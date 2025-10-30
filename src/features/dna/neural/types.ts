@@ -41,16 +41,18 @@ export interface NeuralSession {
   solved_at?: string;
 }
 
+// Exact palette from reference image
+export const NEURON_CORE_COLOR = '#ffb23a'; // Orange/gold core
+export const NEURON_HALO_COLOR = '#ffa06a'; // Hot halo
+export const NEURON_HIGHLIGHT_COLOR = '#ffd37a'; // Highlight
+
 export const NEURAL_COLORS = [
-  '#00d1ff', // cyan
-  '#ff2768', // magenta
-  '#00ff85', // lime
-  '#ffd500', // amber
-  '#8a5cff', // purple
-  '#ff5800', // orange
-  '#00a651', // green
-  '#c41e3a', // red
-  '#0051ba'  // blue
+  '#5ad1ff', // Cyan filament
+  '#2fc5ff', // Bright cyan
+  '#2a51ff', // Blue filament
+  '#ff4bd1', // Magenta hot
+  '#8f6bff', // Purple filament
+  '#ff77b4', // Pink filament
 ];
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

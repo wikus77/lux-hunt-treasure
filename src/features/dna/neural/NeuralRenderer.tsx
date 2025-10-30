@@ -2,11 +2,12 @@
  * © 2025 Joseph MULÉ – M1SSION™ – Neural Renderer
  */
 
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Sphere, Line, Tube } from '@react-three/drei';
+import { Sphere } from '@react-three/drei';
 import * as THREE from 'three';
-import { NeuralNode, NeuralLink } from './types';
+import { NeuralNode, NeuralLink, NEURON_CORE_COLOR, NEURON_HALO_COLOR, NEURON_HIGHLIGHT_COLOR } from './types';
+import { HotSynapseMaterial } from './shaders/HotSynapseMaterial';
 
 interface NeuralRendererProps {
   nodes: NeuralNode[];
@@ -41,102 +42,145 @@ export const NeuralRenderer: React.FC<NeuralRendererProps> = ({
   );
 };
 
-// Node component with physical material and axon glow
-const NeuralNodeMesh: React.FC<{
+interface NeuralNodeProps {
   node: NeuralNode;
   isSelected: boolean;
   onClick: (id: string) => void;
-}> = ({ node, isSelected, onClick }) => {
+}
+
+function NeuralNodeMesh({ node, isSelected, onClick }: NeuralNodeProps) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
   const glowRef = useRef<THREE.Mesh>(null);
-  const axonRef = useRef<THREE.Mesh>(null);
-  const bpm = 80;
-  const beatInterval = 60 / bpm;
+  const coronaRef = useRef<THREE.Points>(null);
+
+  // BPM-synchronized pulse (68-76 BPM)
+  const bpm = 72;
+  const frequency = bpm / 60;
+
+  // Create orbital particle corona
+  const coronaParticles = React.useMemo(() => {
+    const particles = new THREE.BufferGeometry();
+    const positions: number[] = [];
+    const count = 24;
+    
+    for (let i = 0; i < count; i++) {
+      const theta = (i / count) * Math.PI * 2;
+      const phi = Math.random() * Math.PI;
+      const radius = 0.25 + Math.random() * 0.05;
+      
+      positions.push(
+        Math.sin(phi) * Math.cos(theta) * radius,
+        Math.cos(phi) * radius,
+        Math.sin(phi) * Math.sin(theta) * radius
+      );
+    }
+    
+    particles.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    return particles;
+  }, []);
 
   useFrame((state) => {
-    if (!meshRef.current || !glowRef.current || !axonRef.current) return;
-
-    // Synchronized pulse at 80 BPM
-    const beatPhase = (state.clock.elapsedTime % beatInterval) / beatInterval;
-    const pulse = Math.sin(beatPhase * Math.PI * 2) * 0.5 + 0.5;
+    if (!meshRef.current) return;
     
-    const scale = 1 + pulse * 0.08;
-    meshRef.current.scale.setScalar(scale);
+    const time = state.clock.elapsedTime;
+    const pulse = 0.85 + 0.15 * Math.sin(time * frequency * Math.PI * 2);
+    
+    // Exact material properties from specs
+    const mat = meshRef.current.material as THREE.MeshPhysicalMaterial;
+    mat.emissiveIntensity = pulse * (isSelected ? 2.0 : 1.7);
 
-    // Glow pulse
-    const glowScale = isSelected ? 1.8 : 1.4 + pulse * 0.2;
-    glowRef.current.scale.setScalar(glowScale);
+    // Subtle rotation
+    meshRef.current.rotation.y += 0.002;
+    meshRef.current.rotation.x += 0.001;
 
-    // Axon rotation
-    axonRef.current.rotation.z += 0.01;
+    // Glow layer pulse
+    if (glowRef.current) {
+      const glowMat = glowRef.current.material as THREE.MeshBasicMaterial;
+      glowMat.opacity = pulse * 0.35;
+    }
 
-    // Update emissive intensity based on pulse
-    const material = meshRef.current.material as THREE.MeshPhysicalMaterial;
-    if (material.emissiveIntensity !== undefined) {
-      material.emissiveIntensity = (isSelected ? 1.2 : 0.6) + pulse * 0.4;
+    // Rotate corona particles
+    if (coronaRef.current) {
+      coronaRef.current.rotation.y = time * 0.15;
+      coronaRef.current.rotation.x = time * 0.08;
     }
   });
 
   return (
     <group position={node.position}>
-      {/* Outer glow halo */}
-      <Sphere ref={glowRef} args={[0.2, 16, 16]}>
-        <meshBasicMaterial
-          color={node.color}
-          transparent
-          opacity={isSelected ? 0.4 : 0.2}
-          blending={THREE.AdditiveBlending}
-        />
-      </Sphere>
-
-      {/* Axon glow tube */}
-      <mesh ref={axonRef}>
-        {[0, 1, 2, 3].map((i) => (
-          <mesh key={i} rotation={[0, 0, (Math.PI / 2) * i]}>
-            <capsuleGeometry args={[0.01, 0.3, 4, 8]} />
-            <meshBasicMaterial
-              color={node.color}
-              transparent
-              opacity={0.3}
-              blending={THREE.AdditiveBlending}
-            />
-          </mesh>
-        ))}
-      </mesh>
-
-      {/* Main neuron sphere - Physical material */}
+      {/* Main neuron sphere - EXACT specs from requirements */}
       <Sphere
         ref={meshRef}
-        args={[0.14, 48, 48]}
+        args={[0.15, 32, 32]}
         onClick={(e) => {
           e.stopPropagation();
           onClick(node.id);
         }}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
       >
         <meshPhysicalMaterial
-          color={node.color}
-          emissive={node.color}
-          emissiveIntensity={isSelected ? 1.2 : 0.6}
-          metalness={0.1}
-          roughness={0.15}
+          color={NEURON_CORE_COLOR}
+          emissive={NEURON_CORE_COLOR}
+          emissiveIntensity={1.7}
           clearcoat={1}
-          clearcoatRoughness={0.1}
-          transmission={0.8}
-          thickness={0.5}
-          ior={1.45}
+          transmission={0.55}
+          thickness={0.35}
+          ior={1.35}
+          roughness={0.18}
+          metalness={0}
           attenuationDistance={4}
-          attenuationColor={new THREE.Color(node.color)}
+          attenuationColor={NEURON_HALO_COLOR}
         />
       </Sphere>
 
-      {/* Selection ring */}
+      {/* Glow halo - hot orange */}
+      <Sphere ref={glowRef} args={[0.24, 16, 16]}>
+        <meshBasicMaterial
+          color={NEURON_HALO_COLOR}
+          transparent
+          opacity={0.3}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </Sphere>
+
+      {/* Orbital particle corona */}
+      <points ref={coronaRef} geometry={coronaParticles}>
+        <pointsMaterial
+          size={0.02}
+          color={NEURON_HIGHLIGHT_COLOR}
+          transparent
+          opacity={0.6}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          sizeAttenuation
+        />
+      </points>
+
+      {/* Selection indicator */}
       {isSelected && (
+        <Sphere args={[0.30, 16, 16]}>
+          <meshBasicMaterial
+            color="#ffffff"
+            transparent
+            opacity={0.25}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            side={THREE.BackSide}
+          />
+        </Sphere>
+      )}
+
+      {/* Hover ring */}
+      {hovered && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.22, 0.26, 32]} />
           <meshBasicMaterial
-            color={node.color}
+            color={NEURON_HIGHLIGHT_COLOR}
             transparent
-            opacity={0.9}
+            opacity={0.5}
             side={THREE.DoubleSide}
             blending={THREE.AdditiveBlending}
           />
@@ -144,86 +188,104 @@ const NeuralNodeMesh: React.FC<{
       )}
     </group>
   );
-};
+}
 
-// Link component with traveling spark
-const NeuralLinkMesh: React.FC<{ link: NeuralLink }> = ({ link }) => {
-  const lineRef = useRef<any>(null);
+interface NeuralLinkProps {
+  link: NeuralLink;
+}
+
+function NeuralLinkMesh({ link }: NeuralLinkProps) {
+  const tubeRef = useRef<THREE.Mesh>(null);
   const sparkRef = useRef<THREE.Mesh>(null);
-  const [sparkProgress, setSparkProgress] = useState(0);
+  const flareRef = useRef<THREE.Mesh>(null);
+  const [sparkPos, setSparkPos] = useState(0);
+  const hotMaterialRef = useRef<HotSynapseMaterial | null>(null);
 
-  // Create layered glow effect
-  const glowLayers = useMemo(() => [
-    { width: 0.1, opacity: 0.15 },
-    { width: 0.06, opacity: 0.35 },
-    { width: 0.035, opacity: 0.7 }
-  ], []);
+  // Create curve from points
+  const curve = React.useMemo(() => {
+    const points = link.points.map(p => new THREE.Vector3(...p));
+    return new THREE.CatmullRomCurve3(points);
+  }, [link.points]);
 
-  // Calculate spark position along bezier curve
+  // Create THIN tube geometry (0.006-0.012 radius as specified)
+  const tubeGeometry = React.useMemo(() => {
+    return new THREE.TubeGeometry(curve, 24, 0.008, 6, false);
+  }, [curve]);
+
+  // Thicker glow tube
+  const glowTubeGeometry = React.useMemo(() => {
+    return new THREE.TubeGeometry(curve, 24, 0.015, 6, false);
+  }, [curve]);
+
+  // Create hot synapse material for active links
+  const hotMaterial = React.useMemo(() => {
+    hotMaterialRef.current = new HotSynapseMaterial();
+    return hotMaterialRef.current;
+  }, []);
+
   useFrame((state) => {
-    if (!sparkRef.current) return;
-    
-    // Traveling spark animation
-    const speed = 0.3;
-    const progress = (state.clock.elapsedTime * speed) % 1;
-    setSparkProgress(progress);
+    // Update hot synapse shader time
+    if (hotMaterialRef.current) {
+      hotMaterialRef.current.updateTime(state.clock.elapsedTime);
+    }
 
-    // Interpolate position along curve points
-    const idx = Math.floor(progress * (link.points.length - 1));
-    const nextIdx = Math.min(idx + 1, link.points.length - 1);
-    const t = (progress * (link.points.length - 1)) - idx;
-    
-    const p1 = link.points[idx];
-    const p2 = link.points[nextIdx];
-    
-    sparkRef.current.position.set(
-      p1[0] + (p2[0] - p1[0]) * t,
-      p1[1] + (p2[1] - p1[1]) * t,
-      p1[2] + (p2[2] - p1[2]) * t
-    );
+    // Animate traveling spark
+    const speed = 0.4;
+    const newPos = (state.clock.elapsedTime * speed) % 1;
+    setSparkPos(newPos);
 
-    // Pulse spark
-    const pulse = Math.sin(state.clock.elapsedTime * 8) * 0.5 + 0.5;
-    sparkRef.current.scale.setScalar(0.8 + pulse * 0.4);
+    const point = curve.getPoint(newPos);
+    
+    if (sparkRef.current) {
+      sparkRef.current.position.copy(point);
+    }
+    
+    if (flareRef.current) {
+      flareRef.current.position.copy(point);
+    }
   });
 
   return (
     <group>
-      {/* Glow layers */}
-      {glowLayers.map((layer, i) => (
-        <Line
-          key={i}
-          points={link.points}
-          color={link.color}
-          lineWidth={layer.width}
-          transparent
-          opacity={layer.opacity}
-          blending={THREE.AdditiveBlending}
-        />
-      ))}
-
-      {/* Main line */}
-      <Line
-        ref={lineRef}
-        points={link.points}
-        color={link.color}
-        lineWidth={0.03}
-        transparent
-        opacity={1}
-        blending={THREE.AdditiveBlending}
-      />
-
-      {/* Traveling spark */}
-      <Sphere ref={sparkRef} args={[0.06, 16, 16]}>
+      {/* Main filament tube - THIN as specified */}
+      <mesh ref={tubeRef} geometry={tubeGeometry}>
         <meshBasicMaterial
           color={link.color}
           transparent
-          opacity={0.9}
+          opacity={0.75}
           blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Outer glow layer (subtle) */}
+      <mesh geometry={glowTubeGeometry}>
+        <meshBasicMaterial
+          color={link.color}
+          transparent
+          opacity={0.2}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Traveling spark with hot synapse material */}
+      <Sphere ref={sparkRef} args={[0.035, 12, 12]}>
+        <primitive object={hotMaterial} attach="material" />
+      </Sphere>
+
+      {/* Spark flare (tiny lens dirt effect) */}
+      <Sphere ref={flareRef} args={[0.055, 8, 8]}>
+        <meshBasicMaterial
+          color="#ffffff"
+          transparent
+          opacity={0.15}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
         />
       </Sphere>
     </group>
   );
-};
+}
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

@@ -43,9 +43,9 @@ export function DNAComposerVanilla({
     const effects = [
       new BloomEffect({ 
         intensity: bloom,
-        luminanceThreshold: 0.15,
+        luminanceThreshold: 0.78,
         luminanceSmoothing: 0.9,
-        radius: 0.7
+        radius: 0.58
       }),
       new VignetteEffect({ 
         eskil: false, 
@@ -58,12 +58,19 @@ export function DNAComposerVanilla({
         modulationOffset: 0
       }),
       new NoiseEffect({
-        premultiply: true
+        premultiply: true,
+        blendFunction: 10 // NORMAL blend
       })
-    ].filter(Boolean);
+    ].filter(Boolean) as any[];
+
+    // Set noise to 3% opacity as specified
+    const noiseEffect = effects[effects.length - 1];
+    if (noiseEffect) {
+      noiseEffect.blendMode.opacity.value = 0.03;
+    }
 
     if (effects.length > 0) {
-      composer.addPass(new EffectPass(camera, ...effects));
+      composer.addPass(new EffectPass(camera as any, ...effects));
     }
 
     composer.setSize(size.width, size.height);

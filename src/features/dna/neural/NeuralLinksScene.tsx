@@ -5,6 +5,7 @@
 import React, { Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import * as THREE from 'three';
 import { DNAComposerVanilla } from '../common/DNAComposerVanilla';
 import { NeuralRenderer } from './NeuralRenderer';
 import { UiHUD } from './UiHUD';
@@ -41,7 +42,7 @@ export const NeuralLinksScene: React.FC = () => {
   }
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden">
+    <div className="relative w-full h-screen overflow-hidden" style={{ backgroundColor: '#0b1021' }}>
       <Canvas
         camera={{
           position: [0, 0, 8],
@@ -52,21 +53,24 @@ export const NeuralLinksScene: React.FC = () => {
         gl={{
           antialias: true,
           alpha: false,
-          powerPreference: 'high-performance'
+          powerPreference: 'high-performance',
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.2
         }}
       >
         <Suspense fallback={null}>
-          {/* Deep space nebula background */}
+          {/* Deep space nebula background - exact color */}
+          <color attach="background" args={['#0b1021']} />
           <NebulaBackground />
           
-          {/* Enhanced particle field */}
+          {/* Dense particle field (1000-2000 as specified) */}
           <NeuralParticles />
 
-          {/* Lighting setup */}
-          <hemisphereLight args={['#0051ba', '#000033', 0.4]} />
-          <ambientLight intensity={0.2} />
+          {/* Lighting setup - EXACT specs */}
+          <hemisphereLight args={['#2a51ff', '#0b1021', 0.2]} />
+          <ambientLight intensity={0.15} />
           
-          {/* Dynamic synced lights */}
+          {/* Dynamic synced lights - soft blue/cyan + warm rim */}
           <DynamicLights />
 
           {/* Neural network */}
@@ -90,10 +94,10 @@ export const NeuralLinksScene: React.FC = () => {
             enablePan={false}
           />
 
-          {/* Post-processing: Bloom + Vignette + subtle effects */}
+          {/* Post-processing: EXACT specs - Bloom (threshold 0.78, strength 1.15, radius 0.58) + Vignette + Noise */}
           <DNAComposerVanilla
             enabled={true}
-            bloom={1.8}
+            bloom={1.15}
             vignette={0.3}
           />
         </Suspense>
