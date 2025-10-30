@@ -36,57 +36,122 @@ export const MindFractalScene: React.FC = () => {
 
   // Initialize once on mount
   useEffect(() => {
-    console.log('[MindFractal] init');
+    console.log('[MF] init');
     const canvas = canvasRef.current;
     if (!canvas) {
-      // Ensure canvas is rendered; loading overlay will cover it
-      setIsLoading(true);
+      console.error('[MF] Canvas ref not available');
       return;
     }
 
     // Check WebGL2 support
     const gl = canvas.getContext('webgl2');
     if (!gl) {
+      console.error('[MF] WebGL2 not supported');
       setIsWebGL2Available(false);
       setIsLoading(false);
+      window.dispatchEvent(new CustomEvent('mindfractal:error', { 
+        detail: { reason: 'WebGL2 not supported' } 
+      }));
       return;
     }
+
+    // Log GL capabilities
+    console.log('[MF] caps', {
+      version: gl.getParameter(gl.VERSION),
+      shadingLanguage: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+      maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
+      maxRenderbufferSize: gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),
+      maxVertexAttribs: gl.getParameter(gl.MAX_VERTEX_ATTRIBS),
+      maxTextureImageUnits: gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS)
+    });
+
+    console.log('[MF] canvas dimensions', {
+      clientWidth: canvas.clientWidth,
+      clientHeight: canvas.clientHeight,
+      dpr: window.devicePixelRatio
+    });
 
     // Initialize renderer
     const renderer = initRenderer(canvas);
     if (!renderer) {
+      console.error('[MF] Failed to initialize renderer');
       setIsWebGL2Available(false);
       setIsLoading(false);
+      window.dispatchEvent(new CustomEvent('mindfractal:error', { 
+        detail: { reason: 'Renderer initialization failed' } 
+      }));
       return;
     }
 
     // Initialize audio (non-blocking)
     audioEngineRef.current = new AudioEngine();
-    audioEngineRef.current.init().catch((err) => {
-      console.warn('[Mind Fractal] Audio init skipped:', err);
-    });
+    audioEngineRef.current.init()
+      .catch((err) => {
+        console.warn('[MF] Audio init skipped (autoplay policy):', err.message);
+      })
+      .then(() => {
+        if (audioEngineRef.current) {
+          console.log('[MF] Audio engine ready');
+        }
+      });
 
-    // UI ready as soon as renderer is up
-    setIsLoading(false);
+    // Frame counter for stats
+    let frameCount = 0;
+    let lastStatsTime = performance.now();
 
     // Animation loop - reads gameRef.current without re-creating
     const animate = (time: number) => {
       const currentGame = gameRef.current;
-      renderFrame(renderer, {
-        time: time * 0.001,
-        seed: currentGame.seed,
-        connections: currentGame.connections,
-        moves: currentGame.moves
-      });
+      
+      try {
+        renderFrame(renderer, {
+          time: time * 0.001,
+          seed: currentGame.seed,
+          connections: currentGame.connections,
+          moves: currentGame.moves
+        });
+
+        frameCount++;
+
+        // Hide loading and dispatch ready event after first successful frame
+        if (frameCount === 1) {
+          setIsLoading(false);
+          window.dispatchEvent(new CustomEvent('mindfractal:ready'));
+          console.log('[MF] First frame rendered, ready');
+        }
+
+        // Log stats every 60 frames
+        if (frameCount % 60 === 0) {
+          const now = performance.now();
+          const elapsed = now - lastStatsTime;
+          const fps = Math.round((60 * 1000) / elapsed);
+          console.log('[MF] frame stats', {
+            fps,
+            frameCount,
+            avgFrameMs: (elapsed / 60).toFixed(2)
+          });
+          lastStatsTime = now;
+        }
+
+      } catch (err) {
+        console.error('[MF] Render error:', err);
+        cancelAnimationFrame(animationFrameRef.current!);
+        setIsLoading(false);
+        window.dispatchEvent(new CustomEvent('mindfractal:error', { 
+          detail: { reason: 'Render loop error', error: err } 
+        }));
+        return;
+      }
 
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
-    console.log('[MindFractal] raf start');
+    console.log('[MF] raf start');
     animationFrameRef.current = requestAnimationFrame(animate);
 
     // Cleanup
     return () => {
+      console.log('[MF] cleanup');
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
@@ -97,7 +162,16 @@ export const MindFractalScene: React.FC = () => {
 
   // Resize handler
   useEffect(() => {
-    const onResize = () => resizeRenderer();
+    const onResize = () => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        console.log('[MF] resize triggered', {
+          clientWidth: canvas.clientWidth,
+          clientHeight: canvas.clientHeight
+        });
+        resizeRenderer();
+      }
+    };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
@@ -129,7 +203,7 @@ export const MindFractalScene: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center bg-background">
+      <div className="w-full h-full flex items-center justify-center bg-[#0b1021]">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-foreground text-lg">Inizializzazione Mind Fractal...</p>
