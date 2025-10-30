@@ -255,6 +255,7 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                     <DNAErrorBoundary>
                       <MindFractal3D
                         className="w-full h-[700px] rounded-xl overflow-hidden"
+                        seed={dnaProfile.intuito * 1000 + dnaProfile.audacia * 100 + dnaProfile.etica * 10 + dnaProfile.rischio}
                         onReady={() => console.log('[DNAHub] Mind Fractal 3D ready')}
                         onProgress={(p) => {
                           console.log('[DNAHub] Progress:', p);
