@@ -47,40 +47,53 @@ interface Renderer {
 
 let renderer: Renderer | null = null;
 
-function compileShader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader | null {
+function compileShader(gl: WebGL2RenderingContext, type: number, source: string, name: string): WebGLShader | null {
   const shader = gl.createShader(type);
-  if (!shader) return null;
+  if (!shader) {
+    console.error(`[MF] Failed to create shader: ${name}`);
+    return null;
+  }
 
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
 
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.error('Shader compile error:', gl.getShaderInfoLog(shader));
+    const log = gl.getShaderInfoLog(shader);
+    console.error(`[MF] Shader compile error (${name}):`, log);
     gl.deleteShader(shader);
     return null;
   }
 
+  console.log(`[MF] Shader compiled OK: ${name}`);
   return shader;
 }
 
-function createProgram(gl: WebGL2RenderingContext, vertSrc: string, fragSrc: string): WebGLProgram | null {
-  const vertShader = compileShader(gl, gl.VERTEX_SHADER, vertSrc);
-  const fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragSrc);
+function createProgram(gl: WebGL2RenderingContext, vertSrc: string, fragSrc: string, name: string): WebGLProgram | null {
+  const vertShader = compileShader(gl, gl.VERTEX_SHADER, vertSrc, `${name}.vert`);
+  const fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragSrc, `${name}.frag`);
 
-  if (!vertShader || !fragShader) return null;
+  if (!vertShader || !fragShader) {
+    console.error(`[MF] Failed to compile shaders for program: ${name}`);
+    return null;
+  }
 
   const program = gl.createProgram();
-  if (!program) return null;
+  if (!program) {
+    console.error(`[MF] Failed to create program: ${name}`);
+    return null;
+  }
 
   gl.attachShader(program, vertShader);
   gl.attachShader(program, fragShader);
   gl.linkProgram(program);
 
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    console.error('Program link error:', gl.getProgramInfoLog(program));
+    const log = gl.getProgramInfoLog(program);
+    console.error(`[MF] Program link error (${name}):`, log);
     return null;
   }
 
+  console.log(`[MF] Program linked OK: ${name}`);
   return program;
 }
 
@@ -138,6 +151,11 @@ function createTunnelGeometry(gl: WebGL2RenderingContext, rings: number, segment
 
 function createFramebuffer(gl: WebGL2RenderingContext, width: number, height: number) {
   const texture = gl.createTexture();
+  if (!texture) {
+    console.error('[MF] Failed to create texture');
+    throw new Error('Failed to create texture');
+  }
+
   gl.bindTexture(gl.TEXTURE_2D, texture);
   // Use RGBA8 + UNSIGNED_BYTE for iOS compatibility
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -147,15 +165,26 @@ function createFramebuffer(gl: WebGL2RenderingContext, width: number, height: nu
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
   const fbo = gl.createFramebuffer();
+  if (!fbo) {
+    console.error('[MF] Failed to create framebuffer');
+    throw new Error('Failed to create framebuffer');
+  }
+
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
   const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
   if (status !== gl.FRAMEBUFFER_COMPLETE) {
-    console.error('Framebuffer incomplete:', status);
+    console.error('[MF] Framebuffer incomplete:', {
+      status,
+      FRAMEBUFFER_INCOMPLETE_ATTACHMENT: gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
+      FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT,
+      FRAMEBUFFER_INCOMPLETE_DIMENSIONS: gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS,
+      FRAMEBUFFER_UNSUPPORTED: gl.FRAMEBUFFER_UNSUPPORTED
+    });
   }
 
-  return { fbo: fbo!, texture: texture! };
+  return { fbo, texture };
 }
 
 export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
@@ -166,12 +195,22 @@ export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
     preserveDrawingBuffer: false
   });
 
-  if (!gl) return null;
+  if (!gl) {
+    console.error('[MF] Failed to get WebGL2 context');
+    return null;
+  }
 
   // Set canvas size
-  canvas.width = canvas.clientWidth * Math.min(window.devicePixelRatio, 2);
-  canvas.height = canvas.clientHeight * Math.min(window.devicePixelRatio, 2);
+  const dpr = Math.min(window.devicePixelRatio, 2);
+  canvas.width = canvas.clientWidth * dpr;
+  canvas.height = canvas.clientHeight * dpr;
   gl.viewport(0, 0, canvas.width, canvas.height);
+
+  console.log('[MF] Canvas backing store', {
+    width: canvas.width,
+    height: canvas.height,
+    dpr
+  });
 
   // Create programs
   const fullscreenVert = `#version 300 es
@@ -182,23 +221,99 @@ export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
       gl_Position = vec4(aPosition, 0.0, 1.0);
     }`;
 
-  const tunnelProgram = createProgram(gl, tunnelVertSrc, tunnelFragSrc);
-  const neuritesProgram = createProgram(gl, fullscreenVert, neuritesFragSrc);
-  const postBloomProgram = createProgram(gl, fullscreenVert, postBloomFragSrc);
+  console.log('[MF] Compiling shaders...');
+  const tunnelProgram = createProgram(gl, tunnelVertSrc, tunnelFragSrc, 'tunnel');
+  const neuritesProgram = createProgram(gl, fullscreenVert, neuritesFragSrc, 'neurites');
+  const postBloomProgram = createProgram(gl, fullscreenVert, postBloomFragSrc, 'postBloom');
 
   if (!tunnelProgram || !neuritesProgram || !postBloomProgram) {
-    console.error('Failed to create shader programs');
+    console.error('[MF] Failed to create shader programs');
     return null;
   }
+
+  console.log('[MF] Shaders compiled successfully', {
+    tunnel: !!tunnelProgram,
+    neurites: !!neuritesProgram,
+    postBloom: !!postBloomProgram
+  });
+
+  // Log uniform locations for tunnel program
+  gl.useProgram(tunnelProgram);
+  const tunnelUniforms = {
+    uProjection: gl.getUniformLocation(tunnelProgram, 'uProjection'),
+    uView: gl.getUniformLocation(tunnelProgram, 'uView'),
+    uTime: gl.getUniformLocation(tunnelProgram, 'uTime'),
+    uSeed: gl.getUniformLocation(tunnelProgram, 'uSeed')
+  };
+  console.log('[MF] Tunnel uniform locations', {
+    uProjection: tunnelUniforms.uProjection !== null,
+    uView: tunnelUniforms.uView !== null,
+    uTime: tunnelUniforms.uTime !== null,
+    uSeed: tunnelUniforms.uSeed !== null
+  });
+
+  // Log uniform locations for post program
+  gl.useProgram(postBloomProgram);
+  const postUniforms = {
+    uPass: gl.getUniformLocation(postBloomProgram, 'uPass'),
+    uScene: gl.getUniformLocation(postBloomProgram, 'uScene'),
+    uBloom: gl.getUniformLocation(postBloomProgram, 'uBloom'),
+    uResolution: gl.getUniformLocation(postBloomProgram, 'uResolution'),
+    uBloomIntensity: gl.getUniformLocation(postBloomProgram, 'uBloomIntensity')
+  };
+  console.log('[MF] Post uniform locations', {
+    uPass: postUniforms.uPass !== null,
+    uScene: postUniforms.uScene !== null,
+    uBloom: postUniforms.uBloom !== null,
+    uResolution: postUniforms.uResolution !== null,
+    uBloomIntensity: postUniforms.uBloomIntensity !== null
+  });
 
   // Create geometry
   const tunnelBuffers = createTunnelGeometry(gl, 240, 180);
   const quad = createFullscreenQuad(gl);
 
+  console.log('[MF] Geometry created', {
+    tunnelTriangles: tunnelBuffers.count / 3,
+    quadVAO: !!quad.vao
+  });
+
   // Create framebuffers
+  console.log('[MF] Creating framebuffers...');
   const sceneFBO = createFramebuffer(gl, canvas.width, canvas.height);
   const bloomFBO = createFramebuffer(gl, Math.floor(canvas.width / 2), Math.floor(canvas.height / 2));
   const bloomTempFBO = createFramebuffer(gl, Math.floor(canvas.width / 2), Math.floor(canvas.height / 2));
+
+  // Verify FBO status
+  gl.bindFramebuffer(gl.FRAMEBUFFER, sceneFBO.fbo);
+  const sceneStatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  console.log('[MF] FBO scene status', {
+    complete: sceneStatus === gl.FRAMEBUFFER_COMPLETE,
+    status: sceneStatus
+  });
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, bloomFBO.fbo);
+  const bloomStatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  console.log('[MF] FBO bloom status', {
+    complete: bloomStatus === gl.FRAMEBUFFER_COMPLETE,
+    status: bloomStatus
+  });
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, bloomTempFBO.fbo);
+  const bloomTempStatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  console.log('[MF] FBO bloomTemp status', {
+    complete: bloomTempStatus === gl.FRAMEBUFFER_COMPLETE,
+    status: bloomTempStatus
+  });
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+  if (sceneStatus !== gl.FRAMEBUFFER_COMPLETE || 
+      bloomStatus !== gl.FRAMEBUFFER_COMPLETE || 
+      bloomTempStatus !== gl.FRAMEBUFFER_COMPLETE) {
+    console.error('[MF] One or more framebuffers incomplete');
+    return null;
+  }
 
   renderer = {
     gl,
@@ -228,26 +343,40 @@ export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
     }
   };
 
-  console.log('[Mind Fractal] Renderer initialized');
+  console.log('[MF] Renderer initialized successfully');
   return renderer;
 }
 
 export function resizeRenderer() {
-  if (!renderer) return;
+  if (!renderer) {
+    console.warn('[MF] resizeRenderer called but no renderer exists');
+    return;
+  }
+  
   const { gl } = renderer;
   const canvas = gl.canvas as HTMLCanvasElement;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const newWidth = Math.floor(canvas.clientWidth * dpr);
   const newHeight = Math.floor(canvas.clientHeight * dpr);
 
-  if (canvas.width === newWidth && canvas.height === newHeight) return;
+  if (canvas.width === newWidth && canvas.height === newHeight) {
+    console.log('[MF] resize: dimensions unchanged, skipping');
+    return;
+  }
+
+  console.log('[MF] resize: recreating FBOs', { 
+    oldWidth: canvas.width, 
+    oldHeight: canvas.height,
+    newWidth, 
+    newHeight 
+  });
 
   // Resize canvas and viewport
   canvas.width = newWidth;
   canvas.height = newHeight;
   gl.viewport(0, 0, newWidth, newHeight);
 
-  // Recreate FBOs
+  // Delete old FBOs and textures
   gl.deleteFramebuffer(renderer.fbos.scene);
   gl.deleteFramebuffer(renderer.fbos.bloom);
   gl.deleteFramebuffer(renderer.fbos.bloomTemp);
@@ -255,6 +384,7 @@ export function resizeRenderer() {
   gl.deleteTexture(renderer.textures.bloom);
   gl.deleteTexture(renderer.textures.bloomTemp);
 
+  // Recreate FBOs with new dimensions
   const sceneFBO = createFramebuffer(gl, newWidth, newHeight);
   const bloomFBO = createFramebuffer(gl, Math.floor(newWidth / 2), Math.floor(newHeight / 2));
   const bloomTempFBO = createFramebuffer(gl, Math.floor(newWidth / 2), Math.floor(newHeight / 2));
@@ -266,7 +396,7 @@ export function resizeRenderer() {
   renderer.textures.bloom = bloomFBO.texture;
   renderer.textures.bloomTemp = bloomTempFBO.texture;
 
-  console.log('[Mind Fractal] Renderer resized', { w: newWidth, h: newHeight });
+  console.log('[MF] resize complete');
 }
 
 
