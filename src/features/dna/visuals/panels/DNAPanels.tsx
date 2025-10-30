@@ -8,6 +8,7 @@ import { Text } from '@react-three/drei';
 interface PanelData {
   label: string;
   value: number;
+  target?: string;
 }
 
 interface DNAPanelsProps {
@@ -21,7 +22,7 @@ interface DNAPanelsProps {
   activePanelIndex: number | null;
   onPanelClick: (index: number | null) => void;
   cubeSize: number;
-  onPanelOpen?: (target: { x: number; y: number; z: number } | null) => void;
+  onPanelOpen?: (target: string | null) => void;
 }
 
 export const DNAPanels: React.FC<DNAPanelsProps> = ({
@@ -31,21 +32,12 @@ export const DNAPanels: React.FC<DNAPanelsProps> = ({
   cubeSize,
   onPanelOpen
 }) => {
-  // Map panel names to target coordinates (normalized to grid space)
-  const panelTargets: Record<string, { x: number; y: number; z: number }> = {
-    etica: { x: -1, y: 1, z: 0 },
-    intuito: { x: 0, y: 1, z: 1 },
-    audacia: { x: 1, y: 0, z: -1 },
-    vibrazione: { x: -1, y: -1, z: 1 },
-    rischio: { x: 1, y: -1, z: 0 }
-  };
-  
   const panels = [
-    { name: 'front', data: data.front, position: [0, 0, cubeSize / 2], rotation: [0, 0, 0], axis: 'x', target: panelTargets.etica },
-    { name: 'top', data: data.top, position: [0, cubeSize / 2, 0], rotation: [-Math.PI / 2, 0, 0], axis: 'x', target: panelTargets.intuito },
-    { name: 'right', data: data.right, position: [cubeSize / 2, 0, 0], rotation: [0, Math.PI / 2, 0], axis: 'y', target: panelTargets.audacia },
-    { name: 'left', data: data.left, position: [-cubeSize / 2, 0, 0], rotation: [0, -Math.PI / 2, 0], axis: 'y', target: panelTargets.vibrazione },
-    { name: 'back', data: data.back, position: [0, 0, -cubeSize / 2], rotation: [0, Math.PI, 0], axis: 'x', target: panelTargets.rischio }
+    { name: 'front', data: data.front, position: [0, 0, cubeSize / 2], rotation: [0, 0, 0], axis: 'x' },
+    { name: 'top', data: data.top, position: [0, cubeSize / 2, 0], rotation: [-Math.PI / 2, 0, 0], axis: 'x' },
+    { name: 'right', data: data.right, position: [cubeSize / 2, 0, 0], rotation: [0, Math.PI / 2, 0], axis: 'y' },
+    { name: 'left', data: data.left, position: [-cubeSize / 2, 0, 0], rotation: [0, -Math.PI / 2, 0], axis: 'y' },
+    { name: 'back', data: data.back, position: [0, 0, -cubeSize / 2], rotation: [0, Math.PI, 0], axis: 'x' }
   ];
 
   return (
@@ -63,7 +55,8 @@ export const DNAPanels: React.FC<DNAPanelsProps> = ({
           onClick={() => {
             const newIndex = activePanelIndex === index ? null : index;
             onPanelClick(newIndex);
-            onPanelOpen?.(newIndex !== null ? panel.target : null);
+            // Pass the target name from panel data
+            onPanelOpen?.(newIndex !== null ? panel.data.target || null : null);
           }}
           cubeSize={cubeSize}
         />

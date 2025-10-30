@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useDNATargets } from '@/hooks/useDNATargets';
 import { isMobile } from '@/lib/utils/device';
-import { TesseractGrid } from './geometry/TesseractGrid';
+import { InternalLattice } from './geometry/InternalLattice';
 import { DNAPanels } from './panels/DNAPanels';
 import { StarfieldBackground } from './background/StarfieldBackground';
 import { FloatingAnimation } from './effects/FloatingAnimation';
@@ -196,13 +196,13 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
   const groupRef = useRef<THREE.Group>(null);
   const { gl, scene, camera } = useThree();
   const [activePanelIndex, setActivePanelIndex] = useState<number | null>(null);
-  const [highlightedTarget, setHighlightedTarget] = useState<{ x: number; y: number; z: number } | null>(null);
+  const [highlightedTarget, setHighlightedTarget] = useState<string | null>(null);
   const cubeCamera = useRef<THREE.CubeCamera>();
   const frameCount = useRef(0);
   const [envMap, setEnvMap] = useState<THREE.Texture | null>(null);
   
   const mobile = isMobile();
-  const gridDensity = mobile ? 4 : 6;
+  const lodDensity = mobile ? 3 : 4; // 3x3x3 = 27 cubes on mobile, 4x4x4 = 64 on desktop
   const cubeSize = 2.0;
 
   // Use fetched DNA data or defaults
@@ -319,14 +319,19 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
   // Neon edges
   const outerEdges = useMemo(() => createNeonEdges(cubeSize, 3, reducedMotion), [reducedMotion]);
 
-  // Panel data
+  // Panel data with target names
   const panelData = useMemo(() => ({
-    front: { label: 'Vibrazione', value: dnaProfile.vibrazione },
-    top: { label: 'Intuito', value: dnaProfile.intuito },
-    right: { label: 'Audacia', value: dnaProfile.audacia },
-    left: { label: 'Etica', value: dnaProfile.etica },
-    back: { label: 'Rischio', value: dnaProfile.rischio }
+    front: { label: 'Vibrazione', value: dnaProfile.vibrazione, target: 'VIBRAZIONE' },
+    top: { label: 'Intuito', value: dnaProfile.intuito, target: 'INTUITO' },
+    right: { label: 'Audacia', value: dnaProfile.audacia, target: 'AUDACIA' },
+    left: { label: 'Etica', value: dnaProfile.etica, target: 'ETICA' },
+    back: { label: 'Rischio', value: dnaProfile.rischio, target: 'RISCHIO' }
   }), [dnaProfile]);
+  
+  // Handle panel opening to highlight target
+  const handlePanelOpen = (target: string | null) => {
+    setHighlightedTarget(target);
+  };
 
   // Central core glow
   const coreRef = useRef<THREE.Mesh>(null);
@@ -412,12 +417,13 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
           {/* Neon edges */}
           {outerEdges}
 
-          {/* Recursive inner grid with LOD */}
-          <TesseractGrid 
-            density={gridDensity} 
-            cubeSize={cubeSize} 
-            reducedMotion={reducedMotion}
-            highlightedTarget={highlightedTarget}
+          {/* Internal lattice of micro-cubes */}
+          <InternalLattice
+            density={lodDensity}
+            size={cubeSize * 0.9}
+            highlightTarget={highlightedTarget}
+            targets={dnaData?.targets as unknown as Record<string, { x: number; y: number; z: number }> | undefined}
+            seed={dnaData?.seed || user?.id || 'default'}
           />
 
           {/* DNA Panels */}
@@ -425,7 +431,7 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
             data={panelData}
             activePanelIndex={activePanelIndex}
             onPanelClick={setActivePanelIndex}
-            onPanelOpen={setHighlightedTarget}
+            onPanelOpen={handlePanelOpen}
             cubeSize={cubeSize}
           />
         </group>
@@ -511,8 +517,8 @@ export const DNAHyperCube: React.FC<DNAHyperCubeProps> = ({
           />
         </Canvas>
         
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 text-xs text-white/40 bg-black/20 rounded-full backdrop-blur-sm pointer-events-none">
-          🟢 DNA Composer ready
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 text-xs text-white/40 bg-black/20 rounded-full backdrop-blur-sm pointer-events-none z-20">
+          Trascina · Pizzica · Doppio tap reset
         </div>
       </div>
     </DNAErrorBoundary>
