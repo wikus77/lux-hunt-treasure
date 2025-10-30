@@ -5310,6 +5310,101 @@ export type Database = {
         }
         Relationships: []
       }
+      user_dna_neural_links: {
+        Row: {
+          created_at: string
+          id: string
+          link_length: number
+          node_a: number
+          node_b: number
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link_length: number
+          node_a: number
+          node_b: number
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link_length?: number
+          node_a?: number
+          node_b?: number
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_dna_neural_links_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "user_dna_neural_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_dna_neural_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          duration_ms: number
+          id: string
+          links_made: number
+          moves: number
+          pairs_count: number
+          seed: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number
+          id?: string
+          links_made?: number
+          moves?: number
+          pairs_count?: number
+          seed: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number
+          id?: string
+          links_made?: number
+          moves?: number
+          pairs_count?: number
+          seed?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_dna_profile: {
+        Row: {
+          last_seed: string | null
+          level: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          last_seed?: string | null
+          level?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          last_seed?: string | null
+          level?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: []
+      }
       user_flags: {
         Row: {
           hide_tutorial: boolean
@@ -7022,7 +7117,25 @@ export type Database = {
         Args: { user_id_input: string }
         Returns: Json
       }
-      rpc_neural_complete: { Args: { p_session: string }; Returns: undefined }
+      rpc_neural_complete:
+        | {
+            Args: {
+              p_duration_ms: number
+              p_session_id: string
+              p_xp_gain: number
+            }
+            Returns: undefined
+          }
+        | { Args: { p_session: string }; Returns: undefined }
+      rpc_neural_link: {
+        Args: {
+          p_length: number
+          p_node_a: number
+          p_node_b: number
+          p_session_id: string
+        }
+        Returns: undefined
+      }
       rpc_neural_save: {
         Args: {
           p_elapsed: number
@@ -7032,27 +7145,29 @@ export type Database = {
         }
         Returns: undefined
       }
-      rpc_neural_start: {
-        Args: { p_pairs?: number }
-        Returns: {
-          elapsed_seconds: number
-          id: string
-          last_state: Json
-          moves: number
-          pairs_count: number
-          seed: string
-          solved: boolean
-          solved_at: string | null
-          started_at: string
-          user_id: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "dna_neural_sessions"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      rpc_neural_start:
+        | {
+            Args: { p_pairs?: number }
+            Returns: {
+              elapsed_seconds: number
+              id: string
+              last_state: Json
+              moves: number
+              pairs_count: number
+              seed: string
+              solved: boolean
+              solved_at: string | null
+              started_at: string
+              user_id: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "dna_neural_sessions"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | { Args: { p_pairs?: number; p_seed: string }; Returns: string }
       rpc_pulse_decay_tick: {
         Args: { p_decay_percent?: number }
         Returns: Json
