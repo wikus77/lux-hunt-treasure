@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useDNATargets } from '@/hooks/useDNATargets';
 import { isMobile } from '@/lib/utils/device';
-import { InternalLattice } from './geometry/InternalLattice';
+import { ClickableLattice } from './geometry/ClickableLattice';
 import { DNAPanels } from './panels/DNAPanels';
 import { StarfieldBackground } from './background/StarfieldBackground';
 import { FloatingAnimation } from './effects/FloatingAnimation';
@@ -118,17 +118,17 @@ const NeonTubeEdge: React.FC<{
   
   const { geometry, material } = useMemo(() => {
     const curve = new THREE.LineCurve3(start, end);
-    // THICK layers matching reference image - significantly increased from original
-    const widths = [0.085, 0.062, 0.042]; // Professional thick neon rails
-    const geo = new THREE.TubeGeometry(curve, 3, widths[layer] || 0.01, 12, false);
+    // THIN neon tubes matching reference image - slim professional rails
+    const widths = [0.008, 0.006, 0.004]; // Thin multi-layer neon effect
+    const geo = new THREE.TubeGeometry(curve, 8, widths[layer] || 0.003, 16, false);
     
     const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color().setHSL((index / 12 + layer * 0.08) % 1, 1, 0.6),
-      emissive: new THREE.Color().setHSL((index / 12 + layer * 0.08) % 1, 1, 0.6),
-      emissiveIntensity: 5.5 - (layer * 0.9), // Stronger emission
+      color: new THREE.Color().setHSL((index / 12 + layer * 0.08) % 1, 1, 0.7),
+      emissive: new THREE.Color().setHSL((index / 12 + layer * 0.08) % 1, 1, 0.7),
+      emissiveIntensity: 8.0 - (layer * 1.2), // Very strong emission for thin tubes
       toneMapped: false,
       transparent: true,
-      opacity: 0.98 - (layer * 0.1),
+      opacity: 0.95 - (layer * 0.15),
       depthWrite: false,
       blending: THREE.AdditiveBlending
     });
@@ -250,11 +250,11 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
       const { BloomEffect, ChromaticAberrationEffect, SMAAEffect } = await loadPostProcessing();
       
       const bloom = new BloomEffect({
-        intensity: reducedMotion ? 0.4 : (mobile ? 1.1 : 1.6), // Stronger bloom matching reference
-        luminanceThreshold: reducedMotion ? 0.35 : 0.18,
-        luminanceSmoothing: reducedMotion ? 0.75 : 0.92,
+        intensity: reducedMotion ? 0.5 : (mobile ? 1.4 : 2.0), // Stronger bloom for thin edges
+        luminanceThreshold: reducedMotion ? 0.35 : 0.15,
+        luminanceSmoothing: reducedMotion ? 0.75 : 0.95,
         mipmapBlur: !reducedMotion,
-        radius: 0.7
+        radius: 0.85
       });
       
       const chroma = reducedMotion ? null : new ChromaticAberrationEffect({
@@ -419,13 +419,19 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
           {/* Neon edges */}
           {outerEdges}
 
-          {/* Internal lattice of micro-cubes */}
-          <InternalLattice
+          {/* Clickable internal lattice with 64 cubes */}
+          <ClickableLattice
             density={lodDensity}
-            size={cubeSize * 0.9}
+            size={cubeSize * 0.88}
             highlightTarget={highlightedTarget}
-            targets={dnaData?.targets as unknown as Record<string, { x: number; y: number; z: number }> | undefined}
+            targets={dnaData?.targets as any}
             seed={dnaData?.seed || user?.id || 'default'}
+            onCubeClick={(cell, target) => {
+              if (target) {
+                console.log('🎯 [DNA] Target discovered:', target, 'at cell:', cell);
+                setHighlightedTarget(target);
+              }
+            }}
           />
 
           {/* DNA Panels */}
