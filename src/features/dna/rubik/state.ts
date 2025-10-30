@@ -115,7 +115,7 @@ export async function initializeRubikState(): Promise<{
 }
 
 /**
- * Debounced save helper
+ * Debounced save helper - saves partial progress
  */
 let saveTimeout: NodeJS.Timeout | null = null;
 
@@ -123,13 +123,14 @@ export function debouncedSave(
   state: RubikState,
   solved: boolean,
   scrambleSeed: string,
-  delay: number = 2000
+  delay: number = 200
 ): void {
   if (saveTimeout) {
     clearTimeout(saveTimeout);
   }
 
   saveTimeout = setTimeout(() => {
+    // Save current state (even if not solved) so user can resume
     saveRubikState(state, solved, scrambleSeed).catch(console.error);
   }, delay);
 }

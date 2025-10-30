@@ -75,7 +75,7 @@ export const Cubelet: React.FC<CubieProps> = ({ cubie, size, gap, lineWidth }) =
 
       {/* Internal edges (cyan soft) */}
       {visibleFaces.length < 3 && (
-        <CubieEdges face="INNER" size={size} color={RUBIK_COLORS.NEON.INNER} lineWidth={lineWidth * 0.75} />
+        <CubieEdges face="INNER" size={size} color={RUBIK_COLORS.INNER} lineWidth={lineWidth * 0.7} />
       )}
     </group>
   );
@@ -176,17 +176,36 @@ const CubieEdges: React.FC<CubieEdgesProps> = ({ face, size, color, lineWidth })
 
   if (points.length === 0) return null;
 
+  const opacity = face === 'INNER' ? 0.15 : 0.95;
+
   return (
-    <Line
-      points={points}
-      color={color}
-      lineWidth={lineWidth}
-      transparent
-      opacity={0.95}
-      depthWrite={false}
-      // @ts-ignore
-      blending={THREE.AdditiveBlending}
-    />
+    <>
+      {/* Main line */}
+      <Line
+        points={points}
+        color={color}
+        lineWidth={lineWidth}
+        transparent
+        opacity={opacity}
+        depthWrite={false}
+        // @ts-ignore
+        blending={THREE.AdditiveBlending}
+      />
+      
+      {/* Glow outline (second pass for neon effect) */}
+      {face !== 'INNER' && (
+        <Line
+          points={points}
+          color={color}
+          lineWidth={lineWidth * 1.8}
+          transparent
+          opacity={0.25}
+          depthWrite={false}
+          // @ts-ignore
+          blending={THREE.AdditiveBlending}
+        />
+      )}
+    </>
   );
 };
 

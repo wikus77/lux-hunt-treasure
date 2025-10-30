@@ -4,33 +4,23 @@
  */
 
 export const RUBIK_COLORS = {
-  // Standard face colors (for reference/logic)
+  // Standard Rubik face colors (official palette)
   U: '#FFFFFF', // Up - White
-  D: '#FFD700', // Down - Yellow
-  L: '#FF6B35', // Left - Orange
-  R: '#CC0000', // Right - Red
-  F: '#00FF00', // Front - Green
-  B: '#0066FF', // Back - Blue
-  
-  // Neon wireframe colors (additive blend optimized)
-  NEON: {
-    U: '#FFFFFF',   // White warm
-    D: '#FFD700',   // Yellow
-    L: '#FF6B35',   // Orange
-    R: '#FF0033',   // Red neon
-    F: '#00FF66',   // Green neon
-    B: '#0088FF',   // Blue neon
-    INNER: '#6FFCFF' // Cyan soft for internal edges
-  }
+  D: '#FFD500', // Down - Yellow
+  L: '#FF5800', // Left - Orange
+  R: '#C41E3A', // Right - Red
+  F: '#00A651', // Front - Green
+  B: '#0051BA', // Back - Blue
+  INNER: '#66FFF0' // Inner edges - Cyan tenue (10-20% alpha)
 } as const;
 
 export type Face = 'U' | 'D' | 'L' | 'R' | 'F' | 'B';
 
 /**
- * Get neon color for a face
+ * Get color for a face
  */
-export function getNeonColor(face: Face): string {
-  return RUBIK_COLORS.NEON[face];
+export function getFaceColor(face: Face): string {
+  return RUBIK_COLORS[face];
 }
 
 /**
@@ -38,12 +28,12 @@ export function getNeonColor(face: Face): string {
  */
 export function getAllFaceColors(): string[] {
   return [
-    RUBIK_COLORS.NEON.U,
-    RUBIK_COLORS.NEON.D,
-    RUBIK_COLORS.NEON.L,
-    RUBIK_COLORS.NEON.R,
-    RUBIK_COLORS.NEON.F,
-    RUBIK_COLORS.NEON.B
+    RUBIK_COLORS.U,
+    RUBIK_COLORS.D,
+    RUBIK_COLORS.L,
+    RUBIK_COLORS.R,
+    RUBIK_COLORS.F,
+    RUBIK_COLORS.B
   ];
 }
 

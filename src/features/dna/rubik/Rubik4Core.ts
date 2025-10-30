@@ -45,12 +45,12 @@ function getInitialStickers(pos: Position): Partial<Record<Face, string>> {
   const stickers: Partial<Record<Face, string>> = {};
 
   // Only external faces have visible stickers
-  if (x === 0) stickers.L = RUBIK_COLORS.NEON.L; // Left
-  if (x === 3) stickers.R = RUBIK_COLORS.NEON.R; // Right
-  if (y === 0) stickers.D = RUBIK_COLORS.NEON.D; // Down
-  if (y === 3) stickers.U = RUBIK_COLORS.NEON.U; // Up
-  if (z === 0) stickers.B = RUBIK_COLORS.NEON.B; // Back
-  if (z === 3) stickers.F = RUBIK_COLORS.NEON.F; // Front
+  if (x === 0) stickers.L = RUBIK_COLORS.L; // Left - Orange
+  if (x === 3) stickers.R = RUBIK_COLORS.R; // Right - Red
+  if (y === 0) stickers.D = RUBIK_COLORS.D; // Down - Yellow
+  if (y === 3) stickers.U = RUBIK_COLORS.U; // Up - White
+  if (z === 0) stickers.B = RUBIK_COLORS.B; // Back - Blue
+  if (z === 3) stickers.F = RUBIK_COLORS.F; // Front - Green
 
   return stickers;
 }
