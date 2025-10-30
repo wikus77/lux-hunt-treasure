@@ -1743,83 +1743,48 @@ export type Database = {
       }
       dna_rubik_moves: {
         Row: {
-          clockwise: boolean
           created_at: string
-          cube_after: string
-          cube_before: string
-          face: string
-          id: string
-          session_id: string
-          slice_index: number
-          timestamp: string
+          id: number
+          move: string
           user_id: string
         }
         Insert: {
-          clockwise?: boolean
           created_at?: string
-          cube_after: string
-          cube_before: string
-          face: string
-          id?: string
-          session_id: string
-          slice_index: number
-          timestamp?: string
+          id?: number
+          move: string
           user_id: string
         }
         Update: {
-          clockwise?: boolean
           created_at?: string
-          cube_after?: string
-          cube_before?: string
-          face?: string
-          id?: string
-          session_id?: string
-          slice_index?: number
-          timestamp?: string
+          id?: number
+          move?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "dna_rubik_moves_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "dna_rubik_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      dna_rubik_sessions: {
+      dna_rubik_state: {
         Row: {
-          completed_at: string | null
-          created_at: string
-          final_state: string | null
-          id: string
-          initial_state: string
-          is_solved: boolean
-          moves_count: number
-          started_at: string
+          scramble_seed: string
+          size: number
+          solved: boolean
+          state: Json
+          updated_at: string
           user_id: string
         }
         Insert: {
-          completed_at?: string | null
-          created_at?: string
-          final_state?: string | null
-          id?: string
-          initial_state: string
-          is_solved?: boolean
-          moves_count?: number
-          started_at?: string
+          scramble_seed: string
+          size?: number
+          solved?: boolean
+          state: Json
+          updated_at?: string
           user_id: string
         }
         Update: {
-          completed_at?: string | null
-          created_at?: string
-          final_state?: string | null
-          id?: string
-          initial_state?: string
-          is_solved?: boolean
-          moves_count?: number
-          started_at?: string
+          scramble_seed?: string
+          size?: number
+          solved?: boolean
+          state?: Json
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -6631,6 +6596,12 @@ export type Database = {
       count_push_tokens_since: { Args: { since: string }; Returns: number }
       create_free_subscription: { Args: never; Returns: Json }
       debug_vec_info: { Args: never; Returns: Json }
+      dna_get_rubik_state: { Args: never; Returns: Json }
+      dna_log_rubik_move: { Args: { p_move: string }; Returns: undefined }
+      dna_set_rubik_state: {
+        Args: { p_scramble_seed: string; p_solved: boolean; p_state: Json }
+        Returns: undefined
+      }
       ensure_agent_dna: { Args: { p_user: string }; Returns: undefined }
       exec_sql: { Args: { sql: string }; Returns: Json }
       fn_candidates_for_user: {
@@ -7072,7 +7043,6 @@ export type Database = {
         Returns: undefined
       }
       validate_buzz_user_id: { Args: { p_user_id: string }; Returns: boolean }
-      validate_cube96: { Args: { p: string }; Returns: boolean }
       validate_progressive_pricing: {
         Args: {
           p_generation: number
