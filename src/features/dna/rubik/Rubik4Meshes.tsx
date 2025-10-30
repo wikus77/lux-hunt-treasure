@@ -51,20 +51,20 @@ export const Cubelet: React.FC<CubieProps> = ({ cubie, size, gap, lineWidth }) =
 
   return (
     <group position={position} rotation={rotation}>
-      {/* Glass body */}
+      {/* Glass body - ultra subtle */}
       <mesh>
         <boxGeometry args={[size, size, size]} />
         <meshPhysicalMaterial
-          transmission={0.35}
-          thickness={0.4}
-          roughness={0.05}
-          clearcoat={1}
-          clearcoatRoughness={0.1}
-          ior={1.2}
+          transmission={0.15}
+          thickness={0.2}
+          roughness={0.1}
+          clearcoat={0.5}
+          clearcoatRoughness={0.2}
+          ior={1.1}
           transparent
-          opacity={0.08}
+          opacity={0.03}
           depthWrite={false}
-          color={new THREE.Color('#aaffff')}
+          color={new THREE.Color('#556677')}
         />
       </mesh>
 

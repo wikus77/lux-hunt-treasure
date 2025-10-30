@@ -13,6 +13,7 @@ import { usePreferences } from '@/hooks/usePreferences';
 import { RubikGestureController } from './controls/RubikGestures';
 import { VanillaBloomComposer } from './rendering/VanillaBloom';
 import { FPSMonitor } from './rendering/FPSMonitor';
+import { SpaceBackdrop } from './rendering/SpaceBackdrop';
 import type { RubikState, Move } from './types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, RotateCcw, Shuffle, Undo2 } from 'lucide-react';
@@ -135,17 +136,23 @@ const SceneContent: React.FC<{
   });
 
   return (
-    <group ref={groupRef}>
-      {state.cubies.map((cubie) => (
-        <Cubelet
-          key={cubie.id}
-          cubie={cubie}
-          size={CUBIE_SIZE}
-          gap={CUBIE_GAP}
-          lineWidth={lineWidth}
-        />
-      ))}
-    </group>
+    <>
+      {/* Space backdrop with particles (behind cube) */}
+      <SpaceBackdrop particleCount={800} />
+
+      {/* Rubik cube group */}
+      <group ref={groupRef}>
+        {state.cubies.map((cubie) => (
+          <Cubelet
+            key={cubie.id}
+            cubie={cubie}
+            size={CUBIE_SIZE}
+            gap={CUBIE_GAP}
+            lineWidth={lineWidth}
+          />
+        ))}
+      </group>
+    </>
   );
 };
 
@@ -195,18 +202,27 @@ export const Rubik4Scene: React.FC = () => {
 
   // Auto-save on state change (including partial progress)
   useEffect(() => {
-    if (!state || loading) return;
+    if (!state || loading || animating) return;
 
     const solved = isSolved(state);
     debouncedSave(state, solved, scrambleSeed, 200);
 
-    if (solved) {
-      toast.success('🎉 Cubo Risolto!', {
-        description: 'Congratulazioni! Hai completato il Rubik 4×4',
-        duration: 5000
-      });
+    // Only show "solved" toast if:
+    // 1. User has made at least one move (history.length > 0)
+    // 2. Cube is actually solved
+    // 3. Animation has completed
+    if (solved && state.history.length > 0) {
+      // Debounce toast to avoid showing during scramble
+      const toastTimeout = setTimeout(() => {
+        toast.success('🎉 Cubo Risolto!', {
+          description: `Congratulazioni! Completato in ${state.history.length} mosse`,
+          duration: 5000
+        });
+      }, 500);
+
+      return () => clearTimeout(toastTimeout);
     }
-  }, [state, scrambleSeed, loading]);
+  }, [state, scrambleSeed, loading, animating]);
 
   /**
    * Apply a move to the cube
@@ -282,16 +298,18 @@ export const Rubik4Scene: React.FC = () => {
 
   return (
     <div className="relative w-full h-full">
-      {/* Hint pill */}
+      {/* Hint pill - improved guidance */}
       <AnimatePresence>
         {showHint && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-black/80 backdrop-blur-sm border border-cyan-500/30 rounded-full px-4 py-2 text-xs text-cyan-400"
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-black/90 backdrop-blur-md border border-cyan-400/40 rounded-full px-5 py-2.5 text-sm text-cyan-300 shadow-lg shadow-cyan-500/20"
           >
-            Trascina faccia per ruotare • Doppio tap reset • Pizzica zoom
+            <span className="font-medium">Trascina su una faccia per ruotare la slice</span>
+            <span className="mx-2 text-cyan-500/50">•</span>
+            <span className="text-cyan-400/80">Doppio tap reset vista</span>
           </motion.div>
         )}
       </AnimatePresence>
