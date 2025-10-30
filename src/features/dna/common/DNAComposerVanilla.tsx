@@ -15,12 +15,14 @@ interface DNAComposerVanillaProps {
   enabled?: boolean;
   bloom?: number;
   vignette?: number;
+  chromaticAberration?: number;
 }
 
 export function DNAComposerVanilla({ 
   enabled = true, 
   bloom = 0.8, 
-  vignette = 0.2 
+  vignette = 0.2,
+  chromaticAberration = 0
 }: DNAComposerVanillaProps) {
   const composerRef = useRef<EffectComposer | null>(null);
   const { gl, scene, camera, size } = useThree();
@@ -52,11 +54,11 @@ export function DNAComposerVanilla({
         offset: 0.35, 
         darkness: vignette 
       }),
-      new ChromaticAberrationEffect({
-        offset: new THREE.Vector2(0.003, 0.003),
+      chromaticAberration > 0 ? new ChromaticAberrationEffect({
+        offset: new THREE.Vector2(chromaticAberration, chromaticAberration),
         radialModulation: false,
         modulationOffset: 0
-      }),
+      }) : null,
       new NoiseEffect({
         premultiply: true,
         blendFunction: 10 // NORMAL blend
@@ -81,7 +83,7 @@ export function DNAComposerVanilla({
         composerRef.current = null;
       }
     };
-  }, [gl, scene, camera, size.width, size.height, enabled, bloom, vignette]);
+  }, [gl, scene, camera, size.width, size.height, enabled, bloom, vignette, chromaticAberration]);
 
   useFrame((_, delta) => {
     if (composerRef.current && enabled) {
