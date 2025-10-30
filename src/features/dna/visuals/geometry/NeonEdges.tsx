@@ -36,7 +36,7 @@ export function createNeonEdges(size: number, layers: number = 3): React.ReactEl
   ];
 
   const edgeElements: React.ReactElement[] = [];
-  const baseWidths = [0.025, 0.018, 0.012]; // Thick to thin layers
+  const baseWidths = [0.0025, 0.0018, 0.001]; // Professional thickness (2.5 / 1.8 / 1.0 scaled)
 
   edges.forEach((edge, edgeIndex) => {
     const [start, end] = edge;
