@@ -8,6 +8,8 @@ import { RenderPass } from 'postprocessing';
 import { EffectPass } from 'postprocessing';
 import { BloomEffect } from 'postprocessing';
 import { VignetteEffect } from 'postprocessing';
+import { ChromaticAberrationEffect } from 'postprocessing';
+import { NoiseEffect } from 'postprocessing';
 
 interface DNAComposerVanillaProps {
   enabled?: boolean;
@@ -41,13 +43,22 @@ export function DNAComposerVanilla({
     const effects = [
       new BloomEffect({ 
         intensity: bloom,
-        luminanceThreshold: 0.2,
-        luminanceSmoothing: 0.9
+        luminanceThreshold: 0.15,
+        luminanceSmoothing: 0.9,
+        radius: 0.7
       }),
       new VignetteEffect({ 
         eskil: false, 
         offset: 0.35, 
         darkness: vignette 
+      }),
+      new ChromaticAberrationEffect({
+        offset: new THREE.Vector2(0.003, 0.003),
+        radialModulation: false,
+        modulationOffset: 0
+      }),
+      new NoiseEffect({
+        premultiply: true
       })
     ].filter(Boolean);
 

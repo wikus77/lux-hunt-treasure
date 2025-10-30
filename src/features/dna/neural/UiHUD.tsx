@@ -142,22 +142,29 @@ export const UiHUD: React.FC<UiHUDProps> = ({
         </div>
       )}
 
-      {/* Victory Banner */}
+      {/* Victory Banner with neural surge animation */}
       {gameState.solved && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
-          <div className="bg-primary/20 backdrop-blur-md border-2 border-primary rounded-xl px-8 py-6 shadow-2xl animate-in zoom-in-95 duration-500">
-            <h2 className="text-3xl font-bold text-primary mb-2 text-center">
-              🧠 DNA Sinaptico Allineato!
-            </h2>
-            <p className="text-foreground text-center mb-4">
-              Completato in {gameState.moves} mosse · {formatTime(elapsed)}
-            </p>
-            <button
-              onClick={onReset}
-              className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
-            >
-              Nuova Partita
-            </button>
+          <div className="relative bg-primary/20 backdrop-blur-md border-2 border-primary rounded-xl px-8 py-6 shadow-2xl animate-in zoom-in-95 duration-500">
+            {/* Neural surge glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-cyan-500/20 rounded-xl animate-pulse blur-xl" />
+            
+            <div className="relative z-10">
+              <h2 className="text-3xl font-bold text-primary mb-2 text-center flex items-center justify-center gap-2">
+                <span className="animate-pulse">⚡</span>
+                DNA Sinaptico Allineato
+                <span className="animate-pulse">⚡</span>
+              </h2>
+              <p className="text-foreground text-center mb-4">
+                Completato in {gameState.moves} mosse · {formatTime(elapsed)}
+              </p>
+              <button
+                onClick={onReset}
+                className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+              >
+                Nuova Partita
+              </button>
+            </div>
           </div>
         </div>
       )}

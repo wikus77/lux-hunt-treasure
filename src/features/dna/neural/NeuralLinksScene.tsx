@@ -4,11 +4,12 @@
 
 import React, { Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stars } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { DNAComposerVanilla } from '../common/DNAComposerVanilla';
 import { NeuralRenderer } from './NeuralRenderer';
 import { UiHUD } from './UiHUD';
 import { useNeuralGame } from './useNeuralGame';
+import { NebulaBackground, NeuralParticles, DynamicLights } from './NeuralFX';
 
 export const NeuralLinksScene: React.FC = () => {
   const {
@@ -55,21 +56,18 @@ export const NeuralLinksScene: React.FC = () => {
         }}
       >
         <Suspense fallback={null}>
-          {/* Lighting */}
-          <ambientLight intensity={0.3} />
-          <pointLight position={[10, 10, 10]} intensity={0.5} />
-          <pointLight position={[-10, -10, -10]} intensity={0.3} color="#00d1ff" />
+          {/* Deep space nebula background */}
+          <NebulaBackground />
+          
+          {/* Enhanced particle field */}
+          <NeuralParticles />
 
-          {/* Stars background */}
-          <Stars
-            radius={100}
-            depth={50}
-            count={3000}
-            factor={4}
-            saturation={0}
-            fade
-            speed={0.5}
-          />
+          {/* Lighting setup */}
+          <hemisphereLight args={['#0051ba', '#000033', 0.4]} />
+          <ambientLight intensity={0.2} />
+          
+          {/* Dynamic synced lights */}
+          <DynamicLights />
 
           {/* Neural network */}
           {gameState && (
@@ -92,11 +90,11 @@ export const NeuralLinksScene: React.FC = () => {
             enablePan={false}
           />
 
-          {/* Post-processing with vanilla composer */}
+          {/* Post-processing: Bloom + Vignette + subtle effects */}
           <DNAComposerVanilla
             enabled={true}
-            bloom={0.4}
-            vignette={0.5}
+            bloom={1.8}
+            vignette={0.3}
           />
         </Suspense>
       </Canvas>

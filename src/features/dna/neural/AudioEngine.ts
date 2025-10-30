@@ -68,76 +68,164 @@ class NeuralAudioEngine {
     frequencies.forEach(freq => this.playTone(freq, duration, 'sine', volume / frequencies.length));
   }
 
-  // Select node sound
+  // Select node sound with reverb
   playSelect() {
-    this.playTone(1046.5, 0.08, 'sine', 0.25); // C6
+    if (this.isMuted) return;
+    const ctx = this.getContext();
+    
+    // Create reverb convolver
+    const convolver = ctx.createConvolver();
+    const impulseLength = ctx.sampleRate * 0.6;
+    const impulse = ctx.createBuffer(2, impulseLength, ctx.sampleRate);
+    
+    for (let channel = 0; channel < 2; channel++) {
+      const data = impulse.getChannelData(channel);
+      for (let i = 0; i < impulseLength; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / impulseLength * 3);
+      }
+    }
+    convolver.buffer = impulse;
+    
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    const reverbGain = ctx.createGain();
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(600, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
+    
+    gainNode.gain.value = 0.2 * this.masterVolume;
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+    reverbGain.gain.value = 0.3;
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    gainNode.connect(convolver);
+    convolver.connect(reverbGain);
+    reverbGain.connect(ctx.destination);
+    
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.08);
   }
 
-  // Dragging sound (riser)
+  // Dragging sound (FM sweep with sub rumble)
   playDrag() {
     if (this.isMuted) return;
     const ctx = this.getContext();
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(400, ctx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.15);
     
-    gainNode.gain.value = 0.15 * this.masterVolume;
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-
-    oscillator.start(ctx.currentTime);
-    oscillator.stop(ctx.currentTime + 0.15);
+    // FM synthesis
+    const carrier = ctx.createOscillator();
+    const modulator = ctx.createOscillator();
+    const modulatorGain = ctx.createGain();
+    const carrierGain = ctx.createGain();
+    
+    // Sub bass rumble
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(500, ctx.currentTime);
+    carrier.frequency.exponentialRampToValueAtTime(4000, ctx.currentTime + 0.2);
+    
+    modulator.type = 'sine';
+    modulator.frequency.value = 80;
+    modulatorGain.gain.value = 200;
+    
+    sub.type = 'sine';
+    sub.frequency.value = 55;
+    subGain.gain.value = 0.08 * this.masterVolume;
+    
+    carrierGain.gain.value = 0.12 * this.masterVolume;
+    carrierGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    
+    modulator.connect(modulatorGain);
+    modulatorGain.connect(carrier.frequency);
+    carrier.connect(carrierGain);
+    carrierGain.connect(ctx.destination);
+    
+    sub.connect(subGain);
+    subGain.connect(ctx.destination);
+    
+    carrier.start(ctx.currentTime);
+    modulator.start(ctx.currentTime);
+    sub.start(ctx.currentTime);
+    carrier.stop(ctx.currentTime + 0.2);
+    modulator.stop(ctx.currentTime + 0.2);
+    sub.stop(ctx.currentTime + 0.2);
   }
 
-  // Valid connection sound
+  // Valid connection sound with delay tail
   playConnect() {
-    // C major add9 chord
-    this.playChord([261.63, 329.63, 392, 587.33], 0.4, 0.3);
-    
-    // Swoosh (filtered noise)
     if (this.isMuted) return;
     const ctx = this.getContext();
-    const bufferSize = ctx.sampleRate * 0.3;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
     
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / bufferSize * 5);
-    }
+    // Cmaj7add9 chord with sparkle
+    const frequencies = [261.63, 329.63, 392, 493.88, 587.33];
+    frequencies.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const delay = ctx.createDelay();
+      const delayGain = ctx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      
+      gain.gain.value = (0.25 / frequencies.length) * this.masterVolume;
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      
+      delay.delayTime.value = 0.15;
+      delayGain.gain.value = 0.4;
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      gain.connect(delay);
+      delay.connect(delayGain);
+      delayGain.connect(ctx.destination);
+      
+      osc.start(ctx.currentTime + i * 0.02);
+      osc.stop(ctx.currentTime + 0.5);
+    });
     
-    const source = ctx.createBufferSource();
-    const filter = ctx.createBiquadFilter();
-    const gainNode = ctx.createGain();
-    
-    source.buffer = buffer;
-    filter.type = 'highpass';
-    filter.frequency.value = 2000;
-    gainNode.gain.value = 0.15 * this.masterVolume;
-    
-    source.connect(filter);
-    filter.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    
-    source.start(ctx.currentTime);
+    // Sparkle swoosh
+    setTimeout(() => {
+      const bufferSize = ctx.sampleRate * 0.4;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / bufferSize * 4);
+      }
+      
+      const source = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
+      const gainNode = ctx.createGain();
+      
+      source.buffer = buffer;
+      filter.type = 'highpass';
+      filter.frequency.value = 3000;
+      gainNode.gain.value = 0.1 * this.masterVolume;
+      
+      source.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      source.start(ctx.currentTime);
+    }, 50);
   }
 
-  // Error sound
+  // Error sound (band-stop noise + reverse hit)
   playError() {
     if (this.isMuted) return;
     const ctx = this.getContext();
     
-    // Short burst of filtered noise
-    const bufferSize = ctx.sampleRate * 0.12;
+    // Reverse hit effect
+    const bufferSize = ctx.sampleRate * 0.15;
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      const envelope = i / bufferSize;
+      data[i] = (Math.random() * 2 - 1) * envelope;
     }
     
     const source = ctx.createBufferSource();
@@ -145,9 +233,10 @@ class NeuralAudioEngine {
     const gainNode = ctx.createGain();
     
     source.buffer = buffer;
-    filter.type = 'lowpass';
-    filter.frequency.value = 400;
-    gainNode.gain.value = 0.2 * this.masterVolume;
+    filter.type = 'bandpass';
+    filter.frequency.value = 500;
+    filter.Q.value = 8;
+    gainNode.gain.value = 0.25 * this.masterVolume;
     
     source.connect(filter);
     filter.connect(gainNode);
@@ -156,14 +245,73 @@ class NeuralAudioEngine {
     source.start(ctx.currentTime);
   }
 
-  // Victory arpeggio
+  // Cinematic victory sequence (2s rise + pulse drop + reverb tail)
   playVictory() {
-    const notes = [261.63, 329.63, 392, 493.88, 523.25]; // C-E-G-B-C
+    if (this.isMuted) return;
+    const ctx = this.getContext();
+    
+    // Rising arpeggio with reverb
+    const notes = [261.63, 329.63, 392, 493.88, 587.33, 783.99]; // C-E-G-B-D-G
+    
+    // Create reverb
+    const convolver = ctx.createConvolver();
+    const impulseLength = ctx.sampleRate * 2;
+    const impulse = ctx.createBuffer(2, impulseLength, ctx.sampleRate);
+    
+    for (let channel = 0; channel < 2; channel++) {
+      const data = impulse.getChannelData(channel);
+      for (let i = 0; i < impulseLength; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / impulseLength * 2);
+      }
+    }
+    convolver.buffer = impulse;
+    
     notes.forEach((freq, i) => {
       setTimeout(() => {
-        this.playTone(freq, 0.3, 'sine', 0.25);
-      }, i * 120);
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const reverbGain = ctx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        
+        gain.gain.value = (0.2 / notes.length) * this.masterVolume;
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+        reverbGain.gain.value = 0.5;
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.connect(convolver);
+        convolver.connect(reverbGain);
+        reverbGain.connect(ctx.destination);
+        
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.8);
+      }, i * 150);
     });
+    
+    // Pulse drop (sidechain effect)
+    setTimeout(() => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      
+      osc.type = 'sawtooth';
+      osc.frequency.value = 130.81; // C3
+      
+      filter.type = 'lowpass';
+      filter.frequency.value = 200;
+      
+      gain.gain.value = 0.3 * this.masterVolume;
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+      
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 1.2);
+    }, 1000);
   }
 }
 
