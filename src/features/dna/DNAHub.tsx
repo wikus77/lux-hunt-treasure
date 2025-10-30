@@ -13,6 +13,7 @@ import { Rubik4Scene } from './rubik/Rubik4Scene';
 import { NeuralLinksScene } from './neural/NeuralLinksScene';
 import { DNAErrorBoundary } from './common/DNAErrorBoundary';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
+import { MindFractalLite } from './mind-fractal-lite/MindFractalLite';
 import { ArchetypeIcon } from './ArchetypeIcon';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -52,8 +53,9 @@ export const DNAHub: React.FC<DNAHubProps> = ({
   const [showHint, setShowHint] = useState(false);
   const [reduceAnimations, setReduceAnimations] = useState(false);
   
-  // Feature flag: Neural Links puzzle (replaces Rubik)
-  const enableNeuralLinksDNA = true;
+  // Feature flags: Mind Fractal Lite (Three.js pure) replaces r3f implementations
+  const USE_MIND_FRACTAL_LITE = true;
+  const enableNeuralLinksDNA = false; // Disabled when Lite is active
   const [enableTesseract] = useState(true); // Enable new HyperCube
   const [enableRubikDNA] = useState(true); // Enable Rubik 4x4 neon wireframe
   const { getCurrentUser } = useUnifiedAuth();
@@ -245,9 +247,18 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                   />
                 </div>
 
-                {/* Neural Links Puzzle - Full bleed in deep space */}
+                {/* Mind Fractal - Wireframe tunnel visualization */}
                 <div className="flex justify-center relative -mx-6 md:-mx-12">
-                  {enableNeuralLinksDNA ? (
+                  {USE_MIND_FRACTAL_LITE ? (
+                    <div className="w-full h-[700px] relative overflow-hidden bg-black">
+                      <DNAErrorBoundary>
+                        <MindFractalLite 
+                          seed={dnaProfile.intuito * 1000 + dnaProfile.audacia * 100 + dnaProfile.etica * 10 + dnaProfile.rischio}
+                          onReady={() => console.log('[DNAHub] Mind Fractal Lite ready')}
+                        />
+                      </DNAErrorBoundary>
+                    </div>
+                  ) : enableNeuralLinksDNA ? (
                     <div className="w-full h-[700px] relative overflow-hidden">
                       <DNAErrorBoundary>
                         <NeuralLinksScene />
