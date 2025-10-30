@@ -54,7 +54,7 @@ export const DNAHub: React.FC<DNAHubProps> = ({
   const [reduceAnimations, setReduceAnimations] = useState(false);
   
   // Feature flags: DNA Visualizations
-  const enableMindFractal = false; // Mind Fractal wireframe tunnel
+  const enableMindFractal = true; // Mind Fractal wireframe tunnel
   const enableNeuralLinksDNA = true; // Neural Links puzzle
   const [enableTesseract] = useState(true); // Enable new HyperCube
   const [enableRubikDNA] = useState(true); // Enable Rubik 4x4 neon wireframe
