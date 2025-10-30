@@ -13,4 +13,24 @@ export interface RpcFunctions {
       ai_memories_count: number;
     };
   };
+  get_agent_dna_visual: {
+    Args: { user_id: string };
+    Returns: {
+      dna: {
+        intuito: number;
+        audacia: number;
+        etica: number;
+        rischio: number;
+        vibrazione: number;
+      };
+      targets: {
+        ETICA: { x: number; y: number; z: number };
+        INTUITO: { x: number; y: number; z: number };
+        AUDACIA: { x: number; y: number; z: number };
+        VIBRAZIONE: { x: number; y: number; z: number };
+        RISCHIO: { x: number; y: number; z: number };
+      };
+      seed: string;
+    };
+  };
 }

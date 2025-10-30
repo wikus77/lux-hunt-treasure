@@ -38,19 +38,21 @@ export function useDNATargets(userId: string | null) {
     const fetchDNAVisual = async () => {
       try {
         setLoading(true);
-        // Call the RPC function directly
+        // Call the RPC function with proper typing
         const { data: result, error: rpcError } = await supabase
-          .rpc('get_agent_dna_visual' as any, { user_id: userId }) as { data: any; error: any };
+          .rpc('get_agent_dna_visual', { user_id: userId });
 
         if (rpcError) throw rpcError;
+        if (!result) throw new Error('No data returned from RPC');
         
+        // Parse the JSONB result with proper type assertion
         setData(result as unknown as DNAVisualData);
         setError(null);
       } catch (err) {
         console.error('❌ Failed to fetch DNA visual data:', err);
         setError(err as Error);
-        // Fallback data
-        setData({
+        // Fallback data with proper typing
+        const fallbackData: DNAVisualData = {
           dna: { intuito: 50, audacia: 50, etica: 50, rischio: 50, vibrazione: 50 },
           targets: {
             ETICA: { x: -1, y: 1, z: 0 },
@@ -60,7 +62,8 @@ export function useDNATargets(userId: string | null) {
             RISCHIO: { x: 1, y: -1, z: 0 }
           },
           seed: userId
-        });
+        };
+        setData(fallbackData);
       } finally {
         setLoading(false);
       }
