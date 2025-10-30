@@ -9,6 +9,7 @@ import { ARCHETYPE_CONFIGS } from './dnaTypes';
 import type { DNAProfile } from './dnaTypes';
 import { TesseractDNA } from './TesseractDNA';
 import { RubikDNACube } from './visuals/RubikDNACube';
+import { Rubik4Scene } from './rubik/Rubik4Scene';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
 import { ArchetypeIcon } from './ArchetypeIcon';
 import { format } from 'date-fns';
@@ -49,6 +50,7 @@ export const DNAHub: React.FC<DNAHubProps> = ({
   const [showHint, setShowHint] = useState(false);
   const [reduceAnimations, setReduceAnimations] = useState(false);
   const [enableTesseract] = useState(true); // Enable new HyperCube
+  const [enableRubikDNA] = useState(true); // Enable Rubik 4x4 neon wireframe
   const { getCurrentUser } = useUnifiedAuth();
 
   const archetypeConfig = ARCHETYPE_CONFIGS[dnaProfile.archetype];
@@ -238,14 +240,18 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                   />
                 </div>
 
-                {/* Tesseract 3D Visualizer - Full bleed in deep space */}
+                {/* Rubik 4x4 Neon Wireframe - Full bleed in deep space */}
                 <div className="flex justify-center relative -mx-6 md:-mx-12">
-                  {enableTesseract ? (
+                  {enableRubikDNA ? (
+                    <div className="w-full h-[700px] relative overflow-hidden">
+                      <Rubik4Scene />
+                    </div>
+                  ) : enableTesseract ? (
                     <div className="w-full h-[700px] relative overflow-hidden">
                       <RubikDNACube />
                     </div>
                   ) : (
-                    <TesseractDNA 
+                    <TesseractDNA
                       profile={dnaProfile} 
                       size={400} 
                       disableTilt={reduceAnimations}
