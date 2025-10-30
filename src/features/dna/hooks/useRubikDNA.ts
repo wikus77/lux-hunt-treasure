@@ -40,7 +40,7 @@ export function useRubikDNA() {
 
       console.log('[RubikDNA] Incrementing attribute:', lowestAttribute);
 
-      // Call Supabase function to increment
+      // Call Supabase function to increment (capped at 100)
       const { data, error } = await supabase.rpc('increment_dna_attribute', {
         p_user: user.id,
         p_attribute: lowestAttribute
