@@ -14,6 +14,7 @@ import { NeuralLinksScene } from './neural/NeuralLinksScene';
 import { DNAErrorBoundary } from './common/DNAErrorBoundary';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
 import { MindFractalLite } from './mind-fractal-lite/MindFractalLite';
+import { MindFractal3D } from './mind-fractal3d/MindFractal3D';
 import { ArchetypeIcon } from './ArchetypeIcon';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -53,9 +54,10 @@ export const DNAHub: React.FC<DNAHubProps> = ({
   const [showHint, setShowHint] = useState(false);
   const [reduceAnimations, setReduceAnimations] = useState(false);
   
-  // Feature flags: Mind Fractal Lite (Three.js pure) replaces r3f implementations
-  const USE_MIND_FRACTAL_LITE = true;
-  const enableNeuralLinksDNA = false; // Disabled when Lite is active
+  // Feature flags: Mind Fractal 3D (full interactive version with nodes and arcs)
+  const USE_MF3D = true;
+  const USE_MIND_FRACTAL_LITE = false;
+  const enableNeuralLinksDNA = false;
   const [enableTesseract] = useState(true); // Enable new HyperCube
   const [enableRubikDNA] = useState(true); // Enable Rubik 4x4 neon wireframe
   const { getCurrentUser } = useUnifiedAuth();
@@ -247,9 +249,21 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                   />
                 </div>
 
-                {/* Mind Fractal - Wireframe tunnel visualization */}
+                {/* Mind Fractal 3D - Interactive tunnel with nodes and electric arcs */}
                 <div className="flex justify-center relative -mx-6 md:-mx-12">
-                  {USE_MIND_FRACTAL_LITE ? (
+                  {USE_MF3D ? (
+                    <DNAErrorBoundary>
+                      <MindFractal3D
+                        className="w-full h-[700px] rounded-xl overflow-hidden"
+                        onReady={() => console.log('[DNAHub] Mind Fractal 3D ready')}
+                        onProgress={(p) => {
+                          console.log('[DNAHub] Progress:', p);
+                          window.dispatchEvent(new CustomEvent('mf:progress', { detail: p }));
+                        }}
+                        reduced={reduceAnimations}
+                      />
+                    </DNAErrorBoundary>
+                  ) : USE_MIND_FRACTAL_LITE ? (
                     <div className="w-full h-[700px] relative overflow-hidden bg-black">
                       <DNAErrorBoundary>
                         <MindFractalLite 
