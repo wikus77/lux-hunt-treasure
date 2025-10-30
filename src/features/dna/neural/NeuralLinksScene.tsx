@@ -2,10 +2,10 @@
  * © 2025 Joseph MULÉ – M1SSION™ – Neural Links Scene
  */
 
-import React, { Suspense, useRef, useEffect } from 'react';
+import React, { Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
+import { DNAComposerVanilla } from '../common/DNAComposerVanilla';
 import { NeuralRenderer } from './NeuralRenderer';
 import { UiHUD } from './UiHUD';
 import { useNeuralGame } from './useNeuralGame';
@@ -92,18 +92,12 @@ export const NeuralLinksScene: React.FC = () => {
             enablePan={false}
           />
 
-          {/* Post-processing */}
-          <EffectComposer>
-            <Bloom
-              intensity={0.4}
-              luminanceThreshold={0.2}
-              luminanceSmoothing={0.9}
-            />
-            <Vignette
-              offset={0.3}
-              darkness={0.5}
-            />
-          </EffectComposer>
+          {/* Post-processing with vanilla composer */}
+          <DNAComposerVanilla
+            enabled={true}
+            bloom={0.4}
+            vignette={0.5}
+          />
         </Suspense>
       </Canvas>
 
