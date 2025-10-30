@@ -254,7 +254,9 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                       <DNAErrorBoundary>
                         <MindFractalLite 
                           seed={dnaProfile.intuito * 1000 + dnaProfile.audacia * 100 + dnaProfile.etica * 10 + dnaProfile.rischio}
+                          reduced={reduceAnimations}
                           onReady={() => console.log('[DNAHub] Mind Fractal Lite ready')}
+                          onBurst={() => console.log('[DNAHub] DNA Evolution burst triggered')}
                         />
                       </DNAErrorBoundary>
                     </div>
