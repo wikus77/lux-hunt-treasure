@@ -300,15 +300,8 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                   )}
                 </div>
 
-                {/* Actions */}
-                <div className="flex flex-col md:flex-row gap-4 justify-center">
-                  <Button
-                    onClick={handleEvolve}
-                    size="lg"
-                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold px-8"
-                  >
-                    🧬 EVOLVI DNA
-                  </Button>
+                {/* Actions - Single CTA */}
+                <div className="flex justify-center">
                   <Button
                     onClick={() => setActiveTab('history')}
                     size="lg"
