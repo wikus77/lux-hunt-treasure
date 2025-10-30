@@ -94,11 +94,12 @@ export const NeuralLinksScene: React.FC = () => {
             enablePan={false}
           />
 
-          {/* Post-processing: EXACT specs - Bloom (threshold 0.78, strength 1.15, radius 0.58) + Vignette + Noise */}
+          {/* Post-processing: EXACT specs - Bloom (threshold 0.78, strength 1.15, radius 0.58) + Vignette + ChromaticAberration + Noise */}
           <DNAComposerVanilla
             enabled={true}
             bloom={1.15}
             vignette={0.3}
+            chromaticAberration={0.0012}
           />
         </Suspense>
       </Canvas>
