@@ -311,6 +311,27 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_dna_visual: {
+        Row: {
+          created_at: string | null
+          data: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       agent_finalshot_attempts: {
         Row: {
           coords: Json
@@ -6604,7 +6625,9 @@ export type Database = {
           tier: string
         }[]
       }
-      get_agent_dna_visual: { Args: { user_id: string }; Returns: Json }
+      get_agent_dna_visual:
+        | { Args: { user_id: string }; Returns: Json }
+        | { Args: { seed?: boolean }; Returns: Json }
       get_authenticated_user_id: { Args: never; Returns: string }
       get_buzz_override: {
         Args: never
@@ -6894,6 +6917,7 @@ export type Database = {
         }
         Returns: string
       }
+      set_agent_dna_visual: { Args: { payload: Json }; Returns: boolean }
       set_hide_tutorial: { Args: { p_hide: boolean }; Returns: undefined }
       setup_developer_user: { Args: { uid: string }; Returns: undefined }
       submit_final_shot: {
