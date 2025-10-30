@@ -8,23 +8,27 @@ import { ElectroArcSystem } from './effects/ElectroArcSystem';
 import { NodeSystem, NodeState } from './game/NodeSystem';
 import { FPSMonitor } from './utils/FPSMonitor';
 import { CameraStore } from './utils/CameraStore';
+import { useMindFractalPersistence } from './persistence/useMindFractalPersistence';
 
 export interface MindFractal3DProps {
   className?: string;
   onReady?: () => void;
   onProgress?: (progress: { discovered: number; linked: number; ratio: number }) => void;
   reduced?: boolean;
+  seed?: number;
 }
 
 export const MindFractal3D: React.FC<MindFractal3DProps> = ({
   className = '',
   onReady,
   onProgress,
-  reduced = false
+  reduced = false,
+  seed = 42
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mountedRef = useRef(false);
   const [isReady, setIsReady] = useState(false);
+  const { trackNodeSeen, trackLinkCreated } = useMindFractalPersistence();
 
   useEffect(() => {
     if (!canvasRef.current || mountedRef.current) return;
@@ -83,11 +87,13 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     }
 
     // === ORBIT CONTROLS ===
+    // Allow deep zoom into tunnel center
+    const tunnelDepth = 60;
     const controls = new OrbitControls(camera, canvas);
     controls.enableDamping = !reduced;
     controls.dampingFactor = 0.08;
-    controls.minDistance = 2.0;
-    controls.maxDistance = 24.0;
+    controls.minDistance = 0.02 * tunnelDepth; // Can zoom very close to center
+    controls.maxDistance = 1.6 * tunnelDepth; // Can pull back to see full tunnel
     controls.enablePan = false;
     controls.maxPolarAngle = Math.PI * 0.95;
     
@@ -154,6 +160,50 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
     // === ELECTRO ARC SYSTEM ===
     const electroArcs = new ElectroArcSystem(scene, reduced ? 32 : 64);
+    
+    // Idle arc spawner (Poisson process)
+    let lastIdleArcTime = 0;
+    const spawnIdleArc = () => {
+      if (reduced) return; // Skip idle arcs in reduced mode
+      
+      const now = performance.now();
+      const interval = 800 + Math.random() * 1200; // ~0.8-2s between arcs
+      
+      if (now - lastIdleArcTime > interval) {
+        // Pick two random points on tunnel surface
+        const rings = qualityPresets[qualityLevel].rings;
+        const segments = qualityPresets[qualityLevel].segments;
+        
+        const ring1 = Math.floor(Math.random() * rings);
+        const ring2 = Math.floor(Math.random() * rings);
+        const seg1 = Math.floor(Math.random() * segments);
+        const seg2 = Math.floor(Math.random() * segments);
+        
+        const pos = tunnelMesh?.geometry.attributes.position;
+        if (pos) {
+          const idx1 = ring1 * (segments + 1) + seg1;
+          const idx2 = ring2 * (segments + 1) + seg2;
+          
+          const p1 = new THREE.Vector3(
+            pos.getX(idx1),
+            pos.getY(idx1),
+            pos.getZ(idx1)
+          );
+          const p2 = new THREE.Vector3(
+            pos.getX(idx2),
+            pos.getY(idx2),
+            pos.getZ(idx2)
+          );
+          
+          // Only create arc if points are reasonably far
+          if (p1.distanceTo(p2) > 5) {
+            electroArcs.createArc(p1, p2);
+          }
+        }
+        
+        lastIdleArcTime = now;
+      }
+    };
 
     // === RAYCASTER FOR NODE PICKING ===
     const raycaster = new THREE.Raycaster();
@@ -174,6 +224,10 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         
         if (state === NodeState.LOCKED) {
           nodeSystem.setNodeState(nodeId, NodeState.DISCOVERED);
+          
+          // Track in database
+          trackNodeSeen(`node_${nodeId}`, seed);
+          
           window.dispatchEvent(new CustomEvent('mf:node-click', {
             detail: { id: nodeId, state: NodeState.DISCOVERED }
           }));
@@ -188,6 +242,10 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
               electroArcs.createArc(pos1, pos2);
               nodeSystem.setNodeState(lastClickedNode, NodeState.LINKED);
               nodeSystem.setNodeState(nodeId, NodeState.LINKED);
+              
+              // Track link in database
+              const linkLength = pos1.distanceTo(pos2);
+              trackLinkCreated(`node_${lastClickedNode}`, `node_${nodeId}`, linkLength, seed);
               
               window.dispatchEvent(new CustomEvent('mf:node-click', {
                 detail: { id: nodeId, state: NodeState.LINKED, linkedWith: lastClickedNode }
@@ -249,6 +307,9 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       controls.update();
       electroArcs.update(deltaTime);
       nodeSystem.update(elapsedTime);
+      
+      // Spawn idle arcs
+      spawnIdleArc();
 
       // Pulse effect on tunnel
       if (tunnelMesh && !reduced) {
@@ -307,7 +368,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       
       scene.clear();
     };
-  }, [onReady, onProgress, reduced]);
+  }, [onReady, onProgress, reduced, seed, trackNodeSeen, trackLinkCreated]);
 
   return (
     <div className={`relative ${className}`}>

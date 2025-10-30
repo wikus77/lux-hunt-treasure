@@ -1741,6 +1741,93 @@ export type Database = {
         }
         Relationships: []
       }
+      dna_mf_links: {
+        Row: {
+          created_at: string
+          id: string
+          length: number
+          node_from: string
+          node_to: string
+          seed: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          length: number
+          node_from: string
+          node_to: string
+          seed: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          length?: number
+          node_from?: string
+          node_to?: string
+          seed?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dna_mf_nodes_seen: {
+        Row: {
+          first_seen_at: string
+          id: string
+          node_id: string
+          seed: number
+          user_id: string
+        }
+        Insert: {
+          first_seen_at?: string
+          id?: string
+          node_id: string
+          seed: number
+          user_id: string
+        }
+        Update: {
+          first_seen_at?: string
+          id?: string
+          node_id?: string
+          seed?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dna_mind_fractal_sessions: {
+        Row: {
+          completion_ratio: number
+          created_at: string | null
+          id: string
+          moves: number
+          seed: number
+          time_spent: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completion_ratio?: number
+          created_at?: string | null
+          id?: string
+          moves?: number
+          seed: number
+          time_spent?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completion_ratio?: number
+          created_at?: string | null
+          id?: string
+          moves?: number
+          seed?: number
+          time_spent?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       dna_neural_moves: {
         Row: {
           action: string
@@ -7046,6 +7133,14 @@ export type Database = {
         Args: { p_notification_id: string }
         Returns: undefined
       }
+      mf_add_link: {
+        Args: { p_from: string; p_length: number; p_seed: number; p_to: string }
+        Returns: undefined
+      }
+      mf_upsert_seen: {
+        Args: { p_node_ids: string[]; p_seed: number }
+        Returns: undefined
+      }
       mirror_get_watermark: { Args: { p_name: string }; Returns: string }
       mirror_insert_notification_logs: {
         Args: { p_records: Json }
@@ -7240,6 +7335,15 @@ export type Database = {
           p_url: string
         }
         Returns: string
+      }
+      upsert_dna_mind_fractal_session: {
+        Args: {
+          p_completion_ratio: number
+          p_moves: number
+          p_seed: number
+          p_time_spent: number
+        }
+        Returns: undefined
       }
       upsert_fcm_subscription: {
         Args: {
