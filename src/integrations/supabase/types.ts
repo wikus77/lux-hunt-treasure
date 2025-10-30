@@ -1741,39 +1741,6 @@ export type Database = {
         }
         Relationships: []
       }
-      dna_mind_fractal_sessions: {
-        Row: {
-          completion_ratio: number
-          created_at: string | null
-          id: string
-          moves: number
-          seed: number
-          time_spent: number
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          completion_ratio?: number
-          created_at?: string | null
-          id?: string
-          moves?: number
-          seed: number
-          time_spent?: number
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          completion_ratio?: number
-          created_at?: string | null
-          id?: string
-          moves?: number
-          seed?: number
-          time_spent?: number
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       dna_neural_moves: {
         Row: {
           action: string
@@ -7273,15 +7240,6 @@ export type Database = {
           p_url: string
         }
         Returns: string
-      }
-      upsert_dna_mind_fractal_session: {
-        Args: {
-          p_completion_ratio: number
-          p_moves: number
-          p_seed: number
-          p_time_spent: number
-        }
-        Returns: undefined
       }
       upsert_fcm_subscription: {
         Args: {
