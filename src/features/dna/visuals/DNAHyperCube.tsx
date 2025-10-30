@@ -118,16 +118,17 @@ const NeonTubeEdge: React.FC<{
   
   const { geometry, material } = useMemo(() => {
     const curve = new THREE.LineCurve3(start, end);
-    const widths = [0.032, 0.022, 0.014]; // Thick layers
-    const geo = new THREE.TubeGeometry(curve, 2, widths[layer] || 0.01, 8, false);
+    // THICK layers matching reference image - significantly increased from original
+    const widths = [0.085, 0.062, 0.042]; // Professional thick neon rails
+    const geo = new THREE.TubeGeometry(curve, 3, widths[layer] || 0.01, 12, false);
     
     const mat = new THREE.MeshStandardMaterial({
       color: new THREE.Color().setHSL((index / 12 + layer * 0.08) % 1, 1, 0.6),
       emissive: new THREE.Color().setHSL((index / 12 + layer * 0.08) % 1, 1, 0.6),
-      emissiveIntensity: 4.0 - (layer * 0.8),
+      emissiveIntensity: 5.5 - (layer * 0.9), // Stronger emission
       toneMapped: false,
       transparent: true,
-      opacity: 0.95 - (layer * 0.12),
+      opacity: 0.98 - (layer * 0.1),
       depthWrite: false,
       blending: THREE.AdditiveBlending
     });
@@ -218,7 +219,7 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
   useEffect(() => {
     gl.outputColorSpace = THREE.SRGBColorSpace;
     gl.toneMapping = THREE.ACESFilmicToneMapping;
-    gl.toneMappingExposure = 1.15;
+    gl.toneMappingExposure = 1.18; // Slightly brighter for neon visibility
     gl.shadowMap.enabled = false;
     gl.setPixelRatio(mobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2));
   }, [gl, mobile]);
@@ -249,10 +250,11 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
       const { BloomEffect, ChromaticAberrationEffect, SMAAEffect } = await loadPostProcessing();
       
       const bloom = new BloomEffect({
-        intensity: reducedMotion ? 0.35 : (mobile ? 0.8 : 1.2),
-        luminanceThreshold: reducedMotion ? 0.4 : 0.2,
-        luminanceSmoothing: reducedMotion ? 0.8 : 0.9,
-        mipmapBlur: !reducedMotion
+        intensity: reducedMotion ? 0.4 : (mobile ? 1.1 : 1.6), // Stronger bloom matching reference
+        luminanceThreshold: reducedMotion ? 0.35 : 0.18,
+        luminanceSmoothing: reducedMotion ? 0.75 : 0.92,
+        mipmapBlur: !reducedMotion,
+        radius: 0.7
       });
       
       const chroma = reducedMotion ? null : new ChromaticAberrationEffect({
@@ -281,8 +283,8 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
     if (!envMap) {
       return new THREE.MeshPhysicalMaterial({
         transmission: 1.0,
-        thickness: 0.75,
-        roughness: 0.07,
+        thickness: 0.8, // Increased for better refraction depth
+        roughness: 0.06, // Slightly smoother
         metalness: 0,
         clearcoat: 1.0,
         clearcoatRoughness: 0.05,
@@ -293,7 +295,7 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
         iridescenceThicknessRange: [120, 800],
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.15,
+        opacity: 0.18, // Slightly more visible to show structure
         depthWrite: false,
         color: new THREE.Color('#88ffff'),
         attenuationColor: new THREE.Color('#6ffcff'),
@@ -386,14 +388,14 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
 
   return (
     <>
-      {/* Starfield Background */}
-      <StarfieldBackground count={1000} radius={100} reducedMotion={reducedMotion} />
+      {/* Deep Space Starfield */}
+      <StarfieldBackground count={1500} radius={120} reducedMotion={reducedMotion} />
 
-      {/* Lights */}
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[5, 5, 5]} intensity={0.8} color="#00d1ff" />
-      <directionalLight position={[-5, -5, -5]} intensity={0.6} color="#ff2768" />
-      <pointLight position={[0, 0, 0]} intensity={2} color="#00ffff" distance={5} />
+      {/* Enhanced Lighting for Neon Visibility */}
+      <ambientLight intensity={0.3} />
+      <directionalLight position={[5, 5, 5]} intensity={1.2} color="#00d1ff" />
+      <directionalLight position={[-5, -5, -5]} intensity={0.9} color="#ff2768" />
+      <pointLight position={[0, 0, 0]} intensity={3.5} color="#00ffff" distance={6} decay={2} />
 
       {/* Floating Tesseract Group */}
       <FloatingAnimation amplitude={0.015} period={7} enabled={!reducedMotion}>
@@ -483,20 +485,20 @@ export const DNAHyperCube: React.FC<DNAHyperCubeProps> = ({
 
   return (
     <DNAErrorBoundary>
-      <div className={`w-full h-full relative ${className}`}>
-        {/* Vignette overlay */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-radial from-transparent via-transparent to-black/60 z-10" />
+      <div className={`w-full h-full relative ${className}`} style={{ background: '#000000' }}>
+        {/* Deep space vignette - stronger for space immersion */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-radial from-transparent via-black/30 to-black/80 z-10" />
         
         <Canvas
           gl={{
-            alpha: true,
+            alpha: false, // Solid black background
             antialias: true,
             powerPreference: 'high-performance',
             preserveDrawingBuffer: false
           }}
           dpr={mobile ? [1, 1.5] : [1, 2]}
           frameloop="always"
-          style={{ background: 'transparent' }}
+          style={{ background: '#000000' }}
         >
           <PerspectiveCamera makeDefault position={[0, 0, 5.5]} fov={38} near={0.1} far={100} />
           
