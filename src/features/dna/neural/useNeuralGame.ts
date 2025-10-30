@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { NeuralGameState, NeuralSession, NeuralLink } from './types';
+import { NeuralGameState, NeuralLink } from './types';
 import { generateNeuralGraph, checkLinkIntersection, generateLinkPath } from './NeuralGraph';
 import { audioEngine } from './AudioEngine';
 
@@ -13,7 +13,6 @@ export function useNeuralGame() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [dragPath, setDragPath] = useState<Array<[number, number, number]> | null>(null);
-  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
 
   // Initialize game
@@ -21,63 +20,58 @@ export function useNeuralGame() {
     initGame();
   }, []);
 
-  // Auto-save every 5 seconds
-  useEffect(() => {
-    if (!gameState) return;
-
-    saveTimerRef.current = setInterval(() => {
-      saveGameState();
-    }, 5000);
-
-    return () => {
-      if (saveTimerRef.current) {
-        clearInterval(saveTimerRef.current);
-      }
-    };
-  }, [gameState]);
-
   const initGame = async () => {
     try {
       setIsLoading(true);
       
-      const { data: session, error } = await supabase.rpc('rpc_neural_start', {
-        p_pairs: 6
-      }) as { data: NeuralSession | null; error: any };
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user');
 
-      if (error) throw error;
-      if (!session) throw new Error('Failed to create session');
+      // Try to load existing unsolved session
+      const { data: existingSessions } = await supabase
+        .from('user_dna_neural_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .is('completed_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      // Check if we have saved state
-      const savedState = session.last_state as any;
+      let sessionId: string;
+      let seed: string;
+      let moves = 0;
       
-      let state: NeuralGameState;
-      
-      if (savedState && savedState.links && savedState.links.length > 0) {
-        // Resume from saved state
-        state = {
-          sessionId: session.id,
-          seed: session.seed,
-          nodes: savedState.nodes || generateNeuralGraph(session.seed, session.pairs_count),
-          links: savedState.links || [],
-          moves: session.moves,
-          startedAt: new Date(session.started_at).getTime(),
-          elapsedSeconds: session.elapsed_seconds,
-          solved: session.solved
-        };
+      if (existingSessions && existingSessions.length > 0) {
+        // Resume existing session
+        const session = existingSessions[0];
+        sessionId = session.id;
+        seed = session.seed;
+        moves = session.moves || 0;
       } else {
-        // New game
-        const nodes = generateNeuralGraph(session.seed, session.pairs_count);
-        state = {
-          sessionId: session.id,
-          seed: session.seed,
-          nodes,
-          links: [],
-          moves: 0,
-          startedAt: Date.now(),
-          elapsedSeconds: 0,
-          solved: false
-        };
+        // Create new session
+        seed = Math.random().toString(36).substring(2, 15);
+        const { data: newSessionId, error } = await supabase.rpc('rpc_neural_start', {
+          p_seed: seed,
+          p_pairs: 6
+        });
+        
+        if (error) throw error;
+        if (!newSessionId) throw new Error('Failed to create session');
+        sessionId = newSessionId as string;
       }
+
+      // Generate nodes from seed
+      const nodes = generateNeuralGraph(seed, 6);
+      
+      const state: NeuralGameState = {
+        sessionId,
+        seed,
+        nodes,
+        links: [],
+        moves,
+        startedAt: Date.now(),
+        elapsedSeconds: 0,
+        solved: false
+      };
 
       setGameState(state);
       startTimeRef.current = Date.now();
@@ -85,26 +79,6 @@ export function useNeuralGame() {
       console.error('Failed to init game:', error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const saveGameState = async () => {
-    if (!gameState) return;
-
-    const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000) + gameState.elapsedSeconds;
-
-    try {
-      await supabase.rpc('rpc_neural_save', {
-        p_session: gameState.sessionId,
-        p_state: {
-          nodes: gameState.nodes,
-          links: gameState.links
-        } as any,
-        p_moves: gameState.moves,
-        p_elapsed: elapsed
-      });
-    } catch (error) {
-      console.error('Failed to save state:', error);
     }
   };
 
@@ -155,7 +129,6 @@ export function useNeuralGame() {
 
       if (intersects) {
         audioEngine.playError();
-        // Flash red (handled by renderer)
         setDragPath(null);
         setTimeout(() => setSelectedNode(null), 200);
         return;
@@ -172,6 +145,30 @@ export function useNeuralGame() {
 
       const newLinks = [...gameState.links, newLink];
       const newMoves = gameState.moves + 1;
+
+      // Calculate link length for database
+      const dx = node.position[0] - selectedNodeData.position[0];
+      const dy = node.position[1] - selectedNodeData.position[1];
+      const dz = node.position[2] - selectedNodeData.position[2];
+      const linkLength = Math.sqrt(dx*dx + dy*dy + dz*dz);
+      
+      // Save link to database
+      const fromIndex = gameState.nodes.findIndex(n => n.id === selectedNode);
+      const toIndex = gameState.nodes.findIndex(n => n.id === nodeId);
+      
+      // Fire and forget - save link to database
+      (async () => {
+        try {
+          await supabase.rpc('rpc_neural_link', {
+            p_session_id: gameState.sessionId,
+            p_node_a: fromIndex,
+            p_node_b: toIndex,
+            p_length: linkLength
+          });
+        } catch (err) {
+          console.error('Failed to save link:', err);
+        }
+      })();
 
       setGameState({
         ...gameState,
@@ -192,24 +189,26 @@ export function useNeuralGame() {
         // Victory!
         setTimeout(() => {
           audioEngine.playVictory();
-          markSolved();
+          markSolved(newMoves);
         }, 300);
       }
 
       setSelectedNode(null);
       setDragPath(null);
-      
-      // Immediate save
-      saveGameState();
     }
   }, [gameState, selectedNode]);
 
-  const markSolved = async () => {
+  const markSolved = async (finalMoves: number) => {
     if (!gameState) return;
+
+    const duration = Date.now() - startTimeRef.current;
+    const xpGain = Math.max(50, 150 - finalMoves * 5);
 
     try {
       await supabase.rpc('rpc_neural_complete', {
-        p_session: gameState.sessionId
+        p_session_id: gameState.sessionId,
+        p_duration_ms: duration,
+        p_xp_gain: xpGain
       });
 
       setGameState({
@@ -224,14 +223,32 @@ export function useNeuralGame() {
   const handleReset = useCallback(async () => {
     if (!gameState) return;
 
+    // Create new session
+    const seed = Math.random().toString(36).substring(2, 15);
+    const { data: sessionId } = await supabase.rpc('rpc_neural_start', {
+      p_seed: seed,
+      p_pairs: 6
+    });
+    
+    if (!sessionId) return;
+    
+    const nodes = generateNeuralGraph(seed, 6);
+    
     setGameState({
-      ...gameState,
+      sessionId: sessionId as string,
+      seed,
+      nodes,
       links: [],
       moves: 0,
+      startedAt: Date.now(),
+      elapsedSeconds: 0,
       solved: false
     });
-
-    await saveGameState();
+    
+    setSelectedNode(null);
+    setDragPath(null);
+    audioEngine.playSelect();
+    startTimeRef.current = Date.now();
   }, [gameState]);
 
   const handleUndo = useCallback(() => {
@@ -242,8 +259,6 @@ export function useNeuralGame() {
       ...gameState,
       links: newLinks
     });
-
-    saveGameState();
   }, [gameState]);
 
   return {
