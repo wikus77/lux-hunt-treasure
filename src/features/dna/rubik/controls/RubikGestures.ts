@@ -96,7 +96,7 @@ export class RubikGestureController {
 
     const dx = e.clientX - this.dragStart.x;
     const dy = e.clientY - this.dragStart.y;
-    const threshold = 20;
+    const threshold = 30; // Increased deadzone to prevent accidental moves
 
     if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
       // Determine slice and direction
@@ -105,6 +105,7 @@ export class RubikGestureController {
 
       const move = this.computeMove(this.dragFace, direction, horizontal);
       if (move) {
+        console.log(`[RubikGestures] Move detected: ${move} (face: ${this.dragFace}, dir: ${direction})`);
         this.handler.onMove(move);
         this.isDragging = false; // Prevent multiple moves
       }
