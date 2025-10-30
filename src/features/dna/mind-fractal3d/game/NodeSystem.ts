@@ -8,10 +8,13 @@ export enum NodeState {
   LINKED = 2
 }
 
+export type NodeTheme = 'Etica' | 'Strategia' | 'Adattività' | 'Visione';
+
 interface Node {
   id: number;
   position: THREE.Vector3;
   state: NodeState;
+  theme: NodeTheme;
 }
 
 const NODE_COLORS = {
@@ -35,14 +38,17 @@ export class NodeSystem {
   }
 
   /**
-   * Initialize nodes at equidistant points along tunnel
+   * Initialize nodes at equidistant points along tunnel with themes
    */
-  initialize(nodeCount: number): void {
+  initialize(nodeCount: number, seed: number = 42): void {
     const positions = this.geometry.attributes.position;
     const totalVertices = positions.count;
     const step = Math.floor(totalVertices / nodeCount);
 
     this.nodes = [];
+    
+    // Themes to assign deterministically
+    const themes: NodeTheme[] = ['Etica', 'Strategia', 'Adattività', 'Visione'];
 
     for (let i = 0; i < nodeCount; i++) {
       const idx = i * step;
@@ -53,11 +59,15 @@ export class NodeSystem {
         positions.getY(idx),
         positions.getZ(idx)
       );
+      
+      // Assign theme deterministically based on seed and index
+      const themeIndex = (seed + i * 7) % themes.length;
 
       this.nodes.push({
         id: i,
         position,
-        state: NodeState.LOCKED
+        state: NodeState.LOCKED,
+        theme: themes[themeIndex]
       });
     }
 
@@ -143,6 +153,13 @@ export class NodeSystem {
   }
 
   /**
+   * Get node by ID
+   */
+  getNode(nodeId: number): Node | null {
+    return this.nodes.find(n => n.id === nodeId) || null;
+  }
+
+  /**
    * Get node position
    */
   getNodePosition(nodeId: number): THREE.Vector3 | null {
@@ -160,13 +177,14 @@ export class NodeSystem {
   }
 
   /**
-   * Update node visuals (pulse effect)
+   * Update node visuals (pulse effect with hover highlight)
    */
-  update(elapsedTime: number): void {
+  update(elapsedTime: number, hoveredNodeId: number | null = null): void {
     if (!this.instancedMesh) return;
 
     const matrix = new THREE.Matrix4();
     const scale = new THREE.Vector3();
+    const color = new THREE.Color();
 
     for (let i = 0; i < this.nodes.length; i++) {
       const node = this.nodes[i];
@@ -178,6 +196,16 @@ export class NodeSystem {
       } else if (node.state === NodeState.LINKED) {
         pulseScale = 1.0 + Math.sin(elapsedTime * 2 + i * 0.3) * 0.1;
       }
+      
+      // Hover highlight - make larger and brighter
+      if (hoveredNodeId === node.id) {
+        pulseScale *= 1.5;
+        color.setHex(NODE_COLORS[node.state]).multiplyScalar(1.5);
+        this.instancedMesh.setColorAt(i, color);
+      } else {
+        color.setHex(NODE_COLORS[node.state]);
+        this.instancedMesh.setColorAt(i, color);
+      }
 
       scale.set(pulseScale, pulseScale, pulseScale);
       matrix.compose(node.position, new THREE.Quaternion(), scale);
@@ -185,14 +213,17 @@ export class NodeSystem {
     }
 
     this.instancedMesh.instanceMatrix.needsUpdate = true;
+    if (this.instancedMesh.instanceColor) {
+      this.instancedMesh.instanceColor.needsUpdate = true;
+    }
   }
 
   /**
    * Regenerate nodes (for quality changes)
    */
-  regenerate(tunnelGeometry: THREE.BufferGeometry, nodeCount: number): void {
+  regenerate(tunnelGeometry: THREE.BufferGeometry, nodeCount: number, seed: number = 42): void {
     this.geometry = tunnelGeometry;
-    this.initialize(nodeCount);
+    this.initialize(nodeCount, seed);
   }
 
   /**

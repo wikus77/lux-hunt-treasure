@@ -5,10 +5,12 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { buildSpiralTunnel } from './geometry/buildSpiralTunnel';
 import { ElectroArcSystem } from './effects/ElectroArcSystem';
-import { NodeSystem, NodeState } from './game/NodeSystem';
+import { NodeSystem, NodeState, type NodeTheme } from './game/NodeSystem';
 import { FPSMonitor } from './utils/FPSMonitor';
 import { CameraStore } from './utils/CameraStore';
 import { useMindFractalPersistence } from './persistence/useMindFractalPersistence';
+import { useMindLinkPersistence } from './persistence/useMindLinkPersistence';
+import { EvolutionOverlay } from './ui/EvolutionOverlay';
 
 export interface MindFractal3DProps {
   className?: string;
@@ -16,6 +18,13 @@ export interface MindFractal3DProps {
   onProgress?: (progress: { discovered: number; linked: number; ratio: number }) => void;
   reduced?: boolean;
   seed?: number;
+}
+
+interface EvolutionState {
+  visible: boolean;
+  theme: string;
+  level: number;
+  message: string;
 }
 
 export const MindFractal3D: React.FC<MindFractal3DProps> = ({
@@ -28,7 +37,11 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mountedRef = useRef(false);
   const [isReady, setIsReady] = useState(false);
-  const { trackNodeSeen, trackLinkCreated } = useMindFractalPersistence();
+  const [selectedNodeA, setSelectedNodeA] = useState<number | null>(null);
+  const [hoveredNode, setHoveredNode] = useState<number | null>(null);
+  const [evolution, setEvolution] = useState<EvolutionState>({ visible: false, theme: '', level: 0, message: '' });
+  const { trackNodeSeen } = useMindFractalPersistence();
+  const { trackLink } = useMindLinkPersistence();
 
   useEffect(() => {
     if (!canvasRef.current || mountedRef.current) return;
@@ -103,8 +116,13 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     
     controls.update();
 
-    // Save camera state on change
+    // Dynamic near plane adjustment for deep zoom
     controls.addEventListener('change', () => {
+      const distance = camera.position.length();
+      camera.near = Math.max(0.01, distance * 0.002);
+      camera.updateProjectionMatrix();
+      
+      // Save camera state
       camStore.save({
         position: camera.position,
         target: controls.target,
@@ -150,55 +168,34 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
       tunnelMesh = new THREE.LineSegments(edges, material);
       scene.add(tunnelMesh);
+      
+      return geometry;
     };
 
-    buildTunnel();
+    const tunnelGeometry = buildTunnel();
 
     // === NODE SYSTEM ===
-    const nodeSystem = new NodeSystem(scene, tunnelMesh!.geometry as THREE.BufferGeometry);
-    nodeSystem.initialize(48);
+    const nodeSystem = new NodeSystem(scene, tunnelGeometry);
+    nodeSystem.initialize(48, seed);
+    console.info('[MF3D] Node system initialized with themes');
 
     // === ELECTRO ARC SYSTEM ===
     const electroArcs = new ElectroArcSystem(scene, reduced ? 32 : 64);
     
-    // Idle arc spawner (Poisson process)
+    // Idle arc spawner (less frequent)
     let lastIdleArcTime = 0;
     const spawnIdleArc = () => {
-      if (reduced) return; // Skip idle arcs in reduced mode
+      if (reduced) return;
       
       const now = performance.now();
-      const interval = 800 + Math.random() * 1200; // ~0.8-2s between arcs
+      const interval = 2000 + Math.random() * 3000; // 2-5s between arcs
       
       if (now - lastIdleArcTime > interval) {
-        // Pick two random points on tunnel surface
-        const rings = qualityPresets[qualityLevel].rings;
-        const segments = qualityPresets[qualityLevel].segments;
+        const nodeA = nodeSystem.getNode(Math.floor(Math.random() * 48));
+        const nodeB = nodeSystem.getNode(Math.floor(Math.random() * 48));
         
-        const ring1 = Math.floor(Math.random() * rings);
-        const ring2 = Math.floor(Math.random() * rings);
-        const seg1 = Math.floor(Math.random() * segments);
-        const seg2 = Math.floor(Math.random() * segments);
-        
-        const pos = tunnelMesh?.geometry.attributes.position;
-        if (pos) {
-          const idx1 = ring1 * (segments + 1) + seg1;
-          const idx2 = ring2 * (segments + 1) + seg2;
-          
-          const p1 = new THREE.Vector3(
-            pos.getX(idx1),
-            pos.getY(idx1),
-            pos.getZ(idx1)
-          );
-          const p2 = new THREE.Vector3(
-            pos.getX(idx2),
-            pos.getY(idx2),
-            pos.getZ(idx2)
-          );
-          
-          // Only create arc if points are reasonably far
-          if (p1.distanceTo(p2) > 5) {
-            electroArcs.createArc(p1, p2);
-          }
+        if (nodeA && nodeB && nodeA.id !== nodeB.id) {
+          electroArcs.createArc(nodeA.position, nodeB.position);
         }
         
         lastIdleArcTime = now;
@@ -208,10 +205,23 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     // === RAYCASTER FOR NODE PICKING ===
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
-    let lastClickedNode: number | null = null;
     let lastClickTime = 0;
+    
+    const handlePointerMove = (event: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      
+      raycaster.setFromCamera(pointer, camera);
+      const nodeId = nodeSystem.raycast(raycaster);
+      setHoveredNode(nodeId);
+    };
 
-    const onCanvasClick = (event: MouseEvent) => {
+    const onCanvasClick = async (event: PointerEvent) => {
+      const now = Date.now();
+      if (now - lastClickTime < 250) return; // Debounce 250ms
+      lastClickTime = now;
+      
       const rect = canvas.getBoundingClientRect();
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -219,46 +229,88 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       raycaster.setFromCamera(pointer, camera);
       const nodeId = nodeSystem.raycast(raycaster);
 
-      if (nodeId !== null) {
-        const state = nodeSystem.getNodeState(nodeId);
-        
-        if (state === NodeState.LOCKED) {
-          nodeSystem.setNodeState(nodeId, NodeState.DISCOVERED);
-          
-          // Track in database
-          trackNodeSeen(`node_${nodeId}`, seed);
-          
-          window.dispatchEvent(new CustomEvent('mf:node-click', {
-            detail: { id: nodeId, state: NodeState.DISCOVERED }
-          }));
-        } else if (state === NodeState.DISCOVERED) {
-          const now = Date.now();
-          if (lastClickedNode !== null && lastClickedNode !== nodeId && (now - lastClickTime) < 8000) {
-            // Link two discovered nodes
-            const pos1 = nodeSystem.getNodePosition(lastClickedNode);
-            const pos2 = nodeSystem.getNodePosition(nodeId);
-            
-            if (pos1 && pos2) {
-              electroArcs.createArc(pos1, pos2);
-              nodeSystem.setNodeState(lastClickedNode, NodeState.LINKED);
-              nodeSystem.setNodeState(nodeId, NodeState.LINKED);
-              
-              // Track link in database
-              const linkLength = pos1.distanceTo(pos2);
-              trackLinkCreated(`node_${lastClickedNode}`, `node_${nodeId}`, linkLength, seed);
-              
-              window.dispatchEvent(new CustomEvent('mf:node-click', {
-                detail: { id: nodeId, state: NodeState.LINKED, linkedWith: lastClickedNode }
-              }));
-            }
-            
-            lastClickedNode = null;
-          } else {
-            lastClickedNode = nodeId;
-            lastClickTime = now;
-          }
-        }
+      if (nodeId === null) return;
+      
+      const node = nodeSystem.getNode(nodeId);
+      if (!node) return;
 
+      console.info('[MF3D] Node clicked:', nodeId, node.theme, node.state);
+
+      // First click - select node A
+      if (selectedNodeA === null) {
+        if (node.state === NodeState.LOCKED) {
+          nodeSystem.setNodeState(nodeId, NodeState.DISCOVERED);
+          trackNodeSeen(`node_${nodeId}`, seed);
+        }
+        setSelectedNodeA(nodeId);
+        console.info('[MF3D] Selected node A:', nodeId);
+        
+        window.dispatchEvent(new CustomEvent('mindfractal:node-selected', {
+          detail: { nodeId, theme: node.theme }
+        }));
+        return;
+      }
+
+      // Second click - create link
+      if (nodeId !== selectedNodeA) {
+        const nodeA = nodeSystem.getNode(selectedNodeA);
+        if (!nodeA) {
+          setSelectedNodeA(null);
+          return;
+        }
+        
+        // Discover node B if locked
+        if (node.state === NodeState.LOCKED) {
+          nodeSystem.setNodeState(nodeId, NodeState.DISCOVERED);
+          trackNodeSeen(`node_${nodeId}`, seed);
+        }
+        
+        // Create electric arc
+        electroArcs.createArc(nodeA.position, node.position);
+        
+        // Mark both as linked
+        nodeSystem.setNodeState(selectedNodeA, NodeState.LINKED);
+        nodeSystem.setNodeState(nodeId, NodeState.LINKED);
+        
+        // Track link in database
+        const result = await trackLink(selectedNodeA, nodeId, nodeA.theme, seed, 1.0);
+        
+        console.info('[MF3D] Link created:', {
+          from: selectedNodeA,
+          to: nodeId,
+          theme: nodeA.theme,
+          result
+        });
+        
+        window.dispatchEvent(new CustomEvent('mindfractal:link-created', {
+          detail: {
+            from: selectedNodeA,
+            to: nodeId,
+            length: nodeA.position.distanceTo(node.position),
+            ts: Date.now()
+          }
+        }));
+        
+        // Check for evolution milestone
+        if (result?.milestone_added) {
+          console.info('[MF3D] ✨ Evolution milestone!', result);
+          setEvolution({
+            visible: true,
+            theme: nodeA.theme,
+            level: result.milestone_level,
+            message: 'Il tuo DNA ha raggiunto una nuova consapevolezza'
+          });
+          
+          window.dispatchEvent(new CustomEvent('mindfractal:evolve', {
+            detail: { theme: nodeA.theme, level: result.milestone_level }
+          }));
+          
+          // Hide evolution overlay after 2.5s
+          setTimeout(() => {
+            setEvolution(prev => ({ ...prev, visible: false }));
+          }, 2500);
+        }
+        
         // Emit progress
         const stats = nodeSystem.getStats();
         onProgress?.({
@@ -266,9 +318,13 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
           linked: stats.linked,
           ratio: stats.linked / 48
         });
+        
+        // Reset selection
+        setSelectedNodeA(null);
       }
     };
 
+    canvas.addEventListener('pointermove', handlePointerMove);
     canvas.addEventListener('click', onCanvasClick);
 
     // === FPS MONITOR & QUALITY SCALING ===
@@ -296,8 +352,8 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         
         if (avgFps < 45 && qualityLevel !== 'low' && (now - lastQualityCheck) > 2000) {
           qualityLevel = qualityLevel === 'high' ? 'mobile' : 'low';
-          buildTunnel();
-          nodeSystem.regenerate(tunnelMesh!.geometry as THREE.BufferGeometry, 48);
+          const newGeometry = buildTunnel();
+          nodeSystem.regenerate(newGeometry, 48, seed);
           console.info('[MF3D] Quality downgraded to:', qualityLevel);
           lastQualityCheck = now;
         }
@@ -306,10 +362,12 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       // Update systems
       controls.update();
       electroArcs.update(deltaTime);
-      nodeSystem.update(elapsedTime);
+      nodeSystem.update(elapsedTime, hoveredNode);
       
-      // Spawn idle arcs
-      spawnIdleArc();
+      // Spawn idle arcs (less frequently)
+      if (!reduced) {
+        spawnIdleArc();
+      }
 
       // Pulse effect on tunnel
       if (tunnelMesh && !reduced) {
@@ -353,6 +411,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       mountedRef.current = false;
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', handleResize);
+      canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('click', onCanvasClick);
       
       controls.dispose();
@@ -368,7 +427,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       
       scene.clear();
     };
-  }, [onReady, onProgress, reduced, seed, trackNodeSeen, trackLinkCreated]);
+  }, [onReady, onProgress, reduced, seed, trackNodeSeen, trackLink, selectedNodeA, hoveredNode]);
 
   return (
     <div className={`relative ${className}`}>
@@ -385,6 +444,14 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
             <span className="text-sm text-white/60">Inizializzazione Mind Fractal...</span>
           </div>
         </div>
+      )}
+      
+      {evolution.visible && (
+        <EvolutionOverlay
+          theme={evolution.theme}
+          level={evolution.level}
+          message={evolution.message}
+        />
       )}
     </div>
   );
