@@ -6,12 +6,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { initRenderer, renderFrame, cleanupRenderer } from './canvas/renderer';
 import { useMindFractalGame } from './logic/useMindFractalGame';
 import { AudioEngine } from './audio/AudioEngine';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
-interface MindFractalSceneProps {
-  userId: string;
-}
-
-export const MindFractalScene: React.FC<MindFractalSceneProps> = ({ userId }) => {
+export const MindFractalScene: React.FC = () => {
+  const { getCurrentUser } = useUnifiedAuth();
+  const user = getCurrentUser();
+  const userId = user?.id || '';
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioEngineRef = useRef<AudioEngine | null>(null);
   const animationFrameRef = useRef<number>();
