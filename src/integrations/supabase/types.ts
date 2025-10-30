@@ -1828,6 +1828,69 @@ export type Database = {
         }
         Relationships: []
       }
+      dna_mind_links: {
+        Row: {
+          created_at: string
+          id: string
+          intensity: number
+          node_a: number
+          node_b: number
+          seed: number
+          theme: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intensity?: number
+          node_a: number
+          node_b: number
+          seed: number
+          theme: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intensity?: number
+          node_a?: number
+          node_b?: number
+          seed?: number
+          theme?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dna_mind_milestones: {
+        Row: {
+          created_at: string
+          id: string
+          level: number
+          message: string
+          seed: number
+          theme: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level: number
+          message: string
+          seed: number
+          theme: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: number
+          message?: string
+          seed?: number
+          theme?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dna_neural_moves: {
         Row: {
           action: string
@@ -7344,6 +7407,22 @@ export type Database = {
           p_time_spent: number
         }
         Returns: undefined
+      }
+      upsert_dna_mind_link: {
+        Args: {
+          p_intensity?: number
+          p_node_a: number
+          p_node_b: number
+          p_seed: number
+          p_theme: string
+          p_user_id: string
+        }
+        Returns: {
+          milestone_added: boolean
+          milestone_level: number
+          theme_links: number
+          total_links: number
+        }[]
       }
       upsert_fcm_subscription: {
         Args: {
