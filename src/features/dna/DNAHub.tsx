@@ -11,6 +11,7 @@ import { TesseractDNA } from './TesseractDNA';
 import { RubikDNACube } from './visuals/RubikDNACube';
 import { Rubik4Scene } from './rubik/Rubik4Scene';
 import { NeuralLinksScene } from './neural/NeuralLinksScene';
+import { DNAErrorBoundary } from './common/DNAErrorBoundary';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
 import { ArchetypeIcon } from './ArchetypeIcon';
 import { format } from 'date-fns';
@@ -248,11 +249,15 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                 <div className="flex justify-center relative -mx-6 md:-mx-12">
                   {enableNeuralLinksDNA ? (
                     <div className="w-full h-[700px] relative overflow-hidden">
-                      <NeuralLinksScene />
+                      <DNAErrorBoundary>
+                        <NeuralLinksScene />
+                      </DNAErrorBoundary>
                     </div>
                   ) : enableRubikDNA ? (
                     <div className="w-full h-[700px] relative overflow-hidden">
-                      <Rubik4Scene />
+                      <DNAErrorBoundary>
+                        <Rubik4Scene />
+                      </DNAErrorBoundary>
                     </div>
                   ) : enableTesseract ? (
                     <div className="w-full h-[700px] relative overflow-hidden">

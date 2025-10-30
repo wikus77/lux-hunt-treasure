@@ -55,7 +55,6 @@
     "@react-google-maps/api": "^2.19.3",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
-    "@react-three/postprocessing": "^3.0.4",
     "@sentry/react": "^9.22.0",
     "@stripe/react-stripe-js": "^3.7.0",
     "@stripe/stripe-js": "^7.6.1",
