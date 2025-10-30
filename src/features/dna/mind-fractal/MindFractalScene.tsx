@@ -3,7 +3,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { initRenderer, renderFrame, cleanupRenderer, resizeRenderer } from './canvas/renderer';
+import { initRenderer, renderFrame, cleanupRenderer, resizeRenderer, setDebugOptions } from './canvas/renderer';
 import { useMindFractalGame } from './logic/useMindFractalGame';
 import { AudioEngine } from './audio/AudioEngine';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
@@ -17,6 +17,11 @@ export const MindFractalScene: React.FC = () => {
   const animationFrameRef = useRef<number>();
   const [isWebGL2Available, setIsWebGL2Available] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorOverlay, setErrorOverlay] = useState<string | null>(null);
+  const [failoverApplied, setFailoverApplied] = useState(false);
+  const firstPresentedRef = useRef(false);
+  const watchdogRef = useRef<number | null>(null);
+  const failoverTimerRef = useRef<number | null>(null);
 
   const {
     gameState,
@@ -160,21 +165,51 @@ export const MindFractalScene: React.FC = () => {
     };
   }, []); // Only run once on mount
 
-  // Resize handler
+  // Watchdog + failover + overlay/events
   useEffect(() => {
-    const onResize = () => {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        console.log('[MF] resize triggered', {
-          clientWidth: canvas.clientWidth,
-          clientHeight: canvas.clientHeight
-        });
-        resizeRenderer();
+    const onReady = () => {
+      firstPresentedRef.current = true;
+      if (watchdogRef.current) window.clearTimeout(watchdogRef.current);
+      if (failoverTimerRef.current) window.clearTimeout(failoverTimerRef.current);
+      setIsLoading(false);
+    };
+    const onError = (e: Event) => {
+      if (watchdogRef.current) window.clearTimeout(watchdogRef.current);
+      if (failoverTimerRef.current) window.clearTimeout(failoverTimerRef.current);
+      setIsLoading(false);
+      setErrorOverlay('Mind Fractal: renderer non disponibile su questo dispositivo. Tap per tentare il fallback.');
+    };
+    const onFailover = () => {
+      if (!failoverApplied) {
+        setFailoverApplied(true);
+        setDebugOptions({ bypassPost: true, reduceMesh: true });
+        console.log('[MF] failover: bypassPost=true reduceMesh=true');
+        failoverTimerRef.current = window.setTimeout(() => {
+          if (!firstPresentedRef.current) {
+            window.dispatchEvent(new CustomEvent('mindfractal:error', { detail: { reason: 'failover-timeout' } }));
+          }
+        }, 1000) as unknown as number;
       }
     };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
+
+    window.addEventListener('mindfractal:ready', onReady as any);
+    window.addEventListener('mindfractal:error', onError as any);
+    window.addEventListener('mindfractal:failover', onFailover as any);
+
+    watchdogRef.current = window.setTimeout(() => {
+      if (!firstPresentedRef.current) {
+        window.dispatchEvent(new CustomEvent('mindfractal:failover'));
+      }
+    }, 2000) as unknown as number;
+
+    return () => {
+      if (watchdogRef.current) window.clearTimeout(watchdogRef.current);
+      if (failoverTimerRef.current) window.clearTimeout(failoverTimerRef.current);
+      window.removeEventListener('mindfractal:ready', onReady as any);
+      window.removeEventListener('mindfractal:error', onError as any);
+      window.removeEventListener('mindfractal:failover', onFailover as any);
+    };
+  }, [failoverApplied]);
 
   // Handle interactions
   const handleCanvasClick = (e: React.MouseEvent) => {
@@ -186,6 +221,16 @@ export const MindFractalScene: React.FC = () => {
 
     handleTap({ x, y });
     audioEngineRef.current?.playPulse();
+  };
+
+  const handleOverlayRetry = () => {
+    setErrorOverlay(null);
+    setDebugOptions({ bypassPost: true, reduceMesh: true });
+    failoverTimerRef.current = window.setTimeout(() => {
+      if (!firstPresentedRef.current) {
+        window.dispatchEvent(new CustomEvent('mindfractal:error', { detail: { reason: 'overlay-retry-timeout' } }));
+      }
+    }, 1000) as unknown as number;
   };
 
   if (!isWebGL2Available) {
@@ -219,7 +264,17 @@ export const MindFractalScene: React.FC = () => {
         className="w-full h-full cursor-pointer touch-none"
         onClick={handleCanvasClick}
         style={{ display: 'block' }}
-      />
+      {errorOverlay && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="text-center max-w-md p-6">
+            <p className="text-white mb-4">{errorOverlay}</p>
+            <button onClick={handleOverlayRetry} className="px-6 py-3 bg-primary text-primary-foreground rounded-md font-semibold">
+              Tenta il fallback
+            </button>
+          </div>
+        </div>
+      )}
+
 
       {/* HUD */}
       <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">

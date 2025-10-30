@@ -15,6 +15,7 @@ interface Renderer {
     tunnel: WebGLProgram;
     neurites: WebGLProgram;
     postBloom: WebGLProgram;
+    blit: WebGLProgram;
   };
   buffers: {
     tunnel: {
@@ -46,6 +47,14 @@ interface Renderer {
 }
 
 let renderer: Renderer | null = null;
+
+// Debug options with safe defaults
+let debugOptions = {
+  bypassPost: false,
+  reduceMesh: false,
+};
+let reducedMeshApplied = false;
+let firstFramePresented = false;
 
 function compileShader(gl: WebGL2RenderingContext, type: number, source: string, name: string): WebGLShader | null {
   const shader = gl.createShader(type);
@@ -225,8 +234,11 @@ export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
   const tunnelProgram = createProgram(gl, tunnelVertSrc, tunnelFragSrc, 'tunnel');
   const neuritesProgram = createProgram(gl, fullscreenVert, neuritesFragSrc, 'neurites');
   const postBloomProgram = createProgram(gl, fullscreenVert, postBloomFragSrc, 'postBloom');
+  // Simple blit (copy) program for failover bypass
+  const blitFrag = `#version 300 es\nprecision highp float;\nin vec2 vUv;\nuniform sampler2D uTex;\nout vec4 fragColor;\nvoid main(){ fragColor = texture(uTex, vUv); }`;
+  const blitProgram = createProgram(gl, fullscreenVert, blitFrag, 'blit');
 
-  if (!tunnelProgram || !neuritesProgram || !postBloomProgram) {
+  if (!tunnelProgram || !neuritesProgram || !postBloomProgram || !blitProgram) {
     console.error('[MF] Failed to create shader programs');
     return null;
   }
@@ -234,7 +246,8 @@ export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
   console.log('[MF] Shaders compiled successfully', {
     tunnel: !!tunnelProgram,
     neurites: !!neuritesProgram,
-    postBloom: !!postBloomProgram
+    postBloom: !!postBloomProgram,
+    blit: !!blitProgram
   });
 
   // Log uniform locations for tunnel program
@@ -320,7 +333,8 @@ export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
     programs: {
       tunnel: tunnelProgram,
       neurites: neuritesProgram,
-      postBloom: postBloomProgram
+      postBloom: postBloomProgram,
+      blit: blitProgram
     },
     buffers: {
       tunnel: tunnelBuffers,
@@ -399,6 +413,12 @@ export function resizeRenderer() {
   console.log('[MF] resize complete');
 }
 
+export function setDebugOptions(opts: { bypassPost?: boolean; reduceMesh?: boolean }) {
+  debugOptions = { ...debugOptions, ...opts };
+  console.log('[MF] failover: setDebugOptions', debugOptions);
+}
+
+
 
 export function renderFrame(r: Renderer, state: { time: number; seed: number; connections: number; moves: number }) {
   const { gl } = r;
@@ -408,6 +428,18 @@ export function renderFrame(r: Renderer, state: { time: number; seed: number; co
   // Create matrices
   const projectionMatrix = createProjectionMatrix(r.camera.fov, aspect, 0.1, 120);
   const viewMatrix = createViewMatrix(r.camera.position, r.camera.rotation);
+
+  // Apply reduced mesh once if requested
+  if (debugOptions.reduceMesh && !reducedMeshApplied) {
+    console.log('[MF] Applying reduced mesh (rings=48, segments=64)');
+    const { gl } = r;
+    gl.deleteBuffer(r.buffers.tunnel.position);
+    gl.deleteBuffer(r.buffers.tunnel.bary);
+    gl.deleteBuffer(r.buffers.tunnel.indices);
+    const newBuffers = createTunnelGeometry(gl, 48, 64);
+    r.buffers.tunnel = newBuffers as any;
+    reducedMeshApplied = true;
+  }
 
   // ===== PASS 1: Render tunnel to scene FBO =====
   gl.bindFramebuffer(gl.FRAMEBUFFER, r.fbos.scene);
@@ -523,6 +555,7 @@ export function cleanupRenderer() {
   gl.deleteProgram(renderer.programs.tunnel);
   gl.deleteProgram(renderer.programs.neurites);
   gl.deleteProgram(renderer.programs.postBloom);
+  gl.deleteProgram(renderer.programs.blit);
   
   // Delete buffers
   gl.deleteBuffer(renderer.buffers.tunnel.position);
