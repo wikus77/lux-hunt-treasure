@@ -6,6 +6,8 @@ import tunnelVertSrc from '../glsl/tunnel.vert.glsl?raw';
 import tunnelFragSrc from '../glsl/tunnel.frag.glsl?raw';
 import neuritesFragSrc from '../glsl/neurites.frag.glsl?raw';
 import postBloomFragSrc from '../glsl/post_bloom.frag.glsl?raw';
+import { createProjectionMatrix, createViewMatrix } from './matrices';
+import { createFullscreenQuad, drawFullscreenQuad } from './fullscreenQuad';
 
 interface Renderer {
   gl: WebGL2RenderingContext;
@@ -21,6 +23,10 @@ interface Renderer {
       indices: WebGLBuffer;
       count: number;
     };
+    quad: {
+      buffer: WebGLBuffer;
+      vao: WebGLVertexArrayObject;
+    };
   };
   fbos: {
     scene: WebGLFramebuffer;
@@ -35,6 +41,7 @@ interface Renderer {
   camera: {
     position: [number, number, number];
     rotation: [number, number];
+    fov: number;
   };
 }
 
@@ -90,7 +97,7 @@ function createTunnelGeometry(gl: WebGL2RenderingContext, rings: number, segment
       
       positions.push(u, 0, v);
       
-      // Barycentric coordinates for wireframe
+      // Barycentric coordinates for wireframe (proper per-triangle coords)
       const bary = [(s % 3 === 0) ? 1 : 0, (s % 3 === 1) ? 1 : 0, (s % 3 === 2) ? 1 : 0];
       barycentrics.push(...bary);
     }
@@ -142,6 +149,11 @@ function createFramebuffer(gl: WebGL2RenderingContext, width: number, height: nu
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
+  const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  if (status !== gl.FRAMEBUFFER_COMPLETE) {
+    console.error('Framebuffer incomplete:', status);
+  }
+
   return { fbo: fbo!, texture: texture! };
 }
 
@@ -149,14 +161,15 @@ export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
   const gl = canvas.getContext('webgl2', {
     alpha: false,
     antialias: true,
-    powerPreference: 'high-performance'
+    powerPreference: 'high-performance',
+    preserveDrawingBuffer: false
   });
 
   if (!gl) return null;
 
   // Set canvas size
-  canvas.width = canvas.clientWidth * window.devicePixelRatio;
-  canvas.height = canvas.clientHeight * window.devicePixelRatio;
+  canvas.width = canvas.clientWidth * Math.min(window.devicePixelRatio, 2);
+  canvas.height = canvas.clientHeight * Math.min(window.devicePixelRatio, 2);
   gl.viewport(0, 0, canvas.width, canvas.height);
 
   // Create programs
@@ -172,15 +185,19 @@ export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
   const neuritesProgram = createProgram(gl, fullscreenVert, neuritesFragSrc);
   const postBloomProgram = createProgram(gl, fullscreenVert, postBloomFragSrc);
 
-  if (!tunnelProgram || !neuritesProgram || !postBloomProgram) return null;
+  if (!tunnelProgram || !neuritesProgram || !postBloomProgram) {
+    console.error('Failed to create shader programs');
+    return null;
+  }
 
   // Create geometry
   const tunnelBuffers = createTunnelGeometry(gl, 240, 180);
+  const quad = createFullscreenQuad(gl);
 
   // Create framebuffers
   const sceneFBO = createFramebuffer(gl, canvas.width, canvas.height);
-  const bloomFBO = createFramebuffer(gl, canvas.width / 2, canvas.height / 2);
-  const bloomTempFBO = createFramebuffer(gl, canvas.width / 2, canvas.height / 2);
+  const bloomFBO = createFramebuffer(gl, Math.floor(canvas.width / 2), Math.floor(canvas.height / 2));
+  const bloomTempFBO = createFramebuffer(gl, Math.floor(canvas.width / 2), Math.floor(canvas.height / 2));
 
   renderer = {
     gl,
@@ -190,7 +207,8 @@ export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
       postBloom: postBloomProgram
     },
     buffers: {
-      tunnel: tunnelBuffers
+      tunnel: tunnelBuffers,
+      quad
     },
     fbos: {
       scene: sceneFBO.fbo,
@@ -204,49 +222,140 @@ export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
     },
     camera: {
       position: [0, 0, 3],
-      rotation: [0, 0]
+      rotation: [0, 0],
+      fov: (65 * Math.PI) / 180
     }
   };
 
+  console.log('[Mind Fractal] Renderer initialized');
   return renderer;
 }
 
-export function renderFrame(r: Renderer, state: any) {
+export function renderFrame(r: Renderer, state: { time: number; seed: number; connections: number; moves: number }) {
   const { gl } = r;
+  const canvas = gl.canvas as HTMLCanvasElement;
+  const aspect = canvas.width / canvas.height;
 
-  // 1. Render tunnel to FBO
+  // Create matrices
+  const projectionMatrix = createProjectionMatrix(r.camera.fov, aspect, 0.1, 120);
+  const viewMatrix = createViewMatrix(r.camera.position, r.camera.rotation);
+
+  // ===== PASS 1: Render tunnel to scene FBO =====
   gl.bindFramebuffer(gl.FRAMEBUFFER, r.fbos.scene);
-  gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-  gl.clearColor(0.043, 0.063, 0.129, 1.0); // #0b1021
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.clearColor(0.0, 0.0, 0.0, 1.0); // Pure black
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.DEPTH_TEST);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-  // Render tunnel
+  // Draw tunnel
   gl.useProgram(r.programs.tunnel);
-  // ... set uniforms and draw
-  // (truncated for brevity - full matrix calculations needed)
-
-  // 2. Extract bright areas for bloom
-  // 3. Blur bloom (horizontal + vertical)
-  // 4. Composite to screen
   
+  // Set uniforms
+  const uProjection = gl.getUniformLocation(r.programs.tunnel, 'uProjection');
+  const uView = gl.getUniformLocation(r.programs.tunnel, 'uView');
+  const uTime = gl.getUniformLocation(r.programs.tunnel, 'uTime');
+  const uSeed = gl.getUniformLocation(r.programs.tunnel, 'uSeed');
+  
+  gl.uniformMatrix4fv(uProjection, false, projectionMatrix);
+  gl.uniformMatrix4fv(uView, false, viewMatrix);
+  gl.uniform1f(uTime, state.time);
+  gl.uniform1f(uSeed, state.seed);
+  
+  // Bind attributes
+  const aPosition = gl.getAttribLocation(r.programs.tunnel, 'aPosition');
+  const aBary = gl.getAttribLocation(r.programs.tunnel, 'aBary');
+  
+  gl.bindBuffer(gl.ARRAY_BUFFER, r.buffers.tunnel.position);
+  gl.enableVertexAttribArray(aPosition);
+  gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
+  
+  gl.bindBuffer(gl.ARRAY_BUFFER, r.buffers.tunnel.bary);
+  gl.enableVertexAttribArray(aBary);
+  gl.vertexAttribPointer(aBary, 3, gl.FLOAT, false, 0, 0);
+  
+  // Draw tunnel
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, r.buffers.tunnel.indices);
+  gl.drawElements(gl.TRIANGLES, r.buffers.tunnel.count, gl.UNSIGNED_SHORT, 0);
+
+  // ===== PASS 2: Extract bright areas for bloom =====
+  gl.bindFramebuffer(gl.FRAMEBUFFER, r.fbos.bloom);
+  gl.viewport(0, 0, Math.floor(canvas.width / 2), Math.floor(canvas.height / 2));
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.disable(gl.DEPTH_TEST);
+  
+  gl.useProgram(r.programs.postBloom);
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uPass'), 0); // Threshold pass
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uScene'), 0);
+  gl.uniform2f(gl.getUniformLocation(r.programs.postBloom, 'uResolution'), canvas.width, canvas.height);
+  
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, r.textures.scene);
+  
+  drawFullscreenQuad(gl, r.buffers.quad.vao);
+
+  // ===== PASS 3: Horizontal blur =====
+  gl.bindFramebuffer(gl.FRAMEBUFFER, r.fbos.bloomTemp);
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uPass'), 0); // Horizontal
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uBloom'), 0);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, r.textures.bloom);
+  drawFullscreenQuad(gl, r.buffers.quad.vao);
+
+  // ===== PASS 4: Vertical blur =====
+  gl.bindFramebuffer(gl.FRAMEBUFFER, r.fbos.bloom);
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uPass'), 1); // Vertical
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, r.textures.bloomTemp);
+  drawFullscreenQuad(gl, r.buffers.quad.vao);
+
+  // ===== PASS 5: Composite to screen =====
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-  // Final composite render...
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uPass'), 2); // Composite
+  gl.uniform1f(gl.getUniformLocation(r.programs.postBloom, 'uBloomIntensity'), 0.85);
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uScene'), 0);
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uBloom'), 1);
+  
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, r.textures.scene);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, r.textures.bloom);
+  
+  drawFullscreenQuad(gl, r.buffers.quad.vao);
 }
 
 export function cleanupRenderer() {
   if (!renderer) return;
   
   const { gl } = renderer;
-  // Cleanup all resources
+  
+  // Delete programs
   gl.deleteProgram(renderer.programs.tunnel);
   gl.deleteProgram(renderer.programs.neurites);
   gl.deleteProgram(renderer.programs.postBloom);
   
+  // Delete buffers
+  gl.deleteBuffer(renderer.buffers.tunnel.position);
+  gl.deleteBuffer(renderer.buffers.tunnel.bary);
+  gl.deleteBuffer(renderer.buffers.tunnel.indices);
+  gl.deleteBuffer(renderer.buffers.quad.buffer);
+  
+  // Delete framebuffers and textures
+  gl.deleteFramebuffer(renderer.fbos.scene);
+  gl.deleteFramebuffer(renderer.fbos.bloom);
+  gl.deleteFramebuffer(renderer.fbos.bloomTemp);
+  gl.deleteTexture(renderer.textures.scene);
+  gl.deleteTexture(renderer.textures.bloom);
+  gl.deleteTexture(renderer.textures.bloomTemp);
+  
   renderer = null;
+  console.log('[Mind Fractal] Renderer cleaned up');
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
