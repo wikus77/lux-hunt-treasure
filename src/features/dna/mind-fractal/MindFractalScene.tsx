@@ -55,11 +55,14 @@ export const MindFractalScene: React.FC = () => {
       return;
     }
 
-    // Initialize audio
+    // Initialize audio (non-blocking)
     audioEngineRef.current = new AudioEngine();
-    audioEngineRef.current.init().then(() => {
-      setIsLoading(false);
+    audioEngineRef.current.init().catch((err) => {
+      console.warn('[Mind Fractal] Audio init skipped:', err);
     });
+
+    // UI ready as soon as renderer is up
+    setIsLoading(false);
 
     // Animation loop - reads gameRef.current without re-creating
     const animate = (time: number) => {
