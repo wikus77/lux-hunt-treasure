@@ -6604,6 +6604,7 @@ export type Database = {
           tier: string
         }[]
       }
+      get_agent_dna_visual: { Args: { user_id: string }; Returns: Json }
       get_authenticated_user_id: { Args: never; Returns: string }
       get_buzz_override: {
         Args: never

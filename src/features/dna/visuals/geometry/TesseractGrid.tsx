@@ -1,115 +1,158 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { createInnerGlassMaterial } from '../materials/GlassMaterial';
 
 interface TesseractGridProps {
-  density: number;
+  density: number; // 3, 4, or 6
   cubeSize: number;
   reducedMotion?: boolean;
+  highlightedTarget?: { x: number; y: number; z: number } | null;
 }
 
 /**
- * Recursive inner grid of instanced glass cubes
+ * Recursive inner grid of instanced glass cubes with dynamic LOD
  * Creates the "infinite depth" effect from reference images
  */
-export const TesseractGrid: React.FC<TesseractGridProps> = ({ density, cubeSize, reducedMotion = false }) => {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
+export const TesseractGrid: React.FC<TesseractGridProps> = ({ 
+  density, 
+  cubeSize,
+  reducedMotion = false,
+  highlightedTarget = null
+}) => {
+  const instancedMeshRef = useRef<THREE.InstancedMesh>(null);
+  const edgesGroupRef = useRef<THREE.Group>(null);
+  const [fps, setFps] = useState(60);
   
-  // Calculate grid positions (skip center to create hollow effect)
+  // Dynamic LOD based on performance
+  const [lodDensity, setLodDensity] = useState(density);
+  
+  useEffect(() => {
+    // Auto-LOD: adjust density based on FPS
+    if (fps < 45 && lodDensity > 3) {
+      setLodDensity(prev => Math.max(3, prev - 1));
+      console.log('🔻 DNA LOD: reduced to', lodDensity - 1);
+    } else if (fps >= 55 && lodDensity < density) {
+      setLodDensity(prev => Math.min(density, prev + 1));
+      console.log('🔺 DNA LOD: increased to', lodDensity + 1);
+    }
+  }, [fps, density, lodDensity]);
+  
+  // Calculate grid dimensions
+  const gridSize = lodDensity;
+  const spacing = cubeSize / gridSize;
+
+  // Calculate cube positions (hollow center)
   const positions = useMemo(() => {
     const pos: THREE.Vector3[] = [];
-    const step = cubeSize / density;
-    const offset = cubeSize / 2 - step / 2;
+    const halfGrid = gridSize / 2;
     
-    for (let x = 0; x < density; x++) {
-      for (let y = 0; y < density; y++) {
-        for (let z = 0; z < density; z++) {
-          // Skip center cells to create depth
-          if (
-            (x === Math.floor(density / 2) || x === Math.floor(density / 2) - 1) &&
-            (y === Math.floor(density / 2) || y === Math.floor(density / 2) - 1) &&
-            (z === Math.floor(density / 2) || z === Math.floor(density / 2) - 1)
-          ) {
-            continue;
-          }
+    for (let x = 0; x < gridSize; x++) {
+      for (let y = 0; y < gridSize; y++) {
+        for (let z = 0; z < gridSize; z++) {
+          // Skip center region for hollow effect
+          const isCenterX = Math.abs(x - halfGrid + 0.5) < 1;
+          const isCenterY = Math.abs(y - halfGrid + 0.5) < 1;
+          const isCenterZ = Math.abs(z - halfGrid + 0.5) < 1;
           
-          pos.push(
-            new THREE.Vector3(
-              x * step - offset,
-              y * step - offset,
-              z * step - offset
-            )
-          );
+          if (isCenterX && isCenterY && isCenterZ) continue;
+          
+          pos.push(new THREE.Vector3(
+            (x - halfGrid + 0.5) * spacing,
+            (y - halfGrid + 0.5) * spacing,
+            (z - halfGrid + 0.5) * spacing
+          ));
         }
       }
     }
     return pos;
-  }, [density, cubeSize]);
+  }, [gridSize, spacing]);
 
-  const cellSize = useMemo(() => cubeSize / density * 0.75, [cubeSize, density]);
-  
-  // Glass material for inner cells
-  const material = useMemo(() => {
-    return createInnerGlassMaterial(0.08);
-  }, []);
+  const cellSize = spacing * 0.75;
+  const material = useMemo(() => createInnerGlassMaterial(0.08), []);
 
   // Setup instances
   useEffect(() => {
-    if (!meshRef.current) return;
+    if (!instancedMeshRef.current) return;
     
+    const dummy = new THREE.Object3D();
     positions.forEach((pos, i) => {
       dummy.position.copy(pos);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
-      meshRef.current!.setMatrixAt(i, dummy.matrix);
+      instancedMeshRef.current!.setMatrixAt(i, dummy.matrix);
     });
     
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  }, [positions, dummy]);
+    instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+  }, [positions]);
 
-  // Animate shimmer effect
-  useFrame((state) => {
-    if (!meshRef.current || reducedMotion) return;
+  // Measure FPS and animate cubes
+  useFrame((state, delta) => {
+    if (!instancedMeshRef.current) return;
+    
+    const currentFps = 1 / delta;
+    setFps(prev => prev * 0.95 + currentFps * 0.05); // Smooth average
+    
+    if (reducedMotion) return;
     
     const time = state.clock.elapsedTime;
-    
-    positions.forEach((pos, i) => {
-      dummy.position.copy(pos);
+    const matrix = new THREE.Matrix4();
+    const tempScale = new THREE.Vector3();
+    const dummy = new THREE.Object3D();
+
+    positions.forEach((pos, index) => {
+      const x = pos.x / spacing;
+      const y = pos.y / spacing;
+      const z = pos.z / spacing;
       
-      // Subtle pulse based on position and time
-      const distance = pos.length();
-      const pulse = Math.sin(time * 1.5 + distance * 0.5) * 0.05 + 1.0;
-      dummy.scale.setScalar(pulse);
+      // Subtle pulse
+      const pulseIntensity = Math.sin(time * 1.5 + (x + y + z) * 0.5) * 0.5 + 0.5;
+      const baseHue = (x * 0.1 + y * 0.1 + z * 0.1) % 1;
       
-      dummy.updateMatrix();
-      meshRef.current!.setMatrixAt(i, dummy.matrix);
+      // Check if this cube is highlighted
+      const isHighlighted = highlightedTarget && 
+        Math.abs(x - highlightedTarget.x) < 0.1 &&
+        Math.abs(y - highlightedTarget.y) < 0.1 &&
+        Math.abs(z - highlightedTarget.z) < 0.1;
       
-      // Dynamic color per instance
-      const hue = (distance * 0.1 + time * 0.05) % 1;
-      const color = new THREE.Color().setHSL(hue, 0.8, 0.6);
-      meshRef.current!.setColorAt(i, color);
+      const scaleFactor = isHighlighted ? 1.3 : 1 + pulseIntensity * 0.05;
+      
+      // Dynamic color shift (boost if highlighted)
+      const hue = isHighlighted ? 0.5 : (baseHue + time * 0.1 + index * 0.01) % 1;
+      const saturation = isHighlighted ? 1.0 : 0.8;
+      const lightness = isHighlighted ? 0.8 : 0.6;
+      const color = new THREE.Color().setHSL(hue, saturation, lightness);
+      
+      matrix.makeTranslation(pos.x, pos.y, pos.z);
+      matrix.scale(tempScale.set(scaleFactor, scaleFactor, scaleFactor));
+      instancedMeshRef.current!.setMatrixAt(index, matrix);
+      instancedMeshRef.current!.setColorAt(index, color);
     });
     
-    meshRef.current.instanceMatrix.needsUpdate = true;
-    if (meshRef.current.instanceColor) {
-      meshRef.current.instanceColor.needsUpdate = true;
+    instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+    if (instancedMeshRef.current.instanceColor) {
+      instancedMeshRef.current.instanceColor.needsUpdate = true;
     }
   });
 
   return (
     <>
-      <instancedMesh ref={meshRef} args={[undefined, undefined, positions.length]} material={material}>
+      <instancedMesh 
+        ref={instancedMeshRef} 
+        args={[undefined, undefined, positions.length]} 
+        material={material}
+      >
         <boxGeometry args={[cellSize, cellSize, cellSize]} />
       </instancedMesh>
       
-      {/* Add edges to some inner cells for extra detail */}
-      {positions.slice(0, Math.min(12, positions.length)).map((pos, idx) => (
-        <InnerCellEdges key={`cell-${idx}`} position={pos} size={cellSize} index={idx} />
-      ))}
+      {/* Edge details for select cubes */}
+      <group ref={edgesGroupRef}>
+        {positions.slice(0, Math.min(12, positions.length)).map((pos, idx) => (
+          <InnerCellEdges key={`cell-${idx}`} position={pos} size={cellSize} index={idx} />
+        ))}
+      </group>
     </>
   );
 };
