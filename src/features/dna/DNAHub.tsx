@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { ARCHETYPE_CONFIGS } from './dnaTypes';
 import type { DNAProfile } from './dnaTypes';
 import { TesseractDNA } from './TesseractDNA';
-import { DNAHyperCube } from './visuals/DNAHyperCube';
+import { RubikDNACube } from './visuals/RubikDNACube';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
 import { ArchetypeIcon } from './ArchetypeIcon';
 import { format } from 'date-fns';
@@ -242,7 +242,7 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                 <div className="flex justify-center relative -mx-6 md:-mx-12">
                   {enableTesseract ? (
                     <div className="w-full h-[700px] relative overflow-hidden">
-                      <DNAHyperCube reducedMotion={reduceAnimations} />
+                      <RubikDNACube />
                     </div>
                   ) : (
                     <TesseractDNA 
