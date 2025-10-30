@@ -11,8 +11,7 @@ in float vTheta;
 uniform float uTime;
 uniform float uSeed;
 
-layout(location = 0) out vec4 fragColor;
-layout(location = 1) out vec4 fragBloom;
+out vec4 fragColor;
 
 // Noise for hotspots
 float hash(vec2 p) {
@@ -62,14 +61,6 @@ void main() {
     
     // Output
     fragColor = vec4(finalColor, edge * 0.9 + hotspot);
-    
-    // Bloom pass (only bright areas)
-    float brightness = max(max(finalColor.r, finalColor.g), finalColor.b);
-    if (brightness > 0.6) {
-        fragBloom = vec4(finalColor * (brightness - 0.6) * 2.0, 1.0);
-    } else {
-        fragBloom = vec4(0.0);
-    }
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
