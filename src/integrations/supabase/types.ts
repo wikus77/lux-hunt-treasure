@@ -1741,6 +1741,89 @@ export type Database = {
         }
         Relationships: []
       }
+      dna_rubik_moves: {
+        Row: {
+          clockwise: boolean
+          created_at: string
+          cube_after: string
+          cube_before: string
+          face: string
+          id: string
+          session_id: string
+          slice_index: number
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          clockwise?: boolean
+          created_at?: string
+          cube_after: string
+          cube_before: string
+          face: string
+          id?: string
+          session_id: string
+          slice_index: number
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          clockwise?: boolean
+          created_at?: string
+          cube_after?: string
+          cube_before?: string
+          face?: string
+          id?: string
+          session_id?: string
+          slice_index?: number
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_rubik_moves_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "dna_rubik_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dna_rubik_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          final_state: string | null
+          id: string
+          initial_state: string
+          is_solved: boolean
+          moves_count: number
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          final_state?: string | null
+          id?: string
+          initial_state: string
+          is_solved?: boolean
+          moves_count?: number
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          final_state?: string | null
+          id?: string
+          initial_state?: string
+          is_solved?: boolean
+          moves_count?: number
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       event_tickets: {
         Row: {
           created_at: string | null
@@ -6989,6 +7072,7 @@ export type Database = {
         Returns: undefined
       }
       validate_buzz_user_id: { Args: { p_user_id: string }; Returns: boolean }
+      validate_cube96: { Args: { p: string }; Returns: boolean }
       validate_progressive_pricing: {
         Args: {
           p_generation: number
