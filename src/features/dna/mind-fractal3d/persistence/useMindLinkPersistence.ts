@@ -11,6 +11,13 @@ interface LinkResult {
   milestone_level: number;
 }
 
+interface LoadedLink {
+  node_a: number;
+  node_b: number;
+  theme: NodeTheme;
+  intensity: number;
+}
+
 export function useMindLinkPersistence() {
   /**
    * Track link creation and check for milestone
@@ -51,10 +58,10 @@ export function useMindLinkPersistence() {
   /**
    * Load user's links for a given seed
    */
-  const loadLinks = useCallback(async (seed: number) => {
+  const loadLinks = useCallback(async (seed: number): Promise<LoadedLink[]> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!user) return [];
 
       const { data: links } = await supabase
         .from('dna_mind_links' as any)
@@ -62,7 +69,7 @@ export function useMindLinkPersistence() {
         .eq('user_id', user.id)
         .eq('seed', seed);
 
-      return links || [];
+      return (links || []) as unknown as LoadedLink[];
     } catch (error) {
       console.warn('[MF3D][Link] Failed to load:', error);
       return [];
