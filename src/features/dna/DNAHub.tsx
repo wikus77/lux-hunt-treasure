@@ -238,10 +238,10 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                   />
                 </div>
 
-                {/* Tesseract 3D Visualizer - Full bleed, floating in space */}
-                <div className="flex justify-center relative -mx-6 md:-mx-8">
+                {/* Tesseract 3D Visualizer - Full bleed in deep space */}
+                <div className="flex justify-center relative -mx-6 md:-mx-12">
                   {enableTesseract ? (
-                    <div className="w-full h-[600px] bg-gradient-to-b from-black via-background/50 to-black">
+                    <div className="w-full h-[700px] relative overflow-hidden">
                       <DNAHyperCube reducedMotion={reduceAnimations} />
                     </div>
                   ) : (
