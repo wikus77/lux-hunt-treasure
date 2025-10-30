@@ -1741,6 +1741,77 @@ export type Database = {
         }
         Relationships: []
       }
+      dna_neural_moves: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+          payload: Json
+          session_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+          payload: Json
+          session_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+          payload?: Json
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_neural_moves_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "dna_neural_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dna_neural_sessions: {
+        Row: {
+          elapsed_seconds: number
+          id: string
+          last_state: Json
+          moves: number
+          pairs_count: number
+          seed: string
+          solved: boolean
+          solved_at: string | null
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          elapsed_seconds?: number
+          id?: string
+          last_state?: Json
+          moves?: number
+          pairs_count: number
+          seed: string
+          solved?: boolean
+          solved_at?: string | null
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          elapsed_seconds?: number
+          id?: string
+          last_state?: Json
+          moves?: number
+          pairs_count?: number
+          seed?: string
+          solved?: boolean
+          solved_at?: string | null
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dna_rubik_moves: {
         Row: {
           created_at: string
@@ -6950,6 +7021,37 @@ export type Database = {
       reset_user_mission_full: {
         Args: { user_id_input: string }
         Returns: Json
+      }
+      rpc_neural_complete: { Args: { p_session: string }; Returns: undefined }
+      rpc_neural_save: {
+        Args: {
+          p_elapsed: number
+          p_moves: number
+          p_session: string
+          p_state: Json
+        }
+        Returns: undefined
+      }
+      rpc_neural_start: {
+        Args: { p_pairs?: number }
+        Returns: {
+          elapsed_seconds: number
+          id: string
+          last_state: Json
+          moves: number
+          pairs_count: number
+          seed: string
+          solved: boolean
+          solved_at: string | null
+          started_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "dna_neural_sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       rpc_pulse_decay_tick: {
         Args: { p_decay_percent?: number }

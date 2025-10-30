@@ -10,6 +10,7 @@ import type { DNAProfile } from './dnaTypes';
 import { TesseractDNA } from './TesseractDNA';
 import { RubikDNACube } from './visuals/RubikDNACube';
 import { Rubik4Scene } from './rubik/Rubik4Scene';
+import { NeuralLinksScene } from './neural/NeuralLinksScene';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
 import { ArchetypeIcon } from './ArchetypeIcon';
 import { format } from 'date-fns';
@@ -49,6 +50,9 @@ export const DNAHub: React.FC<DNAHubProps> = ({
   const [showSkippedPill, setShowSkippedPill] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [reduceAnimations, setReduceAnimations] = useState(false);
+  
+  // Feature flag: Neural Links puzzle (replaces Rubik)
+  const enableNeuralLinksDNA = true;
   const [enableTesseract] = useState(true); // Enable new HyperCube
   const [enableRubikDNA] = useState(true); // Enable Rubik 4x4 neon wireframe
   const { getCurrentUser } = useUnifiedAuth();
@@ -240,9 +244,13 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                   />
                 </div>
 
-                {/* Rubik 4x4 Neon Wireframe - Full bleed in deep space */}
+                {/* Neural Links Puzzle - Full bleed in deep space */}
                 <div className="flex justify-center relative -mx-6 md:-mx-12">
-                  {enableRubikDNA ? (
+                  {enableNeuralLinksDNA ? (
+                    <div className="w-full h-[700px] relative overflow-hidden">
+                      <NeuralLinksScene />
+                    </div>
+                  ) : enableRubikDNA ? (
                     <div className="w-full h-[700px] relative overflow-hidden">
                       <Rubik4Scene />
                     </div>
@@ -253,7 +261,7 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                   ) : (
                     <TesseractDNA
                       profile={dnaProfile} 
-                      size={400} 
+                      size={400}
                       disableTilt={reduceAnimations}
                     />
                   )}
