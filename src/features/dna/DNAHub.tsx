@@ -11,7 +11,8 @@ import { TesseractDNA } from './TesseractDNA';
 import { RubikDNACube } from './visuals/RubikDNACube';
 import { Rubik4Scene } from './rubik/Rubik4Scene';
 import { NeuralLinksScene } from './neural/NeuralLinksScene';
-import { MindFractalScene } from './mind-fractal/MindFractalScene';
+import { MindFractalScene } from './mind-fractal-legacy/MindFractalScene';
+import { MindFractalLite } from './mind-fractal-lite/MindFractalLite';
 import { DNAErrorBoundary } from './common/DNAErrorBoundary';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
 import { ArchetypeIcon } from './ArchetypeIcon';
@@ -54,6 +55,7 @@ export const DNAHub: React.FC<DNAHubProps> = ({
   const [reduceAnimations, setReduceAnimations] = useState(false);
   
   // Feature flags: DNA Visualizations
+  const USE_MIND_FRACTAL_LITE = true; // Use Lite version (Three.js)
   const enableMindFractal = true; // Mind Fractal wireframe tunnel
   const enableNeuralLinksDNA = true; // Neural Links puzzle
   const [enableTesseract] = useState(true); // Enable new HyperCube
@@ -252,7 +254,11 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                   {enableMindFractal ? (
                     <div className="w-full h-[700px] relative overflow-hidden">
                       <DNAErrorBoundary>
-                        <MindFractalScene />
+                        {USE_MIND_FRACTAL_LITE ? (
+                          <MindFractalLite />
+                        ) : (
+                          <MindFractalScene />
+                        )}
                       </DNAErrorBoundary>
                     </div>
                   ) : enableNeuralLinksDNA ? (
