@@ -139,7 +139,8 @@ function createTunnelGeometry(gl: WebGL2RenderingContext, rings: number, segment
 function createFramebuffer(gl: WebGL2RenderingContext, width: number, height: number) {
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.FLOAT, null);
+  // Use RGBA8 + UNSIGNED_BYTE for iOS compatibility
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -174,7 +175,7 @@ export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
 
   // Create programs
   const fullscreenVert = `#version 300 es
-    in vec2 aPosition;
+    layout(location = 0) in vec2 aPosition;
     out vec2 vUv;
     void main() {
       vUv = aPosition * 0.5 + 0.5;
@@ -279,17 +280,20 @@ export function renderFrame(r: Renderer, state: { time: number; seed: number; co
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, r.buffers.tunnel.indices);
   gl.drawElements(gl.TRIANGLES, r.buffers.tunnel.count, gl.UNSIGNED_SHORT, 0);
 
-  // ===== PASS 2: Extract bright areas for bloom =====
+  // ===== PASS 2: Threshold - Extract bright areas from scene =====
+  const bloomWidth = Math.floor(canvas.width / 2);
+  const bloomHeight = Math.floor(canvas.height / 2);
+  
   gl.bindFramebuffer(gl.FRAMEBUFFER, r.fbos.bloom);
-  gl.viewport(0, 0, Math.floor(canvas.width / 2), Math.floor(canvas.height / 2));
+  gl.viewport(0, 0, bloomWidth, bloomHeight);
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.disable(gl.DEPTH_TEST);
   
   gl.useProgram(r.programs.postBloom);
-  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uPass'), 0); // Threshold pass
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uPass'), 0); // Threshold
   gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uScene'), 0);
-  gl.uniform2f(gl.getUniformLocation(r.programs.postBloom, 'uResolution'), canvas.width, canvas.height);
+  gl.uniform2f(gl.getUniformLocation(r.programs.postBloom, 'uResolution'), bloomWidth, bloomHeight);
   
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, r.textures.scene);
@@ -298,17 +302,28 @@ export function renderFrame(r: Renderer, state: { time: number; seed: number; co
 
   // ===== PASS 3: Horizontal blur =====
   gl.bindFramebuffer(gl.FRAMEBUFFER, r.fbos.bloomTemp);
-  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uPass'), 0); // Horizontal
+  gl.viewport(0, 0, bloomWidth, bloomHeight);
+  
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uPass'), 1); // Blur H
   gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uBloom'), 0);
+  gl.uniform2f(gl.getUniformLocation(r.programs.postBloom, 'uResolution'), bloomWidth, bloomHeight);
+  
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, r.textures.bloom);
+  
   drawFullscreenQuad(gl, r.buffers.quad.vao);
 
   // ===== PASS 4: Vertical blur =====
   gl.bindFramebuffer(gl.FRAMEBUFFER, r.fbos.bloom);
-  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uPass'), 1); // Vertical
+  gl.viewport(0, 0, bloomWidth, bloomHeight);
+  
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uPass'), 2); // Blur V
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uBloom'), 0);
+  gl.uniform2f(gl.getUniformLocation(r.programs.postBloom, 'uResolution'), bloomWidth, bloomHeight);
+  
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, r.textures.bloomTemp);
+  
   drawFullscreenQuad(gl, r.buffers.quad.vao);
 
   // ===== PASS 5: Composite to screen =====
@@ -317,10 +332,11 @@ export function renderFrame(r: Renderer, state: { time: number; seed: number; co
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   
-  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uPass'), 2); // Composite
-  gl.uniform1f(gl.getUniformLocation(r.programs.postBloom, 'uBloomIntensity'), 0.85);
+  gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uPass'), 3); // Composite
+  gl.uniform1f(gl.getUniformLocation(r.programs.postBloom, 'uBloomIntensity'), 0.7);
   gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uScene'), 0);
   gl.uniform1i(gl.getUniformLocation(r.programs.postBloom, 'uBloom'), 1);
+  gl.uniform2f(gl.getUniformLocation(r.programs.postBloom, 'uResolution'), canvas.width, canvas.height);
   
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, r.textures.scene);

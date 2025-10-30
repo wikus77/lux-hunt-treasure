@@ -7,7 +7,7 @@ uniform sampler2D uScene;
 uniform sampler2D uBloom;
 uniform vec2 uResolution;
 uniform float uBloomIntensity;
-uniform int uPass; // 0=horizontal, 1=vertical, 2=composite
+uniform int uPass; // 0=threshold, 1=blur_h, 2=blur_v, 3=composite
 
 in vec2 vUv;
 out vec4 fragColor;
@@ -29,13 +29,22 @@ void main() {
     vec2 uv = gl_FragCoord.xy / uResolution;
     
     if (uPass == 0) {
-        // Horizontal blur
-        fragColor = blur(uBloom, uv, vec2(1.0, 0.0));
+        // THRESHOLD: Extract bright areas from scene
+        vec4 sceneColor = texture(uScene, uv);
+        float brightness = max(max(sceneColor.r, sceneColor.g), sceneColor.b);
+        if (brightness > 0.5) {
+            fragColor = vec4(sceneColor.rgb * (brightness - 0.5) * 2.0, 1.0);
+        } else {
+            fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        }
     } else if (uPass == 1) {
-        // Vertical blur
+        // BLUR HORIZONTAL
+        fragColor = blur(uBloom, uv, vec2(1.0, 0.0));
+    } else if (uPass == 2) {
+        // BLUR VERTICAL
         fragColor = blur(uBloom, uv, vec2(0.0, 1.0));
     } else {
-        // Composite: scene + bloom
+        // COMPOSITE: scene + bloom
         vec4 sceneColor = texture(uScene, uv);
         vec4 bloomColor = texture(uBloom, uv);
         

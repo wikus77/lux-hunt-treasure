@@ -26,6 +26,15 @@ export const MindFractalScene: React.FC = () => {
     reset
   } = useMindFractalGame(userId);
 
+  // Use ref to avoid re-init loop
+  const gameRef = useRef(gameState);
+  
+  // Sync gameRef with gameState without triggering re-init
+  useEffect(() => {
+    gameRef.current = gameState;
+  }, [gameState]);
+
+  // Initialize once on mount
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -52,15 +61,16 @@ export const MindFractalScene: React.FC = () => {
       setIsLoading(false);
     });
 
-    // Animation loop
+    // Animation loop - reads gameRef.current without re-creating
     const animate = (time: number) => {
       if (!renderer) return;
       
+      const currentGame = gameRef.current;
       renderFrame(renderer, {
         time: time * 0.001,
-        seed: gameState.seed,
-        connections: gameState.connections,
-        moves: gameState.moves
+        seed: currentGame.seed,
+        connections: currentGame.connections,
+        moves: currentGame.moves
       });
 
       animationFrameRef.current = requestAnimationFrame(animate);
@@ -76,7 +86,7 @@ export const MindFractalScene: React.FC = () => {
       cleanupRenderer();
       audioEngineRef.current?.destroy();
     };
-  }, [gameState]);
+  }, []); // Only run once on mount
 
   // Handle interactions
   const handleCanvasClick = (e: React.MouseEvent) => {
@@ -115,7 +125,7 @@ export const MindFractalScene: React.FC = () => {
   }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-[#0b1021]">
+    <div className="relative w-full h-full overflow-hidden bg-[#0b1021]">
       <canvas
         ref={canvasRef}
         className="w-full h-full cursor-pointer touch-none"
