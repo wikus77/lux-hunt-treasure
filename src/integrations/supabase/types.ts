@@ -6755,6 +6755,10 @@ export type Database = {
         Args: { p_mission_id: string; p_user_id: string }
         Returns: undefined
       }
+      increment_dna_attribute: {
+        Args: { p_attribute: string; p_user: string }
+        Returns: boolean
+      }
       increment_map_generation_counter: {
         Args: { p_user_id: string; p_week: number }
         Returns: number
