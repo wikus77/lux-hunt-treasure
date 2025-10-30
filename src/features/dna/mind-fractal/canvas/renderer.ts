@@ -232,6 +232,44 @@ export function initRenderer(canvas: HTMLCanvasElement): Renderer | null {
   return renderer;
 }
 
+export function resizeRenderer() {
+  if (!renderer) return;
+  const { gl } = renderer;
+  const canvas = gl.canvas as HTMLCanvasElement;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const newWidth = Math.floor(canvas.clientWidth * dpr);
+  const newHeight = Math.floor(canvas.clientHeight * dpr);
+
+  if (canvas.width === newWidth && canvas.height === newHeight) return;
+
+  // Resize canvas and viewport
+  canvas.width = newWidth;
+  canvas.height = newHeight;
+  gl.viewport(0, 0, newWidth, newHeight);
+
+  // Recreate FBOs
+  gl.deleteFramebuffer(renderer.fbos.scene);
+  gl.deleteFramebuffer(renderer.fbos.bloom);
+  gl.deleteFramebuffer(renderer.fbos.bloomTemp);
+  gl.deleteTexture(renderer.textures.scene);
+  gl.deleteTexture(renderer.textures.bloom);
+  gl.deleteTexture(renderer.textures.bloomTemp);
+
+  const sceneFBO = createFramebuffer(gl, newWidth, newHeight);
+  const bloomFBO = createFramebuffer(gl, Math.floor(newWidth / 2), Math.floor(newHeight / 2));
+  const bloomTempFBO = createFramebuffer(gl, Math.floor(newWidth / 2), Math.floor(newHeight / 2));
+
+  renderer.fbos.scene = sceneFBO.fbo;
+  renderer.fbos.bloom = bloomFBO.fbo;
+  renderer.fbos.bloomTemp = bloomTempFBO.fbo;
+  renderer.textures.scene = sceneFBO.texture;
+  renderer.textures.bloom = bloomFBO.texture;
+  renderer.textures.bloomTemp = bloomTempFBO.texture;
+
+  console.log('[Mind Fractal] Renderer resized', { w: newWidth, h: newHeight });
+}
+
+
 export function renderFrame(r: Renderer, state: { time: number; seed: number; connections: number; moves: number }) {
   const { gl } = r;
   const canvas = gl.canvas as HTMLCanvasElement;

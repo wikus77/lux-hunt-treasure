@@ -3,7 +3,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { initRenderer, renderFrame, cleanupRenderer } from './canvas/renderer';
+import { initRenderer, renderFrame, cleanupRenderer, resizeRenderer } from './canvas/renderer';
 import { useMindFractalGame } from './logic/useMindFractalGame';
 import { AudioEngine } from './audio/AudioEngine';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
@@ -36,8 +36,13 @@ export const MindFractalScene: React.FC = () => {
 
   // Initialize once on mount
   useEffect(() => {
+    console.log('[MindFractal] init');
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      // Ensure canvas is rendered; loading overlay will cover it
+      setIsLoading(true);
+      return;
+    }
 
     // Check WebGL2 support
     const gl = canvas.getContext('webgl2');
@@ -66,8 +71,6 @@ export const MindFractalScene: React.FC = () => {
 
     // Animation loop - reads gameRef.current without re-creating
     const animate = (time: number) => {
-      if (!renderer) return;
-      
       const currentGame = gameRef.current;
       renderFrame(renderer, {
         time: time * 0.001,
@@ -79,6 +82,7 @@ export const MindFractalScene: React.FC = () => {
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
+    console.log('[MindFractal] raf start');
     animationFrameRef.current = requestAnimationFrame(animate);
 
     // Cleanup
@@ -90,6 +94,13 @@ export const MindFractalScene: React.FC = () => {
       audioEngineRef.current?.destroy();
     };
   }, []); // Only run once on mount
+
+  // Resize handler
+  useEffect(() => {
+    const onResize = () => resizeRenderer();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // Handle interactions
   const handleCanvasClick = (e: React.MouseEvent) => {
