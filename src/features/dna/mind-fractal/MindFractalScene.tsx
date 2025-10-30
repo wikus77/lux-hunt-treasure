@@ -264,6 +264,8 @@ export const MindFractalScene: React.FC = () => {
         className="w-full h-full cursor-pointer touch-none"
         onClick={handleCanvasClick}
         style={{ display: 'block' }}
+      />
+
       {errorOverlay && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="text-center max-w-md p-6">
@@ -274,7 +276,6 @@ export const MindFractalScene: React.FC = () => {
           </div>
         </div>
       )}
-
 
       {/* HUD */}
       <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
