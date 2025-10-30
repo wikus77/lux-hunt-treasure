@@ -7,18 +7,22 @@ export class AudioEngine {
   private masterGain: GainNode | null = null;
   private ambientOsc: OscillatorNode | null = null;
   private muted: boolean = false;
+  private initialized: boolean = false;
 
   async init() {
+    // Gracefully handle audio initialization failures
     try {
-      this.ctx = new AudioContext();
+      this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
       this.masterGain = this.ctx.createGain();
       this.masterGain.connect(this.ctx.destination);
       this.masterGain.gain.value = 0.3;
 
       // Start ambient drone
       this.startAmbientDrone();
+      this.initialized = true;
     } catch (error) {
-      console.warn('Audio initialization failed:', error);
+      console.warn('Audio initialization failed (graceful fallback):', error);
+      this.initialized = false;
     }
   }
 
@@ -38,7 +42,7 @@ export class AudioEngine {
   }
 
   playPulse() {
-    if (!this.ctx || !this.masterGain || this.muted) return;
+    if (!this.ctx || !this.masterGain || this.muted || !this.initialized) return;
 
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -59,7 +63,7 @@ export class AudioEngine {
   }
 
   playConnection() {
-    if (!this.ctx || !this.masterGain || this.muted) return;
+    if (!this.ctx || !this.masterGain || this.muted || !this.initialized) return;
 
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -80,7 +84,7 @@ export class AudioEngine {
   }
 
   playVictory() {
-    if (!this.ctx || !this.masterGain || this.muted) return;
+    if (!this.ctx || !this.masterGain || this.muted || !this.initialized) return;
 
     const now = this.ctx.currentTime;
     const frequencies = [523.25, 659.25, 783.99]; // C-E-G major chord

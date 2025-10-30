@@ -11,6 +11,7 @@ import { TesseractDNA } from './TesseractDNA';
 import { RubikDNACube } from './visuals/RubikDNACube';
 import { Rubik4Scene } from './rubik/Rubik4Scene';
 import { NeuralLinksScene } from './neural/NeuralLinksScene';
+import { MindFractalScene } from './mind-fractal/MindFractalScene';
 import { DNAErrorBoundary } from './common/DNAErrorBoundary';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
 import { ArchetypeIcon } from './ArchetypeIcon';
@@ -52,8 +53,9 @@ export const DNAHub: React.FC<DNAHubProps> = ({
   const [showHint, setShowHint] = useState(false);
   const [reduceAnimations, setReduceAnimations] = useState(false);
   
-  // Feature flag: Neural Links puzzle (replaces Rubik)
-  const enableNeuralLinksDNA = true;
+  // Feature flags: DNA Visualizations
+  const enableMindFractal = false; // Mind Fractal wireframe tunnel
+  const enableNeuralLinksDNA = true; // Neural Links puzzle
   const [enableTesseract] = useState(true); // Enable new HyperCube
   const [enableRubikDNA] = useState(true); // Enable Rubik 4x4 neon wireframe
   const { getCurrentUser } = useUnifiedAuth();
@@ -245,9 +247,15 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                   />
                 </div>
 
-                {/* Neural Links Puzzle - Full bleed in deep space */}
+                {/* DNA Visualization - Full bleed in deep space */}
                 <div className="flex justify-center relative -mx-6 md:-mx-12">
-                  {enableNeuralLinksDNA ? (
+                  {enableMindFractal ? (
+                    <div className="w-full h-[700px] relative overflow-hidden">
+                      <DNAErrorBoundary>
+                        <MindFractalScene />
+                      </DNAErrorBoundary>
+                    </div>
+                  ) : enableNeuralLinksDNA ? (
                     <div className="w-full h-[700px] relative overflow-hidden">
                       <DNAErrorBoundary>
                         <NeuralLinksScene />
