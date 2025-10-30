@@ -38,12 +38,13 @@ export function useDNATargets(userId: string | null) {
     const fetchDNAVisual = async () => {
       try {
         setLoading(true);
+        // Call the RPC function directly
         const { data: result, error: rpcError } = await supabase
-          .rpc('get_agent_dna_visual', { user_id: userId });
+          .rpc('get_agent_dna_visual' as any, { user_id: userId }) as { data: any; error: any };
 
         if (rpcError) throw rpcError;
         
-        setData(result as DNAVisualData);
+        setData(result as unknown as DNAVisualData);
         setError(null);
       } catch (err) {
         console.error('❌ Failed to fetch DNA visual data:', err);
