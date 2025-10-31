@@ -120,6 +120,16 @@ export class NodeLayer {
     this.scene.add(this.instancedMesh);
   }
 
+  /**
+   * Public accessor for the instanced mesh
+   */
+  get mesh(): THREE.InstancedMesh {
+    if (!this.instancedMesh) {
+      throw new Error('[NodeLayer] mesh accessed before initialization');
+    }
+    return this.instancedMesh;
+  }
+
   raycast(raycaster: THREE.Raycaster): number | null {
     if (!this.instancedMesh) return null;
 
