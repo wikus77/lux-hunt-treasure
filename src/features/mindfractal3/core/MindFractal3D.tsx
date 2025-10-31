@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { buildFractalTunnel } from '../geometry/buildFractalTunnel';
 import { NodeLayer } from '../nodes/NodeLayer';
 import { LinkEngine } from '../nodes/LinkEngine';

@@ -35,6 +35,7 @@ export class NodeLayer {
   private nodes: Node[] = [];
   private geometry: THREE.BufferGeometry;
   private seed: number;
+  private hoveredNode: number | null = null;
 
   constructor(tunnelGeometry: THREE.BufferGeometry, nodeCount: number, seed: number) {
     this.root = new THREE.Group();
@@ -153,6 +154,42 @@ export class NodeLayer {
 
   getNode(id: number): Node | null {
     return this.nodes[id] || null;
+  }
+
+  get mesh(): THREE.InstancedMesh | null {
+    return this.instancedMesh;
+  }
+
+  setHover(id: number | null): void {
+    if (id === this.hoveredNode) return;
+    
+    // Reset previous hover
+    if (this.hoveredNode !== null && this.instancedMesh) {
+      const prevNode = this.nodes[this.hoveredNode];
+      if (prevNode && prevNode.pulse === 0) {
+        const matrix = new THREE.Matrix4();
+        const q = new THREE.Quaternion();
+        const s = new THREE.Vector3(1, 1, 1);
+        matrix.compose(prevNode.position, q, s);
+        this.instancedMesh.setMatrixAt(this.hoveredNode, matrix);
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
+      }
+    }
+
+    this.hoveredNode = id;
+
+    // Apply new hover
+    if (id !== null && this.instancedMesh) {
+      const node = this.nodes[id];
+      if (node) {
+        const matrix = new THREE.Matrix4();
+        const q = new THREE.Quaternion();
+        const s = new THREE.Vector3(1.15, 1.15, 1.15);
+        matrix.compose(node.position, q, s);
+        this.instancedMesh.setMatrixAt(id, matrix);
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
+      }
+    }
   }
 
   update(deltaTime: number, reduced: boolean): void {

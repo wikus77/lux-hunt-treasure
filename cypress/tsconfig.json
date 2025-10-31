@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["cypress", "@testing-library/cypress"]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "../src/features/mindfractal3/test/**/*.ts"
+  ]
+}
