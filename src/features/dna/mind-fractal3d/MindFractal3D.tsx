@@ -143,10 +143,11 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     });
 
     // === QUALITY SETTINGS ===
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     let qualityLevel: 'high' | 'mobile' | 'low' = reduced ? 'low' : 'mobile';
     const qualityPresets = {
-      high: { rings: 96, segments: 64 },
-      mobile: { rings: 80, segments: 60 },
+      high: { rings: isIOS ? 60 : 96, segments: 64 },
+      mobile: { rings: isIOS ? 60 : 80, segments: 60 },
       low: { rings: 56, segments: 40 }
     };
 
@@ -315,6 +316,13 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         // Create visual arc with white spike
         scheduler.spawnLinkArc(nodeA.position, node.position);
         
+        // Play short link sound
+        try {
+          const audio = new Audio('/sounds/chime.mp3');
+          audio.volume = 0.3;
+          audio.play().catch(() => {});
+        } catch {}
+        
         // Mark both as linked
         nodeLayer.setNodeState(selectedNodeA, NodeState.LINKED);
         nodeLayer.setNodeState(nodeId, NodeState.LINKED);
@@ -400,11 +408,12 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
       // Update systems
       controls.update();
-      arcPool.update(deltaTime);
+      fieldSweep.update();
+      const fieldIntensity = fieldSweep.getIntensity();
+      arcPool.update(deltaTime, fieldIntensity);
       nodeLayer.update(elapsedTime, hoveredNode);
       scheduler.adjustForFPS(avgFPS, deltaTime);
       scheduler.update(deltaTime, reduced);
-      fieldSweep.update();
       
       // Field sweep effect on tunnel
       if (tunnelMesh) {
