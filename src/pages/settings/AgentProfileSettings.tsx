@@ -1,475 +1,116 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useAuth } from '@/hooks/use-auth';
-import { useProfileData } from '@/hooks/useProfileData';
-import { useProfileRealtime } from '@/hooks/useProfileRealtime';
-import { useGlobalProfileSync } from '@/hooks/useGlobalProfileSync';
-import { useProfileImage } from '@/hooks/useProfileImage';
-import { useToast } from '@/hooks/use-toast';
-import { useWouterNavigation } from '@/hooks/useWouterNavigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
-import { Copy, Upload, User, Mail, IdCard } from 'lucide-react';
-import UnifiedHeader from '@/components/layout/UnifiedHeader';
-import BottomNavigation from '@/components/layout/BottomNavigation';
-import { DailyCheckInButton } from '@/components/gamification/DailyCheckInButton';
-import { XpLevelProgress } from '@/components/gamification/XpLevelProgress';
-import { RankHighlight } from '@/components/gamification/RankHighlight';
-import { BadgeGallery } from '@/components/gamification/BadgeGallery';
-import { AchievementTimeline } from '@/components/gamification/AchievementTimeline';
-import { WeeklyLeaderboard } from '@/components/gamification/WeeklyLeaderboard';
-import { BadgeUnlockedNotification } from '@/components/gamification/BadgeUnlockedNotification';
-import { RewardBadgeCard } from '@/components/gamification/RewardBadgeCard';
-import { useXpSystem } from '@/hooks/useXpSystem';
-import { usePulseEnergy } from '@/hooks/usePulseEnergy';
-import type { AgentRank } from '@/hooks/usePulseEnergy';
-import PulseEnergyBadge from '@/components/pulse/PulseEnergyBadge';
-import PulseEnergyProgressBar from '@/components/pulse/PulseEnergyProgressBar';
-import RankUpModal from '@/components/pulse/RankUpModal';
 
-const AgentProfileSettings: React.FC = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const { profileData } = useProfileData();
+import { useState, useEffect } from "react";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
+import ProfileLayout from "@/components/layout/ProfileLayout";
+import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
+import ProfileHeader from "@/components/profile/ProfileHeader";
+import ProfileInfo from "@/components/profile/ProfileInfo";
+import ProfileTabs from "@/components/profile/ProfileTabs";
+import ReferralCodeSection from "@/components/profile/ReferralCodeSection";
+import { useProfileData } from "@/hooks/useProfileData";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useNotificationManager } from "@/hooks/useNotificationManager";
+import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
+import BottomNavigation from "@/components/layout/BottomNavigation";
+
+const AgentProfileSettings = () => {
   const { navigate } = useWouterNavigation();
-  const { profileImage } = useProfileImage();
-  const [agentName, setAgentName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { newBadge, closeBadgeNotification } = useXpSystem();
-  const { 
-    pulseEnergy, 
-    currentRank, 
-    nextRank, 
-    progressToNextRank 
-  } = usePulseEnergy();
-
-  // RankUpModal state
-  const [showRankUp, setShowRankUp] = useState(false);
-  const [newRank, setNewRank] = useState<AgentRank | null>(null);
-
-  // Use global profile data with real-time updates
-  useProfileRealtime();
-  const globalProfile = useGlobalProfileSync();
-
-  // Sync agent name with profile updates
-  useEffect(() => {
-    if (profileData?.name || profileData?.personalInfo?.firstName) {
-      setAgentName(profileData?.name || profileData?.personalInfo?.firstName || '');
-    }
-  }, [profileData]);
-
-  // Listen for custom profile sync events
-  useEffect(() => {
-    const handleProfileSync = (event: CustomEvent) => {
-      const { agentName: syncedAgentName } = event.detail;
-      if (syncedAgentName) {
-        setAgentName(syncedAgentName);
-      }
-    };
-
-    window.addEventListener('profile-sync', handleProfileSync as EventListener);
-    return () => window.removeEventListener('profile-sync', handleProfileSync as EventListener);
-  }, []);
-
-  // Detect rank changes and show RankUpModal once
-  useEffect(() => {
-    if (!currentRank) return;
-    
-    const lastRankCode = localStorage.getItem('__m1_last_rank_code');
-    
-    if (currentRank.code !== lastRankCode) {
-      setNewRank(currentRank);
-      setShowRankUp(true);
-      localStorage.setItem('__m1_last_rank_code', currentRank.code);
-      console.log('[AgentProfile] Rank-up detected:', { old: lastRankCode, new: currentRank.code });
-    }
-  }, [currentRank]);
-
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Errore",
-        description: "Per favore seleziona un file immagine valido.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "Errore",
-        description: "L'immagine deve essere più piccola di 5MB.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      // Update profile with new avatar URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: urlData.publicUrl })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: "✅ Avatar aggiornato",
-        description: "La tua immagine profilo è stata aggiornata con successo."
-      });
-
-    } catch (error: any) {
-      console.error('Avatar upload error:', error);
-      toast({
-        title: "❌ Errore upload",
-        description: error.message || "Impossibile caricare l'immagine. Riprova.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+  const { profileData, actions } = useProfileData();
+  const isMobile = useIsMobile();
+  const { notificationsDrawerOpen, closeNotificationsDrawer } = useNotificationManager();
+  
+  // Initialize real-time notifications (this sets up the listener)
+  useRealTimeNotifications();
+  
+  const navigateToPersonalInfo = () => {
+    navigate('/profile/personal-info');
   };
 
-  const handleSaveProfile = async () => {
-    if (!user) return;
-
-    // Validate agent name
-    if (!agentName.trim()) {
-      toast({
-        title: "❌ Nome obbligatorio",
-        description: "Inserisci un nome agente per salvare.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          first_name: agentName.trim()
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      // Trigger real-time update
-      const event = new CustomEvent('profile-update', {
-        detail: { agentName: agentName.trim() }
-      });
-      window.dispatchEvent(event);
-
-      // Update localStorage for immediate feedback
-      const localProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-      localProfile.first_name = agentName.trim();
-      localStorage.setItem('userProfile', JSON.stringify(localProfile));
-
-      // Dispatch global sync event
-      const syncEvent = new CustomEvent('profile-sync', {
-        detail: { agentName: agentName.trim() }
-      });
-      window.dispatchEvent(syncEvent);
-
-      toast({
-        title: "✅ Profilo aggiornato",
-        description: "I tuoi dati sono stati salvati con successo."
-      });
-    } catch (error: any) {
-      console.error('Profile save error:', error);
-      toast({
-        title: "❌ Errore salvataggio",
-        description: error.message || "Impossibile salvare il profilo. Riprova.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+  const navigateToPrivacySecurity = () => {
+    navigate('/profile/security');
   };
 
-  const copyUserId = () => {
-    if (user?.id) {
-      navigator.clipboard.writeText(user.id);
-      toast({
-        title: "✅ ID copiato",
-        description: "L'ID utente è stato copiato negli appunti."
-      });
-    }
+  const navigateToPaymentMethods = () => {
+    navigate('/profile/payments');
   };
 
-  const getTierBadge = (tier: string) => {
-    const tierConfig = {
-      'starter': { 
-        bg: 'bg-gray-500/20 border-gray-500/30', 
-        text: 'text-gray-300',
-        label: 'Starter'
-      },
-      'premium': { 
-        bg: 'bg-yellow-500/20 border-yellow-500/30', 
-        text: 'text-yellow-300',
-        label: 'Premium'
-      },
-      'enterprise': { 
-        bg: 'bg-purple-500/20 border-purple-500/30', 
-        text: 'text-purple-300',
-        label: 'Enterprise'
-      }
-    };
-
-    const config = tierConfig[tier as keyof typeof tierConfig] || tierConfig.starter;
-    
-    return (
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${config.bg} ${config.text}`}>
-        {config.label}
-      </span>
-    );
+  const navigateToSubscriptions = () => {
+    navigate('/subscriptions');
   };
 
   return (
-    <div className="min-h-screen">
-      <UnifiedHeader profileImage={profileImage || user?.user_metadata?.avatar_url} />
+    <div className="min-h-screen bg-black">
+      <ProfileLayout>
+        <div className="glass-card mx-2 sm:mx-4 mt-2 sm:mt-4 mb-20">
+          {/* Header with Agent Code and Edit Button */}
+          <ProfileHeader 
+            agentCode={profileData.agentCode}
+            agentTitle={profileData.agentTitle}
+            isEditing={profileData.isEditing}
+            onEditToggle={() => actions.setIsEditing(true)}
+            onSave={actions.handleSaveProfile}
+          />
+          
+          {/* Profile Information */}
+          <div className="p-3 sm:p-6 border-t border-white/10">
+            <h2 className="text-xl sm:text-2xl font-bold gradient-text mb-4">
+              👤 Informazioni Agente
+            </h2>
+            <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
+              {/* Left Column - Avatar and Basic Info */}
+              <ProfileInfo 
+                profileImage={profileData.profileImage}
+                name={profileData.name}
+                bio={profileData.bio}
+                agentCode={profileData.agentCode}
+                agentTitle={profileData.agentTitle}
+                investigativeStyle={profileData.investigativeStyle}
+                stats={{
+                  missionsCompleted: profileData.stats.missionsCompleted,
+                  cluesFound: profileData.stats.cluesFound
+                }}
+                credits={profileData.credits}
+                isEditing={profileData.isEditing}
+                subscriptionPlan={profileData.subscription.plan}
+                personalInfo={profileData.personalInfo}
+                setProfileImage={actions.setProfileImage}
+                setName={actions.setName}
+                setBio={actions.setBio}
+                setAgentCode={actions.setAgentCode}
+                setAgentTitle={actions.setAgentTitle}
+              />
+              
+              {/* Right Column - Tabs for different sections */}
+              <div className="flex-1 mt-4 md:mt-0">
+                <ProfileTabs 
+                  stats={profileData.stats}
+                  history={profileData.history}
+                  badges={profileData.badges}
+                  subscription={profileData.subscription}
+                  personalNotes={profileData.personalNotes}
+                  isEditing={profileData.isEditing}
+                  setPersonalNotes={actions.setPersonalNotes}
+                  togglePinBadge={actions.togglePinBadge}
+                  navigateToPersonalInfo={() => navigate('/profile/personal-info')}
+                  navigateToPrivacySecurity={() => navigate('/profile/security')}
+                  navigateToPaymentMethods={() => navigate('/profile/payments')}
+                  navigateToSubscriptions={() => navigate('/subscriptions')}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <NotificationsDrawer
+          open={notificationsDrawerOpen}
+          onOpenChange={closeNotificationsDrawer}
+        />
+      </ProfileLayout>
       
+      {/* Bottom Navigation - Uniform positioning like Home */}
       <div 
-        className="px-4 space-y-6"
-        style={{ 
-          paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
-        }}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-6"
-        >
-          {/* Header */}
-          <div className="text-center space-y-2 mb-6">
-            <h1 className="text-2xl font-bold text-white font-orbitron">Profilo Agente</h1>
-            <p className="text-white/70">Gestisci le informazioni del tuo profilo agente</p>
-          </div>
-
-          {/* Pulse Energy & Rank Section */}
-          <Card className="glass-card" data-testid="pe-section">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold gradient-text">
-                ⚡ Pulse Energy & Gerarchia Agente
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Current Rank Badge */}
-              <div className="flex justify-center" data-testid="pe-badge">
-                <PulseEnergyBadge rank={currentRank} showCode={true} />
-              </div>
-
-              {/* Progress Bar to Next Rank */}
-              <div data-testid="pe-progress">
-                <PulseEnergyProgressBar
-                  currentRank={currentRank}
-                  nextRank={nextRank}
-                  progressPercent={progressToNextRank}
-                  currentPE={pulseEnergy}
-                />
-              </div>
-
-              {/* Daily Check-In */}
-              <div className="pt-4 border-t border-white/10">
-                <h3 className="text-sm font-semibold text-white mb-2">🎯 Check-In Giornaliero</h3>
-                <DailyCheckInButton />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Gamification Section - Compatto */}
-          <div className="space-y-4">
-            {/* Reward Badge Card - Shows when rewards are available */}
-            <RewardBadgeCard />
-
-            {/* Badge Gallery */}
-            <BadgeGallery />
-
-            {/* Achievement Timeline */}
-            <AchievementTimeline />
-
-            {/* Weekly Leaderboard */}
-            <WeeklyLeaderboard />
-          </div>
-
-          {/* Profile Settings Card */}
-          <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white font-orbitron flex items-center">
-                <User className="w-5 h-5 mr-2" />
-                Informazioni Profilo
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Avatar Section */}
-              <div className="flex flex-col items-center space-y-4">
-                <Avatar className="w-24 h-24 border-2 border-gray-600">
-                  <AvatarImage 
-                    src={profileImage || user?.user_metadata?.avatar_url} 
-                    alt="Avatar agente" 
-                  />
-                  <AvatarFallback className="bg-gray-700 text-white text-xl font-bold">
-                    {agentName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'A'}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex flex-col items-center space-y-2">
-                  <label htmlFor="avatar-upload" className="cursor-pointer">
-                    <Button
-                      variant="outline"
-                      className="border-gray-600 text-white hover:bg-gray-700"
-                      asChild
-                    >
-                      <span>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Cambia Avatar
-                      </span>
-                    </Button>
-                  </label>
-                  <input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleAvatarUpload}
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              {/* Agent Name */}
-              <div className="space-y-2">
-                <Label htmlFor="agentName" className="text-white flex items-center">
-                  <User className="w-4 h-4 mr-2" />
-                  Nome Agente
-                </Label>
-                <Input
-                  id="agentName"
-                  type="text"
-                  value={agentName}
-                  onChange={(e) => setAgentName(e.target.value)}
-                  className="bg-gray-800 border-gray-600 text-white"
-                  placeholder="Inserisci il tuo nome agente"
-                />
-              </div>
-
-              {/* Email (Read-only) */}
-              <div className="space-y-2">
-                <Label className="text-white flex items-center">
-                  <Mail className="w-4 h-4 mr-2" />
-                  Email
-                </Label>
-                <Input
-                  type="email"
-                  value={user?.email || ''}
-                  readOnly
-                  className="bg-black/20 border-white/20 text-white/70 cursor-not-allowed"
-                />
-              </div>
-
-              {/* User ID */}
-              <div className="space-y-2">
-                <Label className="text-white flex items-center">
-                  <IdCard className="w-4 h-4 mr-2" />
-                  User ID
-                </Label>
-                <div className="flex space-x-2">
-                  <Input
-                    type="text"
-                    value={user?.id || ''}
-                    readOnly
-                    className="bg-black/20 border-white/20 text-white/70 cursor-not-allowed flex-1"
-                  />
-                  <Button
-                    onClick={copyUserId}
-                    variant="outline"
-                    size="icon"
-                    className="border-white/20 text-white hover:bg-white/10"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Active Tier */}
-              <div className="space-y-2">
-                <Label className="text-white">Tier Attivo</Label>
-                <div className="flex items-center">
-                  {getTierBadge('starter')}
-                </div>
-              </div>
-
-              {/* Save Button */}
-              <Button
-                onClick={handleSaveProfile}
-                disabled={loading}
-                className="w-full bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold"
-              >
-                {loading ? 'Salvataggio...' : 'Salva Modifiche'}
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {newBadge && (
-        <BadgeUnlockedNotification
-          badgeName={newBadge.name}
-          badgeDescription={newBadge.description}
-          onClose={closeBadgeNotification}
-          onClick={() => {
-            const label = (newBadge.name || '').toLowerCase();
-            if (label.includes('mappa')) {
-              navigate('/map?free=1&reward=1');
-            } else {
-              navigate('/buzz?free=1&reward=1');
-            }
-          }}
-        />
-      )}
-
-      {/* RankUpModal - Notifica promozione grado */}
-      {showRankUp && newRank && (
-        <RankUpModal
-          open={showRankUp}
-          onClose={() => setShowRankUp(false)}
-          newRank={newRank}
-          data-testid="rankup-modal"
-        />
-      )}
-
-      {/* Bottom Navigation */}
-      <div 
-        id="settings-bottom-nav-container"
+        id="mission-bottom-nav-container"
         style={{ 
           position: 'fixed', 
           bottom: 0, 
@@ -492,3 +133,5 @@ const AgentProfileSettings: React.FC = () => {
 };
 
 export default AgentProfileSettings;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

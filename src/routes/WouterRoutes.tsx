@@ -378,9 +378,13 @@ const WouterRoutes: React.FC = () => {
           </Route>
 
           <Route path="/profile">
-            <ProtectedRoute>
-              <GlobalLayout><Profile /></GlobalLayout>
-            </ProtectedRoute>
+            {() => {
+              // Redirect to /settings/agent-profile
+              if (typeof window !== 'undefined') {
+                window.location.href = '/settings/agent-profile';
+              }
+              return null;
+            }}
           </Route>
 
           <Route path="/settings">
