@@ -1,6 +1,8 @@
 
 import React from 'react';
-import { Circle, Popup } from 'react-leaflet';
+import { Popup } from 'react-leaflet';
+import { SafeCircle } from '@/components/map/safe/SafeCircle';
+import { isValidLatLng, isValidRadius, logGuard } from '@/lib/map/geoGuards';
 
 interface BuzzMapArea {
   id: string;
@@ -19,18 +21,34 @@ interface UserMapAreasProps {
 const UserMapAreas: React.FC<UserMapAreasProps> = ({ areas }) => {
   console.log('🗺️ UserMapAreas - Rendering areas:', areas.length);
 
-  // 🚨 FORCE CHECK: Never render if no areas or invalid areas
+  // 🚨 FORCE CHECK: Never render if no areas
   if (!areas || areas.length === 0) {
     console.log('🛑 UserMapAreas: No areas to render - returning null');
     return null;
   }
 
-  // 🚨 TRIPLE VALIDATION: Validate area data + recent date filter
-  const validAreas = areas.filter(area => 
-    area.lat && area.lng && area.radius_km && 
-    area.lat !== 0 && area.lng !== 0 &&
-    area.created_at && new Date(area.created_at) >= new Date('2025-07-17')
-  );
+  // Guard robusta con validazione completa
+  const validAreas = areas.filter(area => {
+    const radiusMeters = (area?.radius_km ?? 0) * 1000;
+    const createdAt = area?.created_at ? new Date(area.created_at) : null;
+    const isRecent = createdAt && createdAt >= new Date('2025-07-17');
+    const isValid = 
+      isValidLatLng(area?.lat, area?.lng) && 
+      isValidRadius(radiusMeters) &&
+      isRecent;
+    
+    if (!isValid) {
+      logGuard('UserMapAreas (src/components): area skipped', {
+        id: area?.id,
+        lat: area?.lat,
+        lng: area?.lng,
+        radius_km: area?.radius_km,
+        created_at: area?.created_at
+      });
+    }
+    
+    return isValid;
+  });
 
   if (validAreas.length === 0) {
     console.log('🛑 UserMapAreas: No valid recent areas found - returning null');
@@ -47,7 +65,7 @@ const UserMapAreas: React.FC<UserMapAreasProps> = ({ areas }) => {
   const radiusMeters = latestArea.radius_km * 1000;
 
   return (
-    <Circle
+    <SafeCircle
       center={[latestArea.lat, latestArea.lng]}
       radius={radiusMeters}
       pathOptions={{
@@ -79,8 +97,11 @@ const UserMapAreas: React.FC<UserMapAreasProps> = ({ areas }) => {
           </div>
         </div>
       </Popup>
-    </Circle>
+    </SafeCircle>
   );
 };
 
 export default UserMapAreas;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+

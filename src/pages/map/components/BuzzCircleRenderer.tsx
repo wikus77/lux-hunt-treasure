@@ -1,8 +1,10 @@
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React from 'react';
-import { Circle, Popup } from 'react-leaflet';
+import { Popup } from 'react-leaflet';
+import { SafeCircle } from '@/components/map/safe/SafeCircle';
 import { BuzzMapArea } from '@/hooks/useBuzzMapLogic';
 import { getCurrentColor } from './BuzzColorManager';
+import { isValidLatLng, isValidRadius, logGuard } from '@/lib/map/geoGuards';
 
 interface BuzzCircleRendererProps {
   areas: BuzzMapArea[];
@@ -21,63 +23,78 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
     }))
   });
 
+  // Filtra aree valide con guard robuste
+  const validAreas = areas.filter(a => {
+    const radiusMeters = (a?.radius_km ?? 0) * 1000;
+    const isValid = isValidLatLng(a?.lat, a?.lng) && isValidRadius(radiusMeters);
+    
+    if (!isValid) {
+      logGuard('BuzzCircleRenderer: area skipped', {
+        id: a?.id,
+        lat: a?.lat,
+        lng: a?.lng,
+        radius_km: a?.radius_km
+      });
+    }
+    
+    return isValid;
+  });
+
   return (
     <>
-      {areas
-        .filter(a => Number.isFinite(a?.lat as number) && Number.isFinite(a?.lng as number))
-        .map((area, index) => {
-          const radiusMeters = area.radius_km * 1000;
+      {validAreas.map((area, index) => {
+        const radiusMeters = area.radius_km * 1000;
 
-          console.log(`🔵 Rendering BUZZ area ${index + 1}:`, {
-            id: area.id,
-            center: [area.lat, area.lng],
-            radiusKm: area.radius_km,
-            radiusMeters: radiusMeters,
-            color: currentColor,
-            isActive: area.isActive
-          });
+        console.log(`🔵 Rendering BUZZ area ${index + 1}:`, {
+          id: area.id,
+          center: [area.lat, area.lng],
+          radiusKm: area.radius_km,
+          radiusMeters: radiusMeters,
+          color: currentColor,
+          isActive: area.isActive
+        });
 
-          return (
-            <React.Fragment key={`buzz-area-${area.id}-${area.created_at}`}>
-              <Circle
-                center={[area.lat as number, area.lng as number]}
-                radius={radiusMeters}
-                pathOptions={{
-                  color: currentColor,
-                  fillColor: currentColor,
-                  fillOpacity: 0.15,
-                  weight: 3,
-                  opacity: 0.8,
-                  className: 'buzz-area-glow'
-                }}
-                eventHandlers={{
-                  click: () => {
-                    console.log('🔵 BUZZ area clicked:', area.id);
-                  },
-                  mouseover: (e) => {
-                    e.target.setStyle({ fillOpacity: 0.25, weight: 4 });
-                  },
-                  mouseout: (e) => {
-                    e.target.setStyle({ fillOpacity: 0.15, weight: 3 });
-                  }
-                }}
-              >
-                <Popup>
-                  <div className="p-2">
-                    <div className="font-bold text-sm mb-1">Area BUZZ MAPPA</div>
-                    <div className="text-xs mb-1">Raggio: {area.radius_km.toFixed(1)} km</div>
-                    <div className="text-xs text-gray-600">
-                      Generata: {new Date(area.created_at).toLocaleDateString()}
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      Settimana: {area.week}
-                    </div>
+        return (
+          <React.Fragment key={`buzz-area-${area.id}-${area.created_at}`}>
+            <SafeCircle
+              center={[area.lat, area.lng]}
+              radius={radiusMeters}
+              pathOptions={{
+                color: currentColor,
+                fillColor: currentColor,
+                fillOpacity: 0.15,
+                weight: 3,
+                opacity: 0.8,
+                className: 'buzz-area-glow'
+              }}
+              eventHandlers={{
+                click: () => {
+                  console.log('🔵 BUZZ area clicked:', area.id);
+                },
+                mouseover: (e) => {
+                  e.target.setStyle({ fillOpacity: 0.25, weight: 4 });
+                },
+                mouseout: (e) => {
+                  e.target.setStyle({ fillOpacity: 0.15, weight: 3 });
+                }
+              }}
+            >
+              <Popup>
+                <div className="p-2">
+                  <div className="font-bold text-sm mb-1">Area BUZZ MAPPA</div>
+                  <div className="text-xs mb-1">Raggio: {area.radius_km.toFixed(1)} km</div>
+                  <div className="text-xs text-gray-600">
+                    Generata: {new Date(area.created_at).toLocaleDateString()}
                   </div>
-                </Popup>
-              </Circle>
-            </React.Fragment>
-          );
-        })}
+                  <div className="text-xs text-gray-600">
+                    Settimana: {area.week}
+                  </div>
+                </div>
+              </Popup>
+            </SafeCircle>
+          </React.Fragment>
+        );
+      })}
     </>
   );
 };
