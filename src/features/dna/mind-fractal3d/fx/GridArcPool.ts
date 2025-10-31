@@ -68,6 +68,7 @@ void main() {
  */
 export class GridArcPool {
   private scene: THREE.Scene;
+  private parent: THREE.Object3D | null = null; // [MF3D] Parent for arcs (align with tunnelGroup)
   private arcs: Arc[] = [];
   private edges: Array<[THREE.Vector3, THREE.Vector3]> = [];
   private readonly MAX_ARCS = 200; // BOOSTED +100% for maximum density
@@ -78,6 +79,11 @@ export class GridArcPool {
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
+  }
+
+  // [MF3D] Attach arcs to a parent (e.g., tunnelGroup) so they inherit breath/twist
+  setParent(parent: THREE.Object3D): void {
+    this.parent = parent;
   }
 
   /**
@@ -225,9 +231,9 @@ export class GridArcPool {
     });
 
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.renderOrder = 9999; // CRITICAL: Force arcs to render after tunnel
+    mesh.renderOrder = 20000; // Render after nodes and tunnel
     mesh.frustumCulled = false; // Prevent culling during camera movement
-    this.scene.add(mesh);
+    (this.parent ?? this.scene).add(mesh);
 
     this.arcs.push({
       mesh,

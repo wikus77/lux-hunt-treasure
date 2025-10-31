@@ -160,21 +160,21 @@ export class NodeLayer {
       this.instancedMesh.instanceColor.needsUpdate = true;
     }
 
-    // ULTRA ENHANCED pulse effect - 3.0× for 400ms (MAXIMUM VISIBILITY)
+    // Click pulse effect - 2.0× for 300ms (spec)
     const matrix = new THREE.Matrix4();
-    const scale = new THREE.Vector3(3.0, 3.0, 3.0);
+    const scale = new THREE.Vector3(2.0, 2.0, 2.0);
     matrix.compose(node.position, new THREE.Quaternion(), scale);
     this.instancedMesh.setMatrixAt(nodeId, matrix);
     this.instancedMesh.instanceMatrix.needsUpdate = true;
 
-    console.info('[MF3D] Node state change - PULSE ACTIVATED:', { 
+    console.info('[MF3D] Node state change - PULSE:', { 
       nodeId, 
       state, 
       color: '#' + NODE_COLORS[state].toString(16),
-      scale: '3.0x'
+      scale: '2.0x/300ms'
     });
 
-    // Reset scale after 400ms
+    // Reset scale after 300ms
     setTimeout(() => {
       if (!this.instancedMesh) return;
       const resetMatrix = new THREE.Matrix4();
@@ -182,8 +182,7 @@ export class NodeLayer {
       resetMatrix.compose(node.position, new THREE.Quaternion(), resetScale);
       this.instancedMesh.setMatrixAt(nodeId, resetMatrix);
       this.instancedMesh.instanceMatrix.needsUpdate = true;
-      console.info('[MF3D] Pulse complete:', { nodeId });
-    }, 400);
+    }, 300);
   }
 
   getStats(): { discovered: number; linked: number } {
