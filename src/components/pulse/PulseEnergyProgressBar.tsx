@@ -21,9 +21,9 @@ const PulseEnergyProgressBar = ({
   // Max rank reached
   if (!nextRank) {
     return (
-      <div className={`space-y-2 ${className}`}>
+      <div className={`space-y-2 ${className}`} data-testid="pe-progress-max">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-400">Pulse Energy Totale</span>
+          <span className="text-xs text-gray-400">PE Totali</span>
           <span className="text-sm font-bold text-cyan-400">{currentPE.toLocaleString('it-IT')} PE</span>
         </div>
         <div className="p-3 rounded-md bg-gradient-to-r from-amber-900/30 to-yellow-900/30 border border-amber-500/50">
@@ -39,15 +39,16 @@ const PulseEnergyProgressBar = ({
   const peNeeded = nextRank.pe_min - currentPE;
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`space-y-2 ${className}`} data-testid="pe-progress-active">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400">Pulse Energy</span>
+        <span className="text-xs text-gray-400">PE Totali</span>
         <span className="text-sm font-bold text-cyan-400">{currentPE.toLocaleString('it-IT')} PE</span>
       </div>
       
       <Progress 
         value={progressPercent} 
         className="h-2 bg-gray-800"
+        data-testid="pe-progress-bar"
       />
       
       <div className="flex items-center justify-between text-xs">
@@ -55,7 +56,7 @@ const PulseEnergyProgressBar = ({
           {currentRank?.name_it || 'Attuale'}
         </span>
         <span className="text-cyan-400 font-medium">
-          {peNeeded.toLocaleString('it-IT')} PE per {nextRank.name_it}
+          {peNeeded.toLocaleString('it-IT')} PE al prossimo grado
         </span>
       </div>
     </div>

@@ -78,13 +78,14 @@ const ProfileInfo = ({
   const isMobile = useIsMobile();
   const { pulseEnergy, currentRank, nextRank, progressToNextRank, loading: peLoading } = usePulseEnergy();
   
-  // Debug logging for PE system
+  // Debug logging for PE system (INCIDENT REPORT AUDIT)
   useEffect(() => {
-    console.log('[usePulseEnergy]', { 
+    console.log('[PE-DEBUG]', { 
       pulseEnergy, 
       currentRank: currentRank?.code, 
       nextRank: nextRank?.code, 
-      progressToNextRank 
+      progressToNextRank,
+      ranksCount: currentRank ? 11 : 0 // Assuming 11 ranks from catalog
     });
   }, [pulseEnergy, currentRank, nextRank, progressToNextRank]);
   
@@ -200,19 +201,21 @@ const ProfileInfo = ({
             
             {/* PULSE ENERGY & RANK SYSTEM */}
             {!peLoading && (
-              <div className="mb-4 space-y-3">
+              <div className="mb-4 space-y-3" data-testid="pe-system-container">
                 {/* Badge Grado */}
                 <div className="flex justify-center">
-                  <PulseEnergyBadge rank={currentRank} showCode={true} />
+                  <PulseEnergyBadge rank={currentRank} showCode={true} data-testid="pe-badge" />
                 </div>
                 
                 {/* Progress Bar PE */}
-                <PulseEnergyProgressBar
-                  currentRank={currentRank}
-                  nextRank={nextRank}
-                  progressPercent={progressToNextRank}
-                  currentPE={pulseEnergy}
-                />
+                <div data-testid="pe-progress">
+                  <PulseEnergyProgressBar
+                    currentRank={currentRank}
+                    nextRank={nextRank}
+                    progressPercent={progressToNextRank}
+                    currentPE={pulseEnergy}
+                  />
+                </div>
               </div>
             )}
             

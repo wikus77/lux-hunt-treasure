@@ -46,7 +46,11 @@ const RankUpModal = ({ open, onClose, newRank }: RankUpModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-black/95 border-2" style={{ borderColor: newRank.color }}>
+      <DialogContent 
+        className="max-w-md bg-black/95 border-2" 
+        style={{ borderColor: newRank.color }}
+        data-testid="rankup-modal"
+      >
         <div className="text-center space-y-6 py-6">
           {/* Icon */}
           <div className="flex justify-center">
