@@ -407,6 +407,48 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_ranks: {
+        Row: {
+          code: string
+          color: string
+          created_at: string | null
+          description: string | null
+          id: number
+          name_en: string
+          name_it: string
+          pe_max: number | null
+          pe_min: number
+          symbol: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          color: string
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          name_en: string
+          name_it: string
+          pe_max?: number | null
+          pe_min: number
+          symbol: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          color?: string
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          name_en?: string
+          name_it?: string
+          pe_max?: number | null
+          pe_min?: number
+          symbol?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       ai_docs: {
         Row: {
           body: string | null
@@ -3646,7 +3688,10 @@ export type Database = {
           pre_registration_date: string | null
           preferred_language: string | null
           preferred_rewards: string[] | null
+          pulse_energy: number
           push_notifications_enabled: boolean | null
+          rank_id: number | null
+          rank_updated_at: string | null
           recovery_key: string | null
           referral_code: string | null
           role: string
@@ -3706,7 +3751,10 @@ export type Database = {
           pre_registration_date?: string | null
           preferred_language?: string | null
           preferred_rewards?: string[] | null
+          pulse_energy?: number
           push_notifications_enabled?: boolean | null
+          rank_id?: number | null
+          rank_updated_at?: string | null
           recovery_key?: string | null
           referral_code?: string | null
           role?: string
@@ -3766,7 +3814,10 @@ export type Database = {
           pre_registration_date?: string | null
           preferred_language?: string | null
           preferred_rewards?: string[] | null
+          pulse_energy?: number
           push_notifications_enabled?: boolean | null
+          rank_id?: number | null
+          rank_updated_at?: string | null
           recovery_key?: string | null
           referral_code?: string | null
           role?: string
@@ -3783,7 +3834,15 @@ export type Database = {
           walkthrough_step_buzz_map?: number | null
           weekly_hints?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_rank_id_fkey"
+            columns: ["rank_id"]
+            isOneToOne: false
+            referencedRelation: "agent_ranks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pulse_abuse_counters: {
         Row: {
@@ -4678,6 +4737,54 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      rank_history: {
+        Row: {
+          created_at: string | null
+          delta_pe: number
+          id: string
+          metadata: Json | null
+          new_rank_id: number
+          old_rank_id: number | null
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          delta_pe: number
+          id?: string
+          metadata?: Json | null
+          new_rank_id: number
+          old_rank_id?: number | null
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          delta_pe?: number
+          id?: string
+          metadata?: Json | null
+          new_rank_id?: number
+          old_rank_id?: number | null
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rank_history_new_rank_id_fkey"
+            columns: ["new_rank_id"]
+            isOneToOne: false
+            referencedRelation: "agent_ranks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rank_history_old_rank_id_fkey"
+            columns: ["old_rank_id"]
+            isOneToOne: false
+            referencedRelation: "agent_ranks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       role_change_audit: {
         Row: {
@@ -6652,6 +6759,19 @@ export type Database = {
         }
         Relationships: []
       }
+      v_dna_mind_links_recent: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          intensity: number | null
+          node_a: number | null
+          node_b: number | null
+          seed: number | null
+          theme: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       v_pref_users: {
         Row: {
           user_id: string | null
@@ -6825,6 +6945,15 @@ export type Database = {
           }
         | { Args: { k: number; minscore: number; qvec: string }; Returns: Json }
       assign_area_radius: { Args: { p_mission_id: string }; Returns: number }
+      award_pulse_energy: {
+        Args: {
+          p_delta_pe: number
+          p_metadata?: Json
+          p_reason: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       award_xp:
         | {
             Args: { p_source: string; p_user_id: string; p_xp_amount: number }
@@ -7043,6 +7172,10 @@ export type Database = {
       }
       get_max_buzz_for_week: { Args: { week_num: number }; Returns: number }
       get_max_map_generations: { Args: { p_week: number }; Returns: number }
+      get_mf_progress: {
+        Args: { p_seed: number; p_user_id: string }
+        Returns: Json
+      }
       get_my_agent_code: {
         Args: never
         Returns: {
@@ -7050,6 +7183,16 @@ export type Database = {
         }[]
       }
       get_my_balance: { Args: never; Returns: Json }
+      get_recent_links: {
+        Args: { p_limit?: number; p_seed: number; p_user_id: string }
+        Returns: {
+          created_at: string
+          intensity: number
+          node_a: number
+          node_b: number
+          theme: string
+        }[]
+      }
       get_top_agents: {
         Args: never
         Returns: {
@@ -7200,6 +7343,7 @@ export type Database = {
         Args: { p_from: string; p_length: number; p_seed: number; p_to: string }
         Returns: undefined
       }
+      mf_health: { Args: never; Returns: Json }
       mf_upsert_seen: {
         Args: { p_node_ids: string[]; p_seed: number }
         Returns: undefined
@@ -7252,6 +7396,7 @@ export type Database = {
         Args: { p_code: string; p_lat?: number; p_lon?: number }
         Returns: Json
       }
+      recompute_rank: { Args: { p_user_id: string }; Returns: boolean }
       record_intelligence_tool_usage: {
         Args: { p_mission_id: string; p_tool_name: string; p_user_id: string }
         Returns: boolean
@@ -7410,19 +7555,14 @@ export type Database = {
       }
       upsert_dna_mind_link: {
         Args: {
+          p_a: number
+          p_b: number
           p_intensity?: number
-          p_node_a: number
-          p_node_b: number
           p_seed: number
           p_theme: string
           p_user_id: string
         }
-        Returns: {
-          milestone_added: boolean
-          milestone_level: number
-          theme_links: number
-          total_links: number
-        }[]
+        Returns: Json
       }
       upsert_fcm_subscription: {
         Args: {
