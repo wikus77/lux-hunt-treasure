@@ -6652,6 +6652,19 @@ export type Database = {
         }
         Relationships: []
       }
+      v_dna_mind_links_recent: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          intensity: number | null
+          node_a: number | null
+          node_b: number | null
+          seed: number | null
+          theme: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       v_pref_users: {
         Row: {
           user_id: string | null
