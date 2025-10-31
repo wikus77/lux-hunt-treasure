@@ -19,9 +19,9 @@ export interface Node {
 }
 
 const NODE_COLORS = {
-  [NodeState.LOCKED]: 0x3b3b45,
-  [NodeState.DISCOVERED]: 0x33ccff,
-  [NodeState.LINKED]: 0xaa66ff
+  [NodeState.LOCKED]: 0x555566, // Brighter gray for visibility
+  [NodeState.DISCOVERED]: 0x00ffff, // Pure bright cyan
+  [NodeState.LINKED]: 0xcc66ff // Brighter violet
 };
 
 const THEME_NAMES = {
@@ -91,14 +91,21 @@ export class NodeLayer {
       (this.instancedMesh.material as THREE.Material).dispose();
     }
 
-    const sphereGeometry = new THREE.SphereGeometry(0.12, 8, 8);
-    const material = new THREE.MeshBasicMaterial();
+    const sphereGeometry = new THREE.SphereGeometry(0.24, 12, 12); // DOUBLED size for visibility
+    const material = new THREE.MeshBasicMaterial({
+      transparent: false,
+      depthTest: false, // Render on top
+      depthWrite: true
+    });
 
     this.instancedMesh = new THREE.InstancedMesh(
       sphereGeometry,
       material,
       this.nodes.length
     );
+    
+    this.instancedMesh.renderOrder = 10000; // Render after arcs
+    this.instancedMesh.frustumCulled = false;
 
     const matrix = new THREE.Matrix4();
     const color = new THREE.Color();
@@ -153,16 +160,21 @@ export class NodeLayer {
       this.instancedMesh.instanceColor.needsUpdate = true;
     }
 
-    // ENHANCED pulse effect on state change - 2.0× for 300ms (more visible)
+    // ULTRA ENHANCED pulse effect - 3.0× for 400ms (MAXIMUM VISIBILITY)
     const matrix = new THREE.Matrix4();
-    const scale = new THREE.Vector3(2.0, 2.0, 2.0);
+    const scale = new THREE.Vector3(3.0, 3.0, 3.0);
     matrix.compose(node.position, new THREE.Quaternion(), scale);
     this.instancedMesh.setMatrixAt(nodeId, matrix);
     this.instancedMesh.instanceMatrix.needsUpdate = true;
 
-    console.info('[MF3D] Node state change:', { nodeId, state, color: NODE_COLORS[state].toString(16) });
+    console.info('[MF3D] Node state change - PULSE ACTIVATED:', { 
+      nodeId, 
+      state, 
+      color: '#' + NODE_COLORS[state].toString(16),
+      scale: '3.0x'
+    });
 
-    // Reset scale after 300ms
+    // Reset scale after 400ms
     setTimeout(() => {
       if (!this.instancedMesh) return;
       const resetMatrix = new THREE.Matrix4();
@@ -170,7 +182,8 @@ export class NodeLayer {
       resetMatrix.compose(node.position, new THREE.Quaternion(), resetScale);
       this.instancedMesh.setMatrixAt(nodeId, resetMatrix);
       this.instancedMesh.instanceMatrix.needsUpdate = true;
-    }, 300);
+      console.info('[MF3D] Pulse complete:', { nodeId });
+    }, 400);
   }
 
   getStats(): { discovered: number; linked: number } {
@@ -194,18 +207,18 @@ export class NodeLayer {
       
       let pulseScale = 1.0;
       if (node.state === NodeState.DISCOVERED) {
-        pulseScale = 1.0 + Math.sin(elapsedTime * 3 + i * 0.5) * 0.15;
+        pulseScale = 1.0 + Math.sin(elapsedTime * 3 + i * 0.5) * 0.25; // More dramatic pulse
       } else if (node.state === NodeState.LINKED) {
-        pulseScale = 1.0 + Math.sin(elapsedTime * 2 + i * 0.3) * 0.1;
+        pulseScale = 1.0 + Math.sin(elapsedTime * 2 + i * 0.3) * 0.20; // Visible pulse
       }
       
-      // Hover highlight
+      // Hover highlight - ULTRA bright
       if (hoveredNodeId === node.id) {
-        pulseScale *= 1.5;
-        color.setHex(NODE_COLORS[node.state]).multiplyScalar(1.5);
+        pulseScale *= 2.0; // 2x scale on hover
+        color.setHex(NODE_COLORS[node.state]).multiplyScalar(2.0); // 2x brightness
         this.instancedMesh.setColorAt(i, color);
       } else {
-        color.setHex(NODE_COLORS[node.state]);
+        color.setHex(NODE_COLORS[node.state]).multiplyScalar(1.3); // Base brightness boost
         this.instancedMesh.setColorAt(i, color);
       }
 
