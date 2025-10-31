@@ -13,7 +13,7 @@ const BottomNavigationComponent = () => {
   const { navigate } = useWouterNavigation();
   const isPWA = typeof window !== 'undefined' && 
     window.matchMedia('(display-mode: standalone)').matches;
-  const reduceAnimations = currentPath === '/profile' || currentPath === '/settings/agent-profile';
+  const reduceAnimations = currentPath === '/settings/agent-profile';
 
   console.log('🧭 BottomNavigation render:', {
     currentPath,
@@ -286,3 +286,5 @@ const BottomNavigationComponent = () => {
 // Export with explicit name for iOS Capacitor compatibility
 const BottomNavigation = BottomNavigationComponent;
 export default BottomNavigation;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
