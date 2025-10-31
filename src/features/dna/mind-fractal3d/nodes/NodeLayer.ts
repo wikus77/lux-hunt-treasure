@@ -70,7 +70,7 @@ export class NodeLayer {
       const themeIndex = (seed + i * 7) % themes.length;
       const theme = themes[themeIndex];
       const nameIndex = Math.floor(i / themes.length) % THEME_NAMES[theme].length;
-      const name = `${theme} ${THEME_NAMES[theme][nameIndex]}`;
+      const name = `${theme} • ${THEME_NAMES[theme][nameIndex]}`;
 
       this.nodes.push({
         id: i,
@@ -92,7 +92,7 @@ export class NodeLayer {
     }
 
     const sphereGeometry = new THREE.SphereGeometry(0.12, 8, 8);
-    const material = new THREE.MeshBasicMaterial();
+    const material = new THREE.MeshBasicMaterial({ vertexColors: true });
 
     this.instancedMesh = new THREE.InstancedMesh(
       sphereGeometry,

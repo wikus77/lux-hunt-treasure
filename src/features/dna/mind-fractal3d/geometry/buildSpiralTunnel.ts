@@ -35,6 +35,7 @@ export interface TunnelConfig {
   segments: number;
   radius: number;
   depth: number;
+  twist?: number; // Radians of twist per unit depth
 }
 
 export interface TunnelGeometry {
@@ -46,7 +47,7 @@ export interface TunnelGeometry {
  * Build a spiral tunnel with organic noise and depth degradation
  */
 export function buildSpiralTunnel(config: TunnelConfig): TunnelGeometry {
-  const { rings, segments, radius, depth } = config;
+  const { rings, segments, radius, depth, twist = 0 } = config;
   const rng = new SeededRandom(42);
   
   const positions: number[] = [];
@@ -57,8 +58,8 @@ export function buildSpiralTunnel(config: TunnelConfig): TunnelGeometry {
     const t = r / rings;
     const z = t * depth;
     
-    // Spiral rotation
-    const spiralRotation = t * Math.PI * 0.5;
+    // Spiral rotation + twist
+    const spiralRotation = t * Math.PI * 0.5 + t * twist;
     
     // Radius degradation (exponential toward center)
     const currentRadius = radius * Math.pow(1 - t, 1.2) + 0.5;

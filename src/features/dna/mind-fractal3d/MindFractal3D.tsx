@@ -15,6 +15,7 @@ import { CameraStore } from './utils/CameraStore';
 import { useMindFractalPersistence } from './persistence/useMindFractalPersistence';
 import { useMindLinkPersistence } from './persistence/useMindLinkPersistence';
 import { EvolutionOverlay } from './ui/EvolutionOverlay';
+import './ui/Tooltip.css';
 
 export interface MindFractal3DProps {
   className?: string;
@@ -129,10 +130,27 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     
     controls.update();
 
-    // Dynamic near plane for deep zoom
+    // Dynamic near plane + target follow for deep zoom
     controls.addEventListener('change', () => {
-      const distance = camera.position.length();
-      camera.near = Math.max(0.01, distance * 0.002);
+      // Update target to follow camera when zooming deep
+      const camDist = camera.position.length();
+      const targetDist = controls.target.length();
+      const zoomRatio = camDist / (tunnelDepth * 1.6);
+      
+      if (zoomRatio < 0.3) {
+        // Deep zoom: move target toward tunnel end
+        const targetZ = THREE.MathUtils.lerp(controls.target.z, -tunnelDepth * 0.9, 0.02);
+        controls.target.z = targetZ;
+      }
+      
+      // Clamp camera position to not go beyond tunnel end
+      if (camera.position.z < -tunnelDepth + 0.5) {
+        camera.position.z = -tunnelDepth + 0.5;
+      }
+      
+      // Calculate near relative to distance to target
+      const distanceToTarget = camera.position.distanceTo(controls.target);
+      camera.near = Math.max(0.01, distanceToTarget * 0.002);
       camera.updateProjectionMatrix();
       
       camStore.save({
@@ -155,6 +173,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     let tunnelMesh: THREE.LineSegments | null = null;
     let tunnelTorsion = 0.1;
     let tunnelRings = qualityPresets[qualityLevel].rings;
+    let lastRebuildTime = 0;
     
     const buildTunnel = () => {
       if (tunnelMesh) {
@@ -162,11 +181,13 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         tunnelMesh.geometry.dispose();
       }
 
+      const twistDelta = fieldSweep.getTwistDelta();
       const { positions, indices } = buildSpiralTunnel({
         rings: tunnelRings,
         segments: qualityPresets[qualityLevel].segments,
         radius: 10,
-        depth: -tunnelDepth
+        depth: -tunnelDepth,
+        twist: tunnelTorsion + twistDelta
       });
 
       const geometry = new THREE.BufferGeometry();
@@ -251,6 +272,9 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       raycaster.setFromCamera(mouse, camera);
       const nodeId = nodeLayer.raycast(raycaster);
       setHoveredNode(nodeId);
+      
+      // Change cursor
+      canvas.style.cursor = nodeId !== null ? 'pointer' : 'grab';
     };
 
     let lastClickTime = 0;
@@ -336,12 +360,17 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         if (dbResult?.milestone_added) {
           console.info('[MF3D] ✨ Evolution milestone!', dbResult);
           
-          // Increase tunnel complexity
-          tunnelTorsion += 0.05;
-          tunnelRings = Math.min(tunnelRings + 4, qualityPresets.high.rings);
-          tunnelGeometry = buildTunnel();
-          nodeLayer.regenerate(tunnelGeometry, 48, seed);
-          scheduler.setTunnelGeometry(tunnelGeometry);
+          // Debounce rebuild (max 1 every 2s)
+          const now = Date.now();
+          if (now - lastRebuildTime > 2000) {
+            // Increase tunnel complexity
+            tunnelTorsion += 0.05;
+            tunnelRings = Math.min(tunnelRings + 4, qualityPresets.high.rings);
+            tunnelGeometry = buildTunnel();
+            nodeLayer.regenerate(tunnelGeometry, 48, seed);
+            scheduler.setTunnelGeometry(tunnelGeometry);
+            lastRebuildTime = now;
+          }
           
           // Boost FX frequency
           scheduler.increaseFrequency(0.1);
@@ -409,7 +438,13 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       // Update systems
       controls.update();
       fieldSweep.update();
-      const fieldIntensity = fieldSweep.getIntensity();
+      let fieldIntensity = fieldSweep.getIntensity();
+      
+      // Reduce sweep intensity if reduced animations
+      if (reduced) {
+        fieldIntensity = 0.5 + (fieldIntensity - 1.0) * 0.5;
+      }
+      
       arcPool.update(deltaTime, fieldIntensity);
       nodeLayer.update(elapsedTime, hoveredNode);
       scheduler.adjustForFPS(avgFPS, deltaTime);
@@ -506,7 +541,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       
       {/* Tooltip for hovered node */}
       {hoveredNode !== null && nodeLayerRef.current && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/80 border border-cyan-400/30 backdrop-blur-sm">
+        <div className="mf-tooltip absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/80 border border-cyan-400/30 backdrop-blur-sm">
           <span className="text-sm text-cyan-400 font-medium">
             {nodeLayerRef.current.getNode(hoveredNode)?.name || 'Nodo'}
           </span>
