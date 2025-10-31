@@ -28,7 +28,7 @@ const ProfileHeader = ({
   
   // Special admin constants
   const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
-  const SPECIAL_ADMIN_CODE = 'X0197';
+  const SPECIAL_ADMIN_CODE = 'AG-X0197';
   
   // Determine if this is the admin user and use special code if needed
   const displayCode = user?.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase() 
