@@ -7056,6 +7056,10 @@ export type Database = {
       }
       get_max_buzz_for_week: { Args: { week_num: number }; Returns: number }
       get_max_map_generations: { Args: { p_week: number }; Returns: number }
+      get_mf_progress: {
+        Args: { p_seed: number; p_user_id: string }
+        Returns: Json
+      }
       get_my_agent_code: {
         Args: never
         Returns: {
@@ -7063,6 +7067,16 @@ export type Database = {
         }[]
       }
       get_my_balance: { Args: never; Returns: Json }
+      get_recent_links: {
+        Args: { p_limit?: number; p_seed: number; p_user_id: string }
+        Returns: {
+          created_at: string
+          intensity: number
+          node_a: number
+          node_b: number
+          theme: string
+        }[]
+      }
       get_top_agents: {
         Args: never
         Returns: {
@@ -7424,19 +7438,14 @@ export type Database = {
       }
       upsert_dna_mind_link: {
         Args: {
+          p_a: number
+          p_b: number
           p_intensity?: number
-          p_node_a: number
-          p_node_b: number
           p_seed: number
           p_theme: string
           p_user_id: string
         }
-        Returns: {
-          milestone_added: boolean
-          milestone_level: number
-          theme_links: number
-          total_links: number
-        }[]
+        Returns: Json
       }
       upsert_fcm_subscription: {
         Args: {
