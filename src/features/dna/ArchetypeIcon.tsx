@@ -102,17 +102,8 @@ export const ArchetypeIcon: React.FC<ArchetypeIconProps> = ({
     ),
     Oracle: (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-        {/* Prismatic icosahedron */}
-        <motion.g
-          animate={shouldAnimate ? {
-            rotate: 360
-          } : {}}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        >
+        {/* Prismatic icosahedron - STATIC (no rotation) */}
+        <g>
           <path
             d="M12 2L6 7l6 5 6-5-6-5z"
             fill={color}
@@ -141,7 +132,7 @@ export const ArchetypeIcon: React.FC<ArchetypeIconProps> = ({
             fill={color}
             opacity="0.6"
           />
-        </motion.g>
+        </g>
       </svg>
     ),
     Warden: (
@@ -188,7 +179,7 @@ export const ArchetypeIcon: React.FC<ArchetypeIconProps> = ({
     ),
     Nomad: (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-        {/* Orbiting sphere with trails */}
+        {/* Orbiting sphere - STATIC (no rotation) */}
         <circle
           cx="12"
           cy="12"
@@ -206,17 +197,16 @@ export const ArchetypeIcon: React.FC<ArchetypeIconProps> = ({
           strokeWidth="1"
           fill="none"
           opacity="0.5"
-        />
-        <motion.g
           animate={shouldAnimate ? {
-            rotate: 360
+            scale: [1, 1.05, 1]
           } : {}}
           transition={{
-            duration: 4,
+            duration: 2,
             repeat: Infinity,
-            ease: "linear"
+            ease: "easeInOut"
           }}
-        >
+        />
+        <g>
           <circle cx="20" cy="12" r="2" fill={color} opacity="0.8" />
           <motion.circle
             cx="18"
@@ -233,7 +223,7 @@ export const ArchetypeIcon: React.FC<ArchetypeIconProps> = ({
               ease: "easeInOut"
             }}
           />
-        </motion.g>
+        </g>
       </svg>
     )
   };
