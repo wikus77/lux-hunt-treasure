@@ -136,9 +136,9 @@ export class ElectricArcPool {
   }
 
   /**
-   * Update all arcs and remove expired ones
+   * Update all arcs with field intensity modulation
    */
-  update(deltaTime: number): void {
+  update(deltaTime: number, fieldIntensity: number = 1.0): void {
     const now = performance.now();
     
     for (let i = this.arcs.length - 1; i >= 0; i--) {
@@ -156,6 +156,7 @@ export class ElectricArcPool {
         // Update uniforms
         arc.material.uniforms.uTime.value += deltaTime;
         arc.material.uniforms.uLifetimeRatio.value = ratio;
+        arc.material.uniforms.uFieldIntensity.value = fieldIntensity;
       }
     }
   }
