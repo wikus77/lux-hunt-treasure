@@ -7,6 +7,9 @@ import { User, Camera } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { usePulseEnergy } from "@/hooks/usePulseEnergy";
+import PulseEnergyBadge from "@/components/pulse/PulseEnergyBadge";
+import PulseEnergyProgressBar from "@/components/pulse/PulseEnergyProgressBar";
 
 // Subscription plan ring colors
 const getSubscriptionRingColor = (plan: string) => {
@@ -72,6 +75,7 @@ const ProfileInfo = ({
   setAgentTitle,
 }: ProfileInfoProps) => {
   const isMobile = useIsMobile();
+  const { pulseEnergy, currentRank, nextRank, progressToNextRank, loading: peLoading } = usePulseEnergy();
   
   return (
     <div className="flex-shrink-0 flex flex-col items-center md:w-1/3">
@@ -183,10 +187,23 @@ const ProfileInfo = ({
               </div>
             </div>
             
-            {/* PULSE ENERGY & RANK INTEGRATION PLACEHOLDER */}
-            {/* TODO: Uncomment after backend migration is complete
-            <PulseEnergySection />
-            */}
+            {/* PULSE ENERGY & RANK SYSTEM */}
+            {!peLoading && (
+              <div className="mb-4 space-y-3">
+                {/* Badge Grado */}
+                <div className="flex justify-center">
+                  <PulseEnergyBadge rank={currentRank} showCode={true} />
+                </div>
+                
+                {/* Progress Bar PE */}
+                <PulseEnergyProgressBar
+                  currentRank={currentRank}
+                  nextRank={nextRank}
+                  progressPercent={progressToNextRank}
+                  currentPE={pulseEnergy}
+                />
+              </div>
+            )}
             
             {/* Personal Information Summary */}
             {personalInfo && (personalInfo.firstName || personalInfo.email || personalInfo.phone) && (

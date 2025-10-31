@@ -110,7 +110,7 @@ const ProfileTabs = ({
               <span className="text-base font-medium">{stats.totalPlayTime}</span>
             </div>
             <div className="stat-item">
-              <span className="text-xs text-gray-400">Punti totali: </span>
+              <span className="text-xs text-gray-400">PE totali: </span>
               <span className="text-base font-medium">{stats.pointsEarned.toLocaleString('it-IT')}</span>
             </div>
           </div>
