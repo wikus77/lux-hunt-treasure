@@ -14,6 +14,8 @@ import { CameraStore } from './utils/CameraStore';
 import { useMindFractalPersistence } from './persistence/useMindFractalPersistence';
 import { useMindLinkPersistence } from './persistence/useMindLinkPersistence';
 import { EvolutionOverlay } from './ui/EvolutionOverlay';
+import { ProgressHUD } from './ui/ProgressHUD';
+import type { DNAScores } from '../dnaTypes';
 
 export interface MindFractal3DProps {
   className?: string;
@@ -47,6 +49,12 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
   });
   const [linkOverlay, setLinkOverlay] = useState({ visible: false, theme: '', message: '' });
   
+  // Progress tracking for HUD
+  const [totalLinks, setTotalLinks] = useState(0);
+  const [linksByTheme, setLinksByTheme] = useState<Record<string, number>>({});
+  const [milestones, setMilestones] = useState(0);
+  const [activeTheme, setActiveTheme] = useState<string | null>(null);
+  
   const { trackNodeSeen } = useMindFractalPersistence();
   const { trackLink, loadLinks } = useMindLinkPersistence();
   
@@ -67,15 +75,18 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     const canvas = canvasRef.current;
     let animationId: number;
     
-    // === RENDERER SETUP ===
+    // === RENDERER SETUP === [MF3D] Optimized for 60fps
+    const isMobile = /iPad|iPhone|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const renderer = new THREE.WebGLRenderer({
       canvas,
-      antialias: true,
+      antialias: false, // Disabled for performance
       alpha: true,
-      powerPreference: 'high-performance'
+      powerPreference: 'high-performance',
+      precision: isMobile ? 'mediump' : 'highp',
+      preserveDrawingBuffer: false
     });
     
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = Math.min(1.5, window.devicePixelRatio || 1); // Cap at 1.5 for performance
     renderer.setPixelRatio(dpr);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -116,11 +127,11 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
     // === ORBIT CONTROLS (DEEP ZOOM) ===
     const controls = new OrbitControls(camera, canvas);
-    controls.enableDamping = !reduced;
-    controls.dampingFactor = 0.08;
+    controls.enableDamping = isMobile ? false : !reduced; // No damping on mobile for responsiveness
+    controls.dampingFactor = 0.05;
     controls.minDistance = 0.001 * tunnelDepth; // DEEP ZOOM: Can reach 99.9% of tunnel depth
     controls.maxDistance = 1.6 * tunnelDepth;
-    controls.enablePan = false;
+    controls.enablePan = true; // Enable pan for exploration
     controls.maxPolarAngle = Math.PI * 0.95;
     
     if (savedCam?.target) {
@@ -206,6 +217,9 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     const gridArcPool = new GridArcPool(scene);
     gridArcPool.setParent(tunnelGroup); // [MF3D] Attach arcs to tunnelGroup for alignment
     gridArcPool.bindGeometry(tunnelGeometry);
+    gridArcPool.setFPSTarget(isMobile ? 45 : 60); // Dynamic budgeter
+    
+    console.info('[MF3D] GridArcPool initialized with budgeter target:', isMobile ? 45 : 60, 'fps');
     
     const fieldBreath = new FieldBreath({ periodMs: 12000, amp: 0.30 });
     
@@ -220,6 +234,16 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     const fpsMonitor = new FPSMonitor();
     let frameCount = 0;
     let lastQualityCheck = Date.now();
+    let isPaused = false;
+    
+    // Pause rendering when tab hidden
+    const handleVisibilityChange = () => {
+      isPaused = document.hidden;
+      if (!document.hidden) {
+        console.info('[MF3D] Tab visible, resuming rendering');
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // === RESUME USER LINKS ===
     const resumeLinks = async () => {
@@ -352,15 +376,34 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         // Track in DB
         const dbResult = await trackLink(selectedNodeA, nodeId, nodeA.theme, seed, 1.0);
         
-        // Connection overlay
-        setLinkOverlay({ visible: true, theme: nodeA.theme, message: `Connessione riuscita: ${nodeA.theme} +1` });
+        // Update progress tracking
+        setTotalLinks(prev => prev + 1);
+        setLinksByTheme(prev => ({ ...prev, [nodeA.theme]: (prev[nodeA.theme] || 0) + 1 }));
+        setActiveTheme(nodeA.theme);
+        
+        // Connection overlay with progress
+        const themeCount = (linksByTheme[nodeA.theme] || 0) + 1;
+        setLinkOverlay({ 
+          visible: true, 
+          theme: nodeA.theme, 
+          message: `Connessione riuscita: ${nodeA.theme} +1 • ${themeCount}/12` 
+        });
         setTimeout(() => setLinkOverlay(prev => ({ ...prev, visible: false })), 1200);
+        
+        // Play link sound
+        const linkAudio = new Audio('/sounds/link-success.mp3');
+        linkAudio.volume = 0.3;
+        linkAudio.play().catch(() => {}); // Silent fail if audio unavailable
         
         console.info('[MF3D] link-created', { from: selectedNodeA, to: nodeId, length: linkResult.length.toFixed(2), theme: nodeA.theme, dbTracked: !!dbResult });
         
         // Check for milestone
         if (dbResult?.milestone_added) {
-          console.info('[MF3D] ✨ Evolution milestone!', dbResult);
+          const level = dbResult.milestone_level || 1;
+          console.info('[MF3D] ✨ Evolution milestone!', { theme: nodeA.theme, level, twist: tunnelTwist });
+          
+          // Update milestones count
+          setMilestones(prev => prev + 1);
           
           // Increase tunnel complexity
           tunnelTwist = Math.min(tunnelTwist + 0.12, 0.8);
@@ -370,34 +413,29 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
           setEvolution({
             visible: true,
             theme: nodeA.theme,
-            level: dbResult.milestone_level || 1,
-            message: `Evolution milestone ${dbResult.milestone_level} unlocked! Twist: ${tunnelTwist.toFixed(2)}rad`
+            level,
+            message: `Milestone raggiunta: ${nodeA.theme} L${level}`
           });
           
-          setTimeout(() => setEvolution(prev => ({ ...prev, visible: false })), 3000);
+          setTimeout(() => setEvolution(prev => ({ ...prev, visible: false })), 2500);
+          
+          // Play milestone sound
+          const milestoneAudio = new Audio('/sounds/milestone.mp3');
+          milestoneAudio.volume = 0.4;
+          milestoneAudio.play().catch(() => {});
           
           // Rebuild with debounce
           setTimeout(() => {
             tunnelGeometry = buildTunnel();
             nodeLayer.regenerate(tunnelGeometry, 48, seed);
             gridArcPool.bindGeometry(tunnelGeometry);
+            // Apply twist rotation on rebuild
+            tunnelGroup.rotation.z = tunnelTwist * 1.4; // Amplified for visibility
           }, 2000);
           
-          // Show overlay
-          setEvolution({
-            visible: true,
-            theme: nodeA.theme,
-            level: dbResult.milestone_level,
-            message: 'Il tuo DNA ha raggiunto una nuova consapevolezza'
-          });
-          
           window.dispatchEvent(new CustomEvent('mindfractal:evolve', {
-            detail: { theme: nodeA.theme, level: dbResult.milestone_level }
+            detail: { theme: nodeA.theme, level }
           }));
-          
-          setTimeout(() => {
-            setEvolution(prev => ({ ...prev, visible: false }));
-          }, 2500);
         }
         
         // Emit progress
@@ -448,6 +486,9 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     const animate = () => {
       animationId = requestAnimationFrame(animate);
 
+      // === ANIMATION LOOP ===
+      if (isPaused) return; // Skip rendering when tab hidden
+      
       const deltaTime = clock.getDelta();
       const elapsedTime = clock.getElapsedTime();
 
@@ -455,6 +496,9 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       const currentFPS = fpsMonitor.tick();
       const avgFPS = fpsMonitor.getAverage();
       frameCount++;
+      
+      // Pass FPS to arc pool for dynamic budgeting
+      gridArcPool.setCurrentFPS(avgFPS);
 
       // Quality scaling every 2s
       if (frameCount % 120 === 0 && !reduced) {
@@ -474,14 +518,14 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       controls.update();
       
       // Field breathing effect - applied to tunnelGroup (tunnel + nodes breathe together)
+      // NO LIVE ROTATION: rotation.z set only on rebuild (milestone)
       const nowMs = performance.now();
       const intensity = fieldBreath.tick(nowMs);
       const breathScale = reduced ? 1.0 + (intensity - 1.0) * 0.5 : intensity;
-      const twistDelta = fieldBreath.getTwistDelta(nowMs);
       
-      // Apply breathing and twist to entire group (tunnel + nodes)
+      // Apply breathing ONLY to entire group (tunnel + nodes)
       tunnelGroup.scale.set(breathScale, breathScale, 0.95 + breathScale * 0.05);
-      tunnelGroup.rotation.z = (tunnelTwist + twistDelta) * 1.4; // Enhanced rotation for visible twist
+      // tunnelGroup.rotation.z is NOT updated per-frame, only on milestone rebuild
       
       if (tunnelMesh?.material) {
         (tunnelMesh.material as THREE.LineBasicMaterial).opacity = 0.85 * intensity;
@@ -503,19 +547,20 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         camera.position.z = minZ;
       }
 
-      // Log stats periodically (rate-limited to ~1/s)
+      // Log stats periodically (rate-limited to 1/s max)
       if (frameCount % 60 === 0) {
         const stats = nodeLayer.getStats();
-        console.info('[MF3D] Stats:', {
+        const arcStats = gridArcPool.getStats();
+        console.info('[MF3D] Stats', {
           fps: avgFPS.toFixed(1),
-          drawCalls: renderer.info.render.calls,
+          draw: renderer.info.render.calls,
+          arcs: arcStats.active,
+          pr: renderer.getPixelRatio().toFixed(1),
           quality: qualityLevel,
-          arcs: gridArcPool ? (gridArcPool as any).arcs?.length || 0 : 0,
-          breathIntensity: intensity.toFixed(3),
+          breathIntensity: intensity.toFixed(2),
           twist: tunnelTwist.toFixed(2),
           nodes: { discovered: stats.discovered, linked: stats.linked },
-          camera: { z: camera.position.z.toFixed(1), targetZ: controls.target.z.toFixed(1), near: camera.near.toFixed(3) },
-          lastSurge: lastSurgeLog.rings > 0 ? `${lastSurgeLog.rings}rings/${lastSurgeLog.duration}ms` : 'none'
+          camera: { z: camera.position.z.toFixed(1), targetZ: controls.target.z.toFixed(1), near: camera.near.toFixed(3) }
         });
       }
 
@@ -544,6 +589,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     return () => {
       mountedRef.current = false;
       cancelAnimationFrame(animationId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('resize', handleResize);
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('pointerdown', handlePointerDown);
@@ -581,6 +627,16 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         </div>
       )}
       
+      {/* Progress HUD */}
+      <ProgressHUD
+        totalLinks={totalLinks}
+        linksByTheme={linksByTheme}
+        milestones={milestones}
+        maxMilestones={12}
+        activeTheme={activeTheme}
+      />
+      
+      {/* Evolution overlay */}
       {evolution.visible && (
         <EvolutionOverlay
           theme={evolution.theme}

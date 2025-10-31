@@ -71,11 +71,18 @@ export class GridArcPool {
   private parent: THREE.Object3D | null = null; // [MF3D] Parent for arcs (align with tunnelGroup)
   private arcs: Arc[] = [];
   private edges: Array<[THREE.Vector3, THREE.Vector3]> = [];
-  private readonly MAX_ARCS = 200; // BOOSTED +100% for maximum density
+  private maxArcs = 200; // Dynamic, will be adjusted by budgeter
   private lastIdleSpawn = 0;
   private lastSurge = 0;
   private surgeInterval = 3000 + Math.random() * 3000; // 3-6s randomized
   private ringsPerSegment: number = 0; // Will be calculated from geometry
+  
+  // [MF3D] Dynamic FPS budgeter
+  private fpsTarget = 60;
+  private currentFPS = 60;
+  private targetRate = 7.0; // Hz, dynamically adjusted
+  private lastBudgetAdjust = 0;
+  private readonly BUDGET_ADJUST_INTERVAL = 500; // Adjust every 500ms
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -84,6 +91,56 @@ export class GridArcPool {
   // [MF3D] Attach arcs to a parent (e.g., tunnelGroup) so they inherit breath/twist
   setParent(parent: THREE.Object3D): void {
     this.parent = parent;
+  }
+
+  // [MF3D] Set FPS target for dynamic budgeting
+  setFPSTarget(target: number): void {
+    this.fpsTarget = target;
+  }
+
+  // [MF3D] Update current FPS for budgeting
+  setCurrentFPS(fps: number): void {
+    this.currentFPS = fps;
+    this.adjustBudget();
+  }
+
+  // [MF3D] Dynamic budget adjustment based on FPS
+  private adjustBudget(): void {
+    const now = performance.now();
+    if (now - this.lastBudgetAdjust < this.BUDGET_ADJUST_INTERVAL) return;
+    this.lastBudgetAdjust = now;
+
+    const oldRate = this.targetRate;
+    const oldMax = this.maxArcs;
+
+    // If FPS below target, reduce budget
+    if (this.currentFPS < this.fpsTarget) {
+      this.targetRate = Math.max(2.0, this.targetRate * 0.9); // -10%, min 2 Hz
+      this.maxArcs = Math.max(80, Math.floor(this.maxArcs * 0.9)); // -10%, min 80
+    } 
+    // If FPS comfortably above target, increase budget
+    else if (this.currentFPS >= this.fpsTarget + 5) {
+      this.targetRate = Math.min(7.0, this.targetRate * 1.1); // +10%, max 7 Hz
+      this.maxArcs = Math.min(200, Math.floor(this.maxArcs * 1.1)); // +10%, max 200
+    }
+
+    // Log budget changes
+    if (oldRate !== this.targetRate || oldMax !== this.maxArcs) {
+      console.info('[MF3D] budget', { 
+        fps: this.currentFPS.toFixed(1), 
+        rate: `${oldRate.toFixed(1)}Hz->${this.targetRate.toFixed(1)}Hz`, 
+        maxArcs: `${oldMax}->${this.maxArcs}` 
+      });
+    }
+  }
+
+  // [MF3D] Get pool stats
+  getStats(): { active: number; max: number; rate: number } {
+    return {
+      active: this.arcs.length,
+      max: this.maxArcs,
+      rate: this.targetRate
+    };
   }
 
   /**
@@ -133,14 +190,14 @@ export class GridArcPool {
   }
 
   /**
-   * Update and spawn idle arcs + periodic surge
+   * Update and spawn idle arcs + periodic surge (uses dynamic budgeter)
    */
   update(deltaTime: number, opts: { reduced: boolean }): void {
     const now = performance.now();
     
-    // Spawn idle arcs - BOOSTED +100%
-    const targetRate = opts.reduced ? 3.5 : 7.0; // Hz (+100% from original 1.2/2.5)
-    const interval = 1000 / targetRate;
+    // Spawn idle arcs - dynamic rate from budgeter
+    const effectiveRate = opts.reduced ? this.targetRate * 0.5 : this.targetRate;
+    const interval = 1000 / effectiveRate;
     
     if (now - this.lastIdleSpawn > interval && this.edges.length > 0) {
       this.spawnIdleArcChain();
@@ -161,7 +218,7 @@ export class GridArcPool {
       const ratio = age / arc.lifetime;
 
       if (ratio >= 1.0) {
-        this.scene.remove(arc.mesh);
+        (this.parent ?? this.scene).remove(arc.mesh);
         arc.mesh.geometry.dispose();
         arc.material.dispose();
         this.arcs.splice(i, 1);
@@ -202,10 +259,10 @@ export class GridArcPool {
     color: THREE.Color,
     isLink: boolean
   ): void {
-    if (this.arcs.length >= this.MAX_ARCS) {
+    if (this.arcs.length >= this.maxArcs) { // Use dynamic max
       const oldest = this.arcs.shift();
       if (oldest) {
-        this.scene.remove(oldest.mesh);
+        (this.parent ?? this.scene).remove(oldest.mesh);
         oldest.mesh.geometry.dispose();
         oldest.material.dispose();
       }
@@ -284,7 +341,7 @@ export class GridArcPool {
 
   dispose(): void {
     for (const arc of this.arcs) {
-      this.scene.remove(arc.mesh);
+      (this.parent ?? this.scene).remove(arc.mesh);
       arc.mesh.geometry.dispose();
       arc.material.dispose();
     }
