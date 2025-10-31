@@ -183,6 +183,11 @@ const ProfileInfo = ({
               </div>
             </div>
             
+            {/* PULSE ENERGY & RANK INTEGRATION PLACEHOLDER */}
+            {/* TODO: Uncomment after backend migration is complete
+            <PulseEnergySection />
+            */}
+            
             {/* Personal Information Summary */}
             {personalInfo && (personalInfo.firstName || personalInfo.email || personalInfo.phone) && (
               <div className="mb-4 p-2 bg-black/30 rounded-md border border-gray-800">
