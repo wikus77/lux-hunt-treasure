@@ -65,7 +65,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     // Controls with deep zoom enabled
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enablePan = true;
-    controls.enableDamping = true;
+    controls.enableDamping = !reducedAnimations; // Disable damping when reduced animations is on
     controls.dampingFactor = 0.05;
     controls.minDistance = 0.1;
     controls.maxDistance = 50;
@@ -299,7 +299,8 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
       // Update field breath
       fieldBreath.update();
-      const breathingScale = reducedAnimations ? 1.0 : fieldBreath.getScale();
+      const baseScale = fieldBreath.getScale();
+      const breathingScale = reducedAnimations ? 1.0 + (baseScale - 1.0) * 0.5 : baseScale; // 50% amplitude when reduced
       const twistDelta = fieldBreath.getTwistDelta();
       
       // Apply breathing (including Z-axis)
