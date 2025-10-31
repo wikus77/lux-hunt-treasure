@@ -73,7 +73,7 @@ export const useEnhancedNavigation = () => {
     toMap: preserveFunctionName(() => navigateWithFeedback('/map'), 'toMap'),
     toBuzz: preserveFunctionName(() => navigateWithFeedback('/buzz'), 'toBuzz'),
     toGames: preserveFunctionName(() => navigateWithFeedback('/games'), 'toGames'),
-    toProfile: preserveFunctionName(() => navigateWithFeedback('/settings/agent-profile'), 'toProfile'),
+    toProfile: preserveFunctionName(() => navigateWithFeedback('/profile'), 'toProfile'),
     toSettings: preserveFunctionName(() => navigateWithFeedback('/settings'), 'toSettings'),
     toNotifications: preserveFunctionName(() => navigateWithFeedback('/notifications'), 'toNotifications'),
     toLeaderboard: preserveFunctionName(() => navigateWithFeedback('/leaderboard'), 'toLeaderboard'),
@@ -88,7 +88,7 @@ export const useEnhancedNavigation = () => {
     if (path.startsWith('/map')) return 'map';
     if (path.startsWith('/buzz')) return 'buzz';
     if (path.startsWith('/games')) return 'games';
-    if (path.startsWith('/settings/agent-profile') || path.startsWith('/profile')) return 'profile';
+    if (path.startsWith('/profile')) return 'profile';
     if (path.startsWith('/settings')) return 'settings';
     if (path.startsWith('/notifications')) return 'notifications';
     if (path.startsWith('/leaderboard')) return 'leaderboard';

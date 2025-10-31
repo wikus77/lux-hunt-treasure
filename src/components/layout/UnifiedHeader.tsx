@@ -29,7 +29,7 @@ const pageTitles: Record<string, string> = {
   '/games': 'MISSION',
   '/leaderboard': 'MISSION',
   '/notifications': 'MISSION',
-  '/settings/agent-profile': 'MISSION',
+  '/profile': 'MISSION',
   '/settings': 'MISSION'
 };
 
@@ -197,7 +197,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
   const currentPageTitle = pageTitles[location] || 'M1SSION';
   const isHomePage = location === '/home';
-  const reduceAnimations = location === '/settings/agent-profile';
+  const reduceAnimations = location === '/profile' || location === '/settings/agent-profile';
   
   // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT - Pages that should NOT show back arrow 
   const bottomNavPages = ['/', '/home', '/map', '/buzz', '/games', '/notifications', '/leaderboard', '/intelligence'];
@@ -382,5 +382,3 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 };
 
 export default UnifiedHeader;
-
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
