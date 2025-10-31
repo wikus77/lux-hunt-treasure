@@ -12,8 +12,8 @@ export class ElectricScheduler {
   private arcPool: ElectricArcPool;
   private nodeLayer: NodeLayer | null = null;
   private lastSpawn = 0;
-  private baseRate = 1.2; // arcs per second
-  private currentRate = 1.2;
+  private baseRate = 2.5; // arcs per second (increased for visibility)
+  private currentRate = 2.5;
   private lowFpsStart = 0;
   private tunnelGeometry: THREE.BufferGeometry | null = null;
 
@@ -52,7 +52,7 @@ export class ElectricScheduler {
    * Increase spawn rate after milestone (max +40%)
    */
   increaseFrequency(boost: number): void {
-    this.baseRate = Math.min(1.2 * 1.4, this.baseRate * (1 + boost));
+    this.baseRate = Math.min(2.5 * 1.4, this.baseRate * (1 + boost));
     this.currentRate = this.baseRate;
   }
 

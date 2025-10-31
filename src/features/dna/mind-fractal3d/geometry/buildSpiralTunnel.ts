@@ -58,8 +58,10 @@ export function buildSpiralTunnel(config: TunnelConfig): TunnelGeometry {
     const t = r / rings;
     const z = t * depth;
     
-    // Spiral rotation + twist
-    const spiralRotation = t * Math.PI * 0.5 + t * twist;
+    // Spiral rotation + progressive twist per ring (PERCEPTIBLE TORSION)
+    const baseSpiralRotation = t * Math.PI * 0.5;
+    const progressiveTwist = twist * (r / rings); // Linear twist accumulation
+    const spiralRotation = baseSpiralRotation + progressiveTwist;
     
     // Radius degradation (exponential toward center)
     const currentRadius = radius * Math.pow(1 - t, 1.2) + 0.5;
