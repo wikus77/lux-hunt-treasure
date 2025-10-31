@@ -18,24 +18,29 @@ const PulseEnergyBadge = ({ rank, className = '', showCode = true }: PulseEnergy
     );
   }
 
+  // Ensure AG-01 is visible by increasing contrast for gray rank
+  const isBaseRank = rank.code === 'AG-01';
+  const displayColor = isBaseRank ? '#4A90E2' : rank.color; // Blue instead of gray for AG-01
+
   return (
     <div 
       className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md border ${className}`}
       style={{
-        backgroundColor: `${rank.color}20`,
-        borderColor: rank.color,
-        boxShadow: `0 0 12px ${rank.color}40`
+        backgroundColor: `${displayColor}20`,
+        borderColor: displayColor,
+        boxShadow: `0 0 12px ${displayColor}40`,
+        minHeight: '36px'
       }}
     >
       <span className="text-lg" role="img" aria-label="rank symbol">
         {rank.symbol}
       </span>
       <div className="flex flex-col">
-        <span className="text-xs font-bold leading-tight" style={{ color: rank.color }}>
+        <span className="text-xs font-bold leading-tight" style={{ color: displayColor }}>
           {rank.name_it}
         </span>
         {showCode && (
-          <span className="text-[10px] text-gray-400 font-mono leading-tight">
+          <span className="text-[10px] font-mono leading-tight" style={{ color: displayColor, opacity: 0.7 }}>
             {rank.code}
           </span>
         )}

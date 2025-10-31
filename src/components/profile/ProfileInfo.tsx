@@ -7,6 +7,7 @@ import { User, Camera } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEffect } from "react";
 import { usePulseEnergy } from "@/hooks/usePulseEnergy";
 import PulseEnergyBadge from "@/components/pulse/PulseEnergyBadge";
 import PulseEnergyProgressBar from "@/components/pulse/PulseEnergyProgressBar";
@@ -76,6 +77,16 @@ const ProfileInfo = ({
 }: ProfileInfoProps) => {
   const isMobile = useIsMobile();
   const { pulseEnergy, currentRank, nextRank, progressToNextRank, loading: peLoading } = usePulseEnergy();
+  
+  // Debug logging for PE system
+  useEffect(() => {
+    console.log('[usePulseEnergy]', { 
+      pulseEnergy, 
+      currentRank: currentRank?.code, 
+      nextRank: nextRank?.code, 
+      progressToNextRank 
+    });
+  }, [pulseEnergy, currentRank, nextRank, progressToNextRank]);
   
   return (
     <div className="flex-shrink-0 flex flex-col items-center md:w-1/3">
