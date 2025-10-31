@@ -202,9 +202,14 @@ const ProfileInfo = ({
             {/* PULSE ENERGY & RANK SYSTEM */}
             {!peLoading && (
               <div className="mb-4 space-y-3" data-testid="pe-system-container">
-                {/* Badge Grado */}
+                 {/* Badge Grado - MCP Highlight */}
                 <div className="flex justify-center">
-                  <PulseEnergyBadge rank={currentRank} showCode={true} data-testid="pe-badge" />
+                  <PulseEnergyBadge 
+                    rank={currentRank} 
+                    showCode={true} 
+                    className={currentRank?.code === 'SRC-∞' ? 'ring-2 ring-purple-500 animate-pulse' : ''}
+                    data-testid="pe-badge" 
+                  />
                 </div>
                 
                 {/* Progress Bar PE */}

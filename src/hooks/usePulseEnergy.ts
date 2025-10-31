@@ -34,11 +34,13 @@ interface UsePulseEnergyReturn {
  * Pulse Energy + Rank System Hook
  * Wrapper di useXpSystem() che espone PE + Gerarchia v2.0
  * Mantiene retrocompatibilità con XP legacy
+ * CRITICAL FIX: Legge rank_id direttamente da profiles per MCP
  */
 export const usePulseEnergy = (): UsePulseEnergyReturn => {
   const xpSystem = useXpSystem();
   const [ranks, setRanks] = useState<AgentRank[]>([]);
   const [ranksLoading, setRanksLoading] = useState(true);
+  const [userRankId, setUserRankId] = useState<number | null>(null);
 
   // Fetch agent ranks catalog (cached)
   useEffect(() => {
@@ -67,14 +69,48 @@ export const usePulseEnergy = (): UsePulseEnergyReturn => {
     fetchRanks();
   }, []);
 
+  // CRITICAL: Fetch user's assigned rank_id from profiles (for MCP override)
+  useEffect(() => {
+    const fetchUserRank = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('rank_id')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!error && data?.rank_id) {
+          setUserRankId(data.rank_id);
+          console.log('[usePulseEnergy] User rank_id from DB:', data.rank_id);
+        }
+      } catch (err) {
+        console.error('[usePulseEnergy] Error fetching user rank:', err);
+      }
+    };
+
+    fetchUserRank();
+  }, []);
+
   // Bridge: XP → PE (alias until backend migration completes)
   const pulseEnergy = xpSystem.xpStatus.total_xp;
 
-  // Calculate current rank based on PE
+  // Calculate current rank based on rank_id (priority) or PE fallback
   const currentRank = useMemo(() => {
     if (ranks.length === 0) return null;
 
-    // Find rank where pe_min <= pulseEnergy < pe_max (or pe_max is null for highest)
+    // PRIORITY: If user has assigned rank_id (e.g., MCP), use that
+    if (userRankId !== null) {
+      const assignedRank = ranks.find(r => r.id === userRankId);
+      if (assignedRank) {
+        console.log('[usePulseEnergy] Using assigned rank_id:', assignedRank.code);
+        return assignedRank;
+      }
+    }
+
+    // FALLBACK: Calculate rank from PE for normal users
     for (let i = ranks.length - 1; i >= 0; i--) {
       const rank = ranks[i];
       if (pulseEnergy >= rank.pe_min) {
@@ -84,9 +120,9 @@ export const usePulseEnergy = (): UsePulseEnergyReturn => {
       }
     }
 
-    // Fallback: first rank (Recruit)
+    // Last resort: first rank (Recruit)
     return ranks[0] || null;
-  }, [ranks, pulseEnergy]);
+  }, [ranks, pulseEnergy, userRankId]);
 
   // Calculate next rank
   const nextRank = useMemo(() => {

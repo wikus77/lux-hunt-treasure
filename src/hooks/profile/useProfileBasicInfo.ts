@@ -63,6 +63,14 @@ export const useProfileBasicInfo = () => {
   // Handle saving profile data with realtime updates
   const handleSaveBasicInfo = async () => {
     try {
+      console.log('[ProfileBasicInfo] Starting save...', {
+        name,
+        bio,
+        agentCode,
+        agentTitle,
+        profileImage
+      });
+
       // Save to localStorage immediately for instant feedback
       if (profileImage) {
         localStorage.setItem('profileImage', profileImage);
@@ -72,7 +80,7 @@ export const useProfileBasicInfo = () => {
       localStorage.setItem('agentCode', agentCode);
 
       // Use realtime update function for immediate UI update and Supabase sync
-      await updateProfile({
+      const result = await updateProfile({
         full_name: name,
         bio: bio,
         agent_code: agentCode,
@@ -80,16 +88,23 @@ export const useProfileBasicInfo = () => {
         avatar_url: profileImage
       });
 
+      console.log('[ProfileBasicInfo] Save result:', result);
+
       setIsEditing(false);
       toast({
-        title: "Profilo aggiornato",
-        description: "Le modifiche al tuo dossier agente sono state salvate."
+        title: "✅ Profilo aggiornato",
+        description: "Le modifiche al tuo dossier agente sono state salvate con successo."
       });
-    } catch (error) {
-      console.error("Error saving profile:", error);
+    } catch (error: any) {
+      console.error("[ProfileBasicInfo] Error saving profile:", error);
+      
+      // Enhanced error reporting
+      const errorMessage = error?.message || 'Errore sconosciuto';
+      const errorCode = error?.code || 'N/A';
+      
       toast({
-        title: "Errore",
-        description: "Impossibile salvare le modifiche. Riprova.",
+        title: "❌ Impossibile salvare le modifiche",
+        description: `Errore: ${errorMessage} (Code: ${errorCode}). Verifica la connessione e riprova.`,
         variant: "destructive"
       });
     }
