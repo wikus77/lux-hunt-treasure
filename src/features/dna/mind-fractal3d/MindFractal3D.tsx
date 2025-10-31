@@ -249,6 +249,9 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       raycaster.setFromCamera(mouse, camera);
       const nodeId = nodeLayer.raycast(raycaster);
       setHoveredNode(nodeId);
+      
+      // Update cursor
+      canvas.style.cursor = nodeId !== null ? 'pointer' : 'default';
     };
 
     let lastClickTime = 0;
@@ -469,12 +472,15 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         camera.position.z = minZ;
       }
 
-      // Log stats periodically
-      if (frameCount === 60) {
+      // Log stats periodically (rate-limited to ~1/s)
+      if (frameCount % 60 === 0) {
         console.info('[MF3D] Stats:', {
           fps: avgFPS.toFixed(1),
           drawCalls: renderer.info.render.calls,
-          quality: qualityLevel
+          quality: qualityLevel,
+          arcs: gridArcPool ? (gridArcPool as any).arcs?.length || 0 : 0,
+          breathIntensity: intensity.toFixed(3),
+          twist: tunnelTwist.toFixed(2)
         });
       }
 
@@ -549,13 +555,21 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       )}
       
       {/* Tooltip for hovered node */}
-      {hoveredNode !== null && nodeLayerRef.current && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/80 border border-cyan-400/30 backdrop-blur-sm">
-          <span className="text-sm text-cyan-400 font-medium">
-            {nodeLayerRef.current.getNode(hoveredNode)?.name || 'Nodo'}
-          </span>
-        </div>
-      )}
+      {hoveredNode !== null && nodeLayerRef.current && (() => {
+        const node = nodeLayerRef.current.getNode(hoveredNode);
+        if (!node) return null;
+        // Format: "Theme • Name"
+        const parts = node.name.split(' ');
+        const theme = parts[0];
+        const name = parts.slice(1).join(' ');
+        return (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/80 border border-cyan-400/30 backdrop-blur-sm">
+            <span className="text-sm text-cyan-400 font-medium">
+              {theme} <span className="text-cyan-300">•</span> {name}
+            </span>
+          </div>
+        );
+      })()}
     </div>
   );
 };
