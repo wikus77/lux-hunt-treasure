@@ -12,37 +12,16 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import BottomNavigation from "@/components/layout/BottomNavigation";
-import { usePulseEnergy } from "@/hooks/usePulseEnergy";
-import RankUpModal from "@/components/pulse/RankUpModal";
-import type { AgentRank } from "@/hooks/usePulseEnergy";
+// Pulse Energy components removed - now in /settings/agent-profile
 
 const Profile = () => {
   const { navigate } = useWouterNavigation();
   const { profileData, actions } = useProfileData();
   const isMobile = useIsMobile();
   const { notificationsDrawerOpen, closeNotificationsDrawer } = useNotificationManager();
-  const { currentRank } = usePulseEnergy();
-  
-  // RankUpModal state
-  const [showRankUp, setShowRankUp] = useState(false);
-  const [newRank, setNewRank] = useState<AgentRank | null>(null);
   
   // Initialize real-time notifications (this sets up the listener)
   useRealTimeNotifications();
-  
-  // Detect rank changes and show RankUpModal once
-  useEffect(() => {
-    if (!currentRank) return;
-    
-    const lastRankCode = localStorage.getItem('__m1_last_rank_code');
-    
-    if (currentRank.code !== lastRankCode) {
-      setNewRank(currentRank);
-      setShowRankUp(true);
-      localStorage.setItem('__m1_last_rank_code', currentRank.code);
-      console.log('[Profile] Rank-up detected:', { old: lastRankCode, new: currentRank.code });
-    }
-  }, [currentRank]);
   
   const navigateToPersonalInfo = () => {
     navigate('/profile/personal-info');
@@ -127,15 +106,6 @@ const Profile = () => {
           open={notificationsDrawerOpen}
           onOpenChange={closeNotificationsDrawer}
         />
-        
-        {/* RankUpModal - Notifica promozione grado */}
-        {showRankUp && newRank && (
-          <RankUpModal
-            open={showRankUp}
-            onClose={() => setShowRankUp(false)}
-            newRank={newRank}
-          />
-        )}
       </ProfileLayout>
       
       {/* Bottom Navigation - Uniform positioning like Home */}
