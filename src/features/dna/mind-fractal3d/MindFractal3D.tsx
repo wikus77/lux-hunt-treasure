@@ -127,12 +127,12 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
     // === ORBIT CONTROLS (DEEP ZOOM) ===
     const controls = new OrbitControls(camera, canvas);
-    // === MANUAL CONTROLS === [MF3D] Full control enabled
+    // === MANUAL CONTROLS - STATIC TUNNEL === [MF3D]
     controls.enableRotate = true; // Manual rotation enabled
     controls.enableZoom = true; // Manual zoom enabled
     controls.enablePan = true; // Manual pan enabled
-    controls.enableDamping = isMobile ? false : true; // Smooth damping on desktop
-    controls.dampingFactor = 0.05;
+    controls.enableDamping = false; // NO DAMPING = no drift/movement when idle
+    controls.dampingFactor = 0;
     controls.autoRotate = false; // HARD OFF: no auto rotation
     controls.autoRotateSpeed = 0; // ensure no drift
     controls.minDistance = 0.001 * tunnelDepth; // DEEP ZOOM: Can reach 99.9% of tunnel depth
@@ -519,18 +519,19 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         }
       }
 
-      // Update systems
-      controls.update();
+      // [NO AUTO-UPDATE] Don't call controls.update() every frame to prevent drift
+      // controls.update();
       
       // Field breathing effect - applied to tunnelGroup (tunnel + nodes breathe together)
-      // NO LIVE ROTATION: rotation.z set only on rebuild (milestone)
+      // LUNG-LIKE BREATHING: uniform expansion/contraction
       const nowMs = performance.now();
       const intensity = fieldBreath.tick(nowMs);
-      const breathScale = reduced ? 1.0 + (intensity - 1.0) * 0.5 : intensity;
+      const breathScale = reduced ? 1.0 : intensity;
       
-      // Apply breathing ONLY to entire group (tunnel + nodes)
+      // Apply breathing ONLY to entire group (tunnel + nodes) - UNIFORM SCALE ONLY
       tunnelGroup.scale.set(breathScale, breathScale, breathScale);
-      // tunnelGroup.rotation.z is NOT updated per-frame, only on milestone rebuild
+      // tunnelGroup.rotation is NEVER touched - stays at last manual position
+      // tunnelGroup.position is NEVER touched - stays at (0,0,0)
       
       if (tunnelMesh?.material) {
         (tunnelMesh.material as THREE.LineBasicMaterial).opacity = 0.85 * intensity;
