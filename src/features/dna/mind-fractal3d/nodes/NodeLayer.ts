@@ -92,14 +92,21 @@ export class NodeLayer {
       (this.instancedMesh.material as THREE.Material).dispose();
     }
 
-    const sphereGeometry = new THREE.SphereGeometry(0.12, 8, 8);
-    const material = new THREE.MeshBasicMaterial({ vertexColors: true });
+    const sphereGeometry = new THREE.SphereGeometry(0.14, 10, 10);
+    const material = new THREE.MeshBasicMaterial({ 
+      vertexColors: true,
+      depthWrite: true,
+      depthTest: true
+    });
 
     this.instancedMesh = new THREE.InstancedMesh(
       sphereGeometry,
       material,
       this.nodes.length
     );
+
+    // Ensure matrix auto-update for transforms from parent
+    this.instancedMesh.matrixAutoUpdate = true;
 
     const matrix = new THREE.Matrix4();
     const color = new THREE.Color();
@@ -118,7 +125,7 @@ export class NodeLayer {
       this.instancedMesh.instanceColor.needsUpdate = true;
     }
 
-    this.scene.add(this.instancedMesh);
+    // DO NOT add to scene here - parent will add to tunnelGroup
   }
 
   /**

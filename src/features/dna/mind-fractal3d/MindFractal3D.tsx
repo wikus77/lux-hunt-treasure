@@ -116,8 +116,8 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     const controls = new OrbitControls(camera, canvas);
     controls.enableDamping = !reduced;
     controls.dampingFactor = 0.08;
-    controls.minDistance = 0.02 * tunnelDepth; // Can zoom very close
-    controls.maxDistance = 1.6 * tunnelDepth;
+    controls.minDistance = 0.02 * tunnelDepth; // Ultra-close zoom
+    controls.maxDistance = 1.8 * tunnelDepth; // Extended far range
     controls.enablePan = false;
     controls.maxPolarAngle = Math.PI * 0.95;
     
@@ -127,29 +127,35 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     
     controls.update();
 
-    // Dynamic near plane + target follow for deep zoom
+    // Aggressive deep-zoom: target follows camera into tunnel progressively
     controls.addEventListener('change', () => {
-      // Progressive target follow: when dolly > 70% depth, move target into tunnel
-      const camDist = camera.position.length();
-      const zoomDepth = Math.abs(camera.position.z);
-      const depthRatio = zoomDepth / tunnelDepth;
+      const v = camera.position.clone().sub(controls.target);
+      const dist = v.length();
       
-      if (depthRatio > 0.7) {
-        // Deep zoom: lerp target toward -0.9 * depth with smooth easing
-        const targetZ = THREE.MathUtils.lerp(controls.target.z, -tunnelDepth * 0.9, 0.03);
-        controls.target.z = targetZ;
-      }
+      // Progressive target advance: starts at 50% depth, reaches 90% at full zoom
+      const t = THREE.MathUtils.clamp(1 - dist / (1.6 * tunnelDepth), 0, 1);
+      const targetZ = -tunnelDepth * (0.1 + 0.8 * t); // 10% → 90% tunnel depth
+      controls.target.lerp(new THREE.Vector3(0, 0, targetZ), 0.08); // Smooth easing
       
-      // Clamp camera to not exceed tunnel end (with small epsilon)
-      const minZ = -tunnelDepth + 0.3;
+      // Hard clamp: prevent camera from exceeding tunnel end
+      const minZ = -tunnelDepth + 0.2;
       if (camera.position.z < minZ) {
         camera.position.z = minZ;
       }
       
-      // Stable near plane: calculated from camera→target distance
-      const distanceToTarget = camera.position.distanceTo(controls.target);
-      camera.near = Math.max(0.01, distanceToTarget * 0.003);
+      // Dynamic near plane: prevents Z-fighting at extreme close-up
+      camera.near = Math.max(0.01, dist * 0.002);
       camera.updateProjectionMatrix();
+      
+      // Diagnostic log (every 120 frames)
+      if (Math.random() < 0.01) {
+        console.info('[MF3D] Deep-zoom:', {
+          cameraZ: camera.position.z.toFixed(2),
+          targetZ: controls.target.z.toFixed(2),
+          dist: dist.toFixed(2),
+          near: camera.near.toFixed(4)
+        });
+      }
       
       camStore.save({
         position: camera.position,
@@ -217,19 +223,26 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     nodeLayer.initialize(48, seed);
     nodeLayerRef.current = nodeLayer;
     
-    // Add nodes to tunnel group for unified transforms
-    if (nodeLayer.mesh) {
-      tunnelGroup.add(nodeLayer.mesh);
-    }
+    // CRITICAL: Add nodes to tunnel group for unified transforms (breathing, torsion)
+    // NodeLayer no longer adds mesh to scene, we parent it to tunnelGroup
+    tunnelGroup.add(nodeLayer.mesh);
+    nodeLayer.mesh.matrixAutoUpdate = true;
     
-    // Assert: nodeLayer.mesh must be child of tunnelGroup
+    // Diagnostic: log parenting structure
+    console.info('[MF3D] Parenting check:', {
+      tunnelGroupChildren: tunnelGroup.children.length,
+      nodeLayerParent: nodeLayer.mesh.parent?.type,
+      nodeLayerMatrixAutoUpdate: nodeLayer.mesh.matrixAutoUpdate
+    });
+    
+    // Assert: nodeLayer.mesh MUST be child of tunnelGroup for sync transforms
     console.assert(
-      nodeLayer.mesh && nodeLayer.mesh.parent === tunnelGroup,
-      '[MF3D] ASSERT FAILED: nodeLayer.mesh.parent !== tunnelGroup'
+      nodeLayer.mesh.parent === tunnelGroup,
+      '[MF3D] ❌ ASSERT FAILED: nodeLayer.mesh.parent !== tunnelGroup → nodes will desync!'
     );
     console.assert(
-      tunnelMesh && tunnelGroup.children.includes(tunnelMesh),
-      '[MF3D] ASSERT FAILED: tunnelGroup does not include tunnelMesh'
+      tunnelGroup.children.includes(tunnelMesh!),
+      '[MF3D] ❌ ASSERT FAILED: tunnelGroup missing tunnelMesh'
     );
     
 
@@ -294,8 +307,19 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       const nodeId = nodeLayer.raycast(raycaster);
       setHoveredNode(nodeId);
       
-      // Change cursor
-      canvas.style.cursor = nodeId !== null ? 'pointer' : 'grab';
+      // Change cursor: pointer on node, default otherwise
+      canvas.style.cursor = nodeId !== null ? 'pointer' : 'default';
+      
+      // Diagnostic: log raycast hits occasionally
+      if (nodeId !== null && Math.random() < 0.05) {
+        const node = nodeLayer.getNode(nodeId);
+        console.info('[MF3D] Raycast hit:', {
+          nodeId,
+          state: node?.state,
+          theme: node?.theme,
+          mouseNDC: `(${mouse.x.toFixed(2)}, ${mouse.y.toFixed(2)})`
+        });
+      }
     };
 
     const handlePointerDown = (event: PointerEvent) => {
@@ -404,24 +428,38 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         if (dbResult?.milestone_added) {
           console.info('[MF3D] ✨ Evolution milestone!', dbResult);
           
-          // Debounce rebuild (max 1 every 2s)
+          // Debounce rebuild (max 1 every 2s to avoid flicker)
           const now = Date.now();
           if (now - lastRebuildTime > 2000) {
-            // Increase tunnel complexity and torsion
-            tunnelTorsion += 0.05;
+            // Progressive evolution: increase tunnel complexity + torsion
+            tunnelTorsion = Math.min(tunnelTorsion + 0.05, 0.6); // Cap at 0.6 rad/unit
             tunnelRings = Math.min(tunnelRings + 4, qualityPresets.high.rings);
-            const twistDelta = reduced ? 0 : fieldSweep.getTwistDelta();
-            tunnelGeometry = buildTunnel(twistDelta);
+            
+            // Rebuild tunnel with new torsion
+            tunnelGeometry = buildTunnel(0); // Base torsion baked into geometry
+            
+            // Regenerate nodes on new tunnel geometry
             nodeLayer.regenerate(tunnelGeometry, 48, seed);
+            
+            // Re-parent nodes to tunnelGroup after regenerate
+            if (nodeLayer.mesh.parent !== tunnelGroup) {
+              tunnelGroup.add(nodeLayer.mesh);
+            }
             nodeLayer.mesh.instanceMatrix.needsUpdate = true;
+            
             scheduler.setTunnelGeometry(tunnelGeometry);
             lastRebuildTime = now;
-            console.info('[MF3D] rebuild: milestone, torsion:', tunnelTorsion.toFixed(3));
+            
+            console.info('[MF3D] 🔄 Rebuild: milestone', {
+              torsion: tunnelTorsion.toFixed(3),
+              rings: tunnelRings,
+              nodesParented: nodeLayer.mesh.parent === tunnelGroup
+            });
             
             // Assert: after rebuild, instanceMatrix must need update
             console.assert(
               nodeLayer.mesh.instanceMatrix.needsUpdate === true,
-              '[MF3D] ASSERT FAILED: nodeLayer.mesh.instanceMatrix.needsUpdate !== true after rebuild'
+              '[MF3D] ❌ ASSERT: nodeLayer.mesh.instanceMatrix.needsUpdate !== true after rebuild'
             );
           }
           
@@ -485,18 +523,23 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       const avgFPS = fpsMonitor.getAverage();
       frameCount++;
 
-      // Quality scaling every 2s
+      // Quality scaling every 2s if FPS drops
       if (frameCount % 120 === 0 && !reduced) {
         const now = Date.now();
         
         if (avgFPS < 45 && qualityLevel !== 'low' && (now - lastQualityCheck) > 2000) {
           qualityLevel = qualityLevel === 'high' ? 'mobile' : 'low';
-          const twistDelta = reduced ? 0 : fieldSweep.getTwistDelta();
-          tunnelGeometry = buildTunnel(twistDelta);
+          tunnelGeometry = buildTunnel(0);
           nodeLayer.regenerate(tunnelGeometry, 48, seed);
+          
+          // Re-parent nodes to tunnelGroup after quality rebuild
+          if (nodeLayer.mesh.parent !== tunnelGroup) {
+            tunnelGroup.add(nodeLayer.mesh);
+          }
           nodeLayer.mesh.instanceMatrix.needsUpdate = true;
+          
           scheduler.setTunnelGeometry(tunnelGeometry);
-          console.info('[MF3D] rebuild: quality', qualityLevel);
+          console.info('[MF3D] 🔄 Rebuild: quality degraded to', qualityLevel);
           lastQualityCheck = now;
         }
       }
@@ -506,24 +549,26 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       fieldSweep.update();
       let fieldIntensity = fieldSweep.getIntensity();
       
-      // Reduce sweep intensity if reduced animations (no micro-torsion)
-      if (reduced) {
-        fieldIntensity = 1.0; // Disable breathing
-      }
+      // If reduced animations, halve intensity (not disable completely)
+      const effectiveIntensity = reduced ? 0.5 * fieldIntensity : fieldIntensity;
       
-      arcPool.update(deltaTime, fieldIntensity);
+      arcPool.update(deltaTime, effectiveIntensity);
       nodeLayer.update(elapsedTime, hoveredNode);
       scheduler.adjustForFPS(avgFPS, deltaTime);
-      scheduler.update(deltaTime, reduced);
+      scheduler.update(deltaTime, reduced); // Scheduler now handles reduced internally
       
-      // Coherent breathing: apply same intensity to tunnelGroup (includes nodes)
+      // Coherent breathing: apply intensity to tunnelGroup (includes nodes via parenting)
       const breathingScale = reduced ? 1.0 : fieldIntensity;
       tunnelGroup.scale.set(breathingScale, breathingScale, 1.0);
       
-      // Apply micro-torsion via fieldSweep deltaTwist
+      // Apply micro-torsion from fieldSweep (subtle rotation)
       if (!reduced) {
         const twistDelta = fieldSweep.getTwistDelta();
-        tunnelGroup.rotation.z += twistDelta * 0.001; // Very subtle per-frame twist
+        // Micro-torsion: ±0.015 delta → scaled to ±0.15° per frame
+        tunnelGroup.rotation.z = tunnelTorsion * 0.15 + twistDelta * 10;
+      } else {
+        // Static torsion when reduced
+        tunnelGroup.rotation.z = tunnelTorsion * 0.15;
       }
       
       // Update tunnel opacity
