@@ -324,7 +324,13 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
           trackNodeSeen(`node_${nodeId}`, seed);
         }
         
-        // Create visual arc with white spike
+        // Create ULTRA BRIGHT visual arc connecting the nodes
+        console.info('[MF3D] 🔗 Creating link arc:', {
+          from: selectedNodeA,
+          to: nodeId,
+          posA: nodeA.position.toArray().map(v => v.toFixed(2)),
+          posB: node.position.toArray().map(v => v.toFixed(2))
+        });
         gridArcPool.spawnLinkArc(nodeA.position, node.position);
         
         // Boost breathing intensity

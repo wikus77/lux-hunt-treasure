@@ -47,14 +47,17 @@ void main() {
   
   vec3 color = uColor;
   
-  // White spike at wave peak (last 15%)
+  // White spike at wave peak (last 15%) - BOOSTED
   if (wave > 0.85) {
-    color = mix(color, vec3(1.5), (wave - 0.85) / 0.15);
+    color = mix(color, vec3(3.0), (wave - 0.85) / 0.15); // Extreme white spike
   }
   
-  // Link arcs are brighter - BOOSTED +150% intensity
-  float brightnessMod = mix(2.0, 3.0, uIsLink); // Maximum brightness for visibility
+  // Link arcs are ULTRA bright for maximum visibility
+  float brightnessMod = mix(3.0, 5.0, uIsLink); // 5x for link arcs (pure white)
   float alpha = wave * taper * (1.0 - uLifetimeRatio) * brightnessMod;
+  
+  // Boost base visibility
+  alpha = clamp(alpha * 1.5, 0.0, 1.0);
   
   gl_FragColor = vec4(color, alpha);
 }
@@ -112,10 +115,15 @@ export class GridArcPool {
   }
 
   /**
-   * Spawn white link arc
+   * Spawn ULTRA BRIGHT white link arc (pure white, maximum visibility)
    */
   spawnLinkArc(start: THREE.Vector3, end: THREE.Vector3): void {
-    this.createArc(start, end, 0.4, new THREE.Color(0xffffff), true);
+    console.info('[GridArcPool] 🔗 Link arc spawned:', { 
+      from: start.toArray().map(v => v.toFixed(2)), 
+      to: end.toArray().map(v => v.toFixed(2)),
+      length: start.distanceTo(end).toFixed(2)
+    });
+    this.createArc(start, end, 0.6, new THREE.Color(0xffffff), true); // Longer TTL for link
   }
 
   /**
@@ -198,8 +206,8 @@ export class GridArcPool {
     }
 
     const curve = new THREE.LineCurve3(start, end);
-    const radius = isLink ? 0.14 : 0.10; // BOOSTED +75% for maximum visibility
-    const geometry = new THREE.TubeGeometry(curve, 8, radius, 4, false);
+    const radius = isLink ? 0.20 : 0.12; // MAXIMUM thickness for visibility
+    const geometry = new THREE.TubeGeometry(curve, 16, radius, 8, false); // More segments for smooth appearance
 
     const material = new THREE.ShaderMaterial({
       uniforms: {
@@ -212,10 +220,13 @@ export class GridArcPool {
       fragmentShader: arcFragmentShader,
       transparent: true,
       blending: THREE.AdditiveBlending,
-      depthWrite: false
+      depthWrite: false,
+      depthTest: false // CRITICAL: Render on top of tunnel mesh
     });
 
     const mesh = new THREE.Mesh(geometry, material);
+    mesh.renderOrder = 9999; // CRITICAL: Force arcs to render after tunnel
+    mesh.frustumCulled = false; // Prevent culling during camera movement
     this.scene.add(mesh);
 
     this.arcs.push({
