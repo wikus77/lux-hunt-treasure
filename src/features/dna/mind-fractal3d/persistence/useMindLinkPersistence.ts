@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { NodeTheme } from '../game/NodeSystem';
+import type { NodeTheme } from '../nodes/NodeLayer';
 
 interface LinkResult {
   total_links: number;
