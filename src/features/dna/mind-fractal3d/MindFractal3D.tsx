@@ -175,19 +175,18 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     let tunnelRings = qualityPresets[qualityLevel].rings;
     let lastRebuildTime = 0;
     
-    const buildTunnel = () => {
+    const buildTunnel = (additionalTwist: number = 0) => {
       if (tunnelMesh) {
         scene.remove(tunnelMesh);
         tunnelMesh.geometry.dispose();
       }
 
-      const twistDelta = fieldSweep.getTwistDelta();
       const { positions, indices } = buildSpiralTunnel({
         rings: tunnelRings,
         segments: qualityPresets[qualityLevel].segments,
         radius: 10,
         depth: -tunnelDepth,
-        twist: tunnelTorsion + twistDelta
+        twist: tunnelTorsion + additionalTwist
       });
 
       const geometry = new THREE.BufferGeometry();
@@ -209,6 +208,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     };
 
     let tunnelGeometry = buildTunnel();
+    console.info('[MF3D] buildTunnel OK');
 
     // === NODE LAYER ===
     const nodeLayer = new NodeLayer(scene, tunnelGeometry);
@@ -226,6 +226,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     scheduler.setTunnelGeometry(tunnelGeometry);
     
     const fieldSweep = new FieldSweep();
+    console.info('[MF3D] FieldSweep init OK');
 
     // === FPS MONITOR ===
     const fpsMonitor = new FPSMonitor();
@@ -366,10 +367,12 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
             // Increase tunnel complexity
             tunnelTorsion += 0.05;
             tunnelRings = Math.min(tunnelRings + 4, qualityPresets.high.rings);
-            tunnelGeometry = buildTunnel();
+            const twistDelta = fieldSweep.getTwistDelta();
+            tunnelGeometry = buildTunnel(twistDelta);
             nodeLayer.regenerate(tunnelGeometry, 48, seed);
             scheduler.setTunnelGeometry(tunnelGeometry);
             lastRebuildTime = now;
+            console.info('[MF3D] Milestone rebuild OK, torsion:', tunnelTorsion.toFixed(3));
           }
           
           // Boost FX frequency
@@ -427,7 +430,8 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         
         if (avgFPS < 45 && qualityLevel !== 'low' && (now - lastQualityCheck) > 2000) {
           qualityLevel = qualityLevel === 'high' ? 'mobile' : 'low';
-          tunnelGeometry = buildTunnel();
+          const twistDelta = fieldSweep.getTwistDelta();
+          tunnelGeometry = buildTunnel(twistDelta);
           nodeLayer.regenerate(tunnelGeometry, 48, seed);
           scheduler.setTunnelGeometry(tunnelGeometry);
           console.info('[MF3D] Quality downgraded to:', qualityLevel);
