@@ -250,11 +250,11 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                 </div>
 
                 {/* Mind Fractal 3D - Interactive tunnel with nodes and electric arcs */}
-                <div className="flex justify-center relative -mx-6 md:-mx-12 w-full">
+                <div className="relative w-full h-[70vh] md:h-screen md:max-h-screen overflow-hidden">
                   {USE_MF3D ? (
                     <DNAErrorBoundary>
                       <MindFractal3D
-                        className="w-full h-[600px] md:h-[700px] max-h-[80vh] rounded-xl overflow-hidden"
+                        className="w-full h-full rounded-none md:rounded-xl"
                         seed={dnaProfile.intuito * 1000 + dnaProfile.audacia * 100 + dnaProfile.etica * 10 + dnaProfile.rischio}
                         onReady={() => console.log('[DNAHub] Mind Fractal 3D ready')}
                         onProgress={(p) => {

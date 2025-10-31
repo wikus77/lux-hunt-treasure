@@ -133,6 +133,8 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     controls.enablePan = true; // Manual pan enabled
     controls.enableDamping = isMobile ? false : true; // Smooth damping on desktop
     controls.dampingFactor = 0.05;
+    controls.autoRotate = false; // HARD OFF: no auto rotation
+    controls.autoRotateSpeed = 0; // ensure no drift
     controls.minDistance = 0.001 * tunnelDepth; // DEEP ZOOM: Can reach 99.9% of tunnel depth
     controls.maxDistance = 1.6 * tunnelDepth;
     controls.maxPolarAngle = Math.PI * 0.95;
@@ -538,11 +540,11 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       gridArcPool.update(deltaTime, { reduced });
       nodeLayer.update(elapsedTime, hoveredNode);
       
-      // Deep-zoom target follow
-      const camDist = camera.position.length();
-      const targetProgress = THREE.MathUtils.clamp(1 - camDist / (1.6 * tunnelDepth), 0, 1);
-      const targetZ = -tunnelDepth * (0.05 + 0.95 * targetProgress);
-      controls.target.lerp(new THREE.Vector3(0, 0, targetZ), 0.08);
+      // [STATIC CAMERA] Disable automatic target follow to keep tunnel perfectly still
+      // const camDist = camera.position.length();
+      // const targetProgress = THREE.MathUtils.clamp(1 - camDist / (1.6 * tunnelDepth), 0, 1);
+      // const targetZ = -tunnelDepth * (0.05 + 0.95 * targetProgress);
+      // controls.target.lerp(new THREE.Vector3(0, 0, targetZ), 0.08);
       
       // DEEP ZOOM: Clamp camera to reach 99.9% of tunnel depth
       const minZ = -tunnelDepth + (0.001 * tunnelDepth); // 99.9% reach
