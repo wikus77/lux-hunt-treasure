@@ -519,19 +519,17 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         }
       }
 
-      // [NO AUTO-UPDATE] Don't call controls.update() every frame to prevent drift
-      // controls.update();
-      
-      // Field breathing effect - applied to tunnelGroup (tunnel + nodes breathe together)
-      // LUNG-LIKE BREATHING: uniform expansion/contraction
+      // [BREATHING DISABLED BY DEFAULT] User must enable via reduced=false
+      // Apply ZERO breathing initially - completely static
       const nowMs = performance.now();
-      const intensity = fieldBreath.tick(nowMs);
-      const breathScale = reduced ? 1.0 : intensity;
+      const intensity = reduced ? 1.0 : fieldBreath.tick(nowMs);
+      const breathScale = 1.0; // HARD STATIC: no breathing at all
       
-      // Apply breathing ONLY to entire group (tunnel + nodes) - UNIFORM SCALE ONLY
+      // Apply scale to group - but it's 1.0 (no change)
       tunnelGroup.scale.set(breathScale, breathScale, breathScale);
-      // tunnelGroup.rotation is NEVER touched - stays at last manual position
-      // tunnelGroup.position is NEVER touched - stays at (0,0,0)
+      // NEVER touch rotation or position
+      // tunnelGroup.rotation = NEVER MODIFIED
+      // tunnelGroup.position = NEVER MODIFIED
       
       if (tunnelMesh?.material) {
         (tunnelMesh.material as THREE.LineBasicMaterial).opacity = 0.85 * intensity;
