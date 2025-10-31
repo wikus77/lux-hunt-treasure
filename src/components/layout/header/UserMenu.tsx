@@ -49,7 +49,7 @@ const UserMenu = ({ onClickMail, enableAvatarUpload }: UserMenuProps) => {
         <DropdownMenuSeparator className="bg-white/10" />
         <DropdownMenuItem 
           className="text-white/80 hover:text-white hover:bg-white/10"
-          onClick={() => navigate("/settings/agent-profile")}
+          onClick={() => navigate("/profile")}
         >
           <User className="mr-2 h-4 w-4 text-cyan-400" />
           Il mio profilo

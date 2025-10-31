@@ -193,7 +193,7 @@ const PersonalInfoPage: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/settings/agent-profile')}
+                onClick={() => navigate('/profile')}
                 className="p-2 hover:bg-white/10"
               >
                 <ArrowLeft className="h-5 w-5" />
