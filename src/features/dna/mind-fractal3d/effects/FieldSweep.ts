@@ -9,11 +9,16 @@ export class FieldSweep {
   private sweepDuration = 2000; // 2s pulse
   private sweepInterval = 10000 + Math.random() * 5000; // 10-15s
   private currentIntensity = 1.0;
+  private currentTwist = 0.0; // -0.02 to +0.02 delta twist
   private sweeping = false;
   private sweepStart = 0;
 
   getIntensity(): number {
     return this.currentIntensity;
+  }
+
+  getTwistDelta(): number {
+    return this.currentTwist;
   }
 
   update(): void {
@@ -44,9 +49,18 @@ export class FieldSweep {
         this.currentIntensity = 1.2 - (eased - 0.5) * 0.2 * 2;
       }
 
+      // Twist delta: 0 → ±0.02 → 0 (randomize direction)
+      const twistDir = Math.random() > 0.5 ? 1 : -1;
+      if (progress < 0.5) {
+        this.currentTwist = twistDir * eased * 0.02 * 2;
+      } else {
+        this.currentTwist = twistDir * (0.02 - (eased - 0.5) * 0.02 * 2);
+      }
+
       if (progress >= 1.0) {
         this.sweeping = false;
         this.currentIntensity = 1.0;
+        this.currentTwist = 0.0;
       }
     }
   }
