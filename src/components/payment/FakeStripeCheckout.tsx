@@ -87,9 +87,9 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
         description: `Piano ${planName} attivato con successo.`,
       });
 
-      // Redirect to /profile after success with badge update
+      // Redirect to /settings/agent-profile after success with badge update
       setTimeout(() => {
-        navigate('/profile');
+        navigate('/settings/agent-profile');
       }, 2000);
       
     } catch (error) {

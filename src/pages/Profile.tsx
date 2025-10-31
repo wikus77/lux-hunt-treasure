@@ -92,9 +92,9 @@ const Profile = () => {
                   isEditing={profileData.isEditing}
                   setPersonalNotes={actions.setPersonalNotes}
                   togglePinBadge={actions.togglePinBadge}
-                  navigateToPersonalInfo={() => navigate('/profile/personal-info')}
-                  navigateToPrivacySecurity={() => navigate('/profile/security')}
-                  navigateToPaymentMethods={() => navigate('/profile/payments')}
+                  navigateToPersonalInfo={() => navigate('/settings/agent-profile/personal-info')}
+                  navigateToPrivacySecurity={() => navigate('/settings/agent-profile/security')}
+                  navigateToPaymentMethods={() => navigate('/settings/agent-profile/payments')}
                   navigateToSubscriptions={() => navigate('/subscriptions')}
                 />
               </div>
@@ -133,3 +133,6 @@ const Profile = () => {
 };
 
 export default Profile;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
