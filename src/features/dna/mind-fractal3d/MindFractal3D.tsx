@@ -167,6 +167,10 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       low: { rings: 56, segments: 40 }
     };
 
+    // === TUNNEL GROUP (Contains tunnel + nodes for unified transforms) ===
+    const tunnelGroup = new THREE.Group();
+    scene.add(tunnelGroup);
+
     // === TUNNEL GEOMETRY ===
     let tunnelMesh: THREE.LineSegments | null = null;
     let tunnelTorsion = 0.1;
@@ -175,7 +179,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     
     const buildTunnel = (additionalTwist: number = 0) => {
       if (tunnelMesh) {
-        scene.remove(tunnelMesh);
+        tunnelGroup.remove(tunnelMesh);
         tunnelMesh.geometry.dispose();
       }
 
@@ -200,7 +204,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       });
 
       tunnelMesh = new THREE.LineSegments(edges, material);
-      scene.add(tunnelMesh);
+      tunnelGroup.add(tunnelMesh);
       
       return geometry;
     };
@@ -212,6 +216,21 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     const nodeLayer = new NodeLayer(scene, tunnelGeometry);
     nodeLayer.initialize(48, seed);
     nodeLayerRef.current = nodeLayer;
+    
+    // Add nodes to tunnel group for unified transforms
+    if (nodeLayer.mesh) {
+      tunnelGroup.add(nodeLayer.mesh);
+    }
+    
+    // Assert: nodeLayer.mesh must be child of tunnelGroup
+    console.assert(
+      nodeLayer.mesh && nodeLayer.mesh.parent === tunnelGroup,
+      '[MF3D] ASSERT FAILED: nodeLayer.mesh.parent !== tunnelGroup'
+    );
+    console.assert(
+      tunnelMesh && tunnelGroup.children.includes(tunnelMesh),
+      '[MF3D] ASSERT FAILED: tunnelGroup does not include tunnelMesh'
+    );
     
 
     // === LINK ENGINE ===
@@ -260,6 +279,9 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     resumeLinks();
 
     // === INTERACTION HANDLERS ===
+    let pointerDownPos = { x: 0, y: 0 };
+    let pointerDownTime = 0;
+    
     const handlePointerMove = (event: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
       const mouse = new THREE.Vector2(
@@ -276,8 +298,27 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       canvas.style.cursor = nodeId !== null ? 'pointer' : 'grab';
     };
 
+    const handlePointerDown = (event: PointerEvent) => {
+      pointerDownPos = { x: event.clientX, y: event.clientY };
+      pointerDownTime = Date.now();
+    };
+
+    const handlePointerCancel = () => {
+      linkEngine.resetPending();
+      setSelectedNodeA(null);
+    };
+
     let lastClickTime = 0;
     const onCanvasClick = async (event: PointerEvent) => {
+      // Check if this is a real click (not drag)
+      const deltaX = Math.abs(event.clientX - pointerDownPos.x);
+      const deltaY = Math.abs(event.clientY - pointerDownPos.y);
+      const deltaTime = Date.now() - pointerDownTime;
+      
+      if (deltaX > 6 || deltaY > 6 || deltaTime > 500) {
+        return; // Was a drag, not a click
+      }
+      
       const now = Date.now();
       if (now - lastClickTime < 250) return; // Debounce
       lastClickTime = now;
@@ -297,7 +338,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       const node = nodeLayer.getNode(nodeId);
       if (!node) return;
 
-      console.info('[MF3D] Node clicked:', nodeId, node.theme, node.state);
+      console.info('[MF3D] node-click:', { id: nodeId, state: node.state });
 
       // First click - discover or select
       if (selectedNodeA === null) {
@@ -306,7 +347,13 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
           trackNodeSeen(`node_${nodeId}`, seed);
         }
         setSelectedNodeA(nodeId);
-        console.info('[MF3D] Selected node A:', nodeId, node.name);
+        linkEngine.addPendingNode(nodeId);
+        
+        // Assert: pending node must match
+        console.assert(
+          linkEngine.getPendingNode() === nodeId,
+          '[MF3D] ASSERT FAILED: linkEngine.pendingNodeId !== nodeId'
+        );
         
         window.dispatchEvent(new CustomEvent('mindfractal:node-selected', {
           detail: { nodeId, theme: node.theme, worldPos: node.position.clone() }
@@ -353,8 +400,6 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         // Track in DB
         const dbResult = await trackLink(selectedNodeA, nodeId, nodeA.theme, seed, 1.0);
         
-        console.info('[MF3D] link-created:', { from: selectedNodeA, to: nodeId, theme: nodeA.theme });
-        
         // Check for milestone
         if (dbResult?.milestone_added) {
           console.info('[MF3D] ✨ Evolution milestone!', dbResult);
@@ -368,9 +413,16 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
             const twistDelta = reduced ? 0 : fieldSweep.getTwistDelta();
             tunnelGeometry = buildTunnel(twistDelta);
             nodeLayer.regenerate(tunnelGeometry, 48, seed);
+            nodeLayer.mesh.instanceMatrix.needsUpdate = true;
             scheduler.setTunnelGeometry(tunnelGeometry);
             lastRebuildTime = now;
-            console.info('[MF3D] Milestone rebuild OK, torsion:', tunnelTorsion.toFixed(3));
+            console.info('[MF3D] rebuild: milestone, torsion:', tunnelTorsion.toFixed(3));
+            
+            // Assert: after rebuild, instanceMatrix must need update
+            console.assert(
+              nodeLayer.mesh.instanceMatrix.needsUpdate === true,
+              '[MF3D] ASSERT FAILED: nodeLayer.mesh.instanceMatrix.needsUpdate !== true after rebuild'
+            );
           }
           
           // Boost FX frequency
@@ -404,10 +456,19 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         });
         
         setSelectedNodeA(null);
+        linkEngine.resetPending();
+        
+        // Assert: after successful link, pending must be null
+        console.assert(
+          linkEngine.getPendingNode() === null,
+          '[MF3D] ASSERT FAILED: linkEngine.pendingNodeId !== null after link'
+        );
       }
     };
 
     canvas.addEventListener('pointermove', handlePointerMove);
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    canvas.addEventListener('pointercancel', handlePointerCancel);
     canvas.addEventListener('click', onCanvasClick);
 
     // === ANIMATION LOOP ===
@@ -433,8 +494,9 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
           const twistDelta = reduced ? 0 : fieldSweep.getTwistDelta();
           tunnelGeometry = buildTunnel(twistDelta);
           nodeLayer.regenerate(tunnelGeometry, 48, seed);
+          nodeLayer.mesh.instanceMatrix.needsUpdate = true;
           scheduler.setTunnelGeometry(tunnelGeometry);
-          console.info('[MF3D] Quality downgraded to:', qualityLevel);
+          console.info('[MF3D] rebuild: quality', qualityLevel);
           lastQualityCheck = now;
         }
       }
@@ -454,14 +516,27 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       scheduler.adjustForFPS(avgFPS, deltaTime);
       scheduler.update(deltaTime, reduced);
       
-      // Coherent breathing: apply same intensity to tunnel scale and opacity
-      if (tunnelMesh) {
-        const breathingScale = reduced ? 1.0 : fieldIntensity;
-        tunnelMesh.scale.set(breathingScale, breathingScale, 1.0);
-        
-        if (tunnelMesh.material) {
-          (tunnelMesh.material as THREE.LineBasicMaterial).opacity = 0.85 * fieldIntensity;
-        }
+      // Coherent breathing: apply same intensity to tunnelGroup (includes nodes)
+      const breathingScale = reduced ? 1.0 : fieldIntensity;
+      tunnelGroup.scale.set(breathingScale, breathingScale, 1.0);
+      
+      // Apply micro-torsion via fieldSweep deltaTwist
+      if (!reduced) {
+        const twistDelta = fieldSweep.getTwistDelta();
+        tunnelGroup.rotation.z += twistDelta * 0.001; // Very subtle per-frame twist
+      }
+      
+      // Update tunnel opacity
+      if (tunnelMesh && tunnelMesh.material) {
+        (tunnelMesh.material as THREE.LineBasicMaterial).opacity = 0.85 * fieldIntensity;
+      }
+      
+      // Assert: scale must be consistent
+      if (frameCount % 60 === 0) {
+        console.assert(
+          Math.abs(tunnelGroup.scale.x - tunnelGroup.scale.y) < 0.001,
+          '[MF3D] ASSERT FAILED: tunnelGroup.scale.x !== tunnelGroup.scale.y'
+        );
       }
 
       // Log stats periodically
@@ -500,6 +575,8 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', handleResize);
       canvas.removeEventListener('pointermove', handlePointerMove);
+      canvas.removeEventListener('pointerdown', handlePointerDown);
+      canvas.removeEventListener('pointercancel', handlePointerCancel);
       canvas.removeEventListener('click', onCanvasClick);
       
       controls.dispose();
