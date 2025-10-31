@@ -52,8 +52,8 @@ void main() {
     color = mix(color, vec3(1.5), (wave - 0.85) / 0.15);
   }
   
-  // Link arcs are brighter
-  float brightnessMod = mix(1.0, 1.5, uIsLink);
+  // Link arcs are brighter - BOOSTED intensity ×1.5
+  float brightnessMod = mix(1.5, 2.0, uIsLink); // Increased base from 1.0 to 1.5
   float alpha = wave * taper * (1.0 - uLifetimeRatio) * brightnessMod;
   
   gl_FragColor = vec4(color, alpha);
@@ -67,7 +67,7 @@ export class GridArcPool {
   private scene: THREE.Scene;
   private arcs: Arc[] = [];
   private edges: Array<[THREE.Vector3, THREE.Vector3]> = [];
-  private readonly MAX_ARCS = 80;
+  private readonly MAX_ARCS = 160; // BOOSTED ×2 for denser visual
   private lastIdleSpawn = 0;
 
   constructor(scene: THREE.Scene) {
@@ -113,8 +113,8 @@ export class GridArcPool {
   update(deltaTime: number, opts: { reduced: boolean }): void {
     const now = performance.now();
     
-    // Spawn idle arcs
-    const targetRate = opts.reduced ? 1.2 : 2.5; // Hz
+    // Spawn idle arcs - BOOSTED ×2
+    const targetRate = opts.reduced ? 2.4 : 5.0; // Hz (doubled from 1.2/2.5)
     const interval = 1000 / targetRate;
     
     if (now - this.lastIdleSpawn > interval && this.edges.length > 0) {
@@ -149,7 +149,7 @@ export class GridArcPool {
     
     const hue = 0.55 + Math.random() * 0.1; // cyan→violet range
     const color = new THREE.Color().setHSL(hue, 1.0, 0.6);
-    const ttl = 0.7 + Math.random() * 0.3;
+    const ttl = 0.5 + Math.random() * 0.3; // REDUCED for faster turnover (0.5-0.8s)
     
     for (let i = 0; i < chainLength && startIdx < this.edges.length; i++) {
       const [p0, p1] = this.edges[startIdx];
@@ -180,7 +180,7 @@ export class GridArcPool {
     }
 
     const curve = new THREE.LineCurve3(start, end);
-    const radius = isLink ? 0.08 : 0.06;
+    const radius = isLink ? 0.10 : 0.08; // BOOSTED +30% (was 0.08/0.06)
     const geometry = new THREE.TubeGeometry(curve, 8, radius, 4, false);
 
     const material = new THREE.ShaderMaterial({

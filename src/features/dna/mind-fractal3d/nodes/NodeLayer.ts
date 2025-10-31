@@ -35,13 +35,13 @@ const THEME_NAMES = {
  * Node Layer - manages 48 nodes with themes, states, and symbolic names
  */
 export class NodeLayer {
-  private scene: THREE.Scene;
+  private scene: THREE.Object3D; // Can be Scene or Group
   private nodes: Node[] = [];
   private instancedMesh: THREE.InstancedMesh | null = null;
   private geometry: THREE.BufferGeometry;
 
-  constructor(scene: THREE.Scene, tunnelGeometry: THREE.BufferGeometry) {
-    this.scene = scene;
+  constructor(parent: THREE.Object3D, tunnelGeometry: THREE.BufferGeometry) {
+    this.scene = parent;
     this.geometry = tunnelGeometry;
   }
 

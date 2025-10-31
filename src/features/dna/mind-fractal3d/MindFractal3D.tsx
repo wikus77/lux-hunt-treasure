@@ -151,13 +151,16 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     };
 
     // === TUNNEL GEOMETRY ===
+    const tunnelGroup = new THREE.Group(); // Container for tunnel + nodes (breathing together)
+    scene.add(tunnelGroup);
+    
     let tunnelMesh: THREE.LineSegments | null = null;
     let tunnelTwist = 0.1; // Parametric twist in radians
     let tunnelRings = qualityPresets[qualityLevel].rings;
     
     const buildTunnel = () => {
       if (tunnelMesh) {
-        scene.remove(tunnelMesh);
+        tunnelGroup.remove(tunnelMesh);
         tunnelMesh.geometry.dispose();
       }
 
@@ -182,7 +185,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       });
 
       tunnelMesh = new THREE.LineSegments(edges, material);
-      scene.add(tunnelMesh);
+      tunnelGroup.add(tunnelMesh); // Add to group instead of scene
       
       return geometry;
     };
@@ -190,10 +193,10 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     let tunnelGeometry = buildTunnel();
 
     // === NODE LAYER ===
-    const nodeLayer = new NodeLayer(scene, tunnelGeometry);
+    const nodeLayer = new NodeLayer(tunnelGroup, tunnelGeometry); // Parent to tunnelGroup
     nodeLayer.initialize(48, seed);
     nodeLayerRef.current = nodeLayer;
-    console.info('[MF3D] NodeLayer initialized with 48 nodes');
+    console.info('[MF3D] NodeLayer initialized with 48 nodes, parented to tunnelGroup');
 
     // === LINK ENGINE ===
     const linkEngine = new LinkEngine(tunnelDepth);
@@ -344,6 +347,16 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
           tunnelTwist = Math.min(tunnelTwist + 0.12, 0.8);
           tunnelRings = Math.min(tunnelRings + 4, qualityPresets.high.rings);
           
+          // Show evolution overlay
+          setEvolution({
+            visible: true,
+            theme: nodeA.theme,
+            level: dbResult.milestone_level || 1,
+            message: `Evolution milestone ${dbResult.milestone_level} unlocked! Twist: ${tunnelTwist.toFixed(2)}rad`
+          });
+          
+          setTimeout(() => setEvolution(prev => ({ ...prev, visible: false })), 3000);
+          
           // Rebuild with debounce
           setTimeout(() => {
             tunnelGeometry = buildTunnel();
@@ -441,19 +454,18 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       // Update systems
       controls.update();
       
-      // Field breathing effect
+      // Field breathing effect - applied to tunnelGroup (tunnel + nodes breathe together)
       const nowMs = performance.now();
       const intensity = fieldBreath.tick(nowMs);
       const breathScale = reduced ? 1.0 + (intensity - 1.0) * 0.5 : intensity;
       const twistDelta = fieldBreath.getTwistDelta(nowMs);
       
-      if (tunnelMesh) {
-        tunnelMesh.scale.set(breathScale, breathScale, 0.95 + breathScale * 0.05);
-        tunnelMesh.rotation.z = (tunnelTwist + twistDelta) * 0.9;
-        
-        if (tunnelMesh.material) {
-          (tunnelMesh.material as THREE.LineBasicMaterial).opacity = 0.85 * intensity;
-        }
+      // Apply breathing and twist to entire group (tunnel + nodes)
+      tunnelGroup.scale.set(breathScale, breathScale, 0.95 + breathScale * 0.05);
+      tunnelGroup.rotation.z = (tunnelTwist + twistDelta) * 1.4; // Enhanced rotation for visible twist
+      
+      if (tunnelMesh?.material) {
+        (tunnelMesh.material as THREE.LineBasicMaterial).opacity = 0.85 * intensity;
       }
       
       // Update FX and nodes
@@ -474,13 +486,16 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
       // Log stats periodically (rate-limited to ~1/s)
       if (frameCount % 60 === 0) {
+        const stats = nodeLayer.getStats();
         console.info('[MF3D] Stats:', {
           fps: avgFPS.toFixed(1),
           drawCalls: renderer.info.render.calls,
           quality: qualityLevel,
           arcs: gridArcPool ? (gridArcPool as any).arcs?.length || 0 : 0,
           breathIntensity: intensity.toFixed(3),
-          twist: tunnelTwist.toFixed(2)
+          twist: tunnelTwist.toFixed(2),
+          nodes: { discovered: stats.discovered, linked: stats.linked },
+          camera: { z: camera.position.z.toFixed(1), targetZ: controls.target.z.toFixed(1), near: camera.near.toFixed(3) }
         });
       }
 
