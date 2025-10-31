@@ -37,25 +37,15 @@ export class FieldSweep {
       const elapsed = now - this.sweepStart;
       const progress = Math.min(1.0, elapsed / this.sweepDuration);
 
-      // Easing: expo in-out
-      const eased = progress < 0.5
-        ? Math.pow(2, 20 * progress - 10) / 2
-        : (2 - Math.pow(2, -20 * progress + 10)) / 2;
+      // Easing: smooth sine (organic lung breathing)
+      const eased = Math.sin(progress * Math.PI); // 0 → 1 → 0 smoothly
 
-      // Intensity curve: 1.0 → 1.1 → 1.0 (coherent breathing, not chaotic)
-      if (progress < 0.5) {
-        this.currentIntensity = 1.0 + eased * 0.1 * 2;
-      } else {
-        this.currentIntensity = 1.1 - (eased - 0.5) * 0.1 * 2;
-      }
+      // Intensity curve: 0.85 → 1.15 → 0.85 (30% range for perceptible breathing)
+      this.currentIntensity = 0.85 + eased * 0.3;
 
       // Twist delta: 0 → ±0.015 → 0 (subtle micro-torsion)
       const twistDir = Math.random() > 0.5 ? 1 : -1;
-      if (progress < 0.5) {
-        this.currentTwist = twistDir * eased * 0.015 * 2;
-      } else {
-        this.currentTwist = twistDir * (0.015 - (eased - 0.5) * 0.015 * 2);
-      }
+      this.currentTwist = twistDir * eased * 0.015;
 
       if (progress >= 1.0) {
         this.sweeping = false;

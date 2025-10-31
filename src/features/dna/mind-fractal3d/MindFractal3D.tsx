@@ -127,18 +127,20 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     
     controls.update();
 
-    // Aggressive deep-zoom: target follows camera into tunnel progressively
+    // REAL deep-zoom: target follows camera to 95% tunnel depth
+    const tmpVec = new THREE.Vector3();
     controls.addEventListener('change', () => {
       const v = camera.position.clone().sub(controls.target);
       const dist = v.length();
       
-      // Progressive target advance: starts at 50% depth, reaches 90% at full zoom
+      // Progressive target advance: 5% → 95% tunnel depth (more aggressive)
       const t = THREE.MathUtils.clamp(1 - dist / (1.6 * tunnelDepth), 0, 1);
-      const targetZ = -tunnelDepth * (0.1 + 0.8 * t); // 10% → 90% tunnel depth
-      controls.target.lerp(new THREE.Vector3(0, 0, targetZ), 0.08); // Smooth easing
+      const targetZ = -tunnelDepth * (0.05 + 0.95 * t); // 5% → 95% depth
+      tmpVec.set(0, 0, targetZ);
+      controls.target.lerp(tmpVec, 0.1); // More responsive follow (was 0.08)
       
-      // Hard clamp: prevent camera from exceeding tunnel end
-      const minZ = -tunnelDepth + 0.2;
+      // Hard clamp: allow 99.9% tunnel penetration (was 99.67%)
+      const minZ = -tunnelDepth + 0.05;
       if (camera.position.z < minZ) {
         camera.position.z = minZ;
       }
@@ -435,8 +437,8 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
             tunnelTorsion = Math.min(tunnelTorsion + 0.05, 0.6); // Cap at 0.6 rad/unit
             tunnelRings = Math.min(tunnelRings + 4, qualityPresets.high.rings);
             
-            // Rebuild tunnel with new torsion
-            tunnelGeometry = buildTunnel(0); // Base torsion baked into geometry
+            // Rebuild tunnel with ACCUMULATED torsion baked into geometry
+            tunnelGeometry = buildTunnel(tunnelTorsion); // Pass total torsion
             
             // Regenerate nodes on new tunnel geometry
             nodeLayer.regenerate(tunnelGeometry, 48, seed);
@@ -504,10 +506,20 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       }
     };
 
+    // Listen for node regeneration event to auto-reparent
+    const handleNodesRegenerated = () => {
+      if (nodeLayer.mesh.parent !== tunnelGroup) {
+        tunnelGroup.add(nodeLayer.mesh);
+        nodeLayer.mesh.instanceMatrix.needsUpdate = true;
+        console.info('[MF3D] 🔄 Auto-reparented nodes after regeneration');
+      }
+    };
+    
     canvas.addEventListener('pointermove', handlePointerMove);
     canvas.addEventListener('pointerdown', handlePointerDown);
     canvas.addEventListener('pointercancel', handlePointerCancel);
     canvas.addEventListener('click', onCanvasClick);
+    window.addEventListener('mindfractal:nodes-regenerated', handleNodesRegenerated as EventListener);
 
     // === ANIMATION LOOP ===
     const clock = new THREE.Clock();
@@ -557,18 +569,23 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       scheduler.adjustForFPS(avgFPS, deltaTime);
       scheduler.update(deltaTime, reduced); // Scheduler now handles reduced internally
       
-      // Coherent breathing: apply intensity to tunnelGroup (includes nodes via parenting)
+      // LUNG BREATHING: apply intensity to tunnelGroup (includes nodes via parenting)
+      // Z-axis also breathes for 3D organic effect
       const breathingScale = reduced ? 1.0 : fieldIntensity;
-      tunnelGroup.scale.set(breathingScale, breathingScale, 1.0);
+      tunnelGroup.scale.set(
+        breathingScale, 
+        breathingScale, 
+        0.95 + breathingScale * 0.05 // Z: 0.95 → 1.0 range
+      );
       
-      // Apply micro-torsion from fieldSweep (subtle rotation)
+      // PERCEPTIBLE TORSION: apply strong rotation with sweep micro-twists
       if (!reduced) {
         const twistDelta = fieldSweep.getTwistDelta();
-        // Micro-torsion: ±0.015 delta → scaled to ±0.15° per frame
-        tunnelGroup.rotation.z = tunnelTorsion * 0.15 + twistDelta * 10;
+        // Base torsion (1.2x stronger) + sweep micro-torsion (10x amplified)
+        tunnelGroup.rotation.z = tunnelTorsion * 1.2 + twistDelta * 10;
       } else {
-        // Static torsion when reduced
-        tunnelGroup.rotation.z = tunnelTorsion * 0.15;
+        // Static torsion when reduced (still visible)
+        tunnelGroup.rotation.z = tunnelTorsion * 1.2;
       }
       
       // Update tunnel opacity
@@ -623,6 +640,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       canvas.removeEventListener('pointerdown', handlePointerDown);
       canvas.removeEventListener('pointercancel', handlePointerCancel);
       canvas.removeEventListener('click', onCanvasClick);
+      window.removeEventListener('mindfractal:nodes-regenerated', handleNodesRegenerated as EventListener);
       
       controls.dispose();
       renderer.dispose();

@@ -104,9 +104,9 @@ export class ElectricArcPool {
     const curve = new THREE.CatmullRomCurve3([start, mid, end]);
     const points = curve.getPoints(32);
     
-    // Idle arcs: 0.028 radius (more visible)
-    // Link arcs: 0.022 radius (tighter for user links)
-    const tubeRadius = isLinkArc ? 0.022 : 0.028;
+    // Idle arcs: 0.06 radius (CINEMATIC visibility)
+    // Link arcs: 0.022 radius (precise user links)
+    const tubeRadius = isLinkArc ? 0.022 : 0.06;
     const geometry = new THREE.TubeGeometry(curve, 32, tubeRadius, 6, false);
 
       const material = new THREE.ShaderMaterial({

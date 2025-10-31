@@ -170,6 +170,18 @@ export class NodeLayer {
     if (this.instancedMesh.instanceColor) {
       this.instancedMesh.instanceColor.needsUpdate = true;
     }
+    
+    // IMMEDIATE VISUAL FEEDBACK: burst pulse on state change (200ms lifespan)
+    if (state === NodeState.DISCOVERED || state === NodeState.LINKED) {
+      const matrix = new THREE.Matrix4();
+      const quaternion = new THREE.Quaternion();
+      const scale = new THREE.Vector3(1.5, 1.5, 1.5); // 150% burst
+      matrix.compose(node.position, quaternion, scale);
+      this.instancedMesh.setMatrixAt(nodeId, matrix);
+      this.instancedMesh.instanceMatrix.needsUpdate = true;
+      
+      // Decay back to normal scale over 200ms (handled by update loop)
+    }
   }
 
   getStats(): { discovered: number; linked: number } {
@@ -222,6 +234,11 @@ export class NodeLayer {
   regenerate(tunnelGeometry: THREE.BufferGeometry, nodeCount: number, seed: number = 42): void {
     this.geometry = tunnelGeometry;
     this.initialize(nodeCount, seed);
+    
+    // Emit event: mesh reference changed, parent needs to re-add
+    window.dispatchEvent(new CustomEvent('mindfractal:nodes-regenerated', {
+      detail: { meshUUID: this.instancedMesh?.uuid }
+    }));
   }
 
   dispose(): void {
