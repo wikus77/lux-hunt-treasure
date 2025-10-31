@@ -45,6 +45,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
   const [evolution, setEvolution] = useState<EvolutionState>({ 
     visible: false, theme: '', level: 0, message: '' 
   });
+  const [linkOverlay, setLinkOverlay] = useState({ visible: false, theme: '', message: '' });
   
   const { trackNodeSeen } = useMindFractalPersistence();
   const { trackLink, loadLinks } = useMindLinkPersistence();
@@ -130,8 +131,8 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
     // Dynamic near plane for deep zoom
     controls.addEventListener('change', () => {
-      const distance = camera.position.length();
-      camera.near = Math.max(0.01, distance * 0.002);
+      const distance = camera.position.distanceTo(controls.target);
+      camera.near = Math.max(0.005, distance * 0.0015);
       camera.updateProjectionMatrix();
       
       camStore.save({
@@ -203,6 +204,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
     // === FX SYSTEMS ===
     const gridArcPool = new GridArcPool(scene);
+    gridArcPool.setParent(tunnelGroup); // [MF3D] Attach arcs to tunnelGroup for alignment
     gridArcPool.bindGeometry(tunnelGeometry);
     
     const fieldBreath = new FieldBreath({ periodMs: 12000, amp: 0.30 });
@@ -349,6 +351,10 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         
         // Track in DB
         const dbResult = await trackLink(selectedNodeA, nodeId, nodeA.theme, seed, 1.0);
+        
+        // Connection overlay
+        setLinkOverlay({ visible: true, theme: nodeA.theme, message: `Connessione riuscita: ${nodeA.theme} +1` });
+        setTimeout(() => setLinkOverlay(prev => ({ ...prev, visible: false })), 1200);
         
         console.info('[MF3D] link-created', { from: selectedNodeA, to: nodeId, length: linkResult.length.toFixed(2), theme: nodeA.theme, dbTracked: !!dbResult });
         
@@ -581,6 +587,13 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
           level={evolution.level}
           message={evolution.message}
         />
+      )}
+      
+      {/* Link success overlay */}
+      {linkOverlay.visible && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/80 border border-cyan-400/30 backdrop-blur-sm z-50">
+          <span className="text-sm text-cyan-400 font-medium">{linkOverlay.message}</span>
+        </div>
       )}
       
       {/* Tooltip for hovered node */}
