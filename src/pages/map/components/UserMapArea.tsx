@@ -1,6 +1,8 @@
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React from 'react';
-import { Circle, Popup } from 'react-leaflet';
+import { Popup } from 'react-leaflet';
+import { SafeCircle } from '@/components/map/safe/SafeCircle';
+import { isValidLatLng, isValidRadius, logGuard } from '@/lib/map/geoGuards';
 
 interface BuzzMapArea {
   id: string;
@@ -19,9 +21,24 @@ interface UserMapAreasProps {
 const UserMapAreas: React.FC<UserMapAreasProps> = ({ areas }) => {
   console.log('🗺️ UserMapAreas - Rendering areas:', areas.length);
 
-  const validAreas = (areas || []).filter(a => Number.isFinite(a?.lat) && Number.isFinite(a?.lng) && Number.isFinite(a?.radius_km));
+  // Guard robusta con validazione completa
+  const validAreas = (areas || []).filter(a => {
+    const radiusMeters = (a?.radius_km ?? 0) * 1000;
+    const isValid = isValidLatLng(a?.lat, a?.lng) && isValidRadius(radiusMeters);
+    
+    if (!isValid) {
+      logGuard('UserMapAreas: area skipped', {
+        id: a?.id,
+        lat: a?.lat,
+        lng: a?.lng,
+        radius_km: a?.radius_km
+      });
+    }
+    
+    return isValid;
+  });
+  
   if (validAreas.length === 0) {
-    if (import.meta.env.DEV) console.warn('Layer skipped: missing lat/lng', { comp: 'UserMapAreas' });
     return null;
   }
 
@@ -34,7 +51,7 @@ const UserMapAreas: React.FC<UserMapAreasProps> = ({ areas }) => {
   const radiusMeters = latestArea.radius_km * 1000;
 
   return (
-    <Circle
+    <SafeCircle
       center={[latestArea.lat, latestArea.lng]}
       radius={radiusMeters}
       pathOptions={{
@@ -66,7 +83,7 @@ const UserMapAreas: React.FC<UserMapAreasProps> = ({ areas }) => {
           </div>
         </div>
       </Popup>
-    </Circle>
+    </SafeCircle>
   );
 };
 

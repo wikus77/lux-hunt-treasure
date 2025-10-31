@@ -2,11 +2,13 @@
 // Map Markers Component - Displays markers from database
 
 import React, { useState, useEffect } from 'react';
-import { Marker, Popup } from 'react-leaflet';
+import { Popup } from 'react-leaflet';
+import { SafeMarker } from '@/components/map/safe/SafeMarker';
 import L from 'leaflet';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { toast } from 'sonner';
+import { isValidLatLng, logGuard } from '@/lib/map/geoGuards';
 
 interface MarkerData {
   id: string;
@@ -187,10 +189,26 @@ const MapMarkers: React.FC = () => {
     return null; // Don't show loading state on map
   }
 
+  // Guard robusta: filtra marker con validazione
+  const validMarkers = markers.filter(m => {
+    const isValid = isValidLatLng(m?.lat, m?.lng);
+    
+    if (!isValid) {
+      logGuard('MapMarkers: marker skipped', {
+        id: m?.id,
+        title: m?.title,
+        lat: m?.lat,
+        lng: m?.lng
+      });
+    }
+    
+    return isValid;
+  });
+
   return (
     <>
-      {markers.map((marker) => (
-        <Marker
+      {validMarkers.map((marker) => (
+        <SafeMarker
           key={marker.id}
           position={[marker.lat, marker.lng]}
           icon={createRewardIcon('MARKER')}
@@ -212,7 +230,7 @@ const MapMarkers: React.FC = () => {
               </button>
             </div>
           </Popup>
-        </Marker>
+        </SafeMarker>
       ))}
     </>
   );

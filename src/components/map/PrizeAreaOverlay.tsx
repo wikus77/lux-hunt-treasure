@@ -1,7 +1,9 @@
 // © 2025 All Rights Reserved  – M1SSION™  – NIYVORA KFT Joseph MULÉ
 import React, { useState, useEffect } from 'react';
-import { Circle, Popup } from 'react-leaflet';
+import { Popup } from 'react-leaflet';
+import { SafeCircle } from '@/components/map/safe/SafeCircle';
 import { supabase } from '@/integrations/supabase/client';
+import { isValidLatLng, isValidRadius, logGuard } from '@/lib/map/geoGuards';
 
 interface Prize {
   id: string;
@@ -67,10 +69,29 @@ const PrizeAreaOverlay: React.FC = () => {
     return null;
   }
 
+  // Guard robusta: filtra premi con validazione completa
+  const renderable = prizes.filter(p => {
+    const radius = p.area_radius_m || 500;
+    const isValid = isValidLatLng(p.lat, p.lng) && isValidRadius(radius);
+    
+    if (!isValid) {
+      logGuard('PrizeAreaOverlay (src/components): prize skipped', {
+        id: p.id,
+        lat: p.lat,
+        lng: p.lng,
+        radius
+      });
+    }
+    
+    return isValid;
+  });
+  
+  if (renderable.length === 0) return null;
+
   return (
     <>
-      {prizes.map((prize) => (
-        <Circle
+      {renderable.map((prize) => (
+        <SafeCircle
           key={prize.id}
           center={[prize.lat, prize.lng]}
           radius={prize.area_radius_m || 500}
@@ -100,7 +121,7 @@ const PrizeAreaOverlay: React.FC = () => {
               </div>
             </div>
           </Popup>
-        </Circle>
+        </SafeCircle>
       ))}
     </>
   );
