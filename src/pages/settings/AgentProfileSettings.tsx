@@ -24,13 +24,13 @@ import { BadgeGallery } from '@/components/gamification/BadgeGallery';
 import { AchievementTimeline } from '@/components/gamification/AchievementTimeline';
 import { WeeklyLeaderboard } from '@/components/gamification/WeeklyLeaderboard';
 import { BadgeUnlockedNotification } from '@/components/gamification/BadgeUnlockedNotification';
+import { RewardBadgeCard } from '@/components/gamification/RewardBadgeCard';
 import { useXpSystem } from '@/hooks/useXpSystem';
 import { usePulseEnergy } from '@/hooks/usePulseEnergy';
-import { RewardBadgeCard } from '@/components/gamification/RewardBadgeCard';
+import type { AgentRank } from '@/hooks/usePulseEnergy';
 import PulseEnergyBadge from '@/components/pulse/PulseEnergyBadge';
 import PulseEnergyProgressBar from '@/components/pulse/PulseEnergyProgressBar';
 import RankUpModal from '@/components/pulse/RankUpModal';
-import type { AgentRank } from '@/hooks/usePulseEnergy';
 
 const AgentProfileSettings: React.FC = () => {
   const { user } = useAuth();
