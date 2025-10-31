@@ -11,7 +11,10 @@ interface PulseEnergyBadgeProps {
 const PulseEnergyBadge = ({ rank, className = '', showCode = true }: PulseEnergyBadgeProps) => {
   if (!rank) {
     return (
-      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-gray-800/50 border border-gray-700 ${className}`}>
+      <div 
+        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-gray-800/50 border border-gray-700 ${className}`}
+        data-testid="pe-badge-unavailable"
+      >
         <Shield className="w-4 h-4 text-gray-500" />
         <span className="text-xs text-gray-500">Grado Non Disponibile</span>
       </div>
@@ -29,8 +32,10 @@ const PulseEnergyBadge = ({ rank, className = '', showCode = true }: PulseEnergy
         backgroundColor: `${displayColor}20`,
         borderColor: displayColor,
         boxShadow: `0 0 12px ${displayColor}40`,
-        minHeight: '36px'
+        minHeight: '40px' // Increased for better visibility
       }}
+      data-testid="pe-badge"
+      data-rank-code={rank.code}
     >
       <span className="text-lg" role="img" aria-label="rank symbol">
         {rank.symbol}
