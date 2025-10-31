@@ -24,15 +24,15 @@ const Profile = () => {
   useRealTimeNotifications();
   
   const navigateToPersonalInfo = () => {
-    navigate('/settings/agent-profile/personal-info');
+    navigate('/profile/personal-info');
   };
 
   const navigateToPrivacySecurity = () => {
-    navigate('/settings/agent-profile/security');
+    navigate('/profile/security');
   };
 
   const navigateToPaymentMethods = () => {
-    navigate('/settings/agent-profile/payments');
+    navigate('/profile/payments');
   };
 
   const navigateToSubscriptions = () => {

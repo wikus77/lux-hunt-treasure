@@ -16,8 +16,7 @@ export const ROUTE_TITLES_IT: Record<string, string> = {
   '/intelligence': 'Intelligence',
   '/notifications': 'Notifiche',
   '/leaderboard': 'Classifica',
-  '/settings/agent-profile': 'Profilo',
-  '/profile': 'Profilo', // Legacy redirect
+  '/profile': 'Profilo',
   '/settings': 'Impostazioni',
   '/subscriptions': 'Abbonamenti',
   '/login': 'Accesso',

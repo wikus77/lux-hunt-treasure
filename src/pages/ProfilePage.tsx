@@ -126,7 +126,7 @@ export const ProfilePage: React.FC = () => {
     await vibrate(30);
     if (path === '/home') {
       await toHome();
-    } else if (path.startsWith('/settings/agent-profile/')) {
+    } else if (path.startsWith('/profile/')) {
       window.location.href = path;
     } else {
       window.location.href = path;

@@ -18,6 +18,7 @@ import { Copy, Upload, User, Mail, IdCard } from 'lucide-react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { DailyCheckInButton } from '@/components/gamification/DailyCheckInButton';
+import { XpLevelProgress } from '@/components/gamification/XpLevelProgress';
 import { RankHighlight } from '@/components/gamification/RankHighlight';
 import { BadgeGallery } from '@/components/gamification/BadgeGallery';
 import { AchievementTimeline } from '@/components/gamification/AchievementTimeline';
@@ -491,6 +492,3 @@ const AgentProfileSettings: React.FC = () => {
 };
 
 export default AgentProfileSettings;
-
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-

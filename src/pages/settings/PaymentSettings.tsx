@@ -381,7 +381,10 @@ const PaymentSettings: React.FC = () => {
       <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
         <CardContent className="pt-6">
           <Button
-            onClick={() => navigate('/settings/agent-profile/payments')}
+            onClick={() => {
+              console.log('💳 PaymentSettings: Payment History button clicked - navigating to /profile/payments');
+              navigate('/profile/payments');
+            }}
             variant="outline"
             className="w-full border-white/20 text-white hover:bg-white/10 font-medium"
           >
@@ -423,5 +426,3 @@ const PaymentSettings: React.FC = () => {
 };
 
 export default PaymentSettings;
-
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
