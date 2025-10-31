@@ -20,6 +20,7 @@ void main() {
 const arcFragmentShader = `
 uniform float uTime;
 uniform float uLifetimeRatio;
+uniform float uFieldIntensity;
 varying vec2 vUv;
 
 // Simple noise
@@ -47,9 +48,9 @@ void main() {
   // Taper from center to edges
   float taper = smoothstep(0.0, 0.1, vUv.y) * smoothstep(1.0, 0.9, vUv.y);
   
-  // Cyan to violet gradient with white spike
-  vec3 cyan = vec3(0.2, 0.8, 1.0);
-  vec3 violet = vec3(0.67, 0.4, 1.0);
+  // Cyan (#35E9FF) to violet (#A64DFF) gradient with white spike
+  vec3 cyan = vec3(0.208, 0.914, 1.0);
+  vec3 violet = vec3(0.651, 0.302, 1.0);
   vec3 white = vec3(1.5, 1.5, 1.5);
   
   vec3 color = mix(cyan, violet, vUv.x);
@@ -57,7 +58,8 @@ void main() {
     color = mix(color, white, (wave - 0.85) / 0.15);
   }
   
-  float alpha = wave * taper * (1.0 - uLifetimeRatio);
+  float intensityMod = mix(0.8, 1.2, uFieldIntensity);
+  float alpha = wave * taper * (1.0 - uLifetimeRatio) * intensityMod;
   
   gl_FragColor = vec4(color, alpha);
 }
@@ -102,11 +104,12 @@ export class ElectricArcPool {
     const points = curve.getPoints(32);
     const geometry = new THREE.TubeGeometry(curve, 32, 0.02, 4, false);
 
-    const material = new THREE.ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 },
-        uLifetimeRatio: { value: 0 }
-      },
+      const material = new THREE.ShaderMaterial({
+        uniforms: {
+          uTime: { value: 0 },
+          uLifetimeRatio: { value: 0 },
+          uFieldIntensity: { value: 1.0 }
+        },
       vertexShader: arcVertexShader,
       fragmentShader: arcFragmentShader,
       transparent: true,
