@@ -24,8 +24,12 @@ import { BadgeGallery } from '@/components/gamification/BadgeGallery';
 import { AchievementTimeline } from '@/components/gamification/AchievementTimeline';
 import { WeeklyLeaderboard } from '@/components/gamification/WeeklyLeaderboard';
 import { BadgeUnlockedNotification } from '@/components/gamification/BadgeUnlockedNotification';
-import { useXpSystem } from '@/hooks/useXpSystem';
+import { usePulseEnergy } from '@/hooks/usePulseEnergy';
 import { RewardBadgeCard } from '@/components/gamification/RewardBadgeCard';
+import PulseEnergyBadge from '@/components/pulse/PulseEnergyBadge';
+import PulseEnergyProgressBar from '@/components/pulse/PulseEnergyProgressBar';
+import RankUpModal from '@/components/pulse/RankUpModal';
+import type { AgentRank } from '@/hooks/usePulseEnergy';
 
 const AgentProfileSettings: React.FC = () => {
   const { user } = useAuth();
@@ -35,7 +39,17 @@ const AgentProfileSettings: React.FC = () => {
   const { profileImage } = useProfileImage();
   const [agentName, setAgentName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { newBadge, closeBadgeNotification, xpStatus } = useXpSystem();
+  const { newBadge, closeBadgeNotification } = useXpSystem();
+  const { 
+    pulseEnergy, 
+    currentRank, 
+    nextRank, 
+    progressToNextRank 
+  } = usePulseEnergy();
+
+  // RankUpModal state
+  const [showRankUp, setShowRankUp] = useState(false);
+  const [newRank, setNewRank] = useState<AgentRank | null>(null);
 
   // Use global profile data with real-time updates
   useProfileRealtime();
@@ -60,6 +74,20 @@ const AgentProfileSettings: React.FC = () => {
     window.addEventListener('profile-sync', handleProfileSync as EventListener);
     return () => window.removeEventListener('profile-sync', handleProfileSync as EventListener);
   }, []);
+
+  // Detect rank changes and show RankUpModal once
+  useEffect(() => {
+    if (!currentRank) return;
+    
+    const lastRankCode = localStorage.getItem('__m1_last_rank_code');
+    
+    if (currentRank.code !== lastRankCode) {
+      setNewRank(currentRank);
+      setShowRankUp(true);
+      localStorage.setItem('__m1_last_rank_code', currentRank.code);
+      console.log('[AgentProfile] Rank-up detected:', { old: lastRankCode, new: currentRank.code });
+    }
+  }, [currentRank]);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -246,50 +274,50 @@ const AgentProfileSettings: React.FC = () => {
             <p className="text-white/70">Gestisci le informazioni del tuo profilo agente</p>
           </div>
 
-          {/* Gamification Dashboard - Top Section */}
-          <div className="space-y-4 mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold gradient-text">
-              📊 Dashboard Progressi
-            </h2>
+          {/* Pulse Energy & Rank Section */}
+          <Card className="glass-card" data-testid="pe-section">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold gradient-text">
+                ⚡ Pulse Energy & Gerarchia Agente
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Current Rank Badge */}
+              <div className="flex justify-center" data-testid="pe-badge">
+                <PulseEnergyBadge rank={currentRank} showCode={true} />
+              </div>
 
-            {/* Gamification Grid - Responsive 2 columns on desktop, 1 on mobile */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* PE Level Progress + Daily Check-In Combined Card */}
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold gradient-text">
-                    ⭐ Livello & PE
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <XpLevelProgress totalXp={xpStatus.total_xp} />
-                  
-                  {/* Daily Check-In Section */}
-                  <div className="pt-4 border-t border-white/10">
-                    <h3 className="text-sm font-semibold text-white mb-2">🎯 Check-In Giornaliero</h3>
-                    <DailyCheckInButton />
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Progress Bar to Next Rank */}
+              <div data-testid="pe-progress">
+                <PulseEnergyProgressBar
+                  currentRank={currentRank}
+                  nextRank={nextRank}
+                  progressPercent={progressToNextRank}
+                  currentPE={pulseEnergy}
+                />
+              </div>
 
-              {/* Rank Highlight */}
-              <RankHighlight />
-            </div>
+              {/* Daily Check-In */}
+              <div className="pt-4 border-t border-white/10">
+                <h3 className="text-sm font-semibold text-white mb-2">🎯 Check-In Giornaliero</h3>
+                <DailyCheckInButton />
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Full width sections */}
-            <div className="space-y-4">
-              {/* Reward Badge Card - Shows when rewards are available */}
-              <RewardBadgeCard />
+          {/* Gamification Section - Compatto */}
+          <div className="space-y-4">
+            {/* Reward Badge Card - Shows when rewards are available */}
+            <RewardBadgeCard />
 
-              {/* Badge Gallery */}
-              <BadgeGallery />
+            {/* Badge Gallery */}
+            <BadgeGallery />
 
-              {/* Achievement Timeline */}
-              <AchievementTimeline />
+            {/* Achievement Timeline */}
+            <AchievementTimeline />
 
-              {/* Weekly Leaderboard */}
-              <WeeklyLeaderboard />
-            </div>
+            {/* Weekly Leaderboard */}
+            <WeeklyLeaderboard />
           </div>
 
           {/* Profile Settings Card */}
@@ -425,6 +453,16 @@ const AgentProfileSettings: React.FC = () => {
               navigate('/buzz?free=1&reward=1');
             }
           }}
+        />
+      )}
+
+      {/* RankUpModal - Notifica promozione grado */}
+      {showRankUp && newRank && (
+        <RankUpModal
+          open={showRankUp}
+          onClose={() => setShowRankUp(false)}
+          newRank={newRank}
+          data-testid="rankup-modal"
         />
       )}
 
