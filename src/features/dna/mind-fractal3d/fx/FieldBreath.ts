@@ -13,7 +13,7 @@ export class FieldBreath {
 
   constructor(opts?: { periodMs?: number; amp?: number }) {
     this.periodMs = opts?.periodMs ?? 12000; // 12s period
-    this.amplitude = opts?.amp ?? 0.12; // gentler 0.94-1.06 range
+    this.amplitude = 0; // DISABLED: no amplitude = no breathing
   }
 
   /**
