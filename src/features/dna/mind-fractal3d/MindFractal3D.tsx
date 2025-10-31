@@ -297,7 +297,15 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     let pointerDownPos = { x: 0, y: 0 };
     let pointerDownTime = 0;
     
+    // THROTTLE RAYCAST: 30Hz to prevent hover jitter (was 60fps)
+    const RAYCAST_INTERVAL = 33; // ms (30Hz)
+    let lastRaycastTime = 0;
+    
     const handlePointerMove = (event: PointerEvent) => {
+      const now = performance.now();
+      if (now - lastRaycastTime < RAYCAST_INTERVAL) return; // Skip frame
+      lastRaycastTime = now;
+      
       const rect = canvas.getBoundingClientRect();
       const mouse = new THREE.Vector2(
         ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -315,7 +323,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       // Diagnostic: log raycast hits occasionally
       if (nodeId !== null && Math.random() < 0.05) {
         const node = nodeLayer.getNode(nodeId);
-        console.info('[MF3D] Raycast hit:', {
+        console.info('[MF3D] hover:', {
           nodeId,
           state: node?.state,
           theme: node?.theme,
@@ -326,7 +334,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
     const handlePointerDown = (event: PointerEvent) => {
       pointerDownPos = { x: event.clientX, y: event.clientY };
-      pointerDownTime = Date.now();
+      pointerDownTime = performance.now();
     };
 
     const handlePointerCancel = () => {
@@ -336,16 +344,15 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
     let lastClickTime = 0;
     const onCanvasClick = async (event: PointerEvent) => {
-      // Check if this is a real click (not drag)
+      // CLICK vs DRAG: stricter thresholds (6px, 500ms)
       const deltaX = Math.abs(event.clientX - pointerDownPos.x);
       const deltaY = Math.abs(event.clientY - pointerDownPos.y);
-      const deltaTime = Date.now() - pointerDownTime;
+      const deltaTime = performance.now() - pointerDownTime;
       
-      if (deltaX > 6 || deltaY > 6 || deltaTime > 500) {
-        return; // Was a drag, not a click
-      }
+      const isClick = deltaX + deltaY < 6 && deltaTime < 500;
+      if (!isClick) return; // Was a drag, not a click
       
-      const now = Date.now();
+      const now = performance.now();
       if (now - lastClickTime < 250) return; // Debounce
       lastClickTime = now;
       
@@ -364,7 +371,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       const node = nodeLayer.getNode(nodeId);
       if (!node) return;
 
-      console.info('[MF3D] node-click:', { id: nodeId, state: node.state });
+      console.info('[MF3D] click:', { id: nodeId, state: node.state });
 
       // First click - discover or select
       if (selectedNodeA === null) {
@@ -411,6 +418,11 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         
         // Create visual arc with white spike
         scheduler.spawnLinkArc(nodeA.position, node.position);
+        
+        // BOOST BREATHING on link (600ms pulse)
+        if (!reduced) {
+          fieldSweep.boostAmplitude(0.02, 600);
+        }
         
         // Play short link sound
         try {
@@ -601,12 +613,16 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         );
       }
 
-      // Log stats periodically
-      if (frameCount === 60) {
+      // Diagnostic: log stats every 2s (120 frames at 60fps)
+      if (frameCount % 120 === 0) {
+        const stats = nodeLayer.getStats();
         console.info('[MF3D] Stats:', {
           fps: avgFPS.toFixed(1),
-          drawCalls: renderer.info.render.calls,
-          quality: qualityLevel
+          rings: tunnelRings,
+          arcsActive: scene.children.filter(c => c.type === 'Mesh' && c !== tunnelMesh).length,
+          quality: qualityLevel,
+          nodesDiscovered: stats.discovered,
+          nodesLinked: stats.linked
         });
       }
 
