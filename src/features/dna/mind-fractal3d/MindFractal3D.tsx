@@ -127,11 +127,14 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
     // === ORBIT CONTROLS (DEEP ZOOM) ===
     const controls = new OrbitControls(camera, canvas);
-    controls.enableDamping = isMobile ? false : !reduced; // No damping on mobile for responsiveness
+    // === MANUAL CONTROLS === [MF3D] Full control enabled
+    controls.enableRotate = true; // Manual rotation enabled
+    controls.enableZoom = true; // Manual zoom enabled
+    controls.enablePan = true; // Manual pan enabled
+    controls.enableDamping = isMobile ? false : true; // Smooth damping on desktop
     controls.dampingFactor = 0.05;
     controls.minDistance = 0.001 * tunnelDepth; // DEEP ZOOM: Can reach 99.9% of tunnel depth
     controls.maxDistance = 1.6 * tunnelDepth;
-    controls.enablePan = true; // Enable pan for exploration
     controls.maxPolarAngle = Math.PI * 0.95;
     
     if (savedCam?.target) {
