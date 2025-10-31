@@ -206,6 +206,13 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     gridArcPool.bindGeometry(tunnelGeometry);
     
     const fieldBreath = new FieldBreath({ periodMs: 12000, amp: 0.30 });
+    
+    // Track surge events for logging
+    let lastSurgeLog = { rings: 0, duration: 0 };
+    window.addEventListener('mindfractal:surge', ((e: CustomEvent) => {
+      lastSurgeLog = e.detail;
+      console.info('[MF3D] 🌊 Surge detected:', e.detail);
+    }) as EventListener);
 
     // === FPS MONITOR ===
     const fpsMonitor = new FPSMonitor();
@@ -495,7 +502,8 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
           breathIntensity: intensity.toFixed(3),
           twist: tunnelTwist.toFixed(2),
           nodes: { discovered: stats.discovered, linked: stats.linked },
-          camera: { z: camera.position.z.toFixed(1), targetZ: controls.target.z.toFixed(1), near: camera.near.toFixed(3) }
+          camera: { z: camera.position.z.toFixed(1), targetZ: controls.target.z.toFixed(1), near: camera.near.toFixed(3) },
+          lastSurge: lastSurgeLog.rings > 0 ? `${lastSurgeLog.rings}rings/${lastSurgeLog.duration}ms` : 'none'
         });
       }
 
