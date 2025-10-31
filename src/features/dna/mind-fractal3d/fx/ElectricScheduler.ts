@@ -58,12 +58,14 @@ export class ElectricScheduler {
 
   /**
    * Spawn random idle arcs using Poisson distribution
+   * If reduced animations, halve frequency instead of disabling completely
    */
   update(deltaTime: number, reduced: boolean): void {
-    if (reduced || !this.tunnelGeometry) return;
+    if (!this.tunnelGeometry) return;
 
     const now = performance.now();
-    const expectedInterval = 1000 / this.currentRate;
+    const effectiveRate = reduced ? this.currentRate * 0.5 : this.currentRate;
+    const expectedInterval = 1000 / effectiveRate;
 
     // Poisson: random interval around expected
     const shouldSpawn = (now - this.lastSpawn) > expectedInterval * (0.8 + Math.random() * 0.4);
@@ -71,6 +73,15 @@ export class ElectricScheduler {
     if (shouldSpawn) {
       this.spawnRandomArc();
       this.lastSpawn = now;
+      
+      // Diagnostic log (every 5th spawn)
+      if (Math.random() < 0.2) {
+        console.info('[ElectricScheduler] Spawned idle arc:', {
+          baseRate: this.baseRate.toFixed(2),
+          effectiveRate: effectiveRate.toFixed(2),
+          reduced
+        });
+      }
     }
   }
 
@@ -102,10 +113,10 @@ export class ElectricScheduler {
   }
 
   /**
-   * Spawn white spike arc on user link
+   * Spawn white spike arc on user link (thinner radius for precision)
    */
   spawnLinkArc(start: THREE.Vector3, end: THREE.Vector3): void {
-    this.arcPool.createArc(start, end);
+    this.arcPool.createArc(start, end, true); // true = link arc (0.022 radius)
   }
 }
 

@@ -79,8 +79,9 @@ export class ElectricArcPool {
 
   /**
    * Create arc along a path (start to end)
+   * @param isLinkArc - true for user links (0.022 radius), false for idle (0.028 radius)
    */
-  createArc(start: THREE.Vector3, end: THREE.Vector3): void {
+  createArc(start: THREE.Vector3, end: THREE.Vector3, isLinkArc: boolean = false): void {
     // Remove oldest if at capacity
     if (this.arcs.length >= this.MAX_ARCS) {
       const oldest = this.arcs.shift();
@@ -91,18 +92,22 @@ export class ElectricArcPool {
       }
     }
 
-    // Create curve for arc path
+    // Create curve for arc path with organic jitter
     const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
     const offset = new THREE.Vector3()
       .subVectors(end, start)
       .cross(new THREE.Vector3(0, 1, 0))
       .normalize()
-      .multiplyScalar(Math.random() * 0.3);
+      .multiplyScalar(Math.random() * 0.4);
     mid.add(offset);
 
     const curve = new THREE.CatmullRomCurve3([start, mid, end]);
     const points = curve.getPoints(32);
-    const geometry = new THREE.TubeGeometry(curve, 32, 0.02, 4, false);
+    
+    // Idle arcs: 0.028 radius (more visible)
+    // Link arcs: 0.022 radius (tighter for user links)
+    const tubeRadius = isLinkArc ? 0.022 : 0.028;
+    const geometry = new THREE.TubeGeometry(curve, 32, tubeRadius, 6, false);
 
       const material = new THREE.ShaderMaterial({
         uniforms: {
