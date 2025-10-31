@@ -24,6 +24,7 @@ import { BadgeGallery } from '@/components/gamification/BadgeGallery';
 import { AchievementTimeline } from '@/components/gamification/AchievementTimeline';
 import { WeeklyLeaderboard } from '@/components/gamification/WeeklyLeaderboard';
 import { BadgeUnlockedNotification } from '@/components/gamification/BadgeUnlockedNotification';
+import { useXpSystem } from '@/hooks/useXpSystem';
 import { usePulseEnergy } from '@/hooks/usePulseEnergy';
 import { RewardBadgeCard } from '@/components/gamification/RewardBadgeCard';
 import PulseEnergyBadge from '@/components/pulse/PulseEnergyBadge';
