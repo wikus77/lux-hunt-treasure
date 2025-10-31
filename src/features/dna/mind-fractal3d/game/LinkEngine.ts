@@ -21,9 +21,31 @@ export class LinkEngine {
   private readonly COOLDOWN_MS = 500;
   private readonly MAX_DISTANCE_RATIO = 0.12;
   private readonly tunnelLength: number;
+  public pendingNodeId: number | null = null;
 
   constructor(tunnelLength: number) {
     this.tunnelLength = tunnelLength;
+  }
+
+  /**
+   * Add first node to pending state
+   */
+  addPendingNode(nodeId: number): void {
+    this.pendingNodeId = nodeId;
+  }
+
+  /**
+   * Get pending node
+   */
+  getPendingNode(): number | null {
+    return this.pendingNodeId;
+  }
+
+  /**
+   * Reset pending state
+   */
+  resetPending(): void {
+    this.pendingNodeId = null;
   }
 
   /**
@@ -61,6 +83,7 @@ export class LinkEngine {
     }
 
     this.lastLinkTime = performance.now();
+    this.pendingNodeId = null; // Clear pending after successful link
     
     const result: LinkResult = {
       from: nodeA.id,
@@ -70,6 +93,7 @@ export class LinkEngine {
     };
 
     // Emit event
+    console.info('[MF3D] link-created:', { from: nodeA.id, to: nodeB.id, len: result.length.toFixed(2), theme: nodeA.theme });
     window.dispatchEvent(new CustomEvent('mindfractal:link-created', { 
       detail: result 
     }));
