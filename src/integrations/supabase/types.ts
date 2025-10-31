@@ -7213,6 +7213,7 @@ export type Database = {
         Args: { p_from: string; p_length: number; p_seed: number; p_to: string }
         Returns: undefined
       }
+      mf_health: { Args: never; Returns: Json }
       mf_upsert_seen: {
         Args: { p_node_ids: string[]; p_seed: number }
         Returns: undefined
