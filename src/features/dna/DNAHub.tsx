@@ -13,7 +13,8 @@ import { Rubik4Scene } from './rubik/Rubik4Scene';
 import { NeuralLinksScene } from './neural/NeuralLinksScene';
 import { DNAErrorBoundary } from './common/DNAErrorBoundary';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
-import { MindFractal3D } from '@/features/mindfractal3';
+import { MindFractalLite } from './mind-fractal-lite/MindFractalLite';
+import { MindFractal3D } from './mind-fractal3d/MindFractal3D';
 import { ArchetypeIcon } from './ArchetypeIcon';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -55,6 +56,7 @@ export const DNAHub: React.FC<DNAHubProps> = ({
   
   // Feature flags: Mind Fractal 3D (full interactive version with nodes and arcs)
   const USE_MF3D = true;
+  const USE_MIND_FRACTAL_LITE = false;
   const enableNeuralLinksDNA = false;
   const [enableTesseract] = useState(true); // Enable new HyperCube
   const [enableRubikDNA] = useState(true); // Enable Rubik 4x4 neon wireframe
@@ -252,11 +254,27 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                   {USE_MF3D ? (
                     <DNAErrorBoundary>
                       <MindFractal3D
-                        userId={user?.id || 'anon'}
+                        className="w-full h-[700px] rounded-xl overflow-hidden"
                         seed={dnaProfile.intuito * 1000 + dnaProfile.audacia * 100 + dnaProfile.etica * 10 + dnaProfile.rischio}
-                        reducedAnimations={reduceAnimations}
+                        onReady={() => console.log('[DNAHub] Mind Fractal 3D ready')}
+                        onProgress={(p) => {
+                          console.log('[DNAHub] Progress:', p);
+                          window.dispatchEvent(new CustomEvent('mf:progress', { detail: p }));
+                        }}
+                        reduced={reduceAnimations}
                       />
                     </DNAErrorBoundary>
+                  ) : USE_MIND_FRACTAL_LITE ? (
+                    <div className="w-full h-[700px] relative overflow-hidden bg-black">
+                      <DNAErrorBoundary>
+                        <MindFractalLite 
+                          seed={dnaProfile.intuito * 1000 + dnaProfile.audacia * 100 + dnaProfile.etica * 10 + dnaProfile.rischio}
+                          reduced={reduceAnimations}
+                          onReady={() => console.log('[DNAHub] Mind Fractal Lite ready')}
+                          onBurst={() => console.log('[DNAHub] DNA Evolution burst triggered')}
+                        />
+                      </DNAErrorBoundary>
+                    </div>
                   ) : enableNeuralLinksDNA ? (
                     <div className="w-full h-[700px] relative overflow-hidden">
                       <DNAErrorBoundary>
