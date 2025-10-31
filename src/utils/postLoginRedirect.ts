@@ -163,7 +163,7 @@ const determineRedirectRoute = preserveFunctionName(async (
   // Check if user needs to complete profile setup
   if (!profile.full_name || !profile.agent_code) {
     console.log('📝 Profile incomplete, redirecting to setup');
-    return '/profile';
+    return '/settings/agent-profile';
   }
 
   // Check for email verification (if required)

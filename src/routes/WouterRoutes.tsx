@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Route, Switch, useLocation } from "wouter";
+import { Redirect } from "@/components/routing/RedirectComponent";
 
 // Dev tools (conditionally loaded)
 const MarkersHealthcheck = React.lazy(() => import('../pages/dev/MarkersHealthcheck'));
@@ -39,7 +40,6 @@ import IntelligenceRAG from "@/pages/IntelligenceRAG";
 import IntelligenceAnswerTest from "@/pages/IntelligenceAnswerTest";
 import HallOfWinnersStyledPage from "@/pages/HallOfWinnersStyledPage";
 import Notifications from "@/pages/Notifications";
-import ProfileRedirect from "@/pages/ProfileRedirect";
 import NorahAssistant from "@/pages/NorahAssistant";
 import SettingsPage from "@/pages/settings/SettingsPage";
 import AgentProfileSettings from "@/pages/settings/AgentProfileSettings";
@@ -381,9 +381,7 @@ const WouterRoutes: React.FC = () => {
           </Route>
 
           <Route path="/profile">
-            <ProtectedRoute>
-              <GlobalLayout><ProfileRedirect /></GlobalLayout>
-            </ProtectedRoute>
+            <Redirect to="/settings/agent-profile" />
           </Route>
 
           <Route path="/settings">

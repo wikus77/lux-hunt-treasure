@@ -39,7 +39,7 @@ export const useWouterNavigation = () => {
   const toIntelligence = useCallback(() => navigate('/intelligence'), [navigate]);
   const toNotifications = useCallback(() => navigate('/notifications'), [navigate]);
   const toLeaderboard = useCallback(() => navigate('/leaderboard'), [navigate]);
-  const toProfile = useCallback(() => navigate('/profile'), [navigate]);
+  const toProfile = useCallback(() => navigate('/settings/agent-profile'), [navigate]);
   const toSettings = useCallback(() => navigate('/settings'), [navigate]);
   const toSubscriptions = useCallback(() => navigate('/subscriptions'), [navigate]);
   const toLogin = useCallback(() => navigate('/login'), [navigate]);

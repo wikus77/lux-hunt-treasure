@@ -33,7 +33,7 @@ export const optimizeImageLoading = () => {
 
 // Prefetch critical routes
 export const prefetchCriticalRoutes = () => {
-  const routes = ['/home', '/map', '/profile'];
+  const routes = ['/home', '/map', '/settings/agent-profile'];
   
   routes.forEach(route => {
     const link = document.createElement('link');
