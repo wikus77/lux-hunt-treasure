@@ -5106,6 +5106,33 @@ export type Database = {
           },
         ]
       }
+      system_roles: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          label: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          label: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          label?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           badge_id: string
