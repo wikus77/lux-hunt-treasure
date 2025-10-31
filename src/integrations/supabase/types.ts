@@ -2825,6 +2825,21 @@ export type Database = {
         }
         Relationships: []
       }
+      mcp_whitelist: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mission_enrollments: {
         Row: {
           joined_at: string
@@ -7396,7 +7411,7 @@ export type Database = {
         Args: { p_code: string; p_lat?: number; p_lon?: number }
         Returns: Json
       }
-      recompute_rank: { Args: { p_user_id: string }; Returns: boolean }
+      recompute_rank: { Args: { p_user_id: string }; Returns: undefined }
       record_intelligence_tool_usage: {
         Args: { p_mission_id: string; p_tool_name: string; p_user_id: string }
         Returns: boolean

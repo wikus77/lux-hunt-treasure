@@ -254,11 +254,11 @@ const AgentProfileSettings: React.FC = () => {
 
             {/* Gamification Grid - Responsive 2 columns on desktop, 1 on mobile */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* XP Level Progress + Daily Check-In Combined Card */}
+              {/* PE Level Progress + Daily Check-In Combined Card */}
               <Card className="glass-card">
                 <CardHeader>
                   <CardTitle className="text-lg font-semibold gradient-text">
-                    ⭐ Livello & XP
+                    ⭐ Livello & PE
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">

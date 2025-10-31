@@ -65,7 +65,7 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
             <span className="text-white">ZZ</span>
           </h1>
           <div className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm text-white">
-            XP: {xpStatus.buzz_xp_progress}/100
+            PE: {xpStatus.buzz_xp_progress}/100
           </div>
           <div className="text-sm font-medium bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm text-white">
             €{currentPrice.toFixed(2)}
