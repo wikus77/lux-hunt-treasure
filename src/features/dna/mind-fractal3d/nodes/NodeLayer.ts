@@ -33,6 +33,7 @@ const THEME_NAMES = {
 
 /**
  * Node Layer - manages 48 nodes with themes, states, and symbolic names
+ * Exposes public mesh getter for external access to instanced mesh
  */
 export class NodeLayer {
   private scene: THREE.Scene;
