@@ -19,9 +19,9 @@ export interface Node {
 }
 
 const NODE_COLORS = {
-  [NodeState.LOCKED]: 0x3b3b45,
-  [NodeState.DISCOVERED]: 0x33ccff,
-  [NodeState.LINKED]: 0xaa66ff
+  [NodeState.LOCKED]: 0x8899AA,      // Subtle gray-blue for locked
+  [NodeState.DISCOVERED]: 0x35E9FF,  // Cyan for discovered
+  [NodeState.LINKED]: 0xA64DFF       // Violet for linked
 };
 
 const THEME_NAMES = {

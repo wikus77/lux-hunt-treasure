@@ -85,10 +85,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     const rect = canvas.getBoundingClientRect();
     renderer.setSize(rect.width, rect.height, false);
 
-    console.info('[MF3D] Renderer initialized:', {
-      dpr,
-      size: { w: rect.width, h: rect.height }
-    });
+    console.info('[MF3D] init');
 
     // === SCENE & CAMERA ===
     const scene = new THREE.Scene();
@@ -132,25 +129,26 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
     // Dynamic near plane + target follow for deep zoom
     controls.addEventListener('change', () => {
-      // Update target to follow camera when zooming deep
+      // Progressive target follow: when dolly > 70% depth, move target into tunnel
       const camDist = camera.position.length();
-      const targetDist = controls.target.length();
-      const zoomRatio = camDist / (tunnelDepth * 1.6);
+      const zoomDepth = Math.abs(camera.position.z);
+      const depthRatio = zoomDepth / tunnelDepth;
       
-      if (zoomRatio < 0.3) {
-        // Deep zoom: move target toward tunnel end
-        const targetZ = THREE.MathUtils.lerp(controls.target.z, -tunnelDepth * 0.9, 0.02);
+      if (depthRatio > 0.7) {
+        // Deep zoom: lerp target toward -0.9 * depth with smooth easing
+        const targetZ = THREE.MathUtils.lerp(controls.target.z, -tunnelDepth * 0.9, 0.03);
         controls.target.z = targetZ;
       }
       
-      // Clamp camera position to not go beyond tunnel end
-      if (camera.position.z < -tunnelDepth + 0.5) {
-        camera.position.z = -tunnelDepth + 0.5;
+      // Clamp camera to not exceed tunnel end (with small epsilon)
+      const minZ = -tunnelDepth + 0.3;
+      if (camera.position.z < minZ) {
+        camera.position.z = minZ;
       }
       
-      // Calculate near relative to distance to target
+      // Stable near plane: calculated from camera→target distance
       const distanceToTarget = camera.position.distanceTo(controls.target);
-      camera.near = Math.max(0.01, distanceToTarget * 0.002);
+      camera.near = Math.max(0.01, distanceToTarget * 0.003);
       camera.updateProjectionMatrix();
       
       camStore.save({
@@ -214,7 +212,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     const nodeLayer = new NodeLayer(scene, tunnelGeometry);
     nodeLayer.initialize(48, seed);
     nodeLayerRef.current = nodeLayer;
-    console.info('[MF3D] NodeLayer initialized with 48 nodes');
+    
 
     // === LINK ENGINE ===
     const linkEngine = new LinkEngine(tunnelDepth);
@@ -355,7 +353,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         // Track in DB
         const dbResult = await trackLink(selectedNodeA, nodeId, nodeA.theme, seed, 1.0);
         
-        console.info('[MF3D] Link created:', linkResult, 'DB:', dbResult);
+        console.info('[MF3D] link-created:', { from: selectedNodeA, to: nodeId, theme: nodeA.theme });
         
         // Check for milestone
         if (dbResult?.milestone_added) {
@@ -364,10 +362,10 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
           // Debounce rebuild (max 1 every 2s)
           const now = Date.now();
           if (now - lastRebuildTime > 2000) {
-            // Increase tunnel complexity
+            // Increase tunnel complexity and torsion
             tunnelTorsion += 0.05;
             tunnelRings = Math.min(tunnelRings + 4, qualityPresets.high.rings);
-            const twistDelta = fieldSweep.getTwistDelta();
+            const twistDelta = reduced ? 0 : fieldSweep.getTwistDelta();
             tunnelGeometry = buildTunnel(twistDelta);
             nodeLayer.regenerate(tunnelGeometry, 48, seed);
             scheduler.setTunnelGeometry(tunnelGeometry);
@@ -385,6 +383,8 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
             level: dbResult.milestone_level,
             message: 'Il tuo DNA ha raggiunto una nuova consapevolezza'
           });
+          
+          console.info('[MF3D] evolve:', { theme: nodeA.theme, level: dbResult.milestone_level });
           
           window.dispatchEvent(new CustomEvent('mindfractal:evolve', {
             detail: { theme: nodeA.theme, level: dbResult.milestone_level }
@@ -430,7 +430,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         
         if (avgFPS < 45 && qualityLevel !== 'low' && (now - lastQualityCheck) > 2000) {
           qualityLevel = qualityLevel === 'high' ? 'mobile' : 'low';
-          const twistDelta = fieldSweep.getTwistDelta();
+          const twistDelta = reduced ? 0 : fieldSweep.getTwistDelta();
           tunnelGeometry = buildTunnel(twistDelta);
           nodeLayer.regenerate(tunnelGeometry, 48, seed);
           scheduler.setTunnelGeometry(tunnelGeometry);
@@ -444,9 +444,9 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       fieldSweep.update();
       let fieldIntensity = fieldSweep.getIntensity();
       
-      // Reduce sweep intensity if reduced animations
+      // Reduce sweep intensity if reduced animations (no micro-torsion)
       if (reduced) {
-        fieldIntensity = 0.5 + (fieldIntensity - 1.0) * 0.5;
+        fieldIntensity = 1.0; // Disable breathing
       }
       
       arcPool.update(deltaTime, fieldIntensity);
@@ -454,14 +454,13 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       scheduler.adjustForFPS(avgFPS, deltaTime);
       scheduler.update(deltaTime, reduced);
       
-      // Field sweep effect on tunnel
+      // Coherent breathing: apply same intensity to tunnel scale and opacity
       if (tunnelMesh) {
-        const intensity = fieldSweep.getIntensity();
-        const pulse = !reduced ? Math.sin(elapsedTime * 0.6) * 0.02 + 1.0 : 1.0;
-        tunnelMesh.scale.set(pulse * intensity, pulse * intensity, 1.0);
+        const breathingScale = reduced ? 1.0 : fieldIntensity;
+        tunnelMesh.scale.set(breathingScale, breathingScale, 1.0);
         
         if (tunnelMesh.material) {
-          (tunnelMesh.material as THREE.LineBasicMaterial).opacity = 0.85 * intensity;
+          (tunnelMesh.material as THREE.LineBasicMaterial).opacity = 0.85 * fieldIntensity;
         }
       }
 
@@ -543,9 +542,9 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         />
       )}
       
-      {/* Tooltip for hovered node */}
+      {/* Tooltip for hovered node - positioned high to avoid blocking canvas */}
       {hoveredNode !== null && nodeLayerRef.current && (
-        <div className="mf-tooltip absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/80 border border-cyan-400/30 backdrop-blur-sm">
+        <div className="mf-tooltip absolute top-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-black/80 border border-cyan-400/30 backdrop-blur-sm">
           <span className="text-sm text-cyan-400 font-medium">
             {nodeLayerRef.current.getNode(hoveredNode)?.name || 'Nodo'}
           </span>
