@@ -529,7 +529,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       const breathScale = reduced ? 1.0 + (intensity - 1.0) * 0.5 : intensity;
       
       // Apply breathing ONLY to entire group (tunnel + nodes)
-      tunnelGroup.scale.set(breathScale, breathScale, 0.95 + breathScale * 0.05);
+      tunnelGroup.scale.set(breathScale, breathScale, breathScale);
       // tunnelGroup.rotation.z is NOT updated per-frame, only on milestone rebuild
       
       if (tunnelMesh?.material) {
