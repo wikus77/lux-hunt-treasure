@@ -3,13 +3,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { buildSpiralTunnel } from './geometry/buildSpiralTunnel';
+import { buildFractalTunnel } from './geometry/buildFractalTunnel';
 import { NodeLayer, NodeState } from './nodes/NodeLayer';
 import { usePickNode } from './nodes/usePickNode';
 import { LinkEngine } from './game/LinkEngine';
-import { ElectricArcPool } from './fx/ElectricArcPool';
-import { ElectricScheduler } from './fx/ElectricScheduler';
-import { FieldSweep } from './effects/FieldSweep';
+import { GridArcPool } from './fx/GridArcPool';
+import { FieldBreath } from './fx/FieldBreath';
 import { FPSMonitor } from './utils/FPSMonitor';
 import { CameraStore } from './utils/CameraStore';
 import { useMindFractalPersistence } from './persistence/useMindFractalPersistence';
@@ -153,7 +152,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
     // === TUNNEL GEOMETRY ===
     let tunnelMesh: THREE.LineSegments | null = null;
-    let tunnelTorsion = 0.1;
+    let tunnelTwist = 0.1; // Parametric twist in radians
     let tunnelRings = qualityPresets[qualityLevel].rings;
     
     const buildTunnel = () => {
@@ -162,11 +161,12 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         tunnelMesh.geometry.dispose();
       }
 
-      const { positions, indices } = buildSpiralTunnel({
+      const { positions, indices } = buildFractalTunnel({
         rings: tunnelRings,
         segments: qualityPresets[qualityLevel].segments,
         radius: 10,
-        depth: -tunnelDepth
+        depth: -tunnelDepth,
+        twist: tunnelTwist
       });
 
       const geometry = new THREE.BufferGeometry();
@@ -199,12 +199,10 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     const linkEngine = new LinkEngine(tunnelDepth);
 
     // === FX SYSTEMS ===
-    const arcPool = new ElectricArcPool(scene);
-    const scheduler = new ElectricScheduler(arcPool);
-    scheduler.setNodeLayer(nodeLayer);
-    scheduler.setTunnelGeometry(tunnelGeometry);
+    const gridArcPool = new GridArcPool(scene);
+    gridArcPool.bindGeometry(tunnelGeometry);
     
-    const fieldSweep = new FieldSweep();
+    const fieldBreath = new FieldBreath({ periodMs: 12000, amp: 0.30 });
 
     // === FPS MONITOR ===
     const fpsMonitor = new FPSMonitor();
@@ -314,7 +312,10 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         }
         
         // Create visual arc with white spike
-        scheduler.spawnLinkArc(nodeA.position, node.position);
+        gridArcPool.spawnLinkArc(nodeA.position, node.position);
+        
+        // Boost breathing intensity
+        fieldBreath.boost(2, 0.10);
         
         // Play short link sound
         try {
@@ -337,14 +338,15 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
           console.info('[MF3D] ✨ Evolution milestone!', dbResult);
           
           // Increase tunnel complexity
-          tunnelTorsion += 0.05;
+          tunnelTwist = Math.min(tunnelTwist + 0.12, 0.8);
           tunnelRings = Math.min(tunnelRings + 4, qualityPresets.high.rings);
-          tunnelGeometry = buildTunnel();
-          nodeLayer.regenerate(tunnelGeometry, 48, seed);
-          scheduler.setTunnelGeometry(tunnelGeometry);
           
-          // Boost FX frequency
-          scheduler.increaseFrequency(0.1);
+          // Rebuild with debounce
+          setTimeout(() => {
+            tunnelGeometry = buildTunnel();
+            nodeLayer.regenerate(tunnelGeometry, 48, seed);
+            gridArcPool.bindGeometry(tunnelGeometry);
+          }, 2000);
           
           // Show overlay
           setEvolution({
@@ -375,8 +377,35 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       }
     };
 
+    // === DRAG DETECTION ===
+    let pointerDownPos: { x: number; y: number; ts: number } | null = null;
+    
+    const handlePointerDown = (event: PointerEvent) => {
+      pointerDownPos = {
+        x: event.clientX,
+        y: event.clientY,
+        ts: performance.now()
+      };
+    };
+
+    const handlePointerUp = (event: PointerEvent) => {
+      if (!pointerDownPos) return;
+      
+      const dx = Math.abs(event.clientX - pointerDownPos.x);
+      const dy = Math.abs(event.clientY - pointerDownPos.y);
+      const dt = performance.now() - pointerDownPos.ts;
+      
+      pointerDownPos = null;
+      
+      // Only trigger click if minimal drag and quick
+      if (dx < 6 && dy < 6 && dt < 180) {
+        onCanvasClick(event);
+      }
+    };
+
     canvas.addEventListener('pointermove', handlePointerMove);
-    canvas.addEventListener('click', onCanvasClick);
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    canvas.addEventListener('pointerup', handlePointerUp);
 
     // === ANIMATION LOOP ===
     const clock = new THREE.Clock();
@@ -400,7 +429,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
           qualityLevel = qualityLevel === 'high' ? 'mobile' : 'low';
           tunnelGeometry = buildTunnel();
           nodeLayer.regenerate(tunnelGeometry, 48, seed);
-          scheduler.setTunnelGeometry(tunnelGeometry);
+          gridArcPool.bindGeometry(tunnelGeometry);
           console.info('[MF3D] Quality downgraded to:', qualityLevel);
           lastQualityCheck = now;
         }
@@ -408,22 +437,36 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
 
       // Update systems
       controls.update();
-      fieldSweep.update();
-      const fieldIntensity = fieldSweep.getIntensity();
-      arcPool.update(deltaTime, fieldIntensity);
-      nodeLayer.update(elapsedTime, hoveredNode);
-      scheduler.adjustForFPS(avgFPS, deltaTime);
-      scheduler.update(deltaTime, reduced);
       
-      // Field sweep effect on tunnel
+      // Field breathing effect
+      const nowMs = performance.now();
+      const intensity = fieldBreath.tick(nowMs);
+      const breathScale = reduced ? 1.0 + (intensity - 1.0) * 0.5 : intensity;
+      const twistDelta = fieldBreath.getTwistDelta(nowMs);
+      
       if (tunnelMesh) {
-        const intensity = fieldSweep.getIntensity();
-        const pulse = !reduced ? Math.sin(elapsedTime * 0.6) * 0.02 + 1.0 : 1.0;
-        tunnelMesh.scale.set(pulse * intensity, pulse * intensity, 1.0);
+        tunnelMesh.scale.set(breathScale, breathScale, 0.95 + breathScale * 0.05);
+        tunnelMesh.rotation.z = (tunnelTwist + twistDelta) * 0.9;
         
         if (tunnelMesh.material) {
           (tunnelMesh.material as THREE.LineBasicMaterial).opacity = 0.85 * intensity;
         }
+      }
+      
+      // Update FX and nodes
+      gridArcPool.update(deltaTime, { reduced });
+      nodeLayer.update(elapsedTime, hoveredNode);
+      
+      // Deep-zoom target follow
+      const camDist = camera.position.length();
+      const targetProgress = THREE.MathUtils.clamp(1 - camDist / (1.6 * tunnelDepth), 0, 1);
+      const targetZ = -tunnelDepth * (0.05 + 0.95 * targetProgress);
+      controls.target.lerp(new THREE.Vector3(0, 0, targetZ), 0.08);
+      
+      // Clamp camera near tunnel end
+      const minZ = -tunnelDepth + 0.05;
+      if (camera.position.z < minZ) {
+        camera.position.z = minZ;
       }
 
       // Log stats periodically
@@ -462,7 +505,8 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       cancelAnimationFrame(animationId);
       window.removeEventListener('resize', handleResize);
       canvas.removeEventListener('pointermove', handlePointerMove);
-      canvas.removeEventListener('click', onCanvasClick);
+      canvas.removeEventListener('pointerdown', handlePointerDown);
+      canvas.removeEventListener('pointerup', handlePointerUp);
       
       controls.dispose();
       renderer.dispose();
@@ -473,7 +517,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       }
       
       nodeLayer.dispose();
-      arcPool.dispose();
+      gridArcPool.dispose();
       
       scene.clear();
     };

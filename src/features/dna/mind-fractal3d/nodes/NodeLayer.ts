@@ -152,6 +152,23 @@ export class NodeLayer {
     if (this.instancedMesh.instanceColor) {
       this.instancedMesh.instanceColor.needsUpdate = true;
     }
+
+    // Immediate pulse effect on state change
+    const matrix = new THREE.Matrix4();
+    const scale = new THREE.Vector3(1.5, 1.5, 1.5);
+    matrix.compose(node.position, new THREE.Quaternion(), scale);
+    this.instancedMesh.setMatrixAt(nodeId, matrix);
+    this.instancedMesh.instanceMatrix.needsUpdate = true;
+
+    // Reset scale after 200ms
+    setTimeout(() => {
+      if (!this.instancedMesh) return;
+      const resetMatrix = new THREE.Matrix4();
+      const resetScale = new THREE.Vector3(1.0, 1.0, 1.0);
+      resetMatrix.compose(node.position, new THREE.Quaternion(), resetScale);
+      this.instancedMesh.setMatrixAt(nodeId, resetMatrix);
+      this.instancedMesh.instanceMatrix.needsUpdate = true;
+    }, 200);
   }
 
   getStats(): { discovered: number; linked: number } {
