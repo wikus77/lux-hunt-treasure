@@ -117,7 +117,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
     const controls = new OrbitControls(camera, canvas);
     controls.enableDamping = !reduced;
     controls.dampingFactor = 0.08;
-    controls.minDistance = 0.02 * tunnelDepth; // Can zoom very close
+    controls.minDistance = 0.001 * tunnelDepth; // DEEP ZOOM: Can reach 99.9% of tunnel depth
     controls.maxDistance = 1.6 * tunnelDepth;
     controls.enablePan = false;
     controls.maxPolarAngle = Math.PI * 0.95;
@@ -285,7 +285,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       const node = nodeLayer.getNode(nodeId);
       if (!node) return;
 
-      console.info('[MF3D] Node clicked:', nodeId, node.theme, node.state);
+      console.info('[MF3D] node-click', { nodeId, theme: node.theme, stateBefore: node.state });
 
       // First click - discover or select
       if (selectedNodeA === null) {
@@ -344,7 +344,7 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
         // Track in DB
         const dbResult = await trackLink(selectedNodeA, nodeId, nodeA.theme, seed, 1.0);
         
-        console.info('[MF3D] Link created:', linkResult, 'DB:', dbResult);
+        console.info('[MF3D] link-created', { from: selectedNodeA, to: nodeId, length: linkResult.length.toFixed(2), theme: nodeA.theme, dbTracked: !!dbResult });
         
         // Check for milestone
         if (dbResult?.milestone_added) {
@@ -485,8 +485,8 @@ export const MindFractal3D: React.FC<MindFractal3DProps> = ({
       const targetZ = -tunnelDepth * (0.05 + 0.95 * targetProgress);
       controls.target.lerp(new THREE.Vector3(0, 0, targetZ), 0.08);
       
-      // Clamp camera near tunnel end
-      const minZ = -tunnelDepth + 0.05;
+      // DEEP ZOOM: Clamp camera to reach 99.9% of tunnel depth
+      const minZ = -tunnelDepth + (0.001 * tunnelDepth); // 99.9% reach
       if (camera.position.z < minZ) {
         camera.position.z = minZ;
       }

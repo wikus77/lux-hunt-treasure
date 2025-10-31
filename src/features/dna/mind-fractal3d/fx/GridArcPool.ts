@@ -52,8 +52,8 @@ void main() {
     color = mix(color, vec3(1.5), (wave - 0.85) / 0.15);
   }
   
-  // Link arcs are brighter - BOOSTED intensity ×1.5
-  float brightnessMod = mix(1.5, 2.0, uIsLink); // Increased base from 1.0 to 1.5
+  // Link arcs are brighter - BOOSTED +150% intensity
+  float brightnessMod = mix(2.0, 3.0, uIsLink); // Maximum brightness for visibility
   float alpha = wave * taper * (1.0 - uLifetimeRatio) * brightnessMod;
   
   gl_FragColor = vec4(color, alpha);
@@ -67,7 +67,7 @@ export class GridArcPool {
   private scene: THREE.Scene;
   private arcs: Arc[] = [];
   private edges: Array<[THREE.Vector3, THREE.Vector3]> = [];
-  private readonly MAX_ARCS = 160; // BOOSTED ×2 for denser visual
+  private readonly MAX_ARCS = 200; // BOOSTED +100% for maximum density
   private lastIdleSpawn = 0;
   private lastSurge = 0;
   private surgeInterval = 3000 + Math.random() * 3000; // 3-6s randomized
@@ -124,8 +124,8 @@ export class GridArcPool {
   update(deltaTime: number, opts: { reduced: boolean }): void {
     const now = performance.now();
     
-    // Spawn idle arcs - BOOSTED ×2
-    const targetRate = opts.reduced ? 2.4 : 5.0; // Hz (doubled from 1.2/2.5)
+    // Spawn idle arcs - BOOSTED +100%
+    const targetRate = opts.reduced ? 3.5 : 7.0; // Hz (+100% from original 1.2/2.5)
     const interval = 1000 / targetRate;
     
     if (now - this.lastIdleSpawn > interval && this.edges.length > 0) {
@@ -198,7 +198,7 @@ export class GridArcPool {
     }
 
     const curve = new THREE.LineCurve3(start, end);
-    const radius = isLink ? 0.10 : 0.08; // BOOSTED +30% (was 0.08/0.06)
+    const radius = isLink ? 0.14 : 0.10; // BOOSTED +75% for maximum visibility
     const geometry = new THREE.TubeGeometry(curve, 8, radius, 4, false);
 
     const material = new THREE.ShaderMaterial({
@@ -228,11 +228,11 @@ export class GridArcPool {
   }
 
   /**
-   * Spawn SURGE effect - propagating discharge across 6-10 rings
+   * Spawn SURGE effect - ENHANCED propagating discharge across 8-14 rings
    */
   private spawnSurge(): void {
-    const ringCount = 6 + Math.floor(Math.random() * 5); // 6-10 rings
-    const surgeDuration = 200 + Math.random() * 150; // 200-350ms total
+    const ringCount = 8 + Math.floor(Math.random() * 7); // 8-14 rings (wider propagation)
+    const surgeDuration = 250 + Math.random() * 200; // 250-450ms total (longer, more visible)
     const delayPerRing = surgeDuration / ringCount;
     
     const startRing = Math.floor(Math.random() * (this.edges.length / this.ringsPerSegment - ringCount));
