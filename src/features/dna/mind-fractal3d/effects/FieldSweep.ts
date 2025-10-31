@@ -42,19 +42,19 @@ export class FieldSweep {
         ? Math.pow(2, 20 * progress - 10) / 2
         : (2 - Math.pow(2, -20 * progress + 10)) / 2;
 
-      // Intensity curve: 1.0 → 1.2 → 1.0
+      // Intensity curve: 1.0 → 1.1 → 1.0 (coherent breathing, not chaotic)
       if (progress < 0.5) {
-        this.currentIntensity = 1.0 + eased * 0.2 * 2;
+        this.currentIntensity = 1.0 + eased * 0.1 * 2;
       } else {
-        this.currentIntensity = 1.2 - (eased - 0.5) * 0.2 * 2;
+        this.currentIntensity = 1.1 - (eased - 0.5) * 0.1 * 2;
       }
 
-      // Twist delta: 0 → ±0.02 → 0 (randomize direction)
+      // Twist delta: 0 → ±0.015 → 0 (subtle micro-torsion)
       const twistDir = Math.random() > 0.5 ? 1 : -1;
       if (progress < 0.5) {
-        this.currentTwist = twistDir * eased * 0.02 * 2;
+        this.currentTwist = twistDir * eased * 0.015 * 2;
       } else {
-        this.currentTwist = twistDir * (0.02 - (eased - 0.5) * 0.02 * 2);
+        this.currentTwist = twistDir * (0.015 - (eased - 0.5) * 0.015 * 2);
       }
 
       if (progress >= 1.0) {
