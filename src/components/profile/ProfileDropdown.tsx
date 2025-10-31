@@ -9,6 +9,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import ProfileAvatar from '@/components/profile/ProfileAvatar';
 import { useToast } from '@/hooks/use-toast';
 import ProfileToast from './ProfileToast';
+import PulseEnergyBadge from '@/components/pulse/PulseEnergyBadge';
+import PulseEnergyProgressBar from '@/components/pulse/PulseEnergyProgressBar';
+import { usePulseEnergy } from '@/hooks/usePulseEnergy';
 
 interface ProfileDropdownProps {
   profileImage?: string | null;
@@ -25,6 +28,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   const { navigate } = useWouterNavigation();
   const { toast } = useToast();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { pulseEnergy, currentRank, nextRank, progressToNextRank, loading: peLoading } = usePulseEnergy();
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -138,8 +142,24 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                   </div>
                 </div>
 
+                {/* PE + Rank System */}
+                {!peLoading && currentRank && (
+                  <div className="border-t border-white/10 pt-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/70 text-xs">Grado Agente</span>
+                    </div>
+                    <PulseEnergyBadge rank={currentRank} showCode={true} />
+                    <PulseEnergyProgressBar
+                      currentRank={currentRank}
+                      nextRank={nextRank}
+                      progressPercent={progressToNextRank}
+                      currentPE={pulseEnergy}
+                    />
+                  </div>
+                )}
+
                 {/* Subscription Tier */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between border-t border-white/10 pt-3">
                   <span className="text-white/70 text-sm">Piano attivo:</span>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${tierInfo.color}`}>
                     {tierInfo.emoji} {tierInfo.name}

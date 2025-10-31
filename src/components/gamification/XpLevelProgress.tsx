@@ -10,7 +10,7 @@ interface XpLevelProgressProps {
 }
 
 export const XpLevelProgress: React.FC<XpLevelProgressProps> = ({ totalXp, className }) => {
-  // Calculate level: 1 level = 1000 XP
+  // Calculate level: 1 level = 1000 PE
   const level = Math.floor(totalXp / 1000) + 1;
   const xpInCurrentLevel = totalXp % 1000;
   const xpNeededForNextLevel = 1000;

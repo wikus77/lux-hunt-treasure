@@ -259,11 +259,11 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
                 </div>
               ) : profileData ? (
                 <>
-                  {/* XP & Daily Check-in */}
+                  {/* PE & Daily Check-in */}
                   <div className="border border-slate-700/50 rounded-lg p-3 bg-slate-900/50">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-semibold text-blue-400">Livello & XP</h4>
-                      <span className="text-xs text-gray-400">Totale: {totalXp} XP</span>
+                      <h4 className="text-sm font-semibold text-blue-400">Livello & PE</h4>
+                      <span className="text-xs text-gray-400">Totale: {totalXp} PE</span>
                     </div>
                     <XpLevelProgress totalXp={totalXp} />
                     <div className="mt-3 pt-3 border-t border-slate-700/50">

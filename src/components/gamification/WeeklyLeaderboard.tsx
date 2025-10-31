@@ -150,7 +150,7 @@ export function WeeklyLeaderboard() {
                     {entry.agent_code || 'Agente Segreto'}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {entry.total_xp.toLocaleString()} XP
+                    {entry.total_xp.toLocaleString()} PE
                   </p>
                 </div>
               </div>
