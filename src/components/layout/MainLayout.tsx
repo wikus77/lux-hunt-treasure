@@ -103,11 +103,11 @@ const MainLayout = () => {
                 <DropdownMenuLabel className="font-bold text-white/90">Menu profilo</DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem
-                  onClick={() => navigate("/profile")}
-                  className="cursor-pointer text-white/80 hover:text-white hover:bg-white/10 font-medium transition-colors mobile-touch-target"
-                >
-                  Vai al profilo
-                </DropdownMenuItem>
+                onClick={() => navigate("/settings/agent-profile")}
+                className="cursor-pointer text-white/80 hover:text-white hover:bg-white/10 font-medium transition-colors mobile-touch-target"
+              >
+                Vai al profilo
+              </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10" />
                 <DropdownMenuItem
                   onClick={() => setShowHowItWorks(true)}

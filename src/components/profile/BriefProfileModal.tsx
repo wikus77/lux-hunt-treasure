@@ -36,7 +36,7 @@ const BriefProfileModal = ({ open, onClose, profileImage }: BriefProfileModalPro
 
   const goToProfile = () => {
     onClose();
-    navigate("/profile");
+    navigate("/settings/agent-profile");
   };
 
   return (
