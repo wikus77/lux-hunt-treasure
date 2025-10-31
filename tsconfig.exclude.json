@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "src/features/mindfractal3/test/**/*.cy.ts",
+    "cypress/**/*"
+  ]
+}
