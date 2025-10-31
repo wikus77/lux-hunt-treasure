@@ -39,7 +39,7 @@ import IntelligenceRAG from "@/pages/IntelligenceRAG";
 import IntelligenceAnswerTest from "@/pages/IntelligenceAnswerTest";
 import HallOfWinnersStyledPage from "@/pages/HallOfWinnersStyledPage";
 import Notifications from "@/pages/Notifications";
-import ProfileRedirect from "@/pages/ProfileRedirect";
+import Profile from "@/pages/Profile";
 import NorahAssistant from "@/pages/NorahAssistant";
 import SettingsPage from "@/pages/settings/SettingsPage";
 import AgentProfileSettings from "@/pages/settings/AgentProfileSettings";
@@ -56,9 +56,6 @@ import PrivacyPermissionsSettings from "@/pages/settings/PrivacyPermissionsSetti
 import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
-import PersonalInfoPage from "@/pages/profile/PersonalInfoPage";
-import SecurityPage from "@/pages/profile/SecurityPage";
-import PaymentsHistoryPage from "@/pages/profile/PaymentsHistoryPage";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import MissionPanelPage from "@/pages/admin/MissionPanelPage";
 import PulseLab from "@/pages/admin/PulseLab";
@@ -382,7 +379,7 @@ const WouterRoutes: React.FC = () => {
 
           <Route path="/profile">
             <ProtectedRoute>
-              <GlobalLayout><ProfileRedirect /></GlobalLayout>
+              <GlobalLayout><Profile /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
@@ -408,25 +405,6 @@ const WouterRoutes: React.FC = () => {
           <Route path="/settings/profile">
             <ProtectedRoute>
               <GlobalLayout><AgentProfileSettings /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
-
-          {/* Agent Profile Sub-pages */}
-          <Route path="/settings/agent-profile/personal-info">
-            <ProtectedRoute>
-              <GlobalLayout><PersonalInfoPage /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
-
-          <Route path="/settings/agent-profile/security">
-            <ProtectedRoute>
-              <GlobalLayout><SecurityPage /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
-
-          <Route path="/settings/agent-profile/payments">
-            <ProtectedRoute>
-              <GlobalLayout><PaymentsHistoryPage /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 

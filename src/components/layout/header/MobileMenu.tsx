@@ -45,7 +45,7 @@ export const MobileMenu = ({ isAdmin = false }: MobileMenuProps) => {
               Buzz
             </Link>
             <Link
-              to="/settings/agent-profile"
+              to="/profile"
               className="px-6 py-2 text-sm font-medium hover:bg-gray-800"
             >
               Profilo
