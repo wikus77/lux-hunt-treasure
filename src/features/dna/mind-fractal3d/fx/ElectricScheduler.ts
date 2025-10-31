@@ -76,7 +76,7 @@ export class ElectricScheduler {
       
       // Diagnostic log (every 5th spawn)
       if (Math.random() < 0.2) {
-        console.info('[ElectricScheduler] Spawned idle arc:', {
+        console.info('[MF3D] idle-arc:', {
           baseRate: this.baseRate.toFixed(2),
           effectiveRate: effectiveRate.toFixed(2),
           reduced
