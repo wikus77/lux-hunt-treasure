@@ -76,11 +76,45 @@ interface Window {
 }
 
 // Mobile-compatible environment interface
-// Removed VITE_ variables for Capacitor compatibility
+// Complete VITE_ environment variables declarations
 interface ImportMetaEnv {
   readonly NODE_ENV: string;
   readonly VITE_VAPID_PUBLIC_KEY: string;
   readonly VITE_PWA_VERSION: string;
+
+  // Supabase
+  readonly VITE_SUPABASE_URL: string;
+  readonly VITE_SUPABASE_ANON_KEY: string;
+  readonly VITE_SUPABASE_PROJECT_REF?: string;
+  readonly VITE_SUPABASE_FUNCTIONS_BASE?: string;
+
+  // Stripe
+  readonly VITE_STRIPE_PUBLISHABLE_KEY?: string;
+
+  // Google Maps
+  readonly VITE_GOOGLE_MAPS_API_KEY?: string;
+
+  // Norah AI
+  readonly VITE_NORAH_BASE_URL?: string;
+
+  // Debug / Flags
+  readonly VITE_DIAG?: string;
+  readonly VITE_BADGE_DEBUG?: string;
+  readonly VITE_SHOW_RECONNECT_BADGE?: string;
+  readonly VITE_SW_UPDATE_DEBUG?: string;
+  readonly VITE_QA_MODE?: string;
+  readonly VITE_BUNDLE_ANALYZE?: string;
+
+  // Feature flags
+  readonly VITE_LIVING_MAP_USE_MOCK?: string;
+  readonly VITE_ENABLE_LIVING_MAP?: string;
+  readonly VITE_DEMO_WEATHER?: string;
+
+  // Sentry
+  readonly VITE_SENTRY_DSN?: string;
+
+  // Build
+  readonly VITE_BUILD_ID?: string;
 }
 
 // Process environment for browser compatibility
