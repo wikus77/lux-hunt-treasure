@@ -8,22 +8,9 @@
 // - Le uniche lingue supportate qui sono: en, it, fr. Qualsiasi altra → fallback 'en'.
 // - Non toccare network, routing, o logiche di business. Solo i18n bootstrap.
 
-// Se i18next/react-i18next non fossero presenti nel progetto, il modulo espone API no-op
-// per evitare crash. Se sono presenti, useremo l'integrazione reale.
-
-let i18next: any = null;
-let initReactI18next: any = null;
-
-try {
-  // Lazy require per non esplodere se i pacchetti non sono installati
-  // (Lovable non deve aggiungere dipendenze; se già ci sono, le usiamo)
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  i18next = require('i18next');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  initReactI18next = require('react-i18next').initReactI18next;
-} catch {
-  // no-op fallback
-}
+// i18next and react-i18next are guaranteed to be installed (see package.json)
+import i18next from 'i18next';
+import { initReactI18next } from 'react-i18next';
 
 import en from '../locales/en/common.json';
 import it from '../locales/it/common.json';

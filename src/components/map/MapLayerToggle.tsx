@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Layers, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
 
 interface LayerConfig {
   id: string;
@@ -62,7 +63,6 @@ const MapLayerToggle = ({ onLayerChange, layerCounts, agentsVisibleCount }: MapL
         
         // ✅ FIX: Warning per layer AGENTS
         if (layerId === 'agents' && !newEnabled) {
-          const { toast } = require('sonner');
           toast.warning('⚠️ Layer AGENTS disattivato', {
             description: 'Il tuo marker rosso sarà nascosto',
             duration: 5000
