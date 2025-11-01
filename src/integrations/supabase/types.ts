@@ -7332,7 +7332,9 @@ export type Database = {
         Returns: undefined
       }
       interest_track: { Args: { payload: Json }; Returns: undefined }
-      invoke_auto_push_cron: { Args: never; Returns: Json }
+      invoke_auto_push_cron:
+        | { Args: never; Returns: Json }
+        | { Args: { p_body?: Json }; Returns: Json }
       is_admin: { Args: { user_id?: string }; Returns: boolean }
       is_admin_email_safe: { Args: { p_email: string }; Returns: boolean }
       is_admin_secure: { Args: never; Returns: boolean }
