@@ -98,6 +98,7 @@ import ChoosePlanPage from "@/pages/ChoosePlanPage";
 import SubscriptionVerify from "@/pages/SubscriptionVerify";
 import MissionIntroPage from "@/pages/MissionIntroPage";
 import FcmTest from "@/pages/FcmTest";
+import DevPushTest from "@/pages/dev/PushTest";
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Import centralizzato
@@ -551,6 +552,13 @@ const WouterRoutes: React.FC = () => {
               <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
                 <MarkersHealthcheck />
               </React.Suspense>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Dev Push Test Panel - MCP Only */}
+          <Route path="/dev/push-test">
+            <ProtectedRoute>
+              <DevPushTest />
             </ProtectedRoute>
           </Route>
 
