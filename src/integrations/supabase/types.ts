@@ -854,31 +854,31 @@ export type Database = {
       }
       auto_push_log: {
         Row: {
-          created_at: string
-          delivery: Json | null
+          details: Json | null
           id: string
-          sent_at: string
-          sent_date: string
+          sent_at: string | null
+          sent_date: string | null
+          status: string | null
           template_id: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
-          created_at?: string
-          delivery?: Json | null
+          details?: Json | null
           id?: string
-          sent_at?: string
-          sent_date?: string
+          sent_at?: string | null
+          sent_date?: string | null
+          status?: string | null
           template_id?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
-          created_at?: string
-          delivery?: Json | null
+          details?: Json | null
           id?: string
-          sent_at?: string
-          sent_date?: string
+          sent_at?: string | null
+          sent_date?: string | null
+          status?: string | null
           template_id?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -892,39 +892,57 @@ export type Database = {
       }
       auto_push_templates: {
         Row: {
-          active: boolean
+          ab_key: string | null
+          ab_variant: string | null
           body: string
-          created_at: string
+          condition_sql: string | null
+          created_at: string | null
+          data_json: Json | null
+          deeplink: string | null
+          enabled: boolean
+          freq_cap_user_per_day: number
           id: string
-          image_url: string | null
-          kind: string
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          segment: string | null
           title: string
-          updated_at: string
-          url: string
+          type: string
           weight: number
         }
         Insert: {
-          active?: boolean
+          ab_key?: string | null
+          ab_variant?: string | null
           body: string
-          created_at?: string
+          condition_sql?: string | null
+          created_at?: string | null
+          data_json?: Json | null
+          deeplink?: string | null
+          enabled?: boolean
+          freq_cap_user_per_day?: number
           id?: string
-          image_url?: string | null
-          kind: string
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          segment?: string | null
           title: string
-          updated_at?: string
-          url?: string
+          type: string
           weight?: number
         }
         Update: {
-          active?: boolean
+          ab_key?: string | null
+          ab_variant?: string | null
           body?: string
-          created_at?: string
+          condition_sql?: string | null
+          created_at?: string | null
+          data_json?: Json | null
+          deeplink?: string | null
+          enabled?: boolean
+          freq_cap_user_per_day?: number
           id?: string
-          image_url?: string | null
-          kind?: string
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          segment?: string | null
           title?: string
-          updated_at?: string
-          url?: string
+          type?: string
           weight?: number
         }
         Relationships: []
@@ -6744,15 +6762,6 @@ export type Database = {
           full_name: string | null
           last_contribution: string | null
           total_contribution: number | null
-        }
-        Relationships: []
-      }
-      push_stats_daily: {
-        Row: {
-          date: string | null
-          success_rate: number | null
-          successful: number | null
-          total_sent: number | null
         }
         Relationships: []
       }
