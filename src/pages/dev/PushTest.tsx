@@ -17,6 +17,7 @@ export default function PushTest() {
   const [body, setBody] = useState('Test notifica push da pannello dev.');
   const [deeplink, setDeeplink] = useState('/profile');
   const [bypassQuietHours, setBypassQuietHours] = useState(true);
+  const [adminToken, setAdminToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
@@ -32,6 +33,11 @@ export default function PushTest() {
   }
 
   const handleSendPush = async () => {
+    if (!adminToken.trim()) {
+      toast.error('❌ Inserisci il token admin');
+      return;
+    }
+
     setLoading(true);
     setResult(null);
 
@@ -40,12 +46,9 @@ export default function PushTest() {
         title,
         body,
         deeplink,
-        bypassQuietHours
+        bypassQuietHours,
+        hasToken: !!adminToken
       });
-
-      // Get admin token from Supabase secrets (if available) or use hardcoded for dev
-      // NOTE: In production, this should come from a secure backend call
-      const adminToken = 'M1SSION_PUSH_ADMIN_2025'; // Match PUSH_ADMIN_TOKEN in edge function
 
       const response = await fetch(
         `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/webpush-targeted-send`,
@@ -93,6 +96,20 @@ export default function PushTest() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label htmlFor="adminToken">🔑 Admin Token (PUSH_ADMIN_TOKEN)</Label>
+            <Input
+              id="adminToken"
+              type="password"
+              value={adminToken}
+              onChange={(e) => setAdminToken(e.target.value)}
+              placeholder="Inserisci token admin da Supabase secrets"
+            />
+            <p className="text-xs text-muted-foreground">
+              Trovalo in: Supabase Dashboard → Edge Functions → Secrets → PUSH_ADMIN_TOKEN
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
               id="title"
@@ -135,11 +152,17 @@ export default function PushTest() {
 
           <Button
             onClick={handleSendPush}
-            disabled={loading}
+            disabled={loading || !adminToken.trim()}
             className="w-full"
           >
             {loading ? '⏳ Invio...' : '📤 Invia a MCP (495246c1...)'}
           </Button>
+
+          {!adminToken.trim() && (
+            <p className="text-xs text-yellow-500 text-center">
+              ⚠️ Inserisci il token admin per abilitare l'invio
+            </p>
+          )}
 
           {result && (
             <div className="mt-4 p-4 bg-muted rounded-lg">
