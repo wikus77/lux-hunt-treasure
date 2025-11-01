@@ -117,13 +117,6 @@ interface ImportMetaEnv {
   readonly VITE_BUILD_ID?: string;
 }
 
-// Process environment for browser compatibility
-declare const process: {
-  env: {
-    NODE_ENV: string;
-    [key: string]: string | undefined;
-  };
-};
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
