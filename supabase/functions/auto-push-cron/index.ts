@@ -13,6 +13,7 @@ const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY")!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+const PUSH_ADMIN_TOKEN = Deno.env.get("PUSH_ADMIN_TOKEN")!;
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -43,7 +44,7 @@ interface UserProfile {
   credits?: number;
   subscription_tier?: string;
   city?: string;
-  last_active_at?: string;
+  updated_at?: string;
 }
 
 Deno.serve(async (req) => {
@@ -55,6 +56,8 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const dryRun = body.dryRun === true || body.dry_run === true;
+    const bypassQuietHours = body.bypassQuietHours === true || body.bypass_quiet_hours === true;
+    const forceUserId = body.force_user_id || body.forceUserId;
 
     // 1. Auth: x-cron-secret
     const cronSecret = req.headers.get("x-cron-secret");
@@ -63,7 +66,8 @@ Deno.serve(async (req) => {
       return json({ error: "Unauthorized" }, 401);
     }
 
-    console.log(`[AUTO-PUSH-CRON] ✅ Cron authenticated (dry-run: ${dryRun})`);
+    console.log(`[AUTO-PUSH-CRON] ✅ Cron authenticated (dry-run: ${dryRun}, bypass-quiet: ${bypassQuietHours}, force-user: ${forceUserId || 'none'})`);
+    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2025-11-01-v2-UPDATED_AT_FIX`);
 
     // 2. Load config
     const supabase = createClient(SB_URL, SERVICE_ROLE_KEY);
@@ -88,10 +92,14 @@ Deno.serve(async (req) => {
     const romeTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Rome' }));
     const hour = romeTime.getHours();
 
-    // Global quiet hours check (21:00-08:59)
-    if (hour >= 21 || hour < 9) {
+    // Global quiet hours check (21:00-08:59) - can be bypassed for tests
+    if (!bypassQuietHours && (hour >= 21 || hour < 9)) {
       console.log(`[AUTO-PUSH-CRON] ⏸️ Global quiet hours (${hour}:00 Rome time)`);
       return json({ ok: true, message: "Quiet hours" }, 200);
+    }
+
+    if (bypassQuietHours) {
+      console.log(`[AUTO-PUSH-CRON] ⚡ Quiet hours bypassed for testing`);
     }
 
     console.log(`[AUTO-PUSH-CRON] ✅ Active time confirmed (${hour}:00 Rome time)`);
@@ -123,31 +131,36 @@ Deno.serve(async (req) => {
 
     console.log(`[AUTO-PUSH-CRON] ✅ Template selected: "${selectedTemplate.title}" (${selectedTemplate.type}, segment: ${selectedTemplate.segment})`);
 
-    // 6. Check template quiet hours
+    // 6. Check template quiet hours (can be bypassed)
     const templateQuietStart = parseInt(selectedTemplate.quiet_hours_start?.split(':')[0] || '21');
     const templateQuietEnd = parseInt(selectedTemplate.quiet_hours_end?.split(':')[0] || '9');
     
-    if (hour >= templateQuietStart || hour < templateQuietEnd) {
+    if (!bypassQuietHours && (hour >= templateQuietStart || hour < templateQuietEnd)) {
       console.log(`[AUTO-PUSH-CRON] ⏸️ Template quiet hours (${hour}:00)`);
       return json({ ok: true, message: "Template quiet hours" }, 200);
     }
 
-    // 7. Build user query based on segment
+    // 7. Build user query based on segment (or force single user for testing)
     let userQuery = supabase
       .from('profiles')
-      .select('id, full_name, username, agent_code, pulse_energy, credits, subscription_tier, city, last_active_at');
+      .select('id, full_name, username, agent_code, pulse_energy, credits, subscription_tier, city, updated_at');
 
-    // Apply segment filters
-    switch (selectedTemplate.segment) {
-      case 'active_24h':
-        userQuery = userQuery.gte('last_active_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-        break;
-      case 'inactive_24h':
-        userQuery = userQuery.lte('last_active_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-        break;
-      case 'inactive_7d':
-        userQuery = userQuery.lte('last_active_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
-        break;
+    // Force specific user if requested (for testing)
+    if (forceUserId) {
+      console.log(`[AUTO-PUSH-CRON] 🎯 Forcing single user: ${forceUserId}`);
+      userQuery = userQuery.eq('id', forceUserId);
+    } else {
+      // Apply segment filters (using updated_at as proxy for activity)
+      switch (selectedTemplate.segment) {
+        case 'active_24h':
+          userQuery = userQuery.gte('updated_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+          break;
+        case 'inactive_24h':
+          userQuery = userQuery.lte('updated_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+          break;
+        case 'inactive_7d':
+          userQuery = userQuery.lte('updated_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+          break;
       case 'free_tier':
         userQuery = userQuery.in('subscription_tier', ['free', 'Base']);
         break;
@@ -161,6 +174,7 @@ Deno.serve(async (req) => {
       default:
         // No filter
         break;
+      }
     }
 
     userQuery = userQuery.limit(1000);
@@ -223,6 +237,7 @@ Deno.serve(async (req) => {
         logsToInsert.push({
           template_id: selectedTemplate.id,
           user_id: user.id,
+          sent_date: new Date().toISOString().split('T')[0],
           status: 'queued',
           details: {
             dry_run: true,
@@ -233,24 +248,25 @@ Deno.serve(async (req) => {
         });
         sentCount++;
       } else {
-        // Call webpush-send for individual user
+        // Call webpush-targeted-send with ADMIN TOKEN
         try {
           const pushResponse = await fetch(`${SB_URL}/functions/v1/webpush-targeted-send`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${ANON_KEY}`,
-              'apikey': ANON_KEY
+              'x-admin-token': PUSH_ADMIN_TOKEN
             },
             body: JSON.stringify({
               user_ids: [user.id],
-              title: renderedTitle,
-              body: renderedBody,
-              url: selectedTemplate.deeplink,
-              data: {
-                ...selectedTemplate.data_json,
-                template_id: selectedTemplate.id,
-                ctx: 'auto-cron'
+              payload: {
+                title: renderedTitle,
+                body: renderedBody,
+                url: selectedTemplate.deeplink,
+                extra: {
+                  ...selectedTemplate.data_json,
+                  template_id: selectedTemplate.id,
+                  ctx: 'auto-cron'
+                }
               }
             })
           });
@@ -261,6 +277,7 @@ Deno.serve(async (req) => {
             logsToInsert.push({
               template_id: selectedTemplate.id,
               user_id: user.id,
+              sent_date: new Date().toISOString().split('T')[0],
               status: 'sent',
               details: {
                 title: renderedTitle,
@@ -274,6 +291,7 @@ Deno.serve(async (req) => {
             logsToInsert.push({
               template_id: selectedTemplate.id,
               user_id: user.id,
+              sent_date: new Date().toISOString().split('T')[0],
               status: 'error',
               details: {
                 error: pushResult.error || 'Unknown error',
@@ -287,6 +305,7 @@ Deno.serve(async (req) => {
           logsToInsert.push({
             template_id: selectedTemplate.id,
             user_id: user.id,
+            sent_date: new Date().toISOString().split('T')[0],
             status: 'error',
             details: {
               error: error.message,
@@ -345,8 +364,8 @@ function renderVariables(text: string, user: UserProfile): string {
   result = result.replace(/{city}/g, user.city || 'città');
   
   // Calculated fields (simplified - can be extended)
-  const lastActiveHours = user.last_active_at 
-    ? Math.floor((Date.now() - new Date(user.last_active_at).getTime()) / (1000 * 60 * 60))
+  const lastActiveHours = user.updated_at 
+    ? Math.floor((Date.now() - new Date(user.updated_at).getTime()) / (1000 * 60 * 60))
     : 0;
   result = result.replace(/{last_buzz_hours}/g, String(lastActiveHours));
   
