@@ -87,7 +87,7 @@ const pnpmv = run('bash', ['-lc', 'pnpm -v || true']).trim();
 appendFileSync(join(LOG_DIR, `runner-info-${stamp}.txt`), `pnpm: ${pnpmv}\n`);
 
 // Install & build (unchanged sequence)
-run('bash', ['-lc', 'pnpm install --frozen-lockfile --use-lockfile=true']);
+run('bash', ['-lc', 'pnpm install --frozen-lockfile']);
 run('bash', ['-lc', 'pnpm run -s prebuild']);
 run('bash', ['-lc', 'pnpm run -s build']);
 
