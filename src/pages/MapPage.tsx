@@ -84,15 +84,15 @@ const MapPage: React.FC = () => {
                 overflow: 'hidden'
               }}
             >
-              {/* M1U Pill Slot - Map (Compact) */}
+              {/* M1U Pill Slot - Map (Compact, replacing grey rectangle) */}
               <div 
                 id="m1u-pill-map-slot" 
-                className="absolute top-4 left-4 z-[1000]"
+                className="absolute top-4 left-4 z-[1000] flex items-center gap-2"
                 style={{
                   pointerEvents: 'auto'
                 }}
               >
-                <M1UnitsPill showLabel={false} />
+                <M1UnitsPill showLabel={false} showPlusButton />
               </div>
 
               <MapContainer

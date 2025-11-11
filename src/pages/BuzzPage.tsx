@@ -91,9 +91,9 @@ export const BuzzPage: React.FC = () => {
             </h1>
           </div>
 
-          {/* M1U Pill Slot - Buzz */}
-          <div id="m1u-pill-buzz-slot" className="flex justify-center mb-6">
-            <M1UnitsPill showLabel />
+          {/* M1U Pill Slot - Buzz (replacing grey rectangle) */}
+          <div id="m1u-pill-buzz-slot" className="flex justify-center items-center mb-6">
+            <M1UnitsPill showLabel showPlusButton />
           </div>
 
           {/* Container principale - Pulsante BUZZ prima del container */}
