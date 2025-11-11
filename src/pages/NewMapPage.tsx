@@ -10,6 +10,7 @@ import { useDynamicIsland } from '@/hooks/useDynamicIsland';
 import { useMissionManager } from '@/hooks/useMissionManager';
 import { useMapPageEffects } from './map/hooks/useMapPageEffects';
 import { useDeepLinkQR } from '@/hooks/useDeepLinkQR';
+import { MapStateProvider } from './map/MapStateProvider';
 
 const NewMapPage = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
@@ -91,8 +92,9 @@ const NewMapPage = () => {
   }, []);
 
   return (
-    <MapPageLayout>
-      <MapSection
+    <MapStateProvider>
+      <MapPageLayout>
+        <MapSection
         isAddingPoint={isAddingPoint}
         setIsAddingPoint={setIsAddingPoint}
         addNewPoint={addNewPoint}
@@ -146,8 +148,11 @@ const NewMapPage = () => {
           />
         }
       />
-    </MapPageLayout>
+      </MapPageLayout>
+    </MapStateProvider>
   );
 };
 
 export default NewMapPage;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
