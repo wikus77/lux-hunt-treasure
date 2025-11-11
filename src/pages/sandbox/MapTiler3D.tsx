@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import maplibregl, { Map as MLMap } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import neonStyleTemplate from '../map/styles/m1_neon_style_FULL_3D.json';
-import BuzzMapButtonSecure from '@/pages/map/components/BuzzButtonSecure';
+import BuzzMapButtonSecure from '@/components/map/BuzzMapButtonSecure';
 import PortalContainer from '@/components/map/PortalContainer';
 import MapLayerToggle from '@/components/map/MapLayerToggle';
 import { toast } from 'sonner';
@@ -95,11 +95,11 @@ export default function MapTiler3D() {
     : undefined;
   
   const handleBuzz = () => {
-    console.log('🎯 BUZZ pressed in MapTiler3D');
+    console.log('🎯 BUZZ pressed in MapTiler3D - payment flow handled by BuzzMapButtonSecure');
   };
   
   const handleAreaGenerated = (lat: number, lng: number, radius: number) => {
-    console.log('🎯 Area generated:', { lat, lng, radius });
+    console.log('🎯 BUZZ MAP Area generated:', { lat, lng, radius });
     reloadAreas();
   };
 
@@ -535,10 +535,9 @@ export default function MapTiler3D() {
         }}
       >
         <BuzzMapButtonSecure 
-          onBuzzPress={handleBuzzPress}
-          canUseBuzz={true}
-          currentCount={currentWeekAreas.length}
-          maxCount={3}
+          onBuzzPress={handleBuzz}
+          mapCenter={mapCenter || DEFAULT_LOCATION}
+          onAreaGenerated={handleAreaGenerated}
         />
       </div>
 
