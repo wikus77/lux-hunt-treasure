@@ -91,10 +91,10 @@ export const BuzzPage: React.FC = () => {
             </h1>
           </div>
 
-          {/* M1U Pill Slot - Buzz (replacing grey rectangle) */}
-          <div id="m1u-pill-buzz-slot" className="flex justify-center items-center mb-6">
-            <M1UnitsPill showLabel showPlusButton />
-          </div>
+{/* M1U Pill Slot - Buzz (Fixed top-right) */}
+<div id="m1u-pill-buzz-slot" className="fixed top-4 right-4 z-[1000] flex items-center" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', pointerEvents: 'auto' }}>
+  <M1UnitsPill showLabel showPlusButton />
+</div>
 
           {/* Container principale - Pulsante BUZZ prima del container */}
           <div className="max-w-3xl mx-auto">
@@ -148,3 +148,5 @@ export const BuzzPage: React.FC = () => {
 };
 
 export default BuzzPage;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

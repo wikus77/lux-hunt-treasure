@@ -20,7 +20,7 @@ interface M1UnitsShopModalProps {
 interface M1UPack {
   id: string;
   name: string;
-  priceId: string;
+  code: 'M1U_STARTER' | 'M1U_AGENT' | 'M1U_ELITE' | 'M1U_COMMANDER' | 'M1U_DIRECTOR' | 'M1U_MASTER';
   m1u_total: number;
   euro: number;
   savePct: number;
@@ -32,62 +32,62 @@ const M1U_PACKS: M1UPack[] = [
   { 
     id: 'starter', 
     name: 'Starter Pack', 
-    priceId: 'price_stripe_starter', 
+    code: 'M1U_STARTER',
     m1u_total: 50, 
     euro: 4.99, 
     savePct: 0,
     icon: Sparkles,
-    gradient: 'from-gray-500 to-gray-600'
+    gradient: 'from-[#00D1FF]/20 to-[#A855F7]/20'
   },
   { 
     id: 'agent', 
     name: 'Agent Pack', 
-    priceId: 'price_stripe_agent', 
+    code: 'M1U_AGENT',
     m1u_total: 110, 
     euro: 9.99, 
     savePct: 9,
     icon: Zap,
-    gradient: 'from-blue-500 to-cyan-500'
+    gradient: 'from-[#00D1FF]/25 to-[#A855F7]/25'
   },
   { 
     id: 'elite', 
     name: 'Elite Pack', 
-    priceId: 'price_stripe_elite', 
+    code: 'M1U_ELITE',
     m1u_total: 250, 
     euro: 19.99, 
     savePct: 20,
     icon: Star,
-    gradient: 'from-purple-500 to-pink-500'
+    gradient: 'from-[#00D1FF]/30 to-[#A855F7]/30'
   },
   { 
     id: 'commander', 
     name: 'Commander Pack', 
-    priceId: 'price_stripe_commander', 
+    code: 'M1U_COMMANDER',
     m1u_total: 550, 
     euro: 39.99, 
     savePct: 27,
     icon: Crown,
-    gradient: 'from-amber-500 to-orange-500'
+    gradient: 'from-[#00D1FF]/30 to-[#A855F7]/30'
   },
   { 
     id: 'director', 
     name: 'Director Pack', 
-    priceId: 'price_stripe_director', 
+    code: 'M1U_DIRECTOR',
     m1u_total: 1200, 
     euro: 79.99, 
     savePct: 33,
     icon: Gem,
-    gradient: 'from-emerald-500 to-teal-500'
+    gradient: 'from-[#00D1FF]/35 to-[#A855F7]/35'
   },
   { 
     id: 'mcp', 
     name: 'Master Control', 
-    priceId: 'price_stripe_mcp', 
+    code: 'M1U_MASTER',
     m1u_total: 3000, 
     euro: 199.99, 
     savePct: 33,
     icon: Crown,
-    gradient: 'from-violet-600 to-purple-700'
+    gradient: 'from-[#00D1FF]/40 to-[#A855F7]/40'
   }
 ];
 
@@ -97,21 +97,19 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
 
   const handlePurchase = async (pack: M1UPack) => {
     setSelectedPack(pack.id);
-    
     try {
-      // Track checkout start
-      if (typeof window !== 'undefined' && window.plausible) {
-        window.plausible('checkout_start', { props: { pack: pack.id } });
+      if (typeof window !== 'undefined' && (window as any).plausible) {
+        (window as any).plausible('checkout_start', { props: { pack: pack.id } });
       }
 
-      // Use existing Stripe payment flow (same as BUZZ/BUZZ MAP)
-      const priceInEuro = pack.euro;
-      const success = await processBuzzPurchase(
-        false, // not buzz map
-        priceInEuro,
-        window.location.origin + '/home?m1u_success=true',
-        `m1u_${pack.id}_${Date.now()}`
-      );
+      const sessionId = `m1u_${pack.id}_${Date.now()}`;
+      const redirectUrl = window.location.origin + '/home?m1u_success=true';
+      const { startM1UCheckout } = await import('@/features/m1units/m1uCheckout');
+      const success = await startM1UCheckout(pack.code, {
+        redirectUrl,
+        sessionId,
+        processBuzzPurchase
+      });
 
       if (success) {
         toast.info('Apertura checkout Stripe per M1U...');
@@ -119,7 +117,7 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
       }
     } catch (error) {
       console.error('M1U Purchase error:', error);
-      toast.error('Errore durante l\'acquisto M1U');
+      toast.error("Errore nella creazione del pagamento. Riprova tra poco.");
     } finally {
       setSelectedPack(null);
     }
@@ -127,102 +125,85 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto bg-black/95 backdrop-blur-xl border border-[#FFD700]/30 rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-orbitron text-center">
-            <span className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] bg-clip-text text-transparent">
-              M1 UNITS™ SHOP
-            </span>
-          </DialogTitle>
-          <DialogDescription className="text-center text-white/70">
-            Acquista pacchetti M1U per sbloccare indizi e funzionalità premium
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent
+        aria-label="M1 UNITS Shop"
+        className="sm:max-w-5xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-0 bg-transparent border-0"
+      >
+        {/* Neon glass container with continuous gradient border */}
+        <div className="relative rounded-2xl p-[1.5px] bg-gradient-to-r from-[#00D1FF] via-[#7C3AED] to-[#00D1FF] shadow-[0_0_30px_rgba(124,58,237,0.35)]">
+          <div className="rounded-2xl bg-black/90 backdrop-blur-xl border border-white/10 p-6">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-orbitron text-center">
+                <span className="bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] bg-clip-text text-transparent">M1 UNITS™ SHOP</span>
+              </DialogTitle>
+              <DialogDescription className="text-center text-white/70">
+                Acquista pacchetti M1U per sbloccare indizi e funzionalità premium
+              </DialogDescription>
+            </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-6">
-          {M1U_PACKS.map((pack, index) => {
-            const Icon = pack.icon;
-            const isProcessing = selectedPack === pack.id && loading;
-            
-            return (
-              <motion.div
-                key={pack.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="relative"
-              >
-                <div className={`
-                  relative h-full p-5 rounded-xl
-                  bg-gradient-to-br ${pack.gradient} bg-opacity-10
-                  border border-white/10
-                  hover:border-white/30 hover:shadow-xl
-                  transition-all duration-300
-                  ${isProcessing ? 'opacity-50' : ''}
-                `}>
-                  {/* Save Badge */}
-                  {pack.savePct > 0 && (
-                    <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                      -{pack.savePct}%
-                    </div>
-                  )}
-
-                  {/* Icon */}
-                  <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${pack.gradient} flex items-center justify-center mb-4 mx-auto`}>
-                    <Icon className="w-7 h-7 text-white" />
-                  </div>
-
-                  {/* Pack Info */}
-                  <h3 className="text-lg font-orbitron font-bold text-center text-white mb-2">
-                    {pack.name}
-                  </h3>
-                  
-                  <div className="text-center mb-4">
-                    <div className="text-3xl font-bold text-white mb-1">
-                      {pack.m1u_total}
-                      <span className="text-sm text-white/70 ml-1">M1U</span>
-                    </div>
-                    <div className="text-xl font-semibold text-[#FFD700]">
-                      €{pack.euro.toFixed(2)}
-                    </div>
-                    {pack.savePct > 0 && (
-                      <div className="text-xs text-green-400 mt-1">
-                        Risparmi {pack.savePct}%
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Purchase Button */}
-                  <Button
-                    onClick={() => handlePurchase(pack)}
-                    disabled={loading || isProcessing}
-                    className={`
-                      w-full bg-gradient-to-r ${pack.gradient}
-                      hover:opacity-90 transition-opacity
-                      text-white font-semibold
-                    `}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 my-6">
+              {M1U_PACKS.map((pack, index) => {
+                const Icon = pack.icon;
+                const isProcessing = selectedPack === pack.id && loading;
+                return (
+                  <motion.div
+                    key={pack.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="relative"
                   >
-                    {isProcessing ? (
-                      <span className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Caricamento...
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <ShoppingCart className="w-4 h-4" />
-                        Acquista
-                      </span>
-                    )}
-                  </Button>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                    <div className={`group relative h-full rounded-xl border border-white/10 bg-gradient-to-br ${pack.gradient} p-[1px] hover:border-white/20 transition-all`}>
+                      <div className="rounded-xl bg-black/80 backdrop-blur-xl p-5 h-full">
+                        {pack.savePct > 0 && (
+                          <div className="absolute -top-2 -right-2 px-2 py-1 rounded-full text-xs font-bold text-white bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]">
+                            -{pack.savePct}%
+                          </div>
+                        )}
 
-        {/* Info Footer */}
-        <div className="text-center text-xs text-white/50 mt-4 pb-2">
-          Pagamento sicuro tramite Stripe • M1U non scadono mai
+                        <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center bg-gradient-to-br from-[#00D1FF] to-[#7C3AED] shadow-[0_10px_30px_rgba(124,58,237,0.35)]">
+                          <Icon className="w-7 h-7 text-white" />
+                        </div>
+
+                        <h3 className="text-lg font-orbitron font-bold text-center text-white mb-2">{pack.name}</h3>
+
+                        <div className="text-center mb-4">
+                          <div className="text-3xl font-extrabold text-white mb-1">
+                            {pack.m1u_total}
+                            <span className="text-sm text-white/70 ml-1">M1U</span>
+                          </div>
+                          <div className="text-xl font-semibold text-[#FFD700]">€{pack.euro.toFixed(2)}</div>
+                          {pack.savePct > 0 && (
+                            <div className="text-xs text-emerald-400 mt-1">Risparmi {pack.savePct}%</div>
+                          )}
+                        </div>
+
+                        <Button
+                          onClick={() => handlePurchase(pack)}
+                          disabled={loading || isProcessing}
+                          className="w-full rounded-lg bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] text-white font-semibold hover:opacity-90 transition-opacity"
+                        >
+                          {isProcessing ? (
+                            <span className="flex items-center gap-2">
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              Caricamento...
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-2">
+                              <ShoppingCart className="w-4 h-4" />
+                              Acquista
+                            </span>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <div className="text-center text-xs text-white/50 mt-4 pb-2">Pagamento sicuro tramite Stripe • M1U non scadono mai</div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
