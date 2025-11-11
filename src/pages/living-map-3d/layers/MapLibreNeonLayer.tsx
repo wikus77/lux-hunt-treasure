@@ -39,12 +39,19 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    console.log('[Living Map 3D] Initializing with MapTiler...');
+    console.log('[Living Map 3D] Initializing MapLibre GL with MapTiler...');
+    console.log('[Living Map 3D] MapTiler config:', {
+      isDev: mapTilerConfig.isDev,
+      isProd: mapTilerConfig.isProd,
+      hasKey: mapTilerConfig.isAvailable(),
+      styleId: mapTilerConfig.styleId
+    });
     
     const styleUrl = mapTilerConfig.getStyleUrl();
-    const initialCenter = center 
-      ? [center.lng, center.lat] as [number, number]
-      : [DEFAULT_LOCATION[1], DEFAULT_LOCATION[0]] as [number, number];
+    console.log('[Living Map 3D] Style URL:', styleUrl);
+    
+    // Always use default location initially, then flyTo when center arrives
+    const initialCenter = [DEFAULT_LOCATION[1], DEFAULT_LOCATION[0]] as [number, number];
 
     const initialMap = new maplibregl.Map({
       container: mapContainer.current,
@@ -151,10 +158,15 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
     };
   }, []);
 
-  // Update center when available
+  // FlyTo center when geolocation arrives
   useEffect(() => {
     if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng) && map.current && mapReady) {
-      map.current.setCenter([center.lng, center.lat]);
+      console.log('[Living Map 3D] Flying to user location:', center);
+      map.current.flyTo({
+        center: [center.lng, center.lat],
+        zoom: 15,
+        duration: 2000
+      });
     }
   }, [center, mapReady]);
 
@@ -318,24 +330,26 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
     if (onRegisterResetBearing) onRegisterResetBearing(handleResetBearing);
   }, [mapReady, onRegisterToggle3D, onRegisterFocusLocation, onRegisterResetView, onRegisterResetBearing, handleToggle3DMode, handleFocusLocation, handleResetView, handleResetBearing]);
 
-  // Show loading state
-  if (!center) {
-    return (
-      <div className="living-map-loading">
-        <div className="loading-spinner" />
-        <p className="loading-text">Inizializzazione Living Map 3D...</p>
-        {!mapTilerConfig.isAvailable() && (
-          <p className="loading-warning">MapTiler key missing - using fallback</p>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div 
-      ref={mapContainer} 
-      className="living-map-container"
-    />
+    <>
+      {/* Loading overlay (only while map is initializing) */}
+      {!mapReady && (
+        <div className="living-map-loading">
+          <div className="loading-spinner" />
+          <p className="loading-text">Inizializzazione M1SSION™...</p>
+          {!mapTilerConfig.isAvailable() && (
+            <p className="loading-warning">⚠️ MapTiler key missing - using fallback style</p>
+          )}
+        </div>
+      )}
+      
+      {/* Map container (always rendered) */}
+      <div 
+        ref={mapContainer} 
+        className="living-map-container"
+        style={{ opacity: mapReady ? 1 : 0, transition: 'opacity 0.5s ease' }}
+      />
+    </>
   );
 };
 
