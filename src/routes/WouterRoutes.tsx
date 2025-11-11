@@ -7,9 +7,6 @@ import { Route, Switch, useLocation } from "wouter";
 // Dev tools (conditionally loaded)
 const MarkersHealthcheck = React.lazy(() => import('../pages/dev/MarkersHealthcheck'));
 
-// Living Map 3D - static import to avoid lazy loading without Suspense
-import LivingMap3DPage from '@/pages/living-map-3d/LivingMap3DPage';
-
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Database-based plan choice tracking instead of localStorage
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -255,12 +252,14 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          {/* Living Map 3D removed - redirect to /map */}
           <Route path="/living-map-3d">
-            <ProtectedRoute>
-              <GlobalLayout>
-                <LivingMap3DPage />
-              </GlobalLayout>
-            </ProtectedRoute>
+            {() => {
+              if (typeof window !== 'undefined') {
+                window.location.href = '/map';
+              }
+              return null;
+            }}
           </Route>
 
           <Route path="/buzz">
