@@ -90,21 +90,18 @@ export const M1UnitsDebugPanel = () => {
 
   const handleFakeUpdate = async () => {
     if (!userId) return;
-    addLog('🎭 Triggering fake update...');
+    addLog('🎭 Triggering fake update (+1 M1U)...');
     
-    // Trigger a database update (increment balance by 1, just for testing)
+    // Use RPC m1u_fake_update for test increment
     const { error: updateError } = await (supabase as any)
-      .from('user_m1_units')
-      .update({ 
-        balance: (unitsData?.balance || 0) + 1,
-        total_earned: (unitsData?.total_earned || 0) + 1,
-      })
-      .eq('user_id', userId);
+      .rpc('m1u_fake_update', { _delta: 1 });
 
     if (updateError) {
       addLog(`❌ Fake update failed: ${updateError.message}`);
     } else {
-      addLog('✅ Fake update sent (check realtime pill)');
+      addLog('✅ Fake update sent (+1 M1U)');
+      // Refetch summary to sync state
+      await refetch();
     }
   };
 

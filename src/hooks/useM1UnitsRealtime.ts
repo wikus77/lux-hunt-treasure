@@ -47,40 +47,47 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       setIsLoading(true);
       setError(null);
 
-      // Use RPC m1u_get_balance() for consistent access
-      const { data: balance, error: rpcError } = await (supabase as any)
-        .rpc('m1u_get_balance');
+      // Use RPC m1u_get_summary() for complete data
+      const { data: summary, error: rpcError } = await (supabase as any)
+        .rpc('m1u_get_summary');
 
       if (rpcError) {
-        throw rpcError;
-      }
-
-      // Fetch full row data for display
-      const { data, error: fetchError } = await (supabase as any)
-        .from('user_m1_units')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (fetchError) {
         // If no record exists, create one via RPC ping
-        if (fetchError.code === 'PGRST116') {
+        if (rpcError.code === 'PGRST116' || rpcError.message?.includes('no rows')) {
           await (supabase as any).rpc('m1u_ping');
           
           // Refetch after creation
-          const { data: newData, error: refetchError } = await (supabase as any)
-            .from('user_m1_units')
-            .select('*')
-            .eq('user_id', userId)
-            .single();
+          const { data: newSummary, error: refetchError } = await (supabase as any)
+            .rpc('m1u_get_summary');
 
           if (refetchError) throw refetchError;
-          setUnitsData(newData as M1UnitsData);
+          
+          // Build M1UnitsData from summary
+          if (newSummary) {
+            setUnitsData({
+              id: userId,
+              user_id: userId,
+              balance: newSummary.balance || 0,
+              total_earned: newSummary.total_earned || 0,
+              total_spent: newSummary.total_spent || 0,
+              last_updated: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+            } as M1UnitsData);
+          }
         } else {
-          throw fetchError;
+          throw rpcError;
         }
-      } else {
-        setUnitsData(data as M1UnitsData);
+      } else if (summary) {
+        // Build M1UnitsData from summary
+        setUnitsData({
+          id: userId,
+          user_id: userId,
+          balance: summary.balance || 0,
+          total_earned: summary.total_earned || 0,
+          total_spent: summary.total_spent || 0,
+          last_updated: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        } as M1UnitsData);
       }
     } catch (err) {
       setError(err as Error);
