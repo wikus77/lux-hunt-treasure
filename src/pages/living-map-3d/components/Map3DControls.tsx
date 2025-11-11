@@ -1,9 +1,9 @@
 /**
- * Map 3D Controls - Zoom, Reset, Locate, Bearing, 3D Toggle
+ * Map 3D Controls - Zoom, Reset, Locate, Bearing, 3D Toggle, Refresh
  */
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Box, Map, Crosshair, RotateCcw, Compass } from 'lucide-react';
+import { Box, Map, Crosshair, RotateCcw, Compass, RotateCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Map3DControlsProps {
@@ -12,6 +12,7 @@ interface Map3DControlsProps {
   onFocusLocation: () => void;
   onResetView: () => void;
   onResetBearing: () => void;
+  onRefresh: () => void;
 }
 
 const Map3DControls: React.FC<Map3DControlsProps> = ({
@@ -19,7 +20,8 @@ const Map3DControls: React.FC<Map3DControlsProps> = ({
   onToggle3D,
   onFocusLocation,
   onResetView,
-  onResetBearing
+  onResetBearing,
+  onRefresh
 }) => {
   const handleToggle3D = () => {
     onToggle3D();
@@ -78,6 +80,17 @@ const Map3DControls: React.FC<Map3DControlsProps> = ({
         title="Reset orientamento"
       >
         <Compass className="w-5 h-5" />
+      </Button>
+
+      {/* Refresh Map */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onRefresh}
+        className="living-map-control-button"
+        title="Aggiorna mappa"
+      >
+        <RotateCw className="w-5 h-5" />
       </Button>
     </div>
   );

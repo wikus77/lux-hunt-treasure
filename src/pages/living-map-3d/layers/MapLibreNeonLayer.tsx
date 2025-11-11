@@ -10,6 +10,7 @@ import { mapTilerConfig } from '@/config/maptiler';
 import { useMapState } from '../../map/MapStateProvider';
 import { PORTALS_SEED } from '@/data/portals.seed';
 import { MOCK_EVENTS, MOCK_AGENTS, MOCK_ZONES } from '@/data/mockLayers';
+import neonStyle from '@/pages/map/styles/m1_neon_style_FULL_3D.json';
 
 // Default location (Rome)
 const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
@@ -19,13 +20,15 @@ interface MapLibreNeonLayerProps {
   onRegisterFocusLocation?: (handler: () => void) => void;
   onRegisterResetView?: (handler: () => void) => void;
   onRegisterResetBearing?: (handler: () => void) => void;
+  onRegisterRefresh?: (handler: () => void) => void;
 }
 
 const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
   onRegisterToggle3D,
   onRegisterFocusLocation,
   onRegisterResetView,
-  onRegisterResetBearing
+  onRegisterResetBearing,
+  onRegisterRefresh
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -54,21 +57,24 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
     if (!mapContainer.current || map.current) return;
 
     L3D('mount');
-    console.log('[Living Map 3D] Initializing MapLibre GL with MapTiler...');
-    console.log('[Living Map 3D] MapTiler config:', {
-      isDev: mapTilerConfig.isDev,
-      isProd: mapTilerConfig.isProd,
-      hasKey: mapTilerConfig.isAvailable(),
-      styleId: mapTilerConfig.styleId
-    });
-
-    const hasDev = !!import.meta.env.VITE_MAPTILER_KEY_DEV;
-    const hasProd = !!import.meta.env.VITE_MAPTILER_KEY_PROD;
-    L3D('keys', { env: mapTilerConfig.isProd ? 'prod' : 'dev', hasDev, hasProd });
+    console.log('[Living Map 3D] Initializing MapLibre GL with Neon 3D style...');
     
-    const styleUrl = mapTilerConfig.getStyleUrl();
-    console.log('[Living Map 3D] Style URL:', styleUrl);
-    L3D('style loaded/url', styleUrl);
+    // Process neon style with MapTiler API key
+    const processedStyle = JSON.parse(JSON.stringify(neonStyle));
+    const apiKey = mapTilerConfig.getKey();
+    
+    if (apiKey && processedStyle.sources?.openmaptiles?.tiles) {
+      processedStyle.sources.openmaptiles.tiles = processedStyle.sources.openmaptiles.tiles.map(
+        (url: string) => url.replace('{key}', apiKey)
+      );
+    }
+    
+    if (apiKey && processedStyle.glyphs) {
+      processedStyle.glyphs = processedStyle.glyphs.replace('{key}', apiKey);
+    }
+    
+    console.log('[LIVING3D] style: m1_neon_style_FULL_3D.json (local)');
+    L3D('style: m1_neon_style_FULL_3D.json');
 
     // Container size diagnostics
     const cw = mapContainer.current?.clientWidth || 0;
@@ -84,7 +90,7 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
 
     const initialMap = new maplibregl.Map({
       container: mapContainer.current,
-      style: styleUrl,
+      style: processedStyle as any,
       center: initialCenter,
       zoom: 12,
       pitch: is3D ? 55 : 0,
@@ -94,7 +100,7 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
       interactive: true,
       attributionControl: {
         compact: true,
-        customAttribution: '© MapTiler © OpenStreetMap'
+        customAttribution: '© M1SSION™ © MapTiler © OpenStreetMap'
       }
     });
 
@@ -115,6 +121,7 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
     initialMap.once('styledata', () => {
       if (!readyRef.current) {
         L3D('styledata received → map ready');
+        console.info('[LIVING3D] styledata received → ready');
         console.log('[Living Map 3D] styledata received → marking ready');
         readyRef.current = true;
         setMapReady(true);
@@ -155,46 +162,8 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
         }
       }
 
-      // Add 3D buildings if not in style
-      if (!initialMap.getLayer('building-3d')) {
-        const layers = initialMap.getStyle().layers || [];
-        const buildingLayer = layers.find((l: any) => 
-          l['source-layer'] === 'building' || l.id?.includes('building')
-        );
-        
-        if (buildingLayer) {
-          const sourceId = (buildingLayer as any).source;
-          
-          initialMap.addLayer({
-            id: 'building-3d',
-            type: 'fill-extrusion',
-            source: sourceId,
-            'source-layer': 'building',
-            minzoom: 12,
-            paint: {
-              'fill-extrusion-color': [
-                'interpolate',
-                ['linear'],
-                ['get', 'height'],
-                0, '#1E88E5',
-                50, '#0AEFFF',
-                100, '#00D1FF'
-              ],
-              'fill-extrusion-opacity': 0.85,
-              'fill-extrusion-height': [
-                '*',
-                ['coalesce', ['get', 'height'], 15],
-                1.2
-              ],
-              'fill-extrusion-base': ['coalesce', ['get', 'min_height'], 0]
-            }
-          });
-          console.log('[Living Map 3D] 3D buildings layer added');
-        }
-      }
-
-      // Apply Tron theme overrides
-      applyTronTheme(initialMap);
+      // 3D buildings are already in the native style (buildings-extrusion layer)
+      console.log('[Living Map 3D] Native Neon 3D style loaded with buildings-extrusion');
 
       // Add living layers (portals, events, agents, zones)
       addLivingLayers(initialMap);
@@ -270,54 +239,46 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
   useEffect(() => {
     if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng) && map.current && mapReady) {
       L3D('flyTo center', center);
+      console.log('[LIVING3D] flyTo user location');
       console.log('[Living Map 3D] Flying to user location:', center);
       map.current.flyTo({
         center: [center.lng, center.lat],
-        zoom: 15,
-        duration: 2000
+        zoom: Math.max(map.current.getZoom(), 15),
+        pitch: 55,
+        bearing: 0,
+        essential: true,
+        duration: 1200
       });
     }
   }, [center, mapReady]);
 
-  // Apply Tron theme paint properties
-  const applyTronTheme = (mapInstance: maplibregl.Map) => {
-    const style = mapInstance.getStyle();
-    if (!style || !style.layers) return;
-
-    style.layers.forEach((layer: any) => {
-      try {
-        // Roads - cyan glow
-        if (layer.id?.includes('road') || layer.id?.includes('highway')) {
-          if (layer.type === 'line') {
-            mapInstance.setPaintProperty(layer.id, 'line-color', '#0AEFFF');
-            mapInstance.setPaintProperty(layer.id, 'line-opacity', 0.8);
-          }
-        }
-        
-        // Water - dark blue with glow
-        if (layer.id?.includes('water')) {
-          if (layer.type === 'fill') {
-            mapInstance.setPaintProperty(layer.id, 'fill-color', '#0a0a18');
-          }
-          if (layer.type === 'line') {
-            mapInstance.setPaintProperty(layer.id, 'line-color', '#00D1FF');
-            mapInstance.setPaintProperty(layer.id, 'line-opacity', 0.4);
-          }
-        }
-
-        // Landscape - dark background
-        if (layer.id?.includes('background') || layer.id?.includes('land')) {
-          if (layer.type === 'background' || layer.type === 'fill') {
-            mapInstance.setPaintProperty(layer.id, layer.type === 'background' ? 'background-color' : 'fill-color', '#050E16');
-          }
-        }
-      } catch (e) {
-        // Layer might not support property
-      }
-    });
-
-    console.log('[Living Map 3D] Tron theme applied');
-  };
+  // Refresh map handler
+  const handleRefresh = useCallback(() => {
+    if (!map.current || !mapReady) return;
+    
+    console.log('[LIVING3D] refresh started');
+    map.current.resize();
+    map.current.triggerRepaint();
+    
+    // Reload style with current neon style
+    const processedStyle = JSON.parse(JSON.stringify(neonStyle));
+    const apiKey = mapTilerConfig.getKey();
+    
+    if (apiKey && processedStyle.sources?.openmaptiles?.tiles) {
+      processedStyle.sources.openmaptiles.tiles = processedStyle.sources.openmaptiles.tiles.map(
+        (url: string) => url.replace('{key}', apiKey)
+      );
+    }
+    
+    if (apiKey && processedStyle.glyphs) {
+      processedStyle.glyphs = processedStyle.glyphs.replace('{key}', apiKey);
+    }
+    
+    map.current.setStyle(processedStyle as any, { diff: false });
+    
+    console.log('[LIVING3D] refresh done');
+    toast.success('Mappa aggiornata', { duration: 2000 });
+  }, [mapReady]);
 
   // Add living layers (portals, events, agents, zones)
   const addLivingLayers = (mapInstance: maplibregl.Map) => {
@@ -394,14 +355,18 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
     }
   }, [mapReady]);
 
-  // Focus location handler
+  // Focus location handler (Go to Me)
   const handleFocusLocation = useCallback(() => {
     if (!map.current || !mapReady || !center) return;
     
+    console.log('[LIVING3D] flyTo user location');
     map.current.flyTo({
       center: [center.lng, center.lat],
-      zoom: 15,
-      duration: 1500
+      zoom: Math.max(map.current.getZoom(), 15),
+      pitch: 55,
+      bearing: 0,
+      essential: true,
+      duration: 1200
     });
     console.log('[Living Map 3D] Focused on user location');
   }, [mapReady, center]);
@@ -437,7 +402,8 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
     if (onRegisterFocusLocation) onRegisterFocusLocation(handleFocusLocation);
     if (onRegisterResetView) onRegisterResetView(handleResetView);
     if (onRegisterResetBearing) onRegisterResetBearing(handleResetBearing);
-  }, [mapReady, onRegisterToggle3D, onRegisterFocusLocation, onRegisterResetView, onRegisterResetBearing, handleToggle3DMode, handleFocusLocation, handleResetView, handleResetBearing]);
+    if (onRegisterRefresh) onRegisterRefresh(handleRefresh);
+  }, [mapReady, onRegisterToggle3D, onRegisterFocusLocation, onRegisterResetView, onRegisterResetBearing, onRegisterRefresh, handleToggle3DMode, handleFocusLocation, handleResetView, handleResetBearing, handleRefresh]);
 
   return (
     <>
