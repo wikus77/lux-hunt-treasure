@@ -25,19 +25,19 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- 4) SECURITY DEFINER function to check roles (fixes operator type issue)
-CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role public.app_role)
+CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role text)
 RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$
   select exists (
     select 1 from public.user_roles ur
     where ur.user_id = _user_id
-      and ur.role = _role
+      and ur.role = _role::public.app_role
   );
 $$;
 
-REVOKE ALL ON FUNCTION public.has_role(uuid, public.app_role) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.has_role(uuid, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, text) TO authenticated, service_role;
 
 -- Notes:
 -- - Idempotent: safe to re-run
