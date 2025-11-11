@@ -83,15 +83,26 @@ export const BuzzPage: React.FC = () => {
         <div className="container mx-auto px-4">
           {/* © 2025 Joseph MULÉ – M1SSION™ */}
           
-          {/* Titolo BUZZ - Spostato 10% più in basso + M1U Pill centered below */}
-          <div className="text-center mt-[10%] mb-4">
+          {/* Titolo BUZZ - Spostato 10% più in basso */}
+          <div className="text-center mt-[10%] mb-8">
             <h1 className="text-4xl font-orbitron font-bold">
               <span className="text-[#00ffff]">BU</span>
               <span className="text-white">ZZ</span>
             </h1>
-            <div className="flex justify-center mt-3">
-              <M1UnitsPill showLabel showPlusButton />
-            </div>
+          </div>
+
+          {/* M1U Pill Slot - Buzz (moved to LEFT per incident report) */}
+          <div 
+            id="m1u-pill-buzz-slot" 
+            className="fixed top-4 left-4 z-[1000] flex items-center gap-2"
+            style={{ 
+              paddingTop: 'env(safe-area-inset-top, 0px)',
+              paddingLeft: 'env(safe-area-inset-left, 0px)',
+              pointerEvents: 'auto' 
+            }}
+            aria-hidden={false}
+          >
+            <M1UnitsPill showLabel showPlusButton />
           </div>
 
 
