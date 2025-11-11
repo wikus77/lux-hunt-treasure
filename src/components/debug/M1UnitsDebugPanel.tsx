@@ -79,7 +79,7 @@ export const M1UnitsDebugPanel = () => {
   // Log errors
   useEffect(() => {
     if (error) {
-      addLog(`❌ Error: ${error.message}`);
+      addLog(`❌ Error: ${error}`);
     }
   }, [error]);
 
