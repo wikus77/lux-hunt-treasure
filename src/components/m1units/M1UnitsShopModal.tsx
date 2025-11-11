@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Sparkles, Zap, Crown, Gem, Star } from 'lucide-react';
+import { ShoppingCart, Sparkles, Zap, Crown, Gem, Star, X } from 'lucide-react';
 import { useStripePayment } from '@/hooks/useStripePayment';
 import { toast } from 'sonner';
 
@@ -132,6 +132,15 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
         {/* Neon glass container with continuous gradient border */}
         <div className="relative rounded-2xl p-[1.5px] bg-gradient-to-r from-[#00D1FF] via-[#7C3AED] to-[#00D1FF] shadow-[0_0_30px_rgba(124,58,237,0.35)]">
           <div className="rounded-2xl bg-black/90 backdrop-blur-xl border border-white/10 p-6">
+            {/* Close Button "X" - top-right, accessible 44x44 tap target */}
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute top-4 right-4 z-10 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#00D1FF]/50"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+
             <DialogHeader>
               <DialogTitle className="text-2xl font-orbitron text-center">
                 <span className="bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] bg-clip-text text-transparent">M1 UNITS™ SHOP</span>
