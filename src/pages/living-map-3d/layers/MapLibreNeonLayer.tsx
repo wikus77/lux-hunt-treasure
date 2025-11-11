@@ -4,6 +4,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { toast } from 'sonner';
 import '@/styles/maplibre-tron.css';
 import { mapTilerConfig } from '@/config/maptiler';
 import { useMapState } from '../../map/MapStateProvider';
@@ -34,12 +35,25 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
   });
   const readyRef = useRef(false);
 
+  // LIVING3D debug flag and logger
+  const LIVING3D_DEBUG = (() => {
+    try {
+      const w = (window as any);
+      if (typeof w.LIVING3D_DEBUG_LOGS === 'boolean') return w.LIVING3D_DEBUG_LOGS;
+      const ls = localStorage.getItem('LIVING3D_DEBUG_LOGS');
+      if (ls !== null) return ls === 'true';
+    } catch {}
+    return import.meta.env.DEV; // default on in dev, off in prod
+  })();
+  const L3D = (...args: any[]) => { if (LIVING3D_DEBUG) console.log('LIVING3D:', ...args); };
+
   const { center } = useMapState();
 
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
+    L3D('mount');
     console.log('[Living Map 3D] Initializing MapLibre GL with MapTiler...');
     console.log('[Living Map 3D] MapTiler config:', {
       isDev: mapTilerConfig.isDev,
@@ -47,9 +61,23 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
       hasKey: mapTilerConfig.isAvailable(),
       styleId: mapTilerConfig.styleId
     });
+
+    const hasDev = !!import.meta.env.VITE_MAPTILER_KEY_DEV;
+    const hasProd = !!import.meta.env.VITE_MAPTILER_KEY_PROD;
+    L3D('keys', { env: mapTilerConfig.isProd ? 'prod' : 'dev', hasDev, hasProd });
     
     const styleUrl = mapTilerConfig.getStyleUrl();
     console.log('[Living Map 3D] Style URL:', styleUrl);
+    L3D('style loaded/url', styleUrl);
+
+    // Container size diagnostics
+    const cw = mapContainer.current?.clientWidth || 0;
+    const ch = mapContainer.current?.clientHeight || 0;
+    L3D('container ready', { w: cw, h: ch });
+    if (cw === 0 || ch === 0) {
+      L3D('container zero size → scheduling resize');
+      setTimeout(() => { if (map.current) map.current.resize(); }, 100);
+    }
     
     // Always use default location initially, then flyTo when center arrives
     const initialCenter = [DEFAULT_LOCATION[1], DEFAULT_LOCATION[0]] as [number, number];
@@ -75,15 +103,18 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
     // Consider styledata as ready to avoid indefinite loaders when tiles 403
     initialMap.once('styledata', () => {
       if (!readyRef.current) {
+        L3D('styledata received → map ready');
         console.log('[Living Map 3D] styledata received → marking ready');
         readyRef.current = true;
         setMapReady(true);
+        L3D('setLoading(false)');
       }
     });
 
     // Mark style load stages
     initialMap.on('style.load', () => {
       console.log('[Living Map 3D] style.load fired');
+      L3D('style loaded');
     });
 
     // Handle style load
@@ -91,6 +122,7 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
       console.log('[Living Map 3D] Map loaded successfully');
       readyRef.current = true;
       setMapReady(true);
+      L3D('map ready');
 
       // Add terrain if available
       const terrainSource = mapTilerConfig.getTerrainSource();
@@ -150,25 +182,33 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
 
       // Add living layers (portals, events, agents, zones)
       addLivingLayers(initialMap);
+      L3D('layers loaded');
     });
 
     // Handle errors
     initialMap.on('error', (e) => {
       console.error('[Living Map 3D] Map error:', e);
+      L3D('style error', e);
       // If style fails, switch to fallback after a short delay
       if (!readyRef.current && map.current) {
         console.warn('[Living Map 3D] Switching to fallback style due to error');
+        L3D('fallback → demotiles (error)');
+        setMapReady(true);
+        toast.warning('Layer in ritardo – fallback stile base', { duration: 2500 });
         map.current.setStyle('https://demotiles.maplibre.org/style.json');
       }
     });
 
-    // Safety fallback: switch to OSM if map not ready within 6s
+    // Safety fallback: switch to OSM if map not ready within 2s
     const fallbackTimer = window.setTimeout(() => {
       if (!readyRef.current && map.current) {
         console.warn('[Living Map 3D] Style load timeout. Applying fallback style.');
+        L3D('fallback → demotiles (timeout 2s)');
+        setMapReady(true);
+        toast.warning('Layer in ritardo – caricamento base', { duration: 2500 });
         map.current.setStyle('https://demotiles.maplibre.org/style.json');
       }
-    }, 6000);
+    }, 2000);
 
     // Handle resize
     const handleResize = () => {
@@ -178,8 +218,24 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
     };
     window.addEventListener('resize', handleResize);
 
+    const handleOrientation = () => {
+      L3D('orientationchange → resize');
+      setTimeout(handleResize, 150);
+    };
+    window.addEventListener('orientationchange', handleOrientation);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        L3D('visibilitychange visible → resize');
+        setTimeout(handleResize, 150);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientation);
+      document.removeEventListener('visibilitychange', handleVisibility);
       if (map.current) {
         map.current.remove();
         map.current = null;
@@ -190,6 +246,7 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
   // FlyTo center when geolocation arrives
   useEffect(() => {
     if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng) && map.current && mapReady) {
+      L3D('flyTo center', center);
       console.log('[Living Map 3D] Flying to user location:', center);
       map.current.flyTo({
         center: [center.lng, center.lat],
