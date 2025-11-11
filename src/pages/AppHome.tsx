@@ -190,6 +190,8 @@ const { isConnected } = useRealTimeNotifications();
                   transition={{ delay: 0.2, duration: 0.5 }}
                 >
                   <h1 
+                    id="m1-home-title"
+                    data-m1-anchor="home-title"
                     className="text-4xl font-orbitron font-bold"
                     role="banner"
                     aria-label="M1SSION Centro di Comando Agente"
@@ -199,13 +201,22 @@ const { isConnected } = useRealTimeNotifications();
                     }}>M1</span>
                     <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
                   </h1>
+                  
+                  {/* ON M1SSION Badge Portal - Fixed slot for MissionBadgeInjector */}
+                  <div 
+                    id="mission-status-badge-portal" 
+                    data-anchor="m1-header-badge"
+                    data-persistent="true"
+                    className="flex justify-center my-3"
+                  />
+                  
                   <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
                 </motion.div>
 
-                {/* M1U Pill Slot - Home */}
+                {/* M1U Pill Slot - Home (replacing grey rectangle) */}
                 <motion.div
                   id="m1u-pill-home-slot"
-                  className="flex justify-center mb-6"
+                  className="flex justify-center items-center gap-3 mb-6"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.4, duration: 0.5 }}
