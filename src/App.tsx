@@ -39,6 +39,7 @@ import { RitualOrchestratorWrapper } from "@/features/pulse/ritual";
 import { RouteAnnouncer } from "./components/a11y/RouteAnnouncer";
 import { useRouteAnnouncements } from "./hooks/useRouteAnnouncements";
 import { ReconnectBadge } from "./components/net/ReconnectBadge";
+import { M1UnitsDebugPanel } from "./components/debug/M1UnitsDebugPanel";
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration
@@ -126,6 +127,7 @@ function App() {
                     <RitualOrchestratorWrapper />
                     <Toaster />
                     <BadgeAuditReport />
+                    <M1UnitsDebugPanel />
                   </InterestSignalsProvider>
                 </AuthProvider>
               </SoundProvider>
