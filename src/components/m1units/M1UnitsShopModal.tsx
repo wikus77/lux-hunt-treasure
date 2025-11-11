@@ -9,8 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Sparkles, Zap, Crown, Gem, Star, X } from 'lucide-react';
-import { useStripePayment } from '@/hooks/useStripePayment';
 import { toast } from 'sonner';
+import { M1UPaymentModal } from './M1UPaymentModal';
 
 interface M1UnitsShopModalProps {
   isOpen: boolean;
@@ -92,154 +92,146 @@ const M1U_PACKS: M1UPack[] = [
 ];
 
 export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => {
-  const [selectedPack, setSelectedPack] = useState<string | null>(null);
-  const { processBuzzPurchase, loading } = useStripePayment();
+  const [selectedPack, setSelectedPack] = useState<M1UPack | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  const handlePurchase = async (pack: M1UPack) => {
-    setSelectedPack(pack.id);
-    try {
-      console.log(`[M1U SHOP] Starting purchase for ${pack.name}`, { 
-        packCode: pack.code, 
-        priceEUR: pack.euro,
-        m1u: pack.m1u_total 
-      });
+  const handlePurchase = (pack: M1UPack) => {
+    console.log('[M1U SHOP] Opening payment modal for:', {
+      packCode: pack.code,
+      packName: pack.name,
+      priceEUR: pack.euro,
+      priceCents: Math.round(pack.euro * 100),
+      m1u: pack.m1u_total
+    });
 
-      if (typeof window !== 'undefined' && (window as any).plausible) {
-        (window as any).plausible('checkout_start', { props: { pack: pack.id } });
-      }
-
-      const sessionId = `m1u_${pack.id}_${Date.now()}`;
-      const redirectUrl = window.location.origin + '/home?m1u_success=true';
-      
-      console.log('[M1U SHOP] Importing m1uCheckout module...');
-      const { startM1UCheckout } = await import('@/features/m1units/m1uCheckout');
-      
-      console.log('[M1U SHOP] Calling startM1UCheckout with:', {
-        packCode: pack.code,
-        redirectUrl,
-        sessionId
-      });
-      
-      const success = await startM1UCheckout(pack.code, {
-        redirectUrl,
-        sessionId,
-        processBuzzPurchase
-      });
-
-      console.log('[M1U SHOP] startM1UCheckout result:', success);
-
-      if (success) {
-        toast.info('Apertura checkout Stripe per M1U...');
-        onClose();
-      } else {
-        console.error('[M1U SHOP] Checkout returned false');
-        toast.error("Pagamento non completato. Verifica i log per dettagli.");
-      }
-    } catch (error) {
-      console.error('[M1U SHOP] Purchase error:', error);
-      console.error('[M1U SHOP] Error stack:', error instanceof Error ? error.stack : 'No stack');
-      console.error('[M1U SHOP] Error message:', error instanceof Error ? error.message : String(error));
-      
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      toast.error(`Errore: ${errorMsg}`);
-    } finally {
-      setSelectedPack(null);
+    if (typeof window !== 'undefined' && (window as any).plausible) {
+      (window as any).plausible('checkout_start', { props: { pack: pack.id } });
     }
+
+    setSelectedPack(pack);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    console.log('[M1U SHOP] Payment successful for:', selectedPack?.code);
+    setShowPaymentModal(false);
+    setSelectedPack(null);
+    onClose();
+    
+    // TODO: Refresh M1U balance from backend
+    toast.success('M1U acquistati con successo!', {
+      description: `${selectedPack?.m1u_total} M1U sono stati aggiunti al tuo account`
+    });
+  };
+
+  const handlePaymentCancel = () => {
+    console.log('[M1U SHOP] Payment cancelled');
+    setShowPaymentModal(false);
+    setSelectedPack(null);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        aria-label="M1 UNITS Shop"
-        className="sm:max-w-5xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-0 bg-transparent border-0"
-      >
-        {/* Neon glass container with continuous gradient border */}
-        <div className="relative rounded-2xl p-[1.5px] bg-gradient-to-r from-[#00D1FF] via-[#7C3AED] to-[#00D1FF] shadow-[0_0_30px_rgba(124,58,237,0.35)]">
-          <div className="rounded-2xl bg-black/90 backdrop-blur-xl border border-white/10 p-6">
-            {/* Close Button "X" - top-right, accessible 44x44 tap target */}
-            <button
-              onClick={onClose}
-              aria-label="Close"
-              className="absolute top-4 right-4 z-10 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#00D1FF]/50"
-            >
-              <X className="w-5 h-5 text-white" />
-            </button>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent
+          aria-label="M1 UNITS Shop"
+          className="sm:max-w-5xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-0 bg-transparent border-0"
+        >
+          {/* Neon glass container with continuous gradient border */}
+          <div className="relative rounded-2xl p-[1.5px] bg-gradient-to-r from-[#00D1FF] via-[#7C3AED] to-[#00D1FF] shadow-[0_0_30px_rgba(124,58,237,0.35)]">
+            <div className="rounded-2xl bg-black/90 backdrop-blur-xl border border-white/10 p-6">
+              {/* Close Button "X" - top-right, accessible 44x44 tap target */}
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="absolute top-4 right-4 z-10 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#00D1FF]/50"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
 
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-orbitron text-center">
-                <span className="bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] bg-clip-text text-transparent">M1 UNITS™ SHOP</span>
-              </DialogTitle>
-              <DialogDescription className="text-center text-white/70">
-                Acquista pacchetti M1U per sbloccare indizi e funzionalità premium
-              </DialogDescription>
-            </DialogHeader>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-orbitron text-center">
+                  <span className="bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] bg-clip-text text-transparent">M1 UNITS™ SHOP</span>
+                </DialogTitle>
+                <DialogDescription className="text-center text-white/70">
+                  Acquista pacchetti M1U per sbloccare indizi e funzionalità premium
+                </DialogDescription>
+              </DialogHeader>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 my-6">
-              {M1U_PACKS.map((pack, index) => {
-                const Icon = pack.icon;
-                const isProcessing = selectedPack === pack.id && loading;
-                return (
-                  <motion.div
-                    key={pack.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="relative"
-                  >
-                    <div className={`group relative h-full rounded-xl border border-white/10 bg-gradient-to-br ${pack.gradient} p-[1px] hover:border-white/20 transition-all`}>
-                      <div className="rounded-xl bg-black/80 backdrop-blur-xl p-5 h-full">
-                        {pack.savePct > 0 && (
-                          <div className="absolute -top-2 -right-2 px-2 py-1 rounded-full text-xs font-bold text-white bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]">
-                            -{pack.savePct}%
-                          </div>
-                        )}
-
-                        <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center bg-gradient-to-br from-[#00D1FF] to-[#7C3AED] shadow-[0_10px_30px_rgba(124,58,237,0.35)]">
-                          <Icon className="w-7 h-7 text-white" />
-                        </div>
-
-                        <h3 className="text-lg font-orbitron font-bold text-center text-white mb-2">{pack.name}</h3>
-
-                        <div className="text-center mb-4">
-                          <div className="text-3xl font-extrabold text-white mb-1">
-                            {pack.m1u_total}
-                            <span className="text-sm text-white/70 ml-1">M1U</span>
-                          </div>
-                          <div className="text-xl font-semibold text-[#FFD700]">€{pack.euro.toFixed(2)}</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 my-6">
+                {M1U_PACKS.map((pack, index) => {
+                  const Icon = pack.icon;
+                  const isProcessing = selectedPack?.id === pack.id && showPaymentModal;
+                  return (
+                    <motion.div
+                      key={pack.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="relative"
+                    >
+                      <div className={`group relative h-full rounded-xl border border-white/10 bg-gradient-to-br ${pack.gradient} p-[1px] hover:border-white/20 transition-all`}>
+                        <div className="rounded-xl bg-black/80 backdrop-blur-xl p-5 h-full">
                           {pack.savePct > 0 && (
-                            <div className="text-xs text-emerald-400 mt-1">Risparmi {pack.savePct}%</div>
+                            <div className="absolute -top-2 -right-2 px-2 py-1 rounded-full text-xs font-bold text-white bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]">
+                              -{pack.savePct}%
+                            </div>
                           )}
-                        </div>
 
-                        <Button
-                          onClick={() => handlePurchase(pack)}
-                          disabled={loading || isProcessing}
-                          className="w-full rounded-lg bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] text-white font-semibold hover:opacity-90 transition-opacity"
-                        >
-                          {isProcessing ? (
-                            <span className="flex items-center gap-2">
-                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              Caricamento...
-                            </span>
-                          ) : (
+                          <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center bg-gradient-to-br from-[#00D1FF] to-[#7C3AED] shadow-[0_10px_30px_rgba(124,58,237,0.35)]">
+                            <Icon className="w-7 h-7 text-white" />
+                          </div>
+
+                          <h3 className="text-lg font-orbitron font-bold text-center text-white mb-2">{pack.name}</h3>
+
+                          <div className="text-center mb-4">
+                            <div className="text-3xl font-extrabold text-white mb-1">
+                              {pack.m1u_total}
+                              <span className="text-sm text-white/70 ml-1">M1U</span>
+                            </div>
+                            <div className="text-xl font-semibold text-[#FFD700]">€{pack.euro.toFixed(2)}</div>
+                            {pack.savePct > 0 && (
+                              <div className="text-xs text-emerald-400 mt-1">Risparmi {pack.savePct}%</div>
+                            )}
+                          </div>
+
+                          <Button
+                            onClick={() => handlePurchase(pack)}
+                            disabled={showPaymentModal}
+                            className="w-full rounded-lg bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] text-white font-semibold hover:opacity-90 transition-opacity"
+                          >
                             <span className="flex items-center gap-2">
                               <ShoppingCart className="w-4 h-4" />
                               Acquista
                             </span>
-                          )}
-                        </Button>
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
 
-            <div className="text-center text-xs text-white/50 mt-4 pb-2">Pagamento sicuro tramite Stripe • M1U non scadono mai</div>
+              <div className="text-center text-xs text-white/50 mt-4 pb-2">Pagamento sicuro tramite Stripe • M1U non scadono mai</div>
+            </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* In-App Payment Modal */}
+      {selectedPack && (
+        <M1UPaymentModal
+          isOpen={showPaymentModal}
+          packName={selectedPack.name}
+          packCode={selectedPack.code}
+          m1uAmount={selectedPack.m1u_total}
+          priceEur={selectedPack.euro}
+          priceCents={Math.round(selectedPack.euro * 100)}
+          onSuccess={handlePaymentSuccess}
+          onCancel={handlePaymentCancel}
+        />
+      )}
+    </>
   );
 };
 
