@@ -252,14 +252,15 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          {/* Living Map 3D removed - redirect to /map */}
-          <Route path="/living-map-3d">
-            {() => {
-              if (typeof window !== 'undefined') {
-                window.location.href = '/map';
-              }
-              return null;
-            }}
+          {/* MapTiler 3D Sandbox - Neon Style */}
+          <Route path="/map-3d-tiler">
+            <ProtectedRoute>
+              <GlobalLayout>
+                <React.Suspense fallback={<div>Loading 3D Map...</div>}>
+                  {React.createElement(React.lazy(() => import('@/pages/sandbox/MapTiler3D')))}
+                </React.Suspense>
+              </GlobalLayout>
+            </ProtectedRoute>
           </Route>
 
           <Route path="/buzz">
