@@ -32,6 +32,7 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
   const [is3D, setIs3D] = useState(() => {
     return localStorage.getItem('m1_living_map_3d') === 'true';
   });
+  const readyRef = useRef(false);
 
   const { center } = useMapState();
 
@@ -71,9 +72,24 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
 
     map.current = initialMap;
 
+    // Consider styledata as ready to avoid indefinite loaders when tiles 403
+    initialMap.once('styledata', () => {
+      if (!readyRef.current) {
+        console.log('[Living Map 3D] styledata received → marking ready');
+        readyRef.current = true;
+        setMapReady(true);
+      }
+    });
+
+    // Mark style load stages
+    initialMap.on('style.load', () => {
+      console.log('[Living Map 3D] style.load fired');
+    });
+
     // Handle style load
     initialMap.on('load', () => {
       console.log('[Living Map 3D] Map loaded successfully');
+      readyRef.current = true;
       setMapReady(true);
 
       // Add terrain if available
@@ -139,7 +155,20 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
     // Handle errors
     initialMap.on('error', (e) => {
       console.error('[Living Map 3D] Map error:', e);
+      // If style fails, switch to fallback after a short delay
+      if (!readyRef.current && map.current) {
+        console.warn('[Living Map 3D] Switching to fallback style due to error');
+        map.current.setStyle('https://demotiles.maplibre.org/style.json');
+      }
     });
+
+    // Safety fallback: switch to OSM if map not ready within 6s
+    const fallbackTimer = window.setTimeout(() => {
+      if (!readyRef.current && map.current) {
+        console.warn('[Living Map 3D] Style load timeout. Applying fallback style.');
+        map.current.setStyle('https://demotiles.maplibre.org/style.json');
+      }
+    }, 6000);
 
     // Handle resize
     const handleResize = () => {
