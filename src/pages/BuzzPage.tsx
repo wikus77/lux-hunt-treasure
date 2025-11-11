@@ -83,18 +83,17 @@ export const BuzzPage: React.FC = () => {
         <div className="container mx-auto px-4">
           {/* © 2025 Joseph MULÉ – M1SSION™ */}
           
-          {/* Titolo BUZZ - Spostato 10% più in basso */}
-          <div className="text-center mt-[10%] mb-8">
+          {/* Titolo BUZZ - Spostato 10% più in basso + M1U Pill centered below */}
+          <div className="text-center mt-[10%] mb-4">
             <h1 className="text-4xl font-orbitron font-bold">
               <span className="text-[#00ffff]">BU</span>
               <span className="text-white">ZZ</span>
             </h1>
+            <div className="flex justify-center mt-3">
+              <M1UnitsPill showLabel showPlusButton />
+            </div>
           </div>
 
-{/* M1U Pill Slot - Buzz (Fixed top-right) */}
-<div id="m1u-pill-buzz-slot" className="fixed top-4 right-4 z-[1000] flex items-center" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', pointerEvents: 'auto' }}>
-  <M1UnitsPill showLabel showPlusButton />
-</div>
 
           {/* Container principale - Pulsante BUZZ prima del container */}
           <div className="max-w-3xl mx-auto">

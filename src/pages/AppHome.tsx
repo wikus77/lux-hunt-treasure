@@ -184,7 +184,7 @@ const { isConnected } = useRealTimeNotifications();
 
                   <div className="container mx-auto px-3 pb-20">
                 <motion.div
-                  className="text-center my-6"
+                  className="relative text-center my-6"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
@@ -211,20 +211,18 @@ const { isConnected } = useRealTimeNotifications();
                   />
                   
                   <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
+
+                  {/* M1U Pill Slot - Home (inside hero, aligned right) */}
+                  <div
+                    id="m1u-pill-home-slot"
+                    className="absolute top-0 right-0 z-[1000] flex items-center gap-3"
+                    style={{ pointerEvents: 'auto' }}
+                    aria-hidden={false}
+                  >
+                    <M1UnitsPill showLabel showPlusButton />
+                  </div>
                 </motion.div>
 
-{/* M1U Pill Slot - Home (Fixed top-right, per screenshot) */}
-<motion.div
-  id="m1u-pill-home-slot"
-  className="fixed top-4 right-4 z-[1000] flex items-center gap-3"
-  style={{ paddingTop: 'env(safe-area-inset-top, 0px)', pointerEvents: 'auto' }}
-  initial={{ opacity: 0, scale: 0.9 }}
-  animate={{ opacity: 1, scale: 1 }}
-  transition={{ delay: 0.2, duration: 0.4 }}
-  aria-hidden={false}
->
-  <M1UnitsPill showLabel showPlusButton />
-</motion.div>
 
                 <main 
                   id="main-content" 
