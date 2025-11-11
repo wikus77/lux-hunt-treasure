@@ -35,13 +35,25 @@ export async function startM1UCheckout(
   packCode: M1UPackCode,
   opts: StartCheckoutOptions
 ): Promise<boolean> {
-  const amount = PACK_PRICES_EUR[packCode];
-  if (typeof amount !== 'number') {
+  const amountEur = PACK_PRICES_EUR[packCode];
+  if (typeof amountEur !== 'number') {
     console.error('[M1U] Invalid pack code', packCode);
     return false;
   }
+  
+  // ✅ FIX: Convert EUR to cents BEFORE calling processBuzzPurchase
+  const amountCents = Math.round(amountEur * 100);
+  
+  // Anti-regression guard: minimum 50 cents (€0.50)
+  if (amountCents < 50) {
+    console.error(`[M1U] Amount too low: ${amountCents} cents (€${amountEur})`);
+    return false;
+  }
+  
+  console.info(`[M1U] Checkout: ${packCode} → €${amountEur} = ${amountCents} cents`);
+  
   // Reuse BUZZ one-off flow — same edge function, no new endpoints
-  return opts.processBuzzPurchase(false, amount, opts.redirectUrl, opts.sessionId);
+  return opts.processBuzzPurchase(false, amountCents, opts.redirectUrl, opts.sessionId);
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

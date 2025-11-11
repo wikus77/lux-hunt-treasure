@@ -112,8 +112,12 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           description: `Per generare un'area BUZZ è necessario pagare €${dynamicPrice.toFixed(2)} o attivare un abbonamento.`
         });
 
+        // ✅ FIX: Convert EUR to cents before calling processBuzzPurchase
+        const priceInCents = Math.round(dynamicPrice * 100);
+        console.info(`[BUZZ MAP] Dynamic payment: €${dynamicPrice} = ${priceInCents} cents`);
+
         // MANDATORY: Process payment before allowing generation
-        const paymentSuccess = await processBuzzPurchase(true, dynamicPrice);
+        const paymentSuccess = await processBuzzPurchase(true, priceInCents);
         
         if (!paymentSuccess) {
           toast.error("Pagamento necessario", {
@@ -365,3 +369,5 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 };
 
 export default BuzzButton;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
