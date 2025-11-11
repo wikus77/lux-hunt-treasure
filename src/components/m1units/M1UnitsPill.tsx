@@ -17,6 +17,7 @@ interface M1UnitsPillProps {
 export const M1UnitsPill = ({ className = '', showLabel = true }: M1UnitsPillProps) => {
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [pulseAnimation, setPulseAnimation] = useState(false);
+  const [prevBalance, setPrevBalance] = useState<number | null>(null);
 
   // Get current user ID
   useEffect(() => {
@@ -29,17 +30,21 @@ export const M1UnitsPill = ({ className = '', showLabel = true }: M1UnitsPillPro
     getUser();
   }, []);
 
-  const { unitsData, connectionState } = useM1UnitsRealtime(userId);
+  const { unitsData, isLoading, error, connectionState } = useM1UnitsRealtime(userId);
 
-  // Trigger pulse animation on heartbeat
+  // Trigger pulse animation on balance change
   useEffect(() => {
-    if (connectionState === 'HEARTBEAT') {
+    if (unitsData?.balance !== undefined && prevBalance !== null && unitsData.balance !== prevBalance) {
       setPulseAnimation(true);
-      setTimeout(() => setPulseAnimation(false), 1000);
+      setTimeout(() => setPulseAnimation(false), 800);
     }
-  }, [connectionState]);
+    if (unitsData?.balance !== undefined) {
+      setPrevBalance(unitsData.balance);
+    }
+  }, [unitsData?.balance, prevBalance]);
 
-  if (!userId || !unitsData) return null;
+  // Always render - show skeleton when loading, error state, or data
+  const displayValue = isLoading ? '...' : error ? '—' : unitsData?.balance?.toLocaleString() ?? '—';
 
   return (
     <motion.div
@@ -52,16 +57,16 @@ export const M1UnitsPill = ({ className = '', showLabel = true }: M1UnitsPillPro
       )}
       <AnimatePresence mode="wait">
         <motion.span
-          key={unitsData.balance}
+          key={displayValue}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
-          className="text-sm font-bold text-cyan-400"
+          className={`text-sm font-bold ${isLoading ? 'text-cyan-400/50' : error ? 'text-cyan-400/40' : 'text-cyan-400'}`}
         >
-          {unitsData.balance.toLocaleString()}
+          {displayValue}
         </motion.span>
       </AnimatePresence>
-      {connectionState === 'HEARTBEAT' && (
+      {(connectionState === 'HEARTBEAT' || pulseAnimation) && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: [0, 1.2, 1] }}

@@ -9,13 +9,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { emitSubscribed, emitError } from '@/lib/realtime/reconnectBus';
 
 export interface M1UnitsData {
-  id: string;
   user_id: string;
   balance: number;
   total_earned: number;
   total_spent: number;
-  last_updated: string;
-  created_at: string;
+  updated_at: string;
 }
 
 export type M1UnitsConnectionState = 'INIT' | 'CONNECTING' | 'SUBSCRIBED' | 'HEARTBEAT' | 'ERROR' | 'CLOSED';
@@ -24,7 +22,7 @@ interface UseM1UnitsRealtimeReturn {
   unitsData: M1UnitsData | null;
   connectionState: M1UnitsConnectionState;
   isLoading: boolean;
-  error: Error | null;
+  error: string | null;
   ping: () => Promise<void>;
   refetch: () => Promise<void>;
 }
@@ -33,7 +31,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
   const [unitsData, setUnitsData] = useState<M1UnitsData | null>(null);
   const [connectionState, setConnectionState] = useState<M1UnitsConnectionState>('INIT');
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [heartbeatTimer, setHeartbeatTimer] = useState<NodeJS.Timeout | null>(null);
 
   // Fetch initial M1 Units data using RPC
@@ -47,50 +45,31 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       setIsLoading(true);
       setError(null);
 
-      // Use RPC m1u_get_summary() for complete data
+      // Use RPC m1u_get_summary() - no arguments, uses auth.uid()
       const { data: summary, error: rpcError } = await (supabase as any)
         .rpc('m1u_get_summary');
 
       if (rpcError) {
-        // If no record exists, create one via RPC ping
-        if (rpcError.code === 'PGRST116' || rpcError.message?.includes('no rows')) {
-          await (supabase as any).rpc('m1u_ping');
-          
-          // Refetch after creation
-          const { data: newSummary, error: refetchError } = await (supabase as any)
-            .rpc('m1u_get_summary');
+        throw new Error(rpcError.message || 'Failed to fetch M1U summary');
+      }
 
-          if (refetchError) throw refetchError;
-          
-          // Build M1UnitsData from summary
-          if (newSummary) {
-            setUnitsData({
-              id: userId,
-              user_id: userId,
-              balance: newSummary.balance || 0,
-              total_earned: newSummary.total_earned || 0,
-              total_spent: newSummary.total_spent || 0,
-              last_updated: new Date().toISOString(),
-              created_at: new Date().toISOString(),
-            } as M1UnitsData);
-          }
-        } else {
-          throw rpcError;
-        }
-      } else if (summary) {
-        // Build M1UnitsData from summary
+      if (summary) {
         setUnitsData({
-          id: userId,
-          user_id: userId,
+          user_id: summary.user_id || userId,
           balance: summary.balance || 0,
           total_earned: summary.total_earned || 0,
           total_spent: summary.total_spent || 0,
-          last_updated: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-        } as M1UnitsData);
+          updated_at: summary.updated_at || new Date().toISOString(),
+        });
       }
     } catch (err) {
-      setError(err as Error);
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      setError(errorMsg);
+      setConnectionState('ERROR');
+      // Only log in dev
+      if (import.meta.env.DEV) {
+        console.warn('[M1U] Fetch error:', errorMsg);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -114,8 +93,12 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
         setConnectionState('SUBSCRIBED');
       }, 2000);
     } catch (err) {
-      setError(err as Error);
+      const errorMsg = err instanceof Error ? err.message : 'Ping failed';
+      setError(errorMsg);
       setConnectionState('ERROR');
+      if (import.meta.env.DEV) {
+        console.warn('[M1U] Ping error:', errorMsg);
+      }
     }
   }, [userId]);
 
@@ -133,22 +116,20 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'user_m1_units',
           filter: `user_id=eq.${userId}`,
         },
-        (payload) => {
-          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            const newData = payload.new as M1UnitsData;
-            setUnitsData(newData);
-            
-            // Trigger heartbeat visual feedback
-            setConnectionState('HEARTBEAT');
-            setTimeout(() => {
-              setConnectionState('SUBSCRIBED');
-            }, 1000);
-          }
+        async (payload) => {
+          // On UPDATE, refetch summary to get complete data
+          await fetchUnits();
+          
+          // Trigger heartbeat visual feedback
+          setConnectionState('HEARTBEAT');
+          setTimeout(() => {
+            setConnectionState('SUBSCRIBED');
+          }, 1000);
         }
       )
       .subscribe((status) => {
