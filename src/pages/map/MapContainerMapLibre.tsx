@@ -176,15 +176,23 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
       console.info('[BUZZ MAP 3D] styledata received → ready');
     });
 
-    // Handle errors - detect 403 from MapTiler
+    // Handle errors (wrapped to prevent cross-origin toJSON errors)
     initialMap.on('error', (e) => {
-      console.error('[BUZZ MAP 3D] Map error:', e);
+      try {
+        console.error('[BUZZ MAP 3D] Map error:', e.error?.message || 'unknown error');
+      } catch (err) {
+        console.error('[BUZZ MAP 3D] Map error (non-serializable)');
+      }
       
       // Check if error is related to tiles (403 forbidden)
-      const errorStr = JSON.stringify(e);
-      if (errorStr.includes('403') || errorStr.includes('maptiler')) {
-        console.warn('[BUZZ MAP 3D] MapTiler 403 detected → consider using fallback demotiles in style');
-        // Note: Fallback should be handled by pre-configuring demotiles style or using basic OSM
+      try {
+        const errorStr = JSON.stringify(e);
+        if (errorStr.includes('403') || errorStr.includes('maptiler')) {
+          console.warn('[BUZZ MAP 3D] MapTiler 403 detected → consider using fallback demotiles in style');
+          // Note: Fallback should be handled by pre-configuring demotiles style or using basic OSM
+        }
+      } catch (serializeErr) {
+        // Ignore serialization errors
       }
     });
 
