@@ -35,6 +35,9 @@ export async function startM1UCheckout(
   packCode: M1UPackCode,
   opts: StartCheckoutOptions
 ): Promise<boolean> {
+  console.log('[M1U] ========== START M1U CHECKOUT ==========');
+  console.log('[M1U] Pack code:', packCode);
+  
   const amountEur = PACK_PRICES_EUR[packCode];
   if (typeof amountEur !== 'number') {
     console.error('[M1U] Invalid pack code', packCode);
@@ -50,10 +53,33 @@ export async function startM1UCheckout(
     return false;
   }
   
-  console.info(`[M1U] Checkout: ${packCode} → €${amountEur} = ${amountCents} cents`);
+  console.log(`[M1U] Checkout payload:`, {
+    packCode,
+    amountEur,
+    amountCents,
+    redirectUrl: opts.redirectUrl,
+    sessionId: opts.sessionId,
+    isBuzzMap: false
+  });
   
-  // Reuse BUZZ one-off flow — same edge function, no new endpoints
-  return opts.processBuzzPurchase(false, amountCents, opts.redirectUrl, opts.sessionId);
+  console.log('[M1U] Calling processBuzzPurchase with:', {
+    isBuzzMap: false,
+    amount: amountCents,
+    redirectUrl: opts.redirectUrl,
+    sessionId: opts.sessionId
+  });
+  
+  try {
+    // Reuse BUZZ one-off flow — same edge function, no new endpoints
+    const result = await opts.processBuzzPurchase(false, amountCents, opts.redirectUrl, opts.sessionId);
+    console.log('[M1U] processBuzzPurchase result:', result);
+    console.log('[M1U] ========== END M1U CHECKOUT ==========');
+    return result;
+  } catch (error) {
+    console.error('[M1U] processBuzzPurchase threw error:', error);
+    console.error('[M1U] Error stack:', error instanceof Error ? error.stack : 'No stack');
+    return false;
+  }
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
