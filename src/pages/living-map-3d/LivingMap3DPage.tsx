@@ -21,6 +21,7 @@ const LivingMap3DPage: React.FC = () => {
   const [focusLocationHandler, setFocusLocationHandler] = useState<(() => void) | null>(null);
   const [resetViewHandler, setResetViewHandler] = useState<(() => void) | null>(null);
   const [resetBearingHandler, setResetBearingHandler] = useState<(() => void) | null>(null);
+  const [refreshHandler, setRefreshHandler] = useState<(() => void) | null>(null);
 
   const handleToggle3D = useCallback(() => {
     const newValue = !is3D;
@@ -41,6 +42,10 @@ const LivingMap3DPage: React.FC = () => {
     resetBearingHandler?.();
   }, [resetBearingHandler]);
 
+  const handleRefresh = useCallback(() => {
+    refreshHandler?.();
+  }, [refreshHandler]);
+
   return (
     <MapStateProvider>
       <div className="living-map-3d-container">
@@ -50,6 +55,7 @@ const LivingMap3DPage: React.FC = () => {
           onRegisterFocusLocation={setFocusLocationHandler}
           onRegisterResetView={setResetViewHandler}
           onRegisterResetBearing={setResetBearingHandler}
+          onRegisterRefresh={setRefreshHandler}
         />
 
         {/* 3D Controls */}
@@ -59,6 +65,7 @@ const LivingMap3DPage: React.FC = () => {
           onFocusLocation={handleFocusLocation}
           onResetView={handleResetView}
           onResetBearing={handleResetBearing}
+          onRefresh={handleRefresh}
         />
 
         {/* Buzz Map Button */}
