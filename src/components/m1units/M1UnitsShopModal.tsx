@@ -98,26 +98,50 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
   const handlePurchase = async (pack: M1UPack) => {
     setSelectedPack(pack.id);
     try {
+      console.log(`[M1U SHOP] Starting purchase for ${pack.name}`, { 
+        packCode: pack.code, 
+        priceEUR: pack.euro,
+        m1u: pack.m1u_total 
+      });
+
       if (typeof window !== 'undefined' && (window as any).plausible) {
         (window as any).plausible('checkout_start', { props: { pack: pack.id } });
       }
 
       const sessionId = `m1u_${pack.id}_${Date.now()}`;
       const redirectUrl = window.location.origin + '/home?m1u_success=true';
+      
+      console.log('[M1U SHOP] Importing m1uCheckout module...');
       const { startM1UCheckout } = await import('@/features/m1units/m1uCheckout');
+      
+      console.log('[M1U SHOP] Calling startM1UCheckout with:', {
+        packCode: pack.code,
+        redirectUrl,
+        sessionId
+      });
+      
       const success = await startM1UCheckout(pack.code, {
         redirectUrl,
         sessionId,
         processBuzzPurchase
       });
 
+      console.log('[M1U SHOP] startM1UCheckout result:', success);
+
       if (success) {
         toast.info('Apertura checkout Stripe per M1U...');
         onClose();
+      } else {
+        console.error('[M1U SHOP] Checkout returned false');
+        toast.error("Pagamento non completato. Verifica i log per dettagli.");
       }
     } catch (error) {
-      console.error('M1U Purchase error:', error);
-      toast.error("Errore nella creazione del pagamento. Riprova tra poco.");
+      console.error('[M1U SHOP] Purchase error:', error);
+      console.error('[M1U SHOP] Error stack:', error instanceof Error ? error.stack : 'No stack');
+      console.error('[M1U SHOP] Error message:', error instanceof Error ? error.message : String(error));
+      
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      toast.error(`Errore: ${errorMsg}`);
     } finally {
       setSelectedPack(null);
     }
