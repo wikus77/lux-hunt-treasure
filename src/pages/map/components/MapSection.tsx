@@ -7,9 +7,10 @@ import PortalContainer from '@/components/map/PortalContainer';
 import MapLayerToggle from '@/components/map/MapLayerToggle';
 import '@/styles/map-dock.css';
 import '@/styles/portal-container.css';
+import '@/styles/maplibre-tron.css';
 
-// Lazy load heavy map components
-const MapContainer = lazy(() => import('./MapContainer'));
+// Lazy load MapLibre-based map container (MapTiler + 3D)
+const MapContainer = lazy(() => import('../MapContainerMapLibre'));
 
 interface MapSectionProps {
   isAddingPoint: boolean;
