@@ -4,6 +4,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import '@/styles/maplibre-tron.css';
 import { mapTilerConfig } from '@/config/maptiler';
 import { useMapState } from '../../map/MapStateProvider';
 import { PORTALS_SEED } from '@/data/portals.seed';
@@ -100,9 +101,20 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
             'source-layer': 'building',
             minzoom: 12,
             paint: {
-              'fill-extrusion-color': '#0AEFFF',
-              'fill-extrusion-opacity': 0.35,
-              'fill-extrusion-height': ['coalesce', ['get', 'height'], 18],
+              'fill-extrusion-color': [
+                'interpolate',
+                ['linear'],
+                ['get', 'height'],
+                0, '#1E88E5',
+                50, '#0AEFFF',
+                100, '#00D1FF'
+              ],
+              'fill-extrusion-opacity': 0.85,
+              'fill-extrusion-height': [
+                '*',
+                ['coalesce', ['get', 'height'], 15],
+                1.2
+              ],
               'fill-extrusion-base': ['coalesce', ['get', 'min_height'], 0]
             }
           });

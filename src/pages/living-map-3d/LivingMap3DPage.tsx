@@ -7,6 +7,8 @@ import { MapStateProvider } from '../map/MapStateProvider';
 import MapLibreNeonLayer from './layers/MapLibreNeonLayer';
 import Map3DControls from './components/Map3DControls';
 import BuzzMapButtonDock from './components/BuzzMapButtonDock';
+import NotesPanel from './components/NotesPanel';
+import PointsAreasSwitcher from './components/PointsAreasSwitcher';
 import './styles/living-map-3d.css';
 
 const LivingMap3DPage: React.FC = () => {
@@ -61,6 +63,12 @@ const LivingMap3DPage: React.FC = () => {
 
         {/* Buzz Map Button */}
         <BuzzMapButtonDock />
+
+        {/* Notes Panel */}
+        <NotesPanel />
+
+        {/* Points/Areas Switcher */}
+        <PointsAreasSwitcher />
       </div>
     </MapStateProvider>
   );

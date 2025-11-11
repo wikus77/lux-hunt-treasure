@@ -4,11 +4,17 @@
 
 /* Container */
 .living-map-3d-container {
-  position: relative;
-  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: #050E16;
+  z-index: 0;
 }
 
 /* Map Container */
@@ -68,41 +74,48 @@
 /* Controls */
 .living-map-controls {
   position: fixed;
-  top: 80px;
+  top: calc(var(--app-header-height, 72px) + 8px);
   right: 16px;
   z-index: 100;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .living-map-control-button {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   padding: 0;
-  background: rgba(5, 14, 22, 0.9);
-  border: 1px solid rgba(10, 239, 255, 0.3);
-  border-radius: 8px;
-  box-shadow: 0 0 20px rgba(10, 239, 255, 0.2);
+  background: rgba(5, 14, 22, 0.95);
+  border: 1.5px solid rgba(10, 239, 255, 0.4);
+  border-radius: 50%;
+  box-shadow: 0 0 25px rgba(10, 239, 255, 0.3), inset 0 0 15px rgba(10, 239, 255, 0.1);
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .living-map-control-button:hover {
-  background: rgba(10, 239, 255, 0.1);
-  border-color: rgba(10, 239, 255, 0.5);
-  box-shadow: 0 0 30px rgba(10, 239, 255, 0.4);
+  background: rgba(10, 239, 255, 0.15);
+  border-color: rgba(10, 239, 255, 0.6);
+  box-shadow: 0 0 35px rgba(10, 239, 255, 0.5), inset 0 0 20px rgba(10, 239, 255, 0.2);
+  transform: scale(1.05);
 }
 
 .living-map-control-button:active {
   transform: scale(0.95);
 }
 
+.living-map-control-button svg {
+  filter: drop-shadow(0 0 4px rgba(10, 239, 255, 0.8));
+}
+
 /* Buzz Dock */
 .living-map-buzz-dock {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: calc(var(--app-bottom-nav-height, 64px) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 90;
   pointer-events: none;
 }
@@ -167,12 +180,17 @@
 /* iOS Safe Area */
 @supports (padding: env(safe-area-inset-bottom)) {
   .living-map-3d-container {
-    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(100vh + env(safe-area-inset-bottom));
+    height: calc(100dvh + env(safe-area-inset-bottom));
   }
   
   .living-map-controls {
-    top: calc(80px + env(safe-area-inset-top));
+    top: calc(var(--app-header-height, 72px) + env(safe-area-inset-top) + 8px);
     right: calc(16px + env(safe-area-inset-right));
+  }
+
+  .living-map-buzz-dock {
+    bottom: calc(var(--app-bottom-nav-height, 64px) + env(safe-area-inset-bottom) + 16px);
   }
 }
 
