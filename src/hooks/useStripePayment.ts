@@ -27,6 +27,9 @@ export const useStripePayment = () => {
     redirectUrl?: string,
     sessionId?: string
   ): Promise<boolean> => {
+    console.log('[STRIPE] ========== processBuzzPurchase CALLED ==========');
+    console.log('[STRIPE] Input params:', { isBuzzMap, amount, redirectUrl, sessionId, hasUser: !!user });
+    
     if (!user) {
       console.warn('🚨 STRIPE BLOCK: No authenticated user');
       toast.error('Devi essere loggato per effettuare acquisti');
@@ -34,6 +37,7 @@ export const useStripePayment = () => {
     }
 
     // Verify Stripe mode alignment (client pk_* vs server sk_*)
+    console.log('[STRIPE] Checking mode alignment...');
     try {
       await PaymentErrorHandler.retryWithBackoff(async () => {
         const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
@@ -42,7 +46,9 @@ export const useStripePayment = () => {
         const { assertPkMatchesMode } = await import('@/lib/stripe/guard');
         assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
       });
+      console.log('[STRIPE] Mode check passed');
     } catch (e) {
+      console.error('[STRIPE] Mode check failed:', e);
       await PaymentErrorHandler.handlePaymentError(e, 'stripe_mode_check');
       return false;
     }
@@ -57,6 +63,7 @@ export const useStripePayment = () => {
         timestamp: new Date().toISOString()
       });
 
+      console.log('[STRIPE] Invoking process-buzz-purchase edge function...');
       const { data, error } = await supabase.functions.invoke('process-buzz-purchase', {
         body: {
           user_id: user.id,
@@ -106,6 +113,7 @@ export const useStripePayment = () => {
       console.log('[DEBUG] window.open result:', !!newWindow);
       
       toast.success('Apertura checkout Stripe...');
+      console.log('[STRIPE] ========== processBuzzPurchase SUCCESS ==========');
       return true;
 
     } catch (error) {
@@ -114,6 +122,7 @@ export const useStripePayment = () => {
       return false;
     } finally {
       setLoading(false);
+      console.log('[STRIPE] ========== processBuzzPurchase END ==========');
     }
   };
 
