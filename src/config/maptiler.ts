@@ -18,22 +18,28 @@ const STYLE_ID = (import.meta.env.VITE_MAPTILER_STYLE_ID as string) || 'basic-v2
  * Get the appropriate MapTiler API key based on environment
  */
 export function getMapTilerKey(): string {
-  const key = isProd ? PROD_KEY : DEV_KEY;
+  const primary = isProd ? PROD_KEY : DEV_KEY;
+  const fallback = isProd ? DEV_KEY : PROD_KEY;
   
-  if (!key) {
-    console.warn('[MapTiler] ⚠️ No API key found for environment:', { 
-      isDev, 
-      isProd, 
-      hostname: window.location.hostname,
-      hasDev: !!DEV_KEY,
-      hasProd: !!PROD_KEY
-    });
-    console.warn('[MapTiler] 💡 Set VITE_MAPTILER_KEY_DEV or VITE_MAPTILER_KEY_PROD in env');
-    return '';
+  if (primary && primary.length > 0) {
+    console.log('[MapTiler] ✅ Using', isProd ? 'PROD' : 'DEV', 'key for', window.location.hostname);
+    return primary;
+  }
+
+  if (fallback && fallback.length > 0) {
+    console.warn('[MapTiler] ⚠️ Missing', isProd ? 'PROD' : 'DEV', 'key. Falling back to', isProd ? 'DEV' : 'PROD', 'key.');
+    return fallback;
   }
   
-  console.log('[MapTiler] ✅ Using', isProd ? 'PROD' : 'DEV', 'key for', window.location.hostname);
-  return key;
+  console.warn('[MapTiler] ⚠️ No API key found for environment:', { 
+    isDev, 
+    isProd, 
+    hostname: window.location.hostname,
+    hasDev: !!DEV_KEY,
+    hasProd: !!PROD_KEY
+  });
+  console.warn('[MapTiler] 💡 Set VITE_MAPTILER_KEY_DEV or VITE_MAPTILER_KEY_PROD in env');
+  return '';
 }
 
 /**
