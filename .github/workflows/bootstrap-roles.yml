@@ -1,0 +1,54 @@
+name: Bootstrap Supabase Roles
+on:
+  workflow_dispatch:
+    inputs:
+      FOUNDER_EMAIL:
+        description: 'Email a cui assegnare il ruolo admin'
+        required: true
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        run: |
+          curl -fsSL https://cli.supabase.com/install/linux | sh
+          echo "$HOME/.supabase/bin" >> $GITHUB_PATH
+
+      - name: Link Supabase project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase link --project-ref "${{ secrets.PROJECT_REF }}"
+
+      - name: Apply roles schema (enum, table, function)
+        run: |
+          supabase db execute --file supabase/sql/bootstrap_roles.sql
+
+      - name: Assign admin role to founder
+        env:
+          FOUNDER_EMAIL: ${{ inputs.FOUNDER_EMAIL }}
+        run: |
+          cat > /tmp/assign_admin.sql <<'SQL'
+          with u as (
+            select id from auth.users where email = '${FOUNDER_EMAIL}'
+          )
+          insert into public.user_roles (user_id, role)
+          select id, 'admin'::public.app_role from u
+          on conflict (user_id, role) do nothing;
+          SQL
+          supabase db execute --file /tmp/assign_admin.sql
+
+      - name: Verify assignment
+        env:
+          FOUNDER_EMAIL: ${{ inputs.FOUNDER_EMAIL }}
+        run: |
+          cat > /tmp/verify.sql <<'SQL'
+          select u.email, ur.role, ur.assigned_at
+          from auth.users u
+          left join public.user_roles ur on ur.user_id = u.id
+          where u.email = '${FOUNDER_EMAIL}';
+          SQL
+          supabase db execute --file /tmp/verify.sql
