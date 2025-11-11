@@ -34,8 +34,14 @@ export async function ensureSWAnyHost(): Promise<ServiceWorkerRegistration | nul
     console.log('[SW-ANYHOST] ✅ /sw.js registered and ready');
     return registration;
 
-  } catch (error) {
-    console.warn('[SW-ANYHOST] Registration failed (non-critical):', error);
+  } catch (error: any) {
+    // Downgrade 503/ERR_FAILED to warn without blocking
+    const errStr = String(error?.message || error || '');
+    if (errStr.includes('503') || errStr.includes('ERR_FAILED') || errStr.includes('failed to fetch')) {
+      console.warn('[SW-ANYHOST] ⚠️ SW registration warning (503/network):', errStr);
+    } else {
+      console.warn('[SW-ANYHOST] Registration failed (non-critical):', error);
+    }
     return null;
   }
 }
