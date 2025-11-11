@@ -105,10 +105,10 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
       }
 
       // Use existing Stripe payment flow (same as BUZZ/BUZZ MAP)
-      const priceInCents = Math.round(pack.euro * 100);
+      const priceInEuro = pack.euro;
       const success = await processBuzzPurchase(
         false, // not buzz map
-        priceInCents,
+        priceInEuro,
         window.location.origin + '/home?m1u_success=true',
         `m1u_${pack.id}_${Date.now()}`
       );

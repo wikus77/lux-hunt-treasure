@@ -153,6 +153,7 @@ export const MissionBadgeInjector = () => {
       window.clearInterval(homeCheckInterval);
       badgeNodeRef = null;
     };
+  }, [isLoading]);
 
   // Aggiorna immediatamente il badge quando l'utente viene iscritto
   useEffect(() => {
@@ -191,3 +192,5 @@ export const MissionBadgeInjector = () => {
     portalTarget
   );
 };
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
