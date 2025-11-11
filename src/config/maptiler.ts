@@ -21,10 +21,18 @@ export function getMapTilerKey(): string {
   const key = isProd ? PROD_KEY : DEV_KEY;
   
   if (!key) {
-    console.warn('[MapTiler] No API key found for environment:', { isDev, isProd });
+    console.warn('[MapTiler] ⚠️ No API key found for environment:', { 
+      isDev, 
+      isProd, 
+      hostname: window.location.hostname,
+      hasDev: !!DEV_KEY,
+      hasProd: !!PROD_KEY
+    });
+    console.warn('[MapTiler] 💡 Set VITE_MAPTILER_KEY_DEV or VITE_MAPTILER_KEY_PROD in env');
     return '';
   }
   
+  console.log('[MapTiler] ✅ Using', isProd ? 'PROD' : 'DEV', 'key for', window.location.hostname);
   return key;
 }
 
