@@ -252,6 +252,14 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          <Route path="/living-map-3d">
+            <ProtectedRoute>
+              <GlobalLayout>
+                {React.createElement(React.lazy(() => import('@/pages/living-map-3d/LivingMap3DPage')))}
+              </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
           <Route path="/buzz">
             <ProtectedRoute>
               <GlobalLayout><BuzzPage /></GlobalLayout>
