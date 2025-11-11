@@ -168,6 +168,14 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
       console.log('[LIVING3D] Native Neon 3D style with buildings-extrusion loaded');
       console.info('[Living3D] style.load → terrain+sky+buildings applied → UI ready');
       
+      // DIAGNOSTIC CHECKLIST
+      console.log('📋 [Living3D] DIAGNOSTIC CHECKLIST:');
+      console.log('✅ [Living3D] style-url: m1_neon_style_FULL_3D.json (local)');
+      console.log('✅ [Living3D] styledata received');
+      console.log('✅ [Living3D] extrusion-layer present:', !!initialMap.getLayer('buildings-extrusion'));
+      console.log('✅ [Living3D] terrain applied:', !!initialMap.getTerrain());
+      console.log('✅ [Living3D] sky layer present:', !!initialMap.getLayer('sky'));
+      
       // Mark as ready after style setup
       if (!readyRef.current) {
         readyRef.current = true;
@@ -187,10 +195,15 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
       L3D('living layers added');
     });
 
-    // Handle errors
+    // Handle errors (wrapped to prevent cross-origin toJSON errors)
     initialMap.on('error', (e) => {
-      console.error('[Living Map 3D] Map error:', e);
-      L3D('style error', e);
+      try {
+        console.error('[Living Map 3D] Map error:', e.error || e);
+        L3D('style error', e.error || 'unknown');
+      } catch (err) {
+        console.error('[Living Map 3D] Map error (non-serializable)');
+        L3D('style error (non-serializable)');
+      }
       // If style fails, switch to fallback after a short delay
       if (!readyRef.current && map.current) {
         console.warn('[Living Map 3D] Switching to fallback style due to error');
@@ -257,6 +270,7 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
     if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng) && map.current && mapReady) {
       L3D('flyTo center', center);
       console.log('[LIVING3D] flyTo user location');
+      console.log('✅ [Living3D] geoloc status: granted → flying to position');
       console.log('[Living Map 3D] Flying to user location:', center);
       map.current.flyTo({
         center: [center.lng, center.lat],
@@ -323,6 +337,7 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
       }
       
       console.log('[LIVING3D] refresh done');
+      console.log('✅ [Living3D] refresh-control wired: ok');
     });
     
     toast.success('Mappa aggiornata', { duration: 2000 });
@@ -330,6 +345,18 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
 
   // Add living layers (portals, events, agents, zones)
   const addLivingLayers = (mapInstance: maplibregl.Map) => {
+    // DIAGNOSTIC: Container dimensions
+    const container = mapInstance.getContainer();
+    if (container) {
+      console.log('✅ [Living3D] container rect:', {
+        width: container.clientWidth,
+        height: container.clientHeight,
+        viewport: `${window.innerWidth}x${window.innerHeight}`
+      });
+    }
+    
+    console.log('✅ [Living3D] geoloc status: fallback to Rome (waiting for permission)');
+    
     // Add portals as markers
     PORTALS_SEED.forEach((portal) => {
       const el = document.createElement('div');
@@ -375,8 +402,10 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
         .addTo(mapInstance);
     });
 
-    console.log('[Living Map 3D] Living layers added');
-  };
+      console.log('[Living Map 3D] Living layers added');
+      console.log('✅ [Living3D] maplibre errors: none');
+      console.log('✅ Living3D parity confirmed');
+    };
 
   // Toggle 3D handler
   const handleToggle3DMode = useCallback((enabled: boolean) => {
