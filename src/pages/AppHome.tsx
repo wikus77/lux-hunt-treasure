@@ -14,6 +14,7 @@ import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useLocation } from "wouter";
 import { Cpu } from "lucide-react";
 import { useDeepLinkQR } from "@/hooks/useDeepLinkQR";
+import { M1UnitsPill } from "@/components/m1units/M1UnitsPill";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -199,6 +200,18 @@ const { isConnected } = useRealTimeNotifications();
                     <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
                   </h1>
                   <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
+                </motion.div>
+
+                {/* M1U Pill Slot - Home */}
+                <motion.div
+                  id="m1u-pill-home-slot"
+                  className="flex justify-center mb-6"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                  aria-hidden={false}
+                >
+                  <M1UnitsPill showLabel />
                 </motion.div>
 
                 <main 

@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 import MapContainer from './map/MapContainer';
-
+import { M1UnitsPill } from '@/components/m1units/M1UnitsPill';
 import MapDebugger from './map/components/MapDebugger';
 import { useNewMapPage } from '@/hooks/useNewMapPage';
 import { MapStateProvider } from './map/MapStateProvider';
@@ -84,6 +84,17 @@ const MapPage: React.FC = () => {
                 overflow: 'hidden'
               }}
             >
+              {/* M1U Pill Slot - Map (Compact) */}
+              <div 
+                id="m1u-pill-map-slot" 
+                className="absolute top-4 left-4 z-[1000]"
+                style={{
+                  pointerEvents: 'auto'
+                }}
+              >
+                <M1UnitsPill showLabel={false} />
+              </div>
+
               <MapContainer
                 isAddingPoint={isAddingPoint}
                 setIsAddingPoint={setIsAddingPoint}
