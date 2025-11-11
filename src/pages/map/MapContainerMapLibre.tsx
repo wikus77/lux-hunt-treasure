@@ -70,13 +70,22 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
   const { currentWeekAreas, reloadAreas } = useBuzzMapLogic();
   const { status, center } = useMapState();
 
-  // Update center when available
+  // Update center when available + fly-to with smooth animation
   useEffect(() => {
     if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng)) {
       setMapCenter([center.lat, center.lng]);
       
       if (map.current && mapReady) {
-        map.current.setCenter([center.lng, center.lat]);
+        // Use flyTo for smooth animated transition to user location
+        map.current.flyTo({
+          center: [center.lng, center.lat],
+          zoom: Math.max(map.current.getZoom(), 15),
+          pitch: 55,
+          bearing: 0,
+          duration: 1200,
+          essential: true
+        });
+        console.log('[BUZZ MAP 3D] flyTo user location');
       }
     }
   }, [center, mapReady]);
@@ -129,8 +138,17 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
 
     map.current = initialMap;
 
+    // Fail-safe: force UI ready after 5s regardless
+    const failSafe = setTimeout(() => {
+      if (!mapReady) {
+        console.warn('[BUZZ MAP 3D] fail-safe unlock → setMapReady(true) after 5000ms');
+        setMapReady(true);
+      }
+    }, 5000);
+
     // Handle style load
     initialMap.on('load', () => {
+      clearTimeout(failSafe);
       console.log('[BUZZ MAP 3D] Map loaded successfully with native Neon 3D style');
       setMapReady(true);
 
@@ -158,9 +176,16 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
       console.info('[BUZZ MAP 3D] styledata received → ready');
     });
 
-    // Handle errors
+    // Handle errors - detect 403 from MapTiler
     initialMap.on('error', (e) => {
       console.error('[BUZZ MAP 3D] Map error:', e);
+      
+      // Check if error is related to tiles (403 forbidden)
+      const errorStr = JSON.stringify(e);
+      if (errorStr.includes('403') || errorStr.includes('maptiler')) {
+        console.warn('[BUZZ MAP 3D] MapTiler 403 detected → consider using fallback demotiles in style');
+        // Note: Fallback should be handled by pre-configuring demotiles style or using basic OSM
+      }
     });
 
     // Handle click for adding points/areas
