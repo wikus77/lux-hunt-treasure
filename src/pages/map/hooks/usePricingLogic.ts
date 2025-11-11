@@ -104,8 +104,12 @@ export const usePricingLogic = () => {
       // Calculate the radius before processing payment
       const calculatedRadius = await calculateSearchAreaRadius();
       
+      // ✅ FIX: Convert EUR to cents before calling processBuzzPurchase
+      const priceInCents = Math.round(buzzMapPrice * 100);
+      console.info(`[BUZZ MAP] Payment: €${buzzMapPrice} = ${priceInCents} cents`);
+      
       // Process the map buzz payment
-      const data = await processBuzzPurchase(true, buzzMapPrice);
+      const data = await processBuzzPurchase(true, priceInCents);
       
       if (data) {
         // Record the action in Supabase
@@ -132,3 +136,5 @@ export const usePricingLogic = () => {
     loading
   };
 };
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
