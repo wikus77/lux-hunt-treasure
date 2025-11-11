@@ -95,6 +95,7 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
       zoom: 12,
       pitch: is3D ? 55 : 0,
       bearing: 0,
+      maxPitch: 85,
       fadeDuration: 0,
       crossSourceCollisions: false,
       interactive: true,
@@ -130,44 +131,60 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
       }
     });
 
-    // Mark style load stages
-    initialMap.on('style.load', () => {
-      console.log('[Living Map 3D] style.load fired');
-      L3D('style loaded');
-    });
-
-    // Handle style load
-    initialMap.on('load', () => {
-      console.log('[Living Map 3D] Map loaded successfully');
-      if (!readyRef.current) {
-        readyRef.current = true;
-        setMapReady(true);
-        L3D('UI unblocked (load)');
-        clearTimeout(failSafeTimer);
-      }
-      L3D('map ready');
-
-      // Add terrain if available
+    // Handle style.load - CRITICAL: Add terrain/sky/buildings AFTER style is loaded
+    initialMap.once('style.load', () => {
+      console.log('[LIVING3D] style.load → applying terrain+sky+buildings');
+      L3D('style.load → setup 3D');
+      
+      // Add terrain DEM source + sky ONLY after style load to avoid "Style is not done loading" error
       const terrainSource = mapTilerConfig.getTerrainSource();
       if (terrainSource && !initialMap.getSource('terrain-rgb')) {
         initialMap.addSource('terrain-rgb', terrainSource as any);
-        console.log('[Living Map 3D] Terrain source added');
+        console.log('[LIVING3D] Terrain source added');
         
         if (is3D) {
           initialMap.setTerrain({
             source: 'terrain-rgb',
-            exaggeration: 1.2
+            exaggeration: 1.3
           });
-          console.log('[Living Map 3D] 3D terrain enabled');
+          console.log('[LIVING3D] 3D terrain enabled');
         }
       }
 
-      // 3D buildings are already in the native style (buildings-extrusion layer)
-      console.log('[Living Map 3D] Native Neon 3D style loaded with buildings-extrusion');
+      // Add sky layer (cast to any for MapLibre GL sky support)
+      if (!initialMap.getLayer('sky')) {
+        initialMap.addLayer({
+          id: 'sky',
+          type: 'sky',
+          paint: {
+            'sky-type': 'atmosphere',
+            'sky-atmosphere-sun-intensity': 10
+          }
+        } as any);
+        console.log('[LIVING3D] Sky layer added');
+      }
+
+      // Buildings are already in native style (buildings-extrusion layer)
+      console.log('[LIVING3D] Native Neon 3D style with buildings-extrusion loaded');
+      console.info('[Living3D] style.load → terrain+sky+buildings applied → UI ready');
+      
+      // Mark as ready after style setup
+      if (!readyRef.current) {
+        readyRef.current = true;
+        setMapReady(true);
+        L3D('UI unblocked (style.load)');
+        clearTimeout(failSafeTimer);
+      }
+    });
+
+    // Handle full map load - add living layers
+    initialMap.on('load', () => {
+      console.log('[Living Map 3D] Map fully loaded');
+      L3D('map load complete');
 
       // Add living layers (portals, events, agents, zones)
       addLivingLayers(initialMap);
-      L3D('layers loaded');
+      L3D('living layers added');
     });
 
     // Handle errors
@@ -276,9 +293,40 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
     
     map.current.setStyle(processedStyle as any, { diff: false });
     
-    console.log('[LIVING3D] refresh done');
+    // Re-apply terrain/sky/buildings after style reload
+    map.current.once('style.load', () => {
+      console.log('[LIVING3D] refresh → style reloaded, re-applying 3D setup');
+      
+      // Add terrain DEM source + sky
+      const terrainSource = mapTilerConfig.getTerrainSource();
+      if (terrainSource && map.current && !map.current.getSource('terrain-rgb')) {
+        map.current.addSource('terrain-rgb', terrainSource as any);
+        
+        if (is3D) {
+          map.current.setTerrain({
+            source: 'terrain-rgb',
+            exaggeration: 1.3
+          });
+        }
+      }
+
+      // Add sky layer
+      if (map.current && !map.current.getLayer('sky')) {
+        map.current.addLayer({
+          id: 'sky',
+          type: 'sky',
+          paint: {
+            'sky-type': 'atmosphere',
+            'sky-atmosphere-sun-intensity': 10
+          }
+        } as any);
+      }
+      
+      console.log('[LIVING3D] refresh done');
+    });
+    
     toast.success('Mappa aggiornata', { duration: 2000 });
-  }, [mapReady]);
+  }, [mapReady, is3D]);
 
   // Add living layers (portals, events, agents, zones)
   const addLivingLayers = (mapInstance: maplibregl.Map) => {
@@ -339,10 +387,16 @@ const MapLibreNeonLayer: React.FC<MapLibreNeonLayerProps> = ({
     if (enabled) {
       // Enable 3D
       const terrainSource = mapTilerConfig.getTerrainSource();
-      if (terrainSource && map.current.getSource('terrain-rgb')) {
+      if (terrainSource) {
+        // Ensure terrain source exists
+        if (!map.current.getSource('terrain-rgb')) {
+          map.current.addSource('terrain-rgb', terrainSource as any);
+        }
+        
+        // Apply terrain
         map.current.setTerrain({
           source: 'terrain-rgb',
-          exaggeration: 1.2
+          exaggeration: 1.3
         });
       }
       map.current.easeTo({ pitch: 55, duration: 1000 });
