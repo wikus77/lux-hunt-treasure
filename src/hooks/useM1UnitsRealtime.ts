@@ -36,7 +36,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
   const [error, setError] = useState<Error | null>(null);
   const [heartbeatTimer, setHeartbeatTimer] = useState<NodeJS.Timeout | null>(null);
 
-  // Fetch initial M1 Units data
+  // Fetch initial M1 Units data using RPC
   const fetchUnits = useCallback(async () => {
     if (!userId) {
       setIsLoading(false);
@@ -47,6 +47,15 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       setIsLoading(true);
       setError(null);
 
+      // Use RPC m1u_get_balance() for consistent access
+      const { data: balance, error: rpcError } = await (supabase as any)
+        .rpc('m1u_get_balance');
+
+      if (rpcError) {
+        throw rpcError;
+      }
+
+      // Fetch full row data for display
       const { data, error: fetchError } = await (supabase as any)
         .from('user_m1_units')
         .select('*')
@@ -54,15 +63,18 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
         .single();
 
       if (fetchError) {
-        // If no record exists, create one
+        // If no record exists, create one via RPC ping
         if (fetchError.code === 'PGRST116') {
-          const { data: newData, error: insertError } = await (supabase as any)
+          await (supabase as any).rpc('m1u_ping');
+          
+          // Refetch after creation
+          const { data: newData, error: refetchError } = await (supabase as any)
             .from('user_m1_units')
-            .insert({ user_id: userId, balance: 0 })
-            .select()
+            .select('*')
+            .eq('user_id', userId)
             .single();
 
-          if (insertError) throw insertError;
+          if (refetchError) throw refetchError;
           setUnitsData(newData as M1UnitsData);
         } else {
           throw fetchError;
@@ -82,9 +94,8 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
     if (!userId) return;
 
     try {
-      const { data, error: pingError } = await (supabase as any).rpc('m1u_ping', {
-        target_uid: userId,
-      });
+      // Call without arguments - RPC defaults to auth.uid()
+      const { data, error: pingError } = await (supabase as any).rpc('m1u_ping');
 
       if (pingError) throw pingError;
       
