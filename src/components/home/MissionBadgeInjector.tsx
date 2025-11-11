@@ -122,18 +122,37 @@ export const MissionBadgeInjector = () => {
     };
 
     const onPageShow = () => requestAnimationFrame(findAndInject);
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        requestAnimationFrame(findAndInject);
+      }
+    };
+    const onFocus = () => requestAnimationFrame(findAndInject);
+
+    // Lightweight watchdog: periodically ensure badge is attached on /home
+    const homeCheckInterval = window.setInterval(() => {
+      try {
+        if (window.location.pathname === '/home') {
+          ensureBadgePosition();
+        }
+      } catch {}
+    }, 800);
     
     window.addEventListener('pageshow', onPageShow);
     window.addEventListener('popstate', onRouteChange);
+    window.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', onFocus);
 
     return () => {
       headerObserver?.disconnect();
       globalObserver?.disconnect();
       window.removeEventListener('pageshow', onPageShow);
       window.removeEventListener('popstate', onRouteChange);
+      window.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', onFocus);
+      window.clearInterval(homeCheckInterval);
       badgeNodeRef = null;
     };
-  }, [isLoading]);
 
   // Aggiorna immediatamente il badge quando l'utente viene iscritto
   useEffect(() => {

@@ -7,7 +7,7 @@ import HeaderCountdown from "@/components/layout/header/HeaderCountdown";
 import { useLocation } from "wouter";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import MinimalHeaderStrip from "@/components/layout/MinimalHeaderStrip";
-import { M1UnitsPill } from "@/components/m1units/M1UnitsPill";
+
 
 interface HeaderLayoutProps {
   children?: React.ReactNode;
@@ -59,10 +59,8 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
             {!leftContent && <M1ssionText />}
           </div>
           
-          {/* Center section - M1 Units Pill */}
-          <div className="flex items-center justify-center">
-            <M1UnitsPill />
-          </div>
+          {/* Center section reserved - Pill moved to page-specific slots */}
+          <div className="flex items-center justify-center" aria-hidden />
 
           {/* Right side content */}
           {rightContent && (

@@ -6,7 +6,7 @@ import AgentBadge from "@/components/AgentBadge";
 import { motion } from "framer-motion";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import MinimalHeaderStrip from "@/components/layout/MinimalHeaderStrip";
-import { M1UnitsPill } from "@/components/m1units/M1UnitsPill";
+
 
 interface MapHeaderProps {
   onHelp: () => void;
@@ -52,7 +52,6 @@ const MapHeader = ({
 
             <div className="flex items-center justify-center gap-3">
               <AgentBadge />
-              <M1UnitsPill showLabel={false} />
             </div>
             
             <div className="flex items-center gap-2">
