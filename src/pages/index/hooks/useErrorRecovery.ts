@@ -13,7 +13,6 @@ export const useErrorRecovery = () => {
   useEffect(() => {
     if (error && retryCount < 2) {
       const recoveryTimeout = setTimeout(() => {
-        console.log(`⚠️ Tentativo di recovery automatico #${retryCount + 1}`);
         setError(null);
         setRetryCount(prev => prev + 1);
       }, 2000);

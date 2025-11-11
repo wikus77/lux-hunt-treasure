@@ -18,8 +18,6 @@ const LoadingManager = ({ onLoaded }: LoadingManagerProps) => {
 
   // MIGLIORAMENTO: Gestione più robusta del caricamento della pagina
   useEffect(() => {
-    console.log("LoadingManager montato");
-    
     let isMounted = true;
     let loadTimer: number;
     let safetyTimer: number;
@@ -29,7 +27,6 @@ const LoadingManager = ({ onLoaded }: LoadingManagerProps) => {
       // forziamo il caricamento per evitare la pagina bianca infinita
       safetyTimer = window.setTimeout(() => {
         if (isMounted && !pageLoaded) {
-          console.log("⚠️ Safety timeout attivato! Forziamo il caricamento");
           setLoadingTimeout(true);
           setPageLoaded(true);
           
@@ -47,15 +44,12 @@ const LoadingManager = ({ onLoaded }: LoadingManagerProps) => {
       loadTimer = window.setTimeout(() => {
         if (isMounted) {
           setPageLoaded(true);
-          console.log("Page loaded state set to true");
           
           // Piccolo ritardo prima di renderizzare il contenuto effettivo
           // per garantire che l'hydration sia completata
           setTimeout(() => {
             if (isMounted) {
               setRenderContent(true);
-              console.log("Content rendering enabled");
-              // Notifica il componente padre che tutto è pronto
               onLoaded(true, true);
             }
           }, 200);
@@ -66,7 +60,6 @@ const LoadingManager = ({ onLoaded }: LoadingManagerProps) => {
       const handleDocumentReady = () => {
         if (document.readyState === 'complete' && isMounted) {
           window.clearTimeout(loadTimer);
-          console.log("Document ready state is complete");
           setPageLoaded(true);
           // Piccolo ritardo come sopra
           setTimeout(() => {
@@ -92,7 +85,6 @@ const LoadingManager = ({ onLoaded }: LoadingManagerProps) => {
         window.clearTimeout(safetyTimer);
         document.removeEventListener('readystatechange', handleDocumentReady);
         window.removeEventListener('load', handleDocumentReady);
-        console.log("LoadingManager smontato, timer puliti");
       };
     } catch (error) {
       console.error("Errore in LoadingManager:", error);

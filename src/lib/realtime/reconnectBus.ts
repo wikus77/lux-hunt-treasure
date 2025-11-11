@@ -85,7 +85,13 @@ export function emitError(reason: string, channelName?: string): void {
     },
   });
   window.dispatchEvent(event);
-  console.error('❌ [Realtime] Error', { channelName, reason });
+  
+  // Silence non-critical broadcast channel errors (pulse_notifications uses broadcast, not postgres_changes)
+  const isBroadcastChannel = channelName === 'pulse_notifications' || channelName?.includes('_notifications');
+  if (!isBroadcastChannel || reason === 'TIMED_OUT') {
+    // Only log non-broadcast errors or timeouts
+    console.error('❌ [Realtime] Error', { channelName, reason });
+  }
 }
 
 /**

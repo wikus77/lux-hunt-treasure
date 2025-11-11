@@ -22,8 +22,6 @@ export const useEventHandlers = (countdownCompleted: boolean): EventHandlersResu
 
   // Event handlers
   const handleRegisterClick = () => {
-    console.log('🚀 M1SSION™ User clicking "Inizia la missione" - redirecting to /login');
-    
     // Track Plausible event
     if (typeof window !== 'undefined' && window.plausible) {
       window.plausible('click_cta_join');

@@ -20,7 +20,6 @@ export const useMutationObserver = () => {
             text.includes("auto di lusso")
           ) {
             section.style.display = "none";
-            console.log("✅ Sezione 'Cosa puoi vincere' rimossa con MutationObserver.");
           }
         });
       });
@@ -32,7 +31,6 @@ export const useMutationObserver = () => {
 
       return () => {
         observer.disconnect();
-        console.log("🛑 MutationObserver disattivato.");
       };
     } catch (err) {
       console.error("Errore nel setup MutationObserver:", err);
