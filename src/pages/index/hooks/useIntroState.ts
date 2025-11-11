@@ -14,10 +14,8 @@ export const useIntroState = () => {
       if (typeof window !== 'undefined') {
         const skipIntro = localStorage.getItem("skipIntro");
         if (skipIntro === "true") {
-          console.log("Intro already shown, skipping...");
           setIntroCompleted(true);
         } else {
-          console.log("No skipIntro flag found, will show intro");
           setIntroCompleted(false);
         }
       }

@@ -46,15 +46,6 @@ const MainContent: React.FC<MainContentProps> = ({
   onCloseInviteFriend,
   onAgeVerified,
 }) => {
-  // Log di debug per la diagnostica
-  React.useEffect(() => {
-    console.log("MainContent - stato render:", { 
-      pageLoaded, 
-      introCompleted, 
-      renderContent,
-      error: error ? error.message : null
-    });
-  }, [pageLoaded, introCompleted, renderContent, error]);
 
   // Se c'è un errore, mostra error fallback
   if (error) {

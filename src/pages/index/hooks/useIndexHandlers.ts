@@ -12,13 +12,11 @@ export const useIndexHandlers = () => {
 
   // Handlers for child components
   const handleLoaded = useCallback((isLoaded: boolean, canRender: boolean) => {
-    console.log("handleLoaded chiamato con:", { isLoaded, canRender });
     setPageLoaded(isLoaded);
     setRenderContent(canRender);
   }, []);
 
   const handleIntroComplete = useCallback(() => {
-    console.log("Intro completed callback, setting introCompleted to true");
     try {
       if (typeof window !== 'undefined') {
         localStorage.setItem("skipIntro", "true");
@@ -33,7 +31,6 @@ export const useIndexHandlers = () => {
   }, []);
 
   const handleRetry = useCallback(() => {
-    console.log("Retry richiesto dall'utente");
     window.location.reload();
   }, []);
 

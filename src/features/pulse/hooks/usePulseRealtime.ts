@@ -52,7 +52,6 @@ export const usePulseRealtime = (): UsePulseRealtimeReturn => {
         setPulseState(parsed);
       }
     } catch (err) {
-      console.error('❌ Pulse fetch error:', err);
       setError(err as Error);
     } finally {
       setIsLoading(false);
@@ -76,13 +75,11 @@ export const usePulseRealtime = (): UsePulseRealtimeReturn => {
         (payload) => {
           const newRow = payload.new as PulseState;
           setPulseState(newRow);
-          console.log('🔄 Pulse state updated:', newRow);
         }
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           emitSubscribed('pulse_state_changes');
-          console.log('✅ Subscribed to pulse_state_changes');
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           emitError(String(status), 'pulse_state_changes');
         }
@@ -98,12 +95,10 @@ export const usePulseRealtime = (): UsePulseRealtimeReturn => {
         lastUpdateTime.current = now;
 
         setLastUpdate(payload.payload as PulseRealtimePayload);
-        console.log('⚡ Pulse notification:', payload.payload);
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           emitSubscribed('pulse_notifications');
-          console.log('✅ Subscribed to pulse_notifications');
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           emitError(String(status), 'pulse_notifications');
         }
