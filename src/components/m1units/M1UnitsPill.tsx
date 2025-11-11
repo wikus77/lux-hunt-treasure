@@ -48,29 +48,49 @@ export const M1UnitsPill = ({ className = '', showLabel = true }: M1UnitsPillPro
 
   return (
     <motion.div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 ${className}`}
+      className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl backdrop-blur-md bg-gradient-to-r from-[#070818]/80 to-[#131524]/80 border border-white/10 shadow-lg ${className}`}
       animate={pulseAnimation ? { scale: [1, 1.05, 1] } : {}}
       transition={{ duration: 0.3 }}
     >
-      {showLabel && (
-        <span className="text-xs font-medium text-cyan-300/70">M1U</span>
-      )}
+      {/* M1 Badge - Yellow Circle */}
+      <motion.div 
+        className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] shadow-md"
+        animate={pulseAnimation ? { rotate: [0, 10, -10, 0] } : {}}
+      >
+        <span className="text-xs font-bold text-black">M1</span>
+      </motion.div>
+
+      {/* Balance Display */}
       <AnimatePresence mode="wait">
-        <motion.span
+        <motion.div
           key={displayValue}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
-          className={`text-sm font-bold ${isLoading ? 'text-cyan-400/50' : error ? 'text-cyan-400/40' : 'text-cyan-400'}`}
+          className="flex items-center gap-1.5"
         >
-          {displayValue}
-        </motion.span>
+          {showLabel && (
+            <span className="text-sm font-semibold text-white/90">M1U</span>
+          )}
+          <span 
+            className={`text-sm font-bold ${
+              isLoading ? 'text-white/50 animate-pulse' : 
+              error ? 'text-white/40' : 
+              'text-white'
+            }`}
+          >
+            {displayValue}
+          </span>
+        </motion.div>
       </AnimatePresence>
+
+      {/* Heartbeat indicator */}
       {(connectionState === 'HEARTBEAT' || pulseAnimation) && (
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: [0, 1.2, 1] }}
-          className="w-2 h-2 rounded-full bg-cyan-400"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
+          className="w-2 h-2 rounded-full bg-[#00D1FF] shadow-[0_0_8px_rgba(0,209,255,0.8)]"
         />
       )}
     </motion.div>

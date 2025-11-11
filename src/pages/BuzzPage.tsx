@@ -12,6 +12,7 @@ import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import { M1UnitsPill } from '@/components/m1units/M1UnitsPill';
 
 export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
@@ -88,6 +89,11 @@ export const BuzzPage: React.FC = () => {
               <span className="text-[#00ffff]">BU</span>
               <span className="text-white">ZZ</span>
             </h1>
+          </div>
+
+          {/* M1U Pill Slot - Buzz */}
+          <div id="m1u-pill-buzz-slot" className="flex justify-center mb-6">
+            <M1UnitsPill showLabel />
           </div>
 
           {/* Container principale - Pulsante BUZZ prima del container */}
