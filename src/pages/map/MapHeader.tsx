@@ -6,6 +6,7 @@ import AgentBadge from "@/components/AgentBadge";
 import { motion } from "framer-motion";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import MinimalHeaderStrip from "@/components/layout/MinimalHeaderStrip";
+import { M1UnitsPill } from "@/components/m1units/M1UnitsPill";
 
 interface MapHeaderProps {
   onHelp: () => void;
@@ -49,8 +50,9 @@ const MapHeader = ({
               <M1ssionText />
             </div>
 
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center gap-3">
               <AgentBadge />
+              <M1UnitsPill showLabel={false} />
             </div>
             
             <div className="flex items-center gap-2">
@@ -80,3 +82,5 @@ const MapHeader = ({
 };
 
 export default MapHeader;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

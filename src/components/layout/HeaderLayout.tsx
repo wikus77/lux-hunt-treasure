@@ -7,6 +7,7 @@ import HeaderCountdown from "@/components/layout/header/HeaderCountdown";
 import { useLocation } from "wouter";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import MinimalHeaderStrip from "@/components/layout/MinimalHeaderStrip";
+import { M1UnitsPill } from "@/components/m1units/M1UnitsPill";
 
 interface HeaderLayoutProps {
   children?: React.ReactNode;
@@ -58,9 +59,9 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
             {!leftContent && <M1ssionText />}
           </div>
           
-          {/* Center section - removed M1-AGENT badge */}
+          {/* Center section - M1 Units Pill */}
           <div className="flex items-center justify-center">
-            {/* Empty center area */}
+            <M1UnitsPill />
           </div>
 
           {/* Right side content */}
@@ -86,3 +87,5 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
 };
 
 export default HeaderLayout;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

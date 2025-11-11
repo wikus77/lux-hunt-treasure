@@ -10,6 +10,7 @@ import LandingFooter from "@/components/landing/LandingFooter";
 import GlobalPulseBar from "@/components/pulse/GlobalPulseBar";
 import AgentDNAWidget from "@/components/dna/AgentDNAWidget";
 import PowerBuzzModal from "@/components/monetization/PowerBuzzModal";
+import { M1UnitsPill } from "@/components/m1units/M1UnitsPill";
 
 interface XavierStyleLandingPageProps {
   onRegisterClick: () => void;
@@ -158,6 +159,11 @@ const XavierStyleLandingPage = ({ onRegisterClick, openInviteFriend }: XavierSty
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
+      {/* M1 Units Pill - Fixed Top Right */}
+      <div className="fixed top-4 right-4 z-50" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <M1UnitsPill />
+      </div>
+
       {/* Animated Background */}
       <div className="fixed inset-0 bg-animated opacity-80" />
       
