@@ -12,6 +12,7 @@ import MapControls from './components/MapControls';
 import BuzzMapButtonSecure from '@/components/map/BuzzMapButtonSecure';
 import HelpDialog from './components/HelpDialog';
 import FinalShotButton from '@/components/map/FinalShotButton';
+import neonStyle from './styles/m1_neon_style_FULL_3D.json';
 
 // Default location (Rome)
 const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
@@ -85,19 +86,41 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
     if (!mapContainer.current || map.current) return;
     if (!center) return;
 
-    console.log('[MapLibre] Initializing with MapTiler...');
+    console.log('[BUZZ MAP 3D] Initializing with Neon 3D style...');
     
-    const styleUrl = mapTilerConfig.getStyleUrl();
-    console.log('[MapLibre] Style URL:', styleUrl);
+    // Process the Neon 3D style to inject MapTiler API key
+    const processedStyle = JSON.parse(JSON.stringify(neonStyle));
+    const apiKey = mapTilerConfig.getKey();
+    
+    if (apiKey && processedStyle.sources) {
+      Object.keys(processedStyle.sources).forEach((sourceKey) => {
+        const source = processedStyle.sources[sourceKey];
+        if (source.url && source.url.includes('{key}')) {
+          source.url = source.url.replace('{key}', apiKey);
+        }
+        if (source.tiles) {
+          source.tiles = source.tiles.map((tile: string) => 
+            tile.replace('{key}', apiKey)
+          );
+        }
+      });
+      
+      if (processedStyle.glyphs) {
+        processedStyle.glyphs = processedStyle.glyphs.replace('{key}', apiKey);
+      }
+    }
+
+    console.log('[BUZZ MAP 3D] style: m1_neon_style_FULL_3D.json (local)');
 
     const initialMap = new maplibregl.Map({
       container: mapContainer.current,
-      style: styleUrl,
+      style: processedStyle as any,
       center: [center.lng, center.lat],
       zoom: 13,
       pitch: is3D ? 55 : 0,
       bearing: 0,
       fadeDuration: 0,
+      crossSourceCollisions: false,
       attributionControl: {
         compact: true,
         customAttribution: '© MapTiler © OpenStreetMap'
@@ -108,73 +131,36 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
 
     // Handle style load
     initialMap.on('load', () => {
-      console.log('[MapLibre] Map loaded successfully');
+      console.log('[BUZZ MAP 3D] Map loaded successfully with native Neon 3D style');
       setMapReady(true);
 
       // Add terrain if available
       const terrainSource = mapTilerConfig.getTerrainSource();
       if (terrainSource && !initialMap.getSource('terrain-rgb')) {
         initialMap.addSource('terrain-rgb', terrainSource as any);
-        console.log('[MapLibre] Terrain source added');
+        console.log('[BUZZ MAP 3D] Terrain source added');
         
         if (is3D) {
           initialMap.setTerrain({
             source: 'terrain-rgb',
             exaggeration: 1.2
           });
-          console.log('[MapLibre] 3D terrain enabled');
+          console.log('[BUZZ MAP 3D] 3D terrain enabled');
         }
       }
 
-      // Add 3D buildings if not in style
-      if (!initialMap.getLayer('building-3d')) {
-        // Check if we have a building source
-        const layers = initialMap.getStyle().layers || [];
-        const buildingLayer = layers.find((l: any) => 
-          l['source-layer'] === 'building' || l.id?.includes('building')
-        );
-        
-        if (buildingLayer) {
-          const sourceId = (buildingLayer as any).source;
-          
-          initialMap.addLayer({
-            id: 'building-3d',
-            type: 'fill-extrusion',
-            source: sourceId,
-            'source-layer': 'building',
-            paint: {
-              'fill-extrusion-color': '#0AEFFF',
-              'fill-extrusion-opacity': 0.35,
-              'fill-extrusion-height': ['coalesce', ['get', 'height'], 18],
-              'fill-extrusion-base': ['coalesce', ['get', 'min_height'], 0]
-            }
-          });
-          console.log('[MapLibre] 3D buildings layer added');
-        }
-      }
+      // Native Neon 3D style already has building extrusions, no need for runtime additions
+      console.log('[BUZZ MAP 3D] Native Neon 3D layers loaded (buildings, roads glow, water dark)');
+    });
 
-      // Add atmospheric background layer (MapLibre alternative to sky)
-      if (!initialMap.getLayer('atmosphere-bg')) {
-        initialMap.addLayer({
-          id: 'atmosphere-bg',
-          type: 'background',
-          paint: {
-            'background-color': '#050E16'
-          }
-        }, 'building-3d'); // Place below buildings
-        console.log('[MapLibre] Atmosphere background added');
-      }
-
-      // Note: MapLibre doesn't support setFog() or sky layers natively
-      // Tron aesthetic achieved through paint properties and background
-
-      // Apply Tron theme overrides
-      applyTronTheme(initialMap);
+    // Log style data events
+    initialMap.on('styledata', () => {
+      console.info('[BUZZ MAP 3D] styledata received → ready');
     });
 
     // Handle errors
     initialMap.on('error', (e) => {
-      console.error('[MapLibre] Map error:', e);
+      console.error('[BUZZ MAP 3D] Map error:', e);
     });
 
     // Handle click for adding points/areas
@@ -195,46 +181,37 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
     };
   }, [center]); // Only re-init if center changes initially
 
-  // Apply Tron theme paint properties
-  const applyTronTheme = (mapInstance: maplibregl.Map) => {
-    // Override key layers for Tron aesthetic
-    const style = mapInstance.getStyle();
-    if (!style || !style.layers) return;
-
-    style.layers.forEach((layer: any) => {
-      try {
-        // Roads - cyan glow
-        if (layer.id?.includes('road') || layer.id?.includes('highway')) {
-          if (layer.type === 'line') {
-            mapInstance.setPaintProperty(layer.id, 'line-color', '#0AEFFF');
-            mapInstance.setPaintProperty(layer.id, 'line-opacity', 0.8);
-          }
+  // Refresh handler - reload Neon 3D style
+  const handleRefresh = useCallback(() => {
+    if (!map.current || !mapReady) return;
+    
+    // Process the Neon 3D style to inject MapTiler API key
+    const processedStyle = JSON.parse(JSON.stringify(neonStyle));
+    const apiKey = mapTilerConfig.getKey();
+    
+    if (apiKey && processedStyle.sources) {
+      Object.keys(processedStyle.sources).forEach((sourceKey) => {
+        const source = processedStyle.sources[sourceKey];
+        if (source.url && source.url.includes('{key}')) {
+          source.url = source.url.replace('{key}', apiKey);
         }
-        
-        // Water - dark blue
-        if (layer.id?.includes('water')) {
-          if (layer.type === 'fill') {
-            mapInstance.setPaintProperty(layer.id, 'fill-color', '#0a0a18');
-          }
-          if (layer.type === 'line') {
-            mapInstance.setPaintProperty(layer.id, 'line-color', '#00D1FF');
-            mapInstance.setPaintProperty(layer.id, 'line-opacity', 0.4);
-          }
+        if (source.tiles) {
+          source.tiles = source.tiles.map((tile: string) => 
+            tile.replace('{key}', apiKey)
+          );
         }
-
-        // Landscape - dark background
-        if (layer.id?.includes('background') || layer.id?.includes('land')) {
-          if (layer.type === 'background' || layer.type === 'fill') {
-            mapInstance.setPaintProperty(layer.id, layer.type === 'background' ? 'background-color' : 'fill-color', '#050E16');
-          }
-        }
-      } catch (e) {
-        // Layer might not support property
+      });
+      
+      if (processedStyle.glyphs) {
+        processedStyle.glyphs = processedStyle.glyphs.replace('{key}', apiKey);
       }
-    });
+    }
 
-    console.log('[MapLibre] Tron theme applied');
-  };
+    map.current.resize();
+    map.current.triggerRepaint();
+    map.current.setStyle(processedStyle as any, { diff: false });
+    console.info('[BUZZ MAP 3D] refresh done');
+  }, [mapReady]);
 
   // Toggle 3D handler
   const handleToggle3DMode = useCallback((enabled: boolean) => {
@@ -253,12 +230,12 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
         });
       }
       map.current.easeTo({ pitch: 55, duration: 1000 });
-      console.log('[MapLibre] 3D mode enabled');
+      console.log('[BUZZ MAP 3D] 3D mode enabled');
     } else {
       // Disable 3D
       map.current.setTerrain(null);
       map.current.easeTo({ pitch: 0, bearing: 0, duration: 1000 });
-      console.log('[MapLibre] 2D mode enabled');
+      console.log('[BUZZ MAP 3D] 2D mode enabled');
     }
   }, [mapReady]);
 
@@ -271,7 +248,7 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
       zoom: 15,
       duration: 1500
     });
-    console.log('[MapLibre] Focused on user location');
+    console.log('[BUZZ MAP 3D] Focused on user location');
   }, [mapReady, center]);
 
   // Reset view handler
@@ -283,7 +260,7 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
       bearing: 0,
       duration: 1000
     });
-    console.log('[MapLibre] View reset');
+    console.log('[BUZZ MAP 3D] View reset');
   }, [mapReady, is3D]);
 
   // Register handlers with parent
@@ -348,6 +325,7 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
           handleBuzz={handleBuzz}
           showHelpDialog={showHelpDialog}
           mapCenter={mapCenter}
+          onRefresh={handleRefresh}
           onAreaGenerated={(lat, lng, radius) => {
             console.log('🎯 Area generated:', { lat, lng, radius });
             reloadAreas();
