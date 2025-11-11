@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-m1-192x192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-m1-512x512.png" />
   <link rel="apple-touch-icon" href="/icons/icon-m1-192x192.png" />
-  <link rel="manifest" href="/manifest.webmanifest?v=3" />
+  <link rel="manifest" href="/manifest.webmanifest" crossorigin="anonymous" />
     <meta name="theme-color" content="#0A0B14" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   
@@ -141,7 +141,14 @@
             window.__swRegistered = true;
             navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
               .then(r => console.log('[SW] ✅ Registered:', r.scope))
-              .catch(err => console.error('[SW] ❌', err));
+              .catch(err => {
+                const errStr = String(err?.message || err || '');
+                if (errStr.includes('503') || errStr.includes('ERR_FAILED') || errStr.includes('failed to fetch')) {
+                  console.warn('[SW] ⚠️ Registration warning (503/network):', errStr);
+                } else {
+                  console.error('[SW] ❌', err);
+                }
+              });
           }
         } catch (e) {
           console.warn('[SW] skipped:', e);
