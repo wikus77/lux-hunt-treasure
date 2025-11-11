@@ -33,4 +33,21 @@ export interface RpcFunctions {
       seed: string;
     };
   };
+  has_role: {
+    Args: { _user_id: string; _role: 'admin' | 'moderator' | 'agent' };
+    Returns: boolean;
+  };
+  current_user_role: {
+    Args: Record<string, never>;
+    Returns: 'admin' | 'moderator' | 'agent' | null;
+  };
+  log_admin_action: {
+    Args: {
+      _action: string;
+      _target_user_id?: string;
+      _target_table?: string;
+      _details?: Record<string, any>;
+    };
+    Returns: string;
+  };
 }
