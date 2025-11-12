@@ -40,6 +40,7 @@ import { RouteAnnouncer } from "./components/a11y/RouteAnnouncer";
 import { useRouteAnnouncements } from "./hooks/useRouteAnnouncements";
 import { ReconnectBadge } from "./components/net/ReconnectBadge";
 import { M1UnitsDebugPanel } from "./components/debug/M1UnitsDebugPanel";
+import { Map3DNavExtension } from "./components/nav/Map3DNavExtension";
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration
@@ -128,6 +129,7 @@ function App() {
                     <Toaster />
                     <BadgeAuditReport />
                     <M1UnitsDebugPanel />
+                    <Map3DNavExtension />
                   </InterestSignalsProvider>
                 </AuthProvider>
               </SoundProvider>

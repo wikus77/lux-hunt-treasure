@@ -33,6 +33,7 @@ import FinalShotPage from '@/components/intelligence/FinalShotPage';
 import IntelModuleHeader from '@/components/intelligence/IntelModuleHeader';
 import AppHome from "@/pages/AppHome";
 import Map from "@/pages/Map";
+import LivingMap3D from "@/pages/LivingMap3D";
 import { BuzzPage } from "@/pages/BuzzPage";
 import IntelligenceStyledPage from "@/pages/IntelligenceStyledPage";
 import IntelligenceRAG from "@/pages/IntelligenceRAG";
@@ -259,6 +260,15 @@ const WouterRoutes: React.FC = () => {
                 <React.Suspense fallback={<div>Loading 3D Map...</div>}>
                   {React.createElement(React.lazy(() => import('@/pages/sandbox/MapTiler3D')))}
                 </React.Suspense>
+              </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Living Map 3D - Route Alias */}
+          <Route path="/living-map-3d">
+            <ProtectedRoute>
+              <GlobalLayout>
+                <LivingMap3D />
               </GlobalLayout>
             </ProtectedRoute>
           </Route>

@@ -1,0 +1,124 @@
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+/* Map 3D Navigation Extension - Non-intrusive floating button */
+
+.map3d-nav-button {
+  /* Positioning - above bottom bar, respecting iOS safe area */
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 80px);
+  right: 16px;
+  z-index: 40; /* Below modals (50+), above content */
+  
+  /* Sizing - iOS compliant touch target */
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  
+  /* Visual styling */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 8, 20, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 209, 255, 0.3);
+  
+  /* Interaction */
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  
+  /* Smooth transitions */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Hardware acceleration for iOS */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.map3d-nav-button:hover {
+  transform: scale(1.05);
+  border-color: rgba(0, 209, 255, 0.6);
+  box-shadow: 0 0 20px rgba(0, 209, 255, 0.4);
+}
+
+.map3d-nav-button:active {
+  transform: scale(0.95);
+}
+
+/* Active state - neon glow when on 3D map page */
+.map3d-nav-button--active {
+  border-color: rgba(0, 209, 255, 0.8);
+  box-shadow: 0 0 24px rgba(0, 209, 255, 0.6),
+              0 0 12px rgba(123, 46, 255, 0.4);
+  background: rgba(0, 209, 255, 0.15);
+}
+
+.map3d-nav-button--active::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, 
+    rgba(0, 209, 255, 0.6) 0%, 
+    rgba(123, 46, 255, 0.6) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: map3d-glow-pulse 3s infinite ease-in-out;
+}
+
+.map3d-nav-icon {
+  width: 24px;
+  height: 24px;
+  color: rgba(0, 209, 255, 0.9);
+  transition: color 0.3s ease;
+}
+
+.map3d-nav-button--active .map3d-nav-icon {
+  color: rgba(0, 209, 255, 1);
+}
+
+/* Pulsing glow animation for active state */
+@keyframes map3d-glow-pulse {
+  0% { 
+    opacity: 0.6;
+    filter: blur(4px);
+  }
+  50% { 
+    opacity: 1;
+    filter: blur(8px);
+  }
+  100% { 
+    opacity: 0.6;
+    filter: blur(4px);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .map3d-nav-button,
+  .map3d-nav-icon {
+    transition: none;
+  }
+  
+  .map3d-nav-button--active::before {
+    animation: none;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .map3d-nav-button {
+    background: rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
