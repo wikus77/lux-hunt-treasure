@@ -17,53 +17,53 @@ export function useBattleSystem() {
   const [currentSession, setCurrentSession] = useState<string | null>(null);
 
   /**
-   * FASE 1: Avvia un attacco contro un difensore
+   * FASE 2: Avvia un attacco contro un difensore (con economia M1U)
    * @param defenderId - UUID del difensore
    * @param weaponKey - Chiave arma da catalogo
-   * @returns Response con session_id e dettagli
+   * @returns Response con session_id e expires_at
    */
   const startAttack = useCallback(async (
     defenderId: string,
     weaponKey: string
-  ): Promise<StartBattleResponse | null> => {
+  ): Promise<{ session_id: string; expires_at: string } | null> => {
     setIsLoading(true);
     
     try {
-      console.log('[Battle] Starting attack:', { defenderId, weaponKey });
+      console.debug('[Battle] Starting attack (V2):', { defenderId, weaponKey });
       
-      // FASE 1: chiamata RPC usando any per evitare type errors
-      // (i types saranno generati dopo la migration)
-      const { data, error } = await (supabase as any).rpc('start_battle', {
+      // FASE 2: chiamata a start_battle_v2 (con addebito M1U)
+      const { data, error } = await (supabase as any).rpc('start_battle_v2', {
         p_defender_id: defenderId,
         p_weapon_key: weaponKey,
         p_client_nonce: crypto.randomUUID()
       });
 
       if (error) {
-        console.error('[Battle] start_battle error:', error);
+        console.error('[Battle] start_battle_v2 error:', error);
         toast.error('Attack failed', {
           description: error.message
         });
         return null;
       }
 
-      const response = data as unknown as StartBattleResponse;
-      
-      if (!response.success) {
+      if (!data.success) {
         toast.error('Attack failed', {
-          description: response.error || 'Unknown error'
+          description: data.error || 'Unknown error'
         });
         return null;
       }
 
-      setCurrentSession(response.session_id || null);
+      setCurrentSession(data.session_id || null);
       
       toast.success('Attack initiated!', {
-        description: response.message || 'Waiting for defender...'
+        description: `Waiting for defense... (60s)`
       });
 
-      console.log('[Battle] Attack started:', response);
-      return response;
+      console.debug('[Battle] Attack started V2:', data);
+      return {
+        session_id: data.session_id,
+        expires_at: data.expires_at
+      };
 
     } catch (err) {
       console.error('[Battle] startAttack exception:', err);
@@ -77,14 +77,62 @@ export function useBattleSystem() {
   }, []);
 
   /**
-   * FASE 2: Invia una difesa (non implementato in FASE 1)
+   * FASE 2: Invia una difesa manuale entro 60s
+   * @param sessionId - UUID della sessione di battaglia
+   * @param defenseKey - Chiave difesa da catalogo
+   * @returns Esito risolto { status, winner_id }
    */
   const submitDefense = useCallback(async (
     sessionId: string,
     defenseKey: string
-  ): Promise<boolean> => {
-    toast.info('Defense system coming in Phase 2');
-    return false;
+  ): Promise<{ status: 'resolved'; winner_id: string } | null> => {
+    setIsLoading(true);
+
+    try {
+      console.debug('[Battle] Submitting defense:', { sessionId, defenseKey });
+
+      const { data, error } = await (supabase as any).rpc('submit_defense_v2', {
+        p_session_id: sessionId,
+        p_defense_key: defenseKey
+      });
+
+      if (error) {
+        console.error('[Battle] submit_defense_v2 error:', error);
+        toast.error('Defense failed', {
+          description: error.message
+        });
+        return null;
+      }
+
+      if (!data.success) {
+        toast.error('Defense failed', {
+          description: data.error || 'Unknown error'
+        });
+        return null;
+      }
+
+      setCurrentSession(null);
+
+      const outcome = data.outcome === 'attacker_win' ? 'Attacker wins!' : 'Defender wins!';
+      toast.success('Battle resolved!', {
+        description: outcome
+      });
+
+      console.debug('[Battle] Defense submitted, battle resolved:', data);
+      return {
+        status: 'resolved',
+        winner_id: data.winner_id
+      };
+
+    } catch (err) {
+      console.error('[Battle] submitDefense exception:', err);
+      toast.error('System error', {
+        description: 'Failed to submit defense'
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   /**
@@ -188,14 +236,40 @@ export function useBattleSystem() {
     }
   }, []);
 
+  /**
+   * FASE 2: Finalizza battaglie scadute (cron/manuale)
+   * @returns Numero di battaglie chiuse
+   */
+  const finalizeExpired = useCallback(async (): Promise<number> => {
+    try {
+      console.debug('[Battle] Finalizing expired battles...');
+
+      const { data, error } = await (supabase as any).rpc('finalize_expired_battles');
+
+      if (error) {
+        console.error('[Battle] finalize_expired_battles error:', error);
+        return 0;
+      }
+
+      const count = data || 0;
+      console.debug(`[Battle] Finalized ${count} expired battle(s)`);
+      return count;
+
+    } catch (err) {
+      console.error('[Battle] finalizeExpired exception:', err);
+      return 0;
+    }
+  }, []);
+
   return {
     // State
     isLoading,
     currentSession,
     
-    // Actions
+    // Actions (FASE 2 completa)
     startAttack,
     submitDefense,
+    finalizeExpired,
     
     // Queries
     getMyBattles,
