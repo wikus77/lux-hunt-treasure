@@ -199,6 +199,29 @@ export function useBattleSystem() {
   }, []);
 
   /**
+   * Recupera il catalogo difese disponibili
+   */
+  const getDefenseCatalog = useCallback(async (): Promise<any[]> => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('defense_catalog')
+        .select('key, name, description, power, m1u_cost, cooldown_sec, effect_key, min_rank')
+        .eq('enabled', true)
+        .order('power', { ascending: true });
+
+      if (error) {
+        console.error('[Battle] get_defense_catalog error:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (err) {
+      console.error('[Battle] getDefenseCatalog exception:', err);
+      return [];
+    }
+  }, []);
+
+  /**
    * Verifica se un utente è attackable (helper client-side)
    */
   const isUserAttackable = useCallback(async (userId: string): Promise<boolean> => {
@@ -275,6 +298,7 @@ export function useBattleSystem() {
     getMyBattles,
     getMyCooldowns,
     getWeaponsCatalog,
+    getDefenseCatalog,
     isUserAttackable
   };
 }
