@@ -157,19 +157,15 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
   // 🔄 REAL DATA MODE: Query DB only (no fallback to mock)
   try {
     const { supabase } = await import('@/integrations/supabase/client');
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     
     // Check auth before query
     const { data: { session } } = await supabase.auth.getSession();
     console.debug('[LiveAgents] mode=REAL, auth=', !!session);
     
-    // Query agent_locations
+    // Query v_online_agents view
     const { data: locations, error: locError } = await (supabase as any)
-      .from('agent_locations')
-      .select('id, user_id, lat, lng, accuracy, status, last_seen')
-      .gte('last_seen', fiveMinutesAgo)
-      .eq('status', 'online')
-      .order('last_seen', { ascending: false })
+      .from('v_online_agents')
+      .select('user_id, lat, lng, accuracy, status, last_seen')
       .limit(500);
     
     if (locError) {
@@ -192,7 +188,7 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
     const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
     
     const agents = locations.map((row: any) => ({
-      id: row.id,
+      id: row.user_id,
       lat: row.lat,
       lng: row.lng,
       username: profileMap.get(row.user_id) || 'Agent',
