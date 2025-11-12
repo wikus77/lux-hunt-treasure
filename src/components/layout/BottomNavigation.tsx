@@ -40,8 +40,8 @@ const BottomNavigationComponent = () => {
         <circle cx="12" cy="12" r="10"/>
         <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
       </svg>, 
-      label: "Living", 
-      path: "/living-map-3d",
+      label: "3D", 
+      path: "/map-3d-tiler",
       color: "#00D1FF"
     },
     {
@@ -139,7 +139,8 @@ const BottomNavigationComponent = () => {
       >
         <div className="flex items-center justify-around h-full max-w-lg mx-auto w-full">
           {links.map((link) => {
-            const isActive = currentPath === link.path;
+            const isActive = currentPath === link.path || 
+              (link.path === '/map-3d-tiler' && currentPath === '/living-map-3d');
             
             return (
               <motion.button
