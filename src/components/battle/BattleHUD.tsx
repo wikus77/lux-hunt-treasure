@@ -2,15 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { useBattleSystem } from '@/hooks/useBattleSystem';
-import { useBattleRealtimeSubscription } from '@/hooks/useBattleRealtimeSubscription';
+import { useBattleRealtimeSubscription, type BattleEventType } from '@/hooks/useBattleRealtimeSubscription';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, ChevronUp, Shield, Swords, Clock } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ChevronDown, ChevronUp, Shield, Swords, Clock, Activity } from 'lucide-react';
 
 interface BattleHUDProps {
   sessionId: string | null;
   onClose?: () => void;
+}
+
+interface ActionHistoryItem {
+  id: string;
+  type: BattleEventType;
+  timestamp: number;
+  description: string;
 }
 
 export function BattleHUD({ sessionId, onClose }: BattleHUDProps) {
@@ -18,6 +26,7 @@ export function BattleHUD({ sessionId, onClose }: BattleHUDProps) {
   const [selectedDefense, setSelectedDefense] = useState<string>('');
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [actionHistory, setActionHistory] = useState<ActionHistoryItem[]>([]);
 
   const { submitDefense, getDefenseCatalog } = useBattleSystem();
   const [defenseCatalog, setDefenseCatalog] = useState<any[]>([]);
@@ -37,6 +46,21 @@ export function BattleHUD({ sessionId, onClose }: BattleHUDProps) {
     
     loadDefenses();
   }, [sessionId, getDefenseCatalog]);
+
+  // Track action history from realtime events
+  useEffect(() => {
+    if (!state.lastEvent) return;
+
+    const newAction: ActionHistoryItem = {
+      id: `${state.lastEvent.type}-${Date.now()}`,
+      type: state.lastEvent.type,
+      timestamp: Date.now(),
+      description: formatEventDescription(state.lastEvent.type, state.lastEvent.payload),
+    };
+
+    setActionHistory((prev) => [newAction, ...prev].slice(0, 3));
+    console.debug('[BattleHUD] New action:', newAction);
+  }, [state.lastEvent]);
 
   // Update countdown timer
   useEffect(() => {
@@ -64,13 +88,13 @@ export function BattleHUD({ sessionId, onClose }: BattleHUDProps) {
     if (!sessionId || !selectedDefense || isSubmitting) return;
 
     setIsSubmitting(true);
-    console.debug('[Battle HUD] Submitting defense:', selectedDefense);
+    console.debug('[BattleHUD] Submitting defense:', selectedDefense);
 
     try {
       const result = await submitDefense(sessionId, selectedDefense);
-      console.debug('[Battle HUD] Defense result:', result);
+      console.debug('[BattleHUD] Defense result:', result);
     } catch (error) {
-      console.error('[Battle HUD] Defense error:', error);
+      console.error('[BattleHUD] Defense error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -79,7 +103,21 @@ export function BattleHUD({ sessionId, onClose }: BattleHUDProps) {
   if (!sessionId) return null;
 
   const isResolved = state.status === 'resolved';
+  const isCancelled = state.status === 'cancelled';
   const canDefend = state.status === 'await_defense' && timeLeft > 0 && !isSubmitting;
+
+  const getStatusColor = () => {
+    if (isResolved) return 'text-muted-foreground';
+    if (isCancelled) return 'text-muted-foreground';
+    if (timeLeft < 10) return 'text-destructive';
+    return 'text-foreground';
+  };
+
+  const getStatusText = () => {
+    if (isResolved) return state.winnerId ? `Winner: ${state.winnerId.slice(0, 8)}...` : 'Battle concluded';
+    if (isCancelled) return 'Battle cancelled';
+    return 'You are under attack!';
+  };
 
   return (
     <Card className="fixed bottom-20 right-4 w-80 z-40 shadow-lg border-primary/20">
@@ -107,19 +145,38 @@ export function BattleHUD({ sessionId, onClose }: BattleHUDProps) {
           </div>
         </div>
         {isExpanded && (
-          <CardDescription className="text-xs">
-            {isResolved
-              ? state.winnerId
-                ? `Battle resolved - Winner: ${state.winnerId.slice(0, 8)}...`
-                : 'Battle concluded'
-              : 'You are under attack! Select defense.'}
+          <CardDescription className={`text-xs ${getStatusColor()}`}>
+            {getStatusText()}
           </CardDescription>
         )}
       </CardHeader>
 
       {isExpanded && (
         <CardContent className="space-y-3">
-          {!isResolved ? (
+          {/* Action History */}
+          {actionHistory.length > 0 && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium flex items-center gap-1">
+                <Activity className="h-3 w-3" />
+                Recent Actions
+              </label>
+              <ScrollArea className="h-16 rounded-md border border-border/50 bg-muted/30">
+                <div className="p-2 space-y-1">
+                  {actionHistory.map((action) => (
+                    <div key={action.id} className="text-xs text-muted-foreground">
+                      <span className="font-mono text-[10px]">
+                        {new Date(action.timestamp).toLocaleTimeString()}
+                      </span>
+                      {' · '}
+                      <span>{action.description}</span>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+
+          {!isResolved && !isCancelled ? (
             <>
               <div className="space-y-2">
                 <label className="text-xs font-medium flex items-center gap-1">
@@ -169,7 +226,9 @@ export function BattleHUD({ sessionId, onClose }: BattleHUDProps) {
             </>
           ) : (
             <div className="text-center py-4 space-y-2">
-              <p className="text-sm font-medium">Battle Concluded</p>
+              <p className="text-sm font-medium">
+                {isCancelled ? 'Battle Cancelled' : 'Battle Concluded'}
+              </p>
               {state.winnerId && (
                 <p className="text-xs text-muted-foreground">Winner: {state.winnerId.slice(0, 12)}...</p>
               )}
@@ -184,6 +243,19 @@ export function BattleHUD({ sessionId, onClose }: BattleHUDProps) {
       )}
     </Card>
   );
+}
+
+function formatEventDescription(type: BattleEventType, payload: any): string {
+  switch (type) {
+    case 'attack_started':
+      return `Attack initiated with ${payload?.weapon || 'weapon'}`;
+    case 'defense_needed':
+      return 'Defense window open';
+    case 'battle_resolved':
+      return `Battle resolved - ${payload?.outcome || 'complete'}`;
+    default:
+      return `Event: ${type}`;
+  }
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
