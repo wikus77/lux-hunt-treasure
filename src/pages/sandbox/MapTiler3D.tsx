@@ -8,6 +8,7 @@ import MapLayerToggle from '@/components/map/MapLayerToggle';
 import { toast } from 'sonner';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { useAgentLocationUpdater } from '@/hooks/useAgentLocationUpdater';
 import { useLiveLayers } from '@/features/living-map/hooks/useLiveLayers';
 import { useSearchAreasLogic } from '@/pages/map/hooks/useSearchAreasLogic';
 import { useMapMarkersLogic } from '@/pages/map/useMapMarkersLogic';
@@ -78,7 +79,11 @@ export default function MapTiler3D() {
   const devMocks = use3DDevMocks();
 
   const { areas, currentWeekAreas, reloadAreas } = useBuzzMapLogic();
-  const { position, status: geoStatus, enable: enableGeo } = useGeolocation();
+  const { position, status: geoStatus, enable: enableGeo, enabled: geoEnabled } = useGeolocation();
+  
+  // Auto-update user position in agent_locations for real-time tracking
+  useAgentLocationUpdater(position || undefined, geoEnabled);
+  
   const { portals, agents: liveAgents, events, zones, loading: liveLoading } = useLiveLayers(true);
   
   const {
