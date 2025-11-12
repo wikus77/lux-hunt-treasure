@@ -19,6 +19,12 @@ import { useProfileImage } from '@/hooks/useProfileImage';
 import { useNotificationManager } from '@/hooks/useNotificationManager';
 import NotificationsBanner from '@/components/notifications/NotificationsBanner';
 import { motion, AnimatePresence } from 'framer-motion';
+import AgentsLayer3D from './map3d/layers/AgentsLayer3D';
+import PortalsLayer3D from './map3d/layers/PortalsLayer3D';
+import RewardsLayer3D from './map3d/layers/RewardsLayer3D';
+import AreasLayer3D from './map3d/layers/AreasLayer3D';
+import NotesLayer3D from './map3d/layers/NotesLayer3D';
+import LayerTogglePanel from './map3d/components/LayerTogglePanel';
 import '@/styles/map-dock.css';
 import '@/styles/portal-container.css';
 import '@/styles/portals.css';
@@ -42,6 +48,15 @@ export default function MapTiler3D() {
     glyph: '?', 
     style: '-',
     error: null
+  });
+  
+  // Layer visibility state
+  const [layerVisibility, setLayerVisibility] = useState({
+    agents: true,
+    portals: true,
+    rewards: true,
+    areas: true,
+    notes: true
   });
   
   const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
@@ -101,6 +116,14 @@ export default function MapTiler3D() {
   const handleAreaGenerated = (lat: number, lng: number, radius: number) => {
     console.log('🎯 BUZZ MAP Area generated:', { lat, lng, radius });
     reloadAreas();
+  };
+
+  const toggleLayer = (layer: keyof typeof layerVisibility) => {
+    setLayerVisibility(prev => {
+      const newState = { ...prev, [layer]: !prev[layer] };
+      console.log(`🎨 Layer ${String(layer)}: ${newState[layer] ? 'ENABLED' : 'DISABLED'}`);
+      return newState;
+    });
   };
 
   useEffect(() => {
@@ -506,6 +529,31 @@ export default function MapTiler3D() {
         portalCount={portals.length}
         onPortalAction={(type) => console.log('🎯 Portal filter:', type)}
       />
+      
+      {/* 3D Layers Overlay - All 5 features */}
+      <AgentsLayer3D map={mapRef.current} enabled={layerVisibility.agents} />
+      <PortalsLayer3D map={mapRef.current} enabled={layerVisibility.portals} />
+      <RewardsLayer3D map={mapRef.current} enabled={layerVisibility.rewards} markers={[]} />
+      <AreasLayer3D 
+        map={mapRef.current} 
+        enabled={layerVisibility.areas}
+        userAreas={currentWeekAreas.map(a => ({
+          id: a.id,
+          lat: a.lat,
+          lng: a.lng,
+          radius: a.radius_km * 1000
+        }))}
+        searchAreas={searchAreas.map(a => ({
+          id: a.id,
+          lat: a.lat,
+          lng: a.lng,
+          radius: a.radius
+        }))}
+      />
+      <NotesLayer3D map={mapRef.current} enabled={layerVisibility.notes} />
+
+      {/* Layer Toggle Panel */}
+      <LayerTogglePanel layers={layerVisibility} onToggle={toggleLayer} />
       
       <div
         style={{
