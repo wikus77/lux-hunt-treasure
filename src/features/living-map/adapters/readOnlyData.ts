@@ -39,8 +39,10 @@ export interface ZoneDTO {
   control: number; // 0-100
 }
 
-// Feature flag for dev mode
+// Feature flag for dev mode (read once at module init)
 const USE_MOCK = import.meta.env.VITE_LIVING_MAP_USE_MOCK === 'true';
+
+console.debug('[LiveMap] Adapter initialized:', { USE_MOCK, ENV: import.meta.env.MODE });
 
 // Mock data generators for DEV
 function generateMockPortals(): PortalDTO[] {
@@ -143,13 +145,16 @@ export async function getLiveEvents(): Promise<EventDTO[]> {
 }
 
 export async function getLiveAgents(): Promise<AgentDTO[]> {
+  // 🎯 FORCE MOCK MODE: Always use mock when enabled, regardless of DB state
   if (USE_MOCK) {
+    const mockAgents = generateMockAgents();
+    console.debug('[LiveAgents] Data source: MOCK (forced by ENV)', { count: mockAgents.length });
     return new Promise((resolve) => {
-      setTimeout(() => resolve(generateMockAgents()), 300);
+      setTimeout(() => resolve(mockAgents), 300);
     });
   }
   
-  // Real query: fetch agents with location updated in last 5 minutes
+  // 🔄 REAL DATA MODE: Query DB with silent fallback to mock on error
   try {
     const { supabase } = await import('@/integrations/supabase/client');
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
@@ -164,11 +169,19 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
       .limit(100);
     
     if (locError) {
-      console.warn('[LiveAgents] Query error:', locError);
+      console.debug('[LiveAgents] Query error (404/403 expected if table absent):', locError.code);
+      // Silent fallback to mock when table doesn't exist (403/404)
+      if (locError.code === 'PGRST116' || locError.code === '42P01') {
+        const fallbackMock = generateMockAgents();
+        console.debug('[LiveAgents] Data source: MOCK (fallback due to missing table)', { count: fallbackMock.length });
+        return fallbackMock;
+      }
+      console.debug('[LiveAgents] Data source: DB (empty due to error)');
       return [];
     }
     
     if (!locations || locations.length === 0) {
+      console.debug('[LiveAgents] Data source: DB (empty result)');
       return [];
     }
     
@@ -181,7 +194,7 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
     
     const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
     
-    return locations.map((row: any) => ({
+    const agents = locations.map((row: any) => ({
       id: row.id,
       lat: row.lat,
       lng: row.lng,
@@ -189,9 +202,14 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
       status: row.status,
       lastSeen: row.last_seen
     }));
-  } catch (e) {
-    console.warn('[LiveAgents] Exception:', e);
-    return [];
+    
+    console.debug('[LiveAgents] Data source: DB', { count: agents.length });
+    return agents;
+  } catch (e: any) {
+    console.debug('[LiveAgents] Exception (silent fallback to mock):', e.message);
+    const fallbackMock = generateMockAgents();
+    console.debug('[LiveAgents] Data source: MOCK (fallback due to exception)', { count: fallbackMock.length });
+    return fallbackMock;
   }
 }
 

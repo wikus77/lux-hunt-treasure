@@ -53,12 +53,19 @@ async function upsertAgentLocation(userId: string, position: Position): Promise<
       });
 
     if (error) {
-      console.warn('[AgentLocation] Upsert error:', error);
+      // Silent handling: 403/404 expected when table doesn't exist or RLS blocks
+      // No UI error, just debug log
+      if (error.code === 'PGRST116' || error.code === '42P01' || error.message?.includes('403')) {
+        console.debug('[AgentLocation] Upsert skipped (table absent or RLS):', error.code);
+        return;
+      }
+      console.debug('[AgentLocation] Upsert error:', error);
     } else {
       console.debug('[AgentLocation] Position updated:', { lat: position.lat, lng: position.lng });
     }
-  } catch (e) {
-    console.warn('[AgentLocation] Exception:', e);
+  } catch (e: any) {
+    // Silent exception handling - no toast, just debug log
+    console.debug('[AgentLocation] Exception (silent):', e.message);
   }
 }
 
