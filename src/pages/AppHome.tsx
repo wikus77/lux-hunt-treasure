@@ -212,13 +212,13 @@ const { isConnected } = useRealTimeNotifications();
                   
                   <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
 
-                  {/* M1U Pill Slot - Home (inside hero, aligned right per design spec) */}
+                  {/* M1U Pill Slot - Home (inside hero, aligned left) */}
                   <div
                     id="m1u-pill-home-slot"
-                    className="absolute top-0 right-0 z-[1000] flex items-center gap-3"
+                    className="absolute top-0 left-0 z-[1000] flex items-center gap-3"
                     style={{ 
                       pointerEvents: 'auto',
-                      paddingRight: 'max(1rem, env(safe-area-inset-right, 0px))'
+                      paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))'
                     }}
                     aria-hidden={false}
                   >
