@@ -50,7 +50,7 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
 
   return (
     <>
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 12 }}>
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 660 }}>
         {markers.map((marker) => {
           const pos = positions.get(marker.id);
           if (!pos) return null;
@@ -69,12 +69,13 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
               <div
                 className="m1-reward-marker"
                 style={{
-                  width: 16,
-                  height: 16,
+                  width: 10,
+                  height: 10,
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                  boxShadow: '0 0 15px rgba(255,215,0,0.8)',
-                  border: '2px solid rgba(255,255,255,0.5)'
+                  background: '#10b981',
+                  border: '2px solid rgba(255, 255, 255, 0.6)',
+                  boxShadow: '0 0 8px 2px rgba(16, 185, 129, 0.8), 0 0 16px 4px rgba(16, 185, 129, 0.4)',
+                  animation: 'rewardPulse 2s ease-in-out infinite'
                 }}
                 title={marker.title || 'Reward'}
               />

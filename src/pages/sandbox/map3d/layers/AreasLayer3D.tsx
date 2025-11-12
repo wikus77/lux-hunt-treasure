@@ -95,7 +95,7 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
   if (!enabled) return null;
 
   return (
-    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 9 }}>
+    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 640 }}>
       <svg
         className="absolute inset-0"
         style={{ width: '100%', height: '100%' }}
