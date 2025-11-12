@@ -21,11 +21,14 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
   const [open, setOpen] = useState<boolean>(false);
   const [notes, setNotes] = useState<DevNoteItem[]>([]);
 
+  // Load notes from localStorage when panel opens
   useEffect(() => {
+    if (!open) return;
     try {
       const saved = localStorage.getItem(NOTES_KEY);
       setNotes(saved ? JSON.parse(saved) : []);
-    } catch {
+    } catch (e) {
+      console.warn('[DevNotesPanel] localStorage read error', e);
       setNotes([]);
     }
   }, [open]);
@@ -53,16 +56,18 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
         pointerEvents: 'auto',
       }}
     >
-      <Button
-        size="sm"
-        className="h-9 rounded-full bg-black/70 border border-cyan-500/30 hover:bg-black/90 hover:border-cyan-500/60 px-3 flex items-center gap-2"
+      <div
+        className="m1x-pill m1x-pill--note"
         onClick={() => setOpen(o => !o)}
         title="Note (DEV)"
       >
-        <FileText className="h-4 w-4 text-cyan-400" />
-        <span className="text-xs">Note ({count})</span>
-        {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-      </Button>
+        <div className="m1x-pill__icon">
+          <FileText className="h-6 w-6 text-cyan-400" />
+        </div>
+        <div className="m1x-pill__label">
+          Note ({count})
+        </div>
+      </div>
 
       {open && (
         <div className="mt-2 w-[260px] rounded-xl border border-cyan-500/30 bg-black/70 backdrop-blur-md p-2 text-sm text-white/90">

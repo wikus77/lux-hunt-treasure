@@ -20,17 +20,34 @@ interface NotesLayer3DProps {
   enabled: boolean;
 }
 
+const NOTES_KEY = 'map3d-notes';
+const SEEDED_KEY = 'map3d-notes:seeded';
+
 const NotesLayer3D: React.FC<NotesLayer3DProps> = ({ map, enabled }) => {
   const [notes, setNotes] = useState<Note[]>(() => {
-    const saved = localStorage.getItem('map3d-notes');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(NOTES_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+      // No auto-seed: empty by default
+      return [];
+    } catch (e) {
+      console.warn('[NotesLayer3D] localStorage parse error', e);
+      return [];
+    }
   });
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
   const [selectedNote, setSelectedNote] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<{ title: string; note: string } | null>(null);
 
+  // Persist notes immediately on change
   useEffect(() => {
-    localStorage.setItem('map3d-notes', JSON.stringify(notes));
+    try {
+      localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+    } catch (e) {
+      console.warn('[NotesLayer3D] localStorage write error', e);
+    }
   }, [notes]);
 
   useEffect(() => {

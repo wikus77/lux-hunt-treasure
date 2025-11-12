@@ -33,6 +33,7 @@ import '@/styles/agents.css';
 import '@/styles/rewards.css';
 import '@/features/living-map/styles/livingMap.css';
 import '@/components/map/leaflet-fixes.css';
+import '@/styles/map3d-containers.css';
 import M1UPill from '@/features/m1u/M1UPill';
 import { use3DDevMocks } from './hooks/use3DDevMocks';
 import { supabase } from '@/integrations/supabase/client';
@@ -97,6 +98,12 @@ export default function MapTiler3D() {
     deleteSearchArea,
     setPendingRadius
   } = useSearchAreasLogic(DEFAULT_LOCATION);
+
+  // Wrapper to inject selectedRadius into handleAddArea
+  const handleAddAreaWithRadius = (radius?: number) => {
+    if (radius) setPendingRadius(radius);
+    handleAddArea(radius);
+  };
   
   const {
     markers,
@@ -733,7 +740,7 @@ export default function MapTiler3D() {
             searchAreas={effectiveSearchAreas}
             onDelete={(id) => deleteSearchArea(id)}
             onFocus={(id) => setActiveSearchArea(id)}
-            onAddArea={handleAddArea}
+            onAddArea={handleAddAreaWithRadius}
           />
         </>
 

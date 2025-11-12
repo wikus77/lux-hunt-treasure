@@ -1,0 +1,199 @@
+/* Map 3D Tiler – Containers UI (Note & Punti/Aree)
+   Glass pill neon design for dev panels
+   // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+
+.m1x-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  min-height: 64px;
+  padding: 0 22px;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 
+    0 2px 14px rgba(0, 0, 0, 0.35), 
+    inset 0 0 22px rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+
+.m1x-pill:hover {
+  transform: scale(1.02);
+}
+
+.m1x-pill:active {
+  transform: scale(0.98);
+}
+
+.m1x-pill__icon {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.m1x-pill__label {
+  font-family: var(--font-orbitron, Orbitron, system-ui);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* Note variant - cyan theme */
+.m1x-pill--note {
+  background: 
+    radial-gradient(120% 120% at 50% 20%, rgba(0, 255, 255, 0.10), rgba(0, 0, 0, 0.25) 60%),
+    linear-gradient(180deg, #0a1f33 0%, #0d2744 100%);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.35),
+    inset 0 0 30px rgba(0, 255, 255, 0.12),
+    0 0 18px rgba(0, 255, 255, 0.18);
+  border-color: rgba(0, 255, 255, 0.24);
+}
+
+.m1x-pill--note:hover {
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.35),
+    inset 0 0 30px rgba(0, 255, 255, 0.16),
+    0 0 24px rgba(0, 255, 255, 0.28);
+  border-color: rgba(0, 255, 255, 0.36);
+}
+
+/* Punti/Aree variant - purple theme */
+.m1x-pill--areas {
+  background: 
+    radial-gradient(120% 120% at 50% 20%, rgba(220, 120, 255, 0.10), rgba(0, 0, 0, 0.25) 60%),
+    linear-gradient(180deg, #2a113a 0%, #3a1a4d 100%);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.35),
+    inset 0 0 30px rgba(190, 70, 255, 0.12),
+    0 0 18px rgba(190, 70, 255, 0.18);
+  border-color: rgba(190, 70, 255, 0.24);
+}
+
+.m1x-pill--areas:hover {
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.35),
+    inset 0 0 30px rgba(190, 70, 255, 0.16),
+    0 0 24px rgba(190, 70, 255, 0.28);
+  border-color: rgba(190, 70, 255, 0.36);
+}
+
+/* Radius picker modal */
+.m1x-radius-picker {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  background: 
+    radial-gradient(120% 120% at 50% 20%, rgba(190, 70, 255, 0.12), rgba(0, 0, 0, 0.25) 60%),
+    linear-gradient(180deg, #1a0a2a 0%, #2a1a3d 100%);
+  border: 1px solid rgba(190, 70, 255, 0.3);
+  border-radius: 20px;
+  padding: 24px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    inset 0 0 40px rgba(190, 70, 255, 0.08);
+  min-width: 320px;
+}
+
+.m1x-radius-picker__title {
+  font-family: var(--font-orbitron, Orbitron, system-ui);
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.m1x-radius-picker__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.m1x-radius-picker__option {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(190, 70, 255, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #fff;
+  font-family: var(--font-orbitron, Orbitron, system-ui);
+  font-weight: 600;
+}
+
+.m1x-radius-picker__option:hover {
+  background: rgba(190, 70, 255, 0.15);
+  border-color: rgba(190, 70, 255, 0.4);
+  transform: scale(1.05);
+}
+
+.m1x-radius-picker__option--selected {
+  background: rgba(190, 70, 255, 0.25);
+  border-color: rgba(190, 70, 255, 0.6);
+  box-shadow: 0 0 16px rgba(190, 70, 255, 0.3);
+}
+
+.m1x-radius-picker__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.m1x-radius-picker__btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-family: var(--font-orbitron, Orbitron, system-ui);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid;
+}
+
+.m1x-radius-picker__btn--cancel {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.m1x-radius-picker__btn--cancel:hover {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.m1x-radius-picker__btn--confirm {
+  background: rgba(190, 70, 255, 0.25);
+  border-color: rgba(190, 70, 255, 0.5);
+  color: #fff;
+}
+
+.m1x-radius-picker__btn--confirm:hover {
+  background: rgba(190, 70, 255, 0.35);
+  border-color: rgba(190, 70, 255, 0.7);
+  box-shadow: 0 0 16px rgba(190, 70, 255, 0.3);
+}
+
+/* Backdrop for radius picker */
+.m1x-radius-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9999;
+}
