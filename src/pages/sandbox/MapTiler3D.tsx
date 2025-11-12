@@ -66,7 +66,7 @@ export default function MapTiler3D() {
     error: null
   });
 
-  // 🧪 Expose runtime ENV for debugging (read-only, no SW/PWA impact)
+  // 🧪 Expose runtime ENV for debugging (read-only, no SW/PWA impact) + cache clear
   useEffect(() => {
     if (typeof window !== 'undefined' && !(window as any).__M1_ENV__) {
       (window as any).__M1_ENV__ = {
@@ -76,6 +76,19 @@ export default function MapTiler3D() {
       };
       console.debug('[Map3D] ENV exposed for debugging:', (window as any).__M1_ENV__);
     }
+
+    // 🔄 One-time cache clear to ensure fresh bundle with updated ENV
+    (async () => {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.update()));
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+        console.log('[Map3D] Cache cleared once (fresh ENV)');
+      } catch (e) {
+        console.debug('[Map3D] Cache clear skipped:', e);
+      }
+    })();
   }, []);
   
   // Layer visibility state
