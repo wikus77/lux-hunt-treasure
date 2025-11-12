@@ -30,38 +30,10 @@ import '@/styles/portal-container.css';
 import '@/styles/portals.css';
 import '@/features/living-map/styles/livingMap.css';
 import M1UPill from '@/features/m1u/M1UPill';
+import { use3DDevMocks } from './hooks/use3DDevMocks';
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
 const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
-
-const MOCK_REWARD_MARKERS = DEV_MOCKS ? [
-  { id: 'rw-1', lat: 43.8105, lng: 7.6805, type: 'M1U', title: 'Bonus +10 M1U' },
-  { id: 'rw-2', lat: 45.4705, lng: 9.1905, type: 'PULSE', title: 'Pulse Energy +5' },
-  { id: 'rw-3', lat: 41.9050, lng: 12.4970, type: 'M1U', title: 'Demo Reward' }
-] : [];
-
-const MOCK_USER_AREAS = DEV_MOCKS ? [
-  { id: 'ua-1', lat: 43.8100, lng: 7.6800, radius: 500 },
-  { id: 'ua-2', lat: 45.4700, lng: 9.1900, radius: 600 },
-  { id: 'ua-3', lat: 41.9028, lng: 12.4964, radius: 400 }
-] : [];
-
-const MOCK_SEARCH_AREAS = DEV_MOCKS ? [
-  { id: 'sa-1', lat: 43.8110, lng: 7.6810, radius: 300 },
-  { id: 'sa-2', lat: 45.4710, lng: 9.1910, radius: 350 }
-] : [];
-
-// Seed localStorage for Notes if empty (dev only)
-if (DEV_MOCKS) {
-  const NOTES_KEY = 'map3d-notes';
-  if (!localStorage.getItem(NOTES_KEY)) {
-    localStorage.setItem(NOTES_KEY, JSON.stringify([
-      { id: 'n-1', lat: 43.8101, lng: 7.6799, title: 'Checkpoint Alpha', note: 'Verifica POI iniziale' },
-      { id: 'n-2', lat: 45.4701, lng: 9.1899, title: 'Target Beta', note: 'Area di interesse secondaria' }
-    ]));
-    console.debug('[Map3D] 📝 Seeded localStorage notes for dev');
-  }
-}
 
 interface DiagState {
   keyMode: string;
@@ -95,9 +67,12 @@ export default function MapTiler3D() {
   
   const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 
+  // 🎨 Dev mocks hook
+  const devMocks = use3DDevMocks();
+
   const { areas, currentWeekAreas, reloadAreas } = useBuzzMapLogic();
   const { position, status: geoStatus, enable: enableGeo } = useGeolocation();
-  const { portals, agents, events, zones, loading: liveLoading } = useLiveLayers(true);
+  const { portals, agents: liveAgents, events, zones, loading: liveLoading } = useLiveLayers(true);
   
   const {
     searchAreas,
@@ -129,33 +104,50 @@ export default function MapTiler3D() {
     }
   }, [geoStatus, enableGeo]);
   
+  // 🎨 Seed localStorage notes in DEV mode (non-destructive)
+  useEffect(() => {
+    if (!DEV_MOCKS || !devMocks.notesSeed.length) return;
+    const NOTES_KEY = 'map3d-notes';
+    const cur = localStorage.getItem(NOTES_KEY);
+    if (!cur || cur === '[]') {
+      localStorage.setItem(NOTES_KEY, JSON.stringify(devMocks.notesSeed));
+      console.debug('[Map3D] 📝 Seeded localStorage notes for dev');
+    }
+  }, [devMocks.notesSeed]);
+  
   // Prepare effective data with dev fallbacks
-  const effectiveRewardMarkers = MOCK_REWARD_MARKERS;
-  const effectiveUserAreas = currentWeekAreas?.length 
-    ? currentWeekAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius_km * 1000 }))
-    : MOCK_USER_AREAS;
-  const effectiveSearchAreas = searchAreas?.length
-    ? searchAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius }))
-    : MOCK_SEARCH_AREAS;
+  const effectiveAgents = DEV_MOCKS ? devMocks.agents : liveAgents;
+  const effectiveRewardMarkers = DEV_MOCKS ? devMocks.rewards : [];
+  const effectiveUserAreas = DEV_MOCKS 
+    ? devMocks.userAreas
+    : currentWeekAreas?.length 
+      ? currentWeekAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius_km * 1000 }))
+      : [];
+  const effectiveSearchAreas = DEV_MOCKS
+    ? devMocks.searchAreas
+    : searchAreas?.length
+      ? searchAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius }))
+      : [];
 
   useEffect(() => {
     console.debug('[Map3D] 📊 Live layers loaded:', {
       events: events.length,
       zones: zones.length,
       portals: portals.length,
-      agents: agents.length,
+      agents: effectiveAgents.length,
       loading: liveLoading
     });
-  }, [events.length, zones.length, portals.length, agents.length, liveLoading]);
+  }, [events.length, zones.length, portals.length, effectiveAgents.length, liveLoading]);
 
   useEffect(() => {
     console.debug('[Map3D] 🎨 Layer data counts:', {
+      agents: effectiveAgents.length,
       rewards: effectiveRewardMarkers.length,
       userAreas: effectiveUserAreas.length,
       searchAreas: effectiveSearchAreas.length,
       devMocksEnabled: DEV_MOCKS
     });
-  }, [effectiveRewardMarkers.length, effectiveUserAreas.length, effectiveSearchAreas.length]);
+  }, [effectiveAgents.length, effectiveRewardMarkers.length, effectiveUserAreas.length, effectiveSearchAreas.length]);
   
   const mapCenter: [number, number] | undefined = position 
     ? [position.lat, position.lng]
@@ -333,6 +325,19 @@ export default function MapTiler3D() {
         fetch(`https://api.maptiler.com/tiles/v3/${tileCoords.z}/${tileCoords.x}/${tileCoords.y}.pbf?key=${key}`)
           .then(r => setDiag(prev => ({ ...prev, pbf: String(r.status) })))
           .catch(() => setDiag(prev => ({ ...prev, pbf: 'NET_ERR' })));
+
+        // 🎨 DEV: Auto-center and zoom to mock data area
+        if (DEV_MOCKS) {
+          console.log('🎨 DEV MODE: Centering on Monaco mock area');
+          map.flyTo({
+            center: [7.64, 43.805], // Monaco area
+            zoom: 13,
+            pitch: 55,
+            bearing: 25,
+            essential: true,
+            duration: 2000
+          });
+        }
       });
 
     } catch (error) {
@@ -583,7 +588,11 @@ export default function MapTiler3D() {
       />
       
       {/* 3D Layers Overlay - All 5 features */}
-      <AgentsLayer3D map={mapRef.current} enabled={layerVisibility.agents} />
+      <AgentsLayer3D 
+        map={mapRef.current} 
+        enabled={layerVisibility.agents}
+        agents={effectiveAgents}
+      />
       <PortalsLayer3D map={mapRef.current} enabled={layerVisibility.portals} />
       <RewardsLayer3D 
         map={mapRef.current} 
@@ -627,7 +636,7 @@ export default function MapTiler3D() {
           layerCounts={{
             portals: portals.length,
             events: events.length,
-            agents: agents.length,
+            agents: effectiveAgents.length,
             zones: zones.length
           }}
         />

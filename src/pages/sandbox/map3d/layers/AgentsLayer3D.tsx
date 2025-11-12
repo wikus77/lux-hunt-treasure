@@ -7,22 +7,30 @@ import { getLiveAgents, onAgentsChanged } from '@/features/living-map/adapters/r
 interface AgentsLayer3DProps {
   map: MLMap | null;
   enabled: boolean;
+  agents?: AgentDTO[]; // Optional override for dev mocks
 }
 
-const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled }) => {
+const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled, agents: agentsProp }) => {
   const [agents, setAgents] = useState<AgentDTO[]>([]);
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
 
   useEffect(() => {
     if (!enabled) return;
 
+    // If agents prop is provided (dev mocks), use it directly
+    if (agentsProp) {
+      setAgents(agentsProp);
+      return;
+    }
+
+    // Otherwise, load from API (production behavior)
     getLiveAgents().then(setAgents);
     const unsubscribe = onAgentsChanged(setAgents);
 
     return () => {
       unsubscribe();
     };
-  }, [enabled]);
+  }, [enabled, agentsProp]);
 
   useEffect(() => {
     if (!map || !enabled) return;
