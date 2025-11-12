@@ -149,8 +149,50 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
     });
   }
   
-  // TODO: Replace with real Supabase query
-  return [];
+  // Real query: fetch agents with location updated in last 5 minutes
+  try {
+    const { supabase } = await import('@/integrations/supabase/client');
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    
+    // Query agent_locations (type-safe with 'any' cast since table may not be in generated types yet)
+    const { data: locations, error: locError } = await (supabase as any)
+      .from('agent_locations')
+      .select('id, user_id, lat, lng, status, last_seen')
+      .gte('last_seen', fiveMinutesAgo)
+      .eq('status', 'online')
+      .order('last_seen', { ascending: false })
+      .limit(100);
+    
+    if (locError) {
+      console.warn('[LiveAgents] Query error:', locError);
+      return [];
+    }
+    
+    if (!locations || locations.length === 0) {
+      return [];
+    }
+    
+    // Get user profiles for usernames
+    const userIds = locations.map((l: any) => l.user_id);
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', userIds);
+    
+    const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
+    
+    return locations.map((row: any) => ({
+      id: row.id,
+      lat: row.lat,
+      lng: row.lng,
+      username: profileMap.get(row.user_id) || 'Agent',
+      status: row.status,
+      lastSeen: row.last_seen
+    }));
+  } catch (e) {
+    console.warn('[LiveAgents] Exception:', e);
+    return [];
+  }
 }
 
 export async function getControlZones(): Promise<ZoneDTO[]> {
@@ -211,7 +253,37 @@ export function onAgentsChanged(callback: (agents: AgentDTO[]) => void): () => v
     return () => clearInterval(interval);
   }
   
-  return () => {};
+  // Real Realtime subscription - setup async but return sync cleanup
+  let channelCleanup: (() => void) | null = null;
+  
+  (async () => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const channel = (supabase as any)
+        .channel('agent-locations-live')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'agent_locations' 
+        }, async () => {
+          const agents = await getLiveAgents();
+          callback(agents);
+        })
+        .subscribe();
+      
+      channelCleanup = () => {
+        (supabase as any).removeChannel(channel);
+      };
+    } catch (e) {
+      console.warn('[LiveAgents] Realtime setup failed:', e);
+    }
+  })();
+  
+  return () => {
+    if (channelCleanup) {
+      channelCleanup();
+    }
+  };
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
