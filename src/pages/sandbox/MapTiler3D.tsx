@@ -689,6 +689,7 @@ export default function MapTiler3D() {
         map={mapRef.current} 
         enabled={layerVisibility.agents}
         agents={effectiveAgents}
+        mePosition={position ? { lat: position.lat, lng: position.lng } : null}
       />
       <PortalsLayer3D map={mapRef.current} enabled={layerVisibility.portals} />
       <RewardsLayer3D 
