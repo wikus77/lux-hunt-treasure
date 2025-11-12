@@ -28,6 +28,9 @@ import LayerTogglePanel from './map3d/components/LayerTogglePanel';
 import '@/styles/map-dock.css';
 import '@/styles/portal-container.css';
 import '@/styles/portals.css';
+import '@/styles/agents.css';
+import '@/styles/rewards.css';
+import '@/styles/map-notes.css';
 import '@/features/living-map/styles/livingMap.css';
 import M1UPill from '@/features/m1u/M1UPill';
 import { use3DDevMocks } from './hooks/use3DDevMocks';
@@ -655,13 +658,15 @@ export default function MapTiler3D() {
       <RewardsLayer3D 
         map={mapRef.current} 
         enabled={layerVisibility.rewards} 
-        markers={effectiveRewardMarkers} 
+        markers={effectiveRewardMarkers}
+        userPosition={position}
       />
       <AreasLayer3D 
         map={mapRef.current} 
         enabled={layerVisibility.areas}
         userAreas={effectiveUserAreas}
         searchAreas={effectiveSearchAreas}
+        onDeleteSearchArea={deleteSearchArea}
       />
       <NotesLayer3D map={mapRef.current} enabled={layerVisibility.notes} />
 
