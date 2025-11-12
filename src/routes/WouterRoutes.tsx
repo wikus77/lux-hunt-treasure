@@ -32,7 +32,6 @@ import BuzzInterceptor from '@/components/intelligence/BuzzInterceptor';
 import FinalShotPage from '@/components/intelligence/FinalShotPage';
 import IntelModuleHeader from '@/components/intelligence/IntelModuleHeader';
 import AppHome from "@/pages/AppHome";
-import Map from "@/pages/Map";
 import LivingMap3D from "@/pages/LivingMap3D";
 import { BuzzPage } from "@/pages/BuzzPage";
 import IntelligenceStyledPage from "@/pages/IntelligenceStyledPage";
@@ -244,12 +243,6 @@ const WouterRoutes: React.FC = () => {
           <Route path="/home">
             <ProtectedRoute>
               <GlobalLayout><AppHome /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
-
-          <Route path="/map">
-            <ProtectedRoute>
-              <GlobalLayout><Map /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 

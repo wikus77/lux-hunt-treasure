@@ -65,7 +65,7 @@ const PaymentMethods = () => {
     // Set appropriate state based on payment type
     if (isMapBuzz) {
       // Redirect to map with state
-      navigate("/map", {
+      navigate("/map-3d-tiler", {
         state: {
           paymentCompleted: true, 
           mapBuzz: true,

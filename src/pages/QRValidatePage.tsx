@@ -32,7 +32,7 @@ const QRValidatePage: React.FC<QRValidatePageProps> = () => {
         
         // Redirect to map after validation
         setTimeout(() => {
-          setLocation('/map');
+          setLocation('/map-3d-tiler');
         }, 2000);
         
       } catch (error) {
@@ -48,7 +48,7 @@ const QRValidatePage: React.FC<QRValidatePageProps> = () => {
   }, [code, setLocation]);
 
   const handleRetry = () => {
-    setLocation('/map');
+    setLocation('/map-3d-tiler');
   };
 
   return (

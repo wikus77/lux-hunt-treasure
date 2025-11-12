@@ -50,7 +50,7 @@ serve(async (req) => {
           : 'Il Tasto BUZZ è di nuovo attivo. È ora di continuare la tua missione.',
         payload: { 
           action: buzz_type === 'buzz_mappa' ? 'open_map' : 'open_buzz',
-          url: buzz_type === 'buzz_mappa' ? '/map' : '/dashboard'
+          url: buzz_type === 'buzz_mappa' ? '/map-3d-tiler' : '/dashboard'
         },
         status: 'scheduled'
       });

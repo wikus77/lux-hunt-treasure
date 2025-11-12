@@ -30,7 +30,7 @@ export const ContextualShortcuts: React.FC<ContextualShortcutsProps> = ({
     {
       icon: Map,
       label: "Mappa",
-      path: "/map",
+      path: "/map-3d-tiler",
       color: "bg-green-900/30",
       highlightColor: "bg-green-500",
       highlight: mapActivity

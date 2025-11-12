@@ -164,7 +164,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
               className="bg-cyan-800/30 hover:bg-cyan-700/50 text-cyan-300 px-4 py-2 rounded-lg text-sm flex items-center"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate("/map")}
+              onClick={() => navigate("/map-3d-tiler")}
             >
               <Map className="mr-2 h-4 w-4" />
               Visualizza mappa

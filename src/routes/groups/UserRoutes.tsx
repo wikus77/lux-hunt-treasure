@@ -8,7 +8,6 @@ import Home from "../../pages/Home";
 import Profile from "../../pages/Profile";
 import Events from "../../pages/Events";
 import { BuzzPage } from "../../pages/BuzzPage";
-import Map from "../../pages/Map";
 import Games from "../../pages/Games";
 import TestAgent from "../../pages/TestAgent";
 import AdminPrizeForm from "../../pages/AdminPrizeForm";
@@ -49,14 +48,7 @@ const UserRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/map"
-        element={
-          <ProtectedRoute>
-            <Map />
-          </ProtectedRoute>
-        }
-      />
+      {/* /map route removed - redirects to /map-3d-tiler */}
       <Route
         path="/games"
         element={

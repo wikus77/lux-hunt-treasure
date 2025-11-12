@@ -34,7 +34,7 @@ export const useWouterNavigation = () => {
 
   // Enhanced navigation methods with haptic feedback
   const toHome = useCallback(() => navigate('/home'), [navigate]);
-  const toMap = useCallback(() => navigate('/map'), [navigate]);
+  const toMap = useCallback(() => navigate('/map-3d-tiler'), [navigate]);
   const toBuzz = useCallback(() => navigate('/buzz'), [navigate]);
   const toIntelligence = useCallback(() => navigate('/intelligence'), [navigate]);
   const toNotifications = useCallback(() => navigate('/notifications'), [navigate]);
