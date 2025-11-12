@@ -1,7 +1,7 @@
 // Layer Toggle Panel - Control visibility of 3D map layers
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Layers, Users, Gift, MapPin, Circle, FileText } from 'lucide-react';
+import { Layers, Users, Gift, Circle, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface LayerTogglePanelProps {
   layers: {
@@ -15,6 +15,8 @@ interface LayerTogglePanelProps {
 }
 
 const LayerTogglePanel: React.FC<LayerTogglePanelProps> = ({ layers, onToggle }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const layerConfigs = [
     { key: 'agents' as const, label: 'Agents', icon: Users, color: '#FF3366' },
     { key: 'portals' as const, label: 'Portals', icon: Hexagon, color: '#00f0ff' },
@@ -25,34 +27,59 @@ const LayerTogglePanel: React.FC<LayerTogglePanelProps> = ({ layers, onToggle })
 
   return (
     <div
-      className="fixed bottom-24 right-4 z-[100] flex flex-col gap-2 bg-black/80 backdrop-blur-xl rounded-2xl p-3 border border-cyan-500/20"
-      style={{ pointerEvents: 'auto' }}
+      className="fixed right-4 z-[100]"
+      style={{ 
+        top: 'calc(env(safe-area-inset-top, 0px) + 96px)',
+        pointerEvents: 'auto' 
+      }}
     >
-      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/10">
-        <Layers className="w-4 h-4 text-cyan-400" />
-        <span className="text-xs text-white font-bold">LAYERS</span>
-      </div>
-      
-      {layerConfigs.map(({ key, label, icon: Icon, color }) => (
-        <Button
-          key={key}
-          variant="ghost"
-          size="sm"
-          onClick={() => onToggle(key)}
-          className={`justify-start gap-2 transition-all ${
-            layers[key]
-              ? 'bg-white/10 text-white'
-              : 'text-gray-400 hover:text-white'
-          }`}
-          style={{
-            borderLeft: layers[key] ? `3px solid ${color}` : '3px solid transparent'
-          }}
+      {/* Collapsed state - Pill button */}
+      {!isExpanded && (
+        <button
+          onClick={() => setIsExpanded(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-black/80 backdrop-blur-xl rounded-full border border-cyan-500/20 hover:border-cyan-500/40 transition-all"
         >
-          <Icon className="w-4 h-4" style={{ color: layers[key] ? color : undefined }} />
-          <span className="text-xs">{label}</span>
-          <div className={`ml-auto w-2 h-2 rounded-full ${layers[key] ? 'bg-green-500' : 'bg-gray-600'}`} />
-        </Button>
-      ))}
+          <Layers className="w-4 h-4 text-cyan-400" />
+          <span className="text-xs text-white font-bold font-orbitron">LAYERS</span>
+        </button>
+      )}
+
+      {/* Expanded state - Full panel */}
+      {isExpanded && (
+        <div className="flex flex-col gap-2 bg-black/80 backdrop-blur-xl rounded-2xl p-3 border border-cyan-500/20 min-w-[160px]">
+          <div 
+            className="flex items-center justify-between mb-2 pb-2 border-b border-white/10 cursor-pointer"
+            onClick={() => setIsExpanded(false)}
+          >
+            <div className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-cyan-400" />
+              <span className="text-xs text-white font-bold font-orbitron">LAYERS</span>
+            </div>
+            <ChevronUp className="w-4 h-4 text-cyan-400" />
+          </div>
+          
+          {layerConfigs.map(({ key, label, icon: Icon, color }) => (
+            <Button
+              key={key}
+              variant="ghost"
+              size="sm"
+              onClick={() => onToggle(key)}
+              className={`justify-start gap-2 transition-all ${
+                layers[key]
+                  ? 'bg-white/10 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              style={{
+                borderLeft: layers[key] ? `3px solid ${color}` : '3px solid transparent'
+              }}
+            >
+              <Icon className="w-4 h-4" style={{ color: layers[key] ? color : undefined }} />
+              <span className="text-xs">{label}</span>
+              <div className={`ml-auto w-2 h-2 rounded-full ${layers[key] ? 'bg-green-500' : 'bg-gray-600'}`} />
+            </Button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
