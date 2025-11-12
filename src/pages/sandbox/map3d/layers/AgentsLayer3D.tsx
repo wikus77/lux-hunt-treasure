@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';
 import type { AgentDTO } from '@/features/living-map/adapters/readOnlyData';
 import { getLiveAgents, onAgentsChanged } from '@/features/living-map/adapters/readOnlyData';
-import { useAuth } from '@/hooks/useAuth';
 
 interface AgentsLayer3DProps {
   map: MLMap | null;
@@ -14,7 +13,6 @@ interface AgentsLayer3DProps {
 const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled, agents: agentsProp }) => {
   const [agents, setAgents] = useState<AgentDTO[]>([]);
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
-  const { user } = useAuth();
 
   useEffect(() => {
     if (!enabled) return;
@@ -58,17 +56,21 @@ const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled, agents: age
     };
   }, [map, agents, enabled]);
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'online': return '#24E39E';
+      case 'idle': return '#FFB347';
+      default: return '#8DA3B8';
+    }
+  };
+
   if (!enabled || agents.length === 0) return null;
 
   return (
-    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 650 }}>
+    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }}>
       {agents.map((agent) => {
         const pos = positions.get(agent.id);
         if (!pos) return null;
-
-        const isMe = user && agent.id === user.id;
-        const agentCode = agent.username || `AG-X${agent.id.substring(0, 4)}`;
-        const tooltipText = isMe ? `You — ${agentCode}` : agentCode;
 
         return (
           <div
@@ -81,10 +83,12 @@ const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled, agents: age
             }}
           >
             <div
-              className={`m1-agent-dot ${isMe ? 'm1-agent-dot--me' : ''}`}
-              data-layer="agents"
-              data-agent={isMe ? 'me' : 'other'}
-              title={tooltipText}
+              className="m1-agent-dot"
+              style={{
+                background: getStatusColor(agent.status),
+                boxShadow: `0 0 10px ${getStatusColor(agent.status)}`
+              }}
+              title={agent.username}
             />
           </div>
         );
