@@ -32,6 +32,7 @@ import '@/styles/portals.css';
 import '@/styles/agents.css';
 import '@/styles/rewards.css';
 import '@/features/living-map/styles/livingMap.css';
+import '@/components/map/leaflet-fixes.css';
 import M1UPill from '@/features/m1u/M1UPill';
 import { use3DDevMocks } from './hooks/use3DDevMocks';
 import { supabase } from '@/integrations/supabase/client';
@@ -698,13 +699,15 @@ export default function MapTiler3D() {
       <RewardsLayer3D 
         map={mapRef.current} 
         enabled={layerVisibility.rewards} 
-        markers={effectiveRewardMarkers} 
+        markers={effectiveRewardMarkers}
+        userPosition={position ? { lat: position.lat, lng: position.lng } : undefined}
       />
       <AreasLayer3D 
         map={mapRef.current} 
         enabled={layerVisibility.areas}
         userAreas={effectiveUserAreas}
         searchAreas={effectiveSearchAreas}
+        onDeleteSearchArea={(id) => deleteSearchArea(id)}
       />
       <NotesLayer3D map={mapRef.current} enabled={layerVisibility.notes} />
 
@@ -723,7 +726,6 @@ export default function MapTiler3D() {
       </div>
       
       {/* DEV-only debug panels (non-intrusive) */}
-      {DEV_MOCKS && (
         <>
           <DevNotesPanel map={mapRef.current} />
           <DevAreasPanel
@@ -734,7 +736,6 @@ export default function MapTiler3D() {
             onAddArea={handleAddArea}
           />
         </>
-      )}
 
       {/* Layer Toggle Panel */}
       <LayerTogglePanel layers={layerVisibility} onToggle={toggleLayer} />
