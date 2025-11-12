@@ -28,6 +28,39 @@ import LayerTogglePanel from './map3d/components/LayerTogglePanel';
 import '@/styles/map-dock.css';
 import '@/styles/portal-container.css';
 import '@/styles/portals.css';
+import '@/features/living-map/styles/livingMap.css';
+
+// 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
+const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
+
+const MOCK_REWARD_MARKERS = DEV_MOCKS ? [
+  { id: 'rw-1', lat: 43.8105, lng: 7.6805, type: 'M1U', title: 'Bonus +10 M1U' },
+  { id: 'rw-2', lat: 45.4705, lng: 9.1905, type: 'PULSE', title: 'Pulse Energy +5' },
+  { id: 'rw-3', lat: 41.9050, lng: 12.4970, type: 'M1U', title: 'Demo Reward' }
+] : [];
+
+const MOCK_USER_AREAS = DEV_MOCKS ? [
+  { id: 'ua-1', lat: 43.8100, lng: 7.6800, radius: 500 },
+  { id: 'ua-2', lat: 45.4700, lng: 9.1900, radius: 600 },
+  { id: 'ua-3', lat: 41.9028, lng: 12.4964, radius: 400 }
+] : [];
+
+const MOCK_SEARCH_AREAS = DEV_MOCKS ? [
+  { id: 'sa-1', lat: 43.8110, lng: 7.6810, radius: 300 },
+  { id: 'sa-2', lat: 45.4710, lng: 9.1910, radius: 350 }
+] : [];
+
+// Seed localStorage for Notes if empty (dev only)
+if (DEV_MOCKS) {
+  const NOTES_KEY = 'map3d-notes';
+  if (!localStorage.getItem(NOTES_KEY)) {
+    localStorage.setItem(NOTES_KEY, JSON.stringify([
+      { id: 'n-1', lat: 43.8101, lng: 7.6799, title: 'Checkpoint Alpha', note: 'Verifica POI iniziale' },
+      { id: 'n-2', lat: 45.4701, lng: 9.1899, title: 'Target Beta', note: 'Area di interesse secondaria' }
+    ]));
+    console.debug('[Map3D] 📝 Seeded localStorage notes for dev');
+  }
+}
 
 interface DiagState {
   keyMode: string;
@@ -95,8 +128,17 @@ export default function MapTiler3D() {
     }
   }, [geoStatus, enableGeo]);
   
+  // Prepare effective data with dev fallbacks
+  const effectiveRewardMarkers = MOCK_REWARD_MARKERS;
+  const effectiveUserAreas = currentWeekAreas?.length 
+    ? currentWeekAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius_km * 1000 }))
+    : MOCK_USER_AREAS;
+  const effectiveSearchAreas = searchAreas?.length
+    ? searchAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius }))
+    : MOCK_SEARCH_AREAS;
+
   useEffect(() => {
-    console.log('[MapTiler3D] 📊 Live layers loaded:', {
+    console.debug('[Map3D] 📊 Live layers loaded:', {
       events: events.length,
       zones: zones.length,
       portals: portals.length,
@@ -104,6 +146,15 @@ export default function MapTiler3D() {
       loading: liveLoading
     });
   }, [events.length, zones.length, portals.length, agents.length, liveLoading]);
+
+  useEffect(() => {
+    console.debug('[Map3D] 🎨 Layer data counts:', {
+      rewards: effectiveRewardMarkers.length,
+      userAreas: effectiveUserAreas.length,
+      searchAreas: effectiveSearchAreas.length,
+      devMocksEnabled: DEV_MOCKS
+    });
+  }, [effectiveRewardMarkers.length, effectiveUserAreas.length, effectiveSearchAreas.length]);
   
   const mapCenter: [number, number] | undefined = position 
     ? [position.lat, position.lng]
@@ -533,22 +584,16 @@ export default function MapTiler3D() {
       {/* 3D Layers Overlay - All 5 features */}
       <AgentsLayer3D map={mapRef.current} enabled={layerVisibility.agents} />
       <PortalsLayer3D map={mapRef.current} enabled={layerVisibility.portals} />
-      <RewardsLayer3D map={mapRef.current} enabled={layerVisibility.rewards} markers={[]} />
+      <RewardsLayer3D 
+        map={mapRef.current} 
+        enabled={layerVisibility.rewards} 
+        markers={effectiveRewardMarkers} 
+      />
       <AreasLayer3D 
         map={mapRef.current} 
         enabled={layerVisibility.areas}
-        userAreas={currentWeekAreas.map(a => ({
-          id: a.id,
-          lat: a.lat,
-          lng: a.lng,
-          radius: a.radius_km * 1000
-        }))}
-        searchAreas={searchAreas.map(a => ({
-          id: a.id,
-          lat: a.lat,
-          lng: a.lng,
-          radius: a.radius
-        }))}
+        userAreas={effectiveUserAreas}
+        searchAreas={effectiveSearchAreas}
       />
       <NotesLayer3D map={mapRef.current} enabled={layerVisibility.notes} />
 
