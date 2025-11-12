@@ -91,13 +91,13 @@ export const BuzzPage: React.FC = () => {
             </h1>
           </div>
 
-          {/* M1U Pill Slot - Buzz (positioned top-right per design spec) */}
+          {/* M1U Pill Slot - Buzz (positioned top-left) */}
           <div 
             id="m1u-pill-buzz-slot" 
-            className="fixed top-4 right-4 z-[1000] flex items-center gap-2"
+            className="fixed top-4 left-4 z-[1000] flex items-center gap-2"
             style={{ 
               paddingTop: 'env(safe-area-inset-top, 0px)',
-              paddingRight: 'env(safe-area-inset-right, 0px)',
+              paddingLeft: 'env(safe-area-inset-left, 0px)',
               pointerEvents: 'auto' 
             }}
             aria-hidden={false}

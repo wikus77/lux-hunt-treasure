@@ -598,13 +598,13 @@ export default function MapTiler3D() {
       />
       <NotesLayer3D map={mapRef.current} enabled={layerVisibility.notes} />
 
-      {/* M1U Pill Slot - Map 3D (overlay fixed top-right) */}
+      {/* M1U Pill Slot - Map 3D (overlay fixed top-left) */}
       <div 
         id="m1u-pill-map3d-slot" 
-        className="fixed top-4 right-4 z-[1001] flex items-center gap-2"
+        className="fixed top-4 left-4 z-[1001] flex items-center gap-2"
         style={{ 
           paddingTop: 'env(safe-area-inset-top, 0px)',
-          paddingRight: 'env(safe-area-inset-right, 0px)',
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
           pointerEvents: 'auto' 
         }}
         aria-hidden={false}
