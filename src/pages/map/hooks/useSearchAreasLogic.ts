@@ -7,6 +7,7 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { supabase } from "@/integrations/supabase/client";
 import { safeLatLng } from "@/pages/map/utils/safeLatLng";
 export function useSearchAreasLogic(defaultLocation: [number, number]) {
+  const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
   const [storageAreas, setStorageAreas] = useLocalStorage<SearchArea[]>("map-search-areas", []);
   const [searchAreas, setSearchAreas] = useState<SearchArea[]>([]);
   const [activeSearchArea, setActiveSearchArea] = useState<string | null>(null);
@@ -127,6 +128,23 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData?.session?.user) {
         console.error("❌ AUTH: User not authenticated");
+        if (DEV_MOCKS) {
+          // DEV fallback: store locally
+          const newAreaLocal: SearchArea = {
+            id: uuidv4(),
+            lat,
+            lng,
+            radius,
+            label: `Area di ricerca ${searchAreasThisWeek + 1}`,
+            color: "#00f0ff",
+            position: { lat, lng }
+          };
+          setSearchAreas(prev => [...prev, newAreaLocal]);
+          setActiveSearchArea(newAreaLocal.id);
+          setIsAddingSearchArea(false);
+          toast.success("Area di ricerca aggiunta (DEV locale)", { description: `Raggio: ${(radius/1000).toFixed(1)} km` });
+          return;
+        }
         toast.error("Utente non autenticato");
         setIsAddingSearchArea(false);
         return;
@@ -158,6 +176,15 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
 
       if (error) {
         console.error("❌ DB ERROR: Error saving search area:", error);
+        if (DEV_MOCKS) {
+          // DEV fallback: persist locally when DB write fails
+          setSearchAreasThisWeek(prev => prev + 1);
+          setSearchAreas(prevAreas => [...prevAreas, newArea]);
+          setActiveSearchArea(newArea.id);
+          setIsAddingSearchArea(false);
+          toast.success("Area di ricerca aggiunta (DEV locale)", { description: `Raggio: ${(radius/1000).toFixed(1)} km` });
+          return;
+        }
         toast.error("Si è verificato un errore nel salvare l'area di ricerca");
         setIsAddingSearchArea(false);
         return;
@@ -201,6 +228,13 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
       
       if (error) {
         console.error("❌ DB DELETE ERROR: Error deleting search area:", error);
+        if (DEV_MOCKS) {
+          // DEV fallback: remove locally when DB delete fails
+          setSearchAreas(prevAreas => prevAreas.filter(area => area.id !== id));
+          if (activeSearchArea === id) setActiveSearchArea(null);
+          toast.success("Area di ricerca rimossa (DEV locale)");
+          return true;
+        }
         toast.error("Errore nell'eliminare l'area di ricerca");
         return false;
       }

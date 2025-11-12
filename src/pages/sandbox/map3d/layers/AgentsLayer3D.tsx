@@ -8,28 +8,25 @@ interface AgentsLayer3DProps {
   map: MLMap | null;
   enabled: boolean;
   agents?: AgentDTO[]; // Optional override for dev mocks
+  mePosition?: { lat: number; lng: number } | null;
 }
 
-const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled, agents: agentsProp }) => {
+const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled, agents: agentsProp, mePosition }) => {
   const [agents, setAgents] = useState<AgentDTO[]>([]);
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
 
-  useEffect(() => {
+useEffect(() => {
     if (!enabled) return;
 
-    // If agents prop is provided (dev mocks), use it directly
+    // If agents prop is provided (dev or live), use it
     if (agentsProp) {
       setAgents(agentsProp);
-      return;
+    } else {
+      // Otherwise, load from adapter (dev mock or real if implemented)
+      getLiveAgents().then(setAgents);
+      const unsubscribe = onAgentsChanged(setAgents);
+      return () => unsubscribe();
     }
-
-    // Otherwise, load from API (production behavior)
-    getLiveAgents().then(setAgents);
-    const unsubscribe = onAgentsChanged(setAgents);
-
-    return () => {
-      unsubscribe();
-    };
   }, [enabled, agentsProp]);
 
   useEffect(() => {
@@ -56,13 +53,27 @@ const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled, agents: age
     };
   }, [map, agents, enabled]);
 
-  if (!enabled || agents.length === 0) return null;
+  const augmentedAgents = [...agents];
+  if (mePosition && !augmentedAgents.some(a => a.id === 'me-local')) {
+    augmentedAgents.push({
+      id: 'me-local',
+      lat: mePosition.lat,
+      lng: mePosition.lng,
+      username: 'You',
+      status: 'online',
+      lastSeen: new Date().toISOString()
+    } as AgentDTO);
+  }
+
+  if (!enabled || augmentedAgents.length === 0) return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 650 }}>
-      {agents.map((agent) => {
+      {augmentedAgents.map((agent) => {
         const pos = positions.get(agent.id);
         if (!pos) return null;
+
+        const isMe = agent.id === 'me-local' || /you/i.test(agent.username || '');
 
         return (
           <div
@@ -75,8 +86,8 @@ const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled, agents: age
             }}
           >
             <div
-              className="m1-agent-dot"
-              title={agent.username}
+              className={isMe ? 'm1-agent-dot m1-agent-dot--me' : 'm1-agent-dot'}
+              title={isMe ? 'You' : agent.username}
             />
           </div>
         );
