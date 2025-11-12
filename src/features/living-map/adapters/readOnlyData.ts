@@ -40,7 +40,7 @@ export interface ZoneDTO {
 }
 
 // Feature flag for dev mode
-const USE_MOCK = import.meta.env.VITE_LIVING_MAP_USE_MOCK === 'true' || true;
+const USE_MOCK = import.meta.env.VITE_LIVING_MAP_USE_MOCK === 'true';
 
 // Mock data generators for DEV
 function generateMockPortals(): PortalDTO[] {
