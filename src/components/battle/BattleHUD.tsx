@@ -19,8 +19,24 @@ export function BattleHUD({ sessionId, onClose }: BattleHUDProps) {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { submitDefense, defenseCatalog, loading: catalogLoading } = useBattleSystem();
+  const { submitDefense, getDefenseCatalog } = useBattleSystem();
+  const [defenseCatalog, setDefenseCatalog] = useState<any[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
   const { state } = useBattleRealtimeSubscription(sessionId);
+
+  // Load defense catalog
+  useEffect(() => {
+    if (!sessionId) return;
+    
+    const loadDefenses = async () => {
+      setCatalogLoading(true);
+      const defenses = await getDefenseCatalog();
+      setDefenseCatalog(defenses);
+      setCatalogLoading(false);
+    };
+    
+    loadDefenses();
+  }, [sessionId, getDefenseCatalog]);
 
   // Update countdown timer
   useEffect(() => {
