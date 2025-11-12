@@ -4,7 +4,6 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import neonStyleTemplate from '../map/styles/m1_neon_style_FULL_3D.json';
 import BuzzMapButtonSecure from '@/components/map/BuzzMapButtonSecure';
 import PortalContainer from '@/components/map/PortalContainer';
-import MapLayerToggle from '@/components/map/MapLayerToggle';
 import { toast } from 'sonner';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -815,24 +814,6 @@ export default function MapTiler3D() {
 
       {/* Layer Toggle Panel */}
       <LayerTogglePanel layers={layerVisibility} onToggle={toggleLayer} />
-      
-      <div
-        style={{
-          position: 'fixed',
-          top: 'calc(env(safe-area-inset-top, 0px) + 96px)',
-          right: 0,
-          zIndex: 20001
-        }}
-      >
-        <MapLayerToggle 
-          layerCounts={{
-            portals: portals.length,
-            events: events.length,
-            agents: effectiveAgents.length,
-            zones: zones.length
-          }}
-        />
-      </div>
       
       <div
         style={{
