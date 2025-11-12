@@ -34,6 +34,7 @@ import { use3DDevMocks } from './hooks/use3DDevMocks';
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
 const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
+const DEV_VIEW_LOCK = import.meta.env.VITE_MAP3D_DEV_VIEW_LOCK === 'true';
 
 interface DiagState {
   keyMode: string;
@@ -380,6 +381,12 @@ export default function MapTiler3D() {
     const map = mapRef.current;
     if (!map || !position) return;
 
+    // ⛔ DEV VIEW LOCK: Don't recenter on user position in DEV mode
+    if (DEV_MOCKS && DEV_VIEW_LOCK) {
+      console.log('🔒 DEV VIEW LOCK active - skipping auto-center on user position');
+      return;
+    }
+
     if (!map.loaded()) {
       map.once('load', () => {
         console.log('📍 Flying to user position:', position);
@@ -461,6 +468,57 @@ export default function MapTiler3D() {
       toast.info('Geolocalizzazione non disponibile');
     }
   };
+
+  // 🎯 AUTO-FIT BOUNDS: When layers have data but are off-screen, fit them in view
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.loaded()) return;
+
+    // Only activate in DEV with VIEW LOCK (diagnostic mode)
+    if (!DEV_MOCKS || !DEV_VIEW_LOCK) return;
+
+    // Collect all available coordinates
+    const pts: [number, number][] = [];
+    effectiveAgents.forEach(a => pts.push([a.lng, a.lat]));
+    effectiveRewardMarkers.forEach(r => pts.push([r.lng, r.lat]));
+    effectiveUserAreas.forEach(a => pts.push([a.lng, a.lat]));
+    effectiveSearchAreas.forEach(a => pts.push([a.lng, a.lat]));
+
+    if (!pts.length) {
+      console.log('🎯 No layer data to fit');
+      return;
+    }
+
+    // Check if any point is visible
+    const anyVisible = pts.some(([lng, lat]) => {
+      const p = map.project([lng, lat]);
+      const { width, height } = map.getContainer().getBoundingClientRect();
+      return p.x >= 0 && p.x <= width && p.y >= 0 && p.y <= height;
+    });
+
+    if (!anyVisible) {
+      console.log('🎯 Layer data off-screen - fitting bounds to', pts.length, 'points');
+      const bounds = new maplibregl.LngLatBounds(pts[0], pts[0]);
+      pts.forEach(pt => bounds.extend(pt));
+      
+      map.fitBounds(bounds, { 
+        padding: 80, 
+        maxZoom: 16, 
+        duration: 1200,
+        pitch: 55,
+        bearing: 25
+      });
+    } else {
+      console.log('🎯 Layer data visible - no auto-fit needed');
+    }
+  }, [
+    DEV_MOCKS, 
+    DEV_VIEW_LOCK,
+    effectiveAgents,
+    effectiveRewardMarkers,
+    effectiveUserAreas,
+    effectiveSearchAreas
+  ]);
 
   const { profileImage } = useProfileImage();
   
