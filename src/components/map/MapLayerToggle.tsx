@@ -100,11 +100,11 @@ const MapLayerToggle = ({ onLayerChange, layerCounts, agentsVisibleCount }: MapL
         <button
           onClick={() => setIsOpen(prev => !prev)}
           className="living-layers-pill"
-          aria-label="Toggle LIVING LAYERS"
+          aria-label="Toggle LAYERS"
           aria-expanded={isOpen}
         >
           <Layers className="w-4 h-4" />
-          <span className="living-layers-pill-label">LIVING LAYERS</span>
+          <span className="living-layers-pill-label">LAYERS</span>
         </button>
       )}
 
@@ -116,9 +116,9 @@ const MapLayerToggle = ({ onLayerChange, layerCounts, agentsVisibleCount }: MapL
               className="text-sm font-orbitron font-bold text-cyan-400 cursor-pointer select-none"
               onClick={() => setIsOpen(false)}
               role="button"
-              aria-label="Close LIVING LAYERS"
+              aria-label="Close LAYERS"
             >
-              LIVING LAYERS
+              LAYERS
             </h3>
             <Button
               variant="ghost"
