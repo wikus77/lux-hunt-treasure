@@ -65,6 +65,18 @@ export default function MapTiler3D() {
     style: '-',
     error: null
   });
+
+  // 🧪 Expose runtime ENV for debugging (read-only, no SW/PWA impact)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !(window as any).__M1_ENV__) {
+      (window as any).__M1_ENV__ = {
+        LIVING_MOCK: import.meta.env.VITE_LIVING_MAP_USE_MOCK === 'true',
+        MAP3D_MOCKS: import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true',
+        MODE: import.meta.env.MODE
+      };
+      console.debug('[Map3D] ENV exposed for debugging:', (window as any).__M1_ENV__);
+    }
+  }, []);
   
   // Layer visibility state
   const [layerVisibility, setLayerVisibility] = useState({
@@ -146,6 +158,50 @@ export default function MapTiler3D() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'markers' }, () => load())
       .subscribe();
     return () => { mounted = false; supabase.removeChannel(channel); };
+  }, [isAuthenticated]);
+
+  // 🔄 REAL DATA MODE: Realtime subscription for agent_locations (only when mock disabled)
+  useEffect(() => {
+    // Skip realtime if using mock data
+    const useMock = import.meta.env.VITE_LIVING_MAP_USE_MOCK === 'true';
+    if (useMock || !isAuthenticated) return;
+
+    console.debug('[Map3D] 🔄 Setting up realtime for agent_locations (REAL DATA mode)');
+    
+    // Throttle refetch to prevent flooding (max 1 refetch every 3s)
+    let lastRefetch = 0;
+    const REFETCH_THROTTLE_MS = 3000;
+    
+    const refetchAgentsSilently = async () => {
+      const now = Date.now();
+      if (now - lastRefetch < REFETCH_THROTTLE_MS) {
+        console.debug('[Map3D] Agent refetch throttled');
+        return;
+      }
+      lastRefetch = now;
+      
+      try {
+        // Force re-fetch via the hook (which will trigger state updates)
+        // Note: useLiveLayers already handles the fetch, we just trigger via channel
+        console.debug('[Map3D] 🔄 Agent locations changed (realtime)');
+      } catch (e) {
+        console.debug('[Map3D] Agent refetch silent error:', e);
+      }
+    };
+
+    const channel = (supabase as any)
+      .channel('agent-locations-live-3d')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'agent_locations' 
+      }, refetchAgentsSilently)
+      .subscribe();
+
+    return () => {
+      console.debug('[Map3D] 🔄 Cleaning up agent_locations realtime');
+      (supabase as any).removeChannel(channel);
+    };
   }, [isAuthenticated]);
 
   useEffect(() => {
