@@ -47,7 +47,7 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
     <div
       style={{
         position: 'fixed',
-        top: 'calc(env(safe-area-inset-top, 0px) + 150px)',
+        bottom: 'calc(env(safe-area-inset-bottom, 34px) + 80px)',
         left: 12,
         zIndex: 1002,
         pointerEvents: 'auto',

@@ -52,6 +52,8 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
             stroke="#00D1FF"
             stroke-width="3"
             opacity="0.8"
+            style="pointer-events:auto;cursor:pointer"
+            title="${area.label || 'Area di ricerca'} – Raggio ${(area.radius/1000).toFixed(1)} km"
           />
         `;
       });
@@ -73,6 +75,8 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
             stroke-width="2"
             opacity="0.8"
             class="search-area-pulse"
+            style="pointer-events:auto;cursor:pointer"
+            title="${area.label || 'Area di ricerca'} – Raggio ${(area.radius/1000).toFixed(1)} km"
           />
         `;
       });

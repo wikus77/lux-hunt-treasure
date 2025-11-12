@@ -23,8 +23,8 @@ const DevAreasPanel: React.FC<DevAreasPanelProps> = ({ map, searchAreas, onDelet
     <div
       style={{
         position: 'fixed',
-        top: 'calc(env(safe-area-inset-top, 0px) + 210px)',
-        left: 12,
+        bottom: 'calc(env(safe-area-inset-bottom, 34px) + 80px)',
+        right: 12,
         zIndex: 1002,
         pointerEvents: 'auto',
       }}
