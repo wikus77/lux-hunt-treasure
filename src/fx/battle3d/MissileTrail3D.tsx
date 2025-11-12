@@ -12,7 +12,7 @@ interface MissileTrail3DProps {
 }
 
 function MissileTrail3DInner({ fromLatLng, toLatLng, onEnd }: MissileTrail3DProps) {
-  const lineRef = useRef<THREE.Line>(null);
+  const lineRef = useRef<any>(null);
   const progress = useRef(0);
   const startTime = useRef(Date.now());
 
