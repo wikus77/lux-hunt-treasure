@@ -29,9 +29,12 @@ import '@/styles/map-dock.css';
 import '@/styles/portal-container.css';
 import '@/styles/portals.css';
 import '@/styles/agents.css';
+import '@/styles/rewards.css';
 import '@/features/living-map/styles/livingMap.css';
 import M1UPill from '@/features/m1u/M1UPill';
 import { use3DDevMocks } from './hooks/use3DDevMocks';
+import { supabase } from '@/integrations/supabase/client';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
 const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
@@ -99,6 +102,37 @@ export default function MapTiler3D() {
     editMarker
   } = useMapMarkersLogic();
   
+  // Rewards (indizi) live from Supabase when authenticated
+  type RewardMarkerMinimal = { id: string; lat: number; lng: number; title?: string };
+  const { isAuthenticated } = useUnifiedAuth();
+  const [rewardMarkersLive, setRewardMarkersLive] = useState<RewardMarkerMinimal[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!isAuthenticated) { setRewardMarkersLive([]); return; }
+    const now = new Date().toISOString();
+    const load = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('markers')
+          .select('id, lat, lng, title, active, visible_from, visible_to')
+          .eq('active', true)
+          .or(`visible_from.is.null,visible_from.lte.${now}`)
+          .or(`visible_to.is.null,visible_to.gte.${now}`)
+          .limit(2000);
+        if (!mounted) return;
+        if (error) { console.warn('[Map3D] markers load error', error); return; }
+        setRewardMarkersLive((data || []).map((m:any) => ({ id: m.id, lat: m.lat, lng: m.lng, title: m.title })));
+      } catch (e) { console.warn('[Map3D] markers load exception', e); }
+    };
+    load();
+    const channel = supabase
+      .channel('markers-changes-3d')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'markers' }, () => load())
+      .subscribe();
+    return () => { mounted = false; supabase.removeChannel(channel); };
+  }, [isAuthenticated]);
+
   useEffect(() => {
     if (geoStatus === 'idle') {
       console.log('📍 Auto-enabling geolocation');
@@ -117,9 +151,11 @@ export default function MapTiler3D() {
     }
   }, [devMocks.notesSeed]);
   
-  // Prepare effective data with dev fallbacks
-  const effectiveAgents = DEV_MOCKS ? devMocks.agents : liveAgents;
-  const effectiveRewardMarkers = DEV_MOCKS ? devMocks.rewards : [];
+  // Prepare effective data with dev fallbacks (prefer live when available)
+  const effectiveAgents = (liveAgents && liveAgents.length > 0)
+    ? liveAgents
+    : (DEV_MOCKS ? devMocks.agents : []);
+  const effectiveRewardMarkers = DEV_MOCKS ? devMocks.rewards : rewardMarkersLive;
   const effectiveUserAreas = DEV_MOCKS 
     ? devMocks.userAreas
     : currentWeekAreas?.length 
