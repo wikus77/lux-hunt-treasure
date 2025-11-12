@@ -36,13 +36,22 @@ function calculateDistance(pos1: Position, pos2: Position): number {
 
 /**
  * Updates or inserts user's current position in agent_locations table
+ * Auth gate: Only proceeds if valid session exists
  */
 async function upsertAgentLocation(userId: string, position: Position): Promise<void> {
   try {
+    // 🔒 Auth gate: Check for valid session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) {
+      console.debug('[AgentLocation] Upsert skipped: no session');
+      return;
+    }
+
+    // 🔄 Try REST upsert first
     const { error } = await (supabase as any)
       .from('agent_locations')
       .upsert({
-        user_id: userId,
+        user_id: session.user.id,
         lat: position.lat,
         lng: position.lng,
         accuracy: position.acc,
@@ -53,12 +62,31 @@ async function upsertAgentLocation(userId: string, position: Position): Promise<
       });
 
     if (error) {
-      // Silent handling: 403/404 expected when table doesn't exist or RLS blocks
-      // No UI error, just debug log
-      if (error.code === 'PGRST116' || error.code === '42P01' || error.message?.includes('403')) {
-        console.debug('[AgentLocation] Upsert skipped (table absent or RLS):', error.code);
+      // If REST returns 403, try RPC fallback
+      if (error.code === 'PGRST301' || error.message?.includes('403')) {
+        console.debug('[AgentLocation] REST 403, trying RPC fallback');
+        const { error: rpcErr } = await (supabase as any).rpc('secure_upsert_agent_location', {
+          p_user_id: session.user.id,
+          p_lat: position.lat,
+          p_lng: position.lng,
+          p_accuracy: position.acc,
+          p_status: 'online'
+        });
+        
+        if (rpcErr) {
+          console.debug('[AgentLocation] RPC also failed:', rpcErr.code);
+        } else {
+          console.debug('[AgentLocation] Position updated via RPC');
+        }
         return;
       }
+      
+      // Silent handling: 404 expected when table doesn't exist
+      if (error.code === 'PGRST116' || error.code === '42P01') {
+        console.debug('[AgentLocation] Upsert skipped (table absent):', error.code);
+        return;
+      }
+      
       console.debug('[AgentLocation] Upsert error:', error);
     } else {
       console.debug('[AgentLocation] Position updated:', { lat: position.lat, lng: position.lng });
