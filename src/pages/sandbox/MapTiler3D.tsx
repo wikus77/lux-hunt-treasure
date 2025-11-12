@@ -35,6 +35,8 @@ import M1UPill from '@/features/m1u/M1UPill';
 import { use3DDevMocks } from './hooks/use3DDevMocks';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import DevNotesPanel from './map3d/components/DevNotesPanel';
+import DevAreasPanel from './map3d/components/DevAreasPanel';
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
 const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
@@ -715,6 +717,20 @@ export default function MapTiler3D() {
       >
         <M1UPill showLabel showPlusButton />
       </div>
+      
+      {/* DEV-only debug panels (non-intrusive) */}
+      {DEV_MOCKS && (
+        <>
+          <DevNotesPanel map={mapRef.current} />
+          <DevAreasPanel
+            map={mapRef.current}
+            searchAreas={effectiveSearchAreas}
+            onDelete={(id) => deleteSearchArea(id)}
+            onFocus={(id) => setActiveSearchArea(id)}
+            onAddArea={handleAddArea}
+          />
+        </>
+      )}
 
       {/* Layer Toggle Panel */}
       <LayerTogglePanel layers={layerVisibility} onToggle={toggleLayer} />
