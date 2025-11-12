@@ -15,9 +15,10 @@ interface RewardsLayer3DProps {
   map: MLMap | null;
   enabled: boolean;
   markers?: RewardMarker[];
+  userPosition?: { lat: number; lng: number };
 }
 
-const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers = [] }) => {
+const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers = [], userPosition }) => {
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
   const { rewards } = useMarkerRewards(selectedMarker);
@@ -51,37 +52,50 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
   return (
     <>
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 660 }}>
-        {markers.map((marker) => {
-          const pos = positions.get(marker.id);
-          if (!pos) return null;
+        {markers
+          .filter(m => {
+            if (!userPosition) return true;
+            // Haversine distance, meters
+            const R = 6371e3;
+            const toRad = (d: number) => d * Math.PI / 180;
+            const dLat = toRad(m.lat - userPosition.lat);
+            const dLng = toRad(m.lng - userPosition.lng);
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(userPosition.lat)) * Math.cos(toRad(m.lat)) * Math.sin(dLng / 2) ** 2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const d = R * c;
+            return d <= 90; // show only within 90m
+          })
+          .map((marker) => {
+            const pos = positions.get(marker.id);
+            if (!pos) return null;
 
-          return (
-            <div
-              key={marker.id}
-              className="absolute pointer-events-auto cursor-pointer"
-              style={{
-                left: `${pos.x}px`,
-                top: `${pos.y}px`,
-                transform: 'translate(-50%, -50%)'
-              }}
-              onClick={() => setSelectedMarker(marker.id)}
-            >
+            return (
               <div
-                className="m1-reward-marker"
+                key={marker.id}
+                className="absolute pointer-events-auto cursor-pointer"
                 style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  background: '#10b981',
-                  border: '2px solid rgba(255, 255, 255, 0.6)',
-                  boxShadow: '0 0 8px 2px rgba(16, 185, 129, 0.8), 0 0 16px 4px rgba(16, 185, 129, 0.4)',
-                  animation: 'rewardPulse 2s ease-in-out infinite'
+                  left: `${pos.x}px`,
+                  top: `${pos.y}px`,
+                  transform: 'translate(-50%, -50%)'
                 }}
-                title={marker.title || 'Reward'}
-              />
-            </div>
-          );
-        })}
+                onClick={() => setSelectedMarker(marker.id)}
+              >
+                <div
+                  className="m1-reward-marker"
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: '#10b981',
+                    border: '2px solid rgba(255, 255, 255, 0.6)',
+                    boxShadow: '0 0 8px 2px rgba(16, 185, 129, 0.8), 0 0 16px 4px rgba(16, 185, 129, 0.4)',
+                    animation: 'rewardPulse 2s ease-in-out infinite'
+                  }}
+                  title={marker.title || 'Reward'}
+                />
+              </div>
+            );
+          })}
       </div>
 
       {selectedMarker && rewards.length > 0 && (

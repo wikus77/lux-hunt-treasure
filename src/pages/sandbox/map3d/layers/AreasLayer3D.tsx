@@ -1,5 +1,5 @@
 // Areas Layer for MapLibre 3D - User map areas and search areas overlay
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';
 
 interface Area {
@@ -16,15 +16,19 @@ interface AreasLayer3DProps {
   enabled: boolean;
   userAreas?: Area[];
   searchAreas?: Area[];
+  onDeleteSearchArea?: (id: string) => void;
 }
 
 const AreasLayer3D: React.FC<AreasLayer3DProps> = ({ 
   map, 
   enabled, 
   userAreas = [], 
-  searchAreas = [] 
+  searchAreas = [],
+  onDeleteSearchArea
 }) => {
   const [svgContent, setSvgContent] = useState<string>('');
+  const [tooltip, setTooltip] = useState<null | { id: string; type: 'user'|'search'; label?: string; radius: number; screenX: number; screenY: number; lat: number; lng: number }>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null as any);
 
   useEffect(() => {
     if (!map || !enabled) return;
@@ -52,8 +56,14 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
             stroke="#00D1FF"
             stroke-width="3"
             opacity="0.8"
+            class="interactive buzz-area-glow"
+            data-id="${area.id}"
+            data-type="user"
+            data-label="${(area.label || 'Buzz Area')}"
+            data-radius="${area.radius}"
+            data-lat="${area.lat}"
+            data-lng="${area.lng}"
             style="pointer-events:auto;cursor:pointer"
-            title="${area.label || 'Area di ricerca'} – Raggio ${(area.radius/1000).toFixed(1)} km"
           />
         `;
       });
@@ -74,9 +84,14 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
             stroke="#00f0ff"
             stroke-width="2"
             opacity="0.8"
-            class="search-area-pulse"
+            class="interactive search-area-pulse"
+            data-id="${area.id}"
+            data-type="search"
+            data-label="${(area.label || 'Area di ricerca')}"
+            data-radius="${area.radius}"
+            data-lat="${area.lat}"
+            data-lng="${area.lng}"
             style="pointer-events:auto;cursor:pointer"
-            title="${area.label || 'Area di ricerca'} – Raggio ${(area.radius/1000).toFixed(1)} km"
           />
         `;
       });
@@ -98,13 +113,75 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
 
   if (!enabled) return null;
 
+  useEffect(() => {
+    const svgEl = svgRef.current as unknown as SVGSVGElement | null;
+    if (!svgEl || !enabled) return;
+
+    const handler = (e: Event) => {
+      const target = e.target as SVGCircleElement | null;
+      if (!target || target.tagName.toLowerCase() !== 'circle') return;
+      const id = target.getAttribute('data-id') || '';
+      const type = (target.getAttribute('data-type') as 'user'|'search') || 'user';
+      const label = target.getAttribute('data-label') || undefined;
+      const radius = parseFloat(target.getAttribute('data-radius') || '0');
+      const lat = parseFloat(target.getAttribute('data-lat') || '0');
+      const lng = parseFloat(target.getAttribute('data-lng') || '0');
+
+      setTooltip({ id, type, label, radius, screenX: (e as any).clientX, screenY: (e as any).clientY, lat, lng });
+    };
+
+    svgEl.addEventListener('click', handler as any, { passive: true } as any);
+    return () => svgEl.removeEventListener('click', handler as any);
+  }, [enabled]);
+
   return (
     <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 640 }}>
       <svg
+        ref={svgRef as any}
         className="absolute inset-0"
         style={{ width: '100%', height: '100%' }}
         dangerouslySetInnerHTML={{ __html: svgContent }}
       />
+
+      {tooltip && (
+        <div
+          className="absolute rounded-xl border border-cyan-500/30 bg-black/80 backdrop-blur-md p-2 text-xs text-white pointer-events-auto"
+          style={{ left: tooltip.screenX + 8, top: tooltip.screenY + 8 }}
+        >
+          <div className="font-medium mb-1">
+            {tooltip.type === 'user' ? 'Buzz Area (ultima valida)' : 'Search Area'}
+          </div>
+          {tooltip.label && <div className="opacity-80">{tooltip.label}</div>}
+          <div className="opacity-80">Raggio: {(tooltip.radius/1000).toFixed(1)} km</div>
+          <div className="mt-2 flex gap-2">
+            <button
+              className="px-2 py-1 rounded bg-black/60 border border-cyan-500/30 hover:bg-black/80"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!map) return;
+                map.flyTo({ center: [tooltip.lng, tooltip.lat], zoom: Math.max(map.getZoom(), 15), duration: 800 });
+                setTooltip(null);
+              }}
+            >
+              Focus
+            </button>
+            {tooltip.type === 'search' && onDeleteSearchArea && (
+              <button
+                className="px-2 py-1 rounded border border-red-500/30 text-red-300 hover:bg-red-500/10"
+                onClick={(e) => { e.stopPropagation(); onDeleteSearchArea(tooltip.id); setTooltip(null); }}
+              >
+                Elimina
+              </button>
+            )}
+            <button
+              className="px-2 py-1 rounded border border-white/10 opacity-70 hover:opacity-100"
+              onClick={(e) => { e.stopPropagation(); setTooltip(null); }}
+            >
+              Chiudi
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
