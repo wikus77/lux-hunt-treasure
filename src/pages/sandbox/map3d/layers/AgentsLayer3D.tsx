@@ -56,18 +56,10 @@ const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled, agents: age
     };
   }, [map, agents, enabled]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online': return '#24E39E';
-      case 'idle': return '#FFB347';
-      default: return '#8DA3B8';
-    }
-  };
-
   if (!enabled || agents.length === 0) return null;
 
   return (
-    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }}>
+    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 650 }}>
       {agents.map((agent) => {
         const pos = positions.get(agent.id);
         if (!pos) return null;
@@ -84,10 +76,6 @@ const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled, agents: age
           >
             <div
               className="m1-agent-dot"
-              style={{
-                background: getStatusColor(agent.status),
-                boxShadow: `0 0 10px ${getStatusColor(agent.status)}`
-              }}
               title={agent.username}
             />
           </div>

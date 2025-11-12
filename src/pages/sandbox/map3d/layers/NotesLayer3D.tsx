@@ -83,7 +83,7 @@ const NotesLayer3D: React.FC<NotesLayer3DProps> = ({ map, enabled }) => {
 
   return (
     <>
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 13 }}>
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 670 }}>
         {notes.map((note) => {
           const pos = positions.get(note.id);
           if (!pos) return null;

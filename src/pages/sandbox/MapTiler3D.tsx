@@ -28,6 +28,7 @@ import LayerTogglePanel from './map3d/components/LayerTogglePanel';
 import '@/styles/map-dock.css';
 import '@/styles/portal-container.css';
 import '@/styles/portals.css';
+import '@/styles/agents.css';
 import '@/features/living-map/styles/livingMap.css';
 import M1UPill from '@/features/m1u/M1UPill';
 import { use3DDevMocks } from './hooks/use3DDevMocks';
