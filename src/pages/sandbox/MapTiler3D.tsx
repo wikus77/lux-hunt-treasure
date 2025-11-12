@@ -154,20 +154,18 @@ export default function MapTiler3D() {
   }, [devMocks.notesSeed]);
   
   // Prepare effective data with dev fallbacks (prefer live when available)
-  const effectiveAgents = (liveAgents && liveAgents.length > 0)
-    ? liveAgents
-    : (DEV_MOCKS ? devMocks.agents : []);
+  // Use ONLY live agents; never fallback to dev ones here
+  const effectiveAgents = (liveAgents && liveAgents.length > 0) ? liveAgents : [];
   const effectiveRewardMarkers = DEV_MOCKS ? devMocks.rewards : rewardMarkersLive;
   const effectiveUserAreas = DEV_MOCKS 
     ? devMocks.userAreas
     : currentWeekAreas?.length 
       ? currentWeekAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius_km * 1000 }))
       : [];
-  const effectiveSearchAreas = DEV_MOCKS
-    ? devMocks.searchAreas
-    : searchAreas?.length
-      ? searchAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius }))
-      : [];
+  // Always use hook-managed search areas (DB/local), never static dev seeds
+  const effectiveSearchAreas = searchAreas?.length
+    ? searchAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius }))
+    : [];
 
   useEffect(() => {
     console.debug('[Map3D] 📊 Live layers loaded:', {
