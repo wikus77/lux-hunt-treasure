@@ -14,7 +14,6 @@ type RewardMarker = {
   lng: number; 
   type: 'M1U' | 'PULSE' | 'PRIZE';
   title: string;
-  active: boolean;
 };
 
 type Note = { 
@@ -67,24 +66,21 @@ export function use3DDevMocks() {
       lat: 43.811, 
       lng: 7.634, 
       type: 'M1U',
-      title: 'Bonus +50 M1U',
-      active: true
+      title: 'Bonus +50 M1U' 
     },
     { 
       id: generateId('reward', 1), 
       lat: 43.806, 
       lng: 7.645, 
       type: 'PRIZE',
-      title: 'Prize Hint Chest',
-      active: true
+      title: 'Prize Hint Chest' 
     },
     { 
       id: generateId('reward', 2), 
       lat: 43.799, 
       lng: 7.651, 
       type: 'PULSE',
-      title: 'Pulse Energy +5',
-      active: true
+      title: 'Pulse Energy +5' 
     },
   ];
 

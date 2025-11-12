@@ -4,7 +4,7 @@ import type { Map as MLMap } from 'maplibre-gl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { X } from 'lucide-react';
+import { MapPin, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Note {
@@ -83,7 +83,7 @@ const NotesLayer3D: React.FC<NotesLayer3DProps> = ({ map, enabled }) => {
 
   return (
     <>
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 670 }}>
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 13 }}>
         {notes.map((note) => {
           const pos = positions.get(note.id);
           if (!pos) return null;
@@ -102,18 +102,11 @@ const NotesLayer3D: React.FC<NotesLayer3DProps> = ({ map, enabled }) => {
                 setEditingNote({ title: note.title, note: note.note });
               }}
             >
-              <div
-                className="map-point-marker"
-                style={{
-                  width: 10,
-                  height: 10,
-                  backgroundColor: '#00f0ff',
-                  borderRadius: '50%',
-                  border: '2px solid white',
-                  boxShadow: '0 0 8px rgba(0, 240, 255, 0.8)',
-                  cursor: 'pointer'
-                }}
-                title={note.title || 'Nota'}
+              <MapPin
+                className="text-purple-500"
+                size={24}
+                fill={note.note ? '#a855f7' : 'transparent'}
+                style={{ filter: 'drop-shadow(0 0 4px rgba(168, 85, 247, 0.8))' }}
               />
             </div>
           );
