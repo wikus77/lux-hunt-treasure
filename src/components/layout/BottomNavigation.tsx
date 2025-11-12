@@ -296,3 +296,5 @@ const BottomNavigationComponent = () => {
 // Export with explicit name for iOS Capacitor compatibility
 const BottomNavigation = BottomNavigationComponent;
 export default BottomNavigation;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
