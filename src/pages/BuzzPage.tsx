@@ -12,7 +12,7 @@ import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
-import { M1UnitsPill } from '@/components/m1units/M1UnitsPill';
+import M1UPill from '@/features/m1u/M1UPill';
 
 export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
@@ -91,18 +91,18 @@ export const BuzzPage: React.FC = () => {
             </h1>
           </div>
 
-          {/* M1U Pill Slot - Buzz (moved to LEFT per incident report) */}
+          {/* M1U Pill Slot - Buzz (positioned top-right per design spec) */}
           <div 
             id="m1u-pill-buzz-slot" 
-            className="fixed top-4 left-4 z-[1000] flex items-center gap-2"
+            className="fixed top-4 right-4 z-[1000] flex items-center gap-2"
             style={{ 
               paddingTop: 'env(safe-area-inset-top, 0px)',
-              paddingLeft: 'env(safe-area-inset-left, 0px)',
+              paddingRight: 'env(safe-area-inset-right, 0px)',
               pointerEvents: 'auto' 
             }}
             aria-hidden={false}
           >
-            <M1UnitsPill showLabel showPlusButton />
+            <M1UPill showLabel showPlusButton />
           </div>
 
 

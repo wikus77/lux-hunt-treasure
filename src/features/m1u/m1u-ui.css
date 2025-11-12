@@ -1,0 +1,121 @@
+/* M1U Pill UI Styles - Glassmorphism Design
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */
+
+/* A) Modal overlay + card (per RechargeModal eventuale) */
+.m1u-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+.m1u-modal-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(15, 15, 15, 0.9);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* B) Main Pill */
+.m1u-pill-main {
+  min-height: 40px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+/* C) Plus Orb Button */
+.pill-orb {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.08),
+    rgba(0, 0, 0, 0.4) 80%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35),
+    0 0 20px rgba(0, 255, 255, 0.12) inset;
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.pill-orb:before,
+.pill-orb:after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 72px;
+  height: 72px;
+  margin: -36px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 255, 255, 0.25);
+  animation: ringSpin 12s linear infinite;
+  transform-origin: center;
+}
+
+.pill-orb:after {
+  border-color: rgba(0, 255, 255, 0.35);
+  animation-duration: 18s;
+}
+
+.pill-orb .dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  top: 6px;
+  left: 50%;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: #9ff;
+  box-shadow: 0 0 8px #9ff;
+  transform-origin: 24px 24px;
+  animation: orbit 18s linear infinite;
+}
+
+@keyframes ringSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Glow hover */
+.pill-orb:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35),
+    0 0 24px rgba(0, 255, 255, 0.35) inset;
+}
+
+/* Responsive tweaks */
+@media (max-width: 480px) {
+  .pill-orb {
+    width: 52px;
+    height: 52px;
+  }
+  .pill-orb:before,
+  .pill-orb:after {
+    width: 64px;
+    height: 64px;
+    margin: -32px;
+  }
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

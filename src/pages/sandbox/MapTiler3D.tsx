@@ -29,6 +29,7 @@ import '@/styles/map-dock.css';
 import '@/styles/portal-container.css';
 import '@/styles/portals.css';
 import '@/features/living-map/styles/livingMap.css';
+import M1UPill from '@/features/m1u/M1UPill';
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
 const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
@@ -596,6 +597,20 @@ export default function MapTiler3D() {
         searchAreas={effectiveSearchAreas}
       />
       <NotesLayer3D map={mapRef.current} enabled={layerVisibility.notes} />
+
+      {/* M1U Pill Slot - Map 3D (overlay fixed top-right) */}
+      <div 
+        id="m1u-pill-map3d-slot" 
+        className="fixed top-4 right-4 z-[1001] flex items-center gap-2"
+        style={{ 
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingRight: 'env(safe-area-inset-right, 0px)',
+          pointerEvents: 'auto' 
+        }}
+        aria-hidden={false}
+      >
+        <M1UPill showLabel showPlusButton />
+      </div>
 
       {/* Layer Toggle Panel */}
       <LayerTogglePanel layers={layerVisibility} onToggle={toggleLayer} />
