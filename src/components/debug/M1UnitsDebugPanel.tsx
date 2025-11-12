@@ -33,6 +33,7 @@ export const M1UnitsDebugPanel = () => {
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [logs, setLogs] = useState<string[]>([]);
   const [showPanel, setShowPanel] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Check if dev mode enabled
   useEffect(() => {
@@ -115,15 +116,21 @@ export const M1UnitsDebugPanel = () => {
   return (
     <div className="fixed bottom-4 right-4 z-[9999] max-w-md">
       <Card className="bg-black/90 border-cyan-500/50 backdrop-blur-sm">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
           <CardTitle className="text-cyan-400 text-sm font-mono flex items-center justify-between">
-            M1U DEBUG PANEL
+            <span className="flex items-center gap-2">
+              M1U DEBUG PANEL
+              <span className="text-cyan-300/60 text-xs">
+                {isExpanded ? '▼' : '▶'}
+              </span>
+            </span>
             <Badge className={CONNECTION_STATE_COLORS[connectionState]}>
               {CONNECTION_STATE_LABELS[connectionState]}
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        {isExpanded && (
+          <CardContent className="space-y-3 animate-accordion-down">
           {/* Current Balance Display */}
           <div className="bg-cyan-950/30 p-3 rounded border border-cyan-500/30">
             <div className="text-xs text-cyan-300/70 mb-1">Current Balance</div>
@@ -189,6 +196,7 @@ export const M1UnitsDebugPanel = () => {
             {userId ? `Channel: m1_units_user_${userId.slice(0, 8)}...` : 'Not authenticated'}
           </div>
         </CardContent>
+        )}
       </Card>
     </div>
   );
