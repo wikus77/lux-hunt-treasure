@@ -14,7 +14,7 @@ import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useLocation } from "wouter";
 import { Cpu } from "lucide-react";
 import { useDeepLinkQR } from "@/hooks/useDeepLinkQR";
-import { M1UnitsPill } from "@/components/m1units/M1UnitsPill";
+import M1UPill from "@/features/m1u/M1UPill";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -212,17 +212,17 @@ const { isConnected } = useRealTimeNotifications();
                   
                   <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
 
-                  {/* M1U Pill Slot - Home (inside hero, aligned LEFT per incident report) */}
+                  {/* M1U Pill Slot - Home (inside hero, aligned right per design spec) */}
                   <div
                     id="m1u-pill-home-slot"
-                    className="absolute top-0 left-0 z-[1000] flex items-center gap-3"
+                    className="absolute top-0 right-0 z-[1000] flex items-center gap-3"
                     style={{ 
                       pointerEvents: 'auto',
-                      paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))'
+                      paddingRight: 'max(1rem, env(safe-area-inset-right, 0px))'
                     }}
                     aria-hidden={false}
                   >
-                    <M1UnitsPill showLabel showPlusButton />
+                    <M1UPill showLabel showPlusButton />
                   </div>
                 </motion.div>
 
