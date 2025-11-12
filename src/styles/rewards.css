@@ -1,0 +1,40 @@
+/* M1SSION Rewards (Indizi) Layer Styles */
+
+.reward-marker {
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.3s ease;
+}
+
+.reward-marker:hover {
+  transform: scale(1.15);
+}
+
+/* Reward pulse animation */
+@keyframes rewardPulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 8px 2px rgba(16, 185, 129, 0.8),
+      0 0 16px 4px rgba(16, 185, 129, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 
+      0 0 12px 3px rgba(16, 185, 129, 1),
+      0 0 24px 6px rgba(16, 185, 129, 0.6);
+    transform: scale(1.1);
+  }
+}
+
+.reward-marker {
+  animation: rewardPulse 2.5s ease-in-out infinite;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .reward-marker {
+    animation: none;
+  }
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

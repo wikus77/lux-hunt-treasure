@@ -1,0 +1,35 @@
+/* M1SSION Map Notes (POI) Layer Styles */
+
+.map-point-marker {
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.map-point-marker:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 1) !important;
+}
+
+/* Note pulse animation */
+@keyframes notePointPulse {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(0, 240, 255, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.9);
+  }
+}
+
+.map-point-marker {
+  animation: notePointPulse 2s infinite;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .map-point-marker {
+    animation: none;
+  }
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
