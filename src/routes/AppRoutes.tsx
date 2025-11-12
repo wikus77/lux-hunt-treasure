@@ -14,7 +14,6 @@ import CinematicHomePage from "@/pages/CinematicHomePage";
 
 // Main app routes - STATIC IMPORTS FOR CAPACITOR iOS COMPATIBILITY
 import AppHome from "@/pages/AppHome";
-import Map from "@/pages/Map";
 import { BuzzPage } from "@/pages/BuzzPage";
 import Games from "@/pages/Games";
 import Leaderboard from "@/pages/Leaderboard";
@@ -94,17 +93,7 @@ const AppRoutes: React.FC = () => {
               }
             />
             
-            {/* MAP ROUTE - iOS Optimized */}
-            <Route
-              path="/map"
-              element={
-                <ProtectedRoute>
-                  <GlobalLayout>
-                    <Map />
-                  </GlobalLayout>
-                </ProtectedRoute>
-              }
-            />
+            {/* /map route removed - now using /map-3d-tiler */}
             
             <Route
               path="/buzz"

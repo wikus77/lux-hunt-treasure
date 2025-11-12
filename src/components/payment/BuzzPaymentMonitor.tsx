@@ -40,7 +40,7 @@ const BuzzPaymentMonitor: React.FC = () => {
             
             const redirectToMap = () => {
               console.log('🗺️ Redirecting to map with state restoration');
-              navigate("/map", {
+              navigate("/map-3d-tiler", {
                 replace: true,
                 state: { restorePreviousMapState: true }
               });

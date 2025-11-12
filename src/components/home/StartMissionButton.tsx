@@ -99,7 +99,7 @@ export const StartMissionButton: React.FC = () => {
       });
 
       setTimeout(() => {
-        setLocation('/map');
+        setLocation('/map-3d-tiler');
       }, 800);
     } catch (err) {
       console.error('❌ [START-MISSION] Unexpected error:', err);

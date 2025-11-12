@@ -31,7 +31,7 @@ export const useMapNavigation = () => {
 
   const forceNavigateToMap = () => {
     console.log('🧭 Force navigate to map');
-    navigate('/map', { replace: true });
+    navigate('/map-3d-tiler', { replace: true });
   };
 
   const debugNavigation = () => {

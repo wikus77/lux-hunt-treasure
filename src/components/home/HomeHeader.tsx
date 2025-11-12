@@ -121,7 +121,7 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
               variant="ghost" 
               className="w-full text-left justify-start" 
               onClick={() => {
-                navigate('/map');
+                navigate('/map-3d-tiler');
                 setIsMenuOpen(false);
               }}
             >
