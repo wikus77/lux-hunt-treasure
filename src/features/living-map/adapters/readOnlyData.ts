@@ -28,6 +28,8 @@ export interface AgentDTO {
   username: string;
   status: 'online' | 'idle' | 'offline';
   lastSeen: string;
+  agent_code?: string;
+  rank_id?: number;
 }
 
 export interface ZoneDTO {
@@ -178,23 +180,37 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
       return [];
     }
     
-    // Get user profiles for usernames
+    // Get user profiles for usernames, agent_code, and rank_id
     const userIds = locations.map((l: any) => l.user_id);
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, full_name')
+      .select('id, full_name, agent_code, rank_id')
       .in('id', userIds);
     
-    const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
+    const profileMap = new Map(
+      profiles?.map(p => [
+        p.id, 
+        { 
+          full_name: p.full_name, 
+          agent_code: (p as any).agent_code, 
+          rank_id: (p as any).rank_id 
+        }
+      ]) || []
+    );
     
-    const agents = locations.map((row: any) => ({
-      id: row.user_id,
-      lat: row.lat,
-      lng: row.lng,
-      username: profileMap.get(row.user_id) || 'Agent',
-      status: row.status,
-      lastSeen: row.last_seen
-    }));
+    const agents = locations.map((row: any) => {
+      const profile = profileMap.get(row.user_id);
+      return {
+        id: row.user_id,
+        lat: row.lat,
+        lng: row.lng,
+        username: profile?.full_name || 'Agent',
+        status: row.status,
+        lastSeen: row.last_seen,
+        agent_code: profile?.agent_code,
+        rank_id: profile?.rank_id
+      };
+    });
     
     console.debug('[LiveAgents] Data source: DB', { count: agents.length });
     return agents;

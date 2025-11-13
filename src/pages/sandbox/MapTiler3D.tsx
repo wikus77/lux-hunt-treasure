@@ -662,12 +662,40 @@ export default function MapTiler3D() {
   const [showAgentCard, setShowAgentCard] = useState(false);
   const [showBattleModal, setShowBattleModal] = useState(false);
   const [preSelectedOpponent, setPreSelectedOpponent] = useState<{ id: string; name: string } | undefined>();
+  const [selectedAgentRank, setSelectedAgentRank] = useState<string>('Agent');
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setBattleUserId(data.user?.id || null);
     });
   }, []);
+
+  // Fetch agent rank when agent is selected
+  useEffect(() => {
+    if (!selectedAgent?.rank_id) {
+      setSelectedAgentRank('Agent');
+      return;
+    }
+
+    const fetchRank = async () => {
+      try {
+        const { data: rank } = await (supabase as any)
+          .from('agent_ranks')
+          .select('code, name_en')
+          .eq('id', selectedAgent.rank_id)
+          .single();
+
+        if (rank) {
+          setSelectedAgentRank(rank.name_en || rank.code || 'Agent');
+        }
+      } catch (err) {
+        console.error('[AgentCard] Failed to fetch rank:', err);
+        setSelectedAgentRank('Agent');
+      }
+    };
+
+    fetchRank();
+  }, [selectedAgent?.rank_id]);
 
   const handleAgentClick = (agent: any) => {
     setSelectedAgent(agent);
@@ -678,7 +706,7 @@ export default function MapTiler3D() {
     setShowAgentCard(false);
     setPreSelectedOpponent({
       id: selectedAgent.id,
-      name: selectedAgent.username || `Agent ${selectedAgent.id.slice(0, 6)}`,
+      name: selectedAgent.username || selectedAgent.agent_code || `Agent ${selectedAgent.id.slice(0, 6)}`,
     });
     setShowBattleModal(true);
   };
@@ -758,7 +786,7 @@ export default function MapTiler3D() {
         <Button
           onClick={handleResetBearing}
           size="sm"
-          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/60 p-0 shadow-lg shadow-cyan-500/20"
+          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/80 hover:shadow-cyan-500/40 p-0 shadow-lg shadow-cyan-500/20 transition-all duration-300"
           style={{
             background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.4) 68%)',
           }}
@@ -770,7 +798,7 @@ export default function MapTiler3D() {
         <Button
           onClick={handleFindMyLocation}
           size="sm"
-          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/60 p-0 shadow-lg shadow-cyan-500/20"
+          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/80 hover:shadow-cyan-500/40 p-0 shadow-lg shadow-cyan-500/20 transition-all duration-300"
           style={{
             background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.4) 68%)',
           }}
@@ -782,7 +810,7 @@ export default function MapTiler3D() {
         <Button
           onClick={handleCenterLocation}
           size="sm"
-          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/60 p-0 shadow-lg shadow-cyan-500/20"
+          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/80 hover:shadow-cyan-500/40 p-0 shadow-lg shadow-cyan-500/20 transition-all duration-300"
           style={{
             background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.4) 68%)',
           }}
@@ -794,7 +822,7 @@ export default function MapTiler3D() {
         <Button
           onClick={handleResetView}
           size="sm"
-          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/60 p-0 shadow-lg shadow-cyan-500/20"
+          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/80 hover:shadow-cyan-500/40 p-0 shadow-lg shadow-cyan-500/20 transition-all duration-300"
           style={{
             background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.4) 68%)',
           }}
@@ -878,9 +906,9 @@ export default function MapTiler3D() {
         <AgentBattleCard
           isOpen={showAgentCard}
           onClose={() => setShowAgentCard(false)}
-          agentCode={`AG-${selectedAgent.id.slice(0, 6).toUpperCase()}`}
+          agentCode={selectedAgent.agent_code || `AG-${selectedAgent.id.slice(0, 6).toUpperCase()}`}
           displayName={selectedAgent.username}
-          rank="Agent"
+          rank={selectedAgentRank}
           isAttackable={true}
           status="available"
           onAttack={handleAttackAgent}
