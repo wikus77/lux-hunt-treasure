@@ -46,8 +46,9 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   const currentCostM1U = hasFreeBuzz ? 0 : getCurrentBuzzCostM1U();
   const currentPriceDisplay = hasFreeBuzz ? 'GRATIS' : getCurrentBuzzDisplayCostM1U();
   
+  // 🔥 FIX: Pass actual M1U cost to useBuzzHandler to avoid price check blocking
   const { buzzing, showShockwave, handleBuzz } = useBuzzHandler({
-    currentPrice: 0, // No longer used for M1U system
+    currentPrice: currentCostM1U, // Use actual M1U cost for validation
     onSuccess,
     hasFreeBuzz
   });
