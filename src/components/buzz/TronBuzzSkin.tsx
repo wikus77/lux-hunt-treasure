@@ -17,14 +17,17 @@ export const TronBuzzSkin: React.FC<TronBuzzSkinProps> = ({
 }) => {
   return (
     <div className="tron-disc">
-      {/* Internal LED Ring - shows loading animation when active */}
-      <div className={`tron-led-ring ${isLoading ? 'loading' : ''}`} />
+      {/* Rotating elements wrapper - spins continuously */}
+      <div className="tron-disc-rotating">
+        {/* Internal LED Ring - shows loading animation when active */}
+        <div className={`tron-led-ring ${isLoading ? 'loading' : ''}`} />
+        
+        {/* Decorative dots at cardinal points */}
+        <div className="tron-disc-dots" />
+        <div className="tron-disc-dots-sides" />
+      </div>
       
-      {/* Decorative dots at cardinal points */}
-      <div className="tron-disc-dots" />
-      <div className="tron-disc-dots-sides" />
-      
-      {/* Central content - only the price */}
+      {/* Central content - STABLE, does not rotate */}
       <div className="tron-disc-content">
         {isLoading ? (
           <div className="flex flex-col items-center space-y-2">

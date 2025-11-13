@@ -19,7 +19,6 @@
   cursor: pointer;
   user-select: none;
   isolation: isolate;
-  will-change: transform, opacity;
   
   /* Dark metallic gradient base */
   background: 
@@ -35,6 +34,25 @@
     inset 0 2px 8px rgba(255, 255, 255, 0.05);
   
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Rotating wrapper - contains all visual elements that spin */
+.tron-disc-rotating {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: tronDiscVortex 3s linear infinite;
+  will-change: transform;
+}
+
+/* Vortex rotation animation */
+@keyframes tronDiscVortex {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 640px) {
