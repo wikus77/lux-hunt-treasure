@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// M1SSION™ - BUZZ Action Button with Progressive Pricing & Universal Stripe In-App Payment
+// M1SSION™ - BUZZ Action Button with M1U Payment System
 import React, { useEffect, useRef } from 'react';
 
 // --- BUZZ TOAST GLOBAL LOCK (shared) ---
@@ -8,16 +8,15 @@ const __buzz = (globalThis as any).__buzzToastLock ?? { shown: false, t: 0 };
 import { useBuzzHandler } from '@/hooks/buzz/useBuzzHandler';
 import { BuzzButton } from './BuzzButton';
 import { ShockwaveAnimation } from './ShockwaveAnimation';
-import { useStripeInAppPayment } from '@/hooks/useStripeInAppPayment';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useBuzzGrants } from '@/hooks/useBuzzGrants';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
+import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { toast } from 'sonner';
-import StripeInAppCheckout from '@/components/subscription/StripeInAppCheckout';
-import { validateBuzzPrice } from '@/lib/constants/buzzPricing';
-import { supabase } from '@/integrations/supabase/client'; // © 2025 Joseph MULÉ – M1SSION™
-import { v4 as uuidv4 } from 'uuid'; // © 2025 Joseph MULÉ – M1SSION™
+import { showInsufficientM1UToast, showM1UDebitSuccessToast } from '@/utils/m1uHelpers';
+import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
 
 interface BuzzActionButtonProps {
   isBlocked: boolean;
@@ -31,34 +30,26 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   isWalkthroughMode = false
 }) => {
   const { user } = useUnifiedAuth();
-  const { hasFreeBuzz, consumeFreeBuzz, totalRemaining, dailyUsed } = useBuzzGrants(); // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-  const { playSound } = useSoundEffects(); // © 2025 Joseph MULÉ – M1SSION™ – Spacecraft ignition audio
+  const { hasFreeBuzz, consumeFreeBuzz, totalRemaining, dailyUsed } = useBuzzGrants();
+  const { playSound } = useSoundEffects();
+  const { unitsData } = useM1UnitsRealtime(user?.id);
   
-  // Enhanced BUZZ counter with progressive pricing
+  // Enhanced BUZZ counter with M1U pricing
   const { 
     dailyBuzzCounter, 
-    getCurrentBuzzPriceCents,
-    getCurrentBuzzDisplayPrice,
+    getCurrentBuzzCostM1U,
+    getCurrentBuzzDisplayCostM1U,
     updateDailyBuzzCounter
   } = useBuzzCounter(user?.id);
   
-  // Progressive pricing calculation (free if grants available)
-  const currentPriceCents = hasFreeBuzz ? 0 : getCurrentBuzzPriceCents();
-  const currentPriceEur = currentPriceCents / 100;
-  const currentPriceDisplay = hasFreeBuzz ? 'GRATIS' : getCurrentBuzzDisplayPrice();
-  
-  const { 
-    processBuzzPayment, 
-    showCheckout, 
-    paymentConfig, 
-    closeCheckout, 
-    handlePaymentSuccess 
-  } = useStripeInAppPayment();
+  // M1U pricing calculation (free if grants available)
+  const currentCostM1U = hasFreeBuzz ? 0 : getCurrentBuzzCostM1U();
+  const currentPriceDisplay = hasFreeBuzz ? 'GRATIS' : getCurrentBuzzDisplayCostM1U();
   
   const { buzzing, showShockwave, handleBuzz } = useBuzzHandler({
-    currentPrice: currentPriceEur,
+    currentPrice: 0, // No longer used for M1U system
     onSuccess,
-    hasFreeBuzz // 🔥 FIXED: Pass hasFreeBuzz flag to prevent price validation error
+    hasFreeBuzz
   });
 
   // © 2025 Joseph MULÉ – M1SSION™ – Progressive BUZZ Pricing Handler
@@ -162,28 +153,6 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       return;
     }
 
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check daily usage and trigger Stripe if needed
-    if (dailyUsed || !hasFreeBuzz) {
-      console.log('🔥 M1SSION™ PAID BUZZ REQUIRED: Free BUZZ exhausted for today');
-      toast.error('Hai già utilizzato il BUZZ gratuito oggi.');
-      
-      // Calculate current paid BUZZ price
-      const paidBuzzPriceCents = getCurrentBuzzPriceCents();
-      const paidBuzzPriceEur = paidBuzzPriceCents / 100;
-      
-      console.log('💳 M1SSION™ TRIGGERING STRIPE: Paid BUZZ required', {
-        priceCents: paidBuzzPriceCents,
-        priceEur: paidBuzzPriceEur,
-        dailyCount: dailyBuzzCounter,
-        userId: user.id,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Trigger Stripe payment flow
-      await processBuzzPayment(paidBuzzPriceCents, false);
-      return;
-    }
-
     // Check if free buzz is available first
     if (hasFreeBuzz) {
       console.log('🎁 M1SSION™ FREE BUZZ: Using free grant', { remaining: totalRemaining });
@@ -204,122 +173,84 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       }
     }
 
-    // Fallback to paid buzz with progressive pricing
-    console.log('🔥 M1SSION™ PROGRESSIVE BUZZ: Initiating payment', { 
+    // Paid BUZZ with M1U system
+    const costM1U = getCurrentBuzzCostM1U();
+    const currentBalance = unitsData?.balance || 0;
+    
+    console.log('💎 M1SSION™ M1U BUZZ: Initiating M1U payment', { 
       dailyCount: dailyBuzzCounter,
       nextClick: dailyBuzzCounter + 1,
-      priceCents: currentPriceCents,
-      priceEur: currentPriceEur,
+      costM1U,
+      currentBalance,
+      userId: user.id,
       timestamp: new Date().toISOString()
     });
 
-    // 🔥 FIXED: Only validate pricing for PAID buzz, skip validation for FREE buzz
-    if (!hasFreeBuzz && !validateBuzzPrice(dailyBuzzCounter, currentPriceCents)) {
-      console.error('❌ BUZZ PRICING VALIDATION FAILED');
-      toast.error('Errore nel calcolo del prezzo. Riprova.');
+    // Check M1U balance
+    if (currentBalance < costM1U) {
+      console.warn('❌ M1SSION™ M1U BUZZ: Insufficient M1U balance', {
+        required: costM1U,
+        available: currentBalance
+      });
+      showInsufficientM1UToast(costM1U, currentBalance);
       return;
     }
-    
-    console.log('💳 M1SSION™ PROGRESSIVE BUZZ: Opening in-app checkout', { 
-      priceCents: currentPriceCents, 
-      priceEur: currentPriceEur,
-      dailyCount: dailyBuzzCounter,
-      userId: user.id 
-    });
-    
-    // Open in-app checkout modal with validated progressive pricing
-    await processBuzzPayment(currentPriceCents, false);
-  };
 
-  const handlePaymentComplete = async (paymentIntentId: string) => {
-    console.log('✅ M1SSION™ PROGRESSIVE BUZZ: Payment completed', { 
-      paymentIntentId,
-      dailyCount: dailyBuzzCounter,
-      pricePaid: currentPriceEur
-    });
-    
     try {
-      // 🔥 FIXED: Get result from payment success to check if clue_text was displayed
-      const result = await handlePaymentSuccess(paymentIntentId);
-      
-      // 🔥 FIXED: Skip handleBuzz() call if clue was already processed by handle-buzz-payment-success
-      if (result.ok && result.skipFollowUpBuzzPress) {
-        console.log('🎯 M1SSION™ BUZZ: Skipping handleBuzz() - clue already processed by payment success');
-      } else {
-        // Legacy fallback: call handleBuzz() only if payment success didn't handle the clue
-        console.log('⚠️ M1SSION™ BUZZ: Falling back to handleBuzz() call');
-        await handleBuzz(/* context: { source: 'paid' } */);
-      }
-      
-      // Update BUZZ counter after successful payment
-      await updateDailyBuzzCounter();
-      
-      // Finally call parent success callback
-      onSuccess();
-      
-      console.log('✅ M1SSION™ BUZZ: Payment processing completed successfully', {
-        clueTextShown: !!result.clue_text,
-        skippedFollowUp: !!result.skipFollowUpBuzzPress
+      // Call RPC to spend M1U
+      const { data: spendResult, error: spendError } = await (supabase as any).rpc('buzz_spend_m1u', {
+        p_cost_m1u: costM1U
       });
-    } catch (error) {
-      console.error('❌ M1SSION™ PROGRESSIVE BUZZ: Error in post-payment processing', error);
-      toast.error('Errore nella finalizzazione BUZZ');
-    } finally {
-      // 🔥 ALWAYS fetch and show clue toast in finally block (even on error)
-      try {
-        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-        const { data, error } = await supabase
-          .from('user_notifications')
-          .select('id,type,title,message,metadata,created_at')
-          .eq('user_id', user!.id)
-          .eq('is_deleted', false)
-          .in('type', ['buzz', 'buzz_free'])
-          .gte('created_at', tenMinutesAgo)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        console.info({ step: 'buzz-toast', data, error, tenMinutesAgo });
-        
-        if (data?.message && !__buzz.shown) {
-          toast.success(data.message, {
-            duration: 4000,
-            position: 'top-center',
-            style: { 
-              zIndex: 9999,
-              background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
-              color: 'white',
-              fontWeight: 'bold'
-            }
-          });
-        } else if (!data) {
-          console.info('No fresh notification in last 10 minutes');
-        }
-      } catch (toastError) {
-        console.error('Error fetching toast notification:', toastError);
+
+      if (spendError) {
+        console.error('❌ M1SSION™ M1U BUZZ: RPC error', spendError);
+        toast.error('Errore nel processare il pagamento M1U');
+        return;
       }
+
+      if (!(spendResult as any)?.success) {
+        const errorType = (spendResult as any)?.error || 'unknown';
+        console.error('❌ M1SSION™ M1U BUZZ: Payment failed', { error: errorType });
+        
+        if (errorType === 'insufficient_m1u') {
+          showInsufficientM1UToast(costM1U, (spendResult as any).current_balance || 0);
+        } else {
+          toast.error(`Errore: ${errorType}`);
+        }
+        return;
+      }
+
+      // M1U spent successfully
+      console.log('✅ M1SSION™ M1U BUZZ: M1U spent successfully', {
+        spent: (spendResult as any).spent,
+        newBalance: (spendResult as any).new_balance
+      });
+
+      showM1UDebitSuccessToast((spendResult as any).spent, (spendResult as any).new_balance);
+
+      // Execute BUZZ action
+      await updateDailyBuzzCounter();
+      await handleBuzz();
+      onSuccess();
+
+    } catch (error: any) {
+      console.error('❌ M1SSION™ M1U BUZZ: Exception', error);
+      toast.error('Errore durante il BUZZ. Riprova.');
     }
   };
 
   return (
     <div className="relative flex flex-col items-center space-y-6">
       <BuzzButton
-        currentPrice={currentPriceEur}
+        currentPrice={currentCostM1U}
         isBlocked={isBlocked}
         buzzing={buzzing}
         onClick={handleAction}
       />
       
       <ShockwaveAnimation show={showShockwave} />
-      
-      {/* Universal Stripe In-App Checkout - © 2025 Joseph MULÉ – M1SSION™ */}
-      {showCheckout && paymentConfig && (
-        <StripeInAppCheckout
-          config={paymentConfig}
-          onSuccess={handlePaymentComplete}
-          onCancel={closeCheckout}
-        />
-      )}
     </div>
   );
 };
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

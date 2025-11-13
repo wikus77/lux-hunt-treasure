@@ -12,13 +12,13 @@ interface BuzzStats {
 interface BuzzInstructionsProps {
   stats: BuzzStats | null;
   isBlocked: boolean;
-  getCurrentBuzzPrice: (dailyCount: number) => number;
+  getCurrentBuzzCostM1U: (dailyCount: number) => number;
 }
 
 export const BuzzInstructions: React.FC<BuzzInstructionsProps> = ({
   stats,
   isBlocked,
-  getCurrentBuzzPrice
+  getCurrentBuzzCostM1U
 }) => {
   return (
     <div className="text-center space-y-2 z-30 max-w-md px-4">
@@ -32,7 +32,7 @@ export const BuzzInstructions: React.FC<BuzzInstructionsProps> = ({
           </div>
           {stats.today_count < 50 && (
             <div className="text-sm text-muted-foreground">
-              Prossimo: <span className="font-semibold">€{getCurrentBuzzPrice(stats.today_count + 1).toFixed(2)}</span>
+              Prossimo: <span className="font-semibold">{getCurrentBuzzCostM1U(stats.today_count + 1)} M1U</span>
             </div>
           )}
         </>
@@ -40,3 +40,5 @@ export const BuzzInstructions: React.FC<BuzzInstructionsProps> = ({
     </div>
   );
 };
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

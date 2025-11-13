@@ -6,9 +6,9 @@ import { Lock, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import { useBuzzMapPricingNew } from '@/hooks/useBuzzMapPricingNew';
-import { useStripeInAppPayment } from '@/hooks/useStripeInAppPayment';
+import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
+import { showInsufficientM1UToast } from '@/utils/m1uHelpers';
 import { supabase } from '@/integrations/supabase/client';
-import StripeInAppCheckout from '@/components/subscription/StripeInAppCheckout';
 
 interface BuzzMapButtonSecureProps {
   onBuzzPress: () => void;
@@ -25,19 +25,12 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
   const { 
     nextLevel, 
     nextRadiusKm, 
-    nextPriceEur, 
+    nextPriceEur,
+    nextCostM1U,
     loading: pricingLoading 
   } = useBuzzMapPricingNew(user?.id);
   
-  const { 
-    processBuzzPayment, 
-    showCheckout, 
-    closeCheckout, 
-    handlePaymentSuccess, 
-    paymentConfig,
-    loading 
-  } = useStripeInAppPayment();
-  
+  const { unitsData } = useM1UnitsRealtime(user?.id);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
 
@@ -85,7 +78,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
   };
 
   const handleBuzzMapPress = async () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
       toast.error('Devi accedere per usare BUZZ MAP.');
       return;
     }
@@ -103,79 +96,101 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
       timestamp: Date.now()
     }));
 
+    const costM1U = nextCostM1U;
+    const currentBalance = unitsData?.balance || 0;
+
+    console.log('💎 M1SSION™ BUZZ MAP: Initiating M1U payment', {
+      level: nextLevel,
+      radiusKm: nextRadiusKm,
+      costM1U,
+      currentBalance,
+      coordinates,
+      userId: user.id
+    });
+
+    // Check M1U balance
+    if (currentBalance < costM1U) {
+      console.warn('❌ M1SSION™ BUZZ MAP: Insufficient M1U balance', {
+        required: costM1U,
+        available: currentBalance
+      });
+      showInsufficientM1UToast(costM1U, currentBalance);
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      // Start payment flow - Always paid, no exceptions
-      const priceInCents = Math.round(nextPriceEur * 100);
-      await processBuzzPayment(priceInCents, true); // true = is BUZZ MAP
-      
+      // Call RPC to spend M1U and create BUZZ MAP area
+      const { data: spendResult, error: spendError } = await (supabase as any).rpc('buzz_map_spend_m1u', {
+        p_cost_m1u: costM1U,
+        p_latitude: coordinates[0],
+        p_longitude: coordinates[1],
+        p_radius_km: nextRadiusKm
+      });
+
+      if (spendError) {
+        console.error('❌ M1SSION™ BUZZ MAP: RPC error', spendError);
+        toast.error('Errore nel processare il pagamento M1U');
+        return;
+      }
+
+      if (!(spendResult as any)?.success) {
+        const errorType = (spendResult as any)?.error || 'unknown';
+        console.error('❌ M1SSION™ BUZZ MAP: Payment failed', { error: errorType });
+        
+        if (errorType === 'insufficient_m1u') {
+          showInsufficientM1UToast(costM1U, (spendResult as any).current_balance || 0);
+        } else {
+          toast.error(`Errore: ${errorType}`);
+        }
+        return;
+      }
+
+      // M1U spent and area created successfully
+      console.log('✅ M1SSION™ BUZZ MAP: M1U spent and area created', {
+        spent: (spendResult as any).spent,
+        newBalance: (spendResult as any).new_balance,
+        areaId: (spendResult as any).area_id
+      });
+
+      // Show success toast
+      toast.success(
+        `BUZZ MAP creato · Livello ${nextLevel} · ${Math.round(nextRadiusKm)}km · ${costM1U} M1U`,
+        {
+          duration: 4000,
+          style: {
+            background: 'linear-gradient(135deg, #9333EA 0%, #EF4444 100%)',
+            color: 'white',
+            fontWeight: 'bold'
+          }
+        }
+      );
+
+      // Notify parent components
+      onAreaGenerated?.(coordinates[0], coordinates[1], nextRadiusKm);
+      onBuzzPress();
+
+      // Dispatch success event for other components
+      window.dispatchEvent(new CustomEvent('buzzMapCreated', {
+        detail: { 
+          level: nextLevel,
+          radiusKm: nextRadiusKm,
+          costM1U,
+          coordinates,
+          areaId: (spendResult as any).area_id
+        }
+      }));
+
     } catch (error: any) {
-      console.error('❌ BUZZ MAP Error:', error);
+      console.error('❌ M1SSION™ BUZZ MAP: Exception', error);
       if (error.message?.includes('429')) {
-        toast.error('Hai raggiunto il limite giornaliero (5). Riprova dopo mezzanotte.');
-      } else if (error.message?.includes('403')) {
-        toast.error('Pagamento richiesto per BUZZ MAP.');
+        toast.error('Hai raggiunto il limite giornaliero. Riprova dopo mezzanotte.');
       } else {
-        toast.error('Errore durante l\'inizializzazione del pagamento');
+        toast.error('Errore durante la creazione della BUZZ MAP');
       }
     } finally {
       setIsProcessing(false);
-    }
-  };
-
-  const handlePaymentSuccessComplete = async (paymentIntentId: string) => {
-    try {
-      await handlePaymentSuccess(paymentIntentId);
-      
-      const coordinates = getCoordinates();
-      
-      // Call payment success handler for BUZZ MAP
-      const { data: { session } } = await supabase.auth.getSession();
-      const { data, error } = await supabase.functions.invoke('handle-buzz-payment-success', {
-        body: {
-          paymentIntentId: paymentIntentId,
-          isBuzzMap: true,
-          coordinates: {
-            lat: coordinates[0],
-            lng: coordinates[1]
-          }
-        },
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
-        }
-      });
-
-      if (error) {
-        console.error('❌ Handle buzz press error:', error);
-        throw error;
-      }
-
-      if (data?.success) {
-        // Show success toast with detailed info as requested
-        const level = data.level || nextLevel;
-        const radius_km = data.radius_km || nextRadiusKm / 1000;
-        const price_eur = data.price_eur || nextPriceEur;
-        
-        toast.success(`BUZZ creato · Livello ${level} · ${radius_km}km · €${price_eur.toFixed(2)}`);
-        
-        onAreaGenerated?.(coordinates[0], coordinates[1], radius_km);
-        onBuzzPress();
-        
-        // Dispatch success event for other components
-        window.dispatchEvent(new CustomEvent('paymentIntentSucceeded', {
-          detail: { 
-            paymentIntentId,
-            level,
-            radius_km,
-            price_eur,
-            coordinates
-          }
-        }));
-      }
-    } catch (error) {
-      console.error('Error in post-payment processing:', error);
-      toast.error('Errore nella finalizzazione BUZZ MAP');
     }
   };
 
@@ -192,10 +207,10 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         <motion.button
           className="relative rounded-full transition-all duration-300 bg-gradient-to-br from-purple-500 to-red-500 hover:scale-110 active:scale-95"
           onClick={handleBuzzMapPress}
-          disabled={!isAuthenticated || isProcessing || loading || pricingLoading}
+          disabled={!isAuthenticated || isProcessing || pricingLoading}
           style={{
-            width: '96px', // +10% from original 88px
-            height: '96px', // +10% from original 88px
+            width: '96px',
+            height: '96px',
             border: '2px solid rgba(255, 255, 255, 0.2)',
             boxShadow: `
               inset 0 -8px 20px rgba(0, 0, 0, 0.4),
@@ -236,7 +251,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
           }}
         >
           <div className="absolute top-0 left-0 w-full h-full rounded-full flex flex-col items-center justify-center">
-            {isProcessing || loading ? (
+            {isProcessing || pricingLoading ? (
               <Lock className="text-white animate-pulse" size={28} />
             ) : (
               <>
@@ -244,24 +259,17 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
                   BUZZ MAP
                 </span>
                 <span className="text-xs text-white/90 leading-none mt-1">
-                  {Math.round(nextRadiusKm)}km · €{nextPriceEur.toFixed(2)}
+                  {Math.round(nextRadiusKm)}km · {nextCostM1U} M1U
                 </span>
               </>
             )}
           </div>
         </motion.button>
       </motion.div>
-      
-      {/* Stripe In-App Checkout */}
-      {showCheckout && paymentConfig && (
-        <StripeInAppCheckout
-          config={paymentConfig}
-          onSuccess={handlePaymentSuccessComplete}
-          onCancel={closeCheckout}
-        />
-      )}
     </>
   );
 };
 
 export default BuzzMapButtonSecure;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
