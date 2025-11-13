@@ -18,11 +18,14 @@ import BottomNavigation from '@/components/layout/BottomNavigation';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useProfileImage } from '@/hooks/useProfileImage';
+import { usePerformanceSettings } from '@/hooks/usePerformanceSettings';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const MissionSettings: React.FC = () => {
   const { navigate } = useWouterNavigation();
   const { user } = useAuth();
   const { profileImage } = useProfileImage();
+  const { battleFxMode, setBattleFxMode, isLoading } = usePerformanceSettings();
 
   return (
     <div className="min-h-screen">
@@ -98,6 +101,49 @@ const MissionSettings: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Battle FX Performance Settings */}
+        <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-white font-orbitron flex items-center">
+              <Zap className="h-5 w-5 mr-2 text-[#00D1FF]" />
+              Battle FX Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/90">
+                Performance Mode
+              </label>
+              <p className="text-xs text-white/60 mb-2">
+                Regola la qualità degli effetti visivi Battle per ottimizzare le prestazioni
+              </p>
+              <Select
+                value={battleFxMode}
+                onValueChange={(value: 'high' | 'low') => setBattleFxMode(value)}
+                disabled={isLoading}
+              >
+                <SelectTrigger className="w-full bg-black/20 border-white/20 text-white">
+                  <SelectValue placeholder="Seleziona modalità" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="high">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Alta Qualità</span>
+                      <span className="text-xs text-muted-foreground">Effetti completi e ricchi</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="low">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Performance</span>
+                      <span className="text-xs text-muted-foreground">Effetti semplificati per device meno potenti</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Quick Actions */}
         <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
