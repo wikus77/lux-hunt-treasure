@@ -229,6 +229,39 @@ serve(async (req) => {
 
     console.log(`✅ Battle created: ${battle.id} by ${user.id}`);
 
+    // Phase 5: Send battle invite notification to opponent
+    try {
+      const { data: creatorProfile } = await supabase
+        .from('profiles')
+        .select('agent_code, display_name')
+        .eq('id', user.id)
+        .single();
+
+      const creatorName = creatorProfile?.agent_code || creatorProfile?.display_name || 'Agent';
+
+      await supabase.from('battle_notifications').insert({
+        user_id_target: opponent_id,
+        type: 'battle_invite',
+        payload: {
+          title: `🎯 ${creatorName} ti sfida!`,
+          body: `Battle ${stake_type} - Stake: ${stakeAmount} (${stake_percentage}%)`,
+          url: '/map-3d-tiler',
+          battle_id: battle.id,
+          creator_id: user.id,
+          creator_name: creatorName,
+          stake_type,
+          stake_amount: stakeAmount,
+          arena_name: arenaName,
+        },
+        dedupe_key: `${battle.id}_invite`,
+      });
+
+      console.log(`📬 Battle invite notification queued for opponent: ${opponent_id}`);
+    } catch (notifError) {
+      console.error('⚠️ Failed to queue battle invite notification:', notifError);
+      // Non-blocking error - battle creation succeeded
+    }
+
     return Response.json(
       {
         success: true,

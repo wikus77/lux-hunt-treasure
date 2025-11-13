@@ -195,6 +195,65 @@ serve(async (req) => {
 
     console.log(`🏆 Battle resolved: ${battle_id} - Winner: ${winnerId} (${winnerReaction}ms)`);
 
+    // Phase 5: Send battle_resolved notifications to both participants
+    try {
+      const { data: winnerProfile } = await supabase
+        .from('profiles')
+        .select('agent_code, display_name')
+        .eq('id', winnerId)
+        .single();
+
+      const { data: loserProfile } = await supabase
+        .from('profiles')
+        .select('agent_code, display_name')
+        .eq('id', loserId)
+        .single();
+
+      const winnerName = winnerProfile?.agent_code || winnerProfile?.display_name || 'Winner';
+      const loserName = loserProfile?.agent_code || loserProfile?.display_name || 'Loser';
+
+      // Notification for winner
+      await supabase.from('battle_notifications').insert({
+        user_id_target: winnerId,
+        type: 'battle_resolved',
+        payload: {
+          title: '🏆 Vittoria!',
+          body: `Hai battuto ${loserName} - +${stakeAmount} ${battle.stake_type}`,
+          url: '/map-3d-tiler',
+          battle_id,
+          result: 'win',
+          role: battle.creator_id === winnerId ? 'creator' : 'opponent',
+          reaction_ms: winnerReaction,
+          stake_won: stakeAmount,
+          stake_type: battle.stake_type,
+        },
+        dedupe_key: `${battle_id}_resolved_winner`,
+      });
+
+      // Notification for loser
+      await supabase.from('battle_notifications').insert({
+        user_id_target: loserId,
+        type: 'battle_resolved',
+        payload: {
+          title: '⚔️ Battle conclusa',
+          body: `${winnerName} ha vinto - -${stakeAmount} ${battle.stake_type}`,
+          url: '/map-3d-tiler',
+          battle_id,
+          result: 'loss',
+          role: battle.creator_id === loserId ? 'creator' : 'opponent',
+          reaction_ms: loserReaction,
+          stake_lost: stakeAmount,
+          stake_type: battle.stake_type,
+        },
+        dedupe_key: `${battle_id}_resolved_loser`,
+      });
+
+      console.log(`📬 Battle resolved notifications queued for winner ${winnerId} and loser ${loserId}`);
+    } catch (notifError) {
+      console.error('⚠️ Failed to queue battle resolved notifications:', notifError);
+      // Non-blocking error - battle resolution succeeded
+    }
+
     return Response.json(
       {
         success: true,
