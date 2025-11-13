@@ -16,6 +16,7 @@ import { useSafeNavigate } from '@/lib/navigation/safeNavigate';
 import type { Battle } from '@/types/battle';
 import { BattleMount } from './BattleMount';
 import { BattleCreationForm } from './BattleCreationForm';
+import { BattleShop } from './BattleShop';
 
 interface BattleModalProps {
   isOpen: boolean;
@@ -293,13 +294,13 @@ export function BattleModal({
                 <TabsContent value="shop" className="flex-1 overflow-hidden">
                   <ScrollArea className="h-full">
                     <div className="p-4">
-                      <div className="text-center py-12 space-y-4">
-                        <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground opacity-30" />
-                        <p className="text-sm text-muted-foreground">Battle Shop coming soon...</p>
-                        <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                          Purchase weapons and defenses with M1U to enhance your battle capabilities
-                        </p>
-                      </div>
+                      {userId ? (
+                        <BattleShop userId={userId} />
+                      ) : (
+                        <div className="text-center py-12 text-sm text-muted-foreground">
+                          Please log in to access the shop
+                        </div>
+                      )}
                     </div>
                   </ScrollArea>
                 </TabsContent>

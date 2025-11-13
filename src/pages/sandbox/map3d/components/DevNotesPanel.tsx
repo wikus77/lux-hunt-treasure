@@ -60,9 +60,10 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
         className="m1x-pill m1x-pill--note"
         onClick={() => setOpen(o => !o)}
         title="Note (DEV)"
+        style={{ transform: 'scale(0.75)' }}
       >
         <div className="m1x-pill__icon">
-          <FileText className="h-6 w-6 text-cyan-400" />
+          <FileText className="h-5 w-5 text-cyan-400" />
         </div>
         <div className="m1x-pill__label">
           Note ({count})
@@ -70,20 +71,20 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
       </div>
 
       {open && (
-        <div className="mt-2 w-[260px] rounded-xl border border-cyan-500/30 bg-black/70 backdrop-blur-md p-2 text-sm text-white/90">
+        <div className="mt-2 w-[195px] rounded-xl border border-cyan-500/30 bg-black/70 backdrop-blur-md p-1.5 text-xs text-white/90">
           {notes.length === 0 ? (
-            <div className="text-xs text-white/70 px-2 py-3">Nessuna nota. Tocca un marker per modificare.</div>
+            <div className="text-[10px] text-white/70 px-1.5 py-2">Nessuna nota. Tocca un marker per modificare.</div>
           ) : (
-            <ul className="max-h-[260px] overflow-auto space-y-2 pr-1">
+            <ul className="max-h-[195px] overflow-auto space-y-1.5 pr-1">
               {notes.map(n => (
-                <li key={n.id} className="rounded-lg border border-white/10 p-2">
-                  <div className="font-medium truncate">{n.title || 'Senza titolo'}</div>
-                  {n.note && <div className="text-xs text-white/70 line-clamp-2">{n.note}</div>}
-                  <div className="mt-2 flex items-center gap-2">
-                    <Button size="sm" className="h-7 px-2 text-xs bg-black/60 hover:bg-black/80 border border-cyan-500/30" onClick={() => flyTo(n)}>
-                      <Crosshair className="h-3 w-3 mr-1" /> Centra
+                <li key={n.id} className="rounded-lg border border-white/10 p-1.5">
+                  <div className="font-medium text-[11px] truncate">{n.title || 'Senza titolo'}</div>
+                  {n.note && <div className="text-[10px] text-white/70 line-clamp-2">{n.note}</div>}
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <Button size="sm" className="h-6 px-1.5 text-[10px] bg-black/60 hover:bg-black/80 border border-cyan-500/30" onClick={() => flyTo(n)}>
+                      <Crosshair className="h-2.5 w-2.5 mr-0.5" /> Centra
                     </Button>
-                    <Button size="sm" variant="destructive" className="h-7 px-2 text-xs" onClick={() => remove(n.id)}>
+                    <Button size="sm" variant="destructive" className="h-6 px-1.5 text-[10px]" onClick={() => remove(n.id)}>
                       Elimina
                     </Button>
                   </div>
