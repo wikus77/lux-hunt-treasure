@@ -12,6 +12,7 @@ import { useStripeInAppPayment } from '@/hooks/useStripeInAppPayment';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useBuzzGrants } from '@/hooks/useBuzzGrants';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { toast } from 'sonner';
 import StripeInAppCheckout from '@/components/subscription/StripeInAppCheckout';
 import { validateBuzzPrice } from '@/lib/constants/buzzPricing';
@@ -31,6 +32,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
 }) => {
   const { user } = useUnifiedAuth();
   const { hasFreeBuzz, consumeFreeBuzz, totalRemaining, dailyUsed } = useBuzzGrants(); // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+  const { playSound } = useSoundEffects(); // © 2025 Joseph MULÉ – M1SSION™ – Spacecraft ignition audio
   
   // Enhanced BUZZ counter with progressive pricing
   const { 
@@ -145,6 +147,9 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   }, [user?.id]);
 
   const handleAction = async () => {
+    // © 2025 Joseph MULÉ – M1SSION™ – Play spacecraft ignition sound on BUZZ click
+    playSound('spacecraftIgnition', 0.6);
+    
     if (!user) {
       toast.error('Devi essere loggato per utilizzare BUZZ!');
       return;
