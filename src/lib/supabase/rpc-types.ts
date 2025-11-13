@@ -50,4 +50,44 @@ export interface RpcFunctions {
     };
     Returns: string;
   };
+  audit_battle: {
+    Args: { p_battle_id: string };
+    Returns: {
+      battle_id: string;
+      status: string;
+      creator_id: string;
+      opponent_id?: string;
+      winner_id?: string;
+      stake_type: string;
+      stake_amount: number;
+      created_at: string;
+      resolved_at?: string;
+      rng_seed?: string;
+      rng_check: 'ok' | 'mismatch' | 'missing';
+      ledger_check: 'ok' | 'incomplete' | 'mismatch';
+      audit_log_entries: any[];
+      transfers: any[];
+      participants: any[];
+      tamper_flags: string[];
+      audit_summary: {
+        total_audit_entries: number;
+        total_transfers: number;
+        flags_count: number;
+        is_clean: boolean;
+      };
+    };
+  };
+  flag_battle_suspicious: {
+    Args: {
+      p_battle_id: string;
+      p_reason: string;
+    };
+    Returns: {
+      success: boolean;
+      error?: string;
+      battle_id?: string;
+      action?: string;
+      reason?: string;
+    };
+  };
 }

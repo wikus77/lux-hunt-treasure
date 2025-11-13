@@ -16,37 +16,47 @@ export interface BattleRealtimeState {
   };
 }
 
-export function useBattleRealtimeSubscription(sessionId: string | null) {
+export function useBattleRealtimeSubscription(battleId: string | null) {
   const [state, setState] = useState<BattleRealtimeState>({
     status: 'await_defense',
   });
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
   useEffect(() => {
-    if (!sessionId) {
+    if (!battleId) {
       setChannel(null);
       return;
     }
 
-    console.debug('[Battle Realtime] Subscribing to battle:', sessionId);
+    console.debug('[Battle Realtime] Subscribing to TRON battle:', battleId);
 
     const battleChannel = supabase
-      .channel(`battle:${sessionId}`)
+      .channel(`battle:${battleId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'battle_sessions',
-          filter: `id=eq.${sessionId}`,
+          table: 'battles', // TRON Battle canonical table
+          filter: `id=eq.${battleId}`,
         },
         (payload) => {
-          console.debug('[Battle Realtime] Session update:', payload);
+          console.debug('[Battle Realtime] TRON Battle update:', payload);
           const newData = payload.new as any;
+
+          // Map TRON statuses to legacy state
+          let mappedStatus: 'await_defense' | 'resolved' | 'cancelled' = 'await_defense';
+          if (newData.status === 'resolved' || newData.status === 'expired') {
+            mappedStatus = 'resolved';
+          } else if (newData.status === 'cancelled') {
+            mappedStatus = 'cancelled';
+          } else if (newData.status === 'pending' || newData.status === 'accepted') {
+            mappedStatus = 'await_defense';
+          }
 
           setState((prev) => ({
             ...prev,
-            status: newData.status,
+            status: mappedStatus,
             winnerId: newData.winner_id,
             until: newData.expires_at ? new Date(newData.expires_at).getTime() : undefined,
           }));
@@ -57,18 +67,18 @@ export function useBattleRealtimeSubscription(sessionId: string | null) {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'battle_notifications',
-          filter: `session_id=eq.${sessionId}`,
+          table: 'battle_audit', // TRON audit events
+          filter: `battle_id=eq.${battleId}`,
         },
         (payload) => {
-          console.debug('[Battle Realtime] Notification event:', payload);
-          const notification = payload.new as any;
+          console.debug('[Battle Realtime] TRON Audit event:', payload);
+          const audit = payload.new as any;
 
           setState((prev) => ({
             ...prev,
             lastEvent: {
-              type: notification.type,
-              payload: notification.payload,
+              type: audit.event_type as BattleEventType,
+              payload: audit.payload,
             },
           }));
         }
@@ -80,10 +90,10 @@ export function useBattleRealtimeSubscription(sessionId: string | null) {
     setChannel(battleChannel);
 
     return () => {
-      console.debug('[Battle Realtime] Unsubscribing from battle:', sessionId);
+      console.debug('[Battle Realtime] Unsubscribing from TRON battle:', battleId);
       battleChannel.unsubscribe();
     };
-  }, [sessionId]);
+  }, [battleId]);
 
   return { state, channel };
 }
