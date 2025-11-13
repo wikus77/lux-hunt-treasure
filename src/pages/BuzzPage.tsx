@@ -83,13 +83,6 @@ export const BuzzPage: React.FC = () => {
         <div className="container mx-auto px-4">
           {/* © 2025 Joseph MULÉ – M1SSION™ */}
           
-          {/* Titolo BUZZ - Spostato 10% più in basso */}
-          <div className="text-center mt-[10%] mb-8">
-            <h1 className="text-4xl font-orbitron font-bold">
-              <span className="text-[#00ffff]">BU</span>
-              <span className="text-white">ZZ</span>
-            </h1>
-          </div>
 
           {/* M1U Pill Slot - Buzz (fixed overlay aligned like Home) */}
           <div 
