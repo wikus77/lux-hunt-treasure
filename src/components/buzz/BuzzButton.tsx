@@ -1,9 +1,9 @@
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
-// M1SSION™ - BUZZ Button UI Component - Legacy 3D Skin
+// M1SSION™ - BUZZ Button UI Component - TRON Disc Skin
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useXpSystem } from '@/hooks/useXpSystem';
-import { LegacyBuzzSkin } from './LegacyBuzzSkin';
+import { TronBuzzSkin } from './TronBuzzSkin';
 
 interface BuzzButtonProps {
   currentPrice: number;
@@ -45,9 +45,8 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
         cursor: isBlocked || buzzing ? 'not-allowed' : 'pointer'
       }}
     >
-      <LegacyBuzzSkin
+      <TronBuzzSkin
         priceDisplay={priceDisplay}
-        peProgress={xpStatus.buzz_xp_progress}
         isLoading={buzzing}
         isBlocked={isBlocked}
       />
