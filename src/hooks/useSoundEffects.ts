@@ -10,7 +10,8 @@ export type SoundType =
   | "arcade" 
   | "bell" 
   | "agentClick"
-  | "spacecraftIgnition";
+  | "spacecraftIgnition"
+  | "discVortex";
 
 // Cache for sounds to avoid reloading
 const soundCache: Record<string, HTMLAudioElement> = {};
@@ -22,7 +23,7 @@ export const useSoundEffects = () => {
   // Preload sounds
   useEffect(() => {
     // List of sounds to preload
-    const soundsToPreload: SoundType[] = ["notification", "buzz", "chime", "arcade", "bell", "agentClick", "spacecraftIgnition"];
+    const soundsToPreload: SoundType[] = ["notification", "buzz", "chime", "arcade", "bell", "agentClick", "spacecraftIgnition", "discVortex"];
     
     // Preload each sound
     soundsToPreload.forEach(sound => {
@@ -35,6 +36,10 @@ export const useSoundEffects = () => {
         // Special path for spacecraft ignition sound
         if (sound === "spacecraftIgnition") {
           path = "/audio/spacecraft-ignition.mp3";
+        }
+        // Special path for disc vortex sound
+        if (sound === "discVortex") {
+          path = "/audio/disc-vortex.mp3";
         }
         
         const audio = new Audio(path);
@@ -69,6 +74,11 @@ export const useSoundEffects = () => {
       // Special case for spacecraft ignition sound
       if (sound === "spacecraftIgnition") {
         path = "/audio/spacecraft-ignition.mp3";
+      }
+      
+      // Special case for disc vortex sound
+      if (sound === "discVortex") {
+        path = "/audio/disc-vortex.mp3";
       }
       
       // Use cached audio if available, otherwise create a new one

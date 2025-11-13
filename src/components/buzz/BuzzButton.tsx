@@ -31,16 +31,6 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
       disabled={isBlocked || buzzing}
       onClick={onClick}
       className="relative border-0 bg-transparent p-0 z-20"
-      animate={{
-        scale: [1, 1.06, 1]
-      }}
-      transition={{
-        scale: {
-          duration: 1.5,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }
-      }}
       style={{
         cursor: isBlocked || buzzing ? 'not-allowed' : 'pointer'
       }}

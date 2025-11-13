@@ -2,7 +2,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - BUZZ Page Component - FIXED PRICING LOGIC
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { BuzzActionButton } from '@/components/buzz/BuzzActionButton';
 import { BuzzInstructions } from '@/components/buzz/BuzzInstructions';
@@ -10,6 +10,7 @@ import { BuzzRewardHandler } from '@/components/buzz/BuzzRewardHandler';
 import { useBuzzStats } from '@/hooks/useBuzzStats';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import M1UPill from '@/features/m1u/M1UPill';
@@ -17,6 +18,8 @@ import M1UPill from '@/features/m1u/M1UPill';
 export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
   const { user } = useUnifiedAuth();
+  const { playSound } = useSoundEffects();
+  const vortexAudioRef = useRef<HTMLAudioElement | null>(null);
   
   // 🔥 FIXED: Use centralized pricing logic from useBuzzCounter
   const { 
@@ -27,6 +30,30 @@ export const BuzzPage: React.FC = () => {
   // 🔥 FIXED: Use only centralized pricing - no duplicated logic
   const isBlocked = false; // Never blocked, progressive pricing continues
   const currentPriceDisplay = getCurrentBuzzDisplayPrice();
+
+  // Start vortex sound loop on mount
+  useEffect(() => {
+    // Create and start looping vortex sound
+    const audio = new Audio('/audio/disc-vortex.mp3');
+    audio.loop = true;
+    audio.volume = 0.3;
+    vortexAudioRef.current = audio;
+    
+    // Delay slightly to ensure user interaction
+    const timer = setTimeout(() => {
+      audio.play().catch(err => {
+        console.log('Vortex audio autoplay prevented:', err);
+      });
+    }, 100);
+    
+    return () => {
+      clearTimeout(timer);
+      if (vortexAudioRef.current) {
+        vortexAudioRef.current.pause();
+        vortexAudioRef.current = null;
+      }
+    };
+  }, []);
 
   const handleBuzzSuccess = async () => {
     // Force immediate stats reload - © 2025 Joseph MULÉ – M1SSION™
