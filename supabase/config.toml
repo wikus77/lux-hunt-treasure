@@ -171,3 +171,6 @@ verify_jwt = false
 [functions.battle-resolve]
 
 [functions.battle-cancel]
+
+[functions.battle-push-dispatcher]
+verify_jwt = false
