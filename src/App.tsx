@@ -20,7 +20,6 @@ import { IOSPermissionManager } from "./components/IOSPermissionManager";
 import { AndroidPushSetup } from "./components/android/AndroidPushSetup";
 import { PushNotificationSetup } from "./components/PushNotificationSetup";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
-import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePWAStabilizer } from "./hooks/usePWAStabilizer";
 import { useState, useEffect } from "react";
 import LegalOnboarding from "./components/legal/LegalOnboarding";
@@ -110,7 +109,6 @@ function App() {
                 <AuthProvider>
                   <InterestSignalsProvider>
                     {/* OneSignal rimosso - usando solo FCM */}
-                    <BuzzPaymentMonitor />
                     <LegalOnboarding />
                     <FirstLoginQuizManager />
                     <DNAManager />

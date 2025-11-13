@@ -1,7 +1,5 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { useStripePayment } from '@/hooks/useStripePayment';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useBuzzClues } from '@/hooks/useBuzzClues';
 
@@ -9,7 +7,6 @@ export const usePricingLogic = () => {
   const [buzzMapPrice, setBuzzMapPrice] = useState(7.99);
   const [clueCount, setClueCount] = useState(0);
   const [buzzRadiusMeters, setBuzzRadiusMeters] = useState(100000); // Initial radius 100km
-  const { processBuzzPurchase, loading } = useStripePayment();
   const { unlockedClues } = useBuzzClues();
   
   // Update price based on unlocked clues
@@ -93,47 +90,19 @@ export const usePricingLogic = () => {
     }
   };
   
-  // Handle payment for map buzz
+  // Handle payment for map buzz - DEPRECATED
   const handlePayment = useCallback(async () => {
-    try {
-      // Track checkout start event for map buzz
-      if (typeof window !== 'undefined' && window.plausible) {
-        window.plausible('checkout_start');
-      }
-
-      // Calculate the radius before processing payment
-      const calculatedRadius = await calculateSearchAreaRadius();
-      
-      // ✅ FIX: Convert EUR to cents before calling processBuzzPurchase
-      const priceInCents = Math.round(buzzMapPrice * 100);
-      console.info(`[BUZZ MAP] Payment: €${buzzMapPrice} = ${priceInCents} cents`);
-      
-      // Process the map buzz payment
-      const data = await processBuzzPurchase(true, priceInCents);
-      
-      if (data) {
-        // Record the action in Supabase
-        await recordBuzzMapAction(buzzMapPrice, calculatedRadius);
-        
-        // Update the radius for next time
-        setBuzzRadiusMeters(calculatedRadius);
-        
-        toast.info("Redirezione al pagamento in corso...");
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("Payment error:", error);
-      toast.error("Errore durante il pagamento");
-      return false;
-    }
-  }, [buzzMapPrice, processBuzzPurchase, calculateSearchAreaRadius, clueCount]);
+    // ⚠️ DEPRECATED: This function is no longer used
+    // All BUZZ MAP payments now use M1U currency via RPC handle_m1u_payment
+    console.warn('⚠️ handlePayment in usePricingLogic is deprecated - BUZZ MAP now uses M1U');
+    return false;
+  }, []);
   
   return {
     buzzMapPrice,
     buzzRadiusMeters,
     handlePayment,
-    loading
+    loading: false
   };
 };
 

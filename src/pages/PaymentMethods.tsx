@@ -9,7 +9,6 @@ import ApplePayBox from "@/components/payments/ApplePayBox";
 import GooglePayBox from "@/components/payments/GooglePayBox";
 import { useQueryParams } from "@/hooks/useQueryParams";
 import { useToast } from "@/hooks/use-toast";
-import { useStripePayment } from "@/hooks/useStripePayment";
 import { v4 as uuidv4 } from "uuid";
 
 const PaymentMethods = () => {
@@ -22,7 +21,6 @@ const PaymentMethods = () => {
   const [price, setPrice] = useState("1.99");
   const [sessionId, setSessionId] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const { processBuzzPurchase, loading } = useStripePayment();
 
   useEffect(() => {
     // Check if we're coming from the map page
@@ -91,88 +89,22 @@ const PaymentMethods = () => {
   };
 
   const handleCardSubmit = async () => {
-    if (isProcessing || loading) return;
-    toast.info("Collegamento a Stripe in corso...", {
-      description: "Verrai reindirizzato a Stripe per completare il pagamento in modo sicuro.",
-      duration: 3000,
-    });
-    
-    // Calculate price in cents for Stripe
-    const priceInCents = parseFloat(price) * 100;
-    
-    // Determine return URL based on payment type
-    const redirectUrl = isMapBuzz ? "/map" : "/buzz";
-    
-    try {
-      await processBuzzPurchase(
-        isMapBuzz, 
-        priceInCents, 
-        redirectUrl,
-        sessionId
-      );
-    } catch (error) {
-      console.error("Errore durante il processo di pagamento:", error);
-      toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il processo di pagamento.",
-      });
-      setIsProcessing(false);
-    }
+    // ⚠️ DEPRECATED: This payment method is no longer used for BUZZ/BUZZ MAP
+    // All BUZZ payments now use M1U currency via RPC handle_m1u_payment
+    console.warn('⚠️ PaymentMethods page is deprecated - BUZZ now uses M1U');
+    toast.error("Questo metodo di pagamento non è più disponibile. Usa M1U per i pagamenti BUZZ.");
   };
 
   const handleApplePay = async () => {
-    if (isProcessing || loading) return;
-    toast.success("Pagamento Rapido", {
-      description: "Pagamento in elaborazione..."
-    });
-    
-    // Calculate price in cents for Stripe
-    const priceInCents = parseFloat(price) * 100;
-    
-    // Determine return URL based on payment type
-    const redirectUrl = isMapBuzz ? "/map" : "/buzz";
-    
-    try {
-      await processBuzzPurchase(
-        isMapBuzz, 
-        priceInCents, 
-        redirectUrl,
-        sessionId
-      );
-    } catch (error) {
-      console.error("Errore durante il pagamento rapido:", error);
-      toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il pagamento rapido.",
-      });
-      setIsProcessing(false);
-    }
+    // ⚠️ DEPRECATED: This payment method is no longer used for BUZZ/BUZZ MAP
+    console.warn('⚠️ PaymentMethods page is deprecated - BUZZ now uses M1U');
+    toast.error("Questo metodo di pagamento non è più disponibile. Usa M1U per i pagamenti BUZZ.");
   };
 
   const handleGooglePay = async () => {
-    if (isProcessing || loading) return;
-    toast.success("Metodo Alternativo", {
-      description: "Pagamento in elaborazione..."
-    });
-    
-    // Calculate price in cents for Stripe
-    const priceInCents = parseFloat(price) * 100;
-    
-    // Determine return URL based on payment type
-    const redirectUrl = isMapBuzz ? "/map" : "/buzz";
-    
-    try {
-      await processBuzzPurchase(
-        isMapBuzz, 
-        priceInCents, 
-        redirectUrl,
-        sessionId
-      );
-    } catch (error) {
-      console.error("Errore durante il pagamento alternativo:", error);
-      toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il pagamento alternativo.",
-      });
-      setIsProcessing(false);
-    }
+    // ⚠️ DEPRECATED: This payment method is no longer used for BUZZ/BUZZ MAP
+    console.warn('⚠️ PaymentMethods page is deprecated - BUZZ now uses M1U');
+    toast.error("Questo metodo di pagamento non è più disponibile. Usa M1U per i pagamenti BUZZ.");
   };
 
   return (

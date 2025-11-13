@@ -8,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
 import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { useAbuseProtection } from './useAbuseProtection';
-import { useStripePayment } from '@/hooks/useStripePayment';
 import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';
 import { HapticType } from '@/utils/haptics';
 
@@ -39,7 +38,6 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
   const { user } = useAuth();
   const { vibrate, triggerHaptic } = usePWAHardwareStub();
   const { checkAbuseAndLog } = useAbuseProtection();
-  const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
   const { scheduleBuzzAvailableNotification } = useBuzzNotificationScheduler();
 
   const handleBuzz = async () => {
