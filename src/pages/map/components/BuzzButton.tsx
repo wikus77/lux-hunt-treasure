@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useBuzzMapPricing } from '@/hooks/map/useBuzzMapPricing';
-import { useStripePayment } from '@/hooks/useStripePayment';
 import { useAuth } from '@/hooks/use-auth';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,7 +27,6 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const [showRipple, setShowRipple] = useState(false);
   const { reloadAreas } = useBuzzMapLogic();
   const { buzzMapPrice, radiusKm, incrementGeneration } = useBuzzMapPricing();
-  const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
   const { user } = useAuth();
   const { callBuzzApi } = useBuzzApi();
   const { xpStatus } = useXpSystem();
@@ -68,7 +66,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   }, [user?.id]);
 
   const handleBuzzPress = async () => {
-    if (isGenerating || paymentLoading || !user?.id) {
+    if (isGenerating || !user?.id) {
       console.log('🗺️ BUZZ MAPPA: Button click ignored - already processing or no user');
       return;
     }
@@ -109,25 +107,13 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
         
         // Show payment requirement toast
         toast.error("Pagamento richiesto", {
-          description: `Per generare un'area BUZZ è necessario pagare €${dynamicPrice.toFixed(2)} o attivare un abbonamento.`
+          description: `Per generare un'area BUZZ è necessario pagare ${dynamicPrice} M1U o attivare un abbonamento.`
         });
 
-        // ✅ FIX: Convert EUR to cents before calling processBuzzPurchase
-        const priceInCents = Math.round(dynamicPrice * 100);
-        console.info(`[BUZZ MAP] Dynamic payment: €${dynamicPrice} = ${priceInCents} cents`);
-
-        // MANDATORY: Process payment before allowing generation
-        const paymentSuccess = await processBuzzPurchase(true, priceInCents);
-        
-        if (!paymentSuccess) {
-          toast.error("Pagamento necessario", {
-            description: "Il pagamento è obbligatorio per generare aree BUZZ."
-          });
-          setIsGenerating(false);
-          return;
-        }
-        
-        console.log('✅ BUZZ MAPPA: Payment completed successfully');
+        // ⚠️ DEPRECATED: Stripe payment removed - now using M1U
+        console.warn('⚠️ BUZZ MAP payment now uses M1U, not Stripe');
+        setIsGenerating(false);
+        return;
       } else if (isDeveloper) {
         console.log('🔓 BUZZ MAPPA: Developer bypass activated for wikus77@hotmail.it');
       } else {
@@ -295,8 +281,8 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   };
 
   // CRITICAL: Always allow button unless actively processing
-  const canUseBuzz = !isGenerating && !paymentLoading && user?.id;
-  const isProcessing = isGenerating || paymentLoading;
+  const canUseBuzz = !isGenerating && user?.id;
+  const isProcessing = isGenerating;
 
   return (
     <motion.div className="fixed bottom-20 right-4 z-50">

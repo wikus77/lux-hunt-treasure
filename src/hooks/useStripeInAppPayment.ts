@@ -100,21 +100,6 @@ export const useStripeInAppPayment = () => {
     setShowCheckout(true);
   };
 
-  const processBuzzPayment = async (amount: number, isBuzzMap: boolean = false): Promise<void> => {
-    const config: PaymentConfig = {
-      type: isBuzzMap ? 'buzz_map' : 'buzz',
-      amount: amount, // Amount already in cents
-      description: isBuzzMap ? 'M1SSION™ BUZZ MAPPA - Area geolocalizzata' : 'M1SSION™ BUZZ - Indizio premium',
-      metadata: {
-        is_buzz_map: isBuzzMap,
-        mission: 'M1SSION',
-        reset_date: '2025-07-22'
-      }
-    };
-
-    await initiatePayment(config);
-  };
-
   const processSubscription = async (plan: string): Promise<void> => {
     // Import centralized pricing configuration
     const { getPriceCents, getPriceEur } = await import('@/lib/constants/pricingConfig');
@@ -158,72 +143,8 @@ export const useStripeInAppPayment = () => {
     });
 
     try {
-      // Handle different payment types
-      if (paymentConfig?.type === 'buzz' || paymentConfig?.type === 'buzz_map') {
-        // Validate paymentIntentId before calling handle-buzz-payment-success
-        if (!paymentIntentId) {
-          console.error('❌ Missing paymentIntentId for buzz payment success');
-          toast.error('Pagamento completato, ma manca il riferimento del pagamento. Aggiorna e riprova.');
-          return { ok: false };
-        }
-
-        // Handle BUZZ payment completion
-        const { data: buzzResponse, error: buzzError } = await supabase.functions.invoke('handle-buzz-payment-success', {
-          body: {
-            payment_intent_id: paymentIntentId,
-            user_id: user?.id,
-            amount: paymentConfig.amount,
-            is_buzz_map: paymentConfig.type === 'buzz_map',
-            metadata: paymentConfig.metadata
-          }
-        });
-
-        if (buzzError) {
-          console.error('❌ BUZZ payment success error:', buzzError);
-          
-          // Handle specific errors with friendly messages
-          if (buzzError.message?.includes('Missing paymentIntentId')) {
-            toast.error('Pagamento ok ma manca il riferimento. Aggiorna e riprova.');
-          } else {
-            toast.error('Operazione non riuscita. Riprova tra poco.');
-          }
-          return { ok: false };
-        } else {
-          // Extract clue_text and show toast for standard BUZZ
-          let clueText = '';
-          if (paymentConfig.type === 'buzz') {
-            // Try multiple clue_text sources from the response
-            clueText = buzzResponse?.clue_text || 
-                      buzzResponse?.metadata?.clue_text || 
-                      buzzResponse?.message || '';
-            
-            if (clueText) {
-              console.log('🎯 M1SSION™ SHOWING CLUE TOAST:', clueText);
-              toast.success(`🎯 Nuovo indizio BUZZ!`, {
-                description: clueText,
-                duration: 5000,
-                position: 'top-center',
-                style: { 
-                  zIndex: 9999,
-                  background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '14px',
-                  padding: '12px 16px'
-                }
-              });
-              return { ok: true, clue_text: clueText, skipFollowUpBuzzPress: true };
-            } else {
-              console.warn('⚠️ M1SSION™ No clue_text found in response');
-              toast.success('🎉 BUZZ acquistato con successo!');
-              return { ok: true, skipFollowUpBuzzPress: true };
-            }
-          } else {
-            toast.success(`🎉 Area BUZZ acquistata con successo!`);
-            return { ok: true };
-          }
-        }
-      } else if (paymentConfig?.type === 'subscription') {
+      // Handle subscription payment completion  
+      if (paymentConfig?.type === 'subscription') {
         // Handle subscription payment completion  
         await supabase.functions.invoke('handle-payment-success', {
           body: {
@@ -249,7 +170,6 @@ export const useStripeInAppPayment = () => {
 
   return {
     // Universal payment methods
-    processBuzzPayment,
     processSubscription,
     
     // UI state
