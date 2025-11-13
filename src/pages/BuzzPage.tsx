@@ -25,12 +25,12 @@ export const BuzzPage: React.FC = () => {
   // 🔥 FIXED: Use centralized pricing logic from useBuzzCounter
   const { 
     dailyBuzzCounter, 
-    getCurrentBuzzDisplayPrice 
+    getCurrentBuzzDisplayCostM1U 
   } = useBuzzCounter(user?.id);
 
-  // 🔥 FIXED: Use only centralized pricing - no duplicated logic
+  // 🔥 FIXED: Use only centralized M1U pricing
   const isBlocked = false; // Never blocked, progressive pricing continues
-  const currentPriceDisplay = getCurrentBuzzDisplayPrice();
+  const currentPriceDisplay = getCurrentBuzzDisplayCostM1U();
 
   // Start procedural vortex sound ONLY when on /buzz page
   useEffect(() => {
@@ -159,7 +159,7 @@ export const BuzzPage: React.FC = () => {
                   <p className="font-semibold">BUZZ oggi: {dailyBuzzCounter} (prezzo progressivo)</p>
                   <p className="font-semibold">BUZZ totali: {stats?.total_count || 0}/200 (target finale)</p>
                   <p className="text-[#00ffff]">Prossimo: {currentPriceDisplay}</p>
-                  <p className="text-xs text-white/60">⚠️ Pagamento Stripe obbligatorio per ogni BUZZ</p>
+                  <p className="text-xs text-white/60">💎 Ogni BUZZ consuma M1U dal tuo saldo</p>
                 </div>
               </div>
             </div>

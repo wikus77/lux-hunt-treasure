@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateBuzzPrice, getBuzzDisplayPrice, getBuzzPriceCents } from '@/lib/constants/buzzPricing';
+import { calculateBuzzCostM1U, getBuzzDisplayCostM1U } from '@/lib/constants/buzzPricingM1U';
 
 export const useBuzzCounter = (userId: string | undefined) => {
   const [dailyBuzzCounter, setDailyBuzzCounter] = useState(0);
@@ -72,6 +73,15 @@ export const useBuzzCounter = (userId: string | undefined) => {
     return getBuzzPriceCents(dailyBuzzCounter);
   }, [dailyBuzzCounter]);
 
+  // M1U pricing functions
+  const getCurrentBuzzCostM1U = useCallback(() => {
+    return calculateBuzzCostM1U(dailyBuzzCounter);
+  }, [dailyBuzzCounter]);
+
+  const getCurrentBuzzDisplayCostM1U = useCallback(() => {
+    return getBuzzDisplayCostM1U(dailyBuzzCounter);
+  }, [dailyBuzzCounter]);
+
   useEffect(() => {
     if (userId) {
       loadDailyBuzzCounter();
@@ -84,7 +94,10 @@ export const useBuzzCounter = (userId: string | undefined) => {
     updateDailyBuzzCounter,
     getCurrentBuzzPrice,
     getCurrentBuzzDisplayPrice,
-    getCurrentBuzzPriceCents
+    getCurrentBuzzPriceCents,
+    // M1U functions
+    getCurrentBuzzCostM1U,
+    getCurrentBuzzDisplayCostM1U
   };
 };
 

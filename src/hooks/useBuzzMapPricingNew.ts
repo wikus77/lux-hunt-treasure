@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getBuzzMapPricing } from "@/lib/buzzMapPricing";
+import { getBuzzMapCostM1U } from "@/lib/constants/buzzMapPricingM1U";
 
 export function useBuzzMapPricingNew(userId?: string) {
   const [loading, setLoading] = useState(true);
   const [nextLevel, setLevel] = useState(1);
   const [nextRadiusKm, setRadius] = useState(500);
   const [nextPriceEur, setPrice] = useState(4.99);
+  const [nextCostM1U, setCostM1U] = useState(50);
   const [disabled, setDisabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,17 +65,22 @@ export function useBuzzMapPricingNew(userId?: string) {
         // Get pricing data for next level
         const pricingData = getBuzzMapPricing(levelNext);
         
+        // Get M1U cost for this level
+        const costM1U = getBuzzMapCostM1U(levelNext);
+        
         if (!off) {
           setLevel(levelNext);
           setRadius(pricingData.radiusKm);
           setPrice(pricingData.priceEur);
+          setCostM1U(costM1U);
           setDisabled(false);
           
           console.debug('Buzz map pricing calculated:', {
             currentCount,
             levelNext,
             radiusKm: pricingData.radiusKm,
-            priceEur: pricingData.priceEur
+            priceEur: pricingData.priceEur,
+            costM1U
           });
         }
         
@@ -106,6 +113,7 @@ export function useBuzzMapPricingNew(userId?: string) {
     nextLevel, 
     nextRadiusKm, 
     nextPriceEur,
+    nextCostM1U,
     disabled,
     error,
     // Backward compatibility
@@ -114,3 +122,5 @@ export function useBuzzMapPricingNew(userId?: string) {
     radius: nextRadiusKm
   };
 }
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
