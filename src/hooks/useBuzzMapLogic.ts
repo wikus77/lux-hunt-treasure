@@ -80,18 +80,11 @@ export const useBuzzMapLogic = () => {
         return;
       }
       
-      // 🔥 STEP 2: Check for BUZZ MAP via M1U system (NEW - 2025-11-13)
+      // 🔥 STEP 2: BUZZ MAP via M1U system (NEW - 2025-11-13)
       // BUZZ MAP now uses M1U payments (buzz_map_spend_m1u RPC), not Stripe payments
       // We check user_map_areas directly with source='buzz_map' filter
-      console.log('💎 M1SSION™ BUZZ MAP: Checking M1U-based areas (source=buzz_map)');
-      
-      // 🔥 TEMPORARY BYPASS: Skip payment_transactions check for M1U-based BUZZ MAP
-      // The buzz_map_spend_m1u RPC creates areas directly in user_map_areas with source='buzz_map'
       // Payment validation is handled by the RPC itself (M1U balance check + transaction log)
-        setCurrentWeekAreas([]);
-        setLoading(false);
-        return;
-      }
+      console.log('💎 M1SSION™ BUZZ MAP: Checking M1U-based areas (source=buzz_map)');
 
       // 🔥 STEP 3: Fetch user map areas with M1U-based filter
       // CRITICAL: Filter by source='buzz_map' to only show areas created via M1U payment
