@@ -39,6 +39,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import DevNotesPanel from './map3d/components/DevNotesPanel';
 import DevAreasPanel from './map3d/components/DevAreasPanel';
+import BattleFxLayer from '@/components/map/battle/BattleFxLayer';
+import { usePerformanceSettings } from '@/hooks/usePerformanceSettings';
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
 const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
@@ -649,6 +651,8 @@ export default function MapTiler3D() {
     closeNotificationsBanner
   } = useNotificationManager();
 
+  const { battleFxMode } = usePerformanceSettings();
+
   return (
     <>
       <div 
@@ -785,6 +789,14 @@ export default function MapTiler3D() {
         onDeleteSearchArea={(id) => deleteSearchArea(id)}
       />
       <NotesLayer3D map={mapRef.current} enabled={layerVisibility.notes} />
+
+      {/* Battle FX Layer - Visual effects for battle events */}
+      {mapRef.current && (
+        <BattleFxLayer 
+          map={mapRef.current} 
+          battleFxMode={battleFxMode}
+        />
+      )}
 
       {/* M1U Pill Slot - Map 3D (overlay below header, aligned like Home) */}
       <div 
