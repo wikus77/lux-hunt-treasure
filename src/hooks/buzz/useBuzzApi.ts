@@ -19,6 +19,8 @@ interface BuzzApiResponse {
   lat?: number;
   lng?: number;
   generation_number?: number;
+  area_id?: string;
+  level?: number;
   errorMessage?: string;
   error?: boolean;
   map_area?: {
@@ -216,3 +218,5 @@ export function useBuzzApi() {
 
   return { callBuzzApi: handleBuzzPress };
 }
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
