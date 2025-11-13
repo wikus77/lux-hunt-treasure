@@ -1,0 +1,210 @@
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+/* BUZZ Legacy - 3D Metallic Ring Effects */
+
+/* Enhanced 3D metallic ring */
+.buzz-sphere-pro.buzz-3d {
+  border: 10px solid var(--ring-cyan);
+  
+  /* Complex layered background for photorealistic metal */
+  background: 
+    /* Highlight spot */
+    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
+    /* Panel segments */
+    conic-gradient(
+      from 0deg,
+      var(--ring-metal-dark) 0deg,
+      var(--ring-metal-base) 30deg,
+      var(--ring-metal-light) 45deg,
+      var(--ring-metal-base) 60deg,
+      var(--ring-metal-dark) 90deg,
+      var(--ring-metal-base) 120deg,
+      var(--ring-metal-light) 135deg,
+      var(--ring-metal-base) 150deg,
+      var(--ring-metal-dark) 180deg,
+      var(--ring-metal-base) 210deg,
+      var(--ring-metal-light) 225deg,
+      var(--ring-metal-base) 240deg,
+      var(--ring-metal-dark) 270deg,
+      var(--ring-metal-base) 300deg,
+      var(--ring-metal-light) 315deg,
+      var(--ring-metal-base) 330deg,
+      var(--ring-metal-dark) 360deg
+    ),
+    /* Base metallic gradient */
+    linear-gradient(135deg, var(--ring-metal-light), var(--ring-metal-dark));
+  
+  /* Enhanced shadow depth */
+  box-shadow:
+    /* Inner highlight */
+    inset 0 15px 30px rgba(255, 255, 255, 0.08),
+    /* Inner depth */
+    inset 0 -15px 30px rgba(0, 0, 0, 0.6),
+    /* Outer cyan ring */
+    0 0 0 4px var(--ring-cyan),
+    0 0 0 8px rgba(30, 30, 40, 1),
+    0 0 0 12px var(--ring-cyan),
+    /* Deep shadow */
+    0 25px 70px rgba(0, 255, 255, 0.4),
+    /* Glow */
+    0 0 80px rgba(0, 255, 255, 0.3);
+  
+  /* Radial mask for central hole effect */
+  -webkit-mask-image: radial-gradient(circle, transparent 25%, black 28%);
+  mask-image: radial-gradient(circle, transparent 25%, black 28%);
+}
+
+/* Inner shadow for depth of hole */
+.buzz-sphere-pro.buzz-3d::before {
+  content: '';
+  position: absolute;
+  inset: 25%;
+  border-radius: 50%;
+  box-shadow: 
+    inset 0 0 40px rgba(0, 0, 0, 0.9),
+    inset 0 10px 20px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Outer cyan ambient glow */
+.buzz-sphere-pro.buzz-3d::after {
+  content: '';
+  position: absolute;
+  inset: -5%;
+  border-radius: 50%;
+  border: 2px solid var(--ring-cyan);
+  filter: blur(15px);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Arc segments - upper and lower cyan lines */
+.buzz-arc {
+  position: absolute;
+  inset: 10%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.buzz-arc.arc-a {
+  background: repeating-conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 5deg,
+    var(--buzz-cyan) 6deg,
+    var(--buzz-cyan) 8deg,
+    transparent 9deg,
+    transparent 20deg
+  );
+  -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 50%);
+  mask-image: linear-gradient(to bottom, black 30%, transparent 50%);
+}
+
+.buzz-arc.arc-b {
+  background: repeating-conic-gradient(
+    from 180deg,
+    transparent 0deg,
+    transparent 5deg,
+    var(--buzz-cyan) 6deg,
+    var(--buzz-cyan) 8deg,
+    transparent 9deg,
+    transparent 20deg
+  );
+  -webkit-mask-image: linear-gradient(to top, black 30%, transparent 50%);
+  mask-image: linear-gradient(to top, black 30%, transparent 50%);
+}
+
+/* Decorative bolts at cardinal points */
+.buzz-bolts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.buzz-bolts .bolt {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--buzz-cyan), var(--ring-metal-base));
+  box-shadow: 
+    0 0 8px var(--buzz-cyan),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.buzz-bolts .bolt-1 {
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.buzz-bolts .bolt-2 {
+  bottom: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.buzz-bolts .bolt-3 {
+  top: 50%;
+  left: 15%;
+  transform: translateY(-50%);
+}
+
+.buzz-bolts .bolt-4 {
+  top: 50%;
+  right: 15%;
+  transform: translateY(-50%);
+}
+
+/* Panel lines decoration */
+.buzz-panel-lines {
+  position: absolute;
+  inset: 15%;
+  border-radius: 50%;
+  background: 
+    linear-gradient(90deg, transparent 48%, rgba(0, 255, 255, 0.1) 49%, rgba(0, 255, 255, 0.1) 51%, transparent 52%),
+    linear-gradient(0deg, transparent 48%, rgba(0, 255, 255, 0.1) 49%, rgba(0, 255, 255, 0.1) 51%, transparent 52%);
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0.3;
+}
+
+/* Outer rim highlight */
+.buzz-outer-rim {
+  position: absolute;
+  inset: -2%;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 255, 255, 0.2);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Enhanced hover for 3D version */
+.buzz-sphere-pro.buzz-3d:not(:disabled):hover {
+  transform: scale(1.02) translateY(-2px);
+  box-shadow:
+    inset 0 15px 30px rgba(255, 255, 255, 0.1),
+    inset 0 -15px 30px rgba(0, 0, 0, 0.7),
+    0 0 0 4px var(--ring-cyan),
+    0 0 0 8px rgba(30, 30, 40, 1),
+    0 0 0 12px var(--ring-cyan),
+    0 30px 80px rgba(0, 255, 255, 0.5),
+    0 0 100px rgba(0, 255, 255, 0.4);
+}
+
+/* Enhanced active/pressed for 3D version */
+.buzz-sphere-pro.buzz-3d:not(:disabled):active {
+  transform: scale(0.98) translateY(1px);
+  box-shadow:
+    inset 0 15px 30px rgba(255, 255, 255, 0.05),
+    inset 0 -15px 30px rgba(0, 0, 0, 0.8),
+    0 0 0 4px var(--ring-cyan),
+    0 0 0 8px rgba(30, 30, 40, 1),
+    0 0 0 12px var(--ring-cyan),
+    0 15px 50px rgba(0, 255, 255, 0.3);
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
