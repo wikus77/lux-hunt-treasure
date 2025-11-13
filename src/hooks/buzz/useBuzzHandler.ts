@@ -72,10 +72,13 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
       console.log('💰 BUZZ PRICE CHECK - FIXED', { currentPrice, hasFreeBuzz });
       
       // Progressive pricing - no blocking, price increases with usage
-      console.log('💰 PROGRESSIVE PRICING: Current price €' + currentPrice + ' for usage level');
+      console.log('💰 PROGRESSIVE PRICING: Current price M1U' + currentPrice + ' for usage level');
       
-      // 🔥 FIXED: Allow zero price for FREE buzz, only check for paid buzz
-      if (!hasFreeBuzz && currentPrice <= 0) {
+      // 🔥 FIX: After M1U payment is already processed in BuzzActionButton, 
+      // we should NOT block here. The payment validation happened before this function.
+      // Only check for invalid/negative prices as a safety net.
+      if (!hasFreeBuzz && (currentPrice < 0 || isNaN(currentPrice))) {
+        console.error('❌ BUZZ: Invalid price detected', { currentPrice, hasFreeBuzz });
         toast.error('Errore nel calcolo del prezzo BUZZ');
         return;
       }

@@ -80,52 +80,34 @@ export const useBuzzMapLogic = () => {
         return;
       }
       
-      // 🔥 STEP 2: Check for BUZZ MAP payments (ONLY succeeded)
-      const { data: payments, error: paymentError } = await supabase
-        .from('payment_transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'succeeded') // ONLY succeeded payments
-        .or('description.ilike.%Buzz Map%,description.ilike.%BUZZ MAPPA%') // Match all variants
-        .gte('created_at', '2025-07-17T00:00:00Z');
-
-      console.log('💳 BUZZ MAP PAYMENTS CHECK (RESTORED):', { 
-        count: payments?.length || 0, 
-        payments: payments?.map(p => ({ id: p.id, status: p.status, amount: p.amount, description: p.description })),
-        error: paymentError,
-        query: "Looking for completed 'M1SSION™ Buzz Map' payments since 2025-07-17"
-      });
-
-      if (paymentError) {
-        console.error('❌ PAYMENTS ERROR:', paymentError);
-        setError(paymentError);
+      // 🔥 STEP 2: Check for BUZZ MAP via M1U system (NEW - 2025-11-13)
+      // BUZZ MAP now uses M1U payments (buzz_map_spend_m1u RPC), not Stripe payments
+      // We check user_map_areas directly with source='buzz_map' filter
+      console.log('💎 M1SSION™ BUZZ MAP: Checking M1U-based areas (source=buzz_map)');
+      
+      // 🔥 TEMPORARY BYPASS: Skip payment_transactions check for M1U-based BUZZ MAP
+      // The buzz_map_spend_m1u RPC creates areas directly in user_map_areas with source='buzz_map'
+      // Payment validation is handled by the RPC itself (M1U balance check + transaction log)
         setCurrentWeekAreas([]);
         setLoading(false);
         return;
       }
 
-      // 🚨 CRITICAL: Must have completed BUZZ MAP payments to show areas
-      if (!payments || payments.length === 0) {
-        console.warn('🚨 NO COMPLETED BUZZ MAP PAYMENTS - CLEARING ALL AREAS');
-        console.warn('[PAYMENT VALIDATION] No valid payments found - areas blocked until payment completed');
-        setCurrentWeekAreas([]);
-        setLoading(false);
-        return;
-      }
-
-      // 🔥 STEP 3: Fetch user map areas (only after payment validation passed)
+      // 🔥 STEP 3: Fetch user map areas with M1U-based filter
+      // CRITICAL: Filter by source='buzz_map' to only show areas created via M1U payment
       const { data: userAreas, error: userAreasError } = await supabase
         .from('user_map_areas')
         .select('*')
         .eq('user_id', user.id)
+        .eq('source', 'buzz_map') // 🔥 CRITICAL: Only M1U-paid areas
         .gte('created_at', '2025-07-17T00:00:00.000Z')
         .order('created_at', { ascending: false });
 
-      console.log('🗺️ USER MAP AREAS CHECK (POST-PAYMENT):', { 
+      console.log('🗺️ USER MAP AREAS CHECK (M1U-BASED):', { 
         count: userAreas?.length || 0, 
-        areas: userAreas?.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius_km: a.radius_km, created_at: a.created_at })),
+        areas: userAreas?.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius_km: a.radius_km, source: a.source, created_at: a.created_at })),
         error: userAreasError,
-        query: "Post-payment validation - fetching user_map_areas"
+        query: "M1U payment system - fetching user_map_areas with source='buzz_map'"
       });
 
       if (userAreasError) {
@@ -136,9 +118,10 @@ export const useBuzzMapLogic = () => {
         return;
       }
 
-      // 🚨 CRITICAL: Check if user has map areas after payment validation
+      // 🚨 CRITICAL: Check if user has M1U-based map areas
       if (!userAreas || userAreas.length === 0) {
-        console.warn('🚨 NO USER MAP AREAS FOUND (POST-PAYMENT VALIDATION)');
+        console.warn('🚨 NO M1U-BASED MAP AREAS FOUND (source=buzz_map)');
+        console.log('💡 This is normal if user has not created any BUZZ MAP areas yet via M1U payment');
         setCurrentWeekAreas([]);
         setLoading(false);
         return;
