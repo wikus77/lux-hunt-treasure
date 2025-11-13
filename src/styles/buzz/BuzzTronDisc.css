@@ -1,0 +1,283 @@
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+/* BUZZ TRON Disc - Dark metallic disc with cyan LED ring */
+
+:root {
+  --tron-cyan: #00ffff;
+  --tron-cyan-glow: rgba(0, 255, 255, 0.6);
+  --tron-dark: #1a1a1e;
+  --tron-darker: #0f0f12;
+  --tron-metal: #2a2a32;
+  --tron-highlight: #3a3a42;
+}
+
+/* Base TRON Disc */
+.tron-disc {
+  position: relative;
+  width: clamp(280px, 55vw, 380px);
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  cursor: pointer;
+  user-select: none;
+  isolation: isolate;
+  will-change: transform, opacity;
+  
+  /* Dark metallic gradient base */
+  background: 
+    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at center, var(--tron-metal), var(--tron-darker));
+  
+  /* Cyan outer border with glow */
+  box-shadow:
+    0 0 0 3px var(--tron-cyan),
+    0 0 20px var(--tron-cyan-glow),
+    0 0 40px rgba(0, 255, 255, 0.3),
+    inset 0 -30px 60px rgba(0, 0, 0, 0.8),
+    inset 0 2px 8px rgba(255, 255, 255, 0.05);
+  
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 640px) {
+  .tron-disc {
+    width: clamp(260px, 75vw, 340px);
+  }
+}
+
+/* Panel lines - segmented details like TRON disc */
+.tron-disc::before {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: 
+    /* Vertical segments */
+    linear-gradient(90deg, transparent 48%, rgba(0, 255, 255, 0.08) 49%, rgba(0, 255, 255, 0.08) 51%, transparent 52%),
+    /* Horizontal segments */
+    linear-gradient(0deg, transparent 48%, rgba(0, 255, 255, 0.08) 49%, rgba(0, 255, 255, 0.08) 51%, transparent 52%),
+    /* Diagonal segments */
+    linear-gradient(45deg, transparent 48%, rgba(0, 255, 255, 0.05) 49%, rgba(0, 255, 255, 0.05) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(0, 255, 255, 0.05) 49%, rgba(0, 255, 255, 0.05) 51%, transparent 52%);
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* Central hole effect */
+.tron-disc::after {
+  content: '';
+  position: absolute;
+  inset: 30%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--tron-darker), transparent);
+  box-shadow: 
+    inset 0 0 30px rgba(0, 0, 0, 0.9),
+    inset 0 8px 16px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+/* Content container (price) */
+.tron-disc-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* Price text styling */
+.tron-price {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(32px, 7vw, 48px);
+  font-weight: 600;
+  color: white;
+  text-shadow: 
+    0 0 10px rgba(255, 255, 255, 0.8),
+    0 0 20px rgba(0, 255, 255, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 0.05em;
+}
+
+/* Internal LED Ring - positioned inside the disc */
+.tron-led-ring {
+  position: absolute;
+  inset: 15%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* LED ring base (idle state - dim) */
+.tron-led-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 255, 255, 0.2);
+  box-shadow: 
+    inset 0 0 8px rgba(0, 255, 255, 0.1),
+    0 0 8px rgba(0, 255, 255, 0.1);
+}
+
+/* LED ring loading animation */
+.tron-led-ring.loading::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    var(--tron-cyan) 90deg,
+    transparent 90deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent calc(50% - 3px), black calc(50% - 3px));
+  mask: radial-gradient(circle, transparent calc(50% - 3px), black calc(50% - 3px));
+  animation: tronLedRotate 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  filter: drop-shadow(0 0 12px var(--tron-cyan));
+}
+
+@keyframes tronLedRotate {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg);
+    opacity: 0.8;
+  }
+}
+
+/* Decorative dots at cardinal points (like TRON disc) */
+.tron-disc-dots {
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.tron-disc-dots::before,
+.tron-disc-dots::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tron-cyan);
+  box-shadow: 
+    0 0 8px var(--tron-cyan),
+    0 0 16px rgba(0, 255, 255, 0.5);
+}
+
+.tron-disc-dots::before {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tron-disc-dots::after {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Additional dots using a wrapper */
+.tron-disc-dots-sides {
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.tron-disc-dots-sides::before,
+.tron-disc-dots-sides::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tron-cyan);
+  box-shadow: 
+    0 0 8px var(--tron-cyan),
+    0 0 16px rgba(0, 255, 255, 0.5);
+}
+
+.tron-disc-dots-sides::before {
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.tron-disc-dots-sides::after {
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+}
+
+/* Hover state */
+.tron-disc:not(:disabled):hover {
+  transform: scale(1.02) translateY(-2px);
+  box-shadow:
+    0 0 0 3px var(--tron-cyan),
+    0 0 25px var(--tron-cyan-glow),
+    0 0 50px rgba(0, 255, 255, 0.4),
+    0 8px 30px rgba(0, 255, 255, 0.3),
+    inset 0 -30px 60px rgba(0, 0, 0, 0.8),
+    inset 0 2px 8px rgba(255, 255, 255, 0.08);
+}
+
+/* Active/pressed state */
+.tron-disc:not(:disabled):active {
+  transform: scale(0.98) translateY(1px);
+  box-shadow:
+    0 0 0 3px var(--tron-cyan),
+    0 0 15px var(--tron-cyan-glow),
+    0 0 30px rgba(0, 255, 255, 0.3),
+    inset 0 -30px 60px rgba(0, 0, 0, 0.9),
+    inset 0 2px 8px rgba(255, 255, 255, 0.03);
+}
+
+/* Disabled state */
+.tron-disc:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+
+.tron-disc:disabled .tron-price {
+  color: rgba(255, 255, 255, 0.4);
+  text-shadow: none;
+}
+
+/* Loading spinner (alternative visual if needed) */
+.tron-loading-spinner {
+  position: absolute;
+  inset: 25%;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: var(--tron-cyan);
+  border-right-color: var(--tron-cyan);
+  animation: tronSpin 1s linear infinite;
+  z-index: 8;
+}
+
+@keyframes tronSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .tron-disc,
+  .tron-led-ring.loading::after,
+  .tron-loading-spinner {
+    animation: none !important;
+  }
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
