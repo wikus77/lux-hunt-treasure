@@ -11,6 +11,7 @@ import { useBuzzStats } from '@/hooks/useBuzzStats';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
+import { createVortexSound } from '@/utils/audioSynthesis';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import M1UPill from '@/features/m1u/M1UPill';
@@ -19,7 +20,7 @@ export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
   const { user } = useUnifiedAuth();
   const { playSound } = useSoundEffects();
-  const vortexAudioRef = useRef<HTMLAudioElement | null>(null);
+  const vortexSoundRef = useRef<ReturnType<typeof createVortexSound> | null>(null);
   
   // 🔥 FIXED: Use centralized pricing logic from useBuzzCounter
   const { 
@@ -31,26 +32,26 @@ export const BuzzPage: React.FC = () => {
   const isBlocked = false; // Never blocked, progressive pricing continues
   const currentPriceDisplay = getCurrentBuzzDisplayPrice();
 
-  // Start vortex sound loop on mount
+  // Start procedural vortex sound on mount
   useEffect(() => {
-    // Create and start looping vortex sound
-    const audio = new Audio('/audio/disc-vortex.mp3');
-    audio.loop = true;
-    audio.volume = 0.3;
-    vortexAudioRef.current = audio;
-    
-    // Delay slightly to ensure user interaction
+    // Small delay to ensure user has interacted with page
     const timer = setTimeout(() => {
-      audio.play().catch(err => {
-        console.log('Vortex audio autoplay prevented:', err);
-      });
-    }, 100);
+      try {
+        const vortex = createVortexSound();
+        vortexSoundRef.current = vortex;
+        vortex.setVolume(0.25); // Subtle background volume
+        vortex.start();
+        console.log('🌀 Vortex sound initialized');
+      } catch (error) {
+        console.log('Vortex sound init prevented (autoplay policy):', error);
+      }
+    }, 200);
     
     return () => {
       clearTimeout(timer);
-      if (vortexAudioRef.current) {
-        vortexAudioRef.current.pause();
-        vortexAudioRef.current = null;
+      if (vortexSoundRef.current) {
+        vortexSoundRef.current.stop();
+        vortexSoundRef.current = null;
       }
     };
   }, []);
