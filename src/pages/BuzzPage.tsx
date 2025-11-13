@@ -32,24 +32,37 @@ export const BuzzPage: React.FC = () => {
   const isBlocked = false; // Never blocked, progressive pricing continues
   const currentPriceDisplay = getCurrentBuzzDisplayPrice();
 
-  // Start procedural vortex sound on mount
+  // Start procedural vortex sound ONLY when on /buzz page
   useEffect(() => {
+    let mounted = true;
+    
     // Small delay to ensure user has interacted with page
     const timer = setTimeout(() => {
+      if (!mounted) return;
+      
       try {
         const vortex = createVortexSound();
+        if (!mounted) {
+          vortex.stop();
+          return;
+        }
+        
         vortexSoundRef.current = vortex;
         vortex.setVolume(0.25); // Subtle background volume
         vortex.start();
-        console.log('🌀 Vortex sound initialized');
+        console.log('🌀 Vortex sound active on /buzz page');
       } catch (error) {
         console.log('Vortex sound init prevented (autoplay policy):', error);
       }
     }, 200);
     
+    // Cleanup: stop sound immediately when leaving /buzz page
     return () => {
+      mounted = false;
       clearTimeout(timer);
+      
       if (vortexSoundRef.current) {
+        console.log('🌀 Stopping vortex sound (leaving /buzz page)');
         vortexSoundRef.current.stop();
         vortexSoundRef.current = null;
       }
