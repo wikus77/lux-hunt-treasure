@@ -1,14 +1,16 @@
 // © 2025 M1SSION™ – Handle BUZZ Press Edge Function
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
-import { corsHeaders } from '../_shared/cors.ts'
+import { corsHeaders, handleOptions, ok, err } from '../_shared/cors.ts'
 import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts'
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return handleOptions(req);
   }
+
+  const origin = req.headers.get('origin');
 
   try {
     console.log('🎯 [HANDLE-BUZZ-PRESS] Function started');
@@ -114,16 +116,7 @@ serve(async (req) => {
       
       console.log('🎉 [HANDLE-BUZZ-PRESS] BUZZ MAP completed:', response);
       
-      return new Response(
-        JSON.stringify(response),
-        { 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
-          },
-          status: 200
-        }
-      );
+      return ok(origin, response);
     }
 
     // Generate random clue text (regular BUZZ logic)
@@ -186,32 +179,12 @@ serve(async (req) => {
 
     console.log('🎉 [HANDLE-BUZZ-PRESS] Function completed successfully:', response);
 
-    return new Response(
-      JSON.stringify(response),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        },
-        status: 200
-      }
-    );
+    return ok(origin, response);
 
   } catch (error) {
     console.error('❌ [HANDLE-BUZZ-PRESS] Function error:', error);
-    
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
-      }),
-      { 
-        status: 500,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    );
+    return err(origin, 500, 'FUNCTION_ERROR', error.message);
   }
 });
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
