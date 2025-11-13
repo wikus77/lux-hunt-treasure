@@ -22,8 +22,8 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
 }) => {
   const { xpStatus } = useXpSystem();
   
-  // Format price for display
-  const priceDisplay = `€${currentPrice.toFixed(2)}`;
+  // Format price for display in M1U
+  const priceDisplay = `${currentPrice} M1U`;
   
   return (
     <motion.button
