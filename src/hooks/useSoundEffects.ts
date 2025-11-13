@@ -9,7 +9,8 @@ export type SoundType =
   | "chime" 
   | "arcade" 
   | "bell" 
-  | "agentClick";
+  | "agentClick"
+  | "spacecraftIgnition";
 
 // Cache for sounds to avoid reloading
 const soundCache: Record<string, HTMLAudioElement> = {};
@@ -21,7 +22,7 @@ export const useSoundEffects = () => {
   // Preload sounds
   useEffect(() => {
     // List of sounds to preload
-    const soundsToPreload: SoundType[] = ["notification", "buzz", "chime", "arcade", "bell", "agentClick"];
+    const soundsToPreload: SoundType[] = ["notification", "buzz", "chime", "arcade", "bell", "agentClick", "spacecraftIgnition"];
     
     // Preload each sound
     soundsToPreload.forEach(sound => {
@@ -30,6 +31,10 @@ export const useSoundEffects = () => {
         // Special path for buzz sound
         if (sound === "buzz") {
           path = "/buzz-sound.mp3";
+        }
+        // Special path for spacecraft ignition sound
+        if (sound === "spacecraftIgnition") {
+          path = "/audio/spacecraft-ignition.mp3";
         }
         
         const audio = new Audio(path);
@@ -59,6 +64,11 @@ export const useSoundEffects = () => {
       // Special case for buzz sound which has a different path
       if (sound === "buzz") {
         path = "/buzz-sound.mp3";
+      }
+      
+      // Special case for spacecraft ignition sound
+      if (sound === "spacecraftIgnition") {
+        path = "/audio/spacecraft-ignition.mp3";
       }
       
       // Use cached audio if available, otherwise create a new one
