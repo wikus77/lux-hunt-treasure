@@ -41,7 +41,7 @@ import DevNotesPanel from './map3d/components/DevNotesPanel';
 import DevAreasPanel from './map3d/components/DevAreasPanel';
 import BattleFxLayer from '@/components/map/battle/BattleFxLayer';
 import { usePerformanceSettings } from '@/hooks/usePerformanceSettings';
-import { BattleWidget } from '@/components/battle/BattleWidget';
+import { BattlePill } from '@/components/battle/BattlePill';
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
 const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
@@ -836,8 +836,8 @@ export default function MapTiler3D() {
       {/* Layer Toggle Panel */}
       <LayerTogglePanel layers={layerVisibility} onToggle={toggleLayer} />
 
-      {/* Battle Widget - Floating battle panel */}
-      <BattleWidget userId={battleUserId} />
+      {/* Battle Pill - Circular floating button */}
+      <BattlePill userId={battleUserId} />
       
       <div
         style={{
