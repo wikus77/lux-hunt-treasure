@@ -99,9 +99,9 @@ export const BuzzPage: React.FC = () => {
           </div>
 
 
-          {/* Container principale - Pulsante BUZZ prima del container */}
-          <div className="max-w-3xl mx-auto">
-            {/* Pulsante BUZZ - Prima del container */}
+          {/* Container centrato verticalmente e orizzontalmente */}
+          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+            {/* Pulsante BUZZ centrato */}
             <div className="text-center mb-6">
               <BuzzActionButton
                 isBlocked={isBlocked}
@@ -110,7 +110,7 @@ export const BuzzPage: React.FC = () => {
             </div>
 
             {/* Container con descrizione - Sistema 200 indizi - RESET COMPLETO 17/07/2025 */}
-            <div className="m1ssion-glass-card p-4 sm:p-6 mb-6">
+            <div className="m1ssion-glass-card p-4 sm:p-6 mb-6 max-w-3xl w-full mx-4">
               <div className="text-center space-y-4">
                 {/* Descrizione BUZZ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025 */}
                 <div className="text-white/80 space-y-2">
