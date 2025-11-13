@@ -9,6 +9,7 @@ import { useBuzzMapPricingNew } from '@/hooks/useBuzzMapPricingNew';
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { showInsufficientM1UToast } from '@/utils/m1uHelpers';
 import { supabase } from '@/integrations/supabase/client';
+import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
 
 interface BuzzMapButtonSecureProps {
   onBuzzPress: () => void;
@@ -22,6 +23,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
   onAreaGenerated
 }) => {
   const { isAuthenticated, user } = useAuthContext();
+  const { callBuzzApi } = useBuzzApi();
   const { 
     nextLevel, 
     nextRadiusKm, 
@@ -147,11 +149,31 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         return;
       }
 
-      // M1U spent and area created successfully
-      console.log('✅ M1SSION™ BUZZ MAP: M1U spent and area created', {
+      // M1U spent successfully via RPC
+      console.log('✅ M1SSION™ BUZZ MAP: M1U spent successfully', {
         spent: (spendResult as any).spent,
-        newBalance: (spendResult as any).new_balance,
-        areaId: (spendResult as any).area_id
+        newBalance: (spendResult as any).new_balance
+      });
+
+      // Now call edge function to actually create the area in user_map_areas
+      console.log('🗺️ M1SSION™ BUZZ MAP: Calling edge function to create area...');
+      const edgeResult = await callBuzzApi({
+        userId: user.id,
+        generateMap: true,
+        coordinates: { lat: coordinates[0], lng: coordinates[1] },
+        sessionId: Date.now().toString()
+      });
+
+      if (!edgeResult.success) {
+        console.error('❌ M1SSION™ BUZZ MAP: Edge function failed', edgeResult);
+        toast.error('Area creata ma errore nel salvataggio. Contatta supporto.');
+        return;
+      }
+
+      console.log('✅ M1SSION™ BUZZ MAP: Area created successfully', {
+        areaId: edgeResult.area_id || (spendResult as any).area_id,
+        level: nextLevel,
+        radiusKm: nextRadiusKm
       });
 
       // Show success toast
@@ -167,7 +189,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         }
       );
 
-      // Notify parent components
+      // Notify parent components to reload areas
       onAreaGenerated?.(coordinates[0], coordinates[1], nextRadiusKm);
       onBuzzPress();
 
@@ -178,7 +200,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
           radiusKm: nextRadiusKm,
           costM1U,
           coordinates,
-          areaId: (spendResult as any).area_id
+          areaId: edgeResult.area_id || (spendResult as any).area_id
         }
       }));
 
