@@ -43,22 +43,23 @@ export default function BattleFxLayer({ map, battleFxMode }: BattleFxLayerProps)
 
     const fetchActiveBattle = async () => {
       try {
-        // Query battle_sessions table directly instead of using RPC
+        // Query TRON battles table (canonical)
         const { data, error } = await supabase
-          .from('battle_sessions' as any)
-          .select('id, attacker_id, defender_id, status')
-          .or(`attacker_id.eq.${user.id},defender_id.eq.${user.id}`)
-          .eq('status', 'await_defense')
+          .from('battles' as any)
+          .select('id, creator_id, opponent_id, status')
+          .or(`creator_id.eq.${user.id},opponent_id.eq.${user.id}`)
+          .in('status', ['pending', 'accepted', 'countdown', 'active'])
           .order('created_at', { ascending: false })
-          .limit(1);
+          .limit(1)
+          .maybeSingle();
         
         if (error) {
           console.warn('[BattleFxLayer] Error fetching battles:', error);
           return;
         }
 
-        if (data && data.length > 0) {
-          const activeBattle = data[0] as any;
+        if (data) {
+          const activeBattle = data as any;
           setCurrentBattleSessionId(activeBattle.id);
           console.log('[BattleFxLayer] Active battle found:', activeBattle.id);
         } else {
@@ -138,10 +139,10 @@ export default function BattleFxLayer({ map, battleFxMode }: BattleFxLayerProps)
         if (!currentBattleSessionId) return;
 
         const { data: session, error } = await supabase
-          .from('battle_sessions' as any)
-          .select('attacker_id, defender_id, weapon_key, defense_key')
+          .from('battles' as any)
+          .select('creator_id, opponent_id, stake_type, stake_amount')
           .eq('id', currentBattleSessionId)
-          .single();
+          .maybeSingle();
 
         if (error || !session) {
           console.warn('[BattleFxLayer] Could not fetch session:', error);
@@ -149,8 +150,8 @@ export default function BattleFxLayer({ map, battleFxMode }: BattleFxLayerProps)
         }
 
         const sessionData = session as any;
-        const attackerPos = agentPositions.get(sessionData.attacker_id);
-        const defenderPos = agentPositions.get(sessionData.defender_id);
+        const attackerPos = agentPositions.get(sessionData.creator_id);
+        const defenderPos = agentPositions.get(sessionData.opponent_id);
 
         if (!attackerPos || !defenderPos) {
           console.warn('[BattleFxLayer] Missing agent positions');
