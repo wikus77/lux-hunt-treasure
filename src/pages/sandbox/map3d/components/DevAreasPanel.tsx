@@ -53,9 +53,10 @@ const DevAreasPanel: React.FC<DevAreasPanelProps> = ({ map, searchAreas, onDelet
           className="m1x-pill m1x-pill--areas"
           onClick={() => setOpen(o => !o)}
           title="Punti/Aree (DEV)"
+          style={{ transform: 'scale(0.75)' }}
         >
           <div className="m1x-pill__icon">
-            <MapPin className="h-6 w-6 text-purple-400" />
+            <MapPin className="h-5 w-5 text-purple-400" />
           </div>
           <div className="m1x-pill__label">
             Punti/Aree ({searchAreas?.length || 0})
@@ -63,27 +64,27 @@ const DevAreasPanel: React.FC<DevAreasPanelProps> = ({ map, searchAreas, onDelet
         </div>
 
         {open && (
-          <div className="mt-2 w-[260px] rounded-xl border border-purple-500/30 bg-black/70 backdrop-blur-md p-2 text-sm text-white/90">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs text-white/80">Gestisci aree di ricerca</div>
-              <Button size="sm" className="h-7 px-2 text-xs bg-black/60 hover:bg-black/80 border border-purple-500/30" onClick={handleAddAreaClick}>
-                <Plus className="h-3 w-3 mr-1" /> Nuova
+          <div className="mt-2 w-[195px] rounded-xl border border-purple-500/30 bg-black/70 backdrop-blur-md p-1.5 text-xs text-white/90">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="text-[10px] text-white/80">Gestisci aree di ricerca</div>
+              <Button size="sm" className="h-6 px-1.5 text-[10px] bg-black/60 hover:bg-black/80 border border-purple-500/30" onClick={handleAddAreaClick}>
+                <Plus className="h-2.5 w-2.5 mr-0.5" /> Nuova
               </Button>
             </div>
           {(!searchAreas || searchAreas.length === 0) ? (
-            <div className="text-xs text-white/70 px-2 py-3">Nessuna area. Usa "Nuova" e poi clicca sulla mappa.</div>
+            <div className="text-[10px] text-white/70 px-1.5 py-2">Nessuna area. Usa "Nuova" e poi clicca sulla mappa.</div>
           ) : (
-            <ul className="max-h-[260px] overflow-auto space-y-2 pr-1">
+            <ul className="max-h-[195px] overflow-auto space-y-1.5 pr-1">
               {searchAreas.map(a => (
-                <li key={a.id} className="rounded-lg border border-white/10 p-2">
-                  <div className="font-medium truncate">{a.label || 'Area di ricerca'}</div>
-                  <div className="text-xs text-white/70">Raggio: {(a.radius/1000).toFixed(1)} km</div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <Button size="sm" className="h-7 px-2 text-xs bg-black/60 hover:bg-black/80 border border-cyan-500/30" onClick={() => { onFocus(a.id); flyTo(a); }}>
+                <li key={a.id} className="rounded-lg border border-white/10 p-1.5">
+                  <div className="font-medium text-[11px] truncate">{a.label || 'Area di ricerca'}</div>
+                  <div className="text-[10px] text-white/70">Raggio: {(a.radius/1000).toFixed(1)} km</div>
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <Button size="sm" className="h-6 px-1.5 text-[10px] bg-black/60 hover:bg-black/80 border border-cyan-500/30" onClick={() => { onFocus(a.id); flyTo(a); }}>
                       Focus
                     </Button>
-                    <Button size="sm" variant="destructive" className="h-7 px-2 text-xs" onClick={() => onDelete(a.id)}>
-                      <Trash2 className="h-3 w-3 mr-1" /> Elimina
+                    <Button size="sm" variant="destructive" className="h-6 px-1.5 text-[10px]" onClick={() => onDelete(a.id)}>
+                      <Trash2 className="h-2.5 w-2.5 mr-0.5" /> Elimina
                     </Button>
                   </div>
                 </li>

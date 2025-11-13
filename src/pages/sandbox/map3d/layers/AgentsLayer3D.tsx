@@ -9,9 +9,10 @@ interface AgentsLayer3DProps {
   enabled: boolean;
   agents?: AgentDTO[]; // Optional override for dev mocks
   mePosition?: { lat: number; lng: number } | null;
+  onAgentClick?: (agent: AgentDTO) => void;
 }
 
-const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled, agents: agentsProp, mePosition }) => {
+const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({ map, enabled, agents: agentsProp, mePosition, onAgentClick }) => {
   const [agents, setAgents] = useState<AgentDTO[]>([]);
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
 
@@ -78,12 +79,13 @@ useEffect(() => {
         return (
           <div
             key={agent.id}
-            className="absolute pointer-events-auto"
+            className="absolute pointer-events-auto cursor-pointer"
             style={{
               left: `${pos.x}px`,
               top: `${pos.y}px`,
               transform: 'translate(-50%, -50%)'
             }}
+            onClick={() => !isMe && onAgentClick?.(agent)}
           >
             <div
               className={isMe ? 'm1-agent-dot m1-agent-dot--me' : 'm1-agent-dot'}

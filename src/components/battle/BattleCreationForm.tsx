@@ -12,6 +12,7 @@ import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { Swords, Zap, Search, Shield } from 'lucide-react';
 import { STAKE_TYPES, STAKE_PERCENTS } from '@/lib/battle/constants';
+import { WeaponDefenseSelector } from './WeaponDefenseSelector';
 
 interface BattleCreationFormProps {
   userId: string;
@@ -31,6 +32,11 @@ export function BattleCreationForm({
   const [opponentSearch, setOpponentSearch] = useState(preSelectedOpponent?.name || '');
   const [arenaName, setArenaName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedWeaponId, setSelectedWeaponId] = useState<string | null>(null);
+  const [selectedWeaponCode, setSelectedWeaponCode] = useState<string | null>(null);
+  const [selectedDefenseId, setSelectedDefenseId] = useState<string | null>(null);
+  const [selectedDefenseCode, setSelectedDefenseCode] = useState<string | null>(null);
+  const [showShopTab, setShowShopTab] = useState(false);
   const { toast } = useToast();
 
   const handleCreate = async () => {
@@ -155,21 +161,40 @@ export function BattleCreationForm({
           </div>
         </div>
 
-        {/* Weapon/Defense Selection (Coming Soon) */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-lg bg-muted/30 border border-dashed border-border">
-            <div className="flex items-center gap-2 mb-2">
-              <Swords className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs font-medium text-muted-foreground">Weapon</span>
-            </div>
-            <p className="text-[10px] text-muted-foreground">Coming soon</p>
+        {/* Weapon/Defense Selection */}
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <Label>
+              <Swords className="inline h-3 w-3 mr-1" />
+              Weapon (optional)
+            </Label>
+            <WeaponDefenseSelector
+              userId={userId}
+              type="weapon"
+              selectedItemId={selectedWeaponId}
+              onSelect={(id, code) => {
+                setSelectedWeaponId(id);
+                setSelectedWeaponCode(code);
+              }}
+              onOpenShop={() => setShowShopTab(true)}
+            />
           </div>
-          <div className="p-3 rounded-lg bg-muted/30 border border-dashed border-border">
-            <div className="flex items-center gap-2 mb-2">
-              <Shield className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs font-medium text-muted-foreground">Defense</span>
-            </div>
-            <p className="text-[10px] text-muted-foreground">Coming soon</p>
+
+          <div className="space-y-2">
+            <Label>
+              <Shield className="inline h-3 w-3 mr-1" />
+              Defense (optional)
+            </Label>
+            <WeaponDefenseSelector
+              userId={userId}
+              type="defense"
+              selectedItemId={selectedDefenseId}
+              onSelect={(id, code) => {
+                setSelectedDefenseId(id);
+                setSelectedDefenseCode(code);
+              }}
+              onOpenShop={() => setShowShopTab(true)}
+            />
           </div>
         </div>
       </div>

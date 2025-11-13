@@ -42,6 +42,8 @@ import DevAreasPanel from './map3d/components/DevAreasPanel';
 import BattleFxLayer from '@/components/map/battle/BattleFxLayer';
 import { usePerformanceSettings } from '@/hooks/usePerformanceSettings';
 import { BattlePill } from '@/components/battle/BattlePill';
+import { AgentBattleCard } from '@/components/battle/AgentBattleCard';
+import { BattleModal } from '@/components/battle/BattleModal';
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
 const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
@@ -656,11 +658,30 @@ export default function MapTiler3D() {
 
   // Get user ID for battle widget
   const [battleUserId, setBattleUserId] = useState<string | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<any>(null);
+  const [showAgentCard, setShowAgentCard] = useState(false);
+  const [showBattleModal, setShowBattleModal] = useState(false);
+  const [preSelectedOpponent, setPreSelectedOpponent] = useState<{ id: string; name: string } | undefined>();
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setBattleUserId(data.user?.id || null);
     });
   }, []);
+
+  const handleAgentClick = (agent: any) => {
+    setSelectedAgent(agent);
+    setShowAgentCard(true);
+  };
+
+  const handleAttackAgent = () => {
+    setShowAgentCard(false);
+    setPreSelectedOpponent({
+      id: selectedAgent.id,
+      name: selectedAgent.username || `Agent ${selectedAgent.id.slice(0, 6)}`,
+    });
+    setShowBattleModal(true);
+  };
 
   return (
     <>
@@ -737,37 +758,49 @@ export default function MapTiler3D() {
         <Button
           onClick={handleResetBearing}
           size="sm"
-          className="h-10 w-10 rounded-full bg-black/70 border border-cyan-500/30 hover:bg-black/90 hover:border-cyan-500/60 p-0"
+          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/60 p-0 shadow-lg shadow-cyan-500/20"
+          style={{
+            background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.4) 68%)',
+          }}
           title="Reset bearing to north"
         >
-          <Compass className="h-4 w-4 text-cyan-400" />
+          <Compass className="h-5 w-5 text-cyan-400" />
         </Button>
 
         <Button
           onClick={handleFindMyLocation}
           size="sm"
-          className="h-10 w-10 rounded-full bg-black/70 border border-cyan-500/30 hover:bg-black/90 hover:border-cyan-500/60 p-0"
+          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/60 p-0 shadow-lg shadow-cyan-500/20"
+          style={{
+            background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.4) 68%)',
+          }}
           title="Find my location"
         >
-          <Navigation className="h-4 w-4 text-cyan-400" />
+          <Navigation className="h-5 w-5 text-cyan-400" />
         </Button>
 
         <Button
           onClick={handleCenterLocation}
           size="sm"
-          className="h-10 w-10 rounded-full bg-black/70 border border-cyan-500/30 hover:bg-black/90 hover:border-cyan-500/60 p-0"
+          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/60 p-0 shadow-lg shadow-cyan-500/20"
+          style={{
+            background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.4) 68%)',
+          }}
           title="Centra su posizione"
         >
-          <Crosshair className="h-4 w-4 text-cyan-400" />
+          <Crosshair className="h-5 w-5 text-cyan-400" />
         </Button>
 
         <Button
           onClick={handleResetView}
           size="sm"
-          className="h-10 w-10 rounded-full bg-black/70 border border-cyan-500/30 hover:bg-black/90 hover:border-cyan-500/60 p-0"
+          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/60 p-0 shadow-lg shadow-cyan-500/20"
+          style={{
+            background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.4) 68%)',
+          }}
           title="Reset vista"
         >
-          <RotateCcw className="h-4 w-4 text-cyan-400" />
+          <RotateCcw className="h-5 w-5 text-cyan-400" />
         </Button>
       </div>
       
@@ -782,6 +815,7 @@ export default function MapTiler3D() {
         enabled={layerVisibility.agents}
         agents={effectiveAgents}
         mePosition={position ? { lat: position.lat, lng: position.lng } : null}
+        onAgentClick={handleAgentClick}
       />
       <PortalsLayer3D map={mapRef.current} enabled={layerVisibility.portals} />
       <RewardsLayer3D 
@@ -838,6 +872,33 @@ export default function MapTiler3D() {
 
       {/* Battle Pill - Circular floating button */}
       <BattlePill userId={battleUserId} />
+
+      {/* Agent Battle Card */}
+      {selectedAgent && (
+        <AgentBattleCard
+          isOpen={showAgentCard}
+          onClose={() => setShowAgentCard(false)}
+          agentCode={`AG-${selectedAgent.id.slice(0, 6).toUpperCase()}`}
+          displayName={selectedAgent.username}
+          rank="Agent"
+          isAttackable={true}
+          status="available"
+          onAttack={handleAttackAgent}
+        />
+      )}
+
+      {/* Battle Modal for agent attack */}
+      {showBattleModal && battleUserId && (
+        <BattleModal
+          isOpen={showBattleModal}
+          onClose={() => setShowBattleModal(false)}
+          userId={battleUserId}
+          activeBattles={[]}
+          pendingChallenges={[]}
+          loading={false}
+          preSelectedOpponent={preSelectedOpponent}
+        />
+      )}
       
       <div
         style={{

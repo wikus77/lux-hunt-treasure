@@ -90,4 +90,57 @@ export interface RpcFunctions {
       reason?: string;
     };
   };
+  list_available_battle_items: {
+    Args: Record<string, never>;
+    Returns: Array<{
+      item_id: string;
+      type: 'weapon' | 'defense';
+      code: string;
+      name: string;
+      description: string;
+      icon_key: string;
+      base_price_m1u: number;
+      power: number;
+      rarity: 'common' | 'rare' | 'epic' | 'legendary';
+      min_rank: number;
+      max_stack: number;
+      is_owned: boolean;
+      owned_quantity: number;
+      is_equipped: boolean;
+    }>;
+  };
+  purchase_battle_item: {
+    Args: {
+      p_item_id: string;
+      p_quantity: number;
+    };
+    Returns: {
+      success: boolean;
+      error?: string;
+      item_id?: string;
+      item_code?: string;
+      quantity_purchased?: number;
+      m1u_spent?: number;
+      new_balance?: number;
+      new_quantity?: number;
+    };
+  };
+  get_user_battle_inventory: {
+    Args: Record<string, never>;
+    Returns: Array<{
+      inventory_id: string;
+      item_id: string;
+      type: 'weapon' | 'defense';
+      code: string;
+      name: string;
+      description: string;
+      icon_key: string;
+      power: number;
+      rarity: string;
+      quantity: number;
+      is_equipped: boolean;
+      acquired_at: string;
+      last_used_at: string | null;
+    }>;
+  };
 }
