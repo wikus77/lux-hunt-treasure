@@ -1,8 +1,9 @@
-// © 2025 M1SSION™ – Handle BUZZ Press Edge Function
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
 import { corsHeaders, handleOptions, ok, err } from '../_shared/cors.ts'
 import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts'
+import { generateMissionClue, getCurrentWeekOfYear } from '../_shared/clueGenerator.ts'
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -119,18 +120,37 @@ serve(async (req) => {
       return ok(origin, response);
     }
 
-    // Generate random clue text (regular BUZZ logic)
-    const clueTexts = [
-      "Cerca dove l'innovazione italiana splende più forte...",
-      "L'indizio si nasconde tra i corridoi del progresso...", 
-      "Segui le tracce della tecnologia che ha cambiato il mondo...",
-      "Nel cuore della ricerca italiana troverai la chiave...",
-      "Dove la scienza incontra l'arte, là troverai la risposta...",
-      "L'indizio danza tra le onde dell'innovazione...",
-      "Cerca nei luoghi dove il futuro prende forma..."
-    ];
+    // 🎯 M1SSION™ CLUE ENGINE: Generate clue using original logic with weeks/tiers/antiforcing
+    console.log('🎯 [HANDLE-BUZZ-PRESS] Generating clue using M1SSION™ engine...');
     
-    const clueText = clueTexts[Math.floor(Math.random() * clueTexts.length)];
+    let buzzCount = 0;
+    try {
+      // Get user's weekly BUZZ count
+      const { data: counterData } = await supabase
+        .from('user_buzz_counter')
+        .select('buzz_count')
+        .eq('user_id', user.id)
+        .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        .order('date', { ascending: false });
+      
+      if (counterData && counterData.length > 0) {
+        buzzCount = counterData.reduce((sum, row) => sum + (row.buzz_count || 0), 0);
+      }
+    } catch (error) {
+      console.error('❌ [HANDLE-BUZZ-PRESS] Error fetching buzz count:', error);
+    }
+
+    const weekOfYear = getCurrentWeekOfYear();
+    const clueData = generateMissionClue({ userId: user.id, buzzCount, weekOfYear });
+    const clueText = clueData.text;
+    
+    console.log('🎯 [HANDLE-BUZZ-PRESS] CLUE GENERATED:', {
+      tier: clueData.tier,
+      week: clueData.week,
+      difficulty: clueData.difficulty,
+      buzzCount,
+      textPreview: clueText.substring(0, 50) + '...'
+    });
 
     // Log the BUZZ action
     const { error: logError } = await supabase
