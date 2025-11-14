@@ -147,6 +147,20 @@ serve((req) => withCors(req, async () => {
       textPreview: clueText.substring(0, 50) + '...'
     });
 
+    // Increment buzz counter using safe RPC to avoid 409 conflicts
+    const today = new Date().toISOString().split('T')[0];
+    const { error: counterError } = await supabase.rpc('increment_buzz_counter', {
+      p_user_id: user.id,
+      p_date: today
+    });
+    
+    if (counterError) {
+      console.error('❌ [HANDLE-BUZZ-PRESS] Error incrementing counter:', counterError);
+      // NON bloccare il flusso - il clue è già stato generato
+    } else {
+      console.log('✅ [HANDLE-BUZZ-PRESS] Counter incremented successfully');
+    }
+
     // Log the BUZZ action
     const { error: logError } = await supabase
       .from('buzz_logs')
