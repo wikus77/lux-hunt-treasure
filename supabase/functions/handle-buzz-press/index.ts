@@ -1,15 +1,11 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
-import { buildCorsHeaders } from '../_shared/cors.ts'
+import { withCors } from '../_shared/cors.ts'
 import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts'
 import { generateMissionClue, getCurrentWeekOfYear } from '../_shared/clueGenerator.ts'
 
-serve(async (req: Request): Promise<Response> => {
-  // PRE-FLIGHT
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: buildCorsHeaders(req) });
-  }
+serve(withCors(async (req: Request): Promise<Response> => {
 
   try {
     console.log('🎯 [HANDLE-BUZZ-PRESS] Function started');
@@ -117,7 +113,7 @@ serve(async (req: Request): Promise<Response> => {
       
       return new Response(JSON.stringify(response), {
         status: 200,
-        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(req) }
+        headers: { 'Content-Type': 'application/json' }
       });
     }
 
@@ -216,7 +212,7 @@ serve(async (req: Request): Promise<Response> => {
 
     return new Response(JSON.stringify(response), {
       status: 200,
-      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(req) }
+      headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error: any) {
@@ -228,9 +224,9 @@ serve(async (req: Request): Promise<Response> => {
     };
     return new Response(JSON.stringify(errorResponse), {
       status: 500,
-      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(req) }
+      headers: { 'Content-Type': 'application/json' }
     });
   }
-});
+}));
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
