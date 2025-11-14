@@ -105,16 +105,18 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         sessionId: `buzz_${Date.now()}`
       });
       
-      console.log('✅ BUZZ API CALL COMPLETED - RESET COMPLETO 17/07/2025');
+      console.log('✅ BUZZ API CALL COMPLETED');
       console.log('🚨 POST-BUZZ API CALL:', {
         success: buzzResult?.success,
         error: buzzResult?.error,
         errorMessage: buzzResult?.errorMessage,
         hasClueText: !!buzzResult?.clue_text,
-        fullResult: buzzResult
+        clueTextPreview: buzzResult?.clue_text?.substring(0, 50)
       });
       
+      // 🔥 FIX: Only show error toast if clue generation truly failed
       if (buzzResult.error) {
+        hadError = true;
         console.error('❌ BUZZ API Error:', buzzResult.errorMessage);
         toast.dismiss();
         toast.error(buzzResult.errorMessage || 'Errore di rete. Riprova.');
@@ -122,16 +124,39 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
       }
       
       if (!buzzResult.success) {
+        hadError = true;
+        console.error('❌ BUZZ FAILED - API returned success:false');
         toast.dismiss();
         toast.error(buzzResult.errorMessage || 'Errore durante BUZZ');
         return;
       }
       
-      console.log('📝 BUZZ RESULT M1SSION™ - RESET COMPLETO 17/07/2025:', { 
-        clue_text: buzzResult.clue_text,
-        success: buzzResult.success,
-        full_response: buzzResult
-      });
+      // ✅ SUCCESS: Clue received
+      if (buzzResult.clue_text) {
+        console.log('✅ BUZZ SUCCESS - Clue received:', buzzResult.clue_text.substring(0, 50) + '...');
+        
+        // Show clue to user
+        buzzToastOnce('success', buzzResult.clue_text, {
+          duration: 6000,
+          position: 'top-center',
+          style: {
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            border: '2px solid rgba(255,255,255,0.3)',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            padding: '16px'
+          }
+        });
+        buzzToastShown = true;
+      } else {
+        // No clue text received - this is a real error
+        hadError = true;
+        console.error('❌ BUZZ FAILED - No clue_text in response');
+        toast.dismiss();
+        toast.error('Non sono riuscito a generare l\'indizio, riprova fra poco.');
+        return;
+      }
       
       // Log the buzz action
       await supabase.from('buzz_map_actions').insert({
