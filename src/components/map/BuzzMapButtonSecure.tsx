@@ -164,9 +164,16 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         sessionId: Date.now().toString()
       });
 
+      // 🔥 FIX: Check for undefined result (network/CORS failure)
+      if (!edgeResult) {
+        console.error('❌ M1SSION™ BUZZ MAP: No response from edge function (network/CORS error)');
+        toast.error('Errore di connessione. Verifica la tua connessione e riprova.');
+        return;
+      }
+
       if (!edgeResult.success) {
         console.error('❌ M1SSION™ BUZZ MAP: Edge function failed', edgeResult);
-        toast.error('Area creata ma errore nel salvataggio. Contatta supporto.');
+        toast.error(edgeResult.errorMessage || 'Errore durante la creazione dell\'area. Riprova.');
         return;
       }
 
