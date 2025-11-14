@@ -6,6 +6,9 @@ import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts'
 import { generateMissionClue, getCurrentWeekOfYear } from '../_shared/clueGenerator.ts'
 
 serve(withCors(async (req: Request): Promise<Response> => {
+  // Debug gate
+  const wantsDebug = req.headers.get('x-m1-debug') === '1' || Deno.env.get('DEBUG_PANELS') === 'true';
+  const origin = req.headers.get('origin') || null;
 
   try {
     console.log('🎯 [HANDLE-BUZZ-PRESS] Function started');
@@ -17,6 +20,9 @@ serve(withCors(async (req: Request): Promise<Response> => {
 
     // Get user from JWT
     const authHeader = req.headers.get('Authorization');
+    const sawAuth = !!authHeader;
+    const jwtLen = sawAuth ? authHeader!.replace('Bearer ', '').length : 0;
+    
     if (!authHeader) {
       throw new Error('Missing authorization header');
     }
@@ -108,10 +114,22 @@ serve(withCors(async (req: Request): Promise<Response> => {
         area_id: mapArea.id,
         message: 'BUZZ MAP area created successfully'
       };
+
+      // Add debug block if requested
+      const debugBlock = wantsDebug ? {
+        sawAuthorizationHeader: sawAuth,
+        jwtLen,
+        requestOrigin: origin,
+        allowedOrigin: origin,
+        userId: user.id.substring(0, 8) + '...',
+        flow: 'BUZZ_MAP'
+      } : undefined;
+
+      const responseBody = wantsDebug ? { ...response, __debug: debugBlock } : response;
       
       console.log('🎉 [HANDLE-BUZZ-PRESS] BUZZ MAP completed:', response);
       
-      return new Response(JSON.stringify(response), {
+      return new Response(JSON.stringify(responseBody), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       });
@@ -208,20 +226,41 @@ serve(withCors(async (req: Request): Promise<Response> => {
       message: 'BUZZ processed successfully'
     };
 
+    // Add debug block if requested
+    const debugBlock = wantsDebug ? {
+      sawAuthorizationHeader: sawAuth,
+      jwtLen,
+      requestOrigin: origin,
+      allowedOrigin: origin,
+      userId: user.id.substring(0, 8) + '...',
+      flow: 'BUZZ_CLUE',
+      buzzCount,
+      clueLength: clueText.length
+    } : undefined;
+
+    const responseBody = wantsDebug ? { ...response, __debug: debugBlock } : response;
+
     console.log('🎉 [HANDLE-BUZZ-PRESS] Function completed successfully:', response);
 
-    return new Response(JSON.stringify(response), {
+    return new Response(JSON.stringify(responseBody), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error: any) {
     console.error('❌ [HANDLE-BUZZ-PRESS] Function error:', error);
-    const errorResponse = { 
-      success: false, 
-      error: 'Internal error', 
-      detail: String(error?.message || error) 
-    };
+    
+    const debugBlock = wantsDebug ? {
+      sawAuthorizationHeader: typeof authHeader !== 'undefined' && !!authHeader,
+      jwtLen: typeof authHeader !== 'undefined' && authHeader ? authHeader.replace('Bearer ', '').length : 0,
+      requestOrigin: origin,
+      error: error.message
+    } : undefined;
+
+    const errorResponse = wantsDebug
+      ? { success: false, error: 'Internal error', detail: String(error?.message || error), __debug: debugBlock }
+      : { success: false, error: 'Internal error', detail: String(error?.message || error) };
+
     return new Response(JSON.stringify(errorResponse), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

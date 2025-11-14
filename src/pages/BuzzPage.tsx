@@ -15,12 +15,15 @@ import { createVortexSound } from '@/utils/audioSynthesis';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import M1UPill from '@/features/m1u/M1UPill';
+import { useDebugFlag } from '@/debug/useDebugFlag';
+import { DebugBuzzPanel } from '@/debug/DebugBuzzPanel';
 
 export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
   const { user } = useUnifiedAuth();
   const { playSound } = useSoundEffects();
   const vortexSoundRef = useRef<ReturnType<typeof createVortexSound> | null>(null);
+  const debugEnabled = useDebugFlag();
   
   // 🔥 FIXED: Use centralized pricing logic from useBuzzCounter
   const { 
@@ -187,6 +190,9 @@ export const BuzzPage: React.FC = () => {
       >
         <BottomNavigation />
       </div>
+
+      {/* Debug Panel (only if enabled) */}
+      {debugEnabled && <DebugBuzzPanel />}
     </motion.div>
   );
 };
