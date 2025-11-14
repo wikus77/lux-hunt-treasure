@@ -44,6 +44,8 @@ import { usePerformanceSettings } from '@/hooks/usePerformanceSettings';
 import { BattlePill } from '@/components/battle/BattlePill';
 import { AgentBattleCard } from '@/components/battle/AgentBattleCard';
 import { BattleModal } from '@/components/battle/BattleModal';
+import { useDebugFlag } from '@/debug/useDebugFlag';
+import { DebugMapPanel } from '@/debug/DebugMapPanel';
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
 const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
@@ -61,6 +63,7 @@ interface DiagState {
 export default function MapTiler3D() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MLMap | null>(null);
+  const debugEnabled = useDebugFlag();
   const [diag, setDiag] = useState<DiagState>({ 
     keyMode: '?', 
     tiles: '?', 
@@ -963,6 +966,9 @@ export default function MapTiler3D() {
       >
         <BottomNavigation />
       </div>
+
+      {/* Debug Panel (only if enabled) */}
+      {debugEnabled && <DebugMapPanel />}
     </>
   );
 }
