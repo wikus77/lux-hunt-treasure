@@ -6,6 +6,7 @@ export function corsHeaders(origin: string | null) {
   return new Headers({
     'Access-Control-Allow-Origin': o,
     'Vary': 'Origin',
+    'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Methods': 'POST,GET,OPTIONS',
     'Access-Control-Allow-Headers': 'authorization,apikey,content-type,x-client-info',
     'Access-Control-Max-Age': '86400'
@@ -60,3 +61,5 @@ export function error(origin: string | null, message: string, status = 400): Res
   headers.set('Content-Type', 'application/json');
   return new Response(JSON.stringify({ ok: false, error: message }), { status, headers });
 }
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
