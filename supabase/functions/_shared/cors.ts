@@ -1,6 +1,38 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Universal CORS middleware — Deno-safe, NO null body on 204
 
+function isAllowedOrigin(origin: string): boolean {
+  try {
+    const u = new URL(origin);
+    const https = u.protocol === 'https:';
+    const host = u.hostname.toLowerCase();
+    const allowed =
+      /\.lovableproject\.com$/i.test(host) ||
+      /\.lovable\.app$/i.test(host);
+    return https && allowed;
+  } catch {
+    return false;
+  }
+}
+
+export function buildCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('origin') ?? '';
+  const acrh = req.headers.get('access-control-request-headers') ?? '';
+  const allowed = isAllowedOrigin(origin);
+
+  const h: Record<string, string> = {};
+  if (allowed) {
+    h['Access-Control-Allow-Origin'] = origin;      // echo, no wildcard
+    h['Access-Control-Allow-Credentials'] = 'true';
+    h['Access-Control-Allow-Methods'] = 'POST, OPTIONS';
+    h['Access-Control-Allow-Headers'] =
+      acrh || 'authorization, x-client-info, apikey, content-type, accept, origin, referer';
+    h['Vary'] = 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers';
+  }
+  return h;
+}
+
+// Legacy CORS function (kept for backward compatibility with other edge functions)
 export function corsHeaders(origin: string | null) {
   // CRITICAL FIX: Cannot use credentials with wildcard origin
   // Always use specific origin (Lovable preview/prod or custom domains)
