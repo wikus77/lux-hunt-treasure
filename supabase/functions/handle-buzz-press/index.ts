@@ -1,16 +1,11 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
-import { corsHeaders, handleOptions, ok, err } from '../_shared/cors.ts'
+import { withCors, ok, err } from '../_shared/cors.ts'
 import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts'
 import { generateMissionClue, getCurrentWeekOfYear } from '../_shared/clueGenerator.ts'
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return handleOptions(req);
-  }
-
+serve((req) => withCors(req, async () => {
   const origin = req.headers.get('origin');
 
   try {
