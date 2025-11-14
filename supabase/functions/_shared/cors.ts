@@ -5,11 +5,12 @@ function isAllowedOrigin(origin: string): boolean {
   try {
     const u = new URL(origin);
     const https = u.protocol === 'https:';
-    const host = u.hostname.toLowerCase();
-    const allowed =
-      /\.lovableproject\.com$/i.test(host) ||
-      /\.lovable\.app$/i.test(host);
-    return https && allowed;
+  const host = u.hostname.toLowerCase();
+  const allowed =
+    /\.lovableproject\.com$/i.test(host) ||
+    /\.lovable\.app$/i.test(host) ||
+    /\.lovable\.dev$/i.test(host);
+  return https && allowed;
   } catch {
     return false;
   }
