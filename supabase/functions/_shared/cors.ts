@@ -2,15 +2,41 @@
 // Universal CORS middleware — Deno-safe, NO null body on 204
 
 export function corsHeaders(origin: string | null) {
-  const o = origin ?? '*';
-  return new Headers({
-    'Access-Control-Allow-Origin': o,
-    'Vary': 'Origin',
-    'Access-Control-Allow-Credentials': 'true',
+  // CRITICAL FIX: Cannot use credentials with wildcard origin
+  // Always use specific origin (Lovable preview/prod or custom domains)
+  const allowedOrigins = [
+    /^https:\/\/.*\.lovable\.app$/,
+    /^https:\/\/.*\.lovableproject\.com$/,
+    /^https:\/\/m1ssion\.app$/,
+    /^https:\/\/.*\.vercel\.app$/,
+    /^http:\/\/localhost:\d+$/
+  ];
+  
+  let finalOrigin = '*';
+  let useCredentials = false;
+  
+  if (origin) {
+    // Check if origin matches allowed patterns
+    const isAllowed = allowedOrigins.some(pattern => pattern.test(origin));
+    if (isAllowed) {
+      finalOrigin = origin;
+      useCredentials = true;
+    }
+  }
+  
+  const headers = new Headers({
+    'Access-Control-Allow-Origin': finalOrigin,
     'Access-Control-Allow-Methods': 'POST,GET,OPTIONS',
     'Access-Control-Allow-Headers': 'authorization,apikey,content-type,x-client-info',
     'Access-Control-Max-Age': '86400'
   });
+  
+  if (useCredentials) {
+    headers.set('Access-Control-Allow-Credentials', 'true');
+    headers.set('Vary', 'Origin');
+  }
+  
+  return headers;
 }
 
 export function handleOptions(req: Request): Response {

@@ -114,8 +114,17 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         clueTextPreview: buzzResult?.clue_text?.substring(0, 50)
       });
       
-      // 🔥 FIX: Only show error toast if clue generation truly failed
-      if (buzzResult.error) {
+      // 🔥 FIX: Check for undefined result (network/CORS failure)
+      if (!buzzResult) {
+        hadError = true;
+        console.error('❌ BUZZ API: No response received (network/CORS error)');
+        toast.dismiss();
+        toast.error('Errore di connessione. Verifica la tua connessione e riprova.');
+        return;
+      }
+      
+      // 🔥 FIX: Only show error toast if clue generation truly failed AND no clue_text
+      if (buzzResult.error && !buzzResult.clue_text) {
         hadError = true;
         console.error('❌ BUZZ API Error:', buzzResult.errorMessage);
         toast.dismiss();
@@ -123,15 +132,15 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         return;
       }
       
-      if (!buzzResult.success) {
+      if (!buzzResult.success && !buzzResult.clue_text) {
         hadError = true;
-        console.error('❌ BUZZ FAILED - API returned success:false');
+        console.error('❌ BUZZ FAILED - API returned success:false without clue');
         toast.dismiss();
         toast.error(buzzResult.errorMessage || 'Errore durante BUZZ');
         return;
       }
       
-      // ✅ SUCCESS: Clue received
+      // ✅ SUCCESS: Clue received (even if there were secondary errors)
       if (buzzResult.clue_text) {
         console.log('✅ BUZZ SUCCESS - Clue received:', buzzResult.clue_text.substring(0, 50) + '...');
         
