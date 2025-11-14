@@ -7,6 +7,13 @@ import { createClient } from 'jsr:@supabase/supabase-js@2.49.8';
 import { withCors } from '../_shared/cors.ts';
 
 serve(withCors(async (req) => {
+  // Debug gate
+  const wantsDebug = req.headers.get('x-m1-debug') === '1' || Deno.env.get('DEBUG_PANELS') === 'true';
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const sawAuth = authHeader.startsWith('Bearer ');
+  const jwtLen = sawAuth ? authHeader.replace('Bearer ', '').length : 0;
+  const origin = req.headers.get('origin') || null;
+
   try {
     const { userId } = await req.json();
 
@@ -65,14 +72,48 @@ serve(withCors(async (req) => {
       unreadNotifications: notificationCounter?.unread_count || 0
     };
 
+    // Add debug block if requested
+    const debugBlock = wantsDebug ? {
+      sawAuthorizationHeader: sawAuth,
+      jwtLen,
+      requestOrigin: origin,
+      allowedOrigin: origin, // withCors already validated this
+      corsHeadersEcho: ['Access-Control-Allow-Origin', 'Access-Control-Allow-Credentials'],
+      envSeen: {
+        SUPABASE_URL: !!Deno.env.get('SUPABASE_URL'),
+        SERVICE_ROLE_PRESENT: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+      }
+    } : undefined;
+
+    const responseBody = wantsDebug ? { ...state, __debug: debugBlock } : state;
+
+    // Add expose headers for debug
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    if (wantsDebug && origin) {
+      headers.set('Access-Control-Expose-Headers', 'Access-Control-Allow-Origin, Access-Control-Allow-Methods, x-m1-cors-allowed-origin');
+      headers.set('x-m1-cors-allowed-origin', origin);
+    }
+
     return new Response(
-      JSON.stringify(state),
-      { headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify(responseBody),
+      { headers }
     );
   } catch (error) {
     console.error('[get-user-state] Error:', error);
+    
+    const debugBlock = wantsDebug ? {
+      sawAuthorizationHeader: sawAuth,
+      jwtLen,
+      requestOrigin: origin,
+      error: error.message
+    } : undefined;
+
+    const errorBody = wantsDebug 
+      ? { error: error.message, __debug: debugBlock }
+      : { error: error.message };
+
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify(errorBody),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

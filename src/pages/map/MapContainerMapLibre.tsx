@@ -13,6 +13,8 @@ import BuzzMapButtonSecure from '@/components/map/BuzzMapButtonSecure';
 import HelpDialog from './components/HelpDialog';
 import FinalShotButton from '@/components/map/FinalShotButton';
 import neonStyle from './styles/m1_neon_style_FULL_3D.json';
+import { useDebugFlag } from '@/debug/useDebugFlag';
+import { DebugMapPanel } from '@/debug/DebugMapPanel';
 
 // Default location (Rome)
 const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
@@ -69,6 +71,7 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
   
   const { currentWeekAreas, reloadAreas } = useBuzzMapLogic();
   const { status, center } = useMapState();
+  const debugEnabled = useDebugFlag();
 
   // Update center when available + fly-to with smooth animation
   useEffect(() => {
@@ -381,6 +384,9 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
 
       {/* Final Shot Button */}
       <FinalShotButton mapCenter={mapCenter} />
+
+      {/* Debug Panel (only if enabled) */}
+      {debugEnabled && <DebugMapPanel />}
     </div>
   );
 };
