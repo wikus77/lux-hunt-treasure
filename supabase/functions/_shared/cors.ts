@@ -46,8 +46,14 @@ export function withCors(
   handler: (req: Request) => Promise<Response> | Response
 ) {
   return async (req: Request): Promise<Response> => {
+    const origin = req.headers.get('origin');
+    
     if (req.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: buildCorsHeaders(req) });
+      console.log('[CORS] Preflight from origin:', origin);
+      const headers = buildCorsHeaders(req);
+      console.log('[CORS] Response headers:', Object.keys(headers));
+      console.log('[CORS] Allow-Origin:', headers['Access-Control-Allow-Origin']);
+      return new Response(null, { status: 204, headers });
     }
     try {
       const res = await handler(req);
