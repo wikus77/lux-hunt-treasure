@@ -32,7 +32,46 @@ export function buildCorsHeaders(req: Request): Record<string, string> {
   return h;
 }
 
-// Legacy CORS function (kept for backward compatibility with other edge functions)
+// Applica CORS a qualsiasi Response (successo/errore)
+export function corsify(res: Response, req: Request): Response {
+  const cors = buildCorsHeaders(req);
+  const headers = new Headers(res.headers);
+  for (const [k, v] of Object.entries(cors)) headers.set(k, v);
+  return new Response(res.body, { status: res.status, headers });
+}
+
+// Wrapper universale per gestire CORS su tutte le risposte
+export function withCors(
+  handler: (req: Request) => Promise<Response> | Response
+) {
+  return async (req: Request): Promise<Response> => {
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: buildCorsHeaders(req) });
+    }
+    try {
+      const res = await handler(req);
+      return corsify(res, req);
+    } catch (err: any) {
+      const body = JSON.stringify({ 
+        success: false, 
+        error: true, 
+        message: err?.message ?? 'Internal error' 
+      });
+      return corsify(
+        new Response(body, { 
+          status: 500, 
+          headers: { 'Content-Type': 'application/json' } 
+        }), 
+        req
+      );
+    }
+  };
+}
+
+// ============================================================================
+// Legacy CORS functions (kept for backward compatibility with other edge functions)
+// ============================================================================
+
 export function corsHeaders(origin: string | null) {
   // CRITICAL FIX: Cannot use credentials with wildcard origin
   // Always use specific origin (Lovable preview/prod or custom domains)
