@@ -1,12 +1,15 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
-import { withCors, ok, err } from '../_shared/cors.ts'
+import { buildCorsHeaders } from '../_shared/cors.ts'
 import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts'
 import { generateMissionClue, getCurrentWeekOfYear } from '../_shared/clueGenerator.ts'
 
-serve((req) => withCors(req, async () => {
-  const origin = req.headers.get('origin');
+serve(async (req: Request): Promise<Response> => {
+  // PRE-FLIGHT
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: buildCorsHeaders(req) });
+  }
 
   try {
     console.log('🎯 [HANDLE-BUZZ-PRESS] Function started');
@@ -112,7 +115,10 @@ serve((req) => withCors(req, async () => {
       
       console.log('🎉 [HANDLE-BUZZ-PRESS] BUZZ MAP completed:', response);
       
-      return ok(origin, response);
+      return new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(req) }
+      });
     }
 
     // 🎯 M1SSION™ CLUE ENGINE: Generate clue using original logic with weeks/tiers/antiforcing
@@ -208,11 +214,22 @@ serve((req) => withCors(req, async () => {
 
     console.log('🎉 [HANDLE-BUZZ-PRESS] Function completed successfully:', response);
 
-    return ok(origin, response);
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(req) }
+    });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ [HANDLE-BUZZ-PRESS] Function error:', error);
-    return err(origin, 500, 'FUNCTION_ERROR', error.message);
+    const errorResponse = { 
+      success: false, 
+      error: 'Internal error', 
+      detail: String(error?.message || error) 
+    };
+    return new Response(JSON.stringify(errorResponse), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(req) }
+    });
   }
 });
 
