@@ -118,7 +118,7 @@ export function handleOptions(req: Request): Response {
   });
 }
 
-export async function withCors(req: Request, run: () => Promise<Response>): Promise<Response> {
+export async function withCorsLegacy(req: Request, run: () => Promise<Response>): Promise<Response> {
   // Handle preflight
   if (req.method === 'OPTIONS') {
     return handleOptions(req);
