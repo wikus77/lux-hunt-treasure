@@ -37,7 +37,7 @@ export function buildCorsHeaders(req: Request): Record<string, string> {
     h['Access-Control-Allow-Methods'] = 'POST, OPTIONS';
     // Echo requested headers or provide comprehensive fallback
     h['Access-Control-Allow-Headers'] =
-      acrh || 'authorization, x-client-info, apikey, content-type, accept, origin, referer, x-debug';
+      acrh || 'authorization, x-client-info, apikey, content-type, accept, origin, referer, x-debug, x-m1-debug';
     h['Vary'] = 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers';
     h['Access-Control-Max-Age'] = '600';  // Cache preflight for 10 minutes
   }
