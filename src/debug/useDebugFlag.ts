@@ -10,15 +10,14 @@
 
 import { useState, useEffect } from 'react';
 
-export const useDebugFlag = (): boolean => {
-  const [enabled, setEnabled] = useState(false);
-
-  useEffect(() => {
-    try {
-      // Check env variable
-      const envDebug = import.meta.env.VITE_M1_DEBUG === '1';
-      
-      // Check URL parameter
+// Check immediately (synchronous) to avoid flash
+const checkDebugFlag = (): boolean => {
+  try {
+    // Check env variable
+    const envDebug = import.meta.env.VITE_M1_DEBUG === '1';
+    
+    // Check URL parameter
+    if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const urlDebug = urlParams.get('debug') === '1';
       
@@ -26,15 +25,39 @@ export const useDebugFlag = (): boolean => {
       const storageDebug = localStorage.getItem('M1_DEBUG_PANELS') === '1';
       
       const isEnabled = envDebug || urlDebug || storageDebug;
-      setEnabled(isEnabled);
       
       if (isEnabled) {
-        console.log('🧪 M1DEBUG: Debug panels enabled');
+        console.log('🧪 M1DEBUG: Debug panels ENABLED via', {
+          env: envDebug,
+          url: urlDebug,
+          storage: storageDebug,
+          currentUrl: window.location.href
+        });
+      } else {
+        console.log('🧪 M1DEBUG: Debug panels DISABLED', {
+          currentUrl: window.location.href,
+          urlParams: window.location.search
+        });
       }
-    } catch (e) {
-      console.warn('Debug flag check failed:', e);
-      setEnabled(false);
+      
+      return isEnabled;
     }
+    
+    return envDebug;
+  } catch (e) {
+    console.warn('Debug flag check failed:', e);
+    return false;
+  }
+};
+
+export const useDebugFlag = (): boolean => {
+  // Initialize with immediate check to prevent flash
+  const [enabled, setEnabled] = useState(checkDebugFlag);
+
+  useEffect(() => {
+    // Re-check on mount in case of URL changes
+    const isEnabled = checkDebugFlag();
+    setEnabled(isEnabled);
   }, []);
 
   return enabled;
