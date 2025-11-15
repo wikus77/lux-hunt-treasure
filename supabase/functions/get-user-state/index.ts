@@ -14,6 +14,7 @@ serve(withCors(async (req) => {
   const jwtLen = sawAuth ? authHeader.replace('Bearer ', '').length : 0;
   const origin = req.headers.get('origin') || null;
 
+  console.log('[DEPLOY] get-user-state build:', '2025-11-15T03:35:00Z');
   try {
     const { userId } = await req.json();
 

@@ -12,6 +12,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
 
   try {
     console.log('🎯 [HANDLE-BUZZ-PRESS] Function started');
+    console.log('[DEPLOY] handle-buzz-press build:', '2025-11-15T03:35:00Z');
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
