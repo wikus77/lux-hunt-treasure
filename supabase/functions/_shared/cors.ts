@@ -5,13 +5,22 @@ function isAllowedOrigin(origin: string): boolean {
   try {
     const u = new URL(origin);
     const https = u.protocol === 'https:';
-  const host = u.hostname.toLowerCase();
-  const allowed =
-    /\.lovableproject\.com$/i.test(host) ||
-    /\.lovable\.app$/i.test(host) ||
-    /\.lovable\.dev$/i.test(host);
-  return https && allowed;
-  } catch {
+    const host = u.hostname.toLowerCase();
+    
+    // Log for debugging
+    console.log('[CORS] Checking origin:', origin, 'hostname:', host);
+    
+    const allowed =
+      /\.lovableproject\.com$/i.test(host) ||
+      /\.lovable\.app$/i.test(host) ||
+      /\.lovable\.dev$/i.test(host) ||
+      // Explicit support for preview domains with em-dash or hyphen
+      /^id-preview[—\-].*\.lovable\.app$/i.test(host);
+    
+    console.log('[CORS] Origin allowed:', allowed);
+    return https && allowed;
+  } catch (e) {
+    console.error('[CORS] Origin check failed:', e);
     return false;
   }
 }
@@ -47,12 +56,17 @@ export function withCors(
 ) {
   return async (req: Request): Promise<Response> => {
     const origin = req.headers.get('origin');
+    const method = req.method;
     
-    if (req.method === 'OPTIONS') {
-      console.log('[CORS] Preflight from origin:', origin);
+    if (method === 'OPTIONS') {
+      console.log('[CORS] ✈️ PREFLIGHT from origin:', origin);
       const headers = buildCorsHeaders(req);
-      console.log('[CORS] Response headers:', Object.keys(headers));
-      console.log('[CORS] Allow-Origin:', headers['Access-Control-Allow-Origin']);
+      console.log('[CORS] 📋 Response headers:', Object.keys(headers));
+      console.log('[CORS] 🌐 Allow-Origin:', headers['Access-Control-Allow-Origin'] || 'NOT SET');
+      console.log('[CORS] 🔐 Allow-Credentials:', headers['Access-Control-Allow-Credentials'] || 'NOT SET');
+      console.log('[CORS] 📝 Allow-Headers:', headers['Access-Control-Allow-Headers'] || 'NOT SET');
+      
+      // Return 204 No Content for preflight
       return new Response(null, { status: 204, headers });
     }
     try {
