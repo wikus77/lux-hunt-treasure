@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useBuzzMapPricingNew } from '@/hooks/useBuzzMapPricingNew';
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
@@ -93,7 +94,7 @@ export const DebugMapPanel: React.FC = () => {
 
   if (!isAuthenticated) return null;
 
-  return (
+  const panel = (
     <div
       style={{
         position: 'fixed',
@@ -104,7 +105,7 @@ export const DebugMapPanel: React.FC = () => {
         padding: collapsed ? '8px' : '12px',
         borderRadius: '8px',
         fontSize: '11px',
-        zIndex: 9999,
+        zIndex: 2147483000,
         maxWidth: '320px',
         maxHeight: collapsed ? '40px' : '60vh',
         overflow: 'auto',
@@ -203,6 +204,8 @@ export const DebugMapPanel: React.FC = () => {
       )}
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(panel, document.body) : panel;
 };
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
