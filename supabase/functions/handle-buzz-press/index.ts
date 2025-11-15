@@ -6,13 +6,25 @@ import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts'
 import { generateMissionClue, getCurrentWeekOfYear } from '../_shared/clueGenerator.ts'
 
 serve(withCors(async (req: Request): Promise<Response> => {
-  // Debug gate
+  // Debug/trace flags
   const wantsDebug = req.headers.get('x-m1-debug') === '1' || Deno.env.get('DEBUG_PANELS') === 'true';
+  const wantsTrace = req.headers.get('x-debug') === '1';
   const origin = req.headers.get('origin') || null;
 
   try {
     console.log('🎯 [HANDLE-BUZZ-PRESS] Function started');
-    console.log('[DEPLOY] handle-buzz-press build:', '2025-11-15T03:35:00Z');
+    console.log('[DEPLOY] handle-buzz-press build:', '2025-11-15T04:46:00Z');
+
+    // TRACE: Request metadata
+    if (wantsTrace) {
+      console.log('[TRACE] Origin:', origin);
+      console.log('[TRACE] Method:', req.method);
+      console.log('[TRACE] Headers:', {
+        authorization: !!req.headers.get('Authorization'),
+        'x-client-info': req.headers.get('x-client-info'),
+        'content-type': req.headers.get('content-type')
+      });
+    }
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -38,9 +50,19 @@ serve(withCors(async (req: Request): Promise<Response> => {
 
     console.log('👤 [HANDLE-BUZZ-PRESS] User authenticated:', user.id);
 
-    // Parse request body to check if this is BUZZ MAP
-    const body = await req.json();
+    // Parse request body with compat layer for userId/user_id
+    const rawBody = await req.json().catch(() => ({}));
+    const userId = rawBody.userId ?? rawBody.user_id ?? user.id;
+    const body = { ...rawBody, userId };
     const { generateMap, coordinates, sessionId } = body;
+    
+    // TRACE: Payload
+    if (wantsTrace) {
+      console.log('[TRACE] userId:', userId);
+      console.log('[TRACE] generateMap:', generateMap);
+      console.log('[TRACE] coordinates:', coordinates);
+      console.log('[TRACE] sessionId:', sessionId);
+    }
     
     // Handle BUZZ MAP flow
     if (generateMap && coordinates) {

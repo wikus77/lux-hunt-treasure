@@ -7,14 +7,24 @@ import { createClient } from 'jsr:@supabase/supabase-js@2.49.8';
 import { withCors } from '../_shared/cors.ts';
 
 serve(withCors(async (req) => {
-  // Debug gate
+  // Debug/trace flags
   const wantsDebug = req.headers.get('x-m1-debug') === '1' || Deno.env.get('DEBUG_PANELS') === 'true';
+  const wantsTrace = req.headers.get('x-debug') === '1';
   const authHeader = req.headers.get('Authorization') ?? '';
   const sawAuth = authHeader.startsWith('Bearer ');
   const jwtLen = sawAuth ? authHeader.replace('Bearer ', '').length : 0;
   const origin = req.headers.get('origin') || null;
 
-  console.log('[DEPLOY] get-user-state build:', '2025-11-15T03:35:00Z');
+  console.log('[DEPLOY] get-user-state build:', '2025-11-15T04:46:00Z');
+  
+  // TRACE: Request metadata
+  if (wantsTrace) {
+    console.log('[TRACE] Origin:', origin);
+    console.log('[TRACE] Method:', req.method);
+    console.log('[TRACE] Authorization header present:', sawAuth);
+    console.log('[TRACE] JWT length:', jwtLen);
+  }
+  
   try {
     const { userId } = await req.json();
 
