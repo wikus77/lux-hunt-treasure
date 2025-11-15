@@ -1,6 +1,19 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Universal CORS middleware — Deno-safe, NO null body on 204
 
+// Base whitelist of always-allowed headers
+const BASE_ALLOW_HEADERS = [
+  'authorization',
+  'x-client-info',
+  'apikey',
+  'content-type',
+  'accept',
+  'origin',
+  'referer',
+  'x-debug',
+  'x-m1-debug'
+];
+
 function isAllowedOrigin(origin: string): boolean {
   try {
     const u = new URL(origin);
@@ -25,21 +38,36 @@ function isAllowedOrigin(origin: string): boolean {
   }
 }
 
+function mergeRequestedHeaders(req: Request): string {
+  const acrh = req.headers.get('access-control-request-headers') ?? '';
+  const requestedHeaders = acrh
+    ? acrh.split(',').map(h => h.trim().toLowerCase()).filter(Boolean)
+    : [];
+  
+  // Merge base whitelist with requested headers (deduplicate)
+  const merged = Array.from(new Set([...BASE_ALLOW_HEADERS, ...requestedHeaders]));
+  return merged.join(', ');
+}
+
 export function buildCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get('origin') ?? '';
-  const acrh = req.headers.get('access-control-request-headers') ?? '';
   const allowed = isAllowedOrigin(origin);
 
   const h: Record<string, string> = {};
   if (allowed) {
+    const allowedHeaders = mergeRequestedHeaders(req);
+    
     h['Access-Control-Allow-Origin'] = origin;      // echo exact origin, no wildcard
     h['Access-Control-Allow-Credentials'] = 'true';
     h['Access-Control-Allow-Methods'] = 'POST, OPTIONS';
-    // Echo requested headers or provide comprehensive fallback
-    h['Access-Control-Allow-Headers'] =
-      acrh || 'authorization, x-client-info, apikey, content-type, accept, origin, referer, x-debug, x-m1-debug';
+    h['Access-Control-Allow-Headers'] = allowedHeaders;
     h['Vary'] = 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers';
     h['Access-Control-Max-Age'] = '600';  // Cache preflight for 10 minutes
+    
+    // Debug trace
+    console.log('[CORS] preflight ok • origin=' + origin + ' • allowHeaders=' + allowedHeaders);
+  } else {
+    console.log('[CORS] origin not allowed:', origin);
   }
   return h;
 }
