@@ -1,123 +1,129 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Universal CORS middleware — Deno-safe, NO null body on 204
+// Universal CORS middleware — Deno-safe, 204 preflight + full headers
 
-// Base whitelist of always-allowed headers
-const BASE_ALLOW_HEADERS = [
+const BASE_ALLOWED_HEADERS = [
   'authorization',
-  'x-client-info',
   'apikey',
   'content-type',
-  'accept',
-  'origin',
-  'referer',
-  'x-debug',
-  'x-m1-debug'
+  'x-client-info',
+  'x-m1-debug',
+  'x-debug'
+];
+
+const ALLOWED_ORIGINS = [
+  // Preview/Prod Lovable
+  /\.lovableproject\.com$/i,
+  /\.lovable\.app$/i,
+  /\.lovable\.dev$/i,
+  // Local/dev
+  /^localhost$/i,
+  /^127\.0\.0\.1$/i
 ];
 
 function isAllowedOrigin(origin: string): boolean {
+  if (!origin) return false;
   try {
-    const u = new URL(origin);
-    const https = u.protocol === 'https:';
-    const host = u.hostname.toLowerCase();
+    const url = new URL(origin);
+    const hostname = url.hostname.toLowerCase();
     
-    // Log for debugging
-    console.log('[CORS] Checking origin:', origin, 'hostname:', host);
+    // Check against allowed patterns
+    const allowed = ALLOWED_ORIGINS.some((pattern) => pattern.test(hostname));
     
-    const allowed =
-      /\.lovableproject\.com$/i.test(host) ||
-      /\.lovable\.app$/i.test(host) ||
-      /\.lovable\.dev$/i.test(host) ||
-      // Explicit support for preview domains with em-dash or hyphen
-      /^id-preview[—\-].*\.lovable\.app$/i.test(host);
+    // Validate protocol (must be https or http for localhost)
+    const validProtocol = url.protocol === 'https:' || 
+                         (url.protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1'));
     
-    console.log('[CORS] Origin allowed:', allowed);
-    return https && allowed;
-  } catch (e) {
-    console.error('[CORS] Origin check failed:', e);
+    return allowed && validProtocol;
+  } catch {
     return false;
   }
 }
 
-function mergeRequestedHeaders(req: Request): string {
-  const acrh = req.headers.get('access-control-request-headers') ?? '';
-  const requestedHeaders = acrh
-    ? acrh.split(',').map(h => h.trim().toLowerCase()).filter(Boolean)
-    : [];
+function mergeAllowHeaders(req: Request): string {
+  const requestHeaders = req.headers.get('Access-Control-Request-Headers') ?? '';
+  const incoming = requestHeaders
+    .split(',')
+    .map(h => h.trim().toLowerCase())
+    .filter(Boolean);
   
-  // Merge base whitelist with requested headers (deduplicate)
-  const merged = Array.from(new Set([...BASE_ALLOW_HEADERS, ...requestedHeaders]));
-  return merged.join(', ');
+  const allHeaders = new Set([...BASE_ALLOWED_HEADERS, ...incoming]);
+  return Array.from(allHeaders).join(', ');
 }
 
-export function buildCorsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get('origin') ?? '';
-  const allowed = isAllowedOrigin(origin);
-
-  const h: Record<string, string> = {};
-  if (allowed) {
-    const allowedHeaders = mergeRequestedHeaders(req);
-    
-    h['Access-Control-Allow-Origin'] = origin;      // echo exact origin, no wildcard
-    h['Access-Control-Allow-Credentials'] = 'true';
-    h['Access-Control-Allow-Methods'] = 'POST, OPTIONS';
-    h['Access-Control-Allow-Headers'] = allowedHeaders;
-    h['Vary'] = 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers';
-    h['Access-Control-Max-Age'] = '600';  // Cache preflight for 10 minutes
-    
-    // Debug trace
-    console.log('[CORS] preflight ok • origin=' + origin + ' • allowHeaders=' + allowedHeaders);
-  } else {
-    console.log('[CORS] origin not allowed:', origin);
+function buildCorsHeaders(req: Request): Headers {
+  const origin = req.headers.get('Origin') ?? '';
+  const headers = new Headers();
+  
+  headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  headers.set('Access-Control-Allow-Headers', mergeAllowHeaders(req));
+  headers.set('Access-Control-Allow-Credentials', 'true');
+  headers.set('Access-Control-Max-Age', '600');
+  headers.set('Vary', 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+  
+  if (isAllowedOrigin(origin)) {
+    headers.set('Access-Control-Allow-Origin', origin);
   }
-  return h;
+  
+  return headers;
 }
 
-// Applica CORS a qualsiasi Response (successo/errore)
-export function corsify(res: Response, req: Request): Response {
-  const cors = buildCorsHeaders(req);
-  const headers = new Headers(res.headers);
-  for (const [k, v] of Object.entries(cors)) headers.set(k, v);
-  return new Response(res.body, { status: res.status, headers });
-}
 
-// Wrapper universale per gestire CORS su tutte le risposte
 export function withCors(
   handler: (req: Request) => Promise<Response> | Response
 ) {
   return async (req: Request): Promise<Response> => {
-    const origin = req.headers.get('origin');
+    const origin = req.headers.get('Origin') ?? '';
     const method = req.method;
     
+    // PREFLIGHT
     if (method === 'OPTIONS') {
-      console.log('[CORS] ✈️ PREFLIGHT from origin:', origin);
       const headers = buildCorsHeaders(req);
-      console.log('[CORS] 📋 Response headers:', Object.keys(headers));
-      console.log('[CORS] 🌐 Allow-Origin:', headers['Access-Control-Allow-Origin'] || 'NOT SET');
-      console.log('[CORS] 🔐 Allow-Credentials:', headers['Access-Control-Allow-Credentials'] || 'NOT SET');
-      console.log('[CORS] 📝 Allow-Headers:', headers['Access-Control-Allow-Headers'] || 'NOT SET');
       
-      // Return 204 No Content for preflight
+      // Trace minimo per debug
+      console.log('[CORS] preflight ok • origin=%s • allowHeaders=%s',
+        origin, headers.get('Access-Control-Allow-Headers'));
+      
       return new Response(null, { status: 204, headers });
     }
+    
+    // HANDLER NORMALE
     try {
       const res = await handler(req);
-      return corsify(res, req);
-    } catch (err: any) {
-      const body = JSON.stringify({ 
-        success: false, 
-        error: true, 
-        message: err?.message ?? 'Internal error' 
+      
+      // Inietta CORS anche sulle risposte applicative
+      const corsHeaders = buildCorsHeaders(req);
+      const responseHeaders = new Headers(res.headers);
+      
+      corsHeaders.forEach((value, key) => {
+        responseHeaders.set(key, value);
       });
-      return corsify(
-        new Response(body, { 
-          status: 500, 
-          headers: { 'Content-Type': 'application/json' } 
-        }), 
-        req
-      );
+      
+      return new Response(res.body, {
+        status: res.status,
+        statusText: res.statusText,
+        headers: responseHeaders
+      });
+    } catch (err: any) {
+      // Error handling with CORS
+      const corsHeaders = buildCorsHeaders(req);
+      const errorBody = JSON.stringify({
+        success: false,
+        error: true,
+        message: err?.message ?? 'Internal error'
+      });
+      
+      corsHeaders.set('Content-Type', 'application/json');
+      
+      console.error('[CORS] Handler error:', err);
+      
+      return new Response(errorBody, {
+        status: 500,
+        headers: corsHeaders
+      });
     }
   };
 }
+
 
 // ============================================================================
 // Legacy CORS functions (kept for backward compatibility with other edge functions)
