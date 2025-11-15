@@ -15,7 +15,7 @@ serve(withCors(async (req) => {
   const jwtLen = sawAuth ? authHeader.replace('Bearer ', '').length : 0;
   const origin = req.headers.get('origin') || null;
 
-  console.log('[DEPLOY] get-user-state build:', '2025-11-15T04:46:00Z');
+  console.log('[DEPLOY] get-user-state build:', '2025-11-15T05:15:00Z');
   
   // TRACE: Request metadata
   if (wantsTrace) {
