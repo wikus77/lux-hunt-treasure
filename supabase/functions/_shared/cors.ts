@@ -32,12 +32,14 @@ export function buildCorsHeaders(req: Request): Record<string, string> {
 
   const h: Record<string, string> = {};
   if (allowed) {
-    h['Access-Control-Allow-Origin'] = origin;      // echo, no wildcard
+    h['Access-Control-Allow-Origin'] = origin;      // echo exact origin, no wildcard
     h['Access-Control-Allow-Credentials'] = 'true';
     h['Access-Control-Allow-Methods'] = 'POST, OPTIONS';
+    // Echo requested headers or provide comprehensive fallback
     h['Access-Control-Allow-Headers'] =
-      acrh || 'authorization, x-client-info, apikey, content-type, accept, origin, referer';
+      acrh || 'authorization, x-client-info, apikey, content-type, accept, origin, referer, x-debug';
     h['Vary'] = 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers';
+    h['Access-Control-Max-Age'] = '600';  // Cache preflight for 10 minutes
   }
   return h;
 }
