@@ -119,37 +119,59 @@ export function useBuzzApi() {
         
         // Generic error handling - show friendly message
         console.warn('BUZZ edge function error:', error.message);
-        toast.error('Non sono riuscito a generare l\'indizio, riprova fra poco.');
-        return { success: false, error: true, errorMessage: 'Non sono riuscito a generare l\'indizio, riprova fra poco.' };
+        toast.error('Operazione non riuscita, riprova fra poco.');
+        return { success: false, error: true, errorMessage: 'Operazione non riuscita, riprova fra poco.' };
       }
 
       // Handle successful response
       if (data?.success) {
         console.log("✅ handle-buzz-press success:", data);
         
-        // Show clue toast immediately if available
-        if (data.clue_text) {
-          toast.success(data.clue_text, {
-            duration: 5000,
-            position: 'top-center',
-            style: { 
-              zIndex: 9999,
-              background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
-              color: 'white',
-              fontWeight: 'bold'
-            }
-          });
+        // Gestione biforcata basata su mode
+        if (data.mode === 'buzz') {
+          // BUZZ normale: mostra indizio
+          if (data.clue?.text) {
+            toast.success(data.clue.text, {
+              duration: 5000,
+              position: 'top-center',
+              style: { 
+                zIndex: 9999,
+                background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+                color: 'white',
+                fontWeight: 'bold'
+              }
+            });
+          } else {
+            toast.success('Indizio ricevuto!');
+          }
+        } else if (data.mode === 'map') {
+          // BUZZ MAP: valida area
+          if (data.area) {
+            console.log('🗺️ Area generata:', data.area);
+            toast.success('Area di ricerca creata!', {
+              duration: 4000,
+              style: {
+                background: 'linear-gradient(135deg, #9333EA 0%, #EF4444 100%)',
+                color: 'white',
+                fontWeight: 'bold'
+              }
+            });
+          } else {
+            toast.error('Area non generata, riprova tra poco.');
+            return { success: false, error: true, errorMessage: 'Area non generata' };
+          }
         } else {
           toast.success('BUZZ processed successfully');
         }
 
         return { 
           success: true, 
-          clue_text: data.clue_text,
+          clue_text: data.clue?.text || data.clue_text, // Backward compat
           buzz_cost: data.buzz_cost,
-          radius_km: data.radius_km,
-          lat: data.lat,
-          lng: data.lng,
+          radius_km: data.area?.radius_km || data.radius_km,
+          lat: data.area?.center_lat || data.lat,
+          lng: data.area?.center_lng || data.lng,
+          area_id: data.area?.id || data.area_id,
           generation_number: data.generation_number,
           map_area: data.map_area,
           precision: data.precision,
@@ -198,11 +220,12 @@ export function useBuzzApi() {
       
       return { 
         success: true, 
-        clue_text: data.clue_text,
+        clue_text: data.clue?.text || data.clue_text, // Backward compat
         buzz_cost: data.buzz_cost,
-        radius_km: data.radius_km,
-        lat: data.lat,
-        lng: data.lng,
+        radius_km: data.area?.radius_km || data.radius_km,
+        lat: data.area?.center_lat || data.lat,
+        lng: data.area?.center_lng || data.lng,
+        area_id: data.area?.id || data.area_id,
         generation_number: data.generation_number,
         map_area: data.map_area,
         precision: data.precision,

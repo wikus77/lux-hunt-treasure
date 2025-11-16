@@ -80,8 +80,7 @@ self.addEventListener('fetch', (event) => {
   const isSupabase = url.hostname.endsWith('.supabase.co');
   const isSupabaseRest = url.pathname.startsWith('/rest/v1');
   const isSupabaseAuth = url.pathname.startsWith('/auth/v1');
-  const isSupabaseFunctions = url.pathname.startsWith('/functions/v1');
-  const isEdgeFunctions = url.pathname.startsWith('/functions/v1');
+  const isSupabaseFunctions = url.pathname.includes('/functions/v1/');
   const isServiceWorker = url.pathname === '/sw.js';
   const isVapid = url.pathname === '/vapid-public.txt';
   
@@ -90,6 +89,7 @@ self.addEventListener('fetch', (event) => {
                         url.pathname.startsWith('/assets/');
   
   // Skip non-GET or non-http requests, and NEVER cache Supabase
+  // CRITICAL: Bypass ALL edge functions to prevent CORS/stale responses
   if (!isGET || !request.url.startsWith('http') || isSupabase || isSupabaseRest || isSupabaseAuth || isSupabaseFunctions) return;
   
   // S-W-R: Static assets - CacheFirst with background revalidate
