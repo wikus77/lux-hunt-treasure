@@ -13,7 +13,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
 
   try {
     console.log('🎯 [HANDLE-BUZZ-PRESS] Function started');
-    console.log('[DEPLOY] handle-buzz-press build:', '2025-11-15T05:45:00Z');
+    console.log('[DEPLOY] handle-buzz-press build:', '2025-11-16T05:50:00Z');
 
     // TRACE: Request metadata
     if (wantsTrace) {
@@ -130,12 +130,16 @@ serve(withCors(async (req: Request): Promise<Response> => {
       
       const response = {
         success: true,
+        mode: 'map',
+        area: {
+          id: mapArea.id,
+          center_lat: coordinates.lat,
+          center_lng: coordinates.lng,
+          radius_km: buzzLevel.radiusKm,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        },
         level: level,
-        radius_km: buzzLevel.radiusKm,
-        price_eur: buzzLevel.priceCents / 100,
-        coordinates: coordinates,
-        area_id: mapArea.id,
-        message: 'BUZZ MAP area created successfully'
+        price_eur: buzzLevel.priceCents / 100
       };
 
       // Add debug block if requested
@@ -245,8 +249,10 @@ serve(withCors(async (req: Request): Promise<Response> => {
 
     const response = {
       success: true,
-      clue_text: clueText,
-      message: 'BUZZ processed successfully'
+      mode: 'buzz',
+      clue: {
+        text: clueText
+      }
     };
 
     // Add debug block if requested
