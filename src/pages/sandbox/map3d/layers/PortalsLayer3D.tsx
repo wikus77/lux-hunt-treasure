@@ -15,6 +15,7 @@ const PortalsLayer3D: React.FC<PortalsLayer3DProps> = ({ map, enabled }) => {
   const [portals, setPortals] = useState<PortalDTO[]>([]);
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
   const [selectedPortal, setSelectedPortal] = useState<PortalDTO | null>(null);
+  const rafRef = React.useRef<number | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -50,15 +51,23 @@ const PortalsLayer3D: React.FC<PortalsLayer3DProps> = ({ map, enabled }) => {
       setPositions(newPositions);
     };
 
+    const updateOnRender = () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(updatePositions);
+    };
+
     updatePositions();
     map.on('move', updatePositions);
     map.on('zoom', updatePositions);
     map.on('resize', updatePositions);
+    map.on('render', updateOnRender);
 
     return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       map.off('move', updatePositions);
       map.off('zoom', updatePositions);
       map.off('resize', updatePositions);
+      map.off('render', updateOnRender);
     };
   }, [map, portals, enabled]);
 
