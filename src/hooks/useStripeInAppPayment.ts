@@ -6,14 +6,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 
-// Utilizzo configurazione prezzi centralizzata da pricingConfig
-
 export interface PaymentConfig {
   type: 'buzz' | 'buzz_map' | 'subscription';
-  amount: number; // Amount in cents
+  amount: number;             // cents
   currency?: string;
   description: string;
-  plan?: string; // For subscriptions
+  plan?: string;
   metadata?: Record<string, any>;
 }
 
@@ -25,7 +23,7 @@ export interface PaymentResult {
 
 /*
  * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * M1SSION™ Universal Stripe In-App Payment Hook - RESET COMPLETO 22/07/2025
+ * M1SSION™ Universal Stripe In-App Payment Hook
  */
 export const useStripeInAppPayment = () => {
   const [loading, setLoading] = useState(false);
@@ -34,15 +32,10 @@ export const useStripeInAppPayment = () => {
   const [defaultPaymentMethod, setDefaultPaymentMethod] = useState<any>(null);
   const { user } = useAuthContext();
 
-  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-  // Load default payment method on initialization
   useEffect(() => {
     const loadDefaultPaymentMethod = async () => {
       if (!user) return;
-
       try {
-        console.log('🔍 M1SSION™ Loading default payment method for auto-fill');
-        
         const { data, error } = await supabase
           .from('user_payment_methods')
           .select('*')
@@ -51,43 +44,17 @@ export const useStripeInAppPayment = () => {
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-
-        if (error) {
-          console.error('❌ M1SSION™ Error loading default payment method:', error);
-          return;
-        }
-
-        if (data) {
-          setDefaultPaymentMethod(data);
-          console.log('✅ M1SSION™ Default payment method loaded for auto-fill:', { 
-            brand: data.brand, 
-            last4: data.last4 
-          });
-        }
-      } catch (error) {
-        console.error('❌ M1SSION™ Error in loadDefaultPaymentMethod:', error);
-      }
+        if (!error && data) setDefaultPaymentMethod(data);
+      } catch (_e) {}
     };
-
     loadDefaultPaymentMethod();
   }, [user]);
 
   const initiatePayment = async (config: PaymentConfig): Promise<void> => {
     if (!user) {
-      console.warn('🚨 M1SSION™ STRIPE BLOCK: No authenticated user');
       toast.error('Devi essere loggato per effettuare pagamenti');
       return;
     }
-
-    console.log('🔥 M1SSION™ STRIPE IN-APP: Initiating payment', {
-      type: config.type,
-      amount: config.amount,
-      user_id: user.id,
-      defaultPaymentMethod: defaultPaymentMethod ? `${defaultPaymentMethod.brand} ****${defaultPaymentMethod.last4}` : 'none',
-      timestamp: new Date().toISOString()
-    });
-
-    // Auto-fill with default payment method if available
     const configWithDefaults = {
       ...config,
       metadata: {
@@ -96,7 +63,6 @@ export const useStripeInAppPayment = () => {
         auto_fill_enabled: !!defaultPaymentMethod
       }
     };
-
     setPaymentConfig(configWithDefaults);
     setShowCheckout(true);
   };
@@ -104,76 +70,44 @@ export const useStripeInAppPayment = () => {
   const processBuzzPayment = async (amount: number, isBuzzMap: boolean = false): Promise<void> => {
     const config: PaymentConfig = {
       type: isBuzzMap ? 'buzz_map' : 'buzz',
-      amount: amount, // Amount already in cents
+      amount,
       description: isBuzzMap ? 'M1SSION™ BUZZ MAPPA - Area geolocalizzata' : 'M1SSION™ BUZZ - Indizio premium',
-      metadata: {
-        is_buzz_map: isBuzzMap,
-        mission: 'M1SSION',
-        reset_date: '2025-07-22'
-      }
+      metadata: { is_buzz_map: isBuzzMap, mission: 'M1SSION', reset_date: '2025-07-22' }
     };
-
     await initiatePayment(config);
   };
 
   const processSubscription = async (plan: string): Promise<void> => {
-    // Import centralized pricing configuration
     const { getPriceCents, getPriceEur } = await import('@/lib/constants/pricingConfig');
-    
     const cents = getPriceCents(plan);
     const eur = getPriceEur(plan);
-    
-    if (!cents || !eur) {
-      toast.error('Piano di abbonamento non valido');
-      return;
-    }
-
+    if (!cents || !eur) { toast.error('Piano di abbonamento non valido'); return; }
     const config: PaymentConfig = {
       type: 'subscription',
-      amount: cents, // SYNCHRONIZED: Use centralized pricing
+      amount: cents,
       description: `Piano ${plan} con vantaggi premium`,
-      plan: plan,
-      metadata: {
-        subscription_plan: plan,
-        price_cents: cents,
-        price_eur: eur,
-        mission: 'M1SSION',
-        reset_date: '2025-07-22'
-      }
+      plan,
+      metadata: { subscription_plan: plan, price_cents: cents, price_eur: eur, mission: 'M1SSION', reset_date: '2025-07-22' }
     };
-
     await initiatePayment(config);
   };
 
-  const closeCheckout = () => {
-    if (!loading) {
-      setShowCheckout(false);
-      setPaymentConfig(null);
-    }
-  };
+  const closeCheckout = () => { if (!loading) { setShowCheckout(false); setPaymentConfig(null); } };
 
-  /**
-   * POST-PAYMENT HANDLER
-   * - BUZZ MAP: non chiama l'edge function qui (evita doppia invoke). La finalize con coordinate la fa il chiamante (BuzzMapButtonSecure).
-   * - BUZZ standard: chiama sempre handle-buzz-payment-success con Authorization header esplicito.
-   */
+  // ⚠️ BUZZ standard: chiama edge function con Authorization.
+  // ⚠️ BUZZ MAP: NON richiama qui l'edge (lo fa BuzzMapButtonSecure con coords + header) → evita doppia invoke.
   const handlePaymentSuccess = async (paymentIntentId: string): Promise<{ ok: boolean; clue_text?: string; skipFollowUpBuzzPress?: boolean }> => {
-    console.log('✅ M1SSION™ STRIPE SUCCESS: Payment completed', { 
-      paymentIntentId, 
-      type: paymentConfig?.type 
-    });
-
     try {
-      // ——— BUZZ MAP: delega al caller (serve passare le coordinate) ———
       if (paymentConfig?.type === 'buzz_map') {
-        console.log('💳 M1SSION™: deferring BUZZ MAP finalize to caller (BuzzMapButtonSecure)');
-        // il caller mostrerà i toast; segnaliamo di non eseguire altro
         return { ok: true, skipFollowUpBuzzPress: true };
       }
 
-      // ——— BUZZ standard: finalize qui ———
       if (paymentConfig?.type === 'buzz') {
+        if (!paymentIntentId) { toast.error('Pagamento ok ma manca il riferimento.'); return { ok: false }; }
+
         const { data: { session } } = await supabase.auth.getSession();
+        const headers: Record<string,string> = {};
+        if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
 
         const { data: buzzResponse, error: buzzError } = await supabase.functions.invoke('handle-buzz-payment-success', {
           body: {
@@ -183,54 +117,27 @@ export const useStripeInAppPayment = () => {
             is_buzz_map: false,
             metadata: paymentConfig.metadata
           },
-          headers: {
-            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
-          }
+          headers
         });
 
-        if (buzzError) {
-          console.error('❌ BUZZ payment success error:', buzzError);
-          
-          if ((buzzError as any)?.message?.includes('Missing paymentIntentId')) {
-            toast.error('Pagamento ok ma manca il riferimento. Aggiorna e riprova.');
-          } else {
-            toast.error('Operazione non riuscita. Riprova tra poco.');
-          }
-          return { ok: false };
+        if (buzzError) { toast.error('Operazione non riuscita. Riprova.'); return { ok: false }; }
+
+        let clueText = buzzResponse?.clue_text || buzzResponse?.metadata?.clue_text || buzzResponse?.message || '';
+        if (clueText) {
+          toast.success(`🎯 Nuovo indizio BUZZ!`, {
+            description: clueText,
+            duration: 5000,
+            position: 'top-center',
+            style: { zIndex: 9999, background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)', color: 'white', fontWeight: 'bold', fontSize: '14px', padding: '12px 16px' }
+          });
+          return { ok: true, clue_text: clueText, skipFollowUpBuzzPress: true };
         } else {
-          // Extract clue_text and show toast for standard BUZZ
-          let clueText = '';
-          clueText = buzzResponse?.clue_text || 
-                     buzzResponse?.metadata?.clue_text || 
-                     buzzResponse?.message || '';
-          
-          if (clueText) {
-            console.log('🎯 M1SSION™ SHOWING CLUE TOAST:', clueText);
-            toast.success(`🎯 Nuovo indizio BUZZ!`, {
-              description: clueText,
-              duration: 5000,
-              position: 'top-center',
-              style: { 
-                zIndex: 9999,
-                background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                padding: '12px 16px'
-              }
-            });
-            return { ok: true, clue_text: clueText, skipFollowUpBuzzPress: true };
-          } else {
-            console.warn('⚠️ M1SSION™ No clue_text found in response');
-            toast.success('🎉 BUZZ acquistato con successo!');
-            return { ok: true, skipFollowUpBuzzPress: true };
-          }
+          toast.success('🎉 BUZZ acquistato con successo!');
+          return { ok: true, skipFollowUpBuzzPress: true };
         }
       }
 
-      // Unknown payment type
       return { ok: true };
-
     } catch (error) {
       console.error('❌ handlePaymentSuccess fatal:', error);
       toast.error('Errore nella finalizzazione del pagamento.');
