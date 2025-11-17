@@ -216,13 +216,28 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
 
   // Update user areas GeoJSON data
   useEffect(() => {
-    if (!map || !initializedRef.current) return;
+    if (!map || !initializedRef.current) {
+      console.info('🗺️ M1-3D source:update (user-areas) SKIPPED', { 
+        mapReady: !!map, 
+        initialized: initializedRef.current 
+      });
+      return;
+    }
 
     const source = map.getSource('user-areas') as any;
-    if (!source) return;
+    if (!source) {
+      console.warn('🗺️ M1-3D source:update (user-areas) FAILED - source not found');
+      return;
+    }
 
     const features = userAreas.map(area => {
       const radiusKm = area.radius / 1000;
+      console.info('🗺️ M1-3D source:update (user-areas) processing area', {
+        id: area.id,
+        radiusKm,
+        radius_m: area.radius,
+        center: [area.lat, area.lng]
+      });
       const circle = makeCircle(area.lng, area.lat, radiusKm);
       return {
         ...circle,
@@ -235,8 +250,8 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
       };
     });
 
+    console.info('🗺️ M1-3D setData called (user-areas)', { featureCount: features.length });
     source.setData({ type: 'FeatureCollection', features });
-    console.info('🗺️ M1-3D source:update (user-areas)', { count: features.length });
   }, [map, userAreas]);
 
   // Update search areas GeoJSON data
