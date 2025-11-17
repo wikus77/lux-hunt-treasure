@@ -10,7 +10,7 @@ interface BuzzDebugBadgeProps {
   latestArea: {
     id: string;
     radius_km: number;
-    level: number;
+    level?: number;
     lat: number;
     lng: number;
   } | null;
@@ -91,14 +91,14 @@ const BuzzDebugBadge: React.FC<BuzzDebugBadgeProps> = ({ latestArea }) => {
         <div className="text-gray-400">DB current:</div>
         <div className={`font-mono ${radiusMismatch ? 'text-red-400 font-bold' : 'text-cyan-300'}`}>
           {dbCurrentRadiusKm !== null 
-            ? `L${dbCurrentLevel} • ${dbCurrentRadiusKm.toFixed(1)} km` 
+            ? `L${dbCurrentLevel || '?'} • ${dbCurrentRadiusKm.toFixed(1)} km` 
             : 'N/A'}
         </div>
         
         <div className="text-gray-400">UI used:</div>
         <div className={`font-mono ${radiusMismatch ? 'text-red-400 font-bold' : 'text-green-400'}`}>
           {uiRadiusKm !== null 
-            ? `L${uiLevel} • ${uiRadiusKm.toFixed(1)} km` 
+            ? `L${uiLevel || '?'} • ${uiRadiusKm.toFixed(1)} km` 
             : 'N/A'}
         </div>
         

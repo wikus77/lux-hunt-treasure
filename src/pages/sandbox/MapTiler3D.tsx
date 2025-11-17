@@ -334,7 +334,7 @@ export default function MapTiler3D() {
   };
   
   const effectiveUserAreas: AreaWithDebug[] = DEV_MOCKS 
-    ? devMocks.userAreas
+    ? (devMocks.userAreas as any) // Type assertion for dev mocks
     : currentWeekAreas?.length 
       ? currentWeekAreas.map(a => ({ 
           id: a.id, 
