@@ -19,6 +19,7 @@ export interface BuzzMapArea {
   colorName: string;
   week: number;
   generation: number;
+  level?: number; // 🔍 VERIFY MODE: Added for debug tracking
   isActive: boolean;
   user_id: string;
   created_at: string;
