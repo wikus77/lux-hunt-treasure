@@ -57,6 +57,13 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
     playSound('buzz');
     onBuzzPress();
 
+    // Fallback event to force UI refresh (no business logic change)
+    try {
+      window.dispatchEvent(new CustomEvent('buzzAreaCreated'));
+    } catch (e) {
+      console.warn('buzzAreaCreated event dispatch failed', e);
+    }
+
     setTimeout(() => {
       setIsLocked(false);
     }, 2000);
@@ -100,3 +107,5 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
 };
 
 export default BuzzButtonSecure;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
