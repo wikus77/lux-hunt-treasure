@@ -19,6 +19,7 @@ export interface BuzzMapArea {
   colorName: string;
   week: number;
   generation: number;
+  level?: number; // 🔍 M1-3D VERIFY: Track level from DB
   isActive: boolean;
   user_id: string;
   created_at: string;
@@ -130,7 +131,7 @@ export const useBuzzMapLogic = () => {
 
       // Transform user areas for display with PROPER RADIUS LOGGING (WEEKLY FILTERED)
       const transformedAreas: BuzzMapArea[] = userAreas.map((area, index) => {
-        console.log(`🗺️ BUZZ AREA (Week ${area.week}): Area ${area.id} - radius_km: ${area.radius_km}, lat: ${area.lat}, lng: ${area.lng}`);
+        console.log(`🗺️ BUZZ AREA (Week ${area.week}): Area ${area.id} - level: ${area.level}, radius_km: ${area.radius_km}, lat: ${area.lat}, lng: ${area.lng}`);
         
         // 🚨 REMOVED: No duplicate toast here - only from edge function after payment
         
@@ -139,6 +140,7 @@ export const useBuzzMapLogic = () => {
           lat: area.lat,
           lng: area.lng,
           radius_km: area.radius_km,
+          level: area.level, // 🔍 M1-3D VERIFY: Track level from DB
           coordinates: { lat: area.lat, lng: area.lng },
           radius: area.radius_km * 1000, // Convert to meters for map display
           color: '#00FFFF',
