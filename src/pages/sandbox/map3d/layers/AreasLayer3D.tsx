@@ -251,28 +251,46 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
       return;
     }
 
-    const features = userAreas.map(area => {
-      const radiusKm = area.radius / 1000;
-      console.info('🗺️ M1-3D source:update (user-areas) processing area', {
-        id: area.id,
-        level: area.level,
-        radiusKm,
-        radius_m: area.radius,
-        center: [area.lat, area.lng]
-      });
-      const circle = makeCircle(area.lng, area.lat, radiusKm);
-      return {
-        ...circle,
-        properties: {
-          ...circle.properties,
-          id: area.id,
-          label: area.label || 'Buzz Area',
-          radiusKm,
-          level: area.level,
-          radius_km: area.radius_km
+    const features = userAreas
+      .filter(area => {
+        // 🔥 FIX: Validate coordinates before makeCircle to prevent invalid GeoJSON
+        const isValidLat = typeof area.lat === 'number' && isFinite(area.lat) && Math.abs(area.lat) <= 90;
+        const isValidLng = typeof area.lng === 'number' && isFinite(area.lng) && Math.abs(area.lng) <= 180;
+        
+        if (!isValidLat || !isValidLng) {
+          console.warn('🚫 M1-3D SKIP invalid coords', {
+            id: area.id,
+            lat: area.lat,
+            lng: area.lng,
+            isValidLat,
+            isValidLng
+          });
+          return false;
         }
-      };
-    });
+        return true;
+      })
+      .map(area => {
+        const radiusKm = area.radius / 1000;
+        console.info('🗺️ M1-3D source:update (user-areas) processing area', {
+          id: area.id,
+          level: area.level,
+          radiusKm,
+          radius_m: area.radius,
+          center: [area.lat, area.lng]
+        });
+        const circle = makeCircle(area.lng, area.lat, radiusKm);
+        return {
+          ...circle,
+          properties: {
+            ...circle.properties,
+            id: area.id,
+            label: area.label || 'Buzz Area',
+            radiusKm,
+            level: area.level,
+            radius_km: area.radius_km
+          }
+        };
+      });
 
     console.info('🗺️ M1-3D setData called (user-areas)', { featureCount: features.length });
     source.setData({ type: 'FeatureCollection', features });
