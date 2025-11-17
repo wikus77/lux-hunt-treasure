@@ -1,3 +1,5 @@
+import "@/lib/pwa/sw-autorun";
+import { ensureSWAnyHost } from "//@/lib/pwa/sw-register-anyhost";
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
 /* M1SSION™ AG-X0197 */
 import './styles/map.css';

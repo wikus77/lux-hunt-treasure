@@ -1,3 +1,4 @@
+import { safeJson } from '../_shared/json.ts';
 // © 2025 M1SSION™ – Handle BUZZ Press Edge Function
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
@@ -35,7 +36,7 @@ serve(async (req) => {
     console.log('👤 [HANDLE-BUZZ-PRESS] User authenticated:', user.id);
 
     // Parse request body to check if this is BUZZ MAP
-    const body = await req.json();
+    const body = await safeJson(req);
     const { generateMap, coordinates, sessionId } = body;
     
     // Handle BUZZ MAP flow
@@ -214,4 +215,4 @@ serve(async (req) => {
       }
     );
   }
-});
+});// redeploy 2025-11-16T06:57:51Z

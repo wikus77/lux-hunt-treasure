@@ -1,3 +1,4 @@
+import SettingsPushToggle from "@/components/push/SettingsPushToggle";
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Bell, Volume2, VolumeX, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { UnifiedPushToggle } from '@/components/UnifiedPushToggle';
+
 import PushDebugPanel from '@/components/PushDebugPanel';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import NotificationsStatus from '@/components/NotificationsStatus';
@@ -251,7 +252,7 @@ const NotificationsSettings: React.FC = () => {
 
           {/* Push Notifications using UnifiedPushToggle */}
           <div className="border-t border-white/10 pt-4">
-            <UnifiedPushToggle className="w-full" />
+            <SettingsPushToggle />
             <div className="mt-4">
               <NotificationsStatus userId="495246c1-9154-4f01-a428-7f37fe230180" />
             </div>

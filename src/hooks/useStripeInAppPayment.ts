@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
+
 // Utilizzo configurazione prezzi centralizzata da pricingConfig
 
 export interface PaymentConfig {
@@ -151,6 +152,11 @@ export const useStripeInAppPayment = () => {
     }
   };
 
+  /**
+   * POST-PAYMENT HANDLER
+   * - BUZZ MAP: non chiama l'edge function qui (evita doppia invoke). La finalize con coordinate la fa il chiamante (BuzzMapButtonSecure).
+   * - BUZZ standard: chiama sempre handle-buzz-payment-success con Authorization header esplicito.
+   */
   const handlePaymentSuccess = async (paymentIntentId: string): Promise<{ ok: boolean; clue_text?: string; skipFollowUpBuzzPress?: boolean }> => {
     console.log('✅ M1SSION™ STRIPE SUCCESS: Payment completed', { 
       paymentIntentId, 
@@ -158,31 +164,34 @@ export const useStripeInAppPayment = () => {
     });
 
     try {
-      // Handle different payment types
-      if (paymentConfig?.type === 'buzz' || paymentConfig?.type === 'buzz_map') {
-        // Validate paymentIntentId before calling handle-buzz-payment-success
-        if (!paymentIntentId) {
-          console.error('❌ Missing paymentIntentId for buzz payment success');
-          toast.error('Pagamento completato, ma manca il riferimento del pagamento. Aggiorna e riprova.');
-          return { ok: false };
-        }
+      // ——— BUZZ MAP: delega al caller (serve passare le coordinate) ———
+      if (paymentConfig?.type === 'buzz_map') {
+        console.log('💳 M1SSION™: deferring BUZZ MAP finalize to caller (BuzzMapButtonSecure)');
+        // il caller mostrerà i toast; segnaliamo di non eseguire altro
+        return { ok: true, skipFollowUpBuzzPress: true };
+      }
 
-        // Handle BUZZ payment completion
+      // ——— BUZZ standard: finalize qui ———
+      if (paymentConfig?.type === 'buzz') {
+        const { data: { session } } = await supabase.auth.getSession();
+
         const { data: buzzResponse, error: buzzError } = await supabase.functions.invoke('handle-buzz-payment-success', {
           body: {
             payment_intent_id: paymentIntentId,
             user_id: user?.id,
             amount: paymentConfig.amount,
-            is_buzz_map: paymentConfig.type === 'buzz_map',
+            is_buzz_map: false,
             metadata: paymentConfig.metadata
+          },
+          headers: {
+            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
           }
         });
 
         if (buzzError) {
           console.error('❌ BUZZ payment success error:', buzzError);
           
-          // Handle specific errors with friendly messages
-          if (buzzError.message?.includes('Missing paymentIntentId')) {
+          if ((buzzError as any)?.message?.includes('Missing paymentIntentId')) {
             toast.error('Pagamento ok ma manca il riferimento. Aggiorna e riprova.');
           } else {
             toast.error('Operazione non riuscita. Riprova tra poco.');
@@ -191,81 +200,53 @@ export const useStripeInAppPayment = () => {
         } else {
           // Extract clue_text and show toast for standard BUZZ
           let clueText = '';
-          if (paymentConfig.type === 'buzz') {
-            // Try multiple clue_text sources from the response
-            clueText = buzzResponse?.clue_text || 
-                      buzzResponse?.metadata?.clue_text || 
-                      buzzResponse?.message || '';
-            
-            if (clueText) {
-              console.log('🎯 M1SSION™ SHOWING CLUE TOAST:', clueText);
-              toast.success(`🎯 Nuovo indizio BUZZ!`, {
-                description: clueText,
-                duration: 5000,
-                position: 'top-center',
-                style: { 
-                  zIndex: 9999,
-                  background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '14px',
-                  padding: '12px 16px'
-                }
-              });
-              return { ok: true, clue_text: clueText, skipFollowUpBuzzPress: true };
-            } else {
-              console.warn('⚠️ M1SSION™ No clue_text found in response');
-              toast.success('🎉 BUZZ acquistato con successo!');
-              return { ok: true, skipFollowUpBuzzPress: true };
-            }
+          clueText = buzzResponse?.clue_text || 
+                     buzzResponse?.metadata?.clue_text || 
+                     buzzResponse?.message || '';
+          
+          if (clueText) {
+            console.log('🎯 M1SSION™ SHOWING CLUE TOAST:', clueText);
+            toast.success(`🎯 Nuovo indizio BUZZ!`, {
+              description: clueText,
+              duration: 5000,
+              position: 'top-center',
+              style: { 
+                zIndex: 9999,
+                background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                padding: '12px 16px'
+              }
+            });
+            return { ok: true, clue_text: clueText, skipFollowUpBuzzPress: true };
           } else {
-            toast.success(`🎉 Area BUZZ acquistata con successo!`);
-            return { ok: true };
+            console.warn('⚠️ M1SSION™ No clue_text found in response');
+            toast.success('🎉 BUZZ acquistato con successo!');
+            return { ok: true, skipFollowUpBuzzPress: true };
           }
         }
-      } else if (paymentConfig?.type === 'subscription') {
-        // Handle subscription payment completion  
-        await supabase.functions.invoke('handle-payment-success', {
-          body: {
-            payment_intent_id: paymentIntentId,
-            user_id: user?.id,
-            plan: paymentConfig.plan
-          }
-        });
-
-        toast.success(`🎉 Abbonamento ${paymentConfig.plan} attivato!`);
-        return { ok: true };
       }
 
-      setShowCheckout(false);
-      setPaymentConfig(null);
+      // Unknown payment type
       return { ok: true };
+
     } catch (error) {
-      console.error('❌ M1SSION™ STRIPE: Error handling payment success', error);
-      toast.error('Errore nella finalizzazione del pagamento');
+      console.error('❌ handlePaymentSuccess fatal:', error);
+      toast.error('Errore nella finalizzazione del pagamento.');
       return { ok: false };
     }
   };
 
   return {
-    // Universal payment methods
-    processBuzzPayment,
-    processSubscription,
-    
-    // UI state
+    loading,
     showCheckout,
     paymentConfig,
-    loading,
-    setLoading,
-    defaultPaymentMethod, // © 2025 Joseph MULÉ – M1SSION™ – Auto-fill support
-    
-    // Handlers
+    initiatePayment,
+    processBuzzPayment,
+    processSubscription,
     closeCheckout,
-    handlePaymentSuccess,
+    handlePaymentSuccess
   };
 };
-
-/*
- * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * M1SSION™ - RESET COMPLETO 22/07/2025
- */
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

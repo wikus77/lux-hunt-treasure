@@ -83,3 +83,15 @@ if (import.meta.hot) {
     // Keep singleton warm across HMR
   });
 }
+
+// -- Realtime WS token sync (fallback ANON)
+client.auth.onAuthStateChange((_event, session) => {
+  const token = session?.access_token ?? SUPABASE_ANON_KEY;
+  client.realtime.setAuth(token);
+});
+
+if (import.meta?.env?.DEV) {
+  // @ts-ignore
+  (globalThis as any).supabase = client;
+  // console.log('🔧 DEV: window.supabase exposed');
+}

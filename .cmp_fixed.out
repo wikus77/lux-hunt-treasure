@@ -1,0 +1,16 @@
+
+ ⛅️ wrangler 4.44.0
+───────────────────
+✨ Compiled Worker successfully
+Uploading... (233/257)
+Uploading... (241/257)
+Uploading... (249/257)
+Uploading... (257/257)
+✨ Success! Uploaded 24 files (233 already uploaded) (6.36 sec)
+
+✨ Uploading _headers
+✨ Uploading _redirects
+✨ Uploading Functions bundle
+🌎 Deploying...
+✨ Deployment complete! Take a peek over at https://9846696e.m1ssion-v2.pages.dev
+✨ Deployment alias URL: https://cmp-c63021e-fixed.m1ssion-v2.pages.dev
