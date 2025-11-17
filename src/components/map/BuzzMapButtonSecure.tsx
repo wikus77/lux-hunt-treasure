@@ -200,13 +200,14 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
       onAreaGenerated?.(coordinates[0], coordinates[1], nextRadiusKm);
       onBuzzPress();
 
-      // Dispatch success event for other components
-      window.dispatchEvent(new CustomEvent('buzzMapCreated', {
+      // 🔥 FIX: Dispatch custom event to trigger pricing refresh
+      window.dispatchEvent(new CustomEvent('buzzAreaCreated', {
         detail: { 
           level: nextLevel,
           radiusKm: nextRadiusKm,
           costM1U,
-          coordinates,
+          lat: coordinates[0],
+          lng: coordinates[1],
           areaId: edgeResult.area_id || (spendResult as any).area_id
         }
       }));
