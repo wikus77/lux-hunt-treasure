@@ -326,26 +326,37 @@ export default function MapTiler3D() {
   
   // 🔍 M1-3D VERIFY: Extended area type with debug fields
   type AreaWithDebug = { id: string; lat: number; lng: number; radius: number; level?: number; radius_km: number };
-  const effectiveUserAreas: AreaWithDebug[] = DEV_MOCKS 
-    ? (devMocks.userAreas as any)
-    : currentWeekAreas?.length 
-      ? currentWeekAreas.map(a => ({ 
-          id: a.id, lat: a.lat, lng: a.lng, 
-          radius: a.radius_km * 1000, level: a.level, radius_km: a.radius_km 
-        }))
-      : [];
+  
+  // ⚠️ BUZZ MAP FIX: NEVER use DEV_MOCKS for user areas - always use live DB data
+  const effectiveUserAreas: AreaWithDebug[] = currentWeekAreas?.length 
+    ? currentWeekAreas.map(a => ({ 
+        id: a.id, lat: a.lat, lng: a.lng, 
+        radius: a.radius_km * 1000, level: a.level, radius_km: a.radius_km 
+      }))
+    : [];
+  
+  // Log confirmation that we're using live data (not mocks)
+  useEffect(() => {
+    console.info('🗺️ M1-3D devMocksEnabled (user-areas): false (FORCED LIVE)');
+  }, []);
   
   // 🎯 BUZZ MAP FIX: Show only the most recent area to prevent cumulative glow
   const filteredUserAreas = effectiveUserAreas.length > 0 ? [effectiveUserAreas[0]] : [];
   const latestArea: AreaWithDebug | null = effectiveUserAreas[0] || null;
   
-  // 🔍 M1-3D VERIFY: Log latest area
+  // 🔍 M1-3D VERIFY: Log latest area (UI selected)
   useEffect(() => {
     if (latestArea) {
-      console.info('🗺️ M1-3D latestArea (UI)', {
-        id: latestArea.id, level: latestArea.level, radius_km: latestArea.radius_km,
-        radius_m: latestArea.radius, center: [latestArea.lat, latestArea.lng]
+      console.info('🗺️ M1-3D latestArea (UI selected)', {
+        id: latestArea.id, 
+        level: latestArea.level, 
+        radius_km: latestArea.radius_km,
+        radius_m: latestArea.radius, 
+        center: [latestArea.lat, latestArea.lng],
+        source: 'currentWeekAreas[0]'
       });
+    } else {
+      console.info('🗺️ M1-3D latestArea: null (no areas this week)');
     }
   }, [latestArea?.id, latestArea?.radius_km]);
   
@@ -370,7 +381,8 @@ export default function MapTiler3D() {
       rewards: effectiveRewardMarkers.length,
       userAreas: filteredUserAreas.length,
       searchAreas: effectiveSearchAreas.length,
-      devMocksEnabled: DEV_MOCKS
+      devMocksEnabled_userAreas: false, // FORCED LIVE
+      devMocksEnabled_rewards: DEV_MOCKS
     });
   }, [effectiveAgents.length, effectiveRewardMarkers.length, filteredUserAreas.length, effectiveSearchAreas.length]);
   
