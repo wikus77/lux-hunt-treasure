@@ -125,7 +125,7 @@ const BuzzDiagnosticPanel: React.FC = () => {
                   <div className="col-span-2">
                     <span className="text-gray-500">Center:</span>{' '}
                     <span className="text-gray-300 font-mono">
-                      {area.center_lat.toFixed(5)}, {area.center_lng.toFixed(5)}
+                      {area.center_lat?.toFixed(5) || 'N/A'}, {area.center_lng?.toFixed(5) || 'N/A'}
                     </span>
                   </div>
                   <div className="col-span-2">
