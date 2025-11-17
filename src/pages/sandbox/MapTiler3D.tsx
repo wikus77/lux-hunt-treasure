@@ -24,6 +24,7 @@ import PortalsLayer3D from './map3d/layers/PortalsLayer3D';
 import RewardsLayer3D from './map3d/layers/RewardsLayer3D';
 import AreasLayer3D from './map3d/layers/AreasLayer3D';
 import BuzzDiagnosticPanel from './map3d/components/BuzzDiagnosticPanel';
+import BuzzDebugBadge from './map3d/components/BuzzDebugBadge';
 import NotesLayer3D from './map3d/layers/NotesLayer3D';
 import LayerTogglePanel from './map3d/components/LayerTogglePanel';
 import '@/styles/map-dock.css';
@@ -321,7 +322,18 @@ export default function MapTiler3D() {
   // Use ONLY live agents; never fallback to dev ones here
   const effectiveAgents = (liveAgents && liveAgents.length > 0) ? liveAgents : [];
   const effectiveRewardMarkers = DEV_MOCKS ? devMocks.rewards : rewardMarkersLive;
-  const effectiveUserAreas = DEV_MOCKS 
+  
+  // 🔍 M1-3D VERIFY: Extended area type with debug fields
+  type AreaWithDebug = {
+    id: string;
+    lat: number;
+    lng: number;
+    radius: number;
+    level?: number;
+    radius_km: number;
+  };
+  
+  const effectiveUserAreas: AreaWithDebug[] = DEV_MOCKS 
     ? devMocks.userAreas
     : currentWeekAreas?.length 
       ? currentWeekAreas.map(a => ({ 
@@ -338,7 +350,7 @@ export default function MapTiler3D() {
   const filteredUserAreas = effectiveUserAreas.length > 0 ? [effectiveUserAreas[0]] : [];
   
   // 🔍 M1-3D VERIFY: Log latest area for debugging
-  const latestArea = effectiveUserAreas.length > 0 ? effectiveUserAreas[0] : null;
+  const latestArea: AreaWithDebug | null = effectiveUserAreas.length > 0 ? effectiveUserAreas[0] : null;
   useEffect(() => {
     if (latestArea) {
       console.info('🗺️ M1-3D latestArea', {
