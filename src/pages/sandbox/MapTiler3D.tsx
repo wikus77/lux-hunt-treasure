@@ -251,6 +251,10 @@ export default function MapTiler3D() {
     : currentWeekAreas?.length 
       ? currentWeekAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius_km * 1000 }))
       : [];
+  
+  // 🎯 BUZZ MAP FIX: Show only the most recent area to prevent cumulative glow
+  const filteredUserAreas = effectiveUserAreas.length > 0 ? [effectiveUserAreas[0]] : [];
+  
   // Always use hook-managed search areas (DB/local), never static dev seeds
   const effectiveSearchAreas = searchAreas?.length
     ? searchAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius }))
@@ -270,11 +274,11 @@ export default function MapTiler3D() {
     console.debug('[Map3D] 🎨 Layer data counts:', {
       agents: effectiveAgents.length,
       rewards: effectiveRewardMarkers.length,
-      userAreas: effectiveUserAreas.length,
+      userAreas: filteredUserAreas.length,
       searchAreas: effectiveSearchAreas.length,
       devMocksEnabled: DEV_MOCKS
     });
-  }, [effectiveAgents.length, effectiveRewardMarkers.length, effectiveUserAreas.length, effectiveSearchAreas.length]);
+  }, [effectiveAgents.length, effectiveRewardMarkers.length, filteredUserAreas.length, effectiveSearchAreas.length]);
   
   const mapCenter: [number, number] | undefined = position 
     ? [position.lat, position.lng]
@@ -607,7 +611,7 @@ export default function MapTiler3D() {
     const pts: [number, number][] = [];
     effectiveAgents.forEach(a => pts.push([a.lng, a.lat]));
     effectiveRewardMarkers.forEach(r => pts.push([r.lng, r.lat]));
-    effectiveUserAreas.forEach(a => pts.push([a.lng, a.lat]));
+    filteredUserAreas.forEach(a => pts.push([a.lng, a.lat]));
     effectiveSearchAreas.forEach(a => pts.push([a.lng, a.lat]));
 
     if (!pts.length) {
@@ -642,7 +646,7 @@ export default function MapTiler3D() {
     DEV_VIEW_LOCK,
     effectiveAgents,
     effectiveRewardMarkers,
-    effectiveUserAreas,
+    filteredUserAreas,
     effectiveSearchAreas
   ]);
 
@@ -858,7 +862,7 @@ export default function MapTiler3D() {
       <AreasLayer3D 
         map={mapRef.current} 
         enabled={layerVisibility.areas}
-        userAreas={effectiveUserAreas}
+        userAreas={filteredUserAreas}
         searchAreas={effectiveSearchAreas}
         onDeleteSearchArea={(id) => deleteSearchArea(id)}
       />
