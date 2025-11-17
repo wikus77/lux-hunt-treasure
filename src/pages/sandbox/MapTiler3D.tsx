@@ -231,6 +231,69 @@ export default function MapTiler3D() {
     }
   }, [geoStatus, enableGeo]);
   
+  // 🔔 Realtime: Auto-fit bounds on new BUZZ area INSERT
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const setup = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
+      if (!uid) return;
+
+      const getCurrentWeek = () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 1);
+        const diff = now.getTime() - start.getTime();
+        const oneWeek = 1000 * 60 * 60 * 24 * 7;
+        return Math.floor(diff / oneWeek) + 1;
+      };
+
+      const currentWeek = getCurrentWeek();
+
+      const channel = supabase
+        .channel(`map3d_buzz_fit_${uid}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'user_map_areas',
+            filter: `user_id=eq.${uid}`
+          },
+          (payload) => {
+            if (payload.new?.source === 'buzz_map' && payload.new?.week === currentWeek) {
+              console.log('🔔 MapTiler3D: New buzz area inserted, auto-fitting bounds');
+              const map = mapRef.current;
+              if (!map) return;
+
+              const lat = payload.new.lat;
+              const lng = payload.new.lng;
+              const radiusMeters = (payload.new.radius_km || 500) * 1000;
+
+              setTimeout(() => {
+                const latDeltaDeg = radiusMeters / 111320;
+                const lngDeltaDeg = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
+
+                map.fitBounds([
+                  [lng - lngDeltaDeg, lat - latDeltaDeg],
+                  [lng + lngDeltaDeg, lat + latDeltaDeg]
+                ], {
+                  padding: 80,
+                  maxZoom: 13,
+                  duration: 800
+                });
+              }, 400);
+            }
+          }
+        )
+        .subscribe();
+
+      return () => supabase.removeChannel(channel);
+    };
+
+    setup();
+  }, [isAuthenticated]);
+  
   // 🎨 Seed localStorage notes in DEV mode (non-destructive)
   useEffect(() => {
     if (!DEV_MOCKS || !devMocks.notesSeed.length) return;
@@ -291,6 +354,25 @@ export default function MapTiler3D() {
   const handleAreaGenerated = (lat: number, lng: number, radius: number) => {
     console.log('🎯 BUZZ MAP Area generated:', { lat, lng, radius });
     reloadAreas();
+    
+    // Auto-fit bounds to show the circle border
+    if (mapRef.current) {
+      const map = mapRef.current;
+      setTimeout(() => {
+        const radiusMeters = radius;
+        const latDeltaDeg = radiusMeters / 111320;
+        const lngDeltaDeg = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
+        
+        map.fitBounds([
+          [lng - lngDeltaDeg, lat - latDeltaDeg],
+          [lng + lngDeltaDeg, lat + latDeltaDeg]
+        ], {
+          padding: 80,
+          maxZoom: 13,
+          duration: 800
+        });
+      }, 300); // Wait for reloadAreas to complete
+    }
   };
 
   const toggleLayer = (layer: keyof typeof layerVisibility) => {
