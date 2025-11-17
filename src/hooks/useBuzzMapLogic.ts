@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { emitReconnecting, emitSubscribed, emitError } from '@/lib/realtime/reconnectBus';
+import { getCurrentWeekOfYear } from '@/lib/weekUtils';
 
 export interface BuzzMapArea {
   id: string;
@@ -86,21 +87,25 @@ export const useBuzzMapLogic = () => {
       // Payment validation is handled by the RPC itself (M1U balance check + transaction log)
       console.log('💎 M1SSION™ BUZZ MAP: Checking M1U-based areas (source=buzz_map)');
 
-      // 🔥 STEP 3: Fetch user map areas with M1U-based filter
-      // CRITICAL: Filter by source='buzz_map' to only show areas created via M1U payment
+      // 🔥 STEP 3: Fetch user map areas with M1U-based filter + WEEKLY COUNTER
+      // CRITICAL: Filter by source='buzz_map' AND current week to match backend logic
+      const currentWeek = getCurrentWeekOfYear();
+      console.log('🗓️ BUZZ MAP: Fetching areas for current week:', currentWeek);
+      
       const { data: userAreas, error: userAreasError } = await supabase
         .from('user_map_areas')
         .select('*')
         .eq('user_id', user.id)
         .eq('source', 'buzz_map') // 🔥 CRITICAL: Only M1U-paid areas
-        .gte('created_at', '2025-07-17T00:00:00.000Z')
+        .eq('week', currentWeek) // 🔥 NEW: Filter by current ISO week
         .order('created_at', { ascending: false });
 
-      console.log('🗺️ USER MAP AREAS CHECK (M1U-BASED):', { 
+      console.log('🗺️ USER MAP AREAS CHECK (M1U-BASED + WEEKLY):', { 
         count: userAreas?.length || 0, 
-        areas: userAreas?.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius_km: a.radius_km, source: a.source, created_at: a.created_at })),
+        currentWeek,
+        areas: userAreas?.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius_km: a.radius_km, week: a.week, source: a.source, created_at: a.created_at })),
         error: userAreasError,
-        query: "M1U payment system - fetching user_map_areas with source='buzz_map'"
+        query: "M1U payment system - fetching user_map_areas with source='buzz_map' for current week only"
       });
 
       if (userAreasError) {
@@ -123,9 +128,9 @@ export const useBuzzMapLogic = () => {
       // 🔥 STEP 3: Transform areas that exist (using data from previous step)
       console.log('✅ useBuzzMapLogic: Raw data from user_map_areas (post 2025-07-17):', userAreas);
 
-      // Transform user areas for display with PROPER RADIUS LOGGING
+      // Transform user areas for display with PROPER RADIUS LOGGING (WEEKLY FILTERED)
       const transformedAreas: BuzzMapArea[] = userAreas.map((area, index) => {
-        console.log(`🗺️ BUZZ AREA DEBUG: Area ${area.id} - radius_km: ${area.radius_km}, lat: ${area.lat}, lng: ${area.lng}`);
+        console.log(`🗺️ BUZZ AREA (Week ${area.week}): Area ${area.id} - radius_km: ${area.radius_km}, lat: ${area.lat}, lng: ${area.lng}`);
         
         // 🚨 REMOVED: No duplicate toast here - only from edge function after payment
         
@@ -138,7 +143,7 @@ export const useBuzzMapLogic = () => {
           radius: area.radius_km * 1000, // Convert to meters for map display
           color: '#00FFFF',
           colorName: 'cyan',
-          week: area.week || 1,
+          week: area.week || currentWeek,
           generation: index + 1,
           isActive: true,
           user_id: area.user_id,
@@ -146,7 +151,7 @@ export const useBuzzMapLogic = () => {
         };
       });
 
-      console.log('✅ useBuzzMapLogic: Setting authorized areas:', transformedAreas.length);
+      console.log('✅ useBuzzMapLogic: Setting authorized areas (current week only):', transformedAreas.length);
       setCurrentWeekAreas(transformedAreas);
       setError(null);
       
