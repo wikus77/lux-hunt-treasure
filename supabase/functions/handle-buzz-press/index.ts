@@ -68,12 +68,16 @@ serve(withCors(async (req: Request): Promise<Response> => {
     if (generateMap && coordinates) {
       console.log('🗺️ [HANDLE-BUZZ-PRESS] Processing BUZZ MAP generation');
       
-      // Count existing buzz map areas to determine level
+      // Calculate current week of year for weekly reset
+      const currentWeek = getCurrentWeekOfYear();
+      
+      // Count existing buzz map areas for CURRENT WEEK ONLY to determine level
       const { count, error: countError } = await supabase
         .from('user_map_areas')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
-        .eq('source', 'buzz_map');
+        .eq('source', 'buzz_map')
+        .eq('week', currentWeek);
         
       if (countError) {
         console.error('❌ [HANDLE-BUZZ-PRESS] Error counting map areas:', countError);
@@ -85,13 +89,15 @@ serve(withCors(async (req: Request): Promise<Response> => {
       const buzzLevel = getBuzzLevelFromCount(currentCount);
       
       console.log('🗺️ [HANDLE-BUZZ-PRESS] Creating BUZZ MAP area:', {
+        currentWeek,
+        currentCount,
         level,
         radiusKm: buzzLevel.radiusKm,
         priceCents: buzzLevel.priceCents,
         coordinates
       });
       
-      // Create the map area
+      // Create the map area with weekly counter
       const { data: mapArea, error: mapError } = await supabase
         .from('user_map_areas')
         .insert({
@@ -104,7 +110,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
           source: 'buzz_map',
           level: level,
           price_eur: buzzLevel.priceCents / 100,
-          week: Math.ceil(Date.now() / (7 * 24 * 60 * 60 * 1000))
+          week: currentWeek
         })
         .select()
         .single();
