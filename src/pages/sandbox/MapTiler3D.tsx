@@ -263,22 +263,33 @@ export default function MapTiler3D() {
           },
           (payload) => {
             if (payload.new?.source === 'buzz_map' && payload.new?.week === currentWeek) {
-              console.log('🔔 MapTiler3D: New buzz area inserted, auto-fitting bounds');
+              console.info('🗺️ M1-3D realtime:insert (buzz area)');
               const map = mapRef.current;
               if (!map) return;
 
               const lat = payload.new.lat;
               const lng = payload.new.lng;
-              const radiusMeters = (payload.new.radius_km || 500) * 1000;
+              const radiusKm = payload.new.radius_km || 500;
+              const radiusMeters = radiusKm * 1000;
+
+              console.info('🗺️ M1-3D latestArea', { 
+                level: payload.new.level, 
+                radius_km: radiusKm, 
+                center: { lat, lng } 
+              });
 
               setTimeout(() => {
                 const latDeltaDeg = radiusMeters / 111320;
                 const lngDeltaDeg = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
 
-                map.fitBounds([
+                const bbox: [[number, number], [number, number]] = [
                   [lng - lngDeltaDeg, lat - latDeltaDeg],
                   [lng + lngDeltaDeg, lat + latDeltaDeg]
-                ], {
+                ];
+
+                console.info('🗺️ M1-3D fitBounds (realtime)', { bbox });
+
+                map.fitBounds(bbox, {
                   padding: 80,
                   maxZoom: 13,
                   duration: 800
@@ -352,15 +363,15 @@ export default function MapTiler3D() {
     console.log('🎯 BUZZ pressed in MapTiler3D - payment flow handled by BuzzMapButtonSecure');
   };
   
-  const handleAreaGenerated = (lat: number, lng: number, radius: number) => {
-    console.log('🎯 BUZZ MAP Area generated:', { lat, lng, radius });
+  const handleAreaGenerated = (lat: number, lng: number, radiusMeters: number) => {
+    const radiusKm = radiusMeters / 1000;
+    console.info('🗺️ M1-3D onAreaGenerated', { lat, lng, radiusKm });
     reloadAreas();
     
     // Auto-fit bounds to show the circle border
     if (mapRef.current) {
       const map = mapRef.current;
       setTimeout(() => {
-        const radiusMeters = radius;
         const latDeltaDeg = radiusMeters / 111320;
         const lngDeltaDeg = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
         

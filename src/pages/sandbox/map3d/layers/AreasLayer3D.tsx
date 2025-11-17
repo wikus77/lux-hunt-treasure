@@ -1,6 +1,7 @@
-// Areas Layer for MapLibre 3D - User map areas and search areas overlay
+// Areas Layer for MapLibre 3D - User map areas and search areas as native GeoJSON layers
 import React, { useEffect, useState, useRef } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';
+import { makeCircle, getCircleBounds } from '../geo/circleGeoJSON';
 
 interface Area {
   id: string;
@@ -26,31 +27,35 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
   searchAreas = [],
   onDeleteSearchArea
 }) => {
-  const [svgContent, setSvgContent] = useState<string>('');
   const [tooltip, setTooltip] = useState<null | { id: string; type: 'user'|'search'; label?: string; radius: number; screenX: number; screenY: number; lat: number; lng: number }>(null);
-  const svgRef = useRef<SVGSVGElement | null>(null as any);
   const rafRef = useRef<number | null>(null);
+  const initializedRef = useRef(false);
 
   // Reset tooltip when userAreas changes or buzzAreaCreated event fires
   useEffect(() => {
+    console.info('🗺️ M1-3D tooltip:reset (userAreas changed)');
     setTooltip(null);
   }, [userAreas]);
 
   useEffect(() => {
     const handleBuzzCreated = () => {
+      console.info('🗺️ M1-3D tooltip:reset (buzzAreaCreated event)');
       setTooltip(null);
     };
     window.addEventListener('buzzAreaCreated', handleBuzzCreated);
     return () => window.removeEventListener('buzzAreaCreated', handleBuzzCreated);
   }, []);
 
-  // Update tooltip position using map.project when tooltip is open
+  // Update tooltip position using map.project when tooltip is open (RAF throttling)
   useEffect(() => {
     if (!map || !tooltip) return;
 
     const updateTooltipPosition = () => {
-      const point = map.project([tooltip.lng, tooltip.lat]);
-      setTooltip(prev => prev ? { ...prev, screenX: point.x, screenY: point.y } : null);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        const point = map.project([tooltip.lng, tooltip.lat]);
+        setTooltip(prev => prev ? { ...prev, screenX: point.x, screenY: point.y } : null);
+      });
     };
 
     updateTooltipPosition();
@@ -61,6 +66,7 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
     map.on('render', updateTooltipPosition);
 
     return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       map.off('move', updateTooltipPosition);
       map.off('zoom', updateTooltipPosition);
       map.off('rotate', updateTooltipPosition);
@@ -69,167 +75,251 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
     };
   }, [map, tooltip?.lat, tooltip?.lng]);
 
+  // Initialize GeoJSON sources and layers
   useEffect(() => {
-    if (!map || !enabled) return;
+    if (!map || !enabled || initializedRef.current) return;
 
-    const updateSVG = () => {
-      const container = map.getContainer();
-      const width = container.offsetWidth;
-      const height = container.offsetHeight;
+    const initLayers = () => {
+      // Add user areas source + layers
+      if (!map.getSource('user-areas')) {
+        map.addSource('user-areas', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] }
+        });
+        console.info('🗺️ M1-3D source:add (user-areas)');
+      }
 
-      let svg = '';
+      if (!map.getLayer('user-areas-fill')) {
+        map.addLayer({
+          id: 'user-areas-fill',
+          type: 'fill',
+          source: 'user-areas',
+          paint: {
+            'fill-color': 'rgba(0,209,255,0.15)',
+            'fill-opacity': 0.8
+          }
+        });
+        console.info('🗺️ M1-3D layer:add (user-areas-fill)');
+      }
 
-      // Render user areas (Buzz Map areas)
-      userAreas.forEach(area => {
-        const center = map.project([area.lng, area.lat]);
-        const zoom = map.getZoom();
-        const metersPerPixel = 156543.03392 * Math.cos(area.lat * Math.PI / 180) / Math.pow(2, zoom);
-        const radiusPixels = area.radius / metersPerPixel;
+      if (!map.getLayer('user-areas-border')) {
+        map.addLayer({
+          id: 'user-areas-border',
+          type: 'line',
+          source: 'user-areas',
+          paint: {
+            'line-color': '#00D1FF',
+            'line-width': 3,
+            'line-opacity': 0.8
+          }
+        });
+        console.info('🗺️ M1-3D layer:add (user-areas-border)');
+      }
+
+      // Add search areas source + layers
+      if (!map.getSource('search-areas')) {
+        map.addSource('search-areas', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] }
+        });
+        console.info('🗺️ M1-3D source:add (search-areas)');
+      }
+
+      if (!map.getLayer('search-areas-fill')) {
+        map.addLayer({
+          id: 'search-areas-fill',
+          type: 'fill',
+          source: 'search-areas',
+          paint: {
+            'fill-color': 'rgba(255,0,255,0.1)',
+            'fill-opacity': 0.6
+          }
+        });
+        console.info('🗺️ M1-3D layer:add (search-areas-fill)');
+      }
+
+      if (!map.getLayer('search-areas-border')) {
+        map.addLayer({
+          id: 'search-areas-border',
+          type: 'line',
+          source: 'search-areas',
+          paint: {
+            'line-color': '#ff00ff',
+            'line-width': 2,
+            'line-opacity': 0.6
+          }
+        });
+        console.info('🗺️ M1-3D layer:add (search-areas-border)');
+      }
+
+      // Click handlers
+      const handleUserAreaClick = (e: any) => {
+        if (!e.features || e.features.length === 0) return;
+        const feature = e.features[0];
+        const props = feature.properties;
+        const coords = feature.geometry.coordinates[0][0]; // First point of polygon
+        const point = map.project(coords);
         
-        svg += `
-          <circle
-            cx="${center.x}"
-            cy="${center.y}"
-            r="${radiusPixels}"
-            fill="rgba(0,209,255,0.15)"
-            stroke="#00D1FF"
-            stroke-width="3"
-            opacity="0.8"
-            class="interactive buzz-area-glow"
-            data-id="${area.id}"
-            data-type="user"
-            data-label="${(area.label || 'Buzz Area')}"
-            data-radius="${area.radius}"
-            data-lat="${area.lat}"
-            data-lng="${area.lng}"
-            style="pointer-events:auto;cursor:pointer"
-          />
-        `;
-      });
+        setTooltip({
+          id: props.id,
+          type: 'user',
+          label: props.label || 'Buzz Area',
+          radius: props.radiusKm * 1000,
+          screenX: point.x,
+          screenY: point.y,
+          lat: coords[1],
+          lng: coords[0]
+        });
+      };
 
-      // Render search areas
-      searchAreas.forEach(area => {
-        const center = map.project([area.lng, area.lat]);
-        const zoom = map.getZoom();
-        const metersPerPixel = 156543.03392 * Math.cos(area.lat * Math.PI / 180) / Math.pow(2, zoom);
-        const radiusPixels = area.radius / metersPerPixel;
+      const handleSearchAreaClick = (e: any) => {
+        if (!e.features || e.features.length === 0) return;
+        const feature = e.features[0];
+        const props = feature.properties;
+        const coords = feature.geometry.coordinates[0][0];
+        const point = map.project(coords);
         
-        svg += `
-          <circle
-            cx="${center.x}"
-            cy="${center.y}"
-            r="${radiusPixels}"
-            fill="rgba(0,240,255,0.1)"
-            stroke="#00f0ff"
-            stroke-width="2"
-            opacity="0.8"
-            class="interactive search-area-pulse"
-            data-id="${area.id}"
-            data-type="search"
-            data-label="${(area.label || 'Area di ricerca')}"
-            data-radius="${area.radius}"
-            data-lat="${area.lat}"
-            data-lng="${area.lng}"
-            style="pointer-events:auto;cursor:pointer"
-          />
-        `;
-      });
+        setTooltip({
+          id: props.id,
+          type: 'search',
+          label: props.label || 'Search Area',
+          radius: props.radiusKm * 1000,
+          screenX: point.x,
+          screenY: point.y,
+          lat: coords[1],
+          lng: coords[0]
+        });
+      };
 
-      setSvgContent(svg);
+      map.on('click', 'user-areas-fill', handleUserAreaClick);
+      map.on('click', 'search-areas-fill', handleSearchAreaClick);
+
+      // Cursor styling
+      map.on('mouseenter', 'user-areas-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', 'user-areas-fill', () => { map.getCanvas().style.cursor = ''; });
+      map.on('mouseenter', 'search-areas-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', 'search-areas-fill', () => { map.getCanvas().style.cursor = ''; });
+
+      initializedRef.current = true;
     };
 
-    const updateOnRender = () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(updateSVG);
-    };
-
-    updateSVG();
-    map.on('move', updateSVG);
-    map.on('zoom', updateSVG);
-    map.on('resize', updateSVG);
-    map.on('render', updateOnRender);
+    if (map.loaded()) {
+      initLayers();
+    } else {
+      map.once('load', initLayers);
+    }
 
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      map.off('move', updateSVG);
-      map.off('zoom', updateSVG);
-      map.off('resize', updateSVG);
-      map.off('render', updateOnRender);
+      initializedRef.current = false;
     };
-  }, [map, enabled, userAreas, searchAreas]);
+  }, [map, enabled]);
+
+  // Update user areas GeoJSON data
+  useEffect(() => {
+    if (!map || !initializedRef.current) return;
+
+    const source = map.getSource('user-areas') as any;
+    if (!source) return;
+
+    const features = userAreas.map(area => {
+      const radiusKm = area.radius / 1000;
+      const circle = makeCircle(area.lng, area.lat, radiusKm);
+      return {
+        ...circle,
+        properties: {
+          ...circle.properties,
+          id: area.id,
+          label: area.label || 'Buzz Area',
+          radiusKm
+        }
+      };
+    });
+
+    source.setData({ type: 'FeatureCollection', features });
+    console.info('🗺️ M1-3D source:update (user-areas)', { count: features.length });
+  }, [map, userAreas]);
+
+  // Update search areas GeoJSON data
+  useEffect(() => {
+    if (!map || !initializedRef.current) return;
+
+    const source = map.getSource('search-areas') as any;
+    if (!source) return;
+
+    const features = searchAreas.map(area => {
+      const radiusKm = area.radius / 1000;
+      const circle = makeCircle(area.lng, area.lat, radiusKm);
+      return {
+        ...circle,
+        properties: {
+          ...circle.properties,
+          id: area.id,
+          label: area.label || 'Search Area',
+          radiusKm,
+          color: area.color || '#ff00ff'
+        }
+      };
+    });
+
+    source.setData({ type: 'FeatureCollection', features });
+    console.info('🗺️ M1-3D source:update (search-areas)', { count: features.length });
+  }, [map, searchAreas]);
 
   if (!enabled) return null;
 
-  useEffect(() => {
-    const svgEl = svgRef.current as unknown as SVGSVGElement | null;
-    if (!svgEl || !enabled) return;
-
-    const handler = (e: Event) => {
-      const target = e.target as SVGCircleElement | null;
-      if (!target || target.tagName.toLowerCase() !== 'circle') return;
-      const id = target.getAttribute('data-id') || '';
-      const type = (target.getAttribute('data-type') as 'user'|'search') || 'user';
-      const label = target.getAttribute('data-label') || undefined;
-      const radius = parseFloat(target.getAttribute('data-radius') || '0');
-      const lat = parseFloat(target.getAttribute('data-lat') || '0');
-      const lng = parseFloat(target.getAttribute('data-lng') || '0');
-
-      setTooltip({ id, type, label, radius, screenX: (e as any).clientX, screenY: (e as any).clientY, lat, lng });
-    };
-
-    svgEl.addEventListener('click', handler as any, { passive: true } as any);
-    return () => svgEl.removeEventListener('click', handler as any);
-  }, [enabled]);
-
   return (
-    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 640 }}>
-      <svg
-        ref={svgRef as any}
-        className="absolute inset-0"
-        style={{ width: '100%', height: '100%' }}
-        dangerouslySetInnerHTML={{ __html: svgContent }}
-      />
-
+    <>
+      {/* Tooltip */}
       {tooltip && (
         <div
-          className="absolute rounded-xl border border-cyan-500/30 bg-black/80 backdrop-blur-md p-2 text-xs text-white pointer-events-auto"
-          style={{ left: tooltip.screenX + 8, top: tooltip.screenY + 8 }}
+          style={{
+            position: 'absolute',
+            left: tooltip.screenX,
+            top: tooltip.screenY,
+            transform: 'translate(-50%, -120%)',
+            background: 'rgba(0, 0, 0, 0.85)',
+            color: '#fff',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+            zIndex: 100,
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}
         >
-          <div className="font-medium mb-1">
-            {tooltip.type === 'user' ? 'Buzz Area (ultima valida)' : 'Search Area'}
+          <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+            {tooltip.label}
           </div>
-          {tooltip.label && <div className="opacity-80">{tooltip.label}</div>}
-          <div className="opacity-80">Raggio: {(tooltip.radius/1000).toFixed(1)} km</div>
-          <div className="mt-2 flex gap-2">
+          <div style={{ fontSize: '11px', opacity: 0.9 }}>
+            Radius: {Math.round(tooltip.radius / 1000)}km
+          </div>
+          {tooltip.type === 'search' && onDeleteSearchArea && (
             <button
-              className="px-2 py-1 rounded bg-black/60 border border-cyan-500/30 hover:bg-black/80"
               onClick={(e) => {
                 e.stopPropagation();
-                if (!map) return;
-                map.flyTo({ center: [tooltip.lng, tooltip.lat], zoom: Math.max(map.getZoom(), 15), duration: 800 });
+                onDeleteSearchArea(tooltip.id);
                 setTooltip(null);
               }}
+              style={{
+                marginTop: '6px',
+                padding: '4px 8px',
+                background: 'rgba(255, 0, 0, 0.8)',
+                border: 'none',
+                borderRadius: '4px',
+                color: '#fff',
+                fontSize: '10px',
+                cursor: 'pointer',
+                pointerEvents: 'auto'
+              }}
             >
-              Focus
+              Delete
             </button>
-            {tooltip.type === 'search' && onDeleteSearchArea && (
-              <button
-                className="px-2 py-1 rounded border border-red-500/30 text-red-300 hover:bg-red-500/10"
-                onClick={(e) => { e.stopPropagation(); onDeleteSearchArea(tooltip.id); setTooltip(null); }}
-              >
-                Elimina
-              </button>
-            )}
-            <button
-              className="px-2 py-1 rounded border border-white/10 opacity-70 hover:opacity-100"
-              onClick={(e) => { e.stopPropagation(); setTooltip(null); }}
-            >
-              Chiudi
-            </button>
-          </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 };
 
