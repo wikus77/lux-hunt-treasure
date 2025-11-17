@@ -10,6 +10,8 @@ interface Area {
   radius: number;
   label?: string;
   color?: string;
+  level?: number;
+  radius_km?: number;
 }
 
 interface AreasLayer3DProps {
@@ -27,7 +29,18 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
   searchAreas = [],
   onDeleteSearchArea
 }) => {
-  const [tooltip, setTooltip] = useState<null | { id: string; type: 'user'|'search'; label?: string; radius: number; screenX: number; screenY: number; lat: number; lng: number }>(null);
+  const [tooltip, setTooltip] = useState<null | { 
+    id: string; 
+    type: 'user'|'search'; 
+    label?: string; 
+    radius: number; 
+    level?: number;
+    radius_km?: number;
+    screenX: number; 
+    screenY: number; 
+    lat: number; 
+    lng: number 
+  }>(null);
   const rafRef = useRef<number | null>(null);
   const initializedRef = useRef(false);
 
@@ -160,11 +173,19 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
         const coords = feature.geometry.coordinates[0][0]; // First point of polygon
         const point = map.project(coords);
         
+        console.info('🗺️ M1-3D tooltip:update (user-area clicked)', {
+          id: props.id,
+          level: props.level,
+          radius_km: props.radius_km
+        });
+        
         setTooltip({
           id: props.id,
           type: 'user',
           label: props.label || 'Buzz Area',
           radius: props.radiusKm * 1000,
+          level: props.level,
+          radius_km: props.radius_km,
           screenX: point.x,
           screenY: point.y,
           lat: coords[1],
@@ -234,6 +255,7 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
       const radiusKm = area.radius / 1000;
       console.info('🗺️ M1-3D source:update (user-areas) processing area', {
         id: area.id,
+        level: area.level,
         radiusKm,
         radius_m: area.radius,
         center: [area.lat, area.lng]
@@ -245,7 +267,9 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
           ...circle.properties,
           id: area.id,
           label: area.label || 'Buzz Area',
-          radiusKm
+          radiusKm,
+          level: area.level,
+          radius_km: area.radius_km
         }
       };
     });
@@ -304,12 +328,20 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
             border: '1px solid rgba(255, 255, 255, 0.2)'
           }}
         >
-          <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-            {tooltip.label}
-          </div>
-          <div style={{ fontSize: '11px', opacity: 0.9 }}>
-            Radius: {Math.round(tooltip.radius / 1000)}km
-          </div>
+          {tooltip.type === 'user' && tooltip.level !== undefined && tooltip.radius_km !== undefined ? (
+            <div style={{ fontWeight: 'bold' }}>
+              Livello {tooltip.level} · {Math.round(tooltip.radius_km)} km
+            </div>
+          ) : (
+            <>
+              <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                {tooltip.label}
+              </div>
+              <div style={{ fontSize: '11px', opacity: 0.9 }}>
+                Radius: {Math.round(tooltip.radius / 1000)}km
+              </div>
+            </>
+          )}
           {tooltip.type === 'search' && onDeleteSearchArea && (
             <button
               onClick={(e) => {

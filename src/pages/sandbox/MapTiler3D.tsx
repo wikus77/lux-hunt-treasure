@@ -153,7 +153,7 @@ export default function MapTiler3D() {
   
   // Rewards (indizi) live from Supabase when authenticated
   type RewardMarkerMinimal = { id: string; lat: number; lng: number; title?: string };
-  const { isAuthenticated } = useUnifiedAuth();
+  const { isAuthenticated, user } = useUnifiedAuth();
   const [rewardMarkersLive, setRewardMarkersLive] = useState<RewardMarkerMinimal[]>([]);
 
   useEffect(() => {
@@ -431,6 +431,89 @@ export default function MapTiler3D() {
     });
   };
 
+  // 🔥 BUZZ MAP FIX: Realtime listener for user_map_areas INSERT
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const currentWeek = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+    
+    console.info('🗺️ M1-3D: Setting up realtime listener for user_map_areas', {
+      userId: user.id,
+      currentWeek
+    });
+
+    const channel = supabase
+      .channel('map3d_user_areas_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_map_areas',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          const newArea = payload.new as any;
+          
+          // Only process BUZZ areas from current week
+          if (newArea.source === 'buzz_map' && newArea.week === currentWeek) {
+            console.info('🗺️ M1-3D latestArea (realtime INSERT)', {
+              id: newArea.id,
+              level: newArea.level,
+              radius_km: newArea.radius_km,
+              center: [newArea.center_lat, newArea.center_lng],
+              week: newArea.week
+            });
+
+            // Reload areas from DB
+            reloadAreas();
+
+            // Auto-fit bounds to show the new circle border
+            if (mapRef.current) {
+              const map = mapRef.current;
+              setTimeout(() => {
+                const radiusMeters = newArea.radius_km * 1000;
+                const latDeltaDeg = radiusMeters / 111320;
+                const lngDeltaDeg = radiusMeters / (111320 * Math.cos(newArea.center_lat * Math.PI / 180));
+                
+                const bbox: [[number, number], [number, number]] = [
+                  [newArea.center_lng - lngDeltaDeg, newArea.center_lat - latDeltaDeg],
+                  [newArea.center_lng + lngDeltaDeg, newArea.center_lat + latDeltaDeg]
+                ];
+                
+                const maxZoom = newArea.radius_km > 150 ? 6 : (newArea.radius_km > 80 ? 8 : 10);
+                console.info('🗺️ M1-3D fitBounds (realtime)', { 
+                  bbox, 
+                  radiusKm: newArea.radius_km, 
+                  center: [newArea.center_lat, newArea.center_lng],
+                  maxZoom
+                });
+                
+                map.fitBounds(bbox, {
+                  padding: 80,
+                  maxZoom,
+                  duration: 800
+                });
+              }, 300);
+            }
+
+            // Dispatch event for other components
+            window.dispatchEvent(new CustomEvent('buzzAreaCreated', { 
+              detail: newArea 
+            }));
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.info('🗺️ M1-3D realtime channel status:', status);
+      });
+
+    return () => {
+      console.info('🗺️ M1-3D: Cleaning up realtime listener');
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, reloadAreas]);
+
   useEffect(() => {
     console.log('🌃 MapTiler3D component mounted');
     return () => console.log('🌃 MapTiler3D component unmounting');
@@ -551,6 +634,13 @@ export default function MapTiler3D() {
 
       map.on('load', () => {
         console.log('✅ MapLibre loaded');
+
+        // 🔍 M1-3D DEBUG: Expose map object for console verification
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('debug')) {
+          (window as any).M1_MAP = map;
+          console.info('🗺️ M1-3D map exposed → window.M1_MAP (debug mode)');
+        }
 
         const loadedStyle = map.getStyle();
         const hasExtrusionLayer = loadedStyle?.layers?.some(
