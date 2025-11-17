@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getBuzzMapPricing } from "@/lib/buzzMapPricing";
 import { getBuzzMapCostM1U } from "@/lib/constants/buzzMapPricingM1U";
+import { getCurrentWeekOfYear } from "@/lib/weekUtils";
 
 export function useBuzzMapPricingNew(userId?: string) {
   const [loading, setLoading] = useState(true);
@@ -38,13 +39,17 @@ export function useBuzzMapPricingNew(userId?: string) {
         }
 
         const currentUserId = userId || session.user.id;
+        
+        // 🔄 WEEKLY COUNTER: Get current ISO week and count only this week's areas
+        const currentWeek = getCurrentWeekOfYear();
 
-        // Count current user map areas with buzz_map source
+        // Count current user map areas with buzz_map source FOR CURRENT WEEK ONLY
         const { count, error: countError } = await supabase
           .from("user_map_areas")
           .select("id", { count: "exact", head: true })
           .eq("user_id", currentUserId)
-          .eq("source", "buzz_map");
+          .eq("source", "buzz_map")
+          .eq("week", currentWeek);
 
         if (countError) {
           console.error("Error counting user map areas:", countError);
@@ -75,7 +80,8 @@ export function useBuzzMapPricingNew(userId?: string) {
           setCostM1U(costM1U);
           setDisabled(false);
           
-          console.debug('Buzz map pricing calculated:', {
+          console.debug('🗓️ Buzz map pricing calculated (WEEKLY):', {
+            currentWeek,
             currentCount,
             levelNext,
             radiusKm: pricingData.radiusKm,
