@@ -131,17 +131,29 @@ export const useBuzzMapLogic = () => {
 
       // Transform user areas for display with PROPER RADIUS LOGGING (WEEKLY FILTERED)
       const transformedAreas: BuzzMapArea[] = userAreas.map((area, index) => {
-        console.log(`🗺️ BUZZ AREA (Week ${area.week}): Area ${area.id} - level: ${area.level}, radius_km: ${area.radius_km}, lat: ${area.lat}, lng: ${area.lng}`);
+        // 🔥 FIX: Safe coordinate fallback for center_lat/center_lng vs lat/lng
+        const lat = area.center_lat ?? area.lat;
+        const lng = area.center_lng ?? area.lng;
+        
+        // ⚠️ Log warning if using fallback coordinates
+        if ((area.lat === null || area.lat === undefined) && area.center_lat !== null && area.center_lat !== undefined) {
+          console.warn(`⚠️ BUZZ AREA ${area.id}: Using fallback center_lat (${area.center_lat}) because lat is ${area.lat}`);
+        }
+        if ((area.lng === null || area.lng === undefined) && area.center_lng !== null && area.center_lng !== undefined) {
+          console.warn(`⚠️ BUZZ AREA ${area.id}: Using fallback center_lng (${area.center_lng}) because lng is ${area.lng}`);
+        }
+        
+        console.log(`🗺️ BUZZ AREA (Week ${area.week}): Area ${area.id} - level: ${area.level}, radius_km: ${area.radius_km}, lat: ${lat}, lng: ${lng}`);
         
         // 🚨 REMOVED: No duplicate toast here - only from edge function after payment
         
         return {
           id: area.id,
-          lat: area.lat,
-          lng: area.lng,
+          lat,
+          lng,
           radius_km: area.radius_km,
           level: area.level, // 🔍 M1-3D VERIFY: Track level from DB
-          coordinates: { lat: area.lat, lng: area.lng },
+          coordinates: { lat, lng },
           radius: area.radius_km * 1000, // Convert to meters for map display
           color: '#00FFFF',
           colorName: 'cyan',
