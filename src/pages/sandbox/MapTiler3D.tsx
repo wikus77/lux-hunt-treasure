@@ -457,35 +457,40 @@ export default function MapTiler3D() {
           
           // Only process BUZZ areas from current week
           if (newArea.source === 'buzz_map' && newArea.week === currentWeek) {
+            // 🔥 FIX: Safe coordinate fallback for center_lat/center_lng vs lat/lng
+            const lat = newArea.center_lat ?? newArea.lat;
+            const lng = newArea.center_lng ?? newArea.lng;
+            
             console.info('🗺️ M1-3D latestArea (realtime INSERT)', {
               id: newArea.id,
               level: newArea.level,
               radius_km: newArea.radius_km,
-              center: [newArea.center_lat, newArea.center_lng],
-              week: newArea.week
+              center: [lat, lng],
+              week: newArea.week,
+              usedFallback: (newArea.center_lat === null || newArea.center_lat === undefined) && lat !== null
             });
 
             // Reload areas from DB
             reloadAreas();
 
             // Auto-fit bounds to show the new circle border
-            if (mapRef.current) {
+            if (mapRef.current && lat && lng) {
               const map = mapRef.current;
               setTimeout(() => {
                 const radiusMeters = newArea.radius_km * 1000;
                 const latDeltaDeg = radiusMeters / 111320;
-                const lngDeltaDeg = radiusMeters / (111320 * Math.cos(newArea.center_lat * Math.PI / 180));
+                const lngDeltaDeg = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
                 
                 const bbox: [[number, number], [number, number]] = [
-                  [newArea.center_lng - lngDeltaDeg, newArea.center_lat - latDeltaDeg],
-                  [newArea.center_lng + lngDeltaDeg, newArea.center_lat + latDeltaDeg]
+                  [lng - lngDeltaDeg, lat - latDeltaDeg],
+                  [lng + lngDeltaDeg, lat + latDeltaDeg]
                 ];
                 
                 const maxZoom = newArea.radius_km > 150 ? 6 : (newArea.radius_km > 80 ? 8 : 10);
                 console.info('🗺️ M1-3D fitBounds (realtime)', { 
                   bbox, 
                   radiusKm: newArea.radius_km, 
-                  center: [newArea.center_lat, newArea.center_lng],
+                  center: [lat, lng],
                   maxZoom
                 });
                 
@@ -499,7 +504,7 @@ export default function MapTiler3D() {
 
             // Dispatch event for other components
             window.dispatchEvent(new CustomEvent('buzzAreaCreated', { 
-              detail: newArea 
+              detail: { ...newArea, lat, lng } 
             }));
           }
         }
