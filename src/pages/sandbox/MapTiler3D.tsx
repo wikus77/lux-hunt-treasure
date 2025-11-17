@@ -24,6 +24,7 @@ import PortalsLayer3D from './map3d/layers/PortalsLayer3D';
 import RewardsLayer3D from './map3d/layers/RewardsLayer3D';
 import AreasLayer3D from './map3d/layers/AreasLayer3D';
 import BuzzDiagnosticPanel from './map3d/components/BuzzDiagnosticPanel';
+import BuzzDebugBadge from './map3d/components/BuzzDebugBadge';
 import NotesLayer3D from './map3d/layers/NotesLayer3D';
 import LayerTogglePanel from './map3d/components/LayerTogglePanel';
 import '@/styles/map-dock.css';
@@ -287,11 +288,12 @@ export default function MapTiler3D() {
                   [lng + lngDeltaDeg, lat + latDeltaDeg]
                 ];
 
-                console.info('🗺️ M1-3D fitBounds (realtime)', { bbox });
+                console.info('🗺️ M1-3D fitBounds (realtime)', { bbox, radius_km: radiusKm });
 
+                const maxZoom = radiusKm > 150 ? 6 : (radiusKm > 80 ? 8 : 10);
                 map.fitBounds(bbox, {
                   padding: 80,
-                  maxZoom: 13,
+                  maxZoom,
                   duration: 800
                 });
               }, 400);
@@ -321,14 +323,31 @@ export default function MapTiler3D() {
   // Use ONLY live agents; never fallback to dev ones here
   const effectiveAgents = (liveAgents && liveAgents.length > 0) ? liveAgents : [];
   const effectiveRewardMarkers = DEV_MOCKS ? devMocks.rewards : rewardMarkersLive;
-  const effectiveUserAreas = DEV_MOCKS 
-    ? devMocks.userAreas
+  
+  // 🔍 M1-3D VERIFY: Extended area type with debug fields
+  type AreaWithDebug = { id: string; lat: number; lng: number; radius: number; level?: number; radius_km: number };
+  const effectiveUserAreas: AreaWithDebug[] = DEV_MOCKS 
+    ? (devMocks.userAreas as any)
     : currentWeekAreas?.length 
-      ? currentWeekAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius_km * 1000 }))
+      ? currentWeekAreas.map(a => ({ 
+          id: a.id, lat: a.lat, lng: a.lng, 
+          radius: a.radius_km * 1000, level: a.level, radius_km: a.radius_km 
+        }))
       : [];
   
   // 🎯 BUZZ MAP FIX: Show only the most recent area to prevent cumulative glow
   const filteredUserAreas = effectiveUserAreas.length > 0 ? [effectiveUserAreas[0]] : [];
+  const latestArea: AreaWithDebug | null = effectiveUserAreas[0] || null;
+  
+  // 🔍 M1-3D VERIFY: Log latest area
+  useEffect(() => {
+    if (latestArea) {
+      console.info('🗺️ M1-3D latestArea (UI)', {
+        id: latestArea.id, level: latestArea.level, radius_km: latestArea.radius_km,
+        radius_m: latestArea.radius, center: [latestArea.lat, latestArea.lng]
+      });
+    }
+  }, [latestArea?.id, latestArea?.radius_km]);
   
   // Always use hook-managed search areas (DB/local), never static dev seeds
   const effectiveSearchAreas = searchAreas?.length
@@ -365,7 +384,7 @@ export default function MapTiler3D() {
   
   const handleAreaGenerated = (lat: number, lng: number, radiusMeters: number) => {
     const radiusKm = radiusMeters / 1000;
-    console.info('🗺️ M1-3D onAreaGenerated', { lat, lng, radiusKm });
+    console.info('🗺️ M1-3D onAreaGenerated', { lat, lng, radiusKm, radiusMeters });
     reloadAreas();
     
     // Auto-fit bounds to show the circle border
@@ -375,12 +394,17 @@ export default function MapTiler3D() {
         const latDeltaDeg = radiusMeters / 111320;
         const lngDeltaDeg = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
         
-        map.fitBounds([
+        const bbox: [[number, number], [number, number]] = [
           [lng - lngDeltaDeg, lat - latDeltaDeg],
           [lng + lngDeltaDeg, lat + latDeltaDeg]
-        ], {
+        ];
+        
+        console.info('🗺️ M1-3D fitBounds (onAreaGenerated)', { bbox, radiusKm, center: [lat, lng] });
+        
+        const maxZoom = radiusKm > 150 ? 6 : (radiusKm > 80 ? 8 : 10);
+        map.fitBounds(bbox, {
           padding: 80,
-          maxZoom: 13,
+          maxZoom,
           duration: 800
         });
       }, 300); // Wait for reloadAreas to complete
@@ -1064,6 +1088,9 @@ export default function MapTiler3D() {
       >
         <BottomNavigation />
       </div>
+
+      {/* BUZZ Debug Badge (verify mode) */}
+      <BuzzDebugBadge latestArea={latestArea} />
 
       {/* Debug Panel (only if enabled) */}
       {debugEnabled && <DebugMapPanel />}
