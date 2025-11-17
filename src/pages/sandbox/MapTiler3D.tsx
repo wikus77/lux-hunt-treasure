@@ -1056,6 +1056,9 @@ export default function MapTiler3D() {
 
       {/* Debug Panel (only if enabled) */}
       {debugEnabled && <DebugMapPanel />}
+
+      {/* BUZZ Diagnostic Panel (dev-only) */}
+      <BuzzDiagnosticPanel />
     </>
   );
 }
