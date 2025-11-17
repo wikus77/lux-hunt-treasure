@@ -233,7 +233,76 @@ export default function MapTiler3D() {
     }
   }, [geoStatus, enableGeo]);
   
-  // 🔔 Realtime: Auto-fit bounds on new BUZZ area INSERT
+  // 🔥 Realtime: Watch for new areas (INSERT) to refresh UI + emit event
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`map_areas_realtime_${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_map_areas',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('🔔 Realtime: New area inserted', payload);
+          if (payload.new?.source === 'buzz_map') {
+            const newArea = payload.new;
+            console.info('🗺️ M1-3D latestArea (realtime)', {
+              id: newArea.id,
+              level: newArea.level,
+              radius_km: newArea.radius_km,
+              center: [newArea.center_lat || newArea.lat, newArea.center_lng || newArea.lng]
+            });
+            
+            reloadAreas();
+            
+            // Auto-fit bounds to new area
+            if (mapRef.current && newArea.radius_km) {
+              const lat = newArea.center_lat || newArea.lat;
+              const lng = newArea.center_lng || newArea.lng;
+              const radiusMeters = newArea.radius_km * 1000;
+              
+              setTimeout(() => {
+                const latDeltaDeg = radiusMeters / 111320;
+                const lngDeltaDeg = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
+                
+                const bbox: [[number, number], [number, number]] = [
+                  [lng - lngDeltaDeg, lat - latDeltaDeg],
+                  [lng + lngDeltaDeg, lat + latDeltaDeg]
+                ];
+                
+                console.info('🗺️ M1-3D fitBounds (realtime)', { 
+                  bbox, 
+                  radius_km: newArea.radius_km,
+                  center: [lat, lng]
+                });
+                
+                const maxZoom = newArea.radius_km > 150 ? 6 : (newArea.radius_km > 80 ? 8 : 10);
+                
+                mapRef.current?.fitBounds(bbox, {
+                  padding: 80,
+                  maxZoom,
+                  duration: 800
+                });
+              }, 500);
+            }
+            
+            window.dispatchEvent(new CustomEvent('buzzAreaCreated', { 
+              detail: newArea 
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, reloadAreas]);
   useEffect(() => {
     if (!isAuthenticated) return;
 
