@@ -22,6 +22,7 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
   const { rewards } = useMarkerRewards(selectedMarker);
+  const rafRef = React.useRef<number | null>(null);
 
   useEffect(() => {
     if (!map || !enabled) return;
@@ -35,15 +36,23 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
       setPositions(newPositions);
     };
 
+    const updateOnRender = () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(updatePositions);
+    };
+
     updatePositions();
     map.on('move', updatePositions);
     map.on('zoom', updatePositions);
     map.on('resize', updatePositions);
+    map.on('render', updateOnRender);
 
     return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       map.off('move', updatePositions);
       map.off('zoom', updatePositions);
       map.off('resize', updatePositions);
+      map.off('render', updateOnRender);
     };
   }, [map, markers, enabled]);
 

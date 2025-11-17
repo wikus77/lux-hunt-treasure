@@ -29,6 +29,45 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
   const [svgContent, setSvgContent] = useState<string>('');
   const [tooltip, setTooltip] = useState<null | { id: string; type: 'user'|'search'; label?: string; radius: number; screenX: number; screenY: number; lat: number; lng: number }>(null);
   const svgRef = useRef<SVGSVGElement | null>(null as any);
+  const rafRef = useRef<number | null>(null);
+
+  // Reset tooltip when userAreas changes or buzzAreaCreated event fires
+  useEffect(() => {
+    setTooltip(null);
+  }, [userAreas]);
+
+  useEffect(() => {
+    const handleBuzzCreated = () => {
+      setTooltip(null);
+    };
+    window.addEventListener('buzzAreaCreated', handleBuzzCreated);
+    return () => window.removeEventListener('buzzAreaCreated', handleBuzzCreated);
+  }, []);
+
+  // Update tooltip position using map.project when tooltip is open
+  useEffect(() => {
+    if (!map || !tooltip) return;
+
+    const updateTooltipPosition = () => {
+      const point = map.project([tooltip.lng, tooltip.lat]);
+      setTooltip(prev => prev ? { ...prev, screenX: point.x, screenY: point.y } : null);
+    };
+
+    updateTooltipPosition();
+    map.on('move', updateTooltipPosition);
+    map.on('zoom', updateTooltipPosition);
+    map.on('rotate', updateTooltipPosition);
+    map.on('pitch', updateTooltipPosition);
+    map.on('render', updateTooltipPosition);
+
+    return () => {
+      map.off('move', updateTooltipPosition);
+      map.off('zoom', updateTooltipPosition);
+      map.off('rotate', updateTooltipPosition);
+      map.off('pitch', updateTooltipPosition);
+      map.off('render', updateTooltipPosition);
+    };
+  }, [map, tooltip?.lat, tooltip?.lng]);
 
   useEffect(() => {
     if (!map || !enabled) return;
@@ -99,15 +138,23 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
       setSvgContent(svg);
     };
 
+    const updateOnRender = () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(updateSVG);
+    };
+
     updateSVG();
     map.on('move', updateSVG);
     map.on('zoom', updateSVG);
     map.on('resize', updateSVG);
+    map.on('render', updateOnRender);
 
     return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       map.off('move', updateSVG);
       map.off('zoom', updateSVG);
       map.off('resize', updateSVG);
+      map.off('render', updateOnRender);
     };
   }, [map, enabled, userAreas, searchAreas]);
 
