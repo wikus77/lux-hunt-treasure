@@ -106,36 +106,51 @@ export function useBuzzMapPricingNew(userId?: string) {
 
   // 🔥 REALTIME: Subscribe to user_map_areas INSERT for current week to refresh pricing
   useEffect(() => {
-    if (!userId) return;
+    let mounted = true;
+    let channel: any;
 
-    const currentWeek = getCurrentWeekOfYear();
-    
-    console.log('🔔 useBuzzMapPricingNew: Setting up realtime subscription for user:', userId);
-    
-    const channel = supabase
-      .channel('buzz_map_pricing_updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'user_map_areas',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          console.log('🔔 useBuzzMapPricingNew: New area inserted, checking week:', payload);
-          // Only refresh if it's a buzz_map area for current week
-          if (payload.new?.source === 'buzz_map' && payload.new?.week === currentWeek) {
-            console.log('✅ useBuzzMapPricingNew: Relevant area for current week, refreshing pricing');
-            calculateNextLevel();
+    const setup = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = userId || session?.user?.id;
+      if (!uid || !mounted) {
+        console.warn('useBuzzMapPricingNew: realtime not started — no user id');
+        return;
+      }
+
+      const currentWeek = getCurrentWeekOfYear();
+
+      console.log('🔔 useBuzzMapPricingNew: Subscribing for user:', uid);
+
+      channel = supabase
+        .channel(`buzz_map_pricing_updates_${uid}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'user_map_areas',
+            filter: `user_id=eq.${uid}`
+          },
+          (payload) => {
+            console.log('🔔 useBuzzMapPricingNew: New area inserted, checking week:', payload);
+            // Only refresh if it's a buzz_map area for current week
+            if (payload.new?.source === 'buzz_map' && payload.new?.week === currentWeek) {
+              console.log('✅ useBuzzMapPricingNew: Relevant area for current week, refreshing pricing');
+              calculateNextLevel();
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    };
+
+    setup();
 
     return () => {
-      console.log('🔔 useBuzzMapPricingNew: Unsubscribing from realtime');
-      channel.unsubscribe();
+      mounted = false;
+      if (channel) {
+        console.log('🔔 useBuzzMapPricingNew: Unsubscribing from realtime');
+        supabase.removeChannel(channel);
+      }
     };
   }, [userId, calculateNextLevel]);
 
