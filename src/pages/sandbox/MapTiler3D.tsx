@@ -23,6 +23,7 @@ import AgentsLayer3D from './map3d/layers/AgentsLayer3D';
 import PortalsLayer3D from './map3d/layers/PortalsLayer3D';
 import RewardsLayer3D from './map3d/layers/RewardsLayer3D';
 import AreasLayer3D from './map3d/layers/AreasLayer3D';
+import BuzzDiagnosticPanel from './map3d/components/BuzzDiagnosticPanel';
 import NotesLayer3D from './map3d/layers/NotesLayer3D';
 import LayerTogglePanel from './map3d/components/LayerTogglePanel';
 import '@/styles/map-dock.css';
