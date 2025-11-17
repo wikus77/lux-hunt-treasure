@@ -29,6 +29,22 @@ export function makeCircle(
   radiusKm: number,
   steps: number = 128
 ): CircleFeature {
+  // Guard: validate radius
+  if (!Number.isFinite(radiusKm) || radiusKm <= 0) {
+    console.warn('🗺️ M1-3D guard: invalid radiusKm', { radiusKm, centerLng, centerLat });
+    return {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[]]
+      },
+      properties: {
+        center: [centerLng, centerLat],
+        radiusKm: 0
+      }
+    };
+  }
+
   const coords: number[][] = [];
   const distRatio = radiusKm / EARTH_RADIUS_KM;
   const centerLatRad = (centerLat * Math.PI) / 180;

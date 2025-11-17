@@ -324,11 +324,32 @@ export default function MapTiler3D() {
   const effectiveUserAreas = DEV_MOCKS 
     ? devMocks.userAreas
     : currentWeekAreas?.length 
-      ? currentWeekAreas.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius: a.radius_km * 1000 }))
+      ? currentWeekAreas.map(a => ({ 
+          id: a.id, 
+          lat: a.lat, 
+          lng: a.lng, 
+          radius: a.radius_km * 1000,
+          level: a.level,
+          radius_km: a.radius_km 
+        }))
       : [];
   
   // 🎯 BUZZ MAP FIX: Show only the most recent area to prevent cumulative glow
   const filteredUserAreas = effectiveUserAreas.length > 0 ? [effectiveUserAreas[0]] : [];
+  
+  // 🔍 M1-3D VERIFY: Log latest area for debugging
+  const latestArea = effectiveUserAreas.length > 0 ? effectiveUserAreas[0] : null;
+  useEffect(() => {
+    if (latestArea) {
+      console.info('🗺️ M1-3D latestArea', {
+        id: latestArea.id,
+        level: latestArea.level,
+        radius_km: latestArea.radius_km,
+        radius_m: latestArea.radius,
+        center: [latestArea.lat, latestArea.lng]
+      });
+    }
+  }, [latestArea?.id, latestArea?.radius_km]);
   
   // Always use hook-managed search areas (DB/local), never static dev seeds
   const effectiveSearchAreas = searchAreas?.length
@@ -365,7 +386,7 @@ export default function MapTiler3D() {
   
   const handleAreaGenerated = (lat: number, lng: number, radiusMeters: number) => {
     const radiusKm = radiusMeters / 1000;
-    console.info('🗺️ M1-3D onAreaGenerated', { lat, lng, radiusKm });
+    console.info('🗺️ M1-3D onAreaGenerated', { lat, lng, radiusKm, radiusMeters });
     reloadAreas();
     
     // Auto-fit bounds to show the circle border
@@ -375,12 +396,23 @@ export default function MapTiler3D() {
         const latDeltaDeg = radiusMeters / 111320;
         const lngDeltaDeg = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
         
-        map.fitBounds([
+        const bbox: [[number, number], [number, number]] = [
           [lng - lngDeltaDeg, lat - latDeltaDeg],
           [lng + lngDeltaDeg, lat + latDeltaDeg]
-        ], {
+        ];
+        
+        console.info('🗺️ M1-3D fitBounds', { 
+          bbox, 
+          radiusKm,
+          center: [lat, lng]
+        });
+        
+        // Adjust maxZoom based on radius
+        const maxZoom = radiusKm > 150 ? 6 : (radiusKm > 80 ? 8 : 10);
+        
+        map.fitBounds(bbox, {
           padding: 80,
-          maxZoom: 13,
+          maxZoom,
           duration: 800
         });
       }, 300); // Wait for reloadAreas to complete
@@ -1067,6 +1099,9 @@ export default function MapTiler3D() {
 
       {/* Debug Panel (only if enabled) */}
       {debugEnabled && <DebugMapPanel />}
+
+      {/* BUZZ Debug Badge (verify mode) */}
+      <BuzzDebugBadge latestArea={latestArea} />
 
       {/* BUZZ Diagnostic Panel (dev-only) */}
       <BuzzDiagnosticPanel />
