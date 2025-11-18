@@ -657,7 +657,35 @@ export default function MapTiler3D() {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('debug')) {
           (window as any).M1_MAP = map;
+          (window as any).supabase = supabase;
           console.info('🗺️ M1-3D map exposed → window.M1_MAP (debug mode)');
+          console.info('🗺️ M1-3D supabase exposed → window.supabase (debug mode)');
+          
+          // 🔧 Debug helper: hide any layer by ID
+          (window as any).__hideLayer = (id: string) => {
+            if (map.getLayer(id)) {
+              map.setLayoutProperty(id, 'visibility', 'none');
+              console.info(`🔧 Layer hidden: ${id}`);
+            } else {
+              console.warn(`🔧 Layer not found: ${id}`);
+            }
+          };
+          
+          // 🔧 Debug helper: identify what's drawn at a point
+          (window as any).__whoDrawsHere = (lng: number, lat: number) => {
+            const point = map.project([lng, lat]);
+            const features = map.queryRenderedFeatures(point);
+            console.table(features.map(f => ({
+              layer: f.layer.id,
+              source: f.source,
+              sourceLayer: f.sourceLayer,
+              type: f.geometry.type,
+              properties: JSON.stringify(f.properties)
+            })));
+            return features;
+          };
+          
+          console.info('🔧 Debug helpers ready: __hideLayer(id), __whoDrawsHere(lng,lat)');
         }
 
         const loadedStyle = map.getStyle();
