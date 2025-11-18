@@ -20,6 +20,7 @@ interface AreasLayer3DProps {
   userAreas?: Area[];
   searchAreas?: Area[];
   onDeleteSearchArea?: (id: string) => void;
+  currentAreaVersion?: string; // 🔥 NEW: Stable version key from parent
 }
 
 const AreasLayer3D: React.FC<AreasLayer3DProps> = ({ 
@@ -27,7 +28,8 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
   enabled, 
   userAreas = [], 
   searchAreas = [],
-  onDeleteSearchArea
+  onDeleteSearchArea,
+  currentAreaVersion = 'none'
 }) => {
   const [tooltip, setTooltip] = useState<null | { 
     id: string; 
@@ -262,11 +264,6 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
     };
   }, [map, enabled]);
 
-  // 🔥 FIX: Stable version key to force update on DB CURRENT changes
-  const currentAreaVersion = userAreas.length > 0 
-    ? `${userAreas[0].id}|${userAreas[0].level}|${userAreas[0].radius_km}`
-    : 'none';
-
   // Update user areas GeoJSON data
   useEffect(() => {
     if (!map || !initializedRef.current) {
@@ -335,20 +332,30 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
             ...circle.properties,
             id: area.id,
             label: area.label || 'Buzz Area',
-            radiusKm,
-            radius_km: radiusKm,
+            radiusKm, // 🔥 Alias for compatibility
+            radius_km: radiusKm, // 🔥 DB field name
+            radiusMeters: radiusMeters, // 🔥 Derived value
             level: area.level
           }
         };
       })
       .filter(feature => feature !== null);
 
-    // 🔥 CRITICAL: Log before setData with detailed info
+    // 🔥 CRITICAL: Log props BEFORE setData
     if (features.length > 0) {
-      console.info('🗺️ M1-3D setData props (user-areas)', features[0]?.properties);
+      console.info('🗺️ M1-3D setData props (user-areas)', {
+        level: features[0]?.properties?.level,
+        radius_km: features[0]?.properties?.radius_km,
+        radiusKm: features[0]?.properties?.radiusKm
+      });
+    }
+    
+    source.setData({ type: 'FeatureCollection', features });
+    
+    // Log AFTER setData
+    if (features.length > 0) {
       console.info('🗺️ M1-3D setData called (user-areas)', { 
-        featureCount: features.length,
-        props: features[0]?.properties 
+        featureCount: features.length
       });
     } else {
       console.info('🗺️ M1-3D setData called (user-areas) — CLEARED (0 features)');
@@ -372,19 +379,8 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
       }
     }
     
-    // 🔥 CRITICAL: Clear source if no valid features to prevent "zombie circles"
-    if (features.length === 0) {
-      console.info('🗺️ M1-3D clearing user-areas source (no valid features)');
-      source.setData({ type: 'FeatureCollection', features: [] });
-      
-      // 🧹 Hide any DOM overlays when user-areas is empty (debug only)
-      if (import.meta.env.DEV || new URLSearchParams(window.location.search).get('debug')) {
-        (window as any).__killOverlay?.();
-      }
-    } else {
-      source.setData({ type: 'FeatureCollection', features });
-      
-      // 🔥 CRITICAL: Force user-areas layers to top after update
+    // 🔥 CRITICAL: Move user-areas layers to top (always on top)
+    if (features.length > 0) {
       try {
         if (map.getLayer('user-areas-fill')) {
           map.moveLayer('user-areas-fill');
@@ -397,7 +393,7 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
         console.warn('Failed to move user-areas layers:', e);
       }
     }
-  }, [map, currentAreaVersion, initializedRef.current]); // 🔥 FIX: Use version key instead of userAreas
+  }, [map, currentAreaVersion]); // 🔥 CRITICAL: Depend on currentAreaVersion from parent
 
   // Update search areas GeoJSON data
   useEffect(() => {
