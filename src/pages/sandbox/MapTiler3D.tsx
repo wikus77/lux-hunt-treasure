@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import maplibregl, { Map as MLMap } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import neonStyleTemplate from '../map/styles/m1_neon_style_FULL_3D.json';
@@ -358,6 +358,12 @@ export default function MapTiler3D() {
   const filteredUserAreas = effectiveUserAreas.length > 0 ? [effectiveUserAreas[0]] : [];
   const latestArea: AreaWithDebug | null = effectiveUserAreas[0] || null;
   
+  // 🔥 CRITICAL: Calculate stable currentAreaVersion for AreasLayer3D deps
+  const currentAreaVersion = useMemo(() => {
+    if (!latestArea) return 'none';
+    return `${latestArea.id}|${latestArea.level}|${latestArea.radius_km}`;
+  }, [latestArea?.id, latestArea?.level, latestArea?.radius_km]);
+  
   // 🔍 M1-3D VERIFY: Log latest area (UI selected)
   useEffect(() => {
     if (latestArea) {
@@ -655,7 +661,7 @@ export default function MapTiler3D() {
         console.log('✅ MapLibre loaded');
         
         // 🔧 Cache bust verification
-        const buildId = import.meta.env.VITE_PWA_VERSION || import.meta.env.MODE || 'dev';
+        const buildId = import.meta.env.VITE_BUILD_ID || import.meta.env.VITE_PWA_VERSION || 'unknown';
         console.info('🔧 M1-3D BUILD_ID:', buildId);
 
         // 🔍 M1-3D DEBUG: Expose map object for console verification
@@ -668,6 +674,16 @@ export default function MapTiler3D() {
           (window as any).supabase = supabase;
           console.info('🗺️ M1-3D map exposed → window.M1_MAP (debug mode)');
           console.info('🗺️ M1-3D supabase exposed → window.supabase (debug mode)');
+          
+          // 🔧 Debug Helper: Bypass Service Worker (manual call only)
+          (window as any).__bypassSW = () => {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(regs => {
+                regs.forEach(reg => reg.unregister());
+                console.log('🔧 SW unregistered. Reload page for fresh cache.');
+              });
+            }
+          };
           
           // 🔧 Debug helper: hide any layer by ID
           (window as any).__hideLayer = (id: string) => {
@@ -1269,6 +1285,7 @@ export default function MapTiler3D() {
         userAreas={filteredUserAreas}
         searchAreas={effectiveSearchAreas}
         onDeleteSearchArea={(id) => deleteSearchArea(id)}
+        currentAreaVersion={currentAreaVersion}
       />
       <NotesLayer3D map={mapRef.current} enabled={layerVisibility.notes} />
 
