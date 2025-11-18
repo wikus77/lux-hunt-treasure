@@ -165,16 +165,19 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
         console.info('🗺️ M1-3D layer:add (search-areas-border)');
       }
       
-      // 🔧 DEBUG MODE: Hide search-areas to avoid confusion with user-areas
+      // 🔧 DEBUG MODE: Hide search-areas if debug OR uaOnly
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has('debug')) {
+      const isDebug = urlParams.has('debug');
+      const uaOnly = urlParams.has('uaOnly');
+      
+      if (isDebug || uaOnly) {
         if (map.getLayer('search-areas-fill')) {
           map.setLayoutProperty('search-areas-fill', 'visibility', 'none');
         }
         if (map.getLayer('search-areas-border')) {
           map.setLayoutProperty('search-areas-border', 'visibility', 'none');
         }
-        console.info('🔧 M1-3D debug: search-areas layers hidden for clarity');
+        console.info(`🔧 M1-3D ${uaOnly ? 'uaOnly' : 'debug'}: search-areas layers hidden for clarity`);
       }
       
       // 🔥 CRITICAL: Ensure user-areas layers are on top
@@ -182,6 +185,11 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
         map.moveLayer('user-areas-fill');
         map.moveLayer('user-areas-border');
         console.info('🗺️ M1-3D layers reordered: user-areas on top');
+      }
+      
+      // 🔧 DEBUG: Log search-areas initialization status
+      if (isDebug) {
+        console.info('[M1-3D] search-areas enabled:', searchAreas.length > 0);
       }
 
       // Click handlers
@@ -330,17 +338,14 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
       })
       .filter(feature => feature !== null);
 
-    console.info('🗺️ M1-3D setData called (user-areas)', { featureCount: features.length });
-    
-    // 🔥 CRITICAL: Log properties before setData for verification
-    if (features.length > 0 && features[0]?.properties) {
-      console.info('🗺️ M1-3D setData props (user-areas)', {
-        radiusKm: features[0].properties.radiusKm,
-        radius_km: features[0].properties.radius_km,
-        level: features[0].properties.level,
-        id: features[0].properties.id,
-        center: features[0].properties.center
+    // 🔥 CRITICAL: Log before setData with detailed info
+    if (features.length > 0) {
+      console.info('🗺️ M1-3D setData called (user-areas)', { 
+        featureCount: features.length,
+        props: features[0]?.properties 
       });
+    } else {
+      console.info('🗺️ M1-3D setData called (user-areas) — CLEARED (0 features)');
     }
     
     // 🔧 DEBUG: Also log what's in search-areas for comparison
@@ -355,6 +360,8 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
             count: searchFeats.length,
             firstRadius: searchFeats[0]?.properties?.radiusKm
           });
+        } else {
+          console.info('🔧 M1-3D search-areas is EMPTY (OK)');
         }
       }
     }
