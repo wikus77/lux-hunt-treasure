@@ -208,10 +208,13 @@ export const useBuzzMapLogic = () => {
             // Trigger map auto-center via custom event
             if (payload.new) {
               console.log('📍 useBuzzMapLogic: Broadcasting area creation event');
+              // 🔥 UNIFIED COORDS FIX: Use center_lat/center_lng with fallback to lat/lng
+              const lat = payload.new.center_lat ?? payload.new.lat;
+              const lng = payload.new.center_lng ?? payload.new.lng;
               window.dispatchEvent(new CustomEvent('buzzAreaCreated', {
                 detail: {
-                  lat: payload.new.lat,
-                  lng: payload.new.lng,
+                  lat,
+                  lng,
                   radius_km: payload.new.radius_km
                 }
               }));
@@ -242,3 +245,5 @@ export const useBuzzMapLogic = () => {
     reloadAreas
   };
 };
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
