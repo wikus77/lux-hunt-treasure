@@ -712,7 +712,7 @@ export default function MapTiler3D() {
             const point = map.project([lng, lat]);
             const features = map.queryRenderedFeatures(point);
             console.table(features.map(f => ({
-              layer: f.layer.id,
+              layer: f.layer?.id || 'unknown', // 🔥 FIX: Use f.layer.id (not f.layer)
               source: f.source,
               sourceLayer: f.sourceLayer,
               type: f.geometry.type,

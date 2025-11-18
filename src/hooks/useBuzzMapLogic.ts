@@ -93,13 +93,15 @@ export const useBuzzMapLogic = () => {
       const currentWeek = getCurrentWeekOfYear();
       console.log('🗓️ BUZZ MAP: Fetching areas for current week:', currentWeek);
       
+      // 🔥 CRITICAL: Query ONLY the latest (CURRENT) row for the week
       const { data: userAreas, error: userAreasError } = await supabase
         .from('user_map_areas')
         .select('*')
         .eq('user_id', user.id)
         .eq('source', 'buzz_map') // 🔥 CRITICAL: Only M1U-paid areas
         .eq('week', currentWeek) // 🔥 NEW: Filter by current ISO week
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(1); // 🔥 FIX: Only take the latest (CURRENT) area
 
       console.log('🗺️ USER MAP AREAS CHECK (M1U-BASED + WEEKLY):', { 
         count: userAreas?.length || 0, 
