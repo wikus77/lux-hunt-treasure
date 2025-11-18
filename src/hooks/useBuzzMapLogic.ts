@@ -167,6 +167,19 @@ export const useBuzzMapLogic = () => {
         };
       });
 
+      // 🔍 VERIFICA LOG: Areas dopo fetchCurrentWeekAreas
+      console.log('🔍 [VERIFICA] AREAS DOPO FETCH:', {
+        count: transformedAreas.length,
+        week: currentWeek,
+        firstArea: transformedAreas[0] || null,
+        firstAreaDetails: transformedAreas[0] ? {
+          id: transformedAreas[0].id,
+          level: transformedAreas[0].level,
+          radius_km: transformedAreas[0].radius_km,
+          week: transformedAreas[0].week
+        } : null
+      });
+
       console.log('✅ useBuzzMapLogic: Setting authorized areas (current week only):', transformedAreas.length);
       setCurrentWeekAreas(transformedAreas);
       setError(null);
