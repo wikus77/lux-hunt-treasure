@@ -164,6 +164,25 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
         });
         console.info('🗺️ M1-3D layer:add (search-areas-border)');
       }
+      
+      // 🔧 DEBUG MODE: Hide search-areas to avoid confusion with user-areas
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('debug')) {
+        if (map.getLayer('search-areas-fill')) {
+          map.setLayoutProperty('search-areas-fill', 'visibility', 'none');
+        }
+        if (map.getLayer('search-areas-border')) {
+          map.setLayoutProperty('search-areas-border', 'visibility', 'none');
+        }
+        console.info('🔧 M1-3D debug: search-areas layers hidden for clarity');
+      }
+      
+      // 🔥 CRITICAL: Ensure user-areas layers are on top
+      if (map.getLayer('user-areas-fill') && map.getLayer('search-areas-fill')) {
+        map.moveLayer('user-areas-fill');
+        map.moveLayer('user-areas-border');
+        console.info('🗺️ M1-3D layers reordered: user-areas on top');
+      }
 
       // Click handlers
       const handleUserAreaClick = (e: any) => {
@@ -322,6 +341,22 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
         id: features[0].properties.id,
         center: features[0].properties.center
       });
+    }
+    
+    // 🔧 DEBUG: Also log what's in search-areas for comparison
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('debug')) {
+      const searchSource = map.getSource('search-areas') as any;
+      if (searchSource) {
+        const searchData = searchSource._data || (searchSource.serialize && searchSource.serialize().data);
+        const searchFeats = searchData?.features || [];
+        if (searchFeats.length > 0) {
+          console.warn('🔧 M1-3D search-areas NOT EMPTY (may interfere)', {
+            count: searchFeats.length,
+            firstRadius: searchFeats[0]?.properties?.radiusKm
+          });
+        }
+      }
     }
     
     // 🔥 CRITICAL: Clear source if no valid features to prevent "zombie circles"

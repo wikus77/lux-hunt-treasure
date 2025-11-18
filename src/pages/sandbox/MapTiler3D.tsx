@@ -686,6 +686,21 @@ export default function MapTiler3D() {
           };
           
           console.info('🔧 Debug helpers ready: __hideLayer(id), __whoDrawsHere(lng,lat)');
+          
+          // 🔍 Log all layers and their visibility on load
+          setTimeout(() => {
+            const layers = map.getStyle().layers || [];
+            const areaLayers = layers.filter(l => 
+              l.id.includes('areas') || l.id.includes('search')
+            );
+            console.table(areaLayers.map(l => ({
+              id: l.id,
+              type: l.type,
+              source: (l as any).source,
+              visible: map.getLayoutProperty(l.id, 'visibility') !== 'none'
+            })));
+            console.info('🔍 M1-3D layer audit complete (areas/search only)');
+          }, 1000);
         }
 
         const loadedStyle = map.getStyle();
