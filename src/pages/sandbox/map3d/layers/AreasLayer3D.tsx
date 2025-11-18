@@ -340,6 +340,7 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
 
     // 🔥 CRITICAL: Log before setData with detailed info
     if (features.length > 0) {
+      console.info('🗺️ M1-3D setData props (user-areas)', features[0]?.properties);
       console.info('🗺️ M1-3D setData called (user-areas)', { 
         featureCount: features.length,
         props: features[0]?.properties 
