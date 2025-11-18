@@ -21,6 +21,8 @@ const BuzzDebugBadge: React.FC<BuzzDebugBadgeProps> = ({ latestArea }) => {
   const { nextLevel, nextRadiusKm } = useBuzzMapPricingNew(user?.id);
   const [dbCurrentRadiusKm, setDbCurrentRadiusKm] = useState<number | null>(null);
   const [dbCurrentLevel, setDbCurrentLevel] = useState<number | null>(null);
+  const [geoJsonRadiusKm, setGeoJsonRadiusKm] = useState<number | null>(null);
+  const [geoJsonLevel, setGeoJsonLevel] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user?.id || !isDebugEnabled) return;
@@ -63,10 +65,43 @@ const BuzzDebugBadge: React.FC<BuzzDebugBadgeProps> = ({ latestArea }) => {
     };
   }, [user?.id, isDebugEnabled]);
 
+  // 🔥 CRITICAL: Read from user-areas GeoJSON (single source of truth)
+  useEffect(() => {
+    if (!isDebugEnabled) return;
+
+    const readGeoJson = () => {
+      try {
+        const map = (window as any).M1_MAP;
+        if (!map) return;
+        
+        const source = map.getSource?.('user-areas');
+        const data = source && (source._data || source.serialize?.().data);
+        const props = data?.features?.[0]?.properties;
+        
+        if (props) {
+          setGeoJsonRadiusKm(props.radiusKm || null);
+          setGeoJsonLevel(props.level || null);
+        } else {
+          setGeoJsonRadiusKm(null);
+          setGeoJsonLevel(null);
+        }
+      } catch (e) {
+        console.warn('BuzzDebugBadge: failed to read GeoJSON:', e);
+      }
+    };
+
+    // Poll every 2s to catch GeoJSON updates
+    const interval = setInterval(readGeoJson, 2000);
+    readGeoJson();
+
+    return () => clearInterval(interval);
+  }, [isDebugEnabled]);
+
   if (!isDebugEnabled) return null;
 
-  const uiRadiusKm = latestArea?.radius_km || null;
-  const uiLevel = latestArea?.level || null;
+  // 🔥 CRITICAL: Use GeoJSON props as source of truth (not latestArea prop)
+  const uiRadiusKm = geoJsonRadiusKm;
+  const uiLevel = geoJsonLevel;
   
   const radiusMismatch = dbCurrentRadiusKm !== null && uiRadiusKm !== null && 
     Math.abs(dbCurrentRadiusKm - uiRadiusKm) > 0.01;
@@ -83,8 +118,8 @@ const BuzzDebugBadge: React.FC<BuzzDebugBadgeProps> = ({ latestArea }) => {
       </div>
       
       <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-        <div className="text-gray-400">OVERLAY:</div>
-        <div className="text-cyan-300 font-mono">map-space</div>
+        <div className="text-gray-400">Source:</div>
+        <div className="text-cyan-300 font-mono">user-areas GeoJSON</div>
         
         <div className="text-gray-400">DB current:</div>
         <div className={`font-mono ${radiusMismatch ? 'text-red-400 font-bold' : 'text-cyan-300'}`}>
@@ -93,7 +128,7 @@ const BuzzDebugBadge: React.FC<BuzzDebugBadgeProps> = ({ latestArea }) => {
             : 'N/A'}
         </div>
         
-        <div className="text-gray-400">UI used:</div>
+        <div className="text-gray-400">GeoJSON live:</div>
         <div className={`font-mono ${radiusMismatch ? 'text-red-400 font-bold' : 'text-green-400'}`}>
           {uiRadiusKm !== null 
             ? `L${uiLevel || '?'} • ${uiRadiusKm.toFixed(1)} km` 
