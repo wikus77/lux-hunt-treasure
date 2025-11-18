@@ -72,8 +72,9 @@ const MapVerificationPanel: React.FC = () => {
       const map = (window as any).M1_MAP;
       const center = map.getCenter();
       const drawers = (window as any).__whoDrawsHere?.(center.lng, center.lat);
+      // 🔥 FIX: d.layer is now a string (not object)
       const circleDrawers = drawers?.filter((d: any) => 
-        d.layer.includes('fill') || d.layer.includes('border')
+        typeof d.layer === 'string' && (d.layer.includes('fill') || d.layer.includes('border'))
       ) || [];
       step3.status = 'pass';
       step3.details = circleDrawers.length > 0 
@@ -132,10 +133,22 @@ const MapVerificationPanel: React.FC = () => {
         step5.status = 'fail';
         step5.details = '❌ Supabase not available';
       } else {
+        // 🔥 FIX: Filter by current ISO week (same as useBuzzMapLogic)
+        const getIsoWeekUTC = () => {
+          const now = new Date();
+          const dt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+          const day = dt.getUTCDay() || 7;
+          dt.setUTCDate(dt.getUTCDate() + 4 - day);
+          const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+          return Math.ceil((((dt.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+        };
+        const currentWeek = getIsoWeekUTC();
+        
         const { data: dbData, error } = await supabase
           .from('user_map_areas')
           .select('*')
           .eq('source', 'buzz_map')
+          .eq('week', currentWeek)
           .order('created_at', { ascending: false })
           .limit(1)
           .single();
