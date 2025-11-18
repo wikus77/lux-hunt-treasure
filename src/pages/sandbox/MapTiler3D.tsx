@@ -720,7 +720,60 @@ export default function MapTiler3D() {
             return features;
           };
           
-          console.info('🔧 Debug helpers ready: __hideLayer(id), __onlyUserAreas(), __whoDrawsHere(lng,lat)');
+          // 🔧 Debug helper: full layers inventory with z-order
+          (window as any).__inventoryLayers = () => {
+            const layers = (map.getStyle()?.layers || []).map((l: any, i: number) => ({
+              index: i,
+              id: l.id,
+              type: l.type,
+              source: l.source,
+              visible: (() => {
+                try {
+                  return (map.getLayoutProperty(l.id, 'visibility') ?? 'visible') !== 'none';
+                } catch {
+                  return true;
+                }
+              })()
+            }));
+            console.info('🔎 M1-3D LAYERS INVENTORY');
+            console.table(layers);
+            return layers;
+          };
+          
+          // 🔧 Debug helper: SW bypass (manual use only - clears SW & caches)
+          (window as any).__bypassSW = async () => {
+            try {
+              const regs = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(regs.map(r => r.unregister()));
+              const keys = await caches.keys();
+              await Promise.all(keys.map(k => caches.delete(k)));
+              console.info('🧼 M1-3D SW bypass done (debug) → reloading');
+              location.reload();
+            } catch (e) {
+              console.warn('SW bypass failed:', e);
+            }
+          };
+          
+          console.info('🔧 Debug helpers ready: __hideLayer(id), __onlyUserAreas(), __whoDrawsHere(lng,lat), __inventoryLayers(), __bypassSW()');
+          
+          // 🔎 Auto-run inventory and "drawn here" on load (debug only)
+          setTimeout(() => {
+            (window as any).__inventoryLayers();
+            
+            // Auto "drawn here" at center
+            try {
+              const c = map.getCenter();
+              const feats = map.queryRenderedFeatures(map.project(c));
+              console.info('🎯 M1-3D DRAWN HERE (center)');
+              console.table((feats || []).map(f => ({
+                layer: f.layer?.id,
+                source: f.source,
+                type: f.layer?.type
+              })));
+            } catch (e) {
+              console.warn('Auto "drawn here" failed:', e);
+            }
+          }, 1500);
           
           // 🔥 CRITICAL: If ?uaOnly=1, auto-hide all non-user-areas fill/line layers
           if (uaOnly) {
@@ -737,7 +790,7 @@ export default function MapTiler3D() {
                   } catch {}
                 }
               });
-              console.info(`🔥 uaOnly=1 MODE: hidden ${hidden} fill/line layers (only user-areas visible)`);
+              console.info(`🧽 M1-3D isolate: hidden all but user-areas (${hidden} layers hidden)`);
             }, 500);
           }
           
