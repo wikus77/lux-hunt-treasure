@@ -754,7 +754,19 @@ export default function MapTiler3D() {
             }
           };
           
-          console.info('🔧 Debug helpers ready: __hideLayer(id), __onlyUserAreas(), __whoDrawsHere(lng,lat), __inventoryLayers(), __bypassSW()');
+          // 🔧 Debug helper: kill overlay (removes any DOM/canvas overlay)
+          (window as any).__killOverlay = () => {
+            const overlays = document.querySelectorAll('#map-space,[data-overlay="map-space"],.map-overlay-circle');
+            overlays.forEach(el => {
+              console.info('🧹 M1-3D killOverlay: removing', el);
+              el.remove();
+            });
+            if (overlays.length === 0) {
+              console.info('🧹 M1-3D killOverlay: no overlays found');
+            }
+          };
+          
+          console.info('🔧 Debug helpers ready: __hideLayer(id), __onlyUserAreas(), __whoDrawsHere(lng,lat), __inventoryLayers(), __bypassSW(), __killOverlay()');
           
           // 🔎 Auto-run inventory and "drawn here" on load (debug only)
           setTimeout(() => {
@@ -791,6 +803,9 @@ export default function MapTiler3D() {
                 }
               });
               console.info(`🧽 M1-3D isolate: hidden all but user-areas (${hidden} layers hidden)`);
+              
+              // Auto-kill any DOM overlays
+              (window as any).__killOverlay?.();
             }, 500);
           }
           
