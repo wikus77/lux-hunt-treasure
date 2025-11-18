@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { Lock, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
-import { useBuzzMapPricingNew } from '@/hooks/useBuzzMapPricingNew';
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { showInsufficientM1UToast } from '@/utils/m1uHelpers';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,17 +23,71 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
 }) => {
   const { isAuthenticated, user } = useAuthContext();
   const { callBuzzApi } = useBuzzApi();
-  const { 
-    nextLevel, 
-    nextRadiusKm, 
-    nextPriceEur,
-    nextCostM1U,
-    loading: pricingLoading 
-  } = useBuzzMapPricingNew(user?.id);
+  
+  // 🔥 SERVER-AUTHORITATIVE: Get pricing from RPC, not client calculation
+  const [serverPricing, setServerPricing] = useState<{
+    level: number;
+    radius_km: number;
+    m1u: number;
+    current_week: number;
+    current_count: number;
+  } | null>(null);
+  const [pricingLoading, setPricingLoading] = useState(true);
   
   const { unitsData } = useM1UnitsRealtime(user?.id);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+
+  // Load server-authoritative pricing on mount and when user changes
+  useEffect(() => {
+    const loadServerPricing = async () => {
+      if (!user?.id) {
+        setPricingLoading(false);
+        return;
+      }
+
+      try {
+        setPricingLoading(true);
+        const { data, error } = await (supabase as any).rpc('m1_get_next_buzz_level', {
+          p_user_id: user.id
+        });
+
+        if (error) {
+          console.error('❌ SERVER PRICING: RPC error', error);
+          setPricingLoading(false);
+          return;
+        }
+
+        // RPC returns array with single row
+        const pricing = Array.isArray(data) ? data[0] : data;
+        
+        console.log('✅ PRICING_SOURCE: server', {
+          level: pricing.level,
+          radius_km: pricing.radius_km,
+          m1u: pricing.m1u,
+          current_week: pricing.current_week,
+          current_count: pricing.current_count
+        });
+
+        setServerPricing(pricing);
+      } catch (err) {
+        console.error('❌ SERVER PRICING: Exception', err);
+      } finally {
+        setPricingLoading(false);
+      }
+    };
+
+    loadServerPricing();
+
+    // Reload pricing after buzz area created
+    const handleBuzzCreated = () => {
+      console.log('🔄 Reloading server pricing after BUZZ...');
+      loadServerPricing();
+    };
+
+    window.addEventListener('buzzAreaCreated', handleBuzzCreated);
+    return () => window.removeEventListener('buzzAreaCreated', handleBuzzCreated);
+  }, [user?.id]);
 
   // Get current geolocation
   useEffect(() => {
@@ -98,16 +151,26 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
       timestamp: Date.now()
     }));
 
-    const costM1U = nextCostM1U;
+    // 🔥 SERVER-AUTHORITATIVE: Use server pricing values
+    if (!serverPricing) {
+      console.error('❌ M1SSION™ BUZZ MAP: No server pricing available');
+      toast.error('Errore nel caricamento dei prezzi. Riprova.');
+      return;
+    }
+
+    const costM1U = serverPricing.m1u;
     const currentBalance = unitsData?.balance || 0;
 
-    console.log('💎 M1SSION™ BUZZ MAP: Initiating M1U payment', {
-      level: nextLevel,
-      radiusKm: nextRadiusKm,
+    console.log('💎 M1SSION™ BUZZ MAP: Initiating M1U payment (SERVER-AUTHORITATIVE)', {
+      source: 'server',
+      level: serverPricing.level,
+      radiusKm: serverPricing.radius_km,
       costM1U,
       currentBalance,
       coordinates,
-      userId: user.id
+      userId: user.id,
+      currentWeek: serverPricing.current_week,
+      currentCount: serverPricing.current_count
     });
 
     // Check M1U balance
@@ -123,40 +186,9 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
     setIsProcessing(true);
 
     try {
-      // Call RPC to spend M1U and create BUZZ MAP area
-      const { data: spendResult, error: spendError } = await (supabase as any).rpc('buzz_map_spend_m1u', {
-        p_cost_m1u: costM1U,
-        p_latitude: coordinates[0],
-        p_longitude: coordinates[1],
-        p_radius_km: nextRadiusKm
-      });
-
-      if (spendError) {
-        console.error('❌ M1SSION™ BUZZ MAP: RPC error', spendError);
-        toast.error('Errore nel processare il pagamento M1U');
-        return;
-      }
-
-      if (!(spendResult as any)?.success) {
-        const errorType = (spendResult as any)?.error || 'unknown';
-        console.error('❌ M1SSION™ BUZZ MAP: Payment failed', { error: errorType });
-        
-        if (errorType === 'insufficient_m1u') {
-          showInsufficientM1UToast(costM1U, (spendResult as any).current_balance || 0);
-        } else {
-          toast.error(`Errore: ${errorType}`);
-        }
-        return;
-      }
-
-      // M1U spent successfully via RPC
-      console.log('✅ M1SSION™ BUZZ MAP: M1U spent successfully', {
-        spent: (spendResult as any).spent,
-        newBalance: (spendResult as any).new_balance
-      });
-
-      // Now call edge function to actually create the area in user_map_areas
-      console.log('🗺️ M1SSION™ BUZZ MAP: Calling edge function to create area...');
+      // 🔥 NOTE: RPC buzz_map_spend_m1u is DEPRECATED - server calculates everything
+      // We only call edge function with coordinates, server does the rest
+      console.log('🗺️ M1SSION™ BUZZ MAP: Calling edge function (server will calculate level/radius/cost)...');
       const edgeResult = await callBuzzApi({
         userId: user.id,
         generateMap: true,
@@ -177,15 +209,19 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         return;
       }
 
-      console.log('✅ M1SSION™ BUZZ MAP: Area created successfully', {
-        areaId: edgeResult.area_id || (spendResult as any).area_id,
-        level: nextLevel,
-        radiusKm: nextRadiusKm
+      const actualLevel = edgeResult.level || serverPricing.level;
+      const actualRadius = edgeResult.radius_km || serverPricing.radius_km;
+      
+      console.log('✅ M1SSION™ BUZZ MAP: Area created successfully (SERVER-AUTHORITATIVE)', {
+        areaId: edgeResult.area_id,
+        level: actualLevel,
+        radiusKm: actualRadius,
+        source: 'server'
       });
 
       // Show success toast
       toast.success(
-        `BUZZ MAP creato · Livello ${nextLevel} · ${Math.round(nextRadiusKm)}km · ${costM1U} M1U`,
+        `BUZZ MAP creato · Livello ${actualLevel} · ${Math.round(actualRadius)}km · ${costM1U} M1U`,
         {
           duration: 4000,
           style: {
@@ -197,18 +233,18 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
       );
 
       // Notify parent components to reload areas
-      onAreaGenerated?.(coordinates[0], coordinates[1], nextRadiusKm);
+      onAreaGenerated?.(coordinates[0], coordinates[1], actualRadius);
       onBuzzPress();
 
       // 🔥 FIX: Dispatch custom event to trigger pricing refresh
       window.dispatchEvent(new CustomEvent('buzzAreaCreated', {
         detail: { 
-          level: nextLevel,
-          radiusKm: nextRadiusKm,
+          level: actualLevel,
+          radiusKm: actualRadius,
           costM1U,
           lat: coordinates[0],
           lng: coordinates[1],
-          areaId: edgeResult.area_id || (spendResult as any).area_id
+          areaId: edgeResult.area_id
         }
       }));
 
@@ -289,7 +325,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
                   BUZZ MAP
                 </span>
                 <span className="text-xs text-white/90 leading-none mt-1">
-                  {Math.round(nextRadiusKm)}km · {nextCostM1U} M1U
+                  {serverPricing ? `${serverPricing.radius_km}km · ${serverPricing.m1u} M1U` : 'Loading...'}
                 </span>
               </>
             )}

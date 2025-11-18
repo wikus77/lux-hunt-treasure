@@ -66,9 +66,9 @@ serve(withCors(async (req: Request): Promise<Response> => {
     
     // Handle BUZZ MAP flow
     if (generateMap && coordinates) {
-      console.log('🗺️ [HANDLE-BUZZ-PRESS] Processing BUZZ MAP generation');
+      console.log('🗺️ [HANDLE-BUZZ-PRESS] Processing BUZZ MAP generation (SERVER-AUTHORITATIVE)');
       
-      // Calculate current week of year for weekly reset
+      // Calculate current week of year for weekly reset (ISO week UTC)
       const currentWeek = getCurrentWeekOfYear();
       
       // Count existing buzz map areas for CURRENT WEEK ONLY to determine level
@@ -88,13 +88,43 @@ serve(withCors(async (req: Request): Promise<Response> => {
       const level = Math.min(currentCount + 1, 60);
       const buzzLevel = getBuzzLevelFromCount(currentCount);
       
-      console.log('🗺️ [HANDLE-BUZZ-PRESS] Creating BUZZ MAP area:', {
+      console.log('🗺️ [HANDLE-BUZZ-PRESS] SERVER-CALCULATED pricing:', {
+        source: 'server',
         currentWeek,
         currentCount,
-        level,
+        nextLevel: level,
         radiusKm: buzzLevel.radiusKm,
         priceCents: buzzLevel.priceCents,
+        costM1U: Math.round(buzzLevel.priceCents / 10), // 1 M1U = €0.10 = 10 cents
         coordinates
+      });
+      
+      // 🔥 SERVER-AUTHORITATIVE: Spend M1U using server-calculated cost
+      const costM1U = Math.round(buzzLevel.priceCents / 10);
+      
+      console.log('💎 [HANDLE-BUZZ-PRESS] Calling RPC to spend M1U...');
+      const { data: spendResult, error: spendError } = await supabase.rpc('buzz_map_spend_m1u', {
+        p_user_id: user.id,
+        p_cost_m1u: costM1U,
+        p_latitude: coordinates.lat,
+        p_longitude: coordinates.lng,
+        p_radius_km: buzzLevel.radiusKm
+      });
+      
+      if (spendError) {
+        console.error('❌ [HANDLE-BUZZ-PRESS] M1U payment error:', spendError);
+        throw new Error('M1U payment failed: ' + spendError.message);
+      }
+      
+      if (!spendResult?.success) {
+        const errorType = spendResult?.error || 'unknown';
+        console.error('❌ [HANDLE-BUZZ-PRESS] M1U payment rejected:', { error: errorType });
+        throw new Error('M1U payment rejected: ' + errorType);
+      }
+      
+      console.log('✅ [HANDLE-BUZZ-PRESS] M1U spent successfully:', {
+        spent: spendResult.spent,
+        newBalance: spendResult.new_balance
       });
       
       // Create the map area with weekly counter
@@ -144,8 +174,13 @@ serve(withCors(async (req: Request): Promise<Response> => {
           radius_km: buzzLevel.radiusKm,
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         },
+        area_id: mapArea.id,
         level: level,
-        price_eur: buzzLevel.priceCents / 100
+        radius_km: buzzLevel.radiusKm,
+        price_eur: buzzLevel.priceCents / 100,
+        cost_m1u: costM1U,
+        new_balance: spendResult.new_balance,
+        week: currentWeek
       };
 
       // Add debug block if requested
@@ -160,7 +195,14 @@ serve(withCors(async (req: Request): Promise<Response> => {
 
       const responseBody = wantsDebug ? { ...response, __debug: debugBlock } : response;
       
-      console.log('🎉 [HANDLE-BUZZ-PRESS] BUZZ MAP completed:', response);
+      console.log('🎉 [HANDLE-BUZZ-PRESS] BUZZ MAP completed (SERVER-AUTHORITATIVE):', {
+        areaId: mapArea.id,
+        level,
+        radiusKm: buzzLevel.radiusKm,
+        costM1U,
+        week: currentWeek,
+        source: 'server'
+      });
       
       return new Response(JSON.stringify(responseBody), {
         status: 200,
