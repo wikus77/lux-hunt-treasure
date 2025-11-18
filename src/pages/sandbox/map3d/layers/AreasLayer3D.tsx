@@ -317,7 +317,11 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
           return null;
         }
 
-        const radiusKm = Math.round(radiusMeters / 1000);
+        // 🔥 FIX: Use exact DB radius_km value (no rounding)
+        const radiusKm = Number.isFinite(area.radius_km) 
+          ? area.radius_km 
+          : radiusMeters / 1000;
+        
         console.info('🗺️ M1-3D source:update (user-areas)', {
           id: area.id,
           level: area.level,
@@ -332,8 +336,8 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
             ...circle.properties,
             id: area.id,
             label: area.label || 'Buzz Area',
-            radiusKm, // 🔥 Alias for compatibility
-            radius_km: radiusKm, // 🔥 DB field name
+            radiusKm, // 🔥 Exact DB value
+            radius_km: radiusKm, // 🔥 Exact DB value
             radiusMeters: radiusMeters, // 🔥 Derived value
             level: area.level
           }

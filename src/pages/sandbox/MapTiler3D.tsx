@@ -6,6 +6,7 @@ import BuzzMapButtonSecure from '@/components/map/BuzzMapButtonSecure';
 import PortalContainer from '@/components/map/PortalContainer';
 import { toast } from 'sonner';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
+import { getCurrentWeekOfYear } from '@/lib/weekUtils';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useAgentLocationUpdater } from '@/hooks/useAgentLocationUpdater';
 import { useLiveLayers } from '@/features/living-map/hooks/useLiveLayers';
@@ -243,15 +244,8 @@ export default function MapTiler3D() {
       const uid = session?.user?.id;
       if (!uid) return;
 
-      const getCurrentWeek = () => {
-        const now = new Date();
-        const start = new Date(now.getFullYear(), 0, 1);
-        const diff = now.getTime() - start.getTime();
-        const oneWeek = 1000 * 60 * 60 * 24 * 7;
-        return Math.floor(diff / oneWeek) + 1;
-      };
-
-      const currentWeek = getCurrentWeek();
+      // 🔥 FIX: Use ISO week (same as useBuzzMapLogic)
+      const currentWeek = getCurrentWeekOfYear();
 
       const channel = supabase
         .channel(`map3d_buzz_fit_${uid}`)
@@ -281,7 +275,7 @@ export default function MapTiler3D() {
                 center: { lat, lng } 
               });
 
-              // Trigger reload to update AreasLayer3D
+              // 🔥 FIX: Force reload with bust to trigger currentAreaVersion update
               reloadAreas();
 
               // Dispatch custom event for other listeners
@@ -727,14 +721,15 @@ export default function MapTiler3D() {
           (window as any).__whoDrawsHere = (lng: number, lat: number) => {
             const point = map.project([lng, lat]);
             const features = map.queryRenderedFeatures(point);
-            console.table(features.map(f => ({
-              layer: f.layer?.id || 'unknown', // 🔥 FIX: Use f.layer.id (not f.layer)
+            const rows = (features || []).map(f => ({
+              layer: f.layer?.id || 'unknown',
               source: f.source,
               sourceLayer: f.sourceLayer,
               type: f.geometry.type,
               properties: JSON.stringify(f.properties)
-            })));
-            return features;
+            }));
+            console.table(rows);
+            return rows; // 🔥 FIX: Return mapped array for MapVerificationPanel
           };
           
           // 🔧 Debug helper: full layers inventory with z-order
