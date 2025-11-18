@@ -90,9 +90,9 @@ const MapVerificationPanel: React.FC = () => {
 
     await new Promise(r => setTimeout(r, 500));
 
-    // Step 4: User-areas props
+    // Step 4: User-areas props (GeoJSON live)
     const step4: VerificationResult = {
-      step: '4. User-Areas Props',
+      step: '4. User-Areas Props (GeoJSON)',
       status: 'pending',
       details: ''
     };
@@ -107,9 +107,9 @@ const MapVerificationPanel: React.FC = () => {
         step4.details = '❌ No user-areas data';
       } else {
         step4.status = 'pass';
-        step4.details = `Level ${props.level} · ${props.radiusKm}km`;
+        step4.details = `L${props.level} · ${props.radius_km || props.radiusKm}km`;
         step4.data = props;
-        console.log('🗺️ User-areas props:', props);
+        console.log('🗺️ User-areas GeoJSON props:', props);
       }
     } catch (e) {
       step4.status = 'fail';
