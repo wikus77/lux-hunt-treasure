@@ -313,6 +313,17 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
 
     console.info('🗺️ M1-3D setData called (user-areas)', { featureCount: features.length });
     
+    // 🔥 CRITICAL: Log properties before setData for verification
+    if (features.length > 0 && features[0]?.properties) {
+      console.info('🗺️ M1-3D setData props (user-areas)', {
+        radiusKm: features[0].properties.radiusKm,
+        radius_km: features[0].properties.radius_km,
+        level: features[0].properties.level,
+        id: features[0].properties.id,
+        center: features[0].properties.center
+      });
+    }
+    
     // 🔥 CRITICAL: Clear source if no valid features to prevent "zombie circles"
     if (features.length === 0) {
       console.info('🗺️ M1-3D clearing user-areas source (no valid features)');
