@@ -79,9 +79,11 @@ const BuzzDebugBadge: React.FC<BuzzDebugBadgeProps> = ({ latestArea }) => {
         const props = data?.features?.[0]?.properties;
         
         if (props) {
+          console.log('🔄 BuzzDebugBadge: GeoJSON updated', { level: props.level, radiusKm: props.radiusKm });
           setGeoJsonRadiusKm(props.radiusKm || null);
           setGeoJsonLevel(props.level || null);
         } else {
+          console.log('⚠️ BuzzDebugBadge: No GeoJSON data');
           setGeoJsonRadiusKm(null);
           setGeoJsonLevel(null);
         }
@@ -90,11 +92,33 @@ const BuzzDebugBadge: React.FC<BuzzDebugBadgeProps> = ({ latestArea }) => {
       }
     };
 
-    // Poll every 2s to catch GeoJSON updates
-    const interval = setInterval(readGeoJson, 2000);
+    // Initial read
     readGeoJson();
 
-    return () => clearInterval(interval);
+    // Listen for maplibre sourcedata events
+    const map = (window as any).M1_MAP;
+    if (!map) return;
+
+    const handleSourceData = (e: any) => {
+      if (e.sourceId === 'user-areas' && e.isSourceLoaded) {
+        console.log('🗺️ BuzzDebugBadge: user-areas sourcedata event');
+        setTimeout(readGeoJson, 100);
+      }
+    };
+
+    // Also listen for custom buzz event
+    const handleBuzzUpdate = () => {
+      console.log('🔔 BuzzDebugBadge: buzzAreaCreated event');
+      setTimeout(readGeoJson, 500);
+    };
+
+    map.on('sourcedata', handleSourceData);
+    window.addEventListener('buzzAreaCreated', handleBuzzUpdate);
+
+    return () => {
+      map.off('sourcedata', handleSourceData);
+      window.removeEventListener('buzzAreaCreated', handleBuzzUpdate);
+    };
   }, [isDebugEnabled]);
 
   if (!isDebugEnabled) return null;
