@@ -371,8 +371,26 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
     if (features.length === 0) {
       console.info('🗺️ M1-3D clearing user-areas source (no valid features)');
       source.setData({ type: 'FeatureCollection', features: [] });
+      
+      // 🧹 Hide any DOM overlays when user-areas is empty (debug only)
+      if (import.meta.env.DEV || new URLSearchParams(window.location.search).get('debug')) {
+        (window as any).__killOverlay?.();
+      }
     } else {
       source.setData({ type: 'FeatureCollection', features });
+      
+      // 🔥 CRITICAL: Force user-areas layers to top after update
+      try {
+        if (map.getLayer('user-areas-fill')) {
+          map.moveLayer('user-areas-fill');
+        }
+        if (map.getLayer('user-areas-border')) {
+          map.moveLayer('user-areas-border');
+        }
+        console.info('🗺️ M1-3D user-areas layers moved to top');
+      } catch (e) {
+        console.warn('Failed to move user-areas layers:', e);
+      }
     }
   }, [map, userAreas]);
 
