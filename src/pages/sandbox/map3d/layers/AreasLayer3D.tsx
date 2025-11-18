@@ -270,14 +270,32 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
         return true;
       })
       .map(area => {
-        const radiusKm = area.radius / 1000;
-        console.info('🗺️ M1-3D source:update (user-areas) processing area', {
+        // 🔥 UNIFIED RADIUS FIX: Normalize radius from both possible sources
+        const radiusMeters = Number.isFinite(area.radius) 
+          ? area.radius 
+          : Number.isFinite(area.radius_km) 
+            ? area.radius_km * 1000 
+            : NaN;
+        
+        // 🔥 CRITICAL: Validate radius to prevent invalid GeoJSON
+        if (!Number.isFinite(radiusMeters)) {
+          console.warn('🚫 M1-3D SKIP invalid radius', {
+            id: area.id,
+            radius: area.radius,
+            radius_km: area.radius_km,
+            radiusMeters
+          });
+          return null;
+        }
+
+        const radiusKm = Math.round(radiusMeters / 1000);
+        console.info('🗺️ M1-3D source:update (user-areas)', {
           id: area.id,
           level: area.level,
           radiusKm,
-          radius_m: area.radius,
-          center: [area.lat, area.lng]
+          center: [area.lng, area.lat]
         });
+        
         const circle = makeCircle(area.lng, area.lat, radiusKm);
         return {
           ...circle,
@@ -286,14 +304,22 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
             id: area.id,
             label: area.label || 'Buzz Area',
             radiusKm,
-            level: area.level,
-            radius_km: area.radius_km
+            radius_km: radiusKm,
+            level: area.level
           }
         };
-      });
+      })
+      .filter(feature => feature !== null);
 
     console.info('🗺️ M1-3D setData called (user-areas)', { featureCount: features.length });
-    source.setData({ type: 'FeatureCollection', features });
+    
+    // 🔥 CRITICAL: Clear source if no valid features to prevent "zombie circles"
+    if (features.length === 0) {
+      console.info('🗺️ M1-3D clearing user-areas source (no valid features)');
+      source.setData({ type: 'FeatureCollection', features: [] });
+    } else {
+      source.setData({ type: 'FeatureCollection', features });
+    }
   }, [map, userAreas]);
 
   // Update search areas GeoJSON data

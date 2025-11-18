@@ -268,8 +268,9 @@ export default function MapTiler3D() {
               const map = mapRef.current;
               if (!map) return;
 
-              const lat = payload.new.lat;
-              const lng = payload.new.lng;
+              // 🔥 UNIFIED COORDS FIX: Use center_lat/center_lng with fallback to lat/lng
+              const lat = payload.new.center_lat ?? payload.new.lat;
+              const lng = payload.new.center_lng ?? payload.new.lng;
               const radiusKm = payload.new.radius_km || 500;
               const radiusMeters = radiusKm * 1000;
 
@@ -278,6 +279,18 @@ export default function MapTiler3D() {
                 radius_km: radiusKm, 
                 center: { lat, lng } 
               });
+
+              // Trigger reload to update AreasLayer3D
+              reloadAreas();
+
+              // Dispatch custom event for other listeners
+              window.dispatchEvent(new CustomEvent('buzzAreaCreated', {
+                detail: { 
+                  lat, 
+                  lng, 
+                  radius_km: radiusKm 
+                }
+              }));
 
               setTimeout(() => {
                 const latDeltaDeg = radiusMeters / 111320;
