@@ -25,6 +25,7 @@ import RewardsLayer3D from './map3d/layers/RewardsLayer3D';
 import AreasLayer3D from './map3d/layers/AreasLayer3D';
 import BuzzDiagnosticPanel from './map3d/components/BuzzDiagnosticPanel';
 import BuzzDebugBadge from './map3d/components/BuzzDebugBadge';
+import MapVerificationPanel from './map3d/components/MapVerificationPanel';
 import NotesLayer3D from './map3d/layers/NotesLayer3D';
 import LayerTogglePanel from './map3d/components/LayerTogglePanel';
 import '@/styles/map-dock.css';
@@ -1376,6 +1377,9 @@ export default function MapTiler3D() {
 
       {/* BUZZ Debug Badge (verify mode) */}
       <BuzzDebugBadge latestArea={latestArea} />
+
+      {/* Map Verification Panel (debug mode) */}
+      {debugEnabled && <MapVerificationPanel />}
 
       {/* Debug Panel (only if enabled) */}
       {debugEnabled && <DebugMapPanel />}
