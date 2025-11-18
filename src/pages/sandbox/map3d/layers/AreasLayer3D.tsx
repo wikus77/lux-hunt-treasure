@@ -262,6 +262,11 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
     };
   }, [map, enabled]);
 
+  // 🔥 FIX: Stable version key to force update on DB CURRENT changes
+  const currentAreaVersion = userAreas.length > 0 
+    ? `${userAreas[0].id}|${userAreas[0].level}|${userAreas[0].radius_km}`
+    : 'none';
+
   // Update user areas GeoJSON data
   useEffect(() => {
     if (!map || !initializedRef.current) {
@@ -392,7 +397,7 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
         console.warn('Failed to move user-areas layers:', e);
       }
     }
-  }, [map, userAreas]);
+  }, [map, currentAreaVersion, initializedRef.current]); // 🔥 FIX: Use version key instead of userAreas
 
   // Update search areas GeoJSON data
   useEffect(() => {
