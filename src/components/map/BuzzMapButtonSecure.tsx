@@ -161,6 +161,16 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
     const costM1U = serverPricing.m1u;
     const currentBalance = unitsData?.balance || 0;
 
+    // 🔍 VERIFICA LOG: Server pricing PRIMA del click
+    console.log('🔍 [VERIFICA] PRICING PRIMA CLICK:', {
+      pricingSource: 'server',
+      currentWeek: serverPricing.current_week,
+      currentCount: serverPricing.current_count,
+      levelNext: serverPricing.level,
+      radiusKm: serverPricing.radius_km,
+      costM1U: serverPricing.m1u
+    });
+
     console.log('💎 M1SSION™ BUZZ MAP: Initiating M1U payment (SERVER-AUTHORITATIVE)', {
       source: 'server',
       level: serverPricing.level,
@@ -195,6 +205,20 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         coordinates: { lat: coordinates[0], lng: coordinates[1] },
         sessionId: Date.now().toString()
       });
+
+      // 🔍 VERIFICA LOG: Response dell'edge function
+      console.log('🔍 [VERIFICA] EDGE FUNCTION RESPONSE:', {
+        success: edgeResult?.success,
+        fullResponse: edgeResult,
+        hasId: !!edgeResult?.area_id,
+        level: edgeResult?.level,
+        radius_km: edgeResult?.radius_km,
+        week: (edgeResult as any)?.week // Temporary debug field
+      });
+
+      if (!edgeResult?.area_id) {
+        console.error('❌ Edge returned no row (missing area_id)');
+      }
 
       // 🔥 FIX: Check for undefined result (network/CORS failure)
       if (!edgeResult) {
