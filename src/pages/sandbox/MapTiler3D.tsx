@@ -652,10 +652,17 @@ export default function MapTiler3D() {
 
       map.on('load', () => {
         console.log('✅ MapLibre loaded');
+        
+        // 🔧 Cache bust verification
+        const buildId = import.meta.env.VITE_PWA_VERSION || import.meta.env.MODE || 'dev';
+        console.info('🔧 M1-3D BUILD_ID:', buildId);
 
         // 🔍 M1-3D DEBUG: Expose map object for console verification
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('debug')) {
+        const isDebug = urlParams.has('debug');
+        const uaOnly = urlParams.has('uaOnly');
+        
+        if (isDebug) {
           (window as any).M1_MAP = map;
           (window as any).supabase = supabase;
           console.info('🗺️ M1-3D map exposed → window.M1_MAP (debug mode)');
@@ -668,6 +675,34 @@ export default function MapTiler3D() {
               console.info(`🔧 Layer hidden: ${id}`);
             } else {
               console.warn(`🔧 Layer not found: ${id}`);
+            }
+          };
+          
+          // 🔧 Debug helper: show ONLY user-areas layers
+          (window as any).__onlyUserAreas = () => {
+            const keep = new Set(['user-areas-fill', 'user-areas-border']);
+            const layers = map.getStyle()?.layers || [];
+            let hidden = 0;
+            layers.forEach((l: any) => {
+              const isFillOrLine = (l.type === 'fill' || l.type === 'line');
+              if (isFillOrLine && !keep.has(l.id)) {
+                try {
+                  map.setLayoutProperty(l.id, 'visibility', 'none');
+                  hidden++;
+                } catch {}
+              }
+            });
+            console.info(`👁️ __onlyUserAreas: hidden ${hidden} fill/line layers`);
+            
+            // Also clear user-areas source to prove it's empty
+            try {
+              const ua = map.getSource('user-areas') as any;
+              if (ua && ua.setData) {
+                ua.setData({ type: 'FeatureCollection', features: [] });
+                console.info('🧹 user-areas source CLEARED');
+              }
+            } catch (e) {
+              console.warn('Could not clear user-areas source:', e);
             }
           };
           
@@ -685,7 +720,26 @@ export default function MapTiler3D() {
             return features;
           };
           
-          console.info('🔧 Debug helpers ready: __hideLayer(id), __whoDrawsHere(lng,lat)');
+          console.info('🔧 Debug helpers ready: __hideLayer(id), __onlyUserAreas(), __whoDrawsHere(lng,lat)');
+          
+          // 🔥 CRITICAL: If ?uaOnly=1, auto-hide all non-user-areas fill/line layers
+          if (uaOnly) {
+            setTimeout(() => {
+              const keep = new Set(['user-areas-fill', 'user-areas-border']);
+              const layers = map.getStyle()?.layers || [];
+              let hidden = 0;
+              layers.forEach((l: any) => {
+                const isFillOrLine = (l.type === 'fill' || l.type === 'line');
+                if (isFillOrLine && !keep.has(l.id)) {
+                  try {
+                    map.setLayoutProperty(l.id, 'visibility', 'none');
+                    hidden++;
+                  } catch {}
+                }
+              });
+              console.info(`🔥 uaOnly=1 MODE: hidden ${hidden} fill/line layers (only user-areas visible)`);
+            }, 500);
+          }
           
           // 🔍 Log all layers and their visibility on load
           setTimeout(() => {
