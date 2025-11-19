@@ -56,6 +56,17 @@ async function upsertAgentLocation(userId: string, position: Position): Promise<
     });
 
     if (error) {
+      // 🚨 EXPLICIT 406 ERROR LOGGING for debugging
+      if (error.code === '406' || error.message?.includes('406') || error.message?.includes('Not Acceptable')) {
+        console.error('🚨 [AgentLocation] 406 NOT ACCEPTABLE - RPC call rejected:', {
+          errorCode: error.code,
+          errorMessage: error.message,
+          params: { p_lat: position.lat, p_lng: position.lng, p_accuracy: position.acc },
+          hint: 'Check RPC permissions: GRANT EXECUTE ON FUNCTION set_my_agent_location TO authenticated'
+        });
+        return;
+      }
+      
       // Silent handling: expected when function doesn't exist
       if (error.code === 'PGRST116' || error.code === '42P01' || error.code === 'PGRST301') {
         console.debug('[AgentLocation] RPC skipped (function absent):', error.code);
@@ -64,7 +75,7 @@ async function upsertAgentLocation(userId: string, position: Position): Promise<
       
       console.debug('[AgentLocation] RPC error:', error);
     } else {
-      console.debug('[AgentLocation] Position updated via RPC:', { lat: position.lat, lng: position.lng });
+      console.debug('✅ [AgentLocation] Position updated via RPC:', { lat: position.lat, lng: position.lng });
     }
   } catch (e: any) {
     // Silent exception handling - no toast, just debug log

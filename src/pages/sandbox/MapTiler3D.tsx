@@ -257,7 +257,7 @@ export default function MapTiler3D() {
             table: 'user_map_areas',
             filter: `user_id=eq.${uid}`
           },
-          (payload) => {
+          async (payload) => {
             if (payload.new?.source === 'buzz_map' && payload.new?.week === currentWeek) {
               console.info('🗺️ M1-3D realtime:insert (buzz area)');
               const map = mapRef.current;
@@ -275,19 +275,17 @@ export default function MapTiler3D() {
                 center: { lat, lng } 
               });
 
-              // 🔥 FIX: Force reload with bust to trigger currentAreaVersion update
-              reloadAreas();
+              // ✅ FIX: Await reload completion BEFORE dispatching areasReloaded
+              await reloadAreas();
 
-              // 🔥 NEW: Signal that areas have been reloaded (for BuzzMapButtonSecure sequence)
-              setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('areasReloaded', {
-                  detail: { 
-                    lat, 
-                    lng, 
-                    radius_km: radiusKm 
-                  }
-                }));
-              }, 100); // Small delay to ensure reloadAreas completes
+              // ✅ FIX: Dispatch event ONLY after areas are fully loaded
+              window.dispatchEvent(new CustomEvent('areasReloaded', {
+                detail: { 
+                  lat, 
+                  lng, 
+                  radius_km: radiusKm 
+                }
+              }));
 
               // Dispatch custom event for other listeners
               window.dispatchEvent(new CustomEvent('buzzAreaCreated', {
