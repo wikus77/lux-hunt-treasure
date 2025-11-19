@@ -278,6 +278,17 @@ export default function MapTiler3D() {
               // 🔥 FIX: Force reload with bust to trigger currentAreaVersion update
               reloadAreas();
 
+              // 🔥 NEW: Signal that areas have been reloaded (for BuzzMapButtonSecure sequence)
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('areasReloaded', {
+                  detail: { 
+                    lat, 
+                    lng, 
+                    radius_km: radiusKm 
+                  }
+                }));
+              }, 100); // Small delay to ensure reloadAreas completes
+
               // Dispatch custom event for other listeners
               window.dispatchEvent(new CustomEvent('buzzAreaCreated', {
                 detail: { 
