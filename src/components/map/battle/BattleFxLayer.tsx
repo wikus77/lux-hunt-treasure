@@ -87,9 +87,18 @@ export default function BattleFxLayer({ map, battleFxMode }: BattleFxLayerProps)
         const { data, error } = await supabase
           .from('agent_locations' as any)
           .select('agent_id, lat, lng, updated_at')
-          .order('updated_at', { ascending: false });
+          .order('updated_at', { ascending: false, nullsFirst: false })
+          .limit(100);
 
-        if (error) throw error;
+        if (error) {
+          console.error('[BattleFxLayer] agent_locations query error:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+          return;
+        }
 
         if (data) {
           const posMap = new Map<string, AgentPosition>();
@@ -101,7 +110,7 @@ export default function BattleFxLayer({ map, battleFxMode }: BattleFxLayerProps)
           setAgentPositions(posMap);
         }
       } catch (e) {
-        console.warn('[BattleFxLayer] Error fetching agent positions:', e);
+        console.error('[BattleFxLayer] Exception fetching agent positions:', e);
       }
     };
 
