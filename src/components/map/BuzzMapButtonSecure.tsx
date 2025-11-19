@@ -257,6 +257,24 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         }
       );
 
+      // 🔥 FIX: Update agent location immediately after BUZZ (geolocation sync)
+      try {
+        console.log('📍 Updating agent location after BUZZ...', { lat: coordinates[0], lng: coordinates[1] });
+        const { error: locationError } = await (supabase as any).rpc('set_my_agent_location', {
+          p_lat: coordinates[0],
+          p_lng: coordinates[1],
+          p_accuracy: null,
+          p_status: 'online'
+        });
+        if (locationError) {
+          console.warn('⚠️ Failed to update agent location:', locationError);
+        } else {
+          console.log('✅ Agent location updated successfully');
+        }
+      } catch (e) {
+        console.warn('⚠️ Agent location update exception:', e);
+      }
+
       // Notify parent components to reload areas
       onAreaGenerated?.(coordinates[0], coordinates[1], actualRadius);
       onBuzzPress();
