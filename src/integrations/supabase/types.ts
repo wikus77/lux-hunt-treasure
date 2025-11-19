@@ -76,8 +76,9 @@ export type Database = {
           p_user_id: string
         }
         Returns: {
-          area_id: string
-          message: string
+          error: string
+          new_balance: number
+          spent: number
           success: boolean
         }[]
       }
