@@ -5,6 +5,10 @@ import { withCors } from '../_shared/cors.ts'
 import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts'
 import { generateMissionClue, getCurrentWeekOfYear } from '../_shared/clueGenerator.ts'
 
+// 🔍 Debug switch (controlled by ENV)
+const DEBUG = Deno.env.get('DEBUG_BUZZ_MAP') === '1';
+const dlog = (...args: unknown[]) => { if (DEBUG) console.log(...args); };
+
 serve(withCors(async (req: Request): Promise<Response> => {
   // Debug/trace flags
   const wantsDebug = req.headers.get('x-m1-debug') === '1' || Deno.env.get('DEBUG_PANELS') === 'true';
@@ -56,7 +60,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
     const body = { ...rawBody, userId };
     const { generateMap, coordinates, sessionId } = body;
     
-    // TRACE: Payload
+    // TRACE: Payload (only if wantsTrace)
     if (wantsTrace) {
       console.log('[TRACE] userId:', userId);
       console.log('[TRACE] generateMap:', generateMap);
@@ -64,18 +68,12 @@ serve(withCors(async (req: Request): Promise<Response> => {
       console.log('[TRACE] sessionId:', sessionId);
     }
     
-    // 🔍 VERIFICA LOG: Branch decision
-    console.log('[TRACE] Branch decision', {
+    dlog('[DBG] Branch decision', {
       generateMap,
       typeGenerateMap: typeof generateMap,
       hasCoordinates: !!coordinates,
       lat: coordinates?.lat,
-      lng: coordinates?.lng,
-      latType: typeof coordinates?.lat,
-      lngType: typeof coordinates?.lng,
-      willEnterMapBranch: !!(generateMap === true && coordinates && 
-                            typeof coordinates.lat === 'number' && 
-                            typeof coordinates.lng === 'number')
+      lng: coordinates?.lng
     });
     
     // Handle BUZZ MAP flow (strict validation)
@@ -83,11 +81,11 @@ serve(withCors(async (req: Request): Promise<Response> => {
         coordinates && 
         typeof coordinates.lat === 'number' && 
         typeof coordinates.lng === 'number') {
-      console.log('✅ [TRACE] ENTERING MAP BRANCH');
+      dlog('[DBG] ENTERING MAP BRANCH');
       console.log('🗺️ [HANDLE-BUZZ-PRESS] Processing BUZZ MAP generation (SERVER-AUTHORITATIVE)');
       
       // 🔥 SERVER-AUTHORITATIVE: Use RPC to get next level
-      console.log('🔢 [HANDLE-BUZZ-PRESS] Calling RPC m1_get_next_buzz_level...');
+      dlog('[DBG] Calling RPC m1_get_next_buzz_level...');
       const { data: nextLevel, error: levelError } = await supabase
         .rpc('m1_get_next_buzz_level', { p_user_id: user.id })
         .single();
@@ -102,14 +100,13 @@ serve(withCors(async (req: Request): Promise<Response> => {
       const costM1U = nextLevel.m1u;
       const currentWeek = nextLevel.current_week;
 
-      console.log('🗺️ [HANDLE-BUZZ-PRESS] SERVER-CALCULATED pricing (RPC):', {
+      dlog('[DBG] SERVER-CALCULATED pricing (RPC):', {
         source: 'rpc_server',
         currentWeek: nextLevel.current_week,
         currentCount: nextLevel.current_count,
         nextLevel: level,
         radiusKm: radius_km,
-        costM1U: costM1U,
-        coordinates
+        costM1U: costM1U
       });
       
       // 🔥 SERVER-AUTHORITATIVE: Spend M1U using server-calculated cost
@@ -161,8 +158,9 @@ serve(withCors(async (req: Request): Promise<Response> => {
         throw new Error('Failed to create map area');
       }
       
-      console.log('✅ [TRACE] MAP INSERT OK', { 
-        id: mapArea?.id, 
+      // ✅ Stable log: MAP area created successfully
+      console.log('[BUZZ-MAP] area created', { 
+        area_id: mapArea?.id, 
         level, 
         radius_km, 
         week: currentWeek 
@@ -213,21 +211,12 @@ serve(withCors(async (req: Request): Promise<Response> => {
 
       const responseBody = wantsDebug ? { ...response, __debug: debugBlock } : response;
       
-      console.log('🎉 [HANDLE-BUZZ-PRESS] BUZZ MAP completed (SERVER-AUTHORITATIVE):', {
-        areaId: mapArea.id,
-        level,
-        radiusKm: radius_km,
-        costM1U,
-        week: currentWeek,
-        source: 'server'
-      });
-      
       return new Response(JSON.stringify(responseBody), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       });
     } else {
-      console.log('⚠️ [TRACE] ENTERING CLUE BRANCH (no map generation)', {
+      dlog('[DBG] ENTERING CLUE BRANCH (no map generation)', {
         generateMap,
         coordinates
       });

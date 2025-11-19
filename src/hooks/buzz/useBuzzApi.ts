@@ -34,6 +34,10 @@ interface BuzzApiResponse {
   remainingMapGenerations?: number;
 }
 
+// 🔍 Debug switch (controlled by ENV)
+const DEBUG_BUZZ = import.meta.env.VITE_DEBUG_BUZZ_MAP === '1';
+const dlog = (...args: any[]) => { if (DEBUG_BUZZ) console.log(...args); };
+
 export function useBuzzApi() {
   const handleBuzzPress = async ({ userId, generateMap, coordinates, prizeId, sessionId }: BuzzApiParams): Promise<BuzzApiResponse> => {
     try {
@@ -65,15 +69,10 @@ export function useBuzzApi() {
       if (prizeId) payload.prizeId = prizeId;
       if (sessionId) payload.sessionId = sessionId;
       
-      // 🔍 VERIFICA LOG: Payload finale prima dell'invoke
-      console.log('📡 [VERIFICA] PAYLOAD FINALE', {
+      dlog('📡 [DBG] PAYLOAD', {
         generateMap: payload.generateMap,
         typeGenerateMap: typeof payload.generateMap,
-        hasCoordinates: !!payload.coordinates,
-        lat: payload.coordinates?.lat,
-        lng: payload.coordinates?.lng,
-        latType: typeof payload.coordinates?.lat,
-        lngType: typeof payload.coordinates?.lng
+        coords: payload.coordinates
       });
       
       console.log(`📡 Calling handle-buzz-press with unified payload:`, payload);
@@ -113,18 +112,16 @@ export function useBuzzApi() {
         fullError: error
       });
       
-      // 🔍 VERIFICA LOG: Response dell'edge function
-      console.log('🛰️ [VERIFICA] EDGE RESP', {
+      dlog('🛰️ [DBG] EDGE RESP', {
         ok: !!data?.success,
         mode: data?.mode,
         hasAreaId: !!data?.area_id,
         level: data?.level,
-        radius_km: data?.radius_km,
-        week: data?.week
+        radius_km: data?.radius_km
       });
       
-      if (data?.mode === 'map' && !data?.area_id) {
-        console.error('⚠️ CLUE path preso al posto del MAP (manca area_id)');
+      if (DEBUG_BUZZ && data?.mode === 'map' && !data?.area_id) {
+        console.warn('⚠️ [DBG] CLUE path taken instead of MAP (missing area_id)');
       }
       
       // Handle edge function errors
