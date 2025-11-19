@@ -261,12 +261,31 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
       onAreaGenerated?.(coordinates[0], coordinates[1], actualRadius);
       onBuzzPress();
 
-      // 🔥 FIX: Wait for DB commit/replica + realtime layer refresh, THEN reload pricing
-      // This matches Test Map behavior: DB write → wait → layer refresh → pricing update
-      console.log('🔄 Waiting 800ms for DB commit + layer refresh...');
+      // 🔥 FIX: Wait for DB commit/replica, then wait for areas reload, THEN trigger pricing refresh
+      // Sequence: Edge Function → 800ms delay → areasReloaded event → pricing update
+      console.log('🔄 Step 1/3: Waiting 800ms for DB commit + realtime listener activation...');
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      // 🔥 FIX: Dispatch custom event to trigger pricing refresh AFTER layers updated
+      // 🔥 FIX: Wait for 'areasReloaded' event from MapTiler3D realtime listener
+      console.log('🔄 Step 2/3: Waiting for areasReloaded event (max 3s timeout)...');
+      await new Promise<void>((resolve) => {
+        const timeout = setTimeout(() => {
+          console.warn('⚠️ areasReloaded timeout - proceeding anyway');
+          resolve();
+        }, 3000);
+
+        const handler = () => {
+          console.log('✅ areasReloaded event received');
+          clearTimeout(timeout);
+          window.removeEventListener('areasReloaded', handler);
+          resolve();
+        };
+
+        window.addEventListener('areasReloaded', handler);
+      });
+
+      // 🔥 FIX: NOW dispatch buzzAreaCreated to trigger pricing refresh AFTER layers updated
+      console.log('🔄 Step 3/3: Dispatching buzzAreaCreated to reload pricing...');
       window.dispatchEvent(new CustomEvent('buzzAreaCreated', {
         detail: { 
           level: actualLevel,
@@ -278,7 +297,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         }
       }));
 
-      console.log('✅ BUZZ MAP sequence complete (wait → layers → pricing)');
+      console.log('✅ BUZZ MAP sequence complete (800ms → areasReloaded → pricing)');
 
     } catch (error: any) {
       console.error('❌ M1SSION™ BUZZ MAP: Exception', error);
