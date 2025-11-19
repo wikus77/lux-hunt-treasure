@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      user_map_areas: {
+        Row: {
+          active: boolean | null
+          center_lat: number | null
+          center_lng: number | null
+          created_at: string | null
+          id: string
+          lat: number
+          level: number | null
+          lng: number
+          price_eur: number | null
+          radius_km: number
+          source: string
+          user_id: string
+          week: number
+        }
+        Insert: {
+          active?: boolean | null
+          center_lat?: number | null
+          center_lng?: number | null
+          created_at?: string | null
+          id?: string
+          lat: number
+          level?: number | null
+          lng: number
+          price_eur?: number | null
+          radius_km: number
+          source?: string
+          user_id: string
+          week: number
+        }
+        Update: {
+          active?: boolean | null
+          center_lat?: number | null
+          center_lng?: number | null
+          created_at?: string | null
+          id?: string
+          lat?: number
+          level?: number | null
+          lng?: number
+          price_eur?: number | null
+          radius_km?: number
+          source?: string
+          user_id?: string
+          week?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
