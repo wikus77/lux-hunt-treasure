@@ -9,168 +9,37 @@ max_rows = 1000
 
 [db]
 port = 54322
-shadow_port = 54320
-major_version = 15
-
-[db.pooler]
-enabled = false
-port = 54329
-pool_mode = "transaction"
-default_pool_size = 20
-max_client_conn = 100
-
-[realtime]
-enabled = true
-# port = 54323
-ip_version = "IPv4"
 
 [studio]
 enabled = true
-port = 54324
-api_url = "http://127.0.0.1:54321"
-openai_api_key = "env(OPENAI_API_KEY)"
+port = 54323
 
-[inbucket]
-enabled = true
-port = 54325
-smtp_port = 54326
-pop3_port = 54327
-
-[storage]
-enabled = true
-# port = 54328
-file_size_limit = "50MiB"
-image_transformation = { enabled = true }
-
-[functions]
-verify_jwt = { enabled = true }
-
-[functions.fcm-test]
-
-[functions.fcm-send]
+[ingest]
+enabled = false
 
 [auth]
 enabled = true
-# port = 54329
-site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
 jwt_expiry = 3600
 enable_signup = true
-# enable_email_confirmations = false
-# enable_email_autoconfirm = true
-# enable_phone_confirmations = false
-# enable_phone_autoconfirm = true
 
-[functions.webpush-send]
+[edge_functions]
+enabled = true
+port = 54325
+
+[functions.create-checkout]
+verify_jwt = true
+
+[functions.notify-mission-access]
 verify_jwt = false
-[functions.webpush-upsert]
-
-[functions.geofence-engine]
-
-[functions.webpush-admin-broadcast]
-
-[functions.create-payment-intent]
-
-[functions.stripe-mode]
-
-[functions.create-random-markers]
-
-[functions.feed-crawler]
-
-[functions.notifier-engine]
-
-[functions.handle-buzz-press]
-
-[functions.handle-buzz-payment-success]
-
-[functions.handle-buzz-map]
 
 [functions.send-push-notification]
+verify_jwt = true
 
-[functions.reset-mission]
-
-[functions.create_qr_code]
-
-[functions.ensure-agent-code]
-
-[functions.generate-mission-clues]
-
-[functions.stripe-webhook]
-
-[functions.get-norah-context]
-
-[functions.get-user-state]
-
-[functions.get-nearby-prizes]
-
-[functions.rag-search]
-
-[functions.open-support-ticket]
-
-[functions.populate-knowledge-base]
-
-[functions.norah-chat]
-
-[functions.norah-rag-search]
-verify_jwt = false
-[functions.norah-kb-upsert]
-
-[functions.chat]
-
-[functions.ai-kb-upsert]
-
-[functions.ai-kb-bulk-seed]
-
-[functions.norah-diagnose]
-
-[functions.handle-daily-checkin]
-
-[functions.sync-weekly-leaderboard]
-
-[functions.weekly-reset-cron]
-
-[functions.norah-proactive-analyzer]
-
-[functions.enroll-mission-of-the-month]
-
-[functions.auto-push-cron]
+[functions.send-push-notification-real]
 verify_jwt = false
 
-[functions.get-vapid]
-verify_jwt = false
-
-[functions.env-dump]
-verify_jwt = false
-
-[functions.webpush-targeted-send]
-verify_jwt = false
-
-[functions.norah-ingest]
-verify_jwt = false
-
-[functions.norah-embed]
-verify_jwt = false
-
-[functions.norah-kpis]
-verify_jwt = false
-
-[functions.ritual-orchestrator]
-verify_jwt = false
-
-[functions.ritual-test-fire]
-verify_jwt = false
-
-[functions.battle-create]
-
-[functions.battle-accept]
-
-[functions.battle-ready]
-
-[functions.battle-tap-commit]
-
-[functions.battle-resolve]
-
-[functions.battle-cancel]
-
-[functions.battle-push-dispatcher]
+[functions.get-firebase-config]
 verify_jwt = false
