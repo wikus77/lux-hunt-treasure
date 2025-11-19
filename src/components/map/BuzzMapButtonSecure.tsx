@@ -201,6 +201,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
       console.log('🗺️ M1SSION™ BUZZ MAP: Calling edge function (server will calculate level/radius/cost)...');
       const edgeResult = await callBuzzApi({
         userId: user.id,
+        mode: 'map', // 🔥 FIX: Explicit mode to force MAP branch
         generateMap: true,
         coordinates: { lat: coordinates[0], lng: coordinates[1] },
         sessionId: Date.now().toString()

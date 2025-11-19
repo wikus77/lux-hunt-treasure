@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface BuzzApiParams {
   userId: string;
+  mode?: 'map' | 'clue'; // 🔥 FIX: Explicit mode parameter
   generateMap: boolean;
   coordinates?: { lat: number; lng: number };
   prizeId?: string;
@@ -39,7 +40,7 @@ const DEBUG_BUZZ = import.meta.env.VITE_DEBUG_BUZZ_MAP === '1';
 const dlog = (...args: any[]) => { if (DEBUG_BUZZ) console.log(...args); };
 
 export function useBuzzApi() {
-  const handleBuzzPress = async ({ userId, generateMap, coordinates, prizeId, sessionId }: BuzzApiParams): Promise<BuzzApiResponse> => {
+  const handleBuzzPress = async ({ userId, mode, generateMap, coordinates, prizeId, sessionId }: BuzzApiParams): Promise<BuzzApiResponse> => {
     try {
       if (!userId) {
         console.error("UserId mancante nella chiamata API");
@@ -58,6 +59,11 @@ export function useBuzzApi() {
         userId, 
         generateMap 
       };
+
+      // 🔥 FIX: Add explicit mode parameter
+      if (mode) {
+        payload.mode = mode;
+      }
 
       // Add coordinates if generateMap is true and coordinates provided
       if (generateMap && coordinates) {
@@ -120,8 +126,19 @@ export function useBuzzApi() {
         radius_km: data?.radius_km
       });
       
+      // 🔥 FIX: Validate MAP mode response has area_id
       if (DEBUG_BUZZ && data?.mode === 'map' && !data?.area_id) {
         console.warn('⚠️ [DBG] CLUE path taken instead of MAP (missing area_id)');
+      }
+      
+      // Strict validation: if we requested MAP mode, we MUST get area_id
+      if (generateMap && data?.success && data?.mode === 'map' && !data?.area_id) {
+        console.error('⚠️ Edge returned MAP success but missing area_id (server error)', { data });
+        return {
+          success: false,
+          error: true,
+          errorMessage: 'Errore server: area non creata correttamente'
+        };
       }
       
       // Handle edge function errors

@@ -58,29 +58,43 @@ serve(withCors(async (req: Request): Promise<Response> => {
     const rawBody = await req.json().catch(() => ({}));
     const userId = rawBody.userId ?? rawBody.user_id ?? user.id;
     const body = { ...rawBody, userId };
-    const { generateMap, coordinates, sessionId } = body;
+    const { mode, generateMap, coordinates: rawCoordinates, sessionId } = body;
+    
+    // 🔥 FIX: Normalize coordinates with strict validation
+    function normalizeCoordinates(c: any): { lat: number; lng: number } | null {
+      if (!c) return null;
+      const lat = Number(Array.isArray(c) ? c[0] : c.lat);
+      const lng = Number(Array.isArray(c) ? c[1] : c.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+      return { lat, lng };
+    }
+    
+    const coordinates = normalizeCoordinates(rawCoordinates);
+    const willMap = (generateMap === true || mode === 'map') && !!coordinates;
     
     // TRACE: Payload (only if wantsTrace)
     if (wantsTrace) {
       console.log('[TRACE] userId:', userId);
+      console.log('[TRACE] mode:', mode);
       console.log('[TRACE] generateMap:', generateMap);
-      console.log('[TRACE] coordinates:', coordinates);
+      console.log('[TRACE] rawCoordinates:', rawCoordinates);
+      console.log('[TRACE] normalizedCoordinates:', coordinates);
+      console.log('[TRACE] willMap:', willMap);
       console.log('[TRACE] sessionId:', sessionId);
     }
     
     dlog('[DBG] Branch decision', {
+      mode,
       generateMap,
       typeGenerateMap: typeof generateMap,
-      hasCoordinates: !!coordinates,
-      lat: coordinates?.lat,
-      lng: coordinates?.lng
+      hasRawCoords: !!rawCoordinates,
+      hasNormalizedCoords: !!coordinates,
+      willMap
     });
     
     // Handle BUZZ MAP flow (strict validation)
-    if (generateMap === true && 
-        coordinates && 
-        typeof coordinates.lat === 'number' && 
-        typeof coordinates.lng === 'number') {
+    if (willMap) {
       dlog('[DBG] ENTERING MAP BRANCH');
       console.log('🗺️ [HANDLE-BUZZ-PRESS] Processing BUZZ MAP generation (SERVER-AUTHORITATIVE)');
       
