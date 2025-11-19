@@ -193,9 +193,9 @@ export const useBuzzMapLogic = () => {
     }
   };
 
-  const reloadAreas = () => {
+  const reloadAreas = async (): Promise<void> => {
     console.log('🔄 useBuzzMapLogic: Manual reload triggered');
-    fetchCurrentWeekAreas();
+    await fetchCurrentWeekAreas(); // ✅ FIX: Await completion before dispatching events
   };
 
   // CRITICAL: Auto-fetch on user change but respect payment requirements AND active prizes
