@@ -261,7 +261,12 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
       onAreaGenerated?.(coordinates[0], coordinates[1], actualRadius);
       onBuzzPress();
 
-      // 🔥 FIX: Dispatch custom event to trigger pricing refresh
+      // 🔥 FIX: Wait for DB commit/replica + realtime layer refresh, THEN reload pricing
+      // This matches Test Map behavior: DB write → wait → layer refresh → pricing update
+      console.log('🔄 Waiting 800ms for DB commit + layer refresh...');
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // 🔥 FIX: Dispatch custom event to trigger pricing refresh AFTER layers updated
       window.dispatchEvent(new CustomEvent('buzzAreaCreated', {
         detail: { 
           level: actualLevel,
@@ -272,6 +277,8 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
           areaId: edgeResult.area_id
         }
       }));
+
+      console.log('✅ BUZZ MAP sequence complete (wait → layers → pricing)');
 
     } catch (error: any) {
       console.error('❌ M1SSION™ BUZZ MAP: Exception', error);
