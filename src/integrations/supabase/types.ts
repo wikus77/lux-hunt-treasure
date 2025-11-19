@@ -20,7 +20,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      buzz_map_spend_m1u: {
+        Args: {
+          p_cost_m1u: number
+          p_latitude: number
+          p_longitude: number
+          p_radius_km: number
+          p_user_id: string
+        }
+        Returns: {
+          area_id: string
+          message: string
+          success: boolean
+        }[]
+      }
+      m1_get_next_buzz_level: {
+        Args: { p_user_id: string }
+        Returns: {
+          cost_m1u: number
+          level: number
+          radius_km: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
