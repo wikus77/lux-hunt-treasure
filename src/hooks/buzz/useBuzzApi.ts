@@ -65,6 +65,17 @@ export function useBuzzApi() {
       if (prizeId) payload.prizeId = prizeId;
       if (sessionId) payload.sessionId = sessionId;
       
+      // 🔍 VERIFICA LOG: Payload finale prima dell'invoke
+      console.log('📡 [VERIFICA] PAYLOAD FINALE', {
+        generateMap: payload.generateMap,
+        typeGenerateMap: typeof payload.generateMap,
+        hasCoordinates: !!payload.coordinates,
+        lat: payload.coordinates?.lat,
+        lng: payload.coordinates?.lng,
+        latType: typeof payload.coordinates?.lat,
+        lngType: typeof payload.coordinates?.lng
+      });
+      
       console.log(`📡 Calling handle-buzz-press with unified payload:`, payload);
       
       // Check user session before calling edge function
@@ -101,6 +112,20 @@ export function useBuzzApi() {
         fullData: data,
         fullError: error
       });
+      
+      // 🔍 VERIFICA LOG: Response dell'edge function
+      console.log('🛰️ [VERIFICA] EDGE RESP', {
+        ok: !!data?.success,
+        mode: data?.mode,
+        hasAreaId: !!data?.area_id,
+        level: data?.level,
+        radius_km: data?.radius_km,
+        week: data?.week
+      });
+      
+      if (data?.mode === 'map' && !data?.area_id) {
+        console.error('⚠️ CLUE path preso al posto del MAP (manca area_id)');
+      }
       
       // Handle edge function errors
       if (error) {

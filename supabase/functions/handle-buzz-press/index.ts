@@ -64,51 +64,62 @@ serve(withCors(async (req: Request): Promise<Response> => {
       console.log('[TRACE] sessionId:', sessionId);
     }
     
-    // Handle BUZZ MAP flow
-    if (generateMap && coordinates) {
+    // 🔍 VERIFICA LOG: Branch decision
+    console.log('[TRACE] Branch decision', {
+      generateMap,
+      typeGenerateMap: typeof generateMap,
+      hasCoordinates: !!coordinates,
+      lat: coordinates?.lat,
+      lng: coordinates?.lng,
+      latType: typeof coordinates?.lat,
+      lngType: typeof coordinates?.lng,
+      willEnterMapBranch: !!(generateMap === true && coordinates && 
+                            typeof coordinates.lat === 'number' && 
+                            typeof coordinates.lng === 'number')
+    });
+    
+    // Handle BUZZ MAP flow (strict validation)
+    if (generateMap === true && 
+        coordinates && 
+        typeof coordinates.lat === 'number' && 
+        typeof coordinates.lng === 'number') {
+      console.log('✅ [TRACE] ENTERING MAP BRANCH');
       console.log('🗺️ [HANDLE-BUZZ-PRESS] Processing BUZZ MAP generation (SERVER-AUTHORITATIVE)');
       
-      // Calculate current week of year for weekly reset (ISO week UTC)
-      const currentWeek = getCurrentWeekOfYear();
-      
-      // Count existing buzz map areas for CURRENT WEEK ONLY to determine level
-      const { count, error: countError } = await supabase
-        .from('user_map_areas')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('source', 'buzz_map')
-        .eq('week', currentWeek);
-        
-      if (countError) {
-        console.error('❌ [HANDLE-BUZZ-PRESS] Error counting map areas:', countError);
-        throw new Error('Failed to count existing areas');
+      // 🔥 SERVER-AUTHORITATIVE: Use RPC to get next level
+      console.log('🔢 [HANDLE-BUZZ-PRESS] Calling RPC m1_get_next_buzz_level...');
+      const { data: nextLevel, error: levelError } = await supabase
+        .rpc('m1_get_next_buzz_level', { p_user_id: user.id })
+        .single();
+
+      if (levelError || !nextLevel) {
+        console.error('❌ [HANDLE-BUZZ-PRESS] RPC m1_get_next_buzz_level error:', levelError);
+        throw new Error('Failed to compute next level: ' + (levelError?.message || 'No data'));
       }
-      
-      const currentCount = count ?? 0;
-      const level = Math.min(currentCount + 1, 60);
-      const buzzLevel = getBuzzLevelFromCount(currentCount);
-      
-      console.log('🗺️ [HANDLE-BUZZ-PRESS] SERVER-CALCULATED pricing:', {
-        source: 'server',
-        currentWeek,
-        currentCount,
+
+      const level = nextLevel.level;
+      const radius_km = nextLevel.radius_km;
+      const costM1U = nextLevel.m1u;
+      const currentWeek = nextLevel.current_week;
+
+      console.log('🗺️ [HANDLE-BUZZ-PRESS] SERVER-CALCULATED pricing (RPC):', {
+        source: 'rpc_server',
+        currentWeek: nextLevel.current_week,
+        currentCount: nextLevel.current_count,
         nextLevel: level,
-        radiusKm: buzzLevel.radiusKm,
-        priceCents: buzzLevel.priceCents,
-        costM1U: Math.round(buzzLevel.priceCents / 10), // 1 M1U = €0.10 = 10 cents
+        radiusKm: radius_km,
+        costM1U: costM1U,
         coordinates
       });
       
       // 🔥 SERVER-AUTHORITATIVE: Spend M1U using server-calculated cost
-      const costM1U = Math.round(buzzLevel.priceCents / 10);
-      
       console.log('💎 [HANDLE-BUZZ-PRESS] Calling RPC to spend M1U...');
       const { data: spendResult, error: spendError } = await supabase.rpc('buzz_map_spend_m1u', {
         p_user_id: user.id,
         p_cost_m1u: costM1U,
         p_latitude: coordinates.lat,
         p_longitude: coordinates.lng,
-        p_radius_km: buzzLevel.radiusKm
+        p_radius_km: radius_km
       });
       
       if (spendError) {
@@ -127,7 +138,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
         newBalance: spendResult.new_balance
       });
       
-      // Create the map area with weekly counter
+      // Create the map area with weekly counter (using RPC values)
       const { data: mapArea, error: mapError } = await supabase
         .from('user_map_areas')
         .insert({
@@ -136,10 +147,10 @@ serve(withCors(async (req: Request): Promise<Response> => {
           lng: coordinates.lng,
           center_lat: coordinates.lat,
           center_lng: coordinates.lng,
-          radius_km: buzzLevel.radiusKm,
+          radius_km: radius_km,
           source: 'buzz_map',
           level: level,
-          price_eur: buzzLevel.priceCents / 100,
+          price_eur: costM1U / 10,
           week: currentWeek
         })
         .select()
@@ -150,14 +161,21 @@ serve(withCors(async (req: Request): Promise<Response> => {
         throw new Error('Failed to create map area');
       }
       
-      // Log the action
+      console.log('✅ [TRACE] MAP INSERT OK', { 
+        id: mapArea?.id, 
+        level, 
+        radius_km, 
+        week: currentWeek 
+      });
+      
+      // Log the action (using RPC values)
       const { error: actionError } = await supabase
         .from('buzz_map_actions')
         .insert({
           user_id: user.id,
           clue_count: level,
-          cost_eur: buzzLevel.priceCents / 100,
-          radius_generated: buzzLevel.radiusKm
+          cost_eur: costM1U / 10,
+          radius_generated: radius_km
         });
         
       if (actionError) {
@@ -171,13 +189,13 @@ serve(withCors(async (req: Request): Promise<Response> => {
           id: mapArea.id,
           center_lat: coordinates.lat,
           center_lng: coordinates.lng,
-          radius_km: buzzLevel.radiusKm,
+          radius_km: radius_km,
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         },
         area_id: mapArea.id,
         level: level,
-        radius_km: buzzLevel.radiusKm,
-        price_eur: buzzLevel.priceCents / 100,
+        radius_km: radius_km,
+        price_eur: costM1U / 10,
         cost_m1u: costM1U,
         new_balance: spendResult.new_balance,
         week: currentWeek
@@ -198,7 +216,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
       console.log('🎉 [HANDLE-BUZZ-PRESS] BUZZ MAP completed (SERVER-AUTHORITATIVE):', {
         areaId: mapArea.id,
         level,
-        radiusKm: buzzLevel.radiusKm,
+        radiusKm: radius_km,
         costM1U,
         week: currentWeek,
         source: 'server'
@@ -207,6 +225,11 @@ serve(withCors(async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify(responseBody), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
+      });
+    } else {
+      console.log('⚠️ [TRACE] ENTERING CLUE BRANCH (no map generation)', {
+        generateMap,
+        coordinates
       });
     }
 
