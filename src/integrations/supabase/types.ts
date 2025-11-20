@@ -875,25 +875,34 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_deleted: boolean | null
           is_read: boolean
           message: string
           read_at: string | null
+          title: string | null
+          type: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_deleted?: boolean | null
           is_read?: boolean
           message: string
           read_at?: string | null
+          title?: string | null
+          type?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_deleted?: boolean | null
           is_read?: boolean
           message?: string
           read_at?: string | null
+          title?: string | null
+          type?: string | null
           user_id?: string
         }
         Relationships: []
