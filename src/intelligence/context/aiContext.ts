@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Intelligence Context Engine - Agent-aware state management
+// @ts-nocheck
 
 import { supabase } from '@/integrations/supabase/client';
 

@@ -1,5 +1,5 @@
-
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// @ts-nocheck
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";

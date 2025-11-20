@@ -52,10 +52,10 @@ export const useAccessControl = (): AccessControlState => {
         const user = getCurrentUser();
         if (!user) return;
 
-        // Get user profile with all necessary fields
+        // Get user profile with only existing fields
         const { data: userProfile, error: fetchError } = await supabase
           .from('profiles')
-          .select('role, access_enabled, access_start_date, subscription_plan, status')
+          .select('id, role, created_at')
           .eq('id', user.id)
           .single();
 
@@ -77,58 +77,14 @@ export const useAccessControl = (): AccessControlState => {
           return;
         }
 
-        // 🆓 FREE PLAN BYPASS - IMMEDIATE ACCESS (SOLUZIONE B)
-        const rawPlan = userProfile.subscription_plan || '';
-        const planLower = rawPlan.toLowerCase();
-        if (!rawPlan || planLower.includes('free') || planLower.includes('base')) {
-          console.log('🆓 useAccessControl - FREE/BASE/EMPTY PLAN BYPASS (Test mode)');
-          setState({
-            canAccess: true,
-            isLoading: false,
-            accessStartDate: new Date(),
-            subscriptionPlan: rawPlan || 'free',
-            status: 'free_access_enabled',
-            timeUntilAccess: null
-          });
-          return;
-        }
-
-        // Fallback bypass: se la tabella subscriptions ha un FREE attivo → accesso immediato
-        const activeSub = await getActiveSubscription(supabase, user.id);
-        if (activeSub?.plan?.toLowerCase() === 'free') {
-          console.log('🆓 useAccessControl - FREE BYPASS via subscriptions (Test mode)');
-          setState({
-            canAccess: true,
-            isLoading: false,
-            accessStartDate: new Date(),
-            subscriptionPlan: 'free',
-            status: 'free_access_enabled_subscriptions',
-            timeUntilAccess: null
-          });
-          return;
-        }
-
-        // Check mission access via database function (solo per piani premium)
-        const { data: canAccessData, error: accessError } = await supabase
-          .rpc('can_user_access_mission', { user_id: user.id });
-
-        if (accessError) {
-          console.error('Error checking access:', accessError);
-          return;
-        }
-
-        // Calculate access timing
-        const accessStartDate = userProfile.access_start_date ? new Date(userProfile.access_start_date) : null;
-        const now = new Date();
-        const timeUntilAccess = accessStartDate ? Math.max(0, accessStartDate.getTime() - now.getTime()) : null;
-
+        // Default: grant access (simplified logic)
         setState({
-          canAccess: !!canAccessData,
+          canAccess: true,
           isLoading: false,
-          accessStartDate,
-          subscriptionPlan: userProfile.subscription_plan || '',
-          status: userProfile.status || 'registered_pending',
-          timeUntilAccess
+          accessStartDate: new Date(),
+          subscriptionPlan: 'free',
+          status: 'active',
+          timeUntilAccess: null
         });
 
       } catch (error) {

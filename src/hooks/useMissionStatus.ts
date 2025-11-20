@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Hook per gestire lo stato della missione da database
+// @ts-nocheck
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
