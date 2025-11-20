@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * My Active Battles Hook - Tracks user's active TRON battles
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

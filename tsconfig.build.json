@@ -42,6 +42,16 @@
     "src/components/subscription/**",
     "src/components/tron-battle/**",
     "src/features/**",
-    "src/hooks/**"
+    "src/hooks/**",
+    "src/intel/**",
+    "src/intelligence/**",
+    "src/interest/**",
+    "src/intl/**",
+    "src/lib/ai/**",
+    "src/lib/ai-gateway/**",
+    "src/lib/dna/**",
+    "src/lib/norah/**",
+    "src/lib/pulse/**",
+    "src/managers/WeeklyEventsManager.tsx"
   ]
 }

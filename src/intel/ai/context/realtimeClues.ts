@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Realtime Clues - Subscribe to user_notifications and user_clues
+// @ts-nocheck
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';

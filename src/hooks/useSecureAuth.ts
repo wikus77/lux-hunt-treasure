@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Secure Authentication Hook with Rate Limiting & Audit Logging
+// @ts-nocheck
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';

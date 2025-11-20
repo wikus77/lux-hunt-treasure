@@ -32,15 +32,16 @@ export const useLegalConsent = () => {
         // For authenticated users, check database
         const { data: consentData, error } = await supabase
           .from('user_consents')
-          .select('terms_accepted')
+          .select('granted')
           .eq('user_id', user.id)
+          .eq('purpose', 'terms')
           .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error loading legal consent:', error);
         }
 
-        const isAccepted = consentData?.terms_accepted === true;
+        const isAccepted = consentData?.granted === true;
         setState({
           isAccepted,
           isLoading: false,
@@ -77,9 +78,9 @@ export const useLegalConsent = () => {
           .from('user_consents')
           .upsert({
             user_id: user.id,
-            terms_accepted: true,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'user_id' });
+            purpose: 'terms',
+            granted: true
+          }, { onConflict: 'user_id,purpose' });
 
         if (error) throw error;
       } else {

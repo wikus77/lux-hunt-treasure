@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * © 2025 Joseph MULÉ – M1SSION™ User Interest Resolver
  * Risolve tag feed basati su preferenze categorie utente

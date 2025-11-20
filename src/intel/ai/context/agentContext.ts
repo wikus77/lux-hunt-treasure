@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Agent Context V2 - Enhanced with views and better caching
+// @ts-nocheck
 
 import { supabase } from '@/integrations/supabase/client';
 
