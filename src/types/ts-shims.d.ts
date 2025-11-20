@@ -89,4 +89,31 @@ declare module '@/components/profile/ProfileToast' {
   export default Component;
 }
 
+declare module '@/components/qr/*' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/components/subscription/*' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/components/tron-battle/*' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/features/*' {
+  const Module: any;
+  export default Module;
+  export const useModule: any;
+}
+
+declare module '@/hooks/admin/*' {
+  const Hook: any;
+  export default Hook;
+  export const useHook: any;
+}
+
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

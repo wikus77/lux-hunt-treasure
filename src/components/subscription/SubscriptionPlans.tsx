@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";

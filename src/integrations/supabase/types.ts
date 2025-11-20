@@ -18,22 +18,34 @@ export type Database = {
         Row: {
           created_at: string | null
           id: number
+          lat: number | null
+          location_name: string | null
+          lon: number | null
           message: string | null
           meta: Json | null
+          reward_type: string | null
           user_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: number
+          lat?: number | null
+          location_name?: string | null
+          lon?: number | null
           message?: string | null
           meta?: Json | null
+          reward_type?: string | null
           user_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: number
+          lat?: number | null
+          location_name?: string | null
+          lon?: number | null
           message?: string | null
           meta?: Json | null
+          reward_type?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -391,8 +403,10 @@ export type Database = {
       device_tokens: {
         Row: {
           created_at: string | null
+          device_type: string | null
           id: string
           is_active: boolean | null
+          last_used: string | null
           platform: string
           token: string
           updated_at: string | null
@@ -400,8 +414,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          device_type?: string | null
           id?: string
           is_active?: boolean | null
+          last_used?: string | null
           platform: string
           token: string
           updated_at?: string | null
@@ -409,8 +425,10 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          device_type?: string | null
           id?: string
           is_active?: boolean | null
+          last_used?: string | null
           platform?: string
           token?: string
           updated_at?: string | null
@@ -900,8 +918,13 @@ export type Database = {
           expires_at: string | null
           id: string
           is_active: boolean | null
+          is_used: boolean
+          lat: number | null
+          lng: number | null
+          location_name: string | null
           max_scans: number | null
           qr_type: string
+          reward_type: string
           scanned_count: number | null
           title: string | null
           updated_at: string | null
@@ -914,8 +937,13 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
+          is_used?: boolean
+          lat?: number | null
+          lng?: number | null
+          location_name?: string | null
           max_scans?: number | null
           qr_type: string
+          reward_type?: string
           scanned_count?: number | null
           title?: string | null
           updated_at?: string | null
@@ -928,13 +956,69 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
+          is_used?: boolean
+          lat?: number | null
+          lng?: number | null
+          location_name?: string | null
           max_scans?: number | null
           qr_type?: string
+          reward_type?: string
           scanned_count?: number | null
           title?: string | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      qr_rewards: {
+        Row: {
+          amount: number | null
+          code_id: string
+          created_at: string
+          id: string
+          lat: number | null
+          location_name: string | null
+          lon: number | null
+          message: string | null
+          reward_type: string
+        }
+        Insert: {
+          amount?: number | null
+          code_id: string
+          created_at?: string
+          id?: string
+          lat?: number | null
+          location_name?: string | null
+          lon?: number | null
+          message?: string | null
+          reward_type: string
+        }
+        Update: {
+          amount?: number | null
+          code_id?: string
+          created_at?: string
+          id?: string
+          lat?: number | null
+          location_name?: string | null
+          lon?: number | null
+          message?: string | null
+          reward_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_rewards_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_buzz_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_rewards_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rank_history: {
         Row: {
@@ -1070,6 +1154,51 @@ export type Database = {
           id?: string
           title_it?: string | null
           unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_consents: {
+        Row: {
+          created_at: string
+          granted: boolean
+          id: string
+          purpose: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted: boolean
+          id?: string
+          purpose: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted?: boolean
+          id?: string
+          purpose?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_cookie_preferences: {
+        Row: {
+          analytics: boolean
+          marketing: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analytics?: boolean
+          marketing?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analytics?: boolean
+          marketing?: boolean
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -1442,6 +1571,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      qr_buzz_codes: {
+        Row: {
+          code: string | null
+          created_at: string | null
+          id: string | null
+          is_used: boolean | null
+          lat: number | null
+          lng: number | null
+          location_name: string | null
+          reward_type: string | null
+          title: string | null
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_used?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          location_name?: string | null
+          reward_type?: string | null
+          title?: string | null
+        }
+        Update: {
+          code?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_used?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          location_name?: string | null
+          reward_type?: string | null
+          title?: string | null
+        }
+        Relationships: []
       }
       winners_public: {
         Row: {

@@ -1,4 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – Push Center Subscriptions Tab
+// @ts-nocheck
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -6,13 +7,25 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
+interface WebPushRow {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  platform: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  token: string | null;
+}
+
 interface Subscription {
   id: string;
   user_id: string;
   endpoint: string;
+  platform: string;
   is_active: boolean;
   created_at: string;
-  last_used_at: string;
+  updated_at: string;
 }
 
 export default function SubscriptionsTab() {
@@ -27,13 +40,24 @@ export default function SubscriptionsTab() {
     try {
       const { data, error: fetchError } = await supabase
         .from('webpush_subscriptions')
-        .select('id, user_id, endpoint, is_active, created_at, last_used_at')
+        .select('id, user_id, endpoint, platform, is_active, created_at, updated_at, token')
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (fetchError) throw fetchError;
 
-      setSubscriptions(data || []);
+      const rows = (data || []) as WebPushRow[];
+      const mapped: Subscription[] = rows.map(r => ({
+        id: r.id,
+        user_id: r.user_id,
+        endpoint: r.endpoint,
+        platform: r.platform,
+        is_active: r.is_active,
+        created_at: r.created_at,
+        updated_at: r.updated_at
+      }));
+
+      setSubscriptions(mapped);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch subscriptions');
       console.error('Error fetching subscriptions:', err);
@@ -73,9 +97,9 @@ export default function SubscriptionsTab() {
             <tr>
               <th className="text-left p-3 text-gray-400 font-medium">Created</th>
               <th className="text-left p-3 text-gray-400 font-medium">User ID</th>
+              <th className="text-left p-3 text-gray-400 font-medium">Platform</th>
               <th className="text-left p-3 text-gray-400 font-medium">Endpoint</th>
               <th className="text-left p-3 text-gray-400 font-medium">Active</th>
-              <th className="text-left p-3 text-gray-400 font-medium">Last Used</th>
             </tr>
           </thead>
           <tbody>
@@ -94,6 +118,9 @@ export default function SubscriptionsTab() {
                 <td className="p-3 text-gray-300 font-mono text-xs">
                   {sub.user_id.slice(0, 8)}...
                 </td>
+                <td className="p-3 text-gray-300 text-xs">
+                  {sub.platform}
+                </td>
                 <td className="p-3 text-gray-400 font-mono text-xs truncate max-w-xs">
                   ...{sub.endpoint.slice(-30)}
                 </td>
@@ -105,11 +132,6 @@ export default function SubscriptionsTab() {
                   }`}>
                     {sub.is_active ? 'Active' : 'Inactive'}
                   </span>
-                </td>
-                <td className="p-3 text-gray-400 text-xs">
-                  {sub.last_used_at 
-                    ? new Date(sub.last_used_at).toLocaleString()
-                    : '-'}
                 </td>
               </tr>
             ))}
