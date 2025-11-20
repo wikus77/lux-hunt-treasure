@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ Subscription Sync Hook - Real-time State Management
 

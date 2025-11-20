@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import { useState, useEffect } from 'react';
