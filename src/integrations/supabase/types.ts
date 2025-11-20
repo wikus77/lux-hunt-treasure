@@ -1041,6 +1041,7 @@ export type Database = {
           location_name: string | null
           max_scans: number | null
           qr_type: string
+          reward_id: string | null
           reward_type: string
           scanned_count: number | null
           title: string | null
@@ -1060,6 +1061,7 @@ export type Database = {
           location_name?: string | null
           max_scans?: number | null
           qr_type: string
+          reward_id?: string | null
           reward_type?: string
           scanned_count?: number | null
           title?: string | null
@@ -1079,6 +1081,7 @@ export type Database = {
           location_name?: string | null
           max_scans?: number | null
           qr_type?: string
+          reward_id?: string | null
           reward_type?: string
           scanned_count?: number | null
           title?: string | null
@@ -1184,6 +1187,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scheduled_notifications: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          executed_at: string | null
+          id: string
+          message: Json
+          scheduled_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          executed_at?: string | null
+          id?: string
+          message: Json
+          scheduled_at: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          executed_at?: string | null
+          id?: string
+          message?: Json
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      security_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -1761,7 +1827,9 @@ export type Database = {
           id: string | null
           investigative_style: string | null
           nickname: string | null
+          pulse_energy: number | null
           rank_id: number | null
+          total_referrals: number | null
         }
         Insert: {
           agent_code?: string | null
@@ -1770,7 +1838,9 @@ export type Database = {
           id?: string | null
           investigative_style?: string | null
           nickname?: string | null
+          pulse_energy?: number | null
           rank_id?: number | null
+          total_referrals?: number | null
         }
         Update: {
           agent_code?: string | null
@@ -1779,7 +1849,9 @@ export type Database = {
           id?: string | null
           investigative_style?: string | null
           nickname?: string | null
+          pulse_energy?: number | null
           rank_id?: number | null
+          total_referrals?: number | null
         }
         Relationships: [
           {
@@ -1830,6 +1902,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           location_name: string | null
+          reward_id: string | null
           reward_type: string | null
           title: string | null
         }
@@ -1841,6 +1914,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           location_name?: string | null
+          reward_id?: string | null
           reward_type?: string | null
           title?: string | null
         }
@@ -1852,6 +1926,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           location_name?: string | null
+          reward_id?: string | null
           reward_type?: string | null
           title?: string | null
         }
@@ -1976,49 +2051,6 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
-      }
-      winners_public: {
-        Row: {
-          agent_code: string | null
-          avatar_url: string | null
-          completion_time: string | null
-          id: string | null
-          mission_id: string | null
-          nickname: string | null
-          prize_id: string | null
-          prize_title: string | null
-          winner_user_id: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "final_shots_mission_id_fkey"
-            columns: ["mission_id"]
-            isOneToOne: false
-            referencedRelation: "missions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "final_shots_prize_id_fkey"
-            columns: ["prize_id"]
-            isOneToOne: false
-            referencedRelation: "prizes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "final_shots_winner_user_id_fkey"
-            columns: ["winner_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "final_shots_winner_user_id_fkey"
-            columns: ["winner_user_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Functions: {

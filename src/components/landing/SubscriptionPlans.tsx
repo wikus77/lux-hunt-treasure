@@ -24,7 +24,7 @@ const plans: SubscriptionPlan[] = [
   {
     id: 'base',
     name: 'Base – Gratis',
-    price: 0,
+    price: 0, // M1U value
     icon: Star,
     features: [
       'Funzioni base (accesso alla missione con restrizioni)',
@@ -37,7 +37,7 @@ const plans: SubscriptionPlan[] = [
   {
     id: 'silver',
     name: 'Silver',
-    price: 3.99,
+    price: 399, // M1U value (€3.99 * 100)
     icon: Zap,
     earlyAccessHours: 2,
     features: [
@@ -52,7 +52,7 @@ const plans: SubscriptionPlan[] = [
   {
     id: 'gold',
     name: 'Gold',
-    price: 6.99,
+    price: 699, // M1U value (€6.99 * 100)
     icon: Crown,
     earlyAccessHours: 12,
     highlighted: true,
@@ -69,7 +69,7 @@ const plans: SubscriptionPlan[] = [
   {
     id: 'black',
     name: 'Black',
-    price: 9.99,
+    price: 999, // M1U value (€9.99 * 100)
     icon: Diamond,
     earlyAccessHours: 24,
     features: [
@@ -84,7 +84,7 @@ const plans: SubscriptionPlan[] = [
   {
     id: 'titanium',
     name: 'Titanium',
-    price: 29.99,
+    price: 2999, // M1U value (€29.99 * 100)
     icon: Infinity,
     earlyAccessHours: 48,
     features: [
@@ -177,10 +177,10 @@ export const SubscriptionPlans: React.FC = () => {
                 
                 <div className="mb-4">
                   {plan.originalPrice && (
-                    <div className="text-gray-500 line-through text-sm">€{plan.originalPrice}</div>
+                    <div className="text-gray-500 line-through text-sm">{plan.originalPrice} M1U</div>
                   )}
                   <div className="text-3xl font-bold text-white">
-                    {plan.price === 0 ? 'GRATIS' : `€${plan.price}`}
+                    {plan.price === 0 ? 'GRATIS' : `${plan.price} M1U`}
                   </div>
                   {plan.earlyAccessHours && (
                     <div className="text-cyan-400 text-sm font-semibold mt-1">

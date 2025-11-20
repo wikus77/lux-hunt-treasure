@@ -15,7 +15,7 @@ const FaqSection: React.FC<SectionProps> = ({ variants }) => {
         <div>
           <h3 className="text-xl font-semibold text-white mb-2">Quanto costa partecipare?</h3>
           <p className="text-white/70">
-            La registrazione è gratuita con il piano Base (€0/mese) che include 1 indizio settimanale base. I piani premium includono: Silver (€3,99/mese) con 3 indizi aggiuntivi e 2h accesso anticipato, Gold (€6,99/mese) con 4 indizi aggiuntivi e 12h accesso anticipato, Black (€9,99/mese) con 5 indizi aggiuntivi e 24h accesso VIP, Titanium (€29,99/mese) con 7 indizi aggiuntivi, 48h accesso VIP e supporto 24/7.
+            La registrazione è gratuita con il piano Base (0 M1U/mese) che include 1 indizio settimanale base. I piani premium includono: Silver (399 M1U/mese) con 3 indizi aggiuntivi e 2h accesso anticipato, Gold (699 M1U/mese) con 4 indizi aggiuntivi e 12h accesso anticipato, Black (999 M1U/mese) con 5 indizi aggiuntivi e 24h accesso VIP, Titanium (2999 M1U/mese) con 7 indizi aggiuntivi, 48h accesso VIP e supporto 24/7.
           </p>
         </div>
         
