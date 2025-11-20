@@ -26,7 +26,7 @@ export async function verifyEdgeFunction(fn: string) {
 }
 
 export function norahHeaders() {
-  const anon = import.meta.env.VITE_SUPABASE_ANON_KEY!;
+  const anon = SUPABASE_CONFIG.anonKey;
   return {
     "Content-Type": "application/json",
     "apikey": anon,

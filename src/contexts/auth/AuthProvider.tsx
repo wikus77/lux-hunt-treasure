@@ -11,6 +11,7 @@
 import React, { useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { SUPABASE_CONFIG } from '@/lib/supabase/config';
 import AuthContext from './AuthContext';
 import { AuthContextType } from './types';
 import { authHealthLogger } from '@/utils/AuthHealthCheckLog';
@@ -70,7 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (!lastClear || (now - parseInt(lastClear)) > oneHour) {
           log("🧹 PWA: Clearing stale auth cache");
-          localStorage.removeItem(`sb-${import.meta.env.VITE_SUPABASE_PROJECT_REF}-auth-token`);
+          localStorage.removeItem(`sb-${SUPABASE_CONFIG.projectRef}-auth-token`);
           localStorage.setItem('auth_cache_clear', now.toString());
         }
       };
