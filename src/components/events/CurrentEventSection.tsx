@@ -49,13 +49,16 @@ const CurrentEventSection = ({ currentEvent }: CurrentEventSectionProps) => {
         </Carousel>
       </div>
       <div
-        className="glass-card border-[2.5px] neon-border p-0 rounded-2xl shadow-2xl animate-fade-in bg-gradient-to-br from-[#111124d8] via-[#1eaedb10] to-[#181641d8]"
+        className="relative overflow-hidden rounded-[24px] animate-fade-in"
         style={{
-          boxShadow:
-            "0 0 22px 3px #00a3ff99, 0 0 44px 6px #9b87f599, 0 1px 3px 0 #12004525",
-          borderColor: "#00a3ff"
+          background: 'rgba(0, 0, 0, 0.05)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
         }}
       >
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
         <EventCard
           title={currentEvent.title}
           carModel={currentEvent.carModel}

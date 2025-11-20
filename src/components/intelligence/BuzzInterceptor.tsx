@@ -124,7 +124,17 @@ const BuzzInterceptor: React.FC = () => {
       </div>
 
       {/* Control Panel */}
-      <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
+      <Card 
+        className="relative overflow-hidden rounded-[24px]"
+        style={{
+          background: 'rgba(0, 0, 0, 0.05)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+        }}
+      >
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
         <CardHeader className="border-b-0">
           <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent flex items-center justify-between">
             <span>Pannello di Controllo</span>
@@ -182,7 +192,17 @@ const BuzzInterceptor: React.FC = () => {
       </Card>
 
       {/* Signal Feed */}
-      <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
+      <Card 
+        className="relative overflow-hidden rounded-[24px]"
+        style={{
+          background: 'rgba(0, 0, 0, 0.05)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+        }}
+      >
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
         <CardHeader className="border-b-0">
           <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent flex items-center justify-between">
             <span>Feed Segnali BUZZ</span>
