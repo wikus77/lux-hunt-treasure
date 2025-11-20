@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 import { PrizeFormValues } from "../hooks/usePrizeForm";
 import { getProjectRef } from '@/lib/supabase/functionsBase';

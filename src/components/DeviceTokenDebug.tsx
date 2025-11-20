@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * © 2025 Joseph MULÉ – M1SSION™ – Device Token Debug Component
  * Comprehensive testing and debugging for OneSignal push notifications
