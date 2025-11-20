@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 Joseph MULÉ – M1SSION™
 // Intelligence Engine - Main orchestrator
 

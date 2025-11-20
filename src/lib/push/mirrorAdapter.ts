@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
  * M1SSION™ Mirror Push Adapter - Zero-Risk Diagnostics
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED

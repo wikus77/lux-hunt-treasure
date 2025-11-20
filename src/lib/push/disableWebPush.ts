@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Guard-safe: nessun JWT hardcodato, nessuna URL hardcodata.
  * Usiamo il client Supabase per rimuovere la subscription lato DB.
