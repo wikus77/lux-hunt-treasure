@@ -154,7 +154,17 @@ export const BuzzPage: React.FC = () => {
             </div>
 
             {/* Container con descrizione - Sistema 200 indizi - RESET COMPLETO 17/07/2025 */}
-            <div className="m1ssion-glass-card p-4 sm:p-6 mb-6 max-w-3xl w-full mx-4">
+            <div 
+              className="p-4 sm:p-6 mb-6 max-w-3xl w-full mx-4"
+              style={{
+                background: 'rgba(0, 0, 0, 0.05)',
+                backdropFilter: 'blur(40px)',
+                WebkitBackdropFilter: 'blur(40px)',
+                borderRadius: '24px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+              }}
+            >
               <div className="text-center space-y-4">
                 {/* Descrizione BUZZ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025 */}
                 <div className="text-white/80 space-y-2">
