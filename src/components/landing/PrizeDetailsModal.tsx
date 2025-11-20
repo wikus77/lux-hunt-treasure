@@ -44,7 +44,17 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-3xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto bg-black/80 backdrop-blur-md border border-cyan-500/30 rounded-2xl shadow-xl p-6">
+        <DialogContent 
+          className="sm:max-w-3xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-6"
+          style={{
+            background: 'rgba(0, 0, 0, 0.05)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            borderRadius: '24px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="text-2xl font-orbitron text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
               📦 Premi Esclusivi M1SSION
@@ -61,8 +71,14 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
               return (
                 <div 
                   key={index} 
-                  className="bg-white/5 border border-white/10 p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white/8 hover:scale-[1.02]"
-                  style={{ boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2), 0 0 8px rgba(0, 209, 255, 0.1)" }}
+                  className="p-4 rounded-xl hover:scale-[1.02] transition-all duration-300"
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.05)',
+                    backdropFilter: 'blur(40px)',
+                    WebkitBackdropFilter: 'blur(40px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+                  }}
                 >
                   <div 
                     className="h-48 overflow-hidden rounded-xl mb-4 cursor-pointer"
