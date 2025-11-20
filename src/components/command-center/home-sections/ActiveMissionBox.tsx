@@ -65,11 +65,19 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* INDIZI TROVATI Box */}
         <motion.div
-          className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-4 cursor-pointer hover:border-green-500/30 transition-colors"
+          className="m1ssion-glass-card rounded-2xl p-4 cursor-pointer hover:border-green-500/30 transition-colors overflow-hidden relative"
+          style={{
+            background: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+          }}
           onClick={() => toggleBox("clues")}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
           <div className="flex items-center space-x-2 mb-2">
             <div className="w-2 h-2 bg-green-400 rounded-full" />
             <span className="text-white/80 text-sm">Indizi trovati</span>
@@ -154,11 +162,19 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
 
         {/* TEMPO RIMASTO Box */}
         <motion.div
-          className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-4 cursor-pointer hover:border-amber-500/30 transition-colors"
+          className="m1ssion-glass-card rounded-2xl p-4 cursor-pointer hover:border-amber-500/30 transition-colors overflow-hidden relative"
+          style={{
+            background: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+          }}
           onClick={() => toggleBox("time")}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
           <div className="flex items-center space-x-2 mb-2">
             <div className="w-2 h-2 bg-amber-400 rounded-full" />
             <span className="text-white/80 text-sm">Tempo rimasto</span>
@@ -212,11 +228,19 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
 
         {/* STATO MISSIONE Box */}
         <motion.div
-          className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-4 cursor-pointer hover:border-[#00D1FF]/30 transition-colors"
+          className="m1ssion-glass-card rounded-2xl p-4 cursor-pointer hover:border-[#00D1FF]/30 transition-colors overflow-hidden relative"
+          style={{
+            background: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+          }}
           onClick={() => toggleBox("status")}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
           <div className="flex items-center space-x-2 mb-2">
             <div className="w-2 h-2 bg-[#00D1FF] rounded-full" />
             <span className="text-white/80 text-sm">Stato missione</span>
@@ -291,3 +315,5 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
     </div>
   );
 }
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
