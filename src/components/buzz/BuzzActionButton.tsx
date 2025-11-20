@@ -75,7 +75,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       // 1) Consume a free buzz credit via RPC
       const { data: consumed, error: consumeErr } = await supabase.rpc('consume_credit', {
         p_user_id: user.id,
-        p_credit_type: 'buzz'
+        p_credit_type: 'buzz',
+        p_amount: 1
       });
       if (consumeErr || !consumed) {
         console.error('consume_credit error', consumeErr);
