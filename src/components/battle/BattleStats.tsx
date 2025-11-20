@@ -198,7 +198,17 @@ export function BattleStats({ userId: propUserId }: BattleStatsProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <Card 
+            className="relative overflow-hidden rounded-[24px]"
+            style={{
+              background: 'rgba(0, 0, 0, 0.05)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            }}
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Trophy className="w-5 h-5 text-primary" />
@@ -217,7 +227,17 @@ export function BattleStats({ userId: propUserId }: BattleStatsProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <Card 
+            className="relative overflow-hidden rounded-[24px]"
+            style={{
+              background: 'rgba(0, 0, 0, 0.05)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            }}
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Target className="w-5 h-5 text-primary" />
@@ -234,7 +254,17 @@ export function BattleStats({ userId: propUserId }: BattleStatsProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <Card 
+            className="relative overflow-hidden rounded-[24px]"
+            style={{
+              background: 'rgba(0, 0, 0, 0.05)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            }}
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Zap className="w-5 h-5 text-yellow-500" />
@@ -253,7 +283,17 @@ export function BattleStats({ userId: propUserId }: BattleStatsProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Card className="border-primary/20 bg-gradient-to-br from-orange-500/5 to-transparent">
+          <Card 
+            className="relative overflow-hidden rounded-[24px]"
+            style={{
+              background: 'rgba(0, 0, 0, 0.05)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            }}
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Flame className="w-5 h-5 text-orange-500" />

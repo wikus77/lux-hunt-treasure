@@ -153,7 +153,17 @@ const CrackCombinationGame: React.FC = () => {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto bg-black/90 border-cyan-500/30">
+    <Card 
+      className="w-full max-w-2xl mx-auto relative overflow-hidden rounded-[24px]"
+      style={{
+        background: 'rgba(0, 0, 0, 0.05)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+      }}
+    >
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
       <CardHeader className="text-center border-b border-cyan-500/20">
         <CardTitle className="text-2xl font-bold text-cyan-400 mb-2">
           🔓 CRACK THE COMBINATION
