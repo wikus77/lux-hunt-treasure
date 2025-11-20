@@ -122,8 +122,10 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           expires_at: string | null
+          expiry_date: string | null
           id: string
           is_active: boolean | null
+          is_read: boolean | null
           message_type: string
           target_users: Json | null
           title: string
@@ -134,8 +136,10 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           expires_at?: string | null
+          expiry_date?: string | null
           id?: string
           is_active?: boolean | null
+          is_read?: boolean | null
           message_type: string
           target_users?: Json | null
           title: string
@@ -146,8 +150,10 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           expires_at?: string | null
+          expiry_date?: string | null
           id?: string
           is_active?: boolean | null
+          is_read?: boolean | null
           message_type?: string
           target_users?: Json | null
           title?: string
@@ -290,10 +296,15 @@ export type Database = {
           created_at: string | null
           description: string | null
           difficulty: string | null
+          end_date: string | null
           id: string
           is_active: boolean | null
           objectives: Json | null
+          prize_id: string | null
+          publication_date: string | null
           rewards: Json | null
+          start_date: string | null
+          status: string | null
           title: string
           updated_at: string | null
         }
@@ -302,10 +313,15 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           difficulty?: string | null
+          end_date?: string | null
           id?: string
           is_active?: boolean | null
           objectives?: Json | null
+          prize_id?: string | null
+          publication_date?: string | null
           rewards?: Json | null
+          start_date?: string | null
+          status?: string | null
           title: string
           updated_at?: string | null
         }
@@ -314,14 +330,27 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           difficulty?: string | null
+          end_date?: string | null
           id?: string
           is_active?: boolean | null
           objectives?: Json | null
+          prize_id?: string | null
+          publication_date?: string | null
           rewards?: Json | null
+          start_date?: string | null
+          status?: string | null
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "missions_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       norah_events: {
         Row: {
@@ -344,6 +373,107 @@ export type Database = {
           event?: string
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      pre_registered_users: {
+        Row: {
+          agent_code: string | null
+          converted_at: string | null
+          email: string
+          id: string
+          is_converted: boolean | null
+          registered_at: string | null
+        }
+        Insert: {
+          agent_code?: string | null
+          converted_at?: string | null
+          email: string
+          id?: string
+          is_converted?: boolean | null
+          registered_at?: string | null
+        }
+        Update: {
+          agent_code?: string | null
+          converted_at?: string | null
+          email?: string
+          id?: string
+          is_converted?: boolean | null
+          registered_at?: string | null
+        }
+        Relationships: []
+      }
+      prize_clues: {
+        Row: {
+          clue_text: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          order_index: number | null
+          prize_id: string | null
+        }
+        Insert: {
+          clue_text: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_index?: number | null
+          prize_id?: string | null
+        }
+        Update: {
+          clue_text?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_index?: number | null
+          prize_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prize_clues_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prizes: {
+        Row: {
+          claimed: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          quantity: number | null
+          updated_at: string | null
+          value: number | null
+        }
+        Insert: {
+          claimed?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          quantity?: number | null
+          updated_at?: string | null
+          value?: number | null
+        }
+        Update: {
+          claimed?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          quantity?: number | null
+          updated_at?: string | null
+          value?: number | null
         }
         Relationships: []
       }
@@ -451,6 +581,7 @@ export type Database = {
           max_scans: number | null
           qr_type: string
           scanned_count: number | null
+          title: string | null
           updated_at: string | null
         }
         Insert: {
@@ -464,6 +595,7 @@ export type Database = {
           max_scans?: number | null
           qr_type: string
           scanned_count?: number | null
+          title?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -477,6 +609,7 @@ export type Database = {
           max_scans?: number | null
           qr_type?: string
           scanned_count?: number | null
+          title?: string | null
           updated_at?: string | null
         }
         Relationships: []
