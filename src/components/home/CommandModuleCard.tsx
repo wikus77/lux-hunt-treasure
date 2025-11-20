@@ -39,25 +39,39 @@ const CommandModuleCard = ({
       className="relative"
       onClick={onClick}
     >
-      <div className={`bg-black/60 backdrop-blur-${unlocked ? 'md' : 'sm'} border ${unlocked ? 'border-' + statusColor + '-500/50' : 'border-gray-700/30'} rounded-xl overflow-hidden`}>
-        <div className="p-4">
+      <div 
+        className={`m1ssion-glass-card p-4 relative overflow-hidden ${unlocked ? '' : 'opacity-60'}`}
+        style={{
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: `blur(${unlocked ? '40px' : '20px'})`,
+          WebkitBackdropFilter: `blur(${unlocked ? '40px' : '20px'})`,
+          borderRadius: '24px',
+          boxShadow: unlocked 
+            ? '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05), 0 0 24px rgba(0, 229, 255, 0.15)'
+            : '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)',
+          border: '0'
+        }}
+      >
+        {unlocked && (
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#F059FF] opacity-90" />
+        )}
           <div className="flex justify-between items-center mb-3">
-            <h2 className={`text-lg font-medium ${unlocked ? 'text-' + statusColor + '-400' : 'text-gray-500'}`}>
+            <h2 className={`text-lg font-medium font-orbitron ${unlocked ? 'neon-text-cyan' : 'text-gray-500'}`}>
               <Icon className="inline-block mr-2 w-4 h-4" /> {title}
             </h2>
             {unlocked ? (
-              <span className={`text-xs bg-${statusColor}-500/20 text-${statusColor}-400 px-2 py-1 rounded-full`}>{statusText}</span>
+              <span className={`text-xs bg-${statusColor}-500/20 text-${statusColor}-400 px-2 py-1 rounded-full font-orbitron`}>{statusText}</span>
             ) : (
-              <span className="text-xs bg-gray-800 text-gray-500 px-2 py-1 rounded-full">Bloccato</span>
+              <span className="text-xs bg-gray-800 text-gray-500 px-2 py-1 rounded-full font-orbitron">Bloccato</span>
             )}
           </div>
           
           {unlocked ? (
-            <div className={`${height} bg-black/40`}>
+            <div className={`${height} bg-black/40 rounded-lg`}>
               {children}
             </div>
           ) : (
-            <div className={`${height} bg-black/80 flex items-center justify-center relative overflow-hidden`}>
+            <div className={`${height} bg-black/80 flex items-center justify-center relative overflow-hidden rounded-lg`}>
               {backgroundPattern && (
                 <div className="absolute inset-0 opacity-30">
                   <div className="h-full w-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iZ3JheSIgb3BhY2l0eT0iMC4yIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiIC8+PC9zdmc+')]"></div>
@@ -65,11 +79,10 @@ const CommandModuleCard = ({
               )}
               <div className="text-center z-10">
                 <Lock className="mx-auto w-6 h-6 text-gray-600 mb-2" />
-                <p className="text-gray-600">{lockedMessage}</p>
+                <p className="text-gray-600 font-orbitron">{lockedMessage}</p>
               </div>
             </div>
           )}
-        </div>
       </div>
       
       {!unlocked && gradientOverlay && (
@@ -91,3 +104,5 @@ const CommandModuleCard = ({
 };
 
 export default CommandModuleCard;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
