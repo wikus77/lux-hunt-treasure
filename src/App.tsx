@@ -34,7 +34,7 @@ import { NorahProactiveManager } from "./components/norah/NorahProactiveManager"
 import { MissionBadgeInjector } from "./components/home/MissionBadgeInjector";
 import { UpdateBanner } from "./components/sw/UpdateBanner";
 import '@/features/living-map/styles/livingMap.css';
-import { RitualOrchestratorWrapper } from "@/features/pulse/ritual";
+import { PULSE_ENABLED } from "@/config/featureFlags";
 import { RouteAnnouncer } from "./components/a11y/RouteAnnouncer";
 import { useRouteAnnouncements } from "./hooks/useRouteAnnouncements";
 import { ReconnectBadge } from "./components/net/ReconnectBadge";
@@ -137,7 +137,7 @@ function App() {
                     <XpSystemManager />
                     <NorahProactiveManager />
                     <MissionBadgeInjector />
-                    <RitualOrchestratorWrapper />
+                    {/* Pulse disabled - see featureFlags.ts */}
                     <Toaster />
                     <BadgeAuditReport />
                     <M1UnitsDebugPanel />
