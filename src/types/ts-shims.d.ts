@@ -34,4 +34,59 @@ declare module '@/components/command-center/*' {
   export default Component;
 }
 
+declare module '@/components/intelligence/*' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/components/landing/*' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/components/legal/*' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/components/map/*' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/components/mission/*' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/components/panel/*' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/components/payment/*' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/components/payments/*' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/components/prizes/*' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/components/profile/EnhancedPersonalityQuiz' {
+  const Component: any;
+  export default Component;
+}
+
+declare module '@/components/profile/ProfileToast' {
+  const Component: any;
+  export default Component;
+}
+
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
