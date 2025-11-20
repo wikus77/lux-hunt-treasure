@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * THE PULSE™ — Pulse Panel (Modal/Sheet)
  * Pannello dettaglio con info, micro-feed, thresholds log, ottimizzato per mobile

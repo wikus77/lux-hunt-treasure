@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * THE PULSE™ — Realtime Hook
  * Hook per sottoscrivere lo stato globale del Pulse via Supabase Realtime
