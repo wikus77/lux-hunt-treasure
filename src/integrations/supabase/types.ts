@@ -233,6 +233,30 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_logs: {
+        Row: {
+          created_at: string | null
+          id: number
+          job: string
+          payload: Json | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          job: string
+          payload?: Json | null
+          status: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          job?: string
+          payload?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
       device_tokens: {
         Row: {
           created_at: string | null
@@ -262,6 +286,68 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      final_shots: {
+        Row: {
+          completion_time: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          mission_id: string | null
+          prize_id: string | null
+          proof_url: string | null
+          winner_user_id: string
+        }
+        Insert: {
+          completion_time?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          mission_id?: string | null
+          prize_id?: string | null
+          proof_url?: string | null
+          winner_user_id: string
+        }
+        Update: {
+          completion_time?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          mission_id?: string | null
+          prize_id?: string | null
+          proof_url?: string | null
+          winner_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "final_shots_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "final_shots_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "final_shots_winner_user_id_fkey"
+            columns: ["winner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "final_shots_winner_user_id_fkey"
+            columns: ["winner_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marker_rewards: {
         Row: {
@@ -1053,7 +1139,87 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          agent_code: string | null
+          avatar_url: string | null
+          created_at: string | null
+          id: string | null
+          investigative_style: string | null
+          nickname: string | null
+          rank_id: number | null
+        }
+        Insert: {
+          agent_code?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string | null
+          investigative_style?: string | null
+          nickname?: string | null
+          rank_id?: number | null
+        }
+        Update: {
+          agent_code?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string | null
+          investigative_style?: string | null
+          nickname?: string | null
+          rank_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_rank_id_fkey"
+            columns: ["rank_id"]
+            isOneToOne: false
+            referencedRelation: "agent_ranks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      winners_public: {
+        Row: {
+          agent_code: string | null
+          avatar_url: string | null
+          completion_time: string | null
+          id: string | null
+          mission_id: string | null
+          nickname: string | null
+          prize_id: string | null
+          prize_title: string | null
+          winner_user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "final_shots_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "final_shots_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "final_shots_winner_user_id_fkey"
+            columns: ["winner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "final_shots_winner_user_id_fkey"
+            columns: ["winner_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       award_pulse_energy: {
