@@ -83,6 +83,39 @@ export type Database = {
         }
         Relationships: []
       }
+      app_config: {
+        Row: {
+          config_key: string
+          config_value: Json
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          config_key: string
+          config_value: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_value?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       app_messages: {
         Row: {
           content: string
@@ -218,6 +251,36 @@ export type Database = {
           token?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      marker_rewards: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          marker_id: string
+          payload: Json | null
+          reward_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          marker_id: string
+          payload?: Json | null
+          reward_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          marker_id?: string
+          payload?: Json | null
+          reward_type?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -373,6 +436,48 @@ export type Database = {
           token?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      qr_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          created_by: string | null
+          data: Json | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_scans: number | null
+          qr_type: string
+          scanned_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          data?: Json | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_scans?: number | null
+          qr_type: string
+          scanned_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          data?: Json | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_scans?: number | null
+          qr_type?: string
+          scanned_count?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -618,6 +723,36 @@ export type Database = {
           },
         ]
       }
+      user_push_tokens: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          platform: string
+          token: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          platform: string
+          token: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          platform?: string
+          token?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_referrals: {
         Row: {
           created_at: string | null
@@ -765,6 +900,7 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_my_agent_code: { Args: never; Returns: string }
       has_role:
         | { Args: { _role: string; _user_id: string }; Returns: boolean }
         | {
