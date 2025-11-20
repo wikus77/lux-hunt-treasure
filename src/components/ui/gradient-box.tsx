@@ -14,10 +14,14 @@ const GradientBox = ({
   showTopGradient = true
 }: GradientBoxProps) => {
   return (
-    <div className={cn(
-      "relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg",
-      className
-    )}>
+    <div 
+      className={cn("relative m1ssion-glass-card overflow-hidden shadow-lg", className)}
+      style={{
+        background: 'rgba(0, 0, 0, 0.05)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)'
+      }}
+    >
       {/* The top gradient is now handled by the m1ssion-glass-card class */}
       {children}
     </div>
