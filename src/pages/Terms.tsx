@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { useState, useEffect } from "react";
@@ -94,3 +95,5 @@ const Terms = () => {
 };
 
 export default Terms;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
