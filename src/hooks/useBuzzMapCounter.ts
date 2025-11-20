@@ -29,7 +29,7 @@ export const useBuzzMapCounter = (userId?: string) => {
         .from('user_buzz_map_counter')
         .select('*')
         .eq('user_id', userId)
-        .eq('date', weekStart)
+        .eq('counter_date', weekStart)
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
@@ -38,7 +38,7 @@ export const useBuzzMapCounter = (userId?: string) => {
       }
 
       if (data) {
-        setDailyBuzzMapCounter(data.buzz_map_count);
+        setDailyBuzzMapCounter(data.daily_count);
         // Set default values for missing columns
         setLastPriceUsed(0);
         setPrecisionMode('high');
@@ -70,10 +70,10 @@ export const useBuzzMapCounter = (userId?: string) => {
         .from('user_buzz_map_counter')
         .upsert({
           user_id: userId,
-          date: weekStart,
-          buzz_map_count: dailyBuzzMapCounter + 1,
+          counter_date: weekStart,
+          daily_count: dailyBuzzMapCounter + 1,
         }, {
-          onConflict: 'user_id,date'
+          onConflict: 'user_id,counter_date'
         })
         .select()
         .single();
@@ -85,10 +85,10 @@ export const useBuzzMapCounter = (userId?: string) => {
       }
 
       if (data) {
-        setDailyBuzzMapCounter(data.buzz_map_count);
+        setDailyBuzzMapCounter(data.daily_count);
         setLastPriceUsed(finalPrice);
         setPrecisionMode(precision);
-        return data.buzz_map_count;
+        return data.daily_count;
       }
 
       return dailyBuzzMapCounter + 1;
