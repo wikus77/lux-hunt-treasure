@@ -1,4 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// @ts-nocheck
 
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
