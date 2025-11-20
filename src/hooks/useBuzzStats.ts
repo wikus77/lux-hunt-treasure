@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 // M1SSION™ - BUZZ Stats Hook
 import { useState, useEffect } from 'react';

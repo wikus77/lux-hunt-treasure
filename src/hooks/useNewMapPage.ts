@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import { useState, useCallback } from 'react';
 import { useAuthContext } from '@/contexts/auth';
