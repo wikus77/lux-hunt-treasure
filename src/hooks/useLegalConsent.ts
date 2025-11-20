@@ -28,36 +28,15 @@ export const useLegalConsent = () => {
     try {
       setState(prev => ({ ...prev, isLoading: true }));
 
-      if (user) {
-        // For authenticated users, check database
-        const { data: consentData, error } = await supabase
-          .from('user_consents')
-          .select('granted')
-          .eq('user_id', user.id)
-          .eq('purpose', 'terms')
-          .maybeSingle();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error loading legal consent:', error);
-        }
-
-        const isAccepted = consentData?.granted === true;
-        setState({
-          isAccepted,
-          isLoading: false,
-          needsConsent: !isAccepted
-        });
-      } else {
-        // For anonymous users, check localStorage
-        const savedConsent = localStorage.getItem('m1ssion_legal_consent');
-        const isAccepted = savedConsent === 'true';
-        
-        setState({
-          isAccepted,
-          isLoading: false,
-          needsConsent: !isAccepted
-        });
-      }
+      // Always use localStorage for legal consent (database column doesn't exist)
+      const savedConsent = localStorage.getItem('m1ssion_legal_consent');
+      const isAccepted = savedConsent === 'true';
+      
+      setState({
+        isAccepted,
+        isLoading: false,
+        needsConsent: !isAccepted
+      });
     } catch (error) {
       console.error('Error checking legal consent:', error);
       setState({
@@ -72,22 +51,9 @@ export const useLegalConsent = () => {
     try {
       setState(prev => ({ ...prev, isLoading: true }));
 
-      if (user) {
-        // Save to database for authenticated users
-        const { error } = await supabase
-          .from('user_consents')
-          .upsert({
-            user_id: user.id,
-            purpose: 'terms',
-            granted: true
-          }, { onConflict: 'user_id,purpose' });
-
-        if (error) throw error;
-      } else {
-        // Save to localStorage for anonymous users
-        localStorage.setItem('m1ssion_legal_consent', 'true');
-        localStorage.setItem('m1ssion_legal_consent_date', new Date().toISOString());
-      }
+      // Always use localStorage for legal consent (database column doesn't exist)
+      localStorage.setItem('m1ssion_legal_consent', 'true');
+      localStorage.setItem('m1ssion_legal_consent_date', new Date().toISOString());
 
       setState({
         isAccepted: true,
