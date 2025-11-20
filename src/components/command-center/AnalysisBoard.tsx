@@ -99,13 +99,21 @@ export const AnalysisBoard: React.FC<AnalysisBoardProps> = ({ items }) => {
 
   return (
     <motion.div 
-      className="bg-black/40 backdrop-blur-sm border border-cyan-500/30 rounded-xl p-4 shadow-lg"
+      className="glass-card p-4 relative"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
+      style={{
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '16px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.06)'
+      }}
     >
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-cyan-300 flex items-center">
+        <h2 className="text-lg font-bold flex items-center font-orbitron neon-text-cyan">
           <BrainCircuit className="inline mr-2 h-5 w-5" />
           Tavolo di Analisi
         </h2>
@@ -214,3 +222,5 @@ export const AnalysisBoard: React.FC<AnalysisBoardProps> = ({ items }) => {
     </motion.div>
   );
 };
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

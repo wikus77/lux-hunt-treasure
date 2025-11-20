@@ -31,8 +31,19 @@ const ExclusivePrizesSection = () => {
         transition={{ duration: 0.6 }}
         className="max-w-4xl mx-auto"
       >
-        <div className="bg-gray-900/60 backdrop-blur-sm p-6 rounded-xl overflow-hidden shadow-xl border border-gray-800">
-          <h2 className="text-2xl font-bold text-white mb-3 text-center flex items-center justify-center gap-2">
+        <div 
+          className="m1ssion-glass-card p-6 overflow-hidden relative"
+          style={{
+            background: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            borderRadius: '24px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)',
+            border: '0'
+          }}
+        >
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] via-[#F059FF] to-[#FACC15] opacity-90" />
+          <h2 className="text-2xl font-bold mb-3 text-center flex items-center justify-center gap-2 neon-text-cyan font-orbitron">
             <span className="text-cyan-400">📦</span> Premi Esclusivi M1SSION
           </h2>
           
@@ -65,7 +76,16 @@ const ExclusivePrizesSection = () => {
                   className={`card relative h-full transition-transform duration-700 transform-style-3d ${flippedCards.includes(index) ? 'is-flipped' : ''}`}
                 >
                   {/* Front of card */}
-                  <div className="card-front bg-black/40 rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/30 transition-colors group">
+                  <div 
+                    className="card-front rounded-lg overflow-hidden group"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(14px)',
+                      WebkitBackdropFilter: 'blur(14px)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.06)'
+                    }}
+                  >
                     <div className="aspect-video overflow-hidden relative">
                       <img 
                         src={prize.imageUrl} 
@@ -93,7 +113,16 @@ const ExclusivePrizesSection = () => {
                   </div>
                   
                   {/* Back of card */}
-                  <div className="card-back bg-black/70 rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/30 transition-colors p-4">
+                  <div 
+                    className="card-back rounded-lg overflow-hidden p-4"
+                    style={{
+                      background: 'rgba(0, 0, 0, 0.7)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(0, 209, 255, 0.3)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 2px 3px rgba(255, 255, 255, 0.06)'
+                    }}
+                  >
                     <div className="h-full flex flex-col">
                       <h3 className="text-lg font-bold text-cyan-400 mb-3 text-center">
                         {prize.description.split(',')[0]}
@@ -151,3 +180,5 @@ const ExclusivePrizesSection = () => {
 };
 
 export default ExclusivePrizesSection;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
