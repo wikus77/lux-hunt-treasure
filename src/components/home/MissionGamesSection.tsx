@@ -27,7 +27,17 @@ const GameCard = ({ title, description, icon, gameKey }: GameCardProps) => {
   };
 
   return (
-    <Card className="m1ssion-glass-card border border-white/10 bg-black/40 hover:shadow-[0_0_15px_rgba(0,209,255,0.2)] transition-all duration-300">
+    <Card 
+      className="relative overflow-hidden rounded-[24px] transition-all duration-300"
+      style={{
+        background: 'rgba(0, 0, 0, 0.05)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+      }}
+    >
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00D1FF]/20 to-[#7B2EFF]/20 flex items-center justify-center">
