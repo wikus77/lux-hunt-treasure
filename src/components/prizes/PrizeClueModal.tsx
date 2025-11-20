@@ -190,6 +190,11 @@ export const PrizeClueModal: React.FC<PrizeClueModalProps> = ({
       toast.success(`Indizio sbloccato! Costato ${cost} crediti.`);
       onClueUnlocked();
 
+      // GA4 tracking
+      import('@/lib/analytics/ga4').then(({ trackBuzzClueUnlocked }) => {
+        trackBuzzClueUnlocked(clue.id, cost);
+      });
+
       // Show clue detail
       setSelectedClue({ ...clue, is_unlocked: true });
 
