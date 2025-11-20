@@ -93,6 +93,7 @@ export type Database = {
           is_public: boolean | null
           updated_at: string | null
           updated_by: string | null
+          value_int: number | null
         }
         Insert: {
           config_key: string
@@ -103,6 +104,7 @@ export type Database = {
           is_public?: boolean | null
           updated_at?: string | null
           updated_by?: string | null
+          value_int?: number | null
         }
         Update: {
           config_key?: string
@@ -113,6 +115,7 @@ export type Database = {
           is_public?: boolean | null
           updated_at?: string | null
           updated_by?: string | null
+          value_int?: number | null
         }
         Relationships: []
       }
@@ -726,7 +729,9 @@ export type Database = {
         Row: {
           buzz_cost: number | null
           clue_id: string
+          clue_type: string | null
           created_at: string | null
+          description_it: string | null
           id: string
           title_it: string | null
           unlocked_at: string | null
@@ -735,7 +740,9 @@ export type Database = {
         Insert: {
           buzz_cost?: number | null
           clue_id: string
+          clue_type?: string | null
           created_at?: string | null
+          description_it?: string | null
           id?: string
           title_it?: string | null
           unlocked_at?: string | null
@@ -744,7 +751,9 @@ export type Database = {
         Update: {
           buzz_cost?: number | null
           clue_id?: string
+          clue_type?: string | null
           created_at?: string | null
+          description_it?: string | null
           id?: string
           title_it?: string | null
           unlocked_at?: string | null
