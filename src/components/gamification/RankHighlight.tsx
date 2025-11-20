@@ -75,7 +75,17 @@ export const RankHighlight: React.FC = () => {
     : 'from-cyan-900/40 to-purple-900/40';
 
   return (
-    <Card className={`glass-card bg-gradient-to-r ${bgGradient} border-2 ${isPodium ? 'border-yellow-500/50' : 'border-cyan-500/30'}`}>
+    <Card 
+      className="relative overflow-hidden rounded-[24px]"
+      style={{
+        background: 'rgba(0, 0, 0, 0.05)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+      }}
+    >
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           {/* Left Side - Rank */}

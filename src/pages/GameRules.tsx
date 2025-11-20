@@ -81,7 +81,17 @@ const GameRules: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
+          <Card 
+            className="relative overflow-hidden rounded-[24px]"
+            style={{
+              background: 'rgba(0, 0, 0, 0.05)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            }}
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
             <CardHeader>
               <CardTitle className="text-white font-orbitron flex items-center">
                 <FileText className="w-6 h-6 mr-3 text-[#00D1FF]" />

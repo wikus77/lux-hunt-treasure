@@ -199,7 +199,17 @@ export const EmailVerificationFlow: React.FC<EmailVerificationFlowProps> = ({
               </div>
 
               {/* Instructions */}
-              <Card className="bg-gray-800/30 border-gray-600/30">
+              <Card 
+                className="relative overflow-hidden rounded-[24px]"
+                style={{
+                  background: 'rgba(0, 0, 0, 0.05)',
+                  backdropFilter: 'blur(40px)',
+                  WebkitBackdropFilter: 'blur(40px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+                }}
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
                 <CardContent className="p-4 space-y-3">
                   <h4 className="font-semibold text-white mb-3">
                     Come completare la verifica:

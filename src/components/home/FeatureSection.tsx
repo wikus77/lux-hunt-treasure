@@ -70,11 +70,22 @@ const FeatureSection = () => {
           {features.map((feature, index) => (
             <AnimatedSection 
               key={feature.id}
-              className="m1ssion-glass-card overflow-hidden group hover:bg-white/5 transition-all duration-500"
+              className="group"
               delay={0.2 + index * 0.1}
               once
               direction={index % 2 === 0 ? "left" : "right"}
             >
+              <div 
+                className="relative overflow-hidden transition-all duration-500 rounded-[24px]"
+                style={{
+                  background: 'rgba(0, 0, 0, 0.05)',
+                  backdropFilter: 'blur(40px)',
+                  WebkitBackdropFilter: 'blur(40px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+                }}
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
               <div className="p-8 relative">
                 <div className="text-3xl mb-6 transform transition-transform duration-500 group-hover:scale-125 group-hover:rotate-12">
                   {feature.icon}
@@ -89,6 +100,7 @@ const FeatureSection = () => {
                 {/* Decorative elements */}
                 <div className="absolute top-4 right-4 w-16 h-16 border border-cyan-400/20 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                 <div className="absolute bottom-4 right-8 w-24 h-24 border border-cyan-400/10 rounded-full opacity-10 group-hover:opacity-20 transition-opacity duration-500"></div>
+              </div>
               </div>
             </AnimatedSection>
           ))}
