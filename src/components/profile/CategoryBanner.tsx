@@ -22,15 +22,15 @@ const CategoryBanner = ({
       style={{ transitionProperty: "transform, opacity" }}
     >
       <div
-        className={`rounded-b-xl px-6 py-4 shadow-lg max-w-md w-full flex flex-col items-center ${style.gradient} ${style.textColor} pointer-events-auto animate-fade-in`}
+        className={`m1ssion-glass-card rounded-b-[24px] px-8 py-6 max-w-md w-full flex flex-col items-center ${style.textColor} pointer-events-auto animate-fade-in`}
       >
-        <div className="flex items-center gap-2 text-xl mb-2 font-orbitron font-bold uppercase">
+        <div className="flex items-center gap-2 text-xl mb-2 font-orbitron font-bold uppercase neon-text-cyan">
           {category}
         </div>
-        <div className="text-sm text-white opacity-90 text-center mb-2">{children}</div>
+        <div className="text-sm text-white/90 text-center mb-3">{children}</div>
         <button
           onClick={onClose}
-          className="bg-white/10 border border-white/20 rounded px-3 py-1 text-sm mt-2 transition hover:bg-white/20 pointer-events-auto"
+          className="glass-medium rounded-m1-sm px-4 py-2 text-sm transition hover:bg-white/20 press-effect pointer-events-auto"
         >
           Chiudi
         </button>
@@ -40,4 +40,6 @@ const CategoryBanner = ({
 };
 
 export default CategoryBanner;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
