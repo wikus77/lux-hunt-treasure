@@ -52,6 +52,8 @@
     "src/lib/dna/**",
     "src/lib/norah/**",
     "src/lib/pulse/**",
-    "src/managers/WeeklyEventsManager.tsx"
+    "src/lib/push/**",
+    "src/managers/WeeklyEventsManager.tsx",
+    "src/pages/**"
   ]
 }
