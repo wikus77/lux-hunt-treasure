@@ -14,10 +14,14 @@ interface LegalConsentState {
 export const useLegalConsent = () => {
   const { user } = useUnifiedAuth();
   const { toast } = useToast();
-  const [state, setState] = useState<LegalConsentState>({
-    isAccepted: false,
-    isLoading: true,
-    needsConsent: false
+  // © 2025 M1SSION™ NIYVORA KFT – Lazy initialization to prevent banner flicker
+  const [state, setState] = useState<LegalConsentState>(() => {
+    const saved = localStorage.getItem('m1ssion_legal_consent') === 'true';
+    return {
+      isAccepted: saved,
+      isLoading: false,
+      needsConsent: !saved
+    };
   });
 
   useEffect(() => {
