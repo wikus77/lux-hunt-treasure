@@ -47,13 +47,22 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
 
   return (
     <motion.div 
-      className="bg-black/40 backdrop-blur-sm border border-cyan-500/30 rounded-xl p-5 shadow-lg overflow-hidden"
+      className="m1ssion-glass-card p-5 overflow-hidden relative"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      style={{
+        background: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        borderRadius: '24px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05), 0 0 24px rgba(0, 229, 255, 0.15)',
+        border: '0'
+      }}
     >
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#F059FF] opacity-90" />
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-cyan-300 flex items-center">
+        <h2 className="text-xl font-bold flex items-center font-orbitron neon-text-cyan">
           <Target className="inline mr-2 h-5 w-5" />
           Missione: {mission.name}
         </h2>
@@ -192,3 +201,5 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
     </motion.div>
   );
 };
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
