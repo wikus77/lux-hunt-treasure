@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';

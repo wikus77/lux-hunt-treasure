@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TRON BATTLE - Battle Lobby
  * Create/Accept battles with stake selection

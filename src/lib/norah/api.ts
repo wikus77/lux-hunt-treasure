@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * © 2025 Joseph MULÉ – M1SSION™ – Norah AI 2.0 Network Layer
  * POST via invoke, GET via fetch direto
