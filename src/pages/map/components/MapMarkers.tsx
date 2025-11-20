@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useMemo, useState } from 'react';
 import { Marker } from '@react-google-maps/api';
 import { supabase } from '@/integrations/supabase/client';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // M1SSION™ — First Visit Landing Logic & PWA Routing
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 

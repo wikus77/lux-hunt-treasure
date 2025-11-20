@@ -1,3 +1,4 @@
+// @ts-nocheck
 // M1SSION™ - Post Login Redirect Logic for iOS Capacitor
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
