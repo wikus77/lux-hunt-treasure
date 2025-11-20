@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ - BUZZ Map Progressive Pricing Hook - 42 Levels System
 

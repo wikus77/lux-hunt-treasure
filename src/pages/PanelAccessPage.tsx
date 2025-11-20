@@ -24,7 +24,7 @@ import PushCenterCard from '@/components/push-center/PushCenterCard';
 import { PushCenter } from '@/components/panel/PushCenter';
 import PushControlPanelPage from '@/pages/panel/PushControlPanelPage';
 import PushAutoPreflightPage from '@/pages/panel/PushAutoPreflightPage';
-import { FEATURE_FLAGS } from '@/config/featureFlags';
+import { PUSH_PREFLIGHT_ENABLED } from '@/config/featureFlags';
 
 type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'bulk-marker-drop' | 'push-center' | 'push-control' | 'push-sender' | 'push-preflight';
 
@@ -600,7 +600,7 @@ const PanelAccessPage = () => {
               )}
 
               {/* Push Preflight: hidden via feature flag until fully implemented */}
-              {isAdmin && FEATURE_FLAGS.PUSH_PREFLIGHT_ENABLED && (
+              {isAdmin && PUSH_PREFLIGHT_ENABLED && (
                 <motion.div 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

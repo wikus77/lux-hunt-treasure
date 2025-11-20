@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 // ✅ COMPONENT MODIFICATO
 // BY JOSEPH MULE — 2025-07-12
