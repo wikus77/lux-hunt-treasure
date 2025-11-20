@@ -63,6 +63,13 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
       toast.success('🎁 Premio riscattato con successo!', {
         description: 'Controlla le tue notifiche per i dettagli'
       });
+
+      // GA4 tracking
+      import('@/lib/analytics/ga4').then(({ trackMarkerRewardClaimed }) => {
+        const rewardType = rewards[0]?.reward_type || 'unknown';
+        trackMarkerRewardClaimed(markerId, rewardType);
+      });
+
       onClose?.();
       
       // Force notifications refresh after successful claim

@@ -101,6 +101,7 @@ serve(async (req) => {
       const userId = paymentIntent.metadata?.user_id;
       const userEmail = paymentIntent.metadata?.email;
       const paymentType = paymentIntent.metadata?.payment_type;
+      const isSanityTest = paymentType === 'sanity_test' || paymentIntent.metadata?.test_mode === 'sanity';
       
       if (userId) {
         try {
@@ -125,6 +126,31 @@ serve(async (req) => {
             logError("Failed to log payment success to audit", auditError);
           } else {
             logStep("✅ Payment success logged to audit", { userId, paymentIntentId: paymentIntent.id });
+          }
+
+          // P1: Log sanity test specifically
+          if (isSanityTest) {
+            const { error: sanityLogError } = await supabaseClient
+              .from('admin_logs')
+              .insert({
+                event_type: 'stripe_sanity_ok',
+                admin_id: userId,
+                details: {
+                  payment_intent_id: paymentIntent.id,
+                  amount_cents: paymentIntent.amount,
+                  currency: paymentIntent.currency,
+                  credited_m1u: paymentIntent.metadata?.m1_units || 100,
+                  test_mode: paymentIntent.metadata?.test_mode,
+                  stripe_mode: stripeMode,
+                  timestamp: new Date().toISOString()
+                }
+              });
+
+            if (sanityLogError) {
+              logError("Failed to log sanity test", sanityLogError);
+            } else {
+              logStep("✅ Sanity test logged", { userId, paymentIntentId: paymentIntent.id });
+            }
           }
 
           // Optionally: Send notification or update user balance here
