@@ -688,6 +688,51 @@ export type Database = {
           },
         ]
       }
+      push_delivery_logs: {
+        Row: {
+          channel: string
+          created_at: string | null
+          details: Json | null
+          id: number
+          message_tag: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string | null
+          details?: Json | null
+          id?: number
+          message_tag?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: number
+          message_tag?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_delivery_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_delivery_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_tokens: {
         Row: {
           created_at: string | null
