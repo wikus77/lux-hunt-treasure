@@ -274,11 +274,26 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Unexpected error in battle-create:', error);
+    
+    // Safely extract error message
+    let errorMessage = 'Unknown exception in edge function';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else {
+      try {
+        errorMessage = JSON.stringify(error);
+      } catch {
+        errorMessage = String(error);
+      }
+    }
+    
     return Response.json(
       { 
         code: 'INTERNAL_ERROR',
         error: 'Internal server error',
-        hint: error instanceof Error ? error.message : 'Unknown exception in edge function',
+        hint: errorMessage,
         success: false 
       },
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
