@@ -17,9 +17,9 @@ export const useBuzzCounter = (userId: string | undefined) => {
     try {
       const { data, error } = await supabase
         .from('user_buzz_counter')
-        .select('buzz_count')
+        .select('daily_count')
         .eq('user_id', userId)
-        .eq('date', new Date().toISOString().split('T')[0])
+        .eq('counter_date', new Date().toISOString().split('T')[0])
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -27,7 +27,7 @@ export const useBuzzCounter = (userId: string | undefined) => {
         return;
       }
 
-      const buzzCount = data?.buzz_count || 0;
+      const buzzCount = data?.daily_count || 0;
       setDailyBuzzCounter(buzzCount);
       console.log('📊 PROGRESSIVE PRICING - Daily buzz counter loaded:', buzzCount);
     } catch (err) {
@@ -46,8 +46,8 @@ export const useBuzzCounter = (userId: string | undefined) => {
         .from('user_buzz_counter')
         .upsert({
           user_id: userId,
-          date: new Date().toISOString().split('T')[0],
-          buzz_count: newBuzzCounter
+          counter_date: new Date().toISOString().split('T')[0],
+          daily_count: newBuzzCounter
         });
       
       setDailyBuzzCounter(newBuzzCounter);

@@ -33,12 +33,15 @@ export const useBuzzDatabase = () => {
         validUserId = DEVELOPER_UUID;
       }
 
-      // CRITICAL: Validate user_id using the new database function
-      const { data: validationResult, error: validationError } = await supabase
-        .rpc('validate_buzz_user_id', { p_user_id: validUserId });
+      // Validate user exists using direct query
+      const { data: userCheck, error: userCheckError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', validUserId)
+        .single();
 
-      if (validationError || !validationResult) {
-        console.error('❌ User ID validation failed:', validationError);
+      if (userCheckError || !userCheck) {
+        console.error('❌ User validation failed:', userCheckError);
         toast.error('Errore di validazione utente');
         return null;
       }
@@ -52,7 +55,7 @@ export const useBuzzDatabase = () => {
         week,
         auth_user_id: authData?.user?.id || 'No auth user',
         is_developer_fallback: validUserId === DEVELOPER_UUID,
-        validation_passed: validationResult
+        validation_passed: !!userCheck
       });
 
       // CRITICAL DEBUG: Prepare and validate the exact payload
