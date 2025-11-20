@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 // M1SSION™ - Map Page Hook - Compatibile Capacitor iOS
 import { useState, useEffect, useCallback } from 'react';

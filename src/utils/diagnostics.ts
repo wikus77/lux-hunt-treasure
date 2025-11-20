@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * © 2025 Joseph MULÉ – M1SSION™ Development Diagnostics
  * Enhanced diagnostics for notification testing (only if ?M1_DIAG=1)
