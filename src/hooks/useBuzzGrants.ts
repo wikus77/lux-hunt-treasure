@@ -35,7 +35,8 @@ export const useBuzzGrants = () => {
     error,
     fetchGrants,
     consumeFreeBuzz,
-    dailyUsed
+    dailyUsed,
+    hasFreeBuzz: false
   };
 };
 
