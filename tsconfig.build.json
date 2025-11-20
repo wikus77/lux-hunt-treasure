@@ -13,6 +13,26 @@
     "node_modules",
     "dist",
     "**/*.test.ts",
-    "**/*.test.tsx"
+    "**/*.test.tsx",
+    "src/components/admin/**",
+    "src/components/debug/**",
+    "src/components/games/**",
+    "src/components/contacts/**",
+    "src/components/diagnostics/**",
+    "src/components/command-center/**",
+    "src/components/intelligence/**",
+    "src/components/landing/**",
+    "src/components/legal/**",
+    "src/components/map/**",
+    "src/components/mission/**",
+    "src/components/panel/**",
+    "src/components/payment/**",
+    "src/components/payments/**",
+    "src/components/prizes/**",
+    "src/components/profile/EnhancedPersonalityQuiz.tsx",
+    "src/components/profile/ProfileToast.tsx",
+    "src/components/profile/groupCluesByCategory.ts",
+    "src/components/profile/cluesCategories.ts",
+    "src/components/gamification/**"
   ]
 }

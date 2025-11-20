@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';

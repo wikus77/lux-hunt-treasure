@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
 import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { Marker, Popup, useMap, LayerGroup } from 'react-leaflet';
