@@ -1,23 +1,16 @@
 /**
  * Guard-safe helpers for Supabase endpoints.
- * No hardcoded project refs; everything is derived at runtime from env or JWT.
+ * Uses centralized configuration to ensure consistency.
  */
 
+import { SUPABASE_CONFIG } from './config';
+
 export function getProjectRef(): string | null {
-  try {
-    const url = import.meta.env.VITE_SUPABASE_URL;
-    if (!url) return null;
-    const u = new URL(url);
-    const match = u.hostname.match(/^([a-z0-9-]+)\.supabase\.co$/i);
-    return match ? match[1] : null;
-  } catch {
-    return null;
-  }
+  return SUPABASE_CONFIG.projectRef;
 }
 
 export function functionsBaseUrl(fn: string) {
-  const url = import.meta.env.VITE_SUPABASE_URL!;
-  return `${url.replace(/\/+$/, "")}/functions/v1/${fn}`;
+  return `${SUPABASE_CONFIG.functionsUrl}/functions/v1/${fn}`;
 }
 
 export async function verifyEdgeFunction(fn: string) {

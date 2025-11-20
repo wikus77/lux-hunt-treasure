@@ -1,9 +1,8 @@
-// URL e chiavi dagli env, nessun backtick annidato
-export const BASE =
-  import.meta.env.VITE_SUPABASE_URL ??
-  `https://${import.meta.env.VITE_SUPABASE_PROJECT_REF}.supabase.co`;
+import { SUPABASE_CONFIG } from '@/lib/supabase/config';
 
-export const ANON = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
+// URL e chiavi dalla configurazione centralizzata
+export const BASE = SUPABASE_CONFIG.url;
+export const ANON = SUPABASE_CONFIG.anonKey;
 
 // Helper comodi (se servono)
 export const functionsUrl = (path: string) =>
