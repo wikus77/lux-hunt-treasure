@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// M1SSION™ - BUZZ Cost Warning Modal Component
+// M1SSION™ - BUZZ Cost Warning Modal Component (AGGIORNATO: M1U)
 
 import React from 'react';
 import {
@@ -13,12 +13,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { AlertTriangle } from 'lucide-react';
+import { formatM1U } from '@/utils/formatM1U';
 
 interface BuzzCostWarningModalProps {
   isOpen: boolean;
   onConfirm: () => void;
   onCancel: () => void;
-  price: number;
+  price: number; // Price in EUR (will be converted to M1U for display)
   radius: number;
   segment: string;
   isEliteMaxPrice: boolean;
@@ -33,14 +34,8 @@ export const BuzzCostWarningModal: React.FC<BuzzCostWarningModalProps> = ({
   segment,
   isEliteMaxPrice
 }) => {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('it-IT', { 
-      style: 'currency', 
-      currency: 'EUR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(price);
-  };
+  // Format price as M1U for display
+  const displayPrice = formatM1U(price);
 
   const getWarningMessage = () => {
     if (isEliteMaxPrice) {
@@ -84,7 +79,7 @@ export const BuzzCostWarningModal: React.FC<BuzzCostWarningModalProps> = ({
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Costo:</span>
                 <span className="text-lg font-bold text-primary">
-                  {formatPrice(price)}
+                  {displayPrice}
                 </span>
               </div>
               

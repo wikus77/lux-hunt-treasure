@@ -1,15 +1,19 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // CENTRALE PREZZI UFFICIALI - FONTE UNICA DI VERITÀ
 
+import { formatM1U, eurToM1U } from '@/utils/formatM1U';
+
 /**
  * Configurazione prezzi M1SSION™ - SINCRONIZZAZIONE TOTALE
- * Questi sono i prezzi UFFICIALI che devono essere rispettati ovunque
+ * FRONTEND: Display in M1U
+ * BACKEND: Stripe usa EUR (conversione automatica)
  */
 export const PRICING_CONFIG = {
   Base: {
     priceEur: 0,
     priceCents: 0,
-    displayPrice: "€0",
+    priceM1U: 0,
+    displayPrice: "0 M1U",
     label: "Base - Gratis",
     features: [
       "Funzioni base (accesso alla missione con restrizioni)",
@@ -25,7 +29,8 @@ export const PRICING_CONFIG = {
   Silver: {
     priceEur: 3.99,
     priceCents: 399,
-    displayPrice: "€3.99",
+    priceM1U: eurToM1U(3.99),
+    displayPrice: formatM1U(3.99),
     label: "Silver",
     features: [
       "Tutti i vantaggi Base",
@@ -38,7 +43,8 @@ export const PRICING_CONFIG = {
   Gold: {
     priceEur: 6.99,
     priceCents: 699,
-    displayPrice: "€6.99",
+    priceM1U: eurToM1U(6.99),
+    displayPrice: formatM1U(6.99),
     label: "Gold", 
     features: [
       "Tutti i vantaggi Silver",
@@ -52,7 +58,8 @@ export const PRICING_CONFIG = {
   Black: {
     priceEur: 9.99,
     priceCents: 999,
-    displayPrice: "€9.99",
+    priceM1U: eurToM1U(9.99),
+    displayPrice: formatM1U(9.99),
     label: "Black",
     features: [
       "Tutti i vantaggi Gold",
@@ -65,7 +72,8 @@ export const PRICING_CONFIG = {
   Titanium: {
     priceEur: 29.99,
     priceCents: 2999,
-    displayPrice: "€29.99",
+    priceM1U: eurToM1U(29.99),
+    displayPrice: formatM1U(29.99),
     label: "Titanium",
     features: [
       "Tutti i vantaggi Black",
