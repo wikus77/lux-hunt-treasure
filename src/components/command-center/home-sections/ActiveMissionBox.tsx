@@ -67,11 +67,11 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
         <motion.div
           className="m1ssion-glass-card rounded-2xl p-4 cursor-pointer hover:border-green-500/30 transition-colors overflow-hidden relative"
           style={{
-            background: 'rgba(0, 0, 0, 0.2)',
+            background: 'rgba(0, 0, 0, 0.1)',
             backdropFilter: 'blur(40px)',
             WebkitBackdropFilter: 'blur(40px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
           }}
           onClick={() => toggleBox("clues")}
           whileHover={{ scale: 1.02 }}
@@ -164,11 +164,11 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
         <motion.div
           className="m1ssion-glass-card rounded-2xl p-4 cursor-pointer hover:border-amber-500/30 transition-colors overflow-hidden relative"
           style={{
-            background: 'rgba(0, 0, 0, 0.2)',
+            background: 'rgba(0, 0, 0, 0.1)',
             backdropFilter: 'blur(40px)',
             WebkitBackdropFilter: 'blur(40px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
           }}
           onClick={() => toggleBox("time")}
           whileHover={{ scale: 1.02 }}
@@ -230,11 +230,11 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
         <motion.div
           className="m1ssion-glass-card rounded-2xl p-4 cursor-pointer hover:border-[#00D1FF]/30 transition-colors overflow-hidden relative"
           style={{
-            background: 'rgba(0, 0, 0, 0.2)',
+            background: 'rgba(0, 0, 0, 0.1)',
             backdropFilter: 'blur(40px)',
             WebkitBackdropFilter: 'blur(40px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
           }}
           onClick={() => toggleBox("status")}
           whileHover={{ scale: 1.02 }}
