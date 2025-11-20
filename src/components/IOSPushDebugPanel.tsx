@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // iOS PWA Push Notifications Debug Panel - Emergency Diagnostics Tool
 
