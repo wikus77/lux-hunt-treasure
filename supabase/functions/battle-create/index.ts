@@ -269,7 +269,7 @@ serve(async (req) => {
         arena_name: arenaName,
         stake_amount: stakeAmount,
       },
-      { headers: corsHeaders }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
