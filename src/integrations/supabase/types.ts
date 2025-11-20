@@ -2052,6 +2052,37 @@ export type Database = {
         }
         Relationships: []
       }
+      winners_public: {
+        Row: {
+          agent_code: string | null
+          avatar_url: string | null
+          completion_time: string | null
+          id: string | null
+          mission_code: string | null
+          mission_title: string | null
+          nickname: string | null
+          prize_image: string | null
+          prize_name: string | null
+          prize_value: number | null
+          winner_user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "final_shots_winner_user_id_fkey"
+            columns: ["winner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "final_shots_winner_user_id_fkey"
+            columns: ["winner_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       award_pulse_energy: {
