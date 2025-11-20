@@ -46,26 +46,27 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.02, boxShadow: '0 15px 50px rgba(0, 229, 255, 0.25)' }}
       whileTap={{ scale: 0.98 }}
       onClick={handleCardClick}
-      className="rounded-[20px] bg-[#1C1C1F] backdrop-blur-md cursor-pointer transition-all duration-300 relative overflow-hidden"
+      className="m1ssion-glass-card cursor-pointer transition-all duration-300 relative overflow-hidden"
       style={{
         background: notification.read 
-          ? 'linear-gradient(135deg, #1C1C1F 0%, rgba(28, 28, 31, 0.8) 100%)'
-          : 'linear-gradient(135deg, #1C1C1F 0%, rgba(28, 28, 31, 0.95) 50%, rgba(54, 94, 255, 0.15) 100%)',
+          ? 'rgba(0, 0, 0, 0.6)'
+          : 'rgba(0, 0, 0, 0.7)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        borderRadius: '24px',
         boxShadow: notification.read 
-          ? "0 2px 8px rgba(0, 0, 0, 0.15)" 
-          : "0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+          ? "0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)" 
+          : "0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05), 0 0 24px rgba(0, 229, 255, 0.2)",
+        border: '0'
       }}
     >
       {/* Top gradient border for unread notifications */}
       {!notification.read && (
         <div 
-          className="absolute top-0 left-0 w-full h-[1px]"
-          style={{
-            background: 'linear-gradient(90deg, #FC1EFF 0%, #365EFF 50%, #FACC15 100%)'
-          }}
+          className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] via-[#F059FF] to-[#FACC15] opacity-90"
         />
       )}
       
@@ -165,3 +166,5 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 };
 
 export default NotificationItem;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
