@@ -328,6 +328,63 @@ export type Database = {
         }
         Relationships: []
       }
+      buzz_game_targets: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          lat: number
+          lon: number
+          radius_km: number | null
+          source: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          lat: number
+          lon: number
+          radius_km?: number | null
+          source?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          lat?: number
+          lon?: number
+          radius_km?: number | null
+          source?: string | null
+        }
+        Relationships: []
+      }
+      buzz_grants: {
+        Row: {
+          created_at: string | null
+          id: string
+          remaining: number | null
+          source: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          remaining?: number | null
+          source?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          remaining?: number | null
+          source?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       buzz_map_actions: {
         Row: {
           clue_count: number | null
@@ -498,6 +555,27 @@ export type Database = {
           },
         ]
       }
+      legal_documents: {
+        Row: {
+          content: string | null
+          id: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          content?: string | null
+          id?: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string | null
+          id?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       marker_rewards: {
         Row: {
           created_at: string | null
@@ -525,6 +603,30 @@ export type Database = {
           payload?: Json | null
           reward_type?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      mission_enrollments: {
+        Row: {
+          created_at: string | null
+          id: string
+          mission_id: string | null
+          state: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          mission_id?: string | null
+          state?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          mission_id?: string | null
+          state?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -768,12 +870,15 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_enabled: boolean | null
+          access_start_date: string | null
           agent_code: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string | null
           email: string | null
           first_login_completed: boolean | null
+          full_name: string | null
           id: string
           investigative_style: string | null
           invited_by_code: string | null
@@ -784,16 +889,21 @@ export type Database = {
           rank_updated_at: string | null
           referral_code_used: boolean | null
           role: string | null
+          status: string | null
+          subscription_plan: string | null
           total_referrals: number
           updated_at: string | null
         }
         Insert: {
+          access_enabled?: boolean | null
+          access_start_date?: string | null
           agent_code?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
           email?: string | null
           first_login_completed?: boolean | null
+          full_name?: string | null
           id: string
           investigative_style?: string | null
           invited_by_code?: string | null
@@ -804,16 +914,21 @@ export type Database = {
           rank_updated_at?: string | null
           referral_code_used?: boolean | null
           role?: string | null
+          status?: string | null
+          subscription_plan?: string | null
           total_referrals?: number
           updated_at?: string | null
         }
         Update: {
+          access_enabled?: boolean | null
+          access_start_date?: string | null
           agent_code?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
           email?: string | null
           first_login_completed?: boolean | null
+          full_name?: string | null
           id?: string
           investigative_style?: string | null
           invited_by_code?: string | null
@@ -824,6 +939,8 @@ export type Database = {
           rank_updated_at?: string | null
           referral_code_used?: boolean | null
           role?: string | null
+          status?: string | null
+          subscription_plan?: string | null
           total_referrals?: number
           updated_at?: string | null
         }
@@ -1067,6 +1184,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          current_period_end: string | null
+          id: string
+          plan: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_period_end?: string | null
+          id?: string
+          plan?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_period_end?: string | null
+          id?: string
+          plan?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_buzz_counter: {
         Row: {
@@ -1314,6 +1458,27 @@ export type Database = {
           },
         ]
       }
+      user_mission_status: {
+        Row: {
+          id: string
+          state: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          state?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          state?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_missions: {
         Row: {
           completed_at: string | null
@@ -1559,6 +1724,7 @@ export type Database = {
       webpush_subscriptions: {
         Row: {
           created_at: string | null
+          endpoint: string | null
           id: string
           is_active: boolean | null
           subscription: Json
@@ -1567,6 +1733,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          endpoint?: string | null
           id?: string
           is_active?: boolean | null
           subscription: Json
@@ -1575,6 +1742,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          endpoint?: string | null
           id?: string
           is_active?: boolean | null
           subscription?: Json
@@ -1622,6 +1790,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      push_subscriptions: {
+        Row: {
+          created_at: string | null
+          endpoint: string | null
+          id: string | null
+          is_active: boolean | null
+          platform: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint?: never
+          id?: string | null
+          is_active?: boolean | null
+          platform?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: never
+          id?: string | null
+          is_active?: boolean | null
+          platform?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       qr_buzz_codes: {
         Row: {
@@ -1680,6 +1878,27 @@ export type Database = {
         }
         Relationships: []
       }
+      v_user_buzz_daily: {
+        Row: {
+          buzz_count: number | null
+          date: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          buzz_count?: number | null
+          date?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          buzz_count?: number | null
+          date?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       v_user_buzz_map_counter_compat: {
         Row: {
           buzz_map_count: number | null
@@ -1696,6 +1915,27 @@ export type Database = {
         Update: {
           buzz_map_count?: number | null
           counter_date?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      v_user_buzz_map_daily: {
+        Row: {
+          buzz_map_count: number | null
+          date: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          buzz_map_count?: number | null
+          date?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          buzz_map_count?: number | null
+          date?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -1806,6 +2046,7 @@ export type Database = {
           success: boolean
         }[]
       }
+      can_user_access_mission: { Args: { p_user: string }; Returns: boolean }
       consume_credit: {
         Args: { p_amount: number; p_credit_type: string; p_user_id: string }
         Returns: boolean
@@ -1814,6 +2055,7 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      generate_unique_agent_code: { Args: never; Returns: string }
       get_my_agent_code: { Args: never; Returns: string }
       get_my_notifications: {
         Args: { p_before?: string; p_limit?: number }
@@ -1859,6 +2101,7 @@ export type Database = {
         Args: { p_archived: boolean; p_id: string }
         Returns: boolean
       }
+      validate_buzz_user_id: { Args: { p_user: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "agent"
