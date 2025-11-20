@@ -58,7 +58,7 @@ const FeatureSection = () => {
           </motion.div>
           
           <h2 className="text-4xl md:text-5xl font-orbitron font-light mb-6">
-            Un'esperienza <span className="text-cyan-400">immersiva</span>
+            Un'esperienza <span className="neon-text-cyan animate-neon-pulse">immersiva</span>
           </h2>
           
           <p className="text-lg text-white/70 max-w-2xl mx-auto">
@@ -70,7 +70,7 @@ const FeatureSection = () => {
           {features.map((feature, index) => (
             <AnimatedSection 
               key={feature.id}
-              className="glass-card overflow-hidden group hover:bg-white/5 transition-all duration-500"
+              className="m1ssion-glass-card overflow-hidden group hover:bg-white/5 transition-all duration-500"
               delay={0.2 + index * 0.1}
               once
               direction={index % 2 === 0 ? "left" : "right"}
@@ -109,3 +109,5 @@ const FeatureSection = () => {
 };
 
 export default FeatureSection;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

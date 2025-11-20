@@ -219,7 +219,7 @@ export const ProfilePage: React.FC = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="glass-card">
+        <Card className="m1ssion-glass-card">
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
               {/* Avatar - BY JOSEPH MULE */}
@@ -242,7 +242,7 @@ export const ProfilePage: React.FC = () => {
               {/* Profile Info */}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <h1 className="text-xl font-bold text-white">
+                  <h1 className="text-xl font-bold neon-text-cyan">
                     {profile.full_name || 'Agente Anonimo'}
                   </h1>
                   <button className="text-gray-400 hover:text-white transition-colors">
@@ -292,7 +292,7 @@ export const ProfilePage: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="grid grid-cols-2 gap-4"
         >
-          <Card className="glass-card">
+          <Card className="m1ssion-glass-card">
             <CardContent className="p-4 text-center">
               <Target className="w-8 h-8 mx-auto mb-2 text-[#00D1FF]" />
               <div className="text-2xl font-bold text-white">{stats.clues_unlocked}</div>
@@ -300,7 +300,7 @@ export const ProfilePage: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card className="m1ssion-glass-card">
             <CardContent className="p-4 text-center">
               <Trophy className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
               <div className="text-2xl font-bold text-white">{stats.prizes_won}</div>
@@ -308,7 +308,7 @@ export const ProfilePage: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card className="m1ssion-glass-card">
             <CardContent className="p-4 text-center">
               <Star className="w-8 h-8 mx-auto mb-2 text-[#F059FF]" />
               <div className="text-2xl font-bold text-white">{stats.missions_completed}</div>
@@ -316,7 +316,7 @@ export const ProfilePage: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card className="m1ssion-glass-card">
             <CardContent className="p-4 text-center">
               <div className="w-8 h-8 mx-auto mb-2 bg-[#F059FF] rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">B</span>
@@ -372,9 +372,9 @@ export const ProfilePage: React.FC = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <Card className="glass-card">
+          <Card className="m1ssion-glass-card">
             <CardHeader>
-              <CardTitle className="text-lg text-white">Stile Investigativo</CardTitle>
+              <CardTitle className="text-lg neon-text-cyan">Stile Investigativo</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-300">{profile.investigative_style}</p>

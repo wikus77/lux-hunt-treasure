@@ -71,10 +71,11 @@ const SplitWords = ({ text, delay = 0 }: { text: string; delay?: number }) => {
 export default function AnimatedIntroText() {
   return (
     <div 
-      className="glass-card px-8 py-8 rounded-2xl max-w-2xl text-lg md:text-xl text-center shadow-2xl flex flex-col gap-4 transform-gpu"
+      className="m1ssion-glass-card px-8 py-8 rounded-m1-lg max-w-2xl text-lg md:text-xl text-center shadow-m1-card flex flex-col gap-4 transform-gpu"
       style={{
         background: "rgba(8,8,24,0.85)",
-        backdropFilter: "blur(12px)",
+        backdropFilter: "blur(40px)",
+        WebkitBackdropFilter: "blur(40px)",
         border: "1px solid rgba(0,229,255,0.4)",
         boxShadow: "0 20px 60px 0 rgba(0,229,255,0.12), inset 0 0 20px 0 rgba(0,229,255,0.05)"
       }}
@@ -109,3 +110,5 @@ export default function AnimatedIntroText() {
     </div>
   );
 }
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

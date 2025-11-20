@@ -202,7 +202,7 @@ export const GamesPage: React.FC = () => {
               whileTap={{ scale: game.isLocked ? 1 : 0.98 }}
             >
               <Card 
-                className={`glass-card cursor-pointer transition-all duration-300 ${
+                className={`m1ssion-glass-card cursor-pointer transition-all duration-300 ${
                   game.isLocked 
                     ? 'opacity-60 cursor-not-allowed' 
                     : 'hover:ring-2 hover:ring-[#00D1FF]'
@@ -346,3 +346,5 @@ export const GamesPage: React.FC = () => {
 };
 
 export default GamesPage;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
