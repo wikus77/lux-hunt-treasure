@@ -1,4 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™
+// @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';

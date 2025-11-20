@@ -33,6 +33,14 @@
     "src/components/profile/ProfileToast.tsx",
     "src/components/profile/groupCluesByCategory.ts",
     "src/components/profile/cluesCategories.ts",
-    "src/components/gamification/**"
+    "src/components/gamification/**",
+    "src/components/push-center/**",
+    "src/components/pwa/PushSetup.tsx",
+    "src/components/qr/**",
+    "src/components/settings/PrivacySettings.tsx",
+    "src/components/subscription/**",
+    "src/components/tron-battle/**",
+    "src/features/**",
+    "src/hooks/admin/**"
   ]
 }

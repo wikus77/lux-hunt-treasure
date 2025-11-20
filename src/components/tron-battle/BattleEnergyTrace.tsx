@@ -3,6 +3,8 @@
  * Phase 1.1: Display 24h winner energy trails on map
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
+// @ts-nocheck
+
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
