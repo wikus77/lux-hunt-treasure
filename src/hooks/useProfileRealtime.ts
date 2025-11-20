@@ -22,10 +22,16 @@ export const useProfileRealtime = () => {
     console.log('useProfileRealtime: fetchProfile stub');
   };
 
+  const updateProfile = async () => {
+    console.log('useProfileRealtime: updateProfile stub');
+  };
+
   return {
     profile,
     loading,
-    fetchProfile
+    fetchProfile,
+    updateProfile,
+    profileData: profile
   };
 };
 

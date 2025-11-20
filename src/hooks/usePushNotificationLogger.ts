@@ -6,8 +6,23 @@ export const usePushNotificationLogger = () => {
     console.log('usePushNotificationLogger: logPushEvent stub');
   };
 
+  const logPermissionRequested = async () => {
+    console.log('usePushNotificationLogger: logPermissionRequested stub');
+  };
+
+  const logPermissionGranted = async () => {
+    console.log('usePushNotificationLogger: logPermissionGranted stub');
+  };
+
+  const logPermissionDenied = async () => {
+    console.log('usePushNotificationLogger: logPermissionDenied stub');
+  };
+
   return {
-    logPushEvent
+    logPushEvent,
+    logPermissionRequested,
+    logPermissionGranted,
+    logPermissionDenied
   };
 };
 

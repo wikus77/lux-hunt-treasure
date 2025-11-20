@@ -44,7 +44,8 @@ export const usePrizeData = () => {
     clues,
     loading,
     fetchPrizes,
-    unlockClue
+    unlockClue,
+    userClues: []
   };
 };
 

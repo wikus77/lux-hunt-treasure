@@ -11,10 +11,15 @@ export const useOnboardingTutorial = () => {
     console.log('useOnboardingTutorial: hideTutorial stub');
   };
 
+  const hideTutorialForever = async () => {
+    console.log('useOnboardingTutorial: hideTutorialForever stub');
+  };
+
   return {
     showTutorial,
     isLoading,
-    hideTutorial
+    hideTutorial,
+    hideTutorialForever
   };
 };
 

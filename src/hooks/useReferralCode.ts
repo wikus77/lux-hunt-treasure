@@ -1,56 +1,28 @@
-// © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
+import { useState } from 'react';
 
 export const useReferralCode = () => {
-  const [referralCode, setReferralCode] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  // Stub: No referral_code column - return stub state
+  const [referralCode] = useState<string | null>(null);
+  const [loading] = useState(false);
 
-  useEffect(() => {
-    const fetchReferralCode = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+  const generateReferralCode = async () => {
+    console.log('useReferralCode: generateReferralCode stub');
+    return null;
+  };
 
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('referral_code')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          console.error('Error fetching referral code:', error);
-          return;
-        }
-
-        if (data?.referral_code) {
-          setReferralCode(data.referral_code);
-        }
-      } catch (error) {
-        console.error('Error in fetchReferralCode:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReferralCode();
-  }, []);
-
-  const copyReferralCode = () => {
-    if (referralCode) {
-      navigator.clipboard.writeText(referralCode);
-      toast({
-        title: "Codice copiato!",
-        description: `Il tuo codice referral ${referralCode} è stato copiato negli appunti.`,
-      });
-    }
+  const applyReferralCode = async () => {
+    console.log('useReferralCode: applyReferralCode stub');
+    return false;
   };
 
   return {
     referralCode,
     loading,
-    copyReferralCode
+    generateReferralCode,
+    applyReferralCode
   };
 };
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

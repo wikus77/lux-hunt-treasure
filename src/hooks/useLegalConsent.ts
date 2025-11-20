@@ -21,9 +21,15 @@ export const useLegalConsent = () => {
     return true;
   };
 
+  const acceptLegalConsent = async () => {
+    console.log('useLegalConsent: acceptLegalConsent stub');
+    return true;
+  };
+
   return {
     ...state,
-    acceptConsent
+    acceptConsent,
+    acceptLegalConsent
   };
 };
 
