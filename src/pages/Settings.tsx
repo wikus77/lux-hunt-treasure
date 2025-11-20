@@ -143,7 +143,7 @@ const Settings = () => {
             />
             
             {/* Haptic Feedback Settings */}
-            <div className="glass-card p-4 space-y-3">
+            <div className="m1ssion-glass-card p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Vibrate className="h-5 w-5 text-white" />
@@ -175,7 +175,7 @@ const Settings = () => {
             
             {/* Notification Settings Link */}
             <Link to="/settings/notifications" className="block">
-              <div className="glass-card flex justify-between items-center p-4 hover:bg-white/10 transition-colors">
+              <div className="m1ssion-glass-card flex justify-between items-center p-4 hover:bg-white/10 transition-colors">
                 <div className="flex items-center">
                   <Bell className="h-5 w-5 mr-3 text-white" />
                   <span className="text-white font-medium">Gestione Notifiche</span>

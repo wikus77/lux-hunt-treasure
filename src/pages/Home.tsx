@@ -170,8 +170,8 @@ const Home = () => {
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#070818] px-4">
-        <div className="p-8 bg-red-800/30 rounded-xl text-center w-full max-w-sm glass-card">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-red-300">Errore</h2>
+        <div className="p-8 bg-red-800/30 rounded-xl text-center w-full max-w-sm m1ssion-glass-card">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 neon-text-magenta">Errore</h2>
           <p className="text-white/80">{error}</p>
           <motion.button 
             onClick={() => window.location.reload()}

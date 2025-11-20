@@ -147,7 +147,7 @@ export const HowItWorksPage: React.FC = () => {
         transition={{ delay: 0.1 }}
         className="relative"
       >
-        <Card className="glass-card overflow-hidden">
+        <Card className="m1ssion-glass-card overflow-hidden">
           <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
             <div className="text-center space-y-4">
               <div className="w-20 h-20 bg-[#00D1FF]/20 rounded-full flex items-center justify-center mx-auto">
@@ -400,3 +400,5 @@ export const HowItWorksPage: React.FC = () => {
 };
 
 export default HowItWorksPage;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
