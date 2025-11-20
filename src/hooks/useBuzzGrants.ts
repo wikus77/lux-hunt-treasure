@@ -31,11 +31,11 @@ export const useBuzzGrants = () => {
         .from('user_buzz_counter')
         .select('*')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-        .eq('date', today)
+        .eq('counter_date', today)
         .single();
 
-      // If any BUZZ was used today, mark daily as used
-      if (todayBuzzUsage && todayBuzzUsage.buzz_count > 0) {
+      // © 2025 M1SSION™ - Fixed: use daily_count instead of buzz_count
+      if (todayBuzzUsage && todayBuzzUsage.daily_count > 0) {
         setDailyUsed(true);
       } else {
         setDailyUsed(false);
@@ -81,14 +81,16 @@ export const useBuzzGrants = () => {
         return false;
       }
       
+      // © 2025 M1SSION™ - Fixed: use daily_count and counter_date
       const { data: todayCheck } = await supabase
         .from('user_buzz_counter')
-        .select('buzz_count')
+        .select('daily_count')
         .eq('user_id', userId)
-        .eq('date', today)
+        .eq('counter_date', today)
         .single();
 
-      if (todayCheck && todayCheck.buzz_count > 0) {
+      // © 2025 M1SSION™ - Fixed: use daily_count
+      if (todayCheck && todayCheck.daily_count > 0) {
         console.log('❌ Daily BUZZ already used - database check');
         setDailyUsed(true);
         return false;

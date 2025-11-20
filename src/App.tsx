@@ -124,7 +124,8 @@ function App() {
                 <AuthProvider>
                   <InterestSignalsProvider>
                     {/* OneSignal rimosso - usando solo FCM */}
-                    <LegalOnboarding />
+                    {/* © 2025 M1SSION™ - Conditional render to prevent loop */}
+                    {!localStorage.getItem('m1ssion_legal_consent') && <LegalOnboarding />}
                     <FirstLoginQuizManager />
                     <DNAManager />
                     <CookieConsentManager />

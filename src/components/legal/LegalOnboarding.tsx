@@ -81,12 +81,14 @@ const LegalOnboarding: React.FC = () => {
     try {
       const success = await acceptLegalConsent();
       
-      // CRITICAL: Verify localStorage persistence before redirect
+      // CRITICAL: Verify localStorage persistence
       const saved = localStorage.getItem('m1ssion_legal_consent');
       
       if (success && saved === 'true') {
-        console.log('✅ Legal consent saved, redirecting to home');
-        setLocation('/home'); // Explicit redirect to home
+        console.log('✅ Legal consent saved');
+        // © 2025 M1SSION™ - Dispatch storage event to trigger App re-render
+        window.dispatchEvent(new Event('storage'));
+        // No redirect - let App.tsx conditional render handle unmounting
       } else {
         console.error('❌ localStorage save failed or consent not accepted');
         toast.error('Errore nel salvataggio del consenso. Riprova.');
