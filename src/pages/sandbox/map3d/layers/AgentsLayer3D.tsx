@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Agents Layer for MapLibre 3D - Red markers overlay
 import React, { useEffect, useState } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';

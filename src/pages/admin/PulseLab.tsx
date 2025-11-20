@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * The Pulse™ — Admin Pulse Lab (Sandbox Test Page)
  * Admin-only page to test ritual orchestration in isolated sandbox

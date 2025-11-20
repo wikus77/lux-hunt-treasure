@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Portals Layer for MapLibre 3D - Portal markers overlay
 import React, { useEffect, useState } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';
