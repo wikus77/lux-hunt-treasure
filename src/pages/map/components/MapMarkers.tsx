@@ -1,4 +1,7 @@
 // @ts-nocheck
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// SAFETY: References legacy table (markers) - kept as-is per SAFETY CLAUSE
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { Marker } from '@react-google-maps/api';
 import { supabase } from '@/integrations/supabase/client';
