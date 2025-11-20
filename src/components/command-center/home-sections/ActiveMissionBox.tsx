@@ -67,7 +67,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
         <motion.div
           className="m1ssion-glass-card rounded-2xl p-4 cursor-pointer hover:border-green-500/30 transition-colors overflow-hidden relative"
           style={{
-            background: 'rgba(0, 0, 0, 0.6)',
+            background: 'rgba(0, 0, 0, 0.2)',
             backdropFilter: 'blur(40px)',
             WebkitBackdropFilter: 'blur(40px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -164,7 +164,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
         <motion.div
           className="m1ssion-glass-card rounded-2xl p-4 cursor-pointer hover:border-amber-500/30 transition-colors overflow-hidden relative"
           style={{
-            background: 'rgba(0, 0, 0, 0.6)',
+            background: 'rgba(0, 0, 0, 0.2)',
             backdropFilter: 'blur(40px)',
             WebkitBackdropFilter: 'blur(40px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -230,7 +230,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
         <motion.div
           className="m1ssion-glass-card rounded-2xl p-4 cursor-pointer hover:border-[#00D1FF]/30 transition-colors overflow-hidden relative"
           style={{
-            background: 'rgba(0, 0, 0, 0.6)',
+            background: 'rgba(0, 0, 0, 0.2)',
             backdropFilter: 'blur(40px)',
             WebkitBackdropFilter: 'blur(40px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
