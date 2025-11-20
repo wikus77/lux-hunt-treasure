@@ -95,6 +95,11 @@ export default function BattleArena({ battleId: battleIdProp }: BattleArenaProps
     const clientTapAt = new Date().toISOString();
     setStatus('tapped');
 
+    // Haptic feedback (if supported)
+    if ('vibrate' in navigator) {
+      navigator.vibrate([50, 30, 50]);
+    }
+
     // Measure ping (simple RTT approximation)
     const pingStart = Date.now();
     await supabase.from('battles').select('id').eq('id', battleId).single();
