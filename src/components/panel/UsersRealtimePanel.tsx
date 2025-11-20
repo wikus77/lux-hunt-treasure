@@ -216,7 +216,16 @@ const UsersRealtimePanel: React.FC = () => {
   };
 
   return (
-    <Card className="bg-card border-border">
+    <Card 
+      className="border-0"
+      style={{
+        background: 'rgba(0, 0, 0, 0.05)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        borderRadius: '24px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+      }}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <Users className="h-5 w-5 text-primary" />
