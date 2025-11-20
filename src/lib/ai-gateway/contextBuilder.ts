@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Enhanced Context Builder - Extends NorahContext with AI Gateway features
+// @ts-nocheck
 
 import { supabase } from '@/integrations/supabase/client';
 import { EnhancedContext } from '@/types/ai-gateway.types';

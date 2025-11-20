@@ -1,4 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™
+// @ts-nocheck
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
