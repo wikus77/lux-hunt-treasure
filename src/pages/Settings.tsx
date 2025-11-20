@@ -29,6 +29,9 @@ import { disableWebPush } from "@/lib/push/disableWebPush";
 import { PushTest } from "@/components/push/PushTest";
 import { PushDiagnostics } from "@/components/push/PushDiagnostics";
 import { OperaResetButton } from "@/components/layout/OperaResetButton";
+import { PushE2ETestCard } from "@/settings/PushE2ETestCard";
+import { StripeSanityCard } from "@/settings/StripeSanityCard";
+import { PWAUpdatePrompt } from "@/components/pwa/PWAUpdatePrompt";
 
 const Settings = () => {
   const { profileImage } = useProfileImage();
@@ -113,12 +116,15 @@ const Settings = () => {
         </div>
         
         <Tabs defaultValue="main" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-zinc-900 border-zinc-700">
+          <TabsList className="grid w-full grid-cols-3 bg-zinc-900 border-zinc-700">
             <TabsTrigger value="main" className="text-white data-[state=active]:bg-white data-[state=active]:text-black">
               ⚙️ Impostazioni
             </TabsTrigger>
             <TabsTrigger value="push-test" className="text-white data-[state=active]:bg-white data-[state=active]:text-black">
               🧪 Test Push
+            </TabsTrigger>
+            <TabsTrigger value="dev-tools" className="text-white data-[state=active]:bg-white data-[state=active]:text-black">
+              🛠️ Dev Tools
             </TabsTrigger>
           </TabsList>
           
@@ -231,6 +237,12 @@ const Settings = () => {
             {pushEnabled && (
               <PushTest />
             )}
+          </TabsContent>
+
+          <TabsContent value="dev-tools" className="mt-6 space-y-4">
+            <PushE2ETestCard />
+            <StripeSanityCard />
+            <PWAUpdatePrompt />
           </TabsContent>
         </Tabs>
       </div>

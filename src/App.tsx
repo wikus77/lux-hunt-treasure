@@ -39,9 +39,24 @@ import { RouteAnnouncer } from "./components/a11y/RouteAnnouncer";
 import { useRouteAnnouncements } from "./hooks/useRouteAnnouncements";
 import { ReconnectBadge } from "./components/net/ReconnectBadge";
 import { M1UnitsDebugPanel } from "./components/debug/M1UnitsDebugPanel";
+import { initGA4, trackPageView } from './lib/analytics/ga4';
+import { useLocation } from 'wouter';
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration
+  const [location] = useLocation();
+  
+  // Initialize GA4 once on mount
+  useEffect(() => {
+    initGA4();
+  }, []);
+
+  // Track page views on route change
+  useEffect(() => {
+    if (location) {
+      trackPageView(location);
+    }
+  }, [location]);
   
   // A11y: Route announcements for screen readers
   useRouteAnnouncements();
