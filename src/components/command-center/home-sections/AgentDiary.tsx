@@ -56,21 +56,18 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
 
   return (
     <motion.div 
-      className="rounded-[20px] bg-[#1C1C1F] backdrop-blur-xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] mb-4 relative"
+      className="m1ssion-glass-card rounded-[20px] overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] mb-4 relative"
       style={{
-        background: 'linear-gradient(135deg, #1C1C1F 0%, rgba(28, 28, 31, 0.95) 50%, rgba(252, 30, 255, 0.1) 100%)',
-        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+        background: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
       }}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
-      <div 
-        className="absolute top-0 left-0 w-full h-[1px]"
-        style={{
-          background: 'linear-gradient(90deg, #FC1EFF 0%, #365EFF 50%, #FACC15 100%)'
-        }}
-      />
-      
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
       <div 
         className="p-6 border-b border-white/10 flex justify-between items-center"
         onClick={handleHeaderClick}
