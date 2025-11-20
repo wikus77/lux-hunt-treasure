@@ -89,11 +89,11 @@ export function BattleConsole({ className }: BattleConsoleProps) {
     <motion.div 
       className={`m1ssion-glass-card rounded-[20px] overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] mb-4 relative ${className}`}
       style={{
-        background: 'rgba(0, 0, 0, 0.6)',
+        background: 'rgba(0, 0, 0, 0.1)',
         backdropFilter: 'blur(40px)',
         WebkitBackdropFilter: 'blur(40px)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
       }}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
