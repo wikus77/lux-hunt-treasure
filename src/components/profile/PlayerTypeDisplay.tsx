@@ -23,13 +23,17 @@ const PlayerTypeDisplay: React.FC<PlayerTypeDisplayProps> = ({ playerType, class
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`space-y-3 ${className}`}
+      whileHover={{ 
+        scale: 1.02,
+        boxShadow: '0 15px 50px rgba(0, 229, 255, 0.25)'
+      }}
     >
-      <Card className="bg-black/40 border-white/10 backdrop-blur-sm">
-        <CardContent className="p-4 text-center">
-          <div className="text-3xl mb-3">{playerType.icon}</div>
+      <Card className="m1ssion-glass-card border-0">
+        <CardContent className="p-6 text-center">
+          <div className="text-4xl mb-4">{playerType.icon}</div>
           <Badge 
             variant="outline" 
-            className="mb-3 text-sm"
+            className="mb-4 text-sm glow-border-cyan"
             style={{ borderColor: playerType.color, color: playerType.color }}
           >
             {playerType.name}
@@ -44,3 +48,5 @@ const PlayerTypeDisplay: React.FC<PlayerTypeDisplayProps> = ({ playerType, class
 };
 
 export default PlayerTypeDisplay;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

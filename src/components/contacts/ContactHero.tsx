@@ -11,7 +11,7 @@ const ContactHero = () => {
       transition={{ duration: 0.6 }}
     >
       <h1 className="text-5xl md:text-6xl font-orbitron font-bold mb-6">
-        <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">Contattaci</span>
+        <span className="neon-text-cyan">Contattaci</span>
       </h1>
       
       <p className="text-xl text-white/70 max-w-2xl mx-auto">
@@ -22,3 +22,5 @@ const ContactHero = () => {
 };
 
 export default ContactHero;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

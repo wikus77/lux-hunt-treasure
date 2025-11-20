@@ -10,17 +10,17 @@ interface SectionProps {
 const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
   return (
     <motion.div 
-      className="glass-card mb-12 rounded-xl shadow-lg overflow-hidden" 
+      className="m1ssion-glass-card p-8 mb-12 overflow-hidden" 
       variants={variants}
-      style={{ boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2), 0 0 8px rgba(0, 209, 255, 0.1)" }}
+      whileHover={{ 
+        boxShadow: '0 15px 50px rgba(0, 229, 255, 0.25)'
+      }}
     >
-      <h2 className="text-3xl font-orbitron font-bold mb-6 text-cyan-400">
+      <h2 className="text-3xl font-orbitron font-bold mb-6 neon-text-cyan">
         Vuoi provarci? Fallo. Ma fallo per vincere.
       </h2>
       
-      <div className="rounded-xl overflow-hidden bg-black/30 backdrop-blur-sm border border-white/10 p-2"
-           style={{ boxShadow: "0 8px 32px rgba(0, 0, 0, 0.15), 0 0 8px rgba(0, 209, 255, 0.05)" }}>
-        {/* Car Brand Selection */}
+      <div className="glass-medium rounded-m1 overflow-hidden p-2">
         <CarBrandSelection />
       </div>
     </motion.div>
@@ -28,3 +28,5 @@ const PrizesSection: React.FC<SectionProps> = ({ variants }) => {
 };
 
 export default PrizesSection;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
