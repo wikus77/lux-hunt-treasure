@@ -61,9 +61,17 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
         style={{ visibility: isExpanded ? "hidden" : "visible" }}
         transition={layoutSpring}
       >
-        <GradientBox className="w-full relative overflow-hidden rounded-xl">
-          {/* Stripe superiore caratteristica */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#00D1FF]" />
+        <div 
+          className="w-full relative overflow-hidden rounded-[24px]"
+          style={{
+            background: 'rgba(0, 0, 0, 0.05)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+          }}
+        >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
 
           <div
             className="p-4 border-b border-white/10 flex justify-between items-center cursor-pointer"
@@ -152,7 +160,7 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
               ></div>
             </div>
           </div>
-        </GradientBox>
+        </div>
       </motion.div>
 
       {/* ESPANSO: lo STESSO container si espande tra header (72px) e bottom nav (88px) dal CENTRO */}
@@ -178,9 +186,17 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-2 md:px-6 h-full max-w-screen-xl mx-auto">
-                <GradientBox className="w-full h-full flex flex-col relative overflow-hidden rounded-xl">
-                  {/* Stripe superiore */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#00D1FF]" />
+                <div 
+                  className="w-full h-full flex flex-col relative overflow-hidden rounded-[24px]"
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.05)',
+                    backdropFilter: 'blur(40px)',
+                    WebkitBackdropFilter: 'blur(40px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+                  }}
+                >
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
 
                   {/* Header identico */}
                   <div className="p-4 border-b border-white/10 flex justify-between items-center">
@@ -223,7 +239,7 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
                       ))}
                     </div>
                   </div>
-                </GradientBox>
+                </div>
               </div>
             </motion.div>
           </motion.div>
