@@ -1,7 +1,4 @@
 // @ts-nocheck
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// SAFETY: References legacy tables (subscriptions, buzz_logs) - kept as-is per SAFETY CLAUSE
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin } from 'lucide-react';

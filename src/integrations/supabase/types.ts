@@ -1356,21 +1356,18 @@ export type Database = {
         Row: {
           muted: boolean
           notif_type: string
-          prefs: Json | null
           updated_at: string
           user_id: string
         }
         Insert: {
           muted?: boolean
           notif_type: string
-          prefs?: Json | null
           updated_at?: string
           user_id: string
         }
         Update: {
           muted?: boolean
           notif_type?: string
-          prefs?: Json | null
           updated_at?: string
           user_id?: string
         }
@@ -1659,84 +1656,6 @@ export type Database = {
         }
         Relationships: []
       }
-      v_user_buzz_counter_compat: {
-        Row: {
-          buzz_count: number | null
-          counter_date: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          buzz_count?: number | null
-          counter_date?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          buzz_count?: number | null
-          counter_date?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      v_user_buzz_map_counter_compat: {
-        Row: {
-          buzz_map_count: number | null
-          counter_date: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          buzz_map_count?: number | null
-          counter_date?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          buzz_map_count?: number | null
-          counter_date?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      v_user_inbox: {
-        Row: {
-          archived_at: string | null
-          created_at: string | null
-          id: string | null
-          is_read: boolean | null
-          message: string | null
-          read_at: string | null
-          title: string | null
-          type: string | null
-          user_id: string | null
-        }
-        Insert: {
-          archived_at?: string | null
-          created_at?: string | null
-          id?: string | null
-          is_read?: boolean | null
-          message?: string | null
-          read_at?: string | null
-          title?: string | null
-          type?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          archived_at?: string | null
-          created_at?: string | null
-          id?: string | null
-          is_read?: boolean | null
-          message?: string | null
-          read_at?: string | null
-          title?: string | null
-          type?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       winners_public: {
         Row: {
           agent_code: string | null
@@ -1815,27 +1734,6 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_my_agent_code: { Args: never; Returns: string }
-      get_my_notifications: {
-        Args: { p_before?: string; p_limit?: number }
-        Returns: {
-          archived_at: string | null
-          created_at: string
-          id: string
-          is_deleted: boolean | null
-          is_read: boolean
-          message: string
-          read_at: string | null
-          title: string | null
-          type: string | null
-          user_id: string
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "user_notifications"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
       has_role:
         | { Args: { _role: string; _user_id: string }; Returns: boolean }
         | {
@@ -1855,10 +1753,6 @@ export type Database = {
         }[]
       }
       recompute_rank: { Args: { p_user_id: string }; Returns: boolean }
-      set_notification_archived: {
-        Args: { p_archived: boolean; p_id: string }
-        Returns: boolean
-      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "agent"
