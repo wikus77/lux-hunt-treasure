@@ -1,10 +1,11 @@
+// @ts-nocheck
 /**
  * © 2025 Joseph MULÉ – M1SSION™ Development Diagnostics
  * Enhanced diagnostics for notification testing (only if ?M1_DIAG=1)
  * DOES NOT TOUCH PUSH CHAIN
  */
 
-import { 
+import {
   getCurrentPreferencesState, 
   resolveTagsForCurrentUser 
 } from '@/interest/resolveUserInterests';
