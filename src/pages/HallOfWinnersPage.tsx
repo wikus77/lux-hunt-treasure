@@ -53,59 +53,58 @@ const HallOfWinnersPage: React.FC = () => {
     try {
       setLoading(true);
 
-      // For demo purposes, we'll create some mock winners data
-      // In a real implementation, this would query the final_shots table
-      // joined with profiles and missions tables
-      const mockWinners: Winner[] = [
-        {
-          id: '1',
-          user_id: 'user1',
-          mission_id: 'mission1',
-          agent_code: 'AG-3743',
-          full_name: 'Marco Rossi',
-          avatar_url: undefined,
-          city: 'Milano',
-          prize_image: '/api/placeholder/400/300',
-          prize_name: 'Tesla Model S',
-          won_at: '2024-01-20T16:42:03Z',
-          mission_start: '2024-01-18T00:00:00Z',
-          completion_time: '2 giorni, 16 ore, 42 min'
-        },
-        {
-          id: '2',
-          user_id: 'user2',
-          mission_id: 'mission2',
-          agent_code: 'AG-7291',
-          full_name: 'Anna Bianchi',
-          avatar_url: undefined,
-          city: 'Roma',
-          prize_image: '/api/placeholder/400/300',
-          prize_name: 'iPhone 15 Pro Max',
-          won_at: '2024-01-15T14:22:15Z',
-          mission_start: '2024-01-13T00:00:00Z',
-          completion_time: '2 giorni, 14 ore, 22 min'
-        },
-        {
-          id: '3',
-          user_id: 'user3',
-          mission_id: 'mission3',
-          agent_code: 'AG-1847',
-          full_name: 'Luigi Verde',
-          avatar_url: undefined,
-          city: 'Napoli',
-          prize_image: '/api/placeholder/400/300',
-          prize_name: 'MacBook Pro M3',
-          won_at: '2024-01-10T09:33:27Z',
-          mission_start: '2024-01-08T00:00:00Z',
-          completion_time: '2 giorni, 9 ore, 33 min'
-        }
-      ];
+      // Query real winners data from winners_public view
+      const { data, error } = await supabase
+        .from('winners_public' as any)
+        .select('*')
+        .order('completion_time', { ascending: false })
+        .limit(10);
 
-      setWinners(mockWinners);
+      if (error) {
+        console.error('Error loading winners:', error);
+        setWinners([]);
+        return;
+      }
+
+      // Map database results to Winner interface
+      const winnersData: Winner[] = (data || []).map((row: any) => ({
+        id: row.id,
+        user_id: row.winner_user_id || '',
+        mission_id: row.mission_id || '',
+        agent_code: row.agent_code || 'N/A',
+        full_name: row.nickname || 'Anonymous Agent',
+        avatar_url: row.avatar_url,
+        city: 'Unknown', // Not available in current schema
+        prize_image: '/api/placeholder/400/300',
+        prize_name: row.prize_title || 'Mystery Prize',
+        won_at: row.completion_time,
+        mission_start: row.completion_time, // Fallback
+        completion_time: calculateCompletionTime(row.completion_time)
+      }));
+
+      setWinners(winnersData);
     } catch (error) {
       console.error('Error loading winners:', error);
+      setWinners([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const calculateCompletionTime = (timestamp: string): string => {
+    try {
+      const completionDate = new Date(timestamp);
+      const now = new Date();
+      const diffMs = now.getTime() - completionDate.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      if (diffDays > 0) return `${diffDays} giorni, ${diffHours} ore, ${diffMins} min`;
+      if (diffHours > 0) return `${diffHours} ore, ${diffMins} min`;
+      return `${diffMins} min`;
+    } catch {
+      return 'Unknown';
     }
   };
 
