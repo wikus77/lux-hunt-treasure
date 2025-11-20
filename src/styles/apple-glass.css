@@ -1,0 +1,252 @@
+/* M1SSION™ Apple Glass Style System
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */
+
+:root {
+  /* M1SSION Primary Colors */
+  --m1-cyan: 190 100% 50%;
+  --m1-violet: 255 70% 68%;
+  --m1-pink: 295 100% 68%;
+  --m1-yellow: 45 96% 54%;
+  --m1-deep: 210 48% 8%;
+  --m1-blue: 190 100% 50%;
+  --m1-purple: 265 100% 58%;
+  
+  /* Glass System Colors */
+  --m1-glass: 210 59% 9%;
+  --m1-glass-bg: 210 53% 7%;
+  --m1-glass-bg-strong: 210 53% 7%;
+  --m1-glass-border: 0 0% 100%;
+  --m1-glass-inner: 0 0% 100%;
+  --m1-glass-top: 0 0% 100%;
+  
+  /* Status Colors */
+  --m1-error: 0 100% 65%;
+  --m1-success: 158 64% 52%;
+  
+  /* Blur Levels */
+  --m1-blur-light: 10px;
+  --m1-blur-medium: 14px;
+  --m1-blur-heavy: 20px;
+  --m1-blur-ultra: 40px;
+  
+  /* Border Radius */
+  --m1-radius: 22px;
+  --m1-radius-sm: 18px;
+  --m1-radius-md: 20px;
+  --m1-radius-lg: 24px;
+  
+  /* Shadow System */
+  --m1-shadow: 0 18px 48px rgba(0, 12, 24, .45);
+  --m1-shadow-card: 0 18px 48px -6px rgba(0, 10, 30, 0.45);
+  --m1-shadow-glow-cyan: 0 0 24px rgba(0, 229, 255, 0.38);
+  --m1-shadow-glow-violet: 0 16px 60px rgba(122, 92, 255, 0.44);
+}
+
+/* M1SSION Glass Card - Primary */
+.m1ssion-glass-card {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 0;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
+              inset 0 2px 3px rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s ease-in-out;
+}
+
+.m1ssion-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, #00D1FF, #7B2EFF, #F059FF, #FACC15);
+  opacity: 0.9;
+}
+
+/* Glass Card - Secondary */
+.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2),
+              inset 0 2px 3px rgba(255, 255, 255, 0.06);
+  transition: all 0.25s ease-in-out;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 38px rgba(0, 0, 0, 0.3),
+              inset 0 2px 5px rgba(255, 255, 255, 0.08);
+}
+
+/* M1 Card with Gradient Border */
+.m1-card {
+  position: relative;
+  border-radius: var(--m1-radius-md);
+  background: rgba(7, 17, 26, 0.72);
+  backdrop-filter: blur(var(--m1-blur-medium));
+  -webkit-backdrop-filter: blur(var(--m1-blur-medium));
+}
+
+.m1-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--m1-radius-md);
+  padding: 2px;
+  background: linear-gradient(90deg, hsl(var(--m1-cyan)) 0%, hsl(var(--m1-violet)) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.45;
+  filter: blur(8px);
+}
+
+/* Gradient Neon Buttons */
+.btn-gradient {
+  background: linear-gradient(to right, #7B2EFF, #00D1FF);
+  color: white;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  box-shadow: 0 4px 15px rgba(123, 46, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(123, 46, 255, 0.5);
+}
+
+.btn-gradient:active {
+  transform: translateY(1px);
+}
+
+/* Neon Text Effects */
+.neon-text-cyan {
+  color: #00D1FF;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(0, 209, 255, 0.6), 
+               0 0 20px rgba(0, 209, 255, 0.4);
+}
+
+.neon-text-magenta {
+  color: #F059FF;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(240, 89, 255, 0.6), 
+               0 0 20px rgba(240, 89, 255, 0.4);
+}
+
+.neon-text-yellow {
+  color: #FACC15;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.6), 
+               0 0 20px rgba(250, 204, 21, 0.4);
+}
+
+/* Quick Glass Utilities */
+.glass-light { 
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-medium { 
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-heavy { 
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 0;
+}
+
+/* Glow Border Utilities */
+.glow-border-cyan {
+  border: 1px solid rgba(0, 209, 255, 0.6);
+  box-shadow: 0 0 10px rgba(0, 209, 255, 0.4), 
+              inset 0 0 5px rgba(0, 209, 255, 0.2);
+}
+
+.glow-border-magenta {
+  border: 1px solid rgba(240, 89, 255, 0.6);
+  box-shadow: 0 0 10px rgba(240, 89, 255, 0.4), 
+              inset 0 0 5px rgba(240, 89, 255, 0.2);
+}
+
+/* Press Effect */
+.press-effect {
+  transition: all 0.1s ease-in-out;
+}
+
+.press-effect:active {
+  transform: scale(0.95);
+}
+
+/* Neon Border Gradient */
+.neon-border-gradient {
+  position: relative;
+}
+
+.neon-border-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(34,211,238,.35), rgba(139,92,246,.28));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 1px;
+}
+
+/* Multicolor Top Border */
+.multicolor-top-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, #00D1FF, #7B2EFF, #F059FF, #FACC15);
+  opacity: 0.9;
+}
+
+/* Neon Pulse Animation */
+@keyframes neon-pulse {
+  0%, 100% { 
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.7), 0 0 10px rgba(0, 229, 255, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(0, 229, 255, 0.8), 0 0 25px rgba(0, 229, 255, 0.6), 0 0 35px rgba(0, 229, 255, 0.4);
+  }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+/* Reduced Blur on Mobile */
+@media (max-width: 768px) {
+  .m1ssion-glass-card {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

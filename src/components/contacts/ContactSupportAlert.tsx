@@ -12,9 +12,9 @@ const ContactSupportAlert = () => {
       transition={{ duration: 0.4, delay: 0.2 }}
       className="mb-8"
     >
-      <Alert className="border border-cyan-500/30 bg-black/70 backdrop-blur-sm">
+      <Alert className="glass-medium glow-border-cyan">
         <Check className="h-4 w-4 text-cyan-400" />
-        <AlertTitle className="text-cyan-300">Orari di assistenza</AlertTitle>
+        <AlertTitle className="neon-text-cyan">Orari di assistenza</AlertTitle>
         <AlertDescription className="text-white/80">
           Siamo disponibili dal lunedì al venerdì, dalle 9:00 alle 18:00.
         </AlertDescription>
@@ -24,3 +24,5 @@ const ContactSupportAlert = () => {
 };
 
 export default ContactSupportAlert;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
