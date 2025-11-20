@@ -11,6 +11,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { MissionConfig } from './MissionConfig';
 import { MissionUsers } from './missions/MissionUsers';
 import { MissionPrizes } from './missions/MissionPrizes';
+import { SUPABASE_CONFIG } from '@/lib/supabase/config';
 
 interface Mission {
   id: string;
@@ -302,11 +303,7 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
 
   // Extract project ref from env or Supabase URL
   const getProjectRef = () => {
-    const fromEnv = import.meta.env.VITE_SUPABASE_PROJECT_REF?.trim();
-    if (fromEnv) return fromEnv;
-    const url = import.meta.env.VITE_SUPABASE_URL || '';
-    const m = url.match(/^https?:\/\/([a-z0-9]+)\.supabase\.co/i);
-    return m ? m[1] : '';
+    return SUPABASE_CONFIG.projectRef;
   };
 
   // Generate Supabase table editor URL with public schema

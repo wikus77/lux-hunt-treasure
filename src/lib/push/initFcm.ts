@@ -1,7 +1,9 @@
 // © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
+import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+
 export async function initFcmAndGetToken(): Promise<string | null> {
   // 1) config centralizzata da Supabase (pubblica)
-  const cfg = await fetch(`${import.meta.env.VITE_SUPABASE_FUNCTIONS_BASE ?? `https://${import.meta.env.VITE_SUPABASE_PROJECT_REF}.functions.supabase.co`}/fcm-config`, { cache: "no-store" }).then(r => r.json());
+  const cfg = await fetch(`${SUPABASE_CONFIG.functionsUrl}/fcm-config`, { cache: "no-store" }).then(r => r.json());
 
   // 2) SDK compat - use dynamic imports with @ts-ignore
   // @ts-ignore
