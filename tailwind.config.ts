@@ -72,15 +72,32 @@ const config: Config = {
         },
         'm1ssion': {
           'blue': '#00D1FF',
+          'cyan': '#00E5FF',
           'purple': '#7B2EFF',
+          'violet': '#7A5CFF',
           'pink': '#F059FF',
-          'deep-blue': '#131524'
+          'yellow': '#FACC15',
+          'deep-blue': '#131524',
+          'deep': '#07111A',
         }
       },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        'm1': '22px',
+        'm1-sm': '18px',
+        'm1-md': '20px',
+        'm1-lg': '24px',
+      },
+      backdropBlur: {
+        'xs': '2px',
+        'ultra': '40px',
+      },
+      boxShadow: {
+        'm1-card': '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)',
+        'm1-glow-cyan': '0 0 24px rgba(0, 229, 255, 0.38)',
+        'm1-glow-violet': '0 16px 60px rgba(122, 92, 255, 0.44)',
       },
       keyframes: {
         'accordion-down': {

@@ -12,9 +12,9 @@ const HowItWorksHeader = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">HOW </span>
-          <span className="bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">M1SSION </span>
-          <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">WORKS</span>
+          <span className="text-white/90">HOW </span>
+          <span className="neon-text-cyan animate-neon-pulse">M1SSION </span>
+          <span className="text-white/90">WORKS</span>
         </motion.h1>
         
         <motion.p 
@@ -31,3 +31,5 @@ const HowItWorksHeader = () => {
 };
 
 export default HowItWorksHeader;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

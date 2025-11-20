@@ -13,6 +13,9 @@
 @import './styles/map-dock.css';
 @import './styles/portal-container.css';
 @import './styles/animations/index.css';
+@import './styles/apple-glass.css';
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
