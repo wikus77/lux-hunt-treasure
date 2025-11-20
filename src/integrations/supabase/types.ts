@@ -257,6 +257,115 @@ export type Database = {
         }
         Relationships: []
       }
+      battle_audit: {
+        Row: {
+          battle_id: string
+          event_type: string
+          id: string
+          payload: Json | null
+          rng_seed: string | null
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          battle_id: string
+          event_type: string
+          id?: string
+          payload?: Json | null
+          rng_seed?: string | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          battle_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          rng_seed?: string | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_audit_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "battles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      battle_energy_traces: {
+        Row: {
+          battle_id: string
+          created_at: string
+          end_lat: number
+          end_lng: number
+          expires_at: string
+          id: string
+          intensity: number
+          start_lat: number
+          start_lng: number
+          winner_id: string
+        }
+        Insert: {
+          battle_id: string
+          created_at?: string
+          end_lat: number
+          end_lng: number
+          expires_at?: string
+          id?: string
+          intensity?: number
+          start_lat: number
+          start_lng: number
+          winner_id: string
+        }
+        Update: {
+          battle_id?: string
+          created_at?: string
+          end_lat?: number
+          end_lng?: number
+          expires_at?: string
+          id?: string
+          intensity?: number
+          start_lat?: number
+          start_lng?: number
+          winner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_energy_traces_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "battles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      battle_ghost_mode: {
+        Row: {
+          ghost_mode_active: boolean
+          ghost_until: string | null
+          reason: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ghost_mode_active?: boolean
+          ghost_until?: string | null
+          reason?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ghost_mode_active?: boolean
+          ghost_until?: string | null
+          reason?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       battle_metrics: {
         Row: {
           battle_id: string | null
@@ -279,9 +388,86 @@ export type Database = {
           key?: string
           value?: Json
         }
+        Relationships: []
+      }
+      battle_participants: {
+        Row: {
+          battle_id: string
+          created_at: string
+          id: string
+          is_winner: boolean
+          ping_ms: number | null
+          reaction_ms: number | null
+          role: string
+          tap_timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          battle_id: string
+          created_at?: string
+          id?: string
+          is_winner?: boolean
+          ping_ms?: number | null
+          reaction_ms?: number | null
+          role: string
+          tap_timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          battle_id?: string
+          created_at?: string
+          id?: string
+          is_winner?: boolean
+          ping_ms?: number | null
+          reaction_ms?: number | null
+          role?: string
+          tap_timestamp?: string | null
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "battle_metrics_battle_id_fkey"
+            foreignKeyName: "battle_participants_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "battles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      battle_transfers: {
+        Row: {
+          amount: number
+          battle_id: string
+          created_at: string
+          from_user_id: string
+          id: string
+          metadata: Json | null
+          to_user_id: string
+          transfer_type: string
+        }
+        Insert: {
+          amount: number
+          battle_id: string
+          created_at?: string
+          from_user_id: string
+          id?: string
+          metadata?: Json | null
+          to_user_id: string
+          transfer_type: string
+        }
+        Update: {
+          amount?: number
+          battle_id?: string
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          metadata?: Json | null
+          to_user_id?: string
+          transfer_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_transfers_battle_id_fkey"
             columns: ["battle_id"]
             isOneToOne: false
             referencedRelation: "battles"
@@ -291,19 +477,91 @@ export type Database = {
       }
       battles: {
         Row: {
-          created_at: string | null
+          accepted_at: string | null
+          arena_lat: number | null
+          arena_lng: number | null
+          arena_name: string | null
+          countdown_start_at: string | null
+          created_at: string
+          creator_ghost_until: string | null
+          creator_id: string
+          creator_ping_ms: number | null
+          creator_reaction_ms: number | null
+          creator_tap_at: string | null
+          expires_at: string
+          flash_at: string | null
           id: string
+          metadata: Json | null
+          opponent_ghost_until: string | null
+          opponent_id: string | null
+          opponent_ping_ms: number | null
+          opponent_reaction_ms: number | null
+          opponent_tap_at: string | null
+          resolved_at: string | null
+          server_compensation_ms: number | null
+          stake_amount: number
+          stake_percentage: number
+          stake_type: string
           status: string
+          winner_id: string | null
         }
         Insert: {
-          created_at?: string | null
+          accepted_at?: string | null
+          arena_lat?: number | null
+          arena_lng?: number | null
+          arena_name?: string | null
+          countdown_start_at?: string | null
+          created_at?: string
+          creator_ghost_until?: string | null
+          creator_id: string
+          creator_ping_ms?: number | null
+          creator_reaction_ms?: number | null
+          creator_tap_at?: string | null
+          expires_at?: string
+          flash_at?: string | null
           id?: string
+          metadata?: Json | null
+          opponent_ghost_until?: string | null
+          opponent_id?: string | null
+          opponent_ping_ms?: number | null
+          opponent_reaction_ms?: number | null
+          opponent_tap_at?: string | null
+          resolved_at?: string | null
+          server_compensation_ms?: number | null
+          stake_amount?: number
+          stake_percentage: number
+          stake_type: string
           status?: string
+          winner_id?: string | null
         }
         Update: {
-          created_at?: string | null
+          accepted_at?: string | null
+          arena_lat?: number | null
+          arena_lng?: number | null
+          arena_name?: string | null
+          countdown_start_at?: string | null
+          created_at?: string
+          creator_ghost_until?: string | null
+          creator_id?: string
+          creator_ping_ms?: number | null
+          creator_reaction_ms?: number | null
+          creator_tap_at?: string | null
+          expires_at?: string
+          flash_at?: string | null
           id?: string
+          metadata?: Json | null
+          opponent_ghost_until?: string | null
+          opponent_id?: string | null
+          opponent_ping_ms?: number | null
+          opponent_reaction_ms?: number | null
+          opponent_tap_at?: string | null
+          resolved_at?: string | null
+          server_compensation_ms?: number | null
+          stake_amount?: number
+          stake_percentage?: number
+          stake_type?: string
           status?: string
+          winner_id?: string | null
         }
         Relationships: []
       }
@@ -2157,6 +2415,15 @@ export type Database = {
           cost_m1u: number
           level: number
           radius_km: number
+        }[]
+      }
+      pick_random_opponent: {
+        Args: { p_me: string }
+        Returns: {
+          agent_code: string
+          display_name: string
+          id: string
+          username: string
         }[]
       }
       recompute_rank: { Args: { p_user_id: string }; Returns: boolean }
