@@ -1352,8 +1352,30 @@ export type Database = {
           },
         ]
       }
+      user_notification_prefs: {
+        Row: {
+          muted: boolean
+          notif_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          muted?: boolean
+          notif_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          muted?: boolean
+          notif_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_notifications: {
         Row: {
+          archived_at: string | null
           created_at: string
           id: string
           is_deleted: boolean | null
@@ -1365,6 +1387,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           id?: string
           is_deleted?: boolean | null
@@ -1376,6 +1399,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           id?: string
           is_deleted?: boolean | null
@@ -1445,6 +1469,30 @@ export type Database = {
           status?: Database["public"]["Enums"]["referral_status"]
           updated_at?: string | null
           xp_awarded?: boolean
+        }
+        Relationships: []
+      }
+      user_reward_claims: {
+        Row: {
+          claimed_at: string
+          id: string
+          metadata: Json | null
+          reward_key: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          id?: string
+          metadata?: Json | null
+          reward_key: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          id?: string
+          metadata?: Json | null
+          reward_key?: string
+          user_id?: string
         }
         Relationships: []
       }

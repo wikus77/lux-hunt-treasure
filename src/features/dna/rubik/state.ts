@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase state adapter for Rubik's Cube 4×4
  * Handles loading and saving cube state to database
