@@ -11,14 +11,13 @@ import CommandCenterWrapper from "./CommandCenterWrapper";
 import { LuxuryCarsSection } from "./LuxuryCarsSection";
 import ExclusivePrizesSection from "./ExclusivePrizesSection";
 import MissionGamesSection from "./MissionGamesSection";
-import { PulseBar, PulsePanel } from "@/features/pulse";
+import { PULSE_ENABLED } from "@/config/featureFlags";
 
 export default function HomeContent() {
   console.log("[HomeContent] COMPONENT MOUNTED! - BY JOSEPH MULÈ, CEO NIYVORA KFT™");
   
   const { step, handleIntroEnd } = useIntroStep();
   const { unlockedModules, handleModuleClick, areAllModulesUnlocked } = useModulesUnlock();
-  const [pulseOpen, setPulseOpen] = useState(false);
 
   return (
     <div className="relative">
@@ -46,13 +45,7 @@ export default function HomeContent() {
           {/* New Exclusive Prizes Section */}
           <ExclusivePrizesSection />
           
-          {/* THE PULSE™ - Living Energy Bar */}
-          <div className="px-4 py-3">
-            <PulseBar variant="inline" onTap={() => setPulseOpen(true)} />
-          </div>
-          
-          {/* THE PULSE™ - Panel */}
-          <PulsePanel open={pulseOpen} onOpenChange={setPulseOpen} />
+          {/* THE PULSE™ - Disabled (see featureFlags.ts) */}
           
           {/* Luxury Cars Section */}
           <LuxuryCarsSection />

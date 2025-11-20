@@ -18,7 +18,7 @@ import { useMissionStatus } from "@/hooks/useMissionStatus";
 import { useAuth } from "@/hooks/use-auth";
 import InviteFloatingButton from "@/components/home/InviteFloatingButton";
 import DNAQuickAction from "@/components/dna/DNAQuickAction";
-import { PulseBar, PulsePanel } from "@/features/pulse";
+import { PULSE_ENABLED } from "@/config/featureFlags";
 
 export default function CommandCenterHome() {
   // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
@@ -61,9 +61,6 @@ export default function CommandCenterHome() {
 
   // Track prize unlock status
   const [prizeUnlockStatus, setPrizeUnlockStatus] = useState<"locked" | "partial" | "near" | "unlocked">("locked");
-  
-  // THE PULSE™ - State for panel control
-  const [pulseOpen, setPulseOpen] = useState(false);
 
   // 🔥 NEW: USE REAL DATABASE MISSION STATUS - SISTEMA 200 INDIZI - RESET COMPLETO 21/07/2025
   const activeMission = missionStatus ? {
@@ -195,18 +192,7 @@ export default function CommandCenterHome() {
       />
     </motion.div>
 
-    {/* THE PULSE™ - Global Community Energy Bar */}
-    <motion.div 
-      className="mb-4"
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.15 }}
-    >
-      <PulseBar variant="inline" onTap={() => setPulseOpen(true)} />
-    </motion.div>
-
-    {/* THE PULSE™ - Detail Panel */}
-    <PulsePanel open={pulseOpen} onOpenChange={setPulseOpen} />
+    {/* THE PULSE™ - Disabled (see featureFlags.ts) */}
 
 {/* Floating Invite circle button in top-right */}
 <InviteFloatingButton />

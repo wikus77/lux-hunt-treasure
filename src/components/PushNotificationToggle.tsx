@@ -5,7 +5,7 @@ import { Bell, BellOff, Smartphone, Monitor } from 'lucide-react';
 import { useUnifiedPush as usePushNotifications } from '@/hooks/useUnifiedPush';
 import { Badge } from '@/components/ui/badge';
 import { subscribeFlow } from '@/lib/push/subscribeFlow';
-import { FEATURE_FLAGS } from '@/config/featureFlags';
+import { NEW_PUSH_SUBSCRIBE_FLOW } from '@/config/featureFlags';
 import { toast } from 'sonner';
 
 export const PushNotificationToggle = () => {
@@ -31,7 +31,7 @@ export const PushNotificationToggle = () => {
       
       if (!isSubscribed) {
         // Use new unified pipeline if feature flag is enabled
-        if (FEATURE_FLAGS.NEW_PUSH_SUBSCRIBE_FLOW) {
+        if (NEW_PUSH_SUBSCRIBE_FLOW) {
           const res = await subscribeFlow();
           
           if (res.ok) {

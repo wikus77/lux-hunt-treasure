@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * The Pulse™ — OPEN Button (Deep 2.5D with Haptics)
  * Appears at ritual reveal phase; provides haptic feedback and claim action

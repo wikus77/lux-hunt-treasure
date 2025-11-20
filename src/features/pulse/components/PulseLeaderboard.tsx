@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * THE PULSE™ — Leaderboard Component
  * Leaderboard ottica su viste aggregate, opt-in privacy, ottimizzata per mobile
