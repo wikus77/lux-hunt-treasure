@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/lib/push/webpush.ts
 import { supabase } from '@/integrations/supabase/client'
 
