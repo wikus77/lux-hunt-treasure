@@ -52,11 +52,11 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       style={{
-        background: 'rgba(0, 0, 0, 0.6)',
+        background: 'rgba(0, 0, 0, 0.05)',
         backdropFilter: 'blur(40px)',
         WebkitBackdropFilter: 'blur(40px)',
         borderRadius: '24px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05), 0 0 24px rgba(0, 229, 255, 0.15)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)',
         border: '0'
       }}
     >
