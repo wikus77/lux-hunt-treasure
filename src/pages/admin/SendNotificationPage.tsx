@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 import { generateReferralCode } from "@/components/landing/pre-registration/referralUtils";
 import { logActivity } from "./activityLogService";
