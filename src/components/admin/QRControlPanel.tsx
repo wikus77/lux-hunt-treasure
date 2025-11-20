@@ -51,7 +51,7 @@ function MapSettingsCard() {
       const { data } = await supabase
         .from('app_config')
         .select('value_int')
-        .eq('key', 'marker_min_zoom')
+        .eq('config_key', 'marker_min_zoom')
         .maybeSingle();
       if (data?.value_int) setMinZoom(Number(data.value_int));
     })();
@@ -61,7 +61,7 @@ function MapSettingsCard() {
     setMinZoom(v);
     const { error } = await supabase
       .from('app_config')
-      .upsert({ key: 'marker_min_zoom', value_int: v, value_text: null });
+      .upsert({ config_key: 'marker_min_zoom', config_value: v });
     if (error) {
       toast.error('Salvataggio soglia fallito (serve ruolo admin)');
     } else {

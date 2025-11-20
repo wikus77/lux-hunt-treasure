@@ -97,6 +97,7 @@ export const AdminMissions = () => {
       const { data, error } = await supabase
         .from('missions')
         .insert({
+          code: missionData.title?.toUpperCase().replace(/\s+/g, '_') || 'MISSION',
           title: missionData.title,
           description: missionData.description || null,
           publication_date: missionData.publication_date || null,

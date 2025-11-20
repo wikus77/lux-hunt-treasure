@@ -73,15 +73,15 @@ export const M1ssionSystemReport: React.FC = () => {
     try {
       const { data: configData, error: configError } = await supabase
         .from('app_config')
-        .select('key, value_text')
-        .eq('key', 'app_version')
+        .select('config_key, config_value')
+        .eq('config_key', 'app_version')
         .maybeSingle();
 
       diagnostics.push({
         category: '📡 Database',
         status: configError ? 'error' : 'ok',
         message: configError ? 'Errore connessione database' : 'Database connesso',
-        details: configData ? [`App Version: ${configData.value_text}`] : []
+        details: configData ? [`App Version: ${JSON.stringify(configData.config_value)}`] : []
       });
     } catch (error) {
       diagnostics.push({

@@ -58,26 +58,28 @@ export function BattleConsole({ className }: BattleConsoleProps) {
   }, [userId]);
 
   const loadPendingBattles = async (uid: string) => {
-    const { data, error } = await supabase
-      .from('battles')
-      .select('id')
-      .eq('opponent_id', uid)
-      .in('status', ['pending', 'accepted'])
-      .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      setPendingCount(data.length);
-    }
+    // TODO: battles table not yet in DB - temporarily disabled
+    // const { data, error } = await supabase
+    //   .from('battles')
+    //   .select('id')
+    //   .eq('opponent_id', uid)
+    //   .in('status', ['pending', 'accepted'])
+    //   .order('created_at', { ascending: false });
+    // if (!error && data) {
+    //   setPendingCount(data.length);
+    // }
+    setPendingCount(0);
   };
 
   const loadStats = async (uid: string) => {
-    const { data } = await supabase
-      .from('battle_metrics')
-      .select('*')
-      .eq('user_id', uid)
-      .single();
-
-    setStats(data);
+    // TODO: battle_metrics table not yet in DB - temporarily disabled
+    // const { data } = await supabase
+    //   .from('battle_metrics')
+    //   .select('*')
+    //   .eq('user_id', uid)
+    //   .single();
+    // setStats(data);
+    setStats(null);
   };
 
   const handleHeaderClick = () => {

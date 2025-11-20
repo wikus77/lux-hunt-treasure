@@ -56,7 +56,7 @@ export const AdminAppMessages = () => {
         throw error;
       }
 
-      setMessages(data || []);
+      setMessages((data || []) as AppMessage[]);
     } catch (error: any) {
       toast.error("Errore nel caricamento dei messaggi", {
         description: error.message
