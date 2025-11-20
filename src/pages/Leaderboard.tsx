@@ -115,7 +115,10 @@ const Leaderboard = () => {
       style={{ 
         height: '100dvh',
         overflow: 'hidden',
-        position: 'relative'
+        position: 'relative',
+        background: 'rgba(19, 21, 36, 0.6)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)'
       }}
     >
       {/* Fixed Header */}
