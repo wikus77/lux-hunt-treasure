@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      abuse_logs: {
+        Row: {
+          created_at: string | null
+          id: number
+          message: string | null
+          meta: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          message?: string | null
+          meta?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          message?: string | null
+          meta?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abuse_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "abuse_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_logs: {
         Row: {
           admin_id: string
@@ -82,6 +121,48 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      api_rate_limits: {
+        Row: {
+          created_at: string | null
+          hits: number
+          id: number
+          reset_at: string
+          route: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          hits?: number
+          id?: number
+          reset_at?: string
+          route: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          hits?: number
+          id?: number
+          reset_at?: string
+          route?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_rate_limits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_rate_limits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       app_config: {
         Row: {
@@ -161,6 +242,56 @@ export type Database = {
           target_users?: Json | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      battle_metrics: {
+        Row: {
+          battle_id: string | null
+          created_at: string | null
+          id: number
+          key: string
+          value: Json
+        }
+        Insert: {
+          battle_id?: string | null
+          created_at?: string | null
+          id?: number
+          key: string
+          value?: Json
+        }
+        Update: {
+          battle_id?: string | null
+          created_at?: string | null
+          id?: number
+          key?: string
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_metrics_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "battles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      battles: {
+        Row: {
+          created_at: string | null
+          id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          status?: string
         }
         Relationships: []
       }
@@ -1014,6 +1145,45 @@ export type Database = {
           week?: number
         }
         Relationships: []
+      }
+      user_minigames_progress: {
+        Row: {
+          game_key: string
+          id: number
+          progress_json: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          game_key: string
+          id?: number
+          progress_json?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          game_key?: string
+          id?: number
+          progress_json?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_minigames_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_minigames_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_missions: {
         Row: {

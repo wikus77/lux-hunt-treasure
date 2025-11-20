@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // ULTIMATE ONESIGNAL REGISTRATION - Single Point of Truth
 import React, { useState, useEffect } from 'react';

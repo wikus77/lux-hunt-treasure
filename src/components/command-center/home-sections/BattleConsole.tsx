@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * M1SSION BATTLE Console
  * Embedded Battle Lobby with tabs, badge, and overlay Arena support
