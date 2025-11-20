@@ -14,6 +14,524 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_logs: {
+        Row: {
+          admin_id: string
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          target_user_id: string | null
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          target_user_id?: string | null
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
+      agent_ranks: {
+        Row: {
+          code: string
+          color: string
+          created_at: string | null
+          description: string | null
+          id: number
+          name_en: string
+          name_it: string
+          pe_max: number | null
+          pe_min: number
+          symbol: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          color?: string
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          name_en: string
+          name_it: string
+          pe_max?: number | null
+          pe_min?: number
+          symbol?: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          color?: string
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          name_en?: string
+          name_it?: string
+          pe_max?: number | null
+          pe_min?: number
+          symbol?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      app_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          message_type: string
+          target_users: Json | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message_type: string
+          target_users?: Json | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message_type?: string
+          target_users?: Json | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      buzz_activations: {
+        Row: {
+          created_at: string | null
+          id: string
+          location: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          location?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          location?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      buzz_map_actions: {
+        Row: {
+          clue_count: number | null
+          cost_eur: number | null
+          cost_m1u: number | null
+          created_at: string | null
+          id: string
+          radius_generated: number | null
+          user_id: string
+        }
+        Insert: {
+          clue_count?: number | null
+          cost_eur?: number | null
+          cost_m1u?: number | null
+          created_at?: string | null
+          id?: string
+          radius_generated?: number | null
+          user_id: string
+        }
+        Update: {
+          clue_count?: number | null
+          cost_eur?: number | null
+          cost_m1u?: number | null
+          created_at?: string | null
+          id?: string
+          radius_generated?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      buzz_map_activations: {
+        Row: {
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      device_tokens: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          platform: string
+          token: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          platform: string
+          token: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          platform?: string
+          token?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      missions: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          difficulty: string | null
+          id: string
+          is_active: boolean | null
+          objectives: Json | null
+          rewards: Json | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          id?: string
+          is_active?: boolean | null
+          objectives?: Json | null
+          rewards?: Json | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          id?: string
+          is_active?: boolean | null
+          objectives?: Json | null
+          rewards?: Json | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      norah_events: {
+        Row: {
+          context: Json | null
+          created_at: string | null
+          event: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string | null
+          event: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string | null
+          event?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          agent_code: string | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          invited_by_code: string | null
+          m1_units: number
+          nickname: string | null
+          pulse_energy: number
+          rank_id: number | null
+          rank_updated_at: string | null
+          referral_code_used: boolean | null
+          role: string | null
+          total_referrals: number
+          updated_at: string | null
+        }
+        Insert: {
+          agent_code?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          id: string
+          invited_by_code?: string | null
+          m1_units?: number
+          nickname?: string | null
+          pulse_energy?: number
+          rank_id?: number | null
+          rank_updated_at?: string | null
+          referral_code_used?: boolean | null
+          role?: string | null
+          total_referrals?: number
+          updated_at?: string | null
+        }
+        Update: {
+          agent_code?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          invited_by_code?: string | null
+          m1_units?: number
+          nickname?: string | null
+          pulse_energy?: number
+          rank_id?: number | null
+          rank_updated_at?: string | null
+          referral_code_used?: boolean | null
+          role?: string | null
+          total_referrals?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_rank_id_fkey"
+            columns: ["rank_id"]
+            isOneToOne: false
+            referencedRelation: "agent_ranks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_tokens: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          token: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          token: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          token?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      rank_history: {
+        Row: {
+          created_at: string | null
+          delta_pe: number
+          id: string
+          metadata: Json | null
+          new_rank_id: number
+          old_rank_id: number | null
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          delta_pe: number
+          id?: string
+          metadata?: Json | null
+          new_rank_id: number
+          old_rank_id?: number | null
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          delta_pe?: number
+          id?: string
+          metadata?: Json | null
+          new_rank_id?: number
+          old_rank_id?: number | null
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rank_history_new_rank_id_fkey"
+            columns: ["new_rank_id"]
+            isOneToOne: false
+            referencedRelation: "agent_ranks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rank_history_old_rank_id_fkey"
+            columns: ["old_rank_id"]
+            isOneToOne: false
+            referencedRelation: "agent_ranks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_buzz_counter: {
+        Row: {
+          counter_date: string
+          created_at: string | null
+          daily_count: number
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          counter_date?: string
+          created_at?: string | null
+          daily_count?: number
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          counter_date?: string
+          created_at?: string | null
+          daily_count?: number
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_buzz_map_counter: {
+        Row: {
+          counter_date: string
+          created_at: string | null
+          daily_count: number
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          counter_date?: string
+          created_at?: string | null
+          daily_count?: number
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          counter_date?: string
+          created_at?: string | null
+          daily_count?: number
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_clues: {
+        Row: {
+          buzz_cost: number | null
+          clue_id: string
+          created_at: string | null
+          id: string
+          title_it: string | null
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          buzz_cost?: number | null
+          clue_id: string
+          created_at?: string | null
+          id?: string
+          title_it?: string | null
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          buzz_cost?: number | null
+          clue_id?: string
+          created_at?: string | null
+          id?: string
+          title_it?: string | null
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_credits: {
+        Row: {
+          free_buzz_credit: number
+          free_buzz_map_credit: number
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          free_buzz_credit?: number
+          free_buzz_map_credit?: number
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          free_buzz_credit?: number
+          free_buzz_map_credit?: number
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_map_areas: {
         Row: {
           active: boolean | null
@@ -62,11 +580,172 @@ export type Database = {
         }
         Relationships: []
       }
+      user_missions: {
+        Row: {
+          completed_at: string | null
+          id: string
+          mission_id: string
+          progress: Json | null
+          started_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          mission_id: string
+          progress?: Json | null
+          started_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          mission_id?: string
+          progress?: Json | null
+          started_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_missions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_referrals: {
+        Row: {
+          created_at: string | null
+          id: string
+          invitee_id: string
+          inviter_id: string
+          status: Database["public"]["Enums"]["referral_status"]
+          updated_at: string | null
+          xp_awarded: boolean
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invitee_id: string
+          inviter_id: string
+          status?: Database["public"]["Enums"]["referral_status"]
+          updated_at?: string | null
+          xp_awarded?: boolean
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invitee_id?: string
+          inviter_id?: string
+          status?: Database["public"]["Enums"]["referral_status"]
+          updated_at?: string | null
+          xp_awarded?: boolean
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          metadata: Json | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          metadata?: Json | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          metadata?: Json | null
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_xp: {
+        Row: {
+          buzz_xp_progress: number
+          created_at: string | null
+          map_xp_progress: number
+          total_xp: number
+          updated_at: string | null
+          user_id: string
+          xp_since_reward: number
+        }
+        Insert: {
+          buzz_xp_progress?: number
+          created_at?: string | null
+          map_xp_progress?: number
+          total_xp?: number
+          updated_at?: string | null
+          user_id: string
+          xp_since_reward?: number
+        }
+        Update: {
+          buzz_xp_progress?: number
+          created_at?: string | null
+          map_xp_progress?: number
+          total_xp?: number
+          updated_at?: string | null
+          user_id?: string
+          xp_since_reward?: number
+        }
+        Relationships: []
+      }
+      webpush_subscriptions: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          subscription: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          subscription: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          subscription?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      award_pulse_energy: {
+        Args: {
+          p_delta_pe: number
+          p_metadata?: Json
+          p_reason: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       buzz_map_spend_m1u: {
         Args: {
           p_cost_m1u: number
@@ -82,6 +761,19 @@ export type Database = {
           success: boolean
         }[]
       }
+      current_user_role: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role:
+        | { Args: { _role: string; _user_id: string }; Returns: boolean }
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
       m1_get_next_buzz_level: {
         Args: { p_user_id: string }
         Returns: {
@@ -90,9 +782,11 @@ export type Database = {
           radius_km: number
         }[]
       }
+      recompute_rank: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "agent"
+      referral_status: "pending" | "registered"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -219,6 +913,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "agent"],
+      referral_status: ["pending", "registered"],
+    },
   },
 } as const
