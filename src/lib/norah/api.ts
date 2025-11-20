@@ -132,11 +132,10 @@ async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
   // Origin hygiene check
   checkOrigin();
   
-  // Prefer dedicated Functions domain to avoid CORS header duplication
-  const supaUrl: string = (import.meta as any).env?.VITE_SUPABASE_URL?.trim()?.replace(/\/+$/, '') || '';
-  const functionsBase = supaUrl ? supaUrl.replace('.supabase.co', '.functions.supabase.co') : '';
-  const url = `${functionsBase}/${path}`;
-  const key = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
+  // Use centralized Supabase config
+  const { functionsUrl, anonKey } = await import('@/lib/supabase/config').then(m => m.SUPABASE_CONFIG);
+  const url = `${functionsUrl}/${path}`;
+  const key = anonKey;
   const corr = getClientId();
   const cleanCid = normalizeUuid(corr) || corr;
 

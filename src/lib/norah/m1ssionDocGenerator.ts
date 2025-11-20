@@ -1,17 +1,10 @@
 // © 2025 Joseph MULÉ – M1SSION™ – Synthetic KB Generator for Norah AI 2.0
 import type { ContentDoc } from './types';
-/** ==== Dynamic Supabase projectRef & Functions base (guard-safe) ==== */
-const PROJECT_REF: string = (() => {
-  const url = (import.meta as any).env?.VITE_SUPABASE_URL ?? '';
-  const m = typeof url === 'string' ? url.match(/^https:\/\/([a-z0-9-]+)\.supabase\.co/i) : null;
-  const envRef = m && m[1] ? m[1] : (globalThis as any).__SUPABASE_PROJECT_REF || '';
-  return envRef;
-})();
+import { SUPABASE_CONFIG } from '@/lib/supabase/config';
 
-const FUNCTIONS_BASE: string =
-  PROJECT_REF
-    ? `https://${PROJECT_REF}.functions.supabase.co`
-    : ((import.meta as any).env?.VITE_SUPABASE_FUNCTIONS_URL || '');
+/** ==== Centralized Supabase Config (guard-safe) ==== */
+const PROJECT_REF: string = SUPABASE_CONFIG.projectRef;
+const FUNCTIONS_BASE: string = SUPABASE_CONFIG.functionsUrl;
 /** ==== /Dynamic Supabase ==== */
 
 
