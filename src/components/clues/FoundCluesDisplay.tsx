@@ -47,13 +47,20 @@ export const FoundCluesDisplay: React.FC = () => {
         console.log('✅ [FOUND CLUES] Found clues loaded:', clues?.length || 0, clues);
         
         // FORCE UPDATE UI - Ensure clues are displayed
-        if (clues && clues.length > 0) {
-          console.log('🎯 [FOUND CLUES] DISPLAYING CLUES:', clues.map(c => ({ id: c.clue_id, title: c.title_it, type: c.clue_type })));
+        // Map DB data to FoundClue interface (add missing fields with defaults)
+        const mappedClues = (clues || []).map((clue: any) => ({
+          ...clue,
+          description_it: clue.description_it || clue.title_it || 'Indizio trovato',
+          clue_type: clue.clue_type || 'buzz'
+        }));
+
+        if (mappedClues.length > 0) {
+          console.log('🎯 [FOUND CLUES] DISPLAYING CLUES:', mappedClues.map(c => ({ id: c.clue_id, title: c.title_it, type: c.clue_type })));
         } else {
           console.log('⚠️ [FOUND CLUES] NO CLUES FOUND IN DATABASE');
         }
         
-        setFoundClues(clues || []);
+        setFoundClues(mappedClues);
       } catch (error) {
         console.error('❌ [FOUND CLUES] Exception loading found clues:', error);
       } finally {
