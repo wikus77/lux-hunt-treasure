@@ -52,14 +52,29 @@ export const AdminMissions = () => {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('missions')
-        .select('*')
+        .select(`
+          *,
+          prizes:prize_id (
+            description,
+            value,
+            image_url
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
         throw error;
       }
 
-      setMissions(data || []);
+      // Map prizes data to mission object
+      const missionsWithPrizes = (data || []).map((mission: any) => ({
+        ...mission,
+        prize_description: mission.prizes?.description || null,
+        prize_value: mission.prizes?.value || null,
+        prize_image_url: mission.prizes?.image_url || null
+      }));
+
+      setMissions(missionsWithPrizes);
     } catch (error: any) {
       toast.error("Errore nel caricamento delle missioni", {
         description: error.message

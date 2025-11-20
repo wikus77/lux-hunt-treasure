@@ -38,7 +38,8 @@ export const BuzzMapRewardHandler: React.FC<BuzzMapRewardHandlerProps> = ({
       // 1) Consume a free buzz_map credit via RPC
       const { data: consumed, error: consumeErr } = await supabase.rpc('consume_credit', {
         p_user_id: user.id,
-        p_credit_type: 'buzz_map'
+        p_credit_type: 'buzz_map',
+        p_amount: 1
       });
 
       if (consumeErr || !consumed) {

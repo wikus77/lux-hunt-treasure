@@ -25,7 +25,7 @@ const RoleSwitcher = () => {
       
       try {
         const { data, error } = await supabase
-          .rpc('is_admin', { user_id: user.id });
+          .rpc('is_admin', { p_user_id: user.id });
           
         if (error) {
           console.error("Error checking admin role:", error);
