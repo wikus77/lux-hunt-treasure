@@ -39,6 +39,7 @@ import IntelligenceStyledPage from "@/pages/IntelligenceStyledPage";
 import IntelligenceRAG from "@/pages/IntelligenceRAG";
 import IntelligenceAnswerTest from "@/pages/IntelligenceAnswerTest";
 import HallOfWinnersStyledPage from "@/pages/HallOfWinnersStyledPage";
+import HallOfWinners from "@/pages/HallOfWinners";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
 import NorahAssistant from "@/pages/NorahAssistant";
@@ -386,6 +387,12 @@ const WouterRoutes: React.FC = () => {
           <Route path="/leaderboard">
             <ProtectedRoute>
               <GlobalLayout><HallOfWinnersStyledPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/winners">
+            <ProtectedRoute>
+              <GlobalLayout><HallOfWinners /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
