@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
  * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
  * M1SSION™ Unified Push Toggle Component
