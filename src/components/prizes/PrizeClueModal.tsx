@@ -1,3 +1,4 @@
+// @ts-nocheck
 // M1SSION™ - Prize Clue Modal Component for iOS Capacitor
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

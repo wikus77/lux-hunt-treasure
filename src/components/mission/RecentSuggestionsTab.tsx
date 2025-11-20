@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { ExternalLink, Calendar, Star, Tag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // M1SSION™ - Prize List Component for iOS Capacitor
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
  * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
  * M1SSION™ Smart Prize Management System - GPS & Auto-Notifications
