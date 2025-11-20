@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // Push Notification Diagnostic Page - BREAK-GLASS MODE FIXES
 

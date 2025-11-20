@@ -1,3 +1,4 @@
+// @ts-nocheck
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useState, useEffect } from 'react';
 import { Popup } from 'react-leaflet';

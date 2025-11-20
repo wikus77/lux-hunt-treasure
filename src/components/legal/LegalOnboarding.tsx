@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, Check, FileText, Globe } from 'lucide-react';
 import { useLegalConsent } from '@/hooks/useLegalConsent';
 import { useLocation } from 'wouter';
+import { toast } from 'sonner';
 
 type SupportedLanguage = 'en' | 'fr' | 'es' | 'de';
 
@@ -71,10 +72,28 @@ const LegalOnboarding: React.FC = () => {
     setCurrentLang(detectLanguage());
   }, []);
 
-  const handleAccept = async () => {
+  const handleAccept = async (e?: React.MouseEvent | React.FormEvent) => {
+    // CRITICAL: Prevent any form submission or page reload
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    
     setAccepting(true);
     try {
-      await acceptLegalConsent();
+      const success = await acceptLegalConsent();
+      
+      // CRITICAL: Verify localStorage persistence before redirect
+      const saved = localStorage.getItem('m1ssion_legal_consent');
+      
+      if (success && saved === 'true') {
+        console.log('✅ Legal consent saved, redirecting to home');
+        setLocation('/home'); // Explicit redirect to home
+      } else {
+        console.error('❌ localStorage save failed or consent not accepted');
+        toast.error('Errore nel salvataggio del consenso. Riprova.');
+      }
+    } catch (error) {
+      console.error('❌ Error accepting consent:', error);
+      toast.error('Errore. Riprova.');
     } finally {
       setAccepting(false);
     }

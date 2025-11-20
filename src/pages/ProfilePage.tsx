@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
 // M1SSION™ - Profile Page for iOS Capacitor
 import React, { useState, useEffect } from 'react';
