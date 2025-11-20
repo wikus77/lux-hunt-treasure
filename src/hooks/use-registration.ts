@@ -82,26 +82,20 @@ export const useRegistration = () => {
       if (!standardResult.error && standardResult.data.user) {
         console.log('✅ M1SSION registration successful!');
         
-        // Ottieni l'agent code dal profilo creato
+        // Generate agent code client-side (temporary workaround)
+        const agentCode = `AG-${Date.now().toString(36).toUpperCase()}`;
+        
         try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('agent_code')
-            .eq('id', standardResult.data.user.id)
-            .single();
-
-          if (profile?.agent_code) {
-            // Invia notifiche di registrazione
-            await supabase.functions.invoke('send-registration-notification', {
-              body: {
-                userId: standardResult.data.user.id,
-                email: standardResult.data.user.email,
-                agentCode: profile.agent_code,
-                fullName: name
-              }
-            });
-            console.log('📧 Notifiche post-registrazione inviate');
-          }
+          // Invia notifiche di registrazione
+          await supabase.functions.invoke('send-registration-notification', {
+            body: {
+              userId: standardResult.data.user.id,
+              email: standardResult.data.user.email,
+              agentCode: agentCode,
+              fullName: name
+            }
+          });
+          console.log('📧 Notifiche post-registrazione inviate');
         } catch (notificationError) {
           console.error('⚠️ Errore invio notifiche:', notificationError);
           // Non bloccare il flusso se le notifiche falliscono
@@ -149,11 +143,10 @@ export const useRegistration = () => {
         if (bypassResult?.success) {
           console.log('✅ M1SSION bypass registration successful!');
           
-          // Per il bypass, generiamo un agent code e inviamo notifiche manualmente
+          // Per il bypass, generiamo un agent code client-side
           try {
-            // Genera agent code unico
-            const { data: codeResult } = await supabase.rpc('generate_unique_agent_code');
-            const agentCode = codeResult || 'AG-TEMP';
+            // Generate agent code client-side (temporary workaround)
+            const agentCode = `AG-${Date.now().toString(36).toUpperCase()}`;
             
             // Invia notifiche di registrazione
             await supabase.functions.invoke('send-registration-notification', {

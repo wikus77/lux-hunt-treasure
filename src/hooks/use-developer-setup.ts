@@ -76,7 +76,7 @@ export const useDeveloperSetup = () => {
       
       const { error } = await supabase
         .from('user_roles')
-        .insert({ user_id: userId, role: 'developer' })
+        .insert([{ user_id: userId, role: 'admin' }])
         .select();
 
       if (error && !error.message.includes('duplicate')) {
