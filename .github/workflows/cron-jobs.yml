@@ -1,0 +1,48 @@
+name: M1SSION Scheduled Tasks
+# © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
+on:
+  schedule:
+    # Weekly Reset - Every Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+    # Auto Push Notifications - Every 5 minutes
+    - cron: '*/5 * * * *'
+    # Battle Finalize - Every hour
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  weekly-reset:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 0 * * 0' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Trigger Weekly Reset
+        run: |
+          curl -sS -X POST \
+            "https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/weekly-reset-cron" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json"
+
+  auto-push:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '*/5 * * * *' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Trigger Auto Push
+        run: |
+          curl -sS -X POST \
+            "https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/auto-push-cron" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json"
+
+  battle-finalize:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Trigger Battle Finalize
+        run: |
+          curl -sS -X POST \
+            "https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/battle-cron-finalize" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json"
+
+# © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
