@@ -124,8 +124,8 @@ const AwardsCeremony = () => {
             className="space-y-8"
           >
             <AnimatedSection direction="right" delay={0.2} once>
-              <motion.div variants={itemVariants} className="glass-card">
-                <h3 className="font-orbitron text-xl mb-4">Cerimonie di premiazione esclusive</h3>
+              <motion.div variants={itemVariants} className="m1ssion-glass-card p-6">
+                <h3 className="font-orbitron text-xl mb-4 neon-text-cyan">Cerimonie di premiazione esclusive</h3>
                 <p className="text-white/70">
                   Location prestigiose, hostess, fotografi e ogni dettaglio curato per rendere indimenticabile il momento della consegna.
                 </p>
@@ -133,8 +133,8 @@ const AwardsCeremony = () => {
             </AnimatedSection>
             
             <AnimatedSection direction="right" delay={0.3} once>
-              <motion.div variants={itemVariants} className="glass-card">
-                <h3 className="font-orbitron text-xl mb-4">I vincitori delle precedenti edizioni</h3>
+              <motion.div variants={itemVariants} className="m1ssion-glass-card p-6">
+                <h3 className="font-orbitron text-xl mb-4 neon-text-cyan">I vincitori delle precedenti edizioni</h3>
                 <p className="text-white/70">
                   Persone normali che come te hanno partecipato e vinto auto di lusso grazie alla loro determinazione e intuito.
                 </p>
@@ -159,3 +159,5 @@ const AwardsCeremony = () => {
 };
 
 export default AwardsCeremony;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
