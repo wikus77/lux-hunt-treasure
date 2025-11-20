@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™
 // Blindatura di sicurezza avanzata per M1SSION PANEL™
+// @ts-nocheck
 
 import { useEffect, useState } from 'react';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';

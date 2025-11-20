@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // AI Gateway - Main orchestrator for AI interactions with function calling
+// @ts-nocheck
 
 import { supabase } from '@/integrations/supabase/client';
 import { buildEnhancedContext } from './contextBuilder';

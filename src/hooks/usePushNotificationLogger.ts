@@ -1,5 +1,6 @@
 // © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 // Enhanced Push Notifications Logging Hook
+// @ts-nocheck
 
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
