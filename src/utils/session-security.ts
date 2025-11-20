@@ -1,6 +1,8 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Session Security & Management Utilities
 
+import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+
 interface SessionData {
   timestamp: number;
   userId?: string;
@@ -71,7 +73,7 @@ export class SecureSessionManager {
       
       // Clear all auth-related items
       const authKeys = [
-        `sb-${import.meta.env.VITE_SUPABASE_PROJECT_REF}-auth-token`,
+        `sb-${SUPABASE_CONFIG.projectRef}-auth-token`,
         'hasSeenPostLoginIntro',
         'auth_cache_clear'
       ];
