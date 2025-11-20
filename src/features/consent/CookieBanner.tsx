@@ -40,7 +40,17 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({
           aria-labelledby="cookie-banner-title"
           aria-describedby="cookie-banner-description"
         >
-          <div className="glass-card mx-4 mb-4 p-6 shadow-2xl border border-white/10">
+          <div 
+            className="relative mx-4 mb-4 p-6 shadow-2xl overflow-hidden rounded-[24px]"
+            style={{
+              background: 'rgba(0, 0, 0, 0.05)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            }}
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
             <div className="flex items-start gap-4">
               {/* Icon */}
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
