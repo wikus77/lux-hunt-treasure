@@ -484,7 +484,9 @@ export type Database = {
           bio: string | null
           created_at: string | null
           email: string | null
+          first_login_completed: boolean | null
           id: string
+          investigative_style: string | null
           invited_by_code: string | null
           m1_units: number
           nickname: string | null
@@ -502,7 +504,9 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           email?: string | null
+          first_login_completed?: boolean | null
           id: string
+          investigative_style?: string | null
           invited_by_code?: string | null
           m1_units?: number
           nickname?: string | null
@@ -520,7 +524,9 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           email?: string | null
+          first_login_completed?: boolean | null
           id?: string
+          investigative_style?: string | null
           invited_by_code?: string | null
           m1_units?: number
           nickname?: string | null
@@ -856,6 +862,33 @@ export type Database = {
           },
         ]
       }
+      user_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_push_tokens: {
         Row: {
           created_at: string | null
@@ -1029,6 +1062,10 @@ export type Database = {
           success: boolean
         }[]
       }
+      consume_credit: {
+        Args: { p_amount: number; p_credit_type: string; p_user_id: string }
+        Returns: boolean
+      }
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1043,6 +1080,7 @@ export type Database = {
             }
             Returns: boolean
           }
+      is_admin: { Args: { p_user_id: string }; Returns: boolean }
       m1_get_next_buzz_level: {
         Args: { p_user_id: string }
         Returns: {
