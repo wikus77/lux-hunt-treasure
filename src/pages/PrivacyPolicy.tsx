@@ -60,33 +60,46 @@ const PrivacyPolicy = () => {
           <ArrowLeft className="mr-2 w-4 h-4" /> Torna alla Home
         </Button>
         
-        <h1 className="text-3xl font-bold mb-6">
-          {document?.title || 'Privacy Policy'}
-        </h1>
-        
-        {document ? (
-          <div className="space-y-6 prose prose-invert max-w-none">
-            <div 
-              className="text-gray-300"
-              dangerouslySetInnerHTML={{ __html: document.content_md.replace(/\n/g, '<br />') }}
-            />
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="text-center py-12">
-              <p className="text-gray-400 text-lg mb-4">🚫 Documento non disponibile</p>
-              <p className="text-gray-500 mb-6">Il documento richiesto non è attualmente disponibile.</p>
-              <Button onClick={handleBack} className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black">
-                Torna alla Home
-              </Button>
+        <div 
+          className="relative overflow-hidden rounded-[24px] p-8"
+          style={{
+            background: 'rgba(0, 0, 0, 0.05)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+          }}
+        >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
+          
+          <h1 className="text-3xl font-bold mb-6">
+            {document?.title || 'Privacy Policy'}
+          </h1>
+          
+          {document ? (
+            <div className="space-y-6 prose prose-invert max-w-none">
+              <div 
+                className="text-gray-300"
+                dangerouslySetInnerHTML={{ __html: document.content_md.replace(/\n/g, '<br />') }}
+              />
             </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="text-center py-12">
+                <p className="text-gray-400 text-lg mb-4">🚫 Documento non disponibile</p>
+                <p className="text-gray-500 mb-6">Il documento richiesto non è attualmente disponibile.</p>
+                <Button onClick={handleBack} className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black">
+                  Torna alla Home
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          <div className="mt-10 text-center">
+            <Button onClick={handleBack} className="bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink">
+              Torna alla Home
+            </Button>
           </div>
-        )}
-        
-        <div className="mt-10 mb-10 text-center">
-          <Button onClick={handleBack} className="bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink">
-            Torna alla Home
-          </Button>
         </div>
       </div>
     </div>
