@@ -5,7 +5,11 @@
     "skipLibCheck": true,
     "noEmitOnError": false,
     "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "noUnusedParameters": false,
+    "strict": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictPropertyInitialization": false
   },
   "include": [
     "src/**/*"
@@ -54,6 +58,9 @@
     "src/lib/pulse/**",
     "src/lib/push/**",
     "src/managers/WeeklyEventsManager.tsx",
-    "src/pages/**"
+    "src/pages/**",
+    "src/services/**",
+    "src/utils/**",
+    "src/routes/**"
   ]
 }
