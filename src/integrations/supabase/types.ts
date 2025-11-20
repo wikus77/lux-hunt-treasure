@@ -465,6 +465,57 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_transactions: {
+        Row: {
+          amount_cents: number
+          created_at: string | null
+          currency: string
+          id: string
+          metadata: Json | null
+          provider: string
+          provider_ref: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          provider?: string
+          provider_ref?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          metadata?: Json | null
+          provider?: string
+          provider_ref?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pre_registered_users: {
         Row: {
           agent_code: string | null
