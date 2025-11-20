@@ -145,11 +145,19 @@ const Leaderboard = () => {
         <div className="container mx-auto">
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Titolo sezione */}
           <motion.div
-            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-6 mx-3"
+            className="m1ssion-glass-card p-6 mb-6 mx-3 relative"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
+            style={{
+              background: 'rgba(0, 0, 0, 0.6)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              borderRadius: '24px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            }}
           >
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] via-[#F059FF] to-[#FACC15] opacity-90" />
             <h1 className="text-4xl font-orbitron font-bold text-center">
               <span 
                 className="text-[#00F7FF]"
@@ -168,10 +176,18 @@ const Leaderboard = () => {
           
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Header filtri */}
           <motion.div
-            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6 mx-3"
+            className="glass-card p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.06)'
+            }}
           >
             <LeaderboardHeader 
               onSimulateRankChange={simulateRankChange}
@@ -181,30 +197,54 @@ const Leaderboard = () => {
 
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Ricerca */}
           <motion.div
-            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6 mx-3"
+            className="glass-card p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.06)'
+            }}
           >
             <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
           </motion.div>
 
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Top 3 Podio */}
           <motion.div
-            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-6 mx-3"
+            className="m1ssion-glass-card p-6 mb-6 mx-3 relative"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
+            style={{
+              background: 'rgba(0, 0, 0, 0.6)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              borderRadius: '24px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05), 0 0 24px rgba(0, 229, 255, 0.2)'
+            }}
           >
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#F059FF] opacity-90" />
             <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
           </motion.div>
 
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Lista principale */}
           <motion.div
-            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6 mx-3"
+            className="glass-card p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.06)'
+            }}
           >
             <LeaderboardTabs 
               filteredPlayers={filteredPlayers}
@@ -220,10 +260,18 @@ const Leaderboard = () => {
 
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Progress personale */}
           <motion.div
-            className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6 mx-3"
+            className="glass-card p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.06)'
+            }}
           >
             <LeaderboardProgress currentPosition={42} totalPlayers={100} />
           </motion.div>
@@ -261,3 +309,5 @@ const Leaderboard = () => {
 };
 
 export default Leaderboard;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
