@@ -41,11 +41,11 @@ export default function BigCountdownTimer() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.7, 0.2, 0.2, 1] }}
     >
-      <h2 className="font-orbitron neon-text-cyan text-xl sm:text-2xl mb-2 text-center tracking-widest">
+      <h2 className="font-orbitron neon-text-cyan text-xl sm:text-2xl mb-2 text-center tracking-widest animate-neon-pulse">
         Tempo rimasto alla prossima missione!
       </h2>
       <div
-        className="bg-black/70 neon-border px-12 py-10 rounded-3xl shadow-2xl flex gap-10 items-center glass-card animate-fade-in"
+        className="m1ssion-glass-card neon-border px-12 py-10 rounded-m1-lg shadow-m1-glow-cyan flex gap-10 items-center animate-fade-in"
         style={{
           boxShadow: "0 8px 38px 0 rgba(30,174,219,0.18), 0 0px 64px 0 #00e5ff2a"
         }}
@@ -83,3 +83,5 @@ export default function BigCountdownTimer() {
     </motion.div>
   );
 }
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

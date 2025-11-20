@@ -345,12 +345,12 @@ export const NotificationsPage: React.FC = () => {
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="flex items-center justify-between"
+        className="flex items-center justify-between mb-8"
       >
         <div className="flex items-center gap-3">
-          <Bell className="w-8 h-8 text-[#00D1FF]" />
+          <Bell className="w-8 h-8 neon-text-cyan" />
           <div>
-            <h1 className="text-2xl font-bold text-white">Notifiche</h1>
+            <h1 className="text-2xl font-bold neon-text-cyan">Notifiche</h1>
             {unreadCount > 0 && (
               <p className="text-sm text-gray-400">
                 {unreadCount} nuove notifiche
@@ -403,7 +403,7 @@ export const NotificationsPage: React.FC = () => {
                   transition={{ delay: index * 0.1 }}
                   className={`${style.glowClass}`}
                 >
-                  <Card className={`glass-card ${style.bgColor} ${
+                  <Card className={`m1ssion-glass-card ${style.bgColor} ${
                     !notification.is_read ? 'ring-1 ring-[#00D1FF]' : ''
                   }`}>
                     <CardContent className="p-4">
@@ -531,3 +531,5 @@ export const NotificationsPage: React.FC = () => {
 };
 
 export default NotificationsPage;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

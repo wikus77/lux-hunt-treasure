@@ -196,20 +196,20 @@ const SettingsPage: React.FC = () => {
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="glass-card"
+            className="m1ssion-glass-card"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-orbitron font-bold text-foreground">
+          <h1 className="text-2xl font-orbitron font-bold neon-text-cyan">
             Impostazioni
           </h1>
         </motion.div>
 
         {/* Profilo Utente */}
         <motion.div variants={itemVariants}>
-          <Card className="glass-card neon-border">
+          <Card className="m1ssion-glass-card neon-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 neon-text-cyan">
                 <User className="h-5 w-5" />
                 Profilo Agente
               </CardTitle>
@@ -246,9 +246,9 @@ const SettingsPage: React.FC = () => {
 
         {/* Notifiche */}
         <motion.div variants={itemVariants}>
-          <Card className="glass-card">
+          <Card className="m1ssion-glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 neon-text-cyan">
                 <Bell className="h-5 w-5" />
                 Notifiche
               </CardTitle>
@@ -290,9 +290,9 @@ const SettingsPage: React.FC = () => {
 
         {/* Privacy e Sicurezza */}
         <motion.div variants={itemVariants}>
-          <Card className="glass-card">
+          <Card className="m1ssion-glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 neon-text-cyan">
                 <Shield className="h-5 w-5" />
                 Privacy e Sicurezza
               </CardTitle>
@@ -334,9 +334,9 @@ const SettingsPage: React.FC = () => {
 
         {/* Applicazione */}
         <motion.div variants={itemVariants}>
-          <Card className="glass-card">
+          <Card className="m1ssion-glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 neon-text-cyan">
                 <Smartphone className="h-5 w-5" />
                 Applicazione
               </CardTitle>
@@ -389,7 +389,7 @@ const SettingsPage: React.FC = () => {
         <motion.div variants={itemVariants} className="space-y-3">
           <Button
             variant="outline"
-            className="w-full glass-card border-destructive/20 text-destructive hover:bg-destructive/10"
+            className="w-full m1ssion-glass-card border-destructive/20 text-destructive hover:bg-destructive/10"
             onClick={handleLogout}
             disabled={isLoading}
           >
@@ -406,3 +406,5 @@ const SettingsPage: React.FC = () => {
 };
 
 export default SettingsPage;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
