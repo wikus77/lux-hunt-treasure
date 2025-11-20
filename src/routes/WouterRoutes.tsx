@@ -52,6 +52,7 @@ import PrivacySettings from "@/pages/settings/PrivacySettings";
 import LegalSettings from "@/pages/settings/LegalSettings";
 import BattleLobby from "@/pages/BattleLobby";
 import BattleArena from "@/pages/BattleArena";
+import BattleTest from "@/pages/BattleTest";
 import AppInfoSettings from "@/pages/settings/AppInfoSettings";
 import DiagnosticsSettings from "@/pages/settings/DiagnosticsSettings";
 import PrivacyPermissionsSettings from "@/pages/settings/PrivacyPermissionsSettings";
@@ -310,6 +311,13 @@ const WouterRoutes: React.FC = () => {
               <BattleArena />
             </ProtectedRoute>
           </Route>
+
+          <Route path="/battle-test">
+            <ProtectedRoute>
+              <BattleTest />
+            </ProtectedRoute>
+          </Route>
+
 
           {/* INTEL — sottorotte esclusive */}
           <Route path="/intelligence/coordinates">
