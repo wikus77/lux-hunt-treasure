@@ -52,23 +52,33 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       className="m1ssion-glass-card cursor-pointer transition-all duration-300 relative overflow-hidden"
       style={{
         background: notification.read 
-          ? 'rgba(0, 0, 0, 0.6)'
-          : 'rgba(0, 0, 0, 0.7)',
+          ? 'rgba(0, 0, 0, 0.05)'
+          : 'rgba(0, 0, 0, 0.05)',
         backdropFilter: 'blur(40px)',
         WebkitBackdropFilter: 'blur(40px)',
         borderRadius: '24px',
-        boxShadow: notification.read 
-          ? "0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)" 
-          : "0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05), 0 0 24px rgba(0, 229, 255, 0.2)",
-        border: '0'
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
       }}
     >
-      {/* Top gradient border for unread notifications */}
-      {!notification.read && (
+      {/* Animated glow strip like header */}
+      <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
         <div 
-          className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] via-[#F059FF] to-[#FACC15] opacity-90"
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
+          style={{
+            animation: 'slideGlowNotif 3s ease-in-out infinite',
+            width: '200%',
+            left: '-100%'
+          }}
         />
-      )}
+      </div>
+      <style>{`
+        @keyframes slideGlowNotif {
+          0% { transform: translateX(0); }
+          50% { transform: translateX(50%); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
       
       <div className="p-6">
         <div className="flex justify-between items-start">
