@@ -43,30 +43,8 @@
   --m1-shadow-glow-violet: 0 16px 60px rgba(122, 92, 255, 0.44);
 }
 
-/* M1SSION Glass Card - Primary (Ultra-Transparent) */
-.m1ssion-glass-card {
-  background: rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2),
-              inset 0 2px 3px rgba(255, 255, 255, 0.05);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.25s ease-in-out;
-}
-
-.m1ssion-glass-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(to right, #00D1FF, #7B2EFF, #F059FF, #FACC15);
-  opacity: 0.9;
-}
+/* .m1ssion-glass-card is now defined ONLY in theme.css for 3D Obsidian + Aurora effect */
+/* DO NOT redefine here to avoid CSS cascade conflicts */
 
 /* Glass Card - Secondary */
 .glass-card {
