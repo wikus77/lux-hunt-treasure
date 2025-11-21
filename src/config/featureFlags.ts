@@ -2,7 +2,7 @@
 // Feature Flags Configuration - Legacy Features Isolation
 
 export const DNA_ENABLED = false;
-export const PULSE_ENABLED = false;
+export const PULSE_ENABLED = true;
 export const MAP3D_SANDBOX_ENABLED = false;
 
 // Push Preflight panel (incomplete, hidden until fully implemented)
