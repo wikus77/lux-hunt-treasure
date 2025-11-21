@@ -196,7 +196,7 @@ export function nextBestAction(
  * Render coach-friendly contextual prefix for the phase
  */
 export function getPhaseContext(phase: NorahPhase, ctx: NorahContext): string {
-  const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
+  const agentName = ctx?.agent?.username || ctx?.agent?.code || 'Agente';
   const clues = ctx?.stats?.clues || 0;
 
   switch (phase) {

@@ -9,7 +9,7 @@ const CACHE_TTL = 6 * 60 * 60 * 1000; // v6.2: 6 hours TTL
 export interface NorahContext {
   agent: {
     code: string;
-    nickname: string | null;
+    username: string | null;
   };
   mission: {
     id: string;
@@ -38,7 +38,7 @@ export interface NorahContext {
 
 interface CachedAgent {
   code: string;
-  nickname: string | null;
+  username: string | null;
   timestamp: number;
 }
 
@@ -62,11 +62,11 @@ function getCachedAgent(): CachedAgent | null {
   }
 }
 
-function setCachedAgent(code: string, nickname: string | null) {
+function setCachedAgent(code: string, username: string | null) {
   try {
     const data: CachedAgent = {
       code,
-      nickname,
+      username,
       timestamp: Date.now()
     };
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
@@ -89,7 +89,7 @@ export async function buildNorahContext(): Promise<NorahContext> {
       console.warn('[Norah] No session token available');
       if (cached) {
         return {
-          agent: { code: cached.code, nickname: cached.nickname },
+          agent: { code: cached.code, username: cached.username },
           mission: null,
           stats: { clues: 0, buzz_today: 0, finalshot_today: 0 },
           clues: [],
@@ -115,7 +115,7 @@ export async function buildNorahContext(): Promise<NorahContext> {
       if (cached) {
         console.log('[Norah] Using cached agent due to edge error');
         return {
-          agent: { code: cached.code, nickname: cached.nickname },
+          agent: { code: cached.code, username: cached.username },
           mission: null,
           stats: { clues: 0, buzz_today: 0, finalshot_today: 0 },
           clues: [],
@@ -131,7 +131,7 @@ export async function buildNorahContext(): Promise<NorahContext> {
     const normalized: NorahContext = {
       agent: {
         code: data?.agent?.code || cached?.code || 'AG-UNKNOWN',
-        nickname: data?.agent?.nickname || cached?.nickname || null
+        username: data?.agent?.username || cached?.username || null
       },
       mission: data?.mission || null,
       stats: {
@@ -146,7 +146,7 @@ export async function buildNorahContext(): Promise<NorahContext> {
 
     // Cache agent code for future fast access
     if (normalized.agent.code && normalized.agent.code !== 'AG-UNKNOWN') {
-      setCachedAgent(normalized.agent.code, normalized.agent.nickname);
+      setCachedAgent(normalized.agent.code, normalized.agent.username);
     }
 
     return normalized;
@@ -156,8 +156,8 @@ export async function buildNorahContext(): Promise<NorahContext> {
     // Fallback to cache or safe defaults
     return {
       agent: cached 
-        ? { code: cached.code, nickname: cached.nickname }
-        : { code: 'AG-UNKNOWN', nickname: null },
+        ? { code: cached.code, username: cached.username }
+        : { code: 'AG-UNKNOWN', username: null },
       mission: null,
       stats: { clues: 0, buzz_today: 0, finalshot_today: 0 },
       clues: [],

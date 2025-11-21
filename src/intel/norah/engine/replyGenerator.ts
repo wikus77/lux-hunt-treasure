@@ -99,7 +99,7 @@ export function renderChoiceList(choices: string[]): string {
  * v6.3: Get empathic hook with anti-repetition
  */
 function getEmpathyHook(ctx: NorahContext): string {
-  const agentName = ctx?.agent?.nickname || 'Agente';
+  const agentName = ctx?.agent?.username || 'Agente';
   const agentCode = ctx?.agent?.code || 'AG-XXXX';
   
   // Pick random hook that's not in recent 3
