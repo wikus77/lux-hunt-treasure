@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
+import { useM1UnitsProfile } from '@/hooks/useM1UnitsProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { M1UnitsShopModal } from '@/components/m1units/M1UnitsShopModal';
 import '@/features/m1u/m1u-ui.css';
@@ -40,7 +40,7 @@ const M1UPill: React.FC<M1UPillProps> = ({
     getUser();
   }, []);
 
-  const { unitsData, isLoading, error } = useM1UnitsRealtime(userId);
+  const { unitsData, isLoading, error } = useM1UnitsProfile(userId);
 
   // Trigger pulse animation on balance change
   useEffect(() => {

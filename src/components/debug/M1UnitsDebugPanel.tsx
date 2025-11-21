@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useM1UnitsRealtime, type M1UnitsConnectionState } from '@/hooks/useM1UnitsRealtime';
+import { useM1UnitsProfile, type M1UnitsConnectionState } from '@/hooks/useM1UnitsProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,7 +56,7 @@ export const M1UnitsDebugPanel = () => {
     getUser();
   }, []);
 
-  const { unitsData, connectionState, isLoading, error, ping, refetch } = useM1UnitsRealtime(userId);
+  const { unitsData, connectionState, isLoading, error, ping, refetch } = useM1UnitsProfile(userId);
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -93,15 +93,17 @@ export const M1UnitsDebugPanel = () => {
     if (!userId) return;
     addLog('🎭 Triggering fake update (+1 M1U)...');
     
-    // Use RPC m1u_fake_update for test increment
-    const { error: updateError } = await (supabase as any)
-      .rpc('m1u_fake_update', { _delta: 1 });
+    // Update profiles.m1_units directly
+    const currentBalance = unitsData?.balance || 0;
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ m1_units: currentBalance + 1 })
+      .eq('id', userId);
 
     if (updateError) {
       addLog(`❌ Fake update failed: ${updateError.message}`);
     } else {
       addLog('✅ Fake update sent (+1 M1U)');
-      // Refetch summary to sync state
       await refetch();
     }
   };

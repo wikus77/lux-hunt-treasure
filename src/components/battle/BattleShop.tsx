@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Swords, Shield, ShoppingCart, Coins } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
+import { useM1UnitsProfile } from '@/hooks/useM1UnitsProfile';
 import { supabase } from '@/integrations/supabase/client';
 
 interface BattleItem {
@@ -49,7 +49,7 @@ export function BattleShop({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const { toast } = useToast();
-  const { unitsData, isLoading: m1uLoading, refetch: refetchM1U } = useM1UnitsRealtime(userId);
+  const { unitsData, isLoading: m1uLoading, refetch: refetchM1U } = useM1UnitsProfile(userId);
 
   const balance = unitsData?.balance || 0;
 

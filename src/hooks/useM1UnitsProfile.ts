@@ -1,12 +1,11 @@
 /**
- * M1 UNITS™ — Realtime Hook
- * Subscribe to user M1 Units balance updates via Supabase Realtime
+ * M1 UNITS™ — Profile-based Hook
+ * Direct integration with profiles.m1_units column
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { emitSubscribed, emitError } from '@/lib/realtime/reconnectBus';
 
 export interface M1UnitsData {
   user_id: string;
@@ -18,7 +17,7 @@ export interface M1UnitsData {
 
 export type M1UnitsConnectionState = 'INIT' | 'CONNECTING' | 'SUBSCRIBED' | 'HEARTBEAT' | 'ERROR' | 'CLOSED';
 
-interface UseM1UnitsRealtimeReturn {
+interface UseM1UnitsProfileReturn {
   unitsData: M1UnitsData | null;
   connectionState: M1UnitsConnectionState;
   isLoading: boolean;
@@ -27,14 +26,13 @@ interface UseM1UnitsRealtimeReturn {
   refetch: () => Promise<void>;
 }
 
-export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealtimeReturn => {
+export const useM1UnitsProfile = (userId: string | undefined): UseM1UnitsProfileReturn => {
   const [unitsData, setUnitsData] = useState<M1UnitsData | null>(null);
   const [connectionState, setConnectionState] = useState<M1UnitsConnectionState>('INIT');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [heartbeatTimer, setHeartbeatTimer] = useState<NodeJS.Timeout | null>(null);
 
-  // Fetch initial M1 Units data using RPC
+  // Fetch M1 Units from profiles.m1_units
   const fetchUnits = useCallback(async () => {
     if (!userId) {
       setIsLoading(false);
@@ -45,50 +43,44 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       setIsLoading(true);
       setError(null);
 
-      // Use RPC m1u_get_summary() - no arguments, uses auth.uid()
-      const { data: summary, error: rpcError } = await (supabase as any)
-        .rpc('m1u_get_summary');
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, m1_units')
+        .eq('id', userId)
+        .single();
 
-      if (rpcError) {
-        throw new Error(rpcError.message || 'Failed to fetch M1U summary');
+      if (profileError) {
+        throw new Error(profileError.message || 'Failed to fetch M1U from profile');
       }
 
-      if (summary) {
+      if (profile) {
         setUnitsData({
-          user_id: summary.user_id || userId,
-          balance: summary.balance || 0,
-          total_earned: summary.total_earned || 0,
-          total_spent: summary.total_spent || 0,
-          updated_at: summary.updated_at || new Date().toISOString(),
+          user_id: profile.id,
+          balance: profile.m1_units || 0,
+          total_earned: 0, // Not tracked in profiles table
+          total_spent: 0,  // Not tracked in profiles table
+          updated_at: new Date().toISOString(),
         });
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMsg);
       setConnectionState('ERROR');
-      // Only log in dev
       if (import.meta.env.DEV) {
-        console.warn('[M1U] Fetch error:', errorMsg);
+        console.warn('[M1U Profile] Fetch error:', errorMsg);
       }
     } finally {
       setIsLoading(false);
     }
   }, [userId]);
 
-  // Ping function (triggers realtime update for smoke test)
+  // Ping function (just refetches data for UI feedback)
   const ping = useCallback(async () => {
     if (!userId) return;
 
     try {
-      // Call without arguments - RPC defaults to auth.uid()
-      const { data, error: pingError } = await (supabase as any).rpc('m1u_ping');
-
-      if (pingError) throw pingError;
-      
-      // Heartbeat received
       setConnectionState('HEARTBEAT');
-      
-      // Reset to SUBSCRIBED after 2s
+      await fetchUnits();
       setTimeout(() => {
         setConnectionState('SUBSCRIBED');
       }, 2000);
@@ -97,19 +89,19 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       setError(errorMsg);
       setConnectionState('ERROR');
       if (import.meta.env.DEV) {
-        console.warn('[M1U] Ping error:', errorMsg);
+        console.warn('[M1U Profile] Ping error:', errorMsg);
       }
     }
-  }, [userId]);
+  }, [userId, fetchUnits]);
 
-  // Subscribe to realtime updates
+  // Subscribe to realtime updates on profiles table
   useEffect(() => {
     if (!userId) return;
 
     fetchUnits();
     setConnectionState('CONNECTING');
 
-    const channelName = `m1_units_user_${userId}`;
+    const channelName = `m1_units_profile_${userId}`;
     
     const channel = supabase
       .channel(channelName)
@@ -118,11 +110,11 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'user_m1_units',
-          filter: `user_id=eq.${userId}`,
+          table: 'profiles',
+          filter: `id=eq.${userId}`,
         },
         async (payload) => {
-          // On UPDATE, refetch summary to get complete data
+          // On UPDATE, refetch profile data
           await fetchUnits();
           
           // Trigger heartbeat visual feedback
@@ -135,25 +127,14 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setConnectionState('SUBSCRIBED');
-          emitSubscribed(channelName);
-          
-          // Start heartbeat check (every 30s)
-          const timer = setInterval(() => {
-            setConnectionState(prev => prev === 'SUBSCRIBED' ? 'SUBSCRIBED' : prev);
-          }, 30000);
-          setHeartbeatTimer(timer);
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           setConnectionState('ERROR');
-          emitError(String(status), channelName);
         } else if (status === 'CLOSED') {
           setConnectionState('CLOSED');
         }
       });
 
     return () => {
-      if (heartbeatTimer) {
-        clearInterval(heartbeatTimer);
-      }
       channel.unsubscribe();
       setConnectionState('INIT');
     };

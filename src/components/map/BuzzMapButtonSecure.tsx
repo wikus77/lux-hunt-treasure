@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Lock, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
-import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
+import { useM1UnitsProfile } from '@/hooks/useM1UnitsProfile';
 import { showInsufficientM1UToast } from '@/utils/m1uHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
@@ -34,7 +34,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
   } | null>(null);
   const [pricingLoading, setPricingLoading] = useState(true);
   
-  const { unitsData } = useM1UnitsRealtime(user?.id);
+  const { unitsData } = useM1UnitsProfile(user?.id);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
 

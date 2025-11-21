@@ -12,7 +12,7 @@ import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useBuzzGrants } from '@/hooks/useBuzzGrants';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
-import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
+import { useM1UnitsProfile } from '@/hooks/useM1UnitsProfile';
 import { toast } from 'sonner';
 import { showInsufficientM1UToast, showM1UDebitSuccessToast } from '@/utils/m1uHelpers';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,7 +32,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   const { user } = useUnifiedAuth();
   const { hasFreeBuzz, consumeFreeBuzz, totalRemaining, dailyUsed } = useBuzzGrants();
   const { playSound } = useSoundEffects();
-  const { unitsData, refetch: refetchM1U } = useM1UnitsRealtime(user?.id);
+  const { unitsData, refetch: refetchM1U } = useM1UnitsProfile(user?.id);
   
   // Enhanced BUZZ counter with M1U pricing
   const { 
@@ -213,17 +213,16 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     }
 
     try {
-      console.log('💳 M1SSION™ M1U BUZZ: Calling buzz_spend_m1u RPC...', { costM1U, currentBalance });
+      console.log('💳 M1SSION™ M1U BUZZ: Spending M1U from profiles...', { costM1U, currentBalance });
       
-      // Call RPC to spend M1U
-      const { data: spendResult, error: spendError } = await (supabase as any).rpc('buzz_spend_m1u', {
-        p_cost_m1u: costM1U
-      });
+      // Update profiles.m1_units directly
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ m1_units: currentBalance - costM1U })
+        .eq('id', user.id);
 
-      console.log('💳 M1SSION™ M1U BUZZ: RPC response', { spendResult, spendError });
-
-      if (spendError) {
-        console.error('❌ M1SSION™ M1U BUZZ: RPC error', spendError);
+      if (updateError) {
+        console.error('❌ M1SSION™ M1U BUZZ: Update error', updateError);
         toast.error('Errore nel processare il pagamento M1U');
         return;
       }

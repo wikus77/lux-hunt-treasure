@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
+import { useM1UnitsProfile } from '@/hooks/useM1UnitsProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus } from 'lucide-react';
@@ -34,7 +34,7 @@ export const M1UnitsPill = ({ className = '', showLabel = true, showPlusButton =
     getUser();
   }, []);
 
-  const { unitsData, isLoading, error, connectionState } = useM1UnitsRealtime(userId);
+  const { unitsData, isLoading, error, connectionState } = useM1UnitsProfile(userId);
 
   // Trigger pulse animation on balance change
   useEffect(() => {

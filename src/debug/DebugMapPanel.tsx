@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useBuzzMapPricingNew } from '@/hooks/useBuzzMapPricingNew';
-import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
+import { useM1UnitsProfile } from '@/hooks/useM1UnitsProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { CopyJsonButton } from './CopyJsonButton';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -16,7 +16,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 export const DebugMapPanel: React.FC = () => {
   const { user, session, isAuthenticated } = useUnifiedAuth();
   const { nextLevel, nextRadiusKm, nextCostM1U } = useBuzzMapPricingNew(user?.id);
-  const { unitsData } = useM1UnitsRealtime(user?.id);
+  const { unitsData } = useM1UnitsProfile(user?.id);
   const [collapsed, setCollapsed] = useState(true);
   const [geoPermission, setGeoPermission] = useState<string>('unknown');
   const [currentPos, setCurrentPos] = useState<{ lat: number; lng: number } | null>(null);
