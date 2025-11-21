@@ -69,15 +69,19 @@ export const useBuzzCounter = (userId: string | undefined) => {
           daily_count: newBuzzCounter
         });
       
+      // ✅ UPDATE STATE IMMEDIATELY
       setDailyBuzzCounter(newBuzzCounter);
       console.log('✅ BUZZ COUNTER: Updated successfully', { newBuzzCounter });
+      
+      // ✅ FORCE RELOAD from DB to ensure sync
+      setTimeout(() => loadDailyBuzzCounter(), 100);
       
       return newBuzzCounter;
     } catch (err) {
       console.error('❌ BUZZ COUNTER: Update failed', err);
       return dailyBuzzCounter;
     }
-  }, [userId, dailyBuzzCounter]);
+  }, [userId, dailyBuzzCounter, loadDailyBuzzCounter]);
 
   // Get current BUZZ pricing
   const getCurrentBuzzPrice = useCallback(() => {

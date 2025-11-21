@@ -28,7 +28,8 @@ export const BuzzPage: React.FC = () => {
   // 🔥 FIXED: Use centralized pricing logic from useBuzzCounter
   const { 
     dailyBuzzCounter, 
-    getCurrentBuzzDisplayCostM1U 
+    getCurrentBuzzDisplayCostM1U,
+    loadDailyBuzzCounter  // ✅ ADD THIS for force refresh
   } = useBuzzCounter(user?.id);
 
   // 🔥 FIXED: Use only centralized M1U pricing
@@ -73,11 +74,15 @@ export const BuzzPage: React.FC = () => {
   }, []);
 
   const handleBuzzSuccess = async () => {
-    // Force immediate stats reload - © 2025 Joseph MULÉ – M1SSION™
-    setTimeout(async () => {
-      await loadBuzzStats();
-      console.log('🔄 Stats aggiornate post-BUZZ - PRICING FIXED');
-    }, 100);
+    console.log('🎉 BUZZ SUCCESS - Reloading all stats...');
+    
+    // ✅ Force reload counter
+    await loadDailyBuzzCounter();
+    
+    // ✅ Force reload stats
+    await loadBuzzStats();
+    
+    console.log('✅ All stats reloaded after BUZZ');
   };
 
   if (loading) {
