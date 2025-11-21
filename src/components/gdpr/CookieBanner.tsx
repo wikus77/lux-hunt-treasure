@@ -118,7 +118,7 @@ const CookieBanner = () => {
           }}
         >
           <div className="max-w-6xl mx-auto">
-            <div className="bg-black/95 backdrop-blur-xl border border-cyan-400/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(0,229,255,0.3)]">
+            <div className="m1ssion-glass-card p-6">
               {!showSettings ? (
                 // Main banner
                 <div className="flex flex-col lg:flex-row lg:items-center gap-6">
