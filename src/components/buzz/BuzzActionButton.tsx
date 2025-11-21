@@ -227,30 +227,16 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         return;
       }
 
-      if (!(spendResult as any)?.success) {
-        const errorType = (spendResult as any)?.error || 'unknown';
-        console.error('❌ M1SSION™ M1U BUZZ: Payment failed', { 
-          error: errorType,
-          fullResult: spendResult 
-        });
-        
-        if (errorType === 'insufficient_m1u') {
-          showInsufficientM1UToast(costM1U, (spendResult as any).current_balance || 0);
-        } else {
-          toast.error(`Errore: ${errorType}`);
-        }
-        return;
-      }
-
       // M1U spent successfully
+      const newBalance = currentBalance - costM1U;
       console.log('✅ M1SSION™ M1U BUZZ: M1U debited successfully!', {
-        spent: (spendResult as any).spent,
-        oldBalance: (spendResult as any).old_balance,
-        newBalance: (spendResult as any).new_balance,
-        timestamp: (spendResult as any).timestamp
+        spent: costM1U,
+        oldBalance: currentBalance,
+        newBalance,
+        timestamp: new Date().toISOString()
       });
 
-      showM1UDebitSuccessToast((spendResult as any).spent, (spendResult as any).new_balance);
+      showM1UDebitSuccessToast(costM1U, newBalance);
       
       // Refresh M1U balance to show updated value
       await refetchM1U();
