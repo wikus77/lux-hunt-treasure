@@ -196,12 +196,19 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             <div 
               className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
               style={{
-                animation: 'slideGlow 3s ease-in-out infinite',
+                animation: 'slideGlowTime 3s ease-in-out infinite',
                 width: '200%',
                 left: '-100%'
               }}
             />
           </div>
+          <style>{`
+            @keyframes slideGlowTime {
+              0% { transform: translateX(0); }
+              50% { transform: translateX(50%); }
+              100% { transform: translateX(0); }
+            }
+          `}</style>
           <div className="flex items-center space-x-2 mb-2">
             <div className="w-2 h-2 bg-amber-400 rounded-full" />
             <span className="text-white/80 text-sm">Tempo rimasto</span>
@@ -272,12 +279,19 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             <div 
               className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
               style={{
-                animation: 'slideGlow 3s ease-in-out infinite',
+                animation: 'slideGlowStatus 3s ease-in-out infinite',
                 width: '200%',
                 left: '-100%'
               }}
             />
           </div>
+          <style>{`
+            @keyframes slideGlowStatus {
+              0% { transform: translateX(0); }
+              50% { transform: translateX(50%); }
+              100% { transform: translateX(0); }
+            }
+          `}</style>
           <div className="flex items-center space-x-2 mb-2">
             <div className="w-2 h-2 bg-[#00D1FF] rounded-full" />
             <span className="text-white/80 text-sm">Stato missione</span>
