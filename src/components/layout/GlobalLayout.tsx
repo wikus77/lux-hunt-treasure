@@ -48,7 +48,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   // Landing and auth pages - minimal layout
   if (shouldHideNavigation) {
     return (
-      <SafeAreaWrapper className="min-h-screen bg-gradient-to-br from-black via-[#0B1426] to-[#1a1a2e]">
+      <SafeAreaWrapper className="min-h-screen">
         {children}
       </SafeAreaWrapper>
     );
@@ -57,7 +57,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   // Full screen pages (map, buzz, games) - no header padding
   if (isFullScreen) {
     return (
-      <SafeAreaWrapper className="min-h-screen bg-gradient-to-br from-black via-[#0B1426] to-[#1a1a2e]">
+      <SafeAreaWrapper className="min-h-screen">
         <div className="relative min-h-screen">
           {/* Header */}
           <UnifiedHeader />
@@ -76,7 +76,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
 
   // Standard app pages - with header padding
   return (
-    <SafeAreaWrapper className="min-h-screen bg-gradient-to-br from-black via-[#0B1426] to-[#1a1a2e]">
+    <SafeAreaWrapper className="min-h-screen">
       <div className="relative min-h-screen">
         {/* Header */}
         <UnifiedHeader />
