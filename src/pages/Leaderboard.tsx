@@ -108,17 +108,14 @@ const Leaderboard = () => {
 
   return (
     <motion.div 
-      className="bg-gradient-to-b from-[#131524]/70 to-black"
+      className=""
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       style={{ 
         height: '100dvh',
         overflow: 'hidden',
-        position: 'relative',
-        background: 'rgba(19, 21, 36, 0.6)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)'
+        position: 'relative'
       }}
     >
       {/* Fixed Header */}
@@ -148,16 +145,12 @@ const Leaderboard = () => {
         <div className="container mx-auto">
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Titolo sezione */}
           <motion.div
-            className="m1ssion-glass-card p-6 mb-6 mx-3 relative"
+            className="card-obsidian elev-1 p-6 mb-6 mx-3 relative"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
             style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              borderRadius: '24px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+              borderRadius: '24px'
             }}
           >
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] via-[#F059FF] to-[#FACC15] opacity-90" />
@@ -179,17 +172,12 @@ const Leaderboard = () => {
           
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Header filtri */}
           <motion.div
-            className="glass-card p-4 mb-6 mx-3"
+            className="card-obsidian elev-1 p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '16px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+              borderRadius: '16px'
             }}
           >
             <LeaderboardHeader 
