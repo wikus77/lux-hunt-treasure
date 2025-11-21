@@ -22,6 +22,7 @@
 @tailwind utilities;
 
 @import './styles/m1-glass.css';
+@import './styles/obsidian-aurora.css';
 
 @layer utilities {
   .font-orbitron {

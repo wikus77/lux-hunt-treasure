@@ -219,7 +219,7 @@ const Home = () => {
       </div>
       
       <div 
-        className="min-h-screen bg-[#070818]" 
+        className="min-h-screen" 
         style={{ 
           paddingTop: '140px', 
           paddingBottom: '120px',

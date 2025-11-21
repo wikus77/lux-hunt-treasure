@@ -1,0 +1,102 @@
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+/* Obsidian + Aurora Style Layer */
+
+:root {
+  --bg-obsidian-0: #0A0B0D;
+  --bg-obsidian-1: #121316;
+  --aurora-cyan: rgba(0, 229, 255, 0.12);
+  --aurora-violet: rgba(155, 92, 246, 0.10);
+  --elev-shadow-1: 0 6px 18px rgba(0, 0, 0, 0.35);
+  --elev-shadow-2: 0 12px 28px rgba(0, 0, 0, 0.45);
+  --bevel-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  --grain-opacity: 0.07;
+}
+
+/* Background obsidian globale */
+.bg-obsidian {
+  background: radial-gradient(circle at 50% 0%, var(--bg-obsidian-0) 0%, var(--bg-obsidian-1) 100%);
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Aurora overlay (cyan + violet) */
+.aurora-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 1;
+  background: 
+    radial-gradient(circle at 20% 30%, var(--aurora-cyan) 0%, transparent 50%),
+    radial-gradient(circle at 80% 60%, var(--aurora-violet) 0%, transparent 50%);
+  filter: blur(80px);
+  transition: opacity 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-overlay {
+    opacity: 0;
+    filter: none;
+  }
+}
+
+/* Film grain layer */
+.grain-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  mix-blend-mode: overlay;
+  transition: opacity 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain-layer {
+    opacity: 0;
+  }
+}
+
+/* Elevation shadows */
+.elev-1 {
+  box-shadow: var(--elev-shadow-1), var(--bevel-inset);
+}
+
+.elev-2 {
+  box-shadow: var(--elev-shadow-2), var(--bevel-inset);
+}
+
+/* Bevel soft */
+.bevel-soft {
+  box-shadow: var(--bevel-inset);
+}
+
+/* Card obsidian (da usare sui container) */
+.card-obsidian {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.00) 100%),
+              var(--bg-obsidian-1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--elev-shadow-1), var(--bevel-inset);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-obsidian:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: var(--elev-shadow-2), var(--bevel-inset);
+}
+
+/* Divider sottile */
+.divider-obsidian {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Content wrapper con z-index corretto */
+.content-above-aurora {
+  position: relative;
+  z-index: 1;
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
