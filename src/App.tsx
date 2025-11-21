@@ -90,7 +90,8 @@ function App() {
 
   
   return (
-    <div className="app-shell">
+    <div className="app-shell m1-app-bg">
+      <div className="m1-grain"></div>
       <PushFrozenNotice />
       <div className="ios-safe-top"></div>
       <ErrorBoundary fallback={
