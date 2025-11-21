@@ -51,17 +51,17 @@ const Notifications = () => {
 
   return (
     <motion.div 
-      className="w-full"
+      className="w-full m1-app-bg relative"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       style={{ 
         height: '100dvh',
         overflow: 'hidden',
-        position: 'relative',
-        background: 'linear-gradient(to bottom, #0a0b14 0%, #050508 100%)'
+        position: 'relative'
       }}
     >
+      <div className="m1-grain" />
       <UnifiedHeader />
       
       {/* Main scrollable content */}
@@ -82,18 +82,8 @@ const Notifications = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            <span 
-              className="text-[#00F7FF]"
-              style={{ textShadow: "0 0 10px rgba(0, 247, 255, 0.6), 0 0 20px rgba(0, 247, 255, 0.3)" }}
-            >
-              NO
-            </span>
-            <span 
-              className="text-white"
-              style={{ textShadow: "0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.3)" }}
-            >
-              TICE
-            </span>
+            <span className="neon-text-cyan">NO</span>
+            <span className="neon-text-cyan">TICE</span>
           </motion.h1>
           
           <motion.div
