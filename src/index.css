@@ -170,24 +170,7 @@
     transition: all 0.25s ease-in-out;
   }
 
-  .m1ssion-glass-card {
-    @apply bg-black/60 backdrop-blur-xl border-0 relative overflow-hidden;
-    border-radius: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
-                inset 0 2px 3px rgba(255, 255, 255, 0.05);
-    transition: all 0.25s ease-in-out;
-  }
-
-  .m1ssion-glass-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(to right, #00D1FF, #7B2EFF, #F059FF, #FACC15);
-    opacity: 0.9;
-  }
+  /* .m1ssion-glass-card now defined in theme.css for 3D Obsidian + Aurora effect */
 
   .glass-card:hover {
     @apply bg-white/10;
