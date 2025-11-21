@@ -1,0 +1,119 @@
+rendering chunks...
+dist/index.html                                     8.07 kB
+dist/assets/grid-pattern.C0O5llsq.png              20.85 kB
+dist/assets/iphone-16-pro-max.Ddiy8e6N.png         33.79 kB
+dist/assets/airpods-max.DG_7KfAy.png               41.68 kB
+dist/assets/rolex-submariner.A9k_cAfW.png          48.45 kB
+dist/assets/lamborghini-huracan.BDVrMRV0.png       50.88 kB
+dist/assets/hermes-birkin.DHEqTVeR.png             68.73 kB
+dist/assets/prod-hide-debug.Be_kZpfd.css            0.46 kB
+dist/assets/MapContainer.bkSrcfSQ.css              74.96 kB
+dist/assets/index.DiHLDph0.css                    352.60 kB
+dist/assets/debugHelpers.DH9Zj0Q8.js                0.09 kB
+dist/assets/pushPlatform.CTjVyOsx.js                0.22 kB
+dist/assets/guard.YD1WsOZx.js                       0.54 kB
+dist/assets/mapStore.CrBNZT8j.js                    0.57 kB
+dist/assets/vapid-loader.B-Hm76bn.js                0.69 kB
+dist/assets/performanceOptimizer.BWj6DYfN.js        0.87 kB
+dist/assets/MapHUDHeader.DlwrKzug.js                0.94 kB
+dist/assets/swControllerGuard.uyqAAqlN.js           1.07 kB
+dist/assets/EventsLayer.CHxh-VOP.js                 1.14 kB
+dist/assets/ControlZonesLayer.BHtlWFTx.js           1.25 kB
+dist/assets/PushDebug.DhJ4IirR.js                   1.27 kB
+dist/assets/PortalsLayer.qIfQ9E_J.js                1.54 kB
+dist/assets/BadgeStackOverlay.jmVfTSe-.js           1.57 kB
+dist/assets/AgentsLayer.CxKHpl6F.js                 1.63 kB
+dist/assets/RadarOverlay.BztZ7EFq.js                1.92 kB
+dist/assets/LegendHUD.BG3FrrrI.js                   2.13 kB
+dist/assets/useAutoInterestSignals.v_GK7C4w.js      2.14 kB
+dist/assets/android-push-test.Bl44uQOZ.js           2.57 kB
+dist/assets/BillingSmokeTest.C7nFy7in.js            2.58 kB
+dist/assets/localCache.C59LjE01.js                  2.77 kB
+dist/assets/testFcm.xnJRn9dY.js                     2.88 kB
+dist/assets/accessibilityEnhancer.DdVEOO08.js       3.00 kB
+dist/assets/native-push-test.D4Rj-Q5Z.js            3.04 kB
+dist/assets/PortalOverlay.B7vm1peS.js               3.06 kB
+dist/assets/DockLeft.DG2TmsDr.js                    3.21 kB
+dist/assets/interestSignals.Cigs7Bhg.js             3.61 kB
+dist/assets/three-vendor.Bf8OZxBP.js                4.23 kB
+dist/assets/router-vendor.Cp7cz96Y.js               4.43 kB
+dist/assets/productionMonitoring.B0FmkHNk.js        4.65 kB
+dist/assets/silentAutoUpdate.mxv2fLq0.js            4.86 kB
+dist/assets/ClaimRewardModal.Y5IIFN2b.js            5.82 kB
+dist/assets/index.YJpnwDcm.js                       6.26 kB
+dist/assets/DevStripeKeysSetup.DhSsQ-W-.js          7.07 kB
+dist/assets/UserPushConsolePage.Cl9FGcgh.js         7.19 kB
+dist/assets/MarkersHealthcheck.CLXQm4kh.js         10.90 kB
+dist/assets/stripe-vendor.BOQ-Bm-A.js              12.02 kB
+dist/assets/ui-vendor.DqpT7nWc.js                  64.37 kB
+dist/assets/supabase-vendor.GLBbnsxY.js           131.18 kB
+dist/assets/react-vendor.En47FymB.js              140.29 kB
+dist/assets/index.es.C3sgR9vu.js                  148.32 kB
+dist/assets/map-vendor.BoewWIJM.js                154.25 kB
+dist/assets/html2canvas.esm.CJ7z3xiY.js           198.20 kB
+dist/assets/animation-vendor.BiSAoDKv.js          450.60 kB
+dist/assets/MapContainer.bxQ8uvAg.js            1,001.31 kB
+dist/assets/index.bmixU7u6.js                   2,088.10 kB
+✓ built in 58.73s
+node_modules/.pnpm/lottie-web@5.13.0/node_modules/lottie-web/build/player/lottie.js (13749:32): Use of eval in "node_modules/.pnpm/lottie-web@5.13.0/node_modules/lottie-web/build/player/lottie.js" is strongly discouraged as it poses security risks and may cause issues with minification.
+warnings when minifying css:
+▲ [WARNING] Unexpected "@keyframes" [css-syntax-error]
+
+    <stdin>:9464:12:
+      9464 │ [dir="rtl"] @keyframes slideInDown {
+           ╵             ~~~~~~~~~~
+
+
+▲ [WARNING] Unexpected "@keyframes" [css-syntax-error]
+
+    <stdin>:9475:12:
+      9475 │ [dir="rtl"] @keyframes slideInUp {
+           ╵             ~~~~~~~~~~
+
+
+▲ [WARNING] Unexpected "@keyframes" [css-syntax-error]
+
+    <stdin>:23148:17:
+      23148 │    */[dir="rtl"] @keyframes slideInDown {
+            ╵                  ~~~~~~~~~~
+
+
+▲ [WARNING] Unexpected "@keyframes" [css-syntax-error]
+
+    <stdin>:23157:15:
+      23157 │   }[dir="rtl"] @keyframes slideInUp {
+            ╵                ~~~~~~~~~~
+
+
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/josephmule/Desktop/M1SSION/m1ssion-full/node_modules/.pnpm/sonner@1.7.4_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/sonner/dist/index.mjs is dynamically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/intel/ai-analyst/AIAnalystPanel.tsx but also statically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/DeviceTokenDebug.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/IOSPermissionManager.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/PushNotificationToggle.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/PushRegistrationTest.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/admin/QRControlPanel.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/auth/StandardLoginForm.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/buzz/BuzzActionButton.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/buzz/BuzzRewardHandler.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/command-center/CommandCenterHome.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/gamification/DailyCheckInButton.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/gamification/RewardBadgeCard.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/home/StartMissionButton.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/intelligence/BuzzInterceptor.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/intelligence/ClueJournal.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/intelligence/CoordinateSelector.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/intelligence/GeoRadarTool.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/map/BuzzMapButtonSecure.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/map/Map3DToggle.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/map/QRMapDisplay.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/marker-rewards/ClaimRewardModal.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/panel/AIContentGenerator.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/panel/MissionConfig.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/panel/MissionConfigSection.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/panel/MissionControlPanel.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/panel/MissionResetSection.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/panel/PushCenter.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/panel/UsersRealtimePanel.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/panel/missions/MissionPrizes.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/panel/missions/MissionUsers.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/payments/AddCardDialog.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/payments/SavedCardPayment.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/profile/EnhancedPersonalityQuiz.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/profile/ProfileInfo.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/push-center/sections/SendTab.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/quiz/FirstLoginQuizManager.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/subscription/StripeInAppCheckout.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/subscription/SubscriptionPlans.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/ui/sonner.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/xp/InviteFriendModal.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/features/norah/BulkIngest.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/features/norah/IntelligenceActivation.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/features/norah/KPIPanel.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/buzz/useBuzzApi.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/buzz/useBuzzHandler.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/use-registration.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/use-toast.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useAndroidPushNotifications.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useBuzzNotificationScheduler.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useBuzzStats.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useIOSPushNotifications.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useIPGeolocation.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useNorahProactiveListener.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useNotificationManager.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/usePrizeData.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useRealTimeNotifications.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useSimpleGeolocation.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useStripeInAppPayment.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useStripePayment.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/map/terrain/enableTerrain.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/AppHome.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/ChoosePlanPage.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/Login.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/M1ssionDebugTest.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/NotificationDebug.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/PushReport.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/PushTestPage.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/Subscriptions.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/admin/MissionPanelPage.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/android-push-test.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/auth/ResetPasswordPage.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/debug/PushDiagnostic.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/debug/PushTest.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/map/MapPointsSection.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/map/NotesSection.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/map/SearchAreasSection.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/map/components/MapContainer.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/map/components/MapController.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/map/hooks/useNewMapPage.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/map/hooks/useSearchAreasLogic.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/native-push-test.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/panel/PushControlPanelPage.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/panel/PushSenderPanel.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/push/AdminPushConsolePage.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/push/UserPushConsolePage.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/utils/paymentErrorHandler.ts, dynamic import will not move module into another chunk.
+
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/utils/pwaBadgeAudit.ts is dynamically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/main.tsx but also statically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/debug/BadgeAuditReport.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useNotifications.ts, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/utils/debugHelpers.ts, dynamic import will not move module into another chunk.
+
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/utils/pwaNativeFunctions.ts is dynamically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/main.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/main.tsx but also statically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/layout/SafeAreaWrapper.tsx, dynamic import will not move module into another chunk.
+
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/lib/stripeFallback.ts is dynamically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/payments/SavedCardPayment.tsx but also statically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/payments/AddCardDialog.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/subscription/StripeInAppCheckout.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/main.tsx, dynamic import will not move module into another chunk.
+
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/intel/norah/engine/contextBuilder.ts is dynamically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/intel/norah/engine/replyGenerator.ts but also statically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/intel/ai-analyst/AIAnalystPanel.tsx, dynamic import will not move module into another chunk.
+
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/BattleLobby.tsx is dynamically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/command-center/home-sections/BattleConsole.tsx but also statically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/routes/WouterRoutes.tsx, dynamic import will not move module into another chunk.
+
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/BattleArena.tsx is dynamically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/battle/BattleArenaOverlay.tsx but also statically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/routes/WouterRoutes.tsx, dynamic import will not move module into another chunk.
+
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/lib/constants/pricingConfig.ts is dynamically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/payment/FakeStripeCheckout.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/hooks/useStripeInAppPayment.ts but also statically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/components/subscription/SubscriptionPlans.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/subscriptions/BlackPlanPage.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/subscriptions/GoldPlanPage.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/subscriptions/SilverPlanPage.tsx, /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/subscriptions/TitaniumPlanPage.tsx, dynamic import will not move module into another chunk.
+
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/pages/push/AdminPushConsolePage.tsx is dynamically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/routes/WouterRoutes.tsx but also statically imported by /Users/josephmule/Desktop/M1SSION/m1ssion-full/src/routes/WouterRoutes.tsx, dynamic import will not move module into another chunk.
+
+
+(!) Some chunks are larger than 2000 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.

@@ -1,0 +1,62 @@
+// FILE CREATO O MODIFICATO — BY JOSEPH MULE
+import React from 'react';
+import BottomNavigation from '@/components/layout/BottomNavigation';
+
+interface MapPageLayoutProps {
+  children: React.ReactNode;
+}
+
+const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
+  return (
+    <div 
+      className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
+      style={{ 
+        height: '100dvh',
+        overflow: 'hidden',
+        position: 'relative'
+      }}
+    >
+      <main
+        id="map-scroll-container"
+        style={{
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 60px)', // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px) + 40px)', // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+          height: '100dvh',
+          overflowY: 'auto',
+          position: 'relative',
+          zIndex: 0
+        }}
+      >
+        <div className="container mx-auto px-4 pt-4 pb-2 max-w-6xl">
+          {/* 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
+          {/* ✅ Compatibile Capacitor iOS */}
+          
+          {children}
+        </div>
+      </main>
+      
+      {/* Bottom Navigation - Uniform positioning like Home */}
+      <div 
+        id="mission-bottom-nav-container"
+        style={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          width: '100vw',
+          zIndex: 10000,
+          isolation: 'isolate',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+          display: 'block',
+          visibility: 'visible',
+          opacity: 1
+        } as React.CSSProperties}
+      >
+        <BottomNavigation />
+      </div>
+    </div>
+  );
+};
+
+export default MapPageLayout;

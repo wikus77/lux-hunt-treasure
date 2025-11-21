@@ -1,0 +1,80 @@
+[2025-11-02T03:23:11.349Z] $ bash -lc corepack enable || true
+[2025-11-02T03:23:11.477Z] $ bash -lc corepack prepare pnpm@9.12.3 --activate || true
+Preparing pnpm@9.12.3 for immediate activation...
+[2025-11-02T03:23:11.617Z] $ bash -lc pnpm -v || true
+9.12.3
+[2025-11-02T03:23:12.119Z] $ bash -lc pnpm install --frozen-lockfile
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +914
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   ╭───────────────────────────────────────────────────────────────────╮
+   │                                                                   │
+   │                Update available! 9.12.3 → 10.20.0.                │
+   │   Changelog: https://github.com/pnpm/pnpm/releases/tag/v10.20.0   │
+   │         Run "corepack install -g pnpm@10.20.0" to update.         │
+   │                                                                   │
+   │         Follow @pnpmjs for updates: https://x.com/pnpmjs          │
+   │                                                                   │
+   ╰───────────────────────────────────────────────────────────────────╯
+
+Progress: resolved 914, reused 310, downloaded 0, added 0
+Progress: resolved 914, reused 544, downloaded 0, added 0
+Progress: resolved 914, reused 755, downloaded 0, added 0
+Progress: resolved 914, reused 913, downloaded 0, added 87
+Progress: resolved 914, reused 913, downloaded 0, added 217
+Progress: resolved 914, reused 913, downloaded 0, added 459
+Progress: resolved 914, reused 913, downloaded 0, added 604
+Progress: resolved 914, reused 913, downloaded 1, added 761
+Progress: resolved 914, reused 913, downloaded 1, added 903
+Progress: resolved 914, reused 913, downloaded 1, added 911
+Progress: resolved 914, reused 913, downloaded 1, added 914, done
+
+dependencies:
++ @hookform/resolvers 3.10.0
++ @playwright/test 1.55.1
++ @radix-ui/react-accordion 1.2.12
++ @radix-ui/react-alert-dialog 1.1.15
++ @radix-ui/react-aspect-ratio 1.1.7
++ @radix-ui/react-avatar 1.1.10
++ @radix-ui/react-checkbox 1.3.3
++ @radix-ui/react-collapsible 1.1.12
++ @radix-ui/react-context-menu 2.2.16
++ @radix-ui/react-dialog 1.1.15
++ @radix-ui/react-dropdown-menu 2.1.16
++ @radix-ui/react-hover-card 1.1.15
++ @radix-ui/react-label 2.1.7
++ @radix-ui/react-menubar 1.1.16
++ @radix-ui/react-navigation-menu 1.2.14
++ @radix-ui/react-popover 1.1.15
++ @radix-ui/react-progress 1.1.7
++ @radix-ui/react-radio-group 1.3.8
++ @radix-ui/react-scroll-area 1.2.10
++ @radix-ui/react-select 2.2.6
++ @radix-ui/react-separator 1.1.7
++ @radix-ui/react-slider 1.3.6
++ @radix-ui/react-slot 1.2.3
++ @radix-ui/react-switch 1.2.6
++ @radix-ui/react-tabs 1.1.13
++ @radix-ui/react-toast 1.2.15
++ @radix-ui/react-toggle 1.1.10
++ @radix-ui/react-toggle-group 1.1.11
++ @radix-ui/react-tooltip 1.2.8
++ @react-google-maps/api 2.20.7
++ @react-three/drei 9.122.0
++ @react-three/fiber 8.18.0
++ @sentry/react 9.46.0
++ @stripe/react-stripe-js 3.10.0
++ @stripe/stripe-js 7.9.0
++ @supabase/supabase-js 2.58.0
++ @tanstack/react-query 5.90.2
++ @types/canvas-confetti 1.9.0
++ @types/dompurify 3.2.0
++ @types/leaflet 1.9.20
++ @types/maplibre-gl 1.14.0
++ @types/react-helmet 6.1.11
++ @types/react-leaflet 3.0.0
++ @types/three 0.154.0
++ canvas-confetti 1.9.3
++ class-variance-authority 0.7.1

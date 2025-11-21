@@ -1,0 +1,10 @@
+[2025-11-02T03:21:16.651Z] $ bash -lc corepack enable || true
+[2025-11-02T03:21:17.860Z] $ bash -lc corepack prepare pnpm@9.12.3 --activate || true
+Preparing pnpm@9.12.3 for immediate activation...
+[2025-11-02T03:21:17.993Z] $ bash -lc pnpm -v || true
+9.12.3
+[2025-11-02T03:21:18.755Z] $ bash -lc pnpm install --frozen-lockfile --use-lockfile=true
+ ERROR  Unknown option: 'use-lockfile'
+Did you mean 'fix-lockfile'? Use "--config.unknown=value" to force an unknown option.
+For help, run: pnpm help install
+[2025-11-02T03:21:19.251Z] EXIT 1

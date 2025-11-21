@@ -1,0 +1,26 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from './types';
+
+const ENV: any = (import.meta as any)?.env ?? (globalThis as any)?.process?.env ?? {};
+
+function requireEnv(name: string): string {
+  const v = (ENV[name] ?? '').toString().trim();
+  if (!v) throw new Error(`[Supabase] Missing env: ${name}`);
+  return v;
+}
+
+const SUPABASE_URL = requireEnv('VITE_SUPABASE_URL');
+const SUPABASE_ANON_KEY = requireEnv('VITE_SUPABASE_ANON_KEY');
+
+let _client: SupabaseClient<Database> | null = null;
+
+export default (function getClient() {
+  if (!_client) {
+    _client = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+      db: { schema: 'public' },
+    });
+  }
+  return _client;
+})();

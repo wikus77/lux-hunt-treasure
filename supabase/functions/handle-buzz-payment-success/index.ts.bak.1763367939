@@ -1,0 +1,148 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+type Json = Record<string, unknown>;
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+const LEVELS = [
+  { radius: 500, m1u: 50 },
+  { radius: 450, m1u: 60 },
+  { radius: 410, m1u: 70 },
+  { radius: 365, m1u: 80 },
+  { radius: 325, m1u: 90 },
+  { radius: 295, m1u: 100 },
+  { radius: 275, m1u: 110 },
+  { radius: 255, m1u: 120 },
+  { radius: 235, m1u: 130 },
+  { radius: 220, m1u: 140 },
+  { radius: 205, m1u: 150 },
+  { radius: 190, m1u: 160 },
+  { radius: 175, m1u: 170 },
+  { radius: 165, m1u: 180 },
+  { radius: 155, m1u: 190 },
+  { radius: 145, m1u: 200 },
+  { radius: 135, m1u: 210 },
+  { radius: 125, m1u: 220 },
+  { radius: 115, m1u: 230 },
+  { radius: 105, m1u: 240 },
+  { radius:  95, m1u: 250 },
+  { radius:  85, m1u: 260 },
+  { radius:  75, m1u: 270 },
+  { radius:  65, m1u: 280 },
+  { radius:  55, m1u: 290 },
+  { radius:  45, m1u: 300 },
+  { radius:  35, m1u: 310 },
+  { radius:  25, m1u: 320 }
+];
+
+function nextPlan(levelCount: number) {
+  const idx = Math.min(levelCount, LEVELS.length - 1);
+  return LEVELS[idx];
+}
+
+serve(async (req) => {
+  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
+    global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+  });
+
+  try {
+    const body = (await req.json()) as {
+      paymentIntentId?: string;
+      isBuzzMap?: boolean;
+      coordinates?: { lat: number; lng: number };
+      amount?: number;        // cents EUR
+      amount_m1u?: number;    // optional M1U explicit
+      dry_run?: boolean;
+    };
+
+    if (!body?.isBuzzMap) {
+      return new Response(JSON.stringify({ success: false, error: "isBuzzMap=false" }), { status: 400 });
+    }
+
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+    if (!user?.id) {
+      return new Response(JSON.stringify({ success: false, error: "unauthorized" }), { status: 401 });
+    }
+
+    // DEDUPE by payment_intent_id (idempotent)
+    if (body.paymentIntentId) {
+      const { data: existing } = await supabase
+        .from("buzz_map_actions")
+        .select("payment_intent_id")
+        .eq("payment_intent_id", body.paymentIntentId)
+        .maybeSingle();
+      if (existing) {
+        return new Response(JSON.stringify({
+          success: true,
+          message: "Already processed",
+          payment_intent_id: body.paymentIntentId
+        }), { headers: { "Content-Type": "application/json" }});
+      }
+    }
+
+    // Count previous areas (level = count + 1)
+    const { count: prevCount } = await supabase
+      .from("user_map_areas")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("source", "buzz_map");
+    const levelCount = prevCount ?? 0;
+    const nextLevel = levelCount + 1;
+
+    const plan = nextPlan(levelCount);
+    const radiusKm = plan.radius;
+    const costM1U = Number.isFinite(body.amount_m1u) ? Number(body.amount_m1u) : plan.m1u;
+    const priceEur = typeof body.amount === "number" ? Math.round(body.amount) / 100 : null;
+
+    if (body.dry_run) {
+      return new Response(JSON.stringify({
+        success: true,
+        message: "Buzz Map DRY-RUN",
+        next_level: nextLevel,
+        radius_km: radiusKm,
+        cost_m1u: costM1U,
+        price_eur: priceEur
+      }), { headers: { "Content-Type": "application/json" }});
+    }
+
+    // Insert new area
+    const { data: area, error: areaErr } = await supabase
+      .from("user_map_areas")
+      .insert({
+        user_id: user.id,
+        source: "buzz_map",
+        radius_km: radiusKm,
+        level: nextLevel
+      } as Json)
+      .select("id")
+      .single();
+    if (areaErr) throw areaErr;
+
+    // Log action (not blocking on error)
+    await supabase.from("buzz_map_actions").insert({
+      user_id: user.id,
+      payment_intent_id: body.paymentIntentId ?? null,
+      radius_generated: radiusKm,
+      cost_eur: priceEur,
+      cost_m1u: costM1U,
+      coordinates: body.coordinates ? { lat: body.coordinates.lat, lng: body.coordinates.lng } : null
+    } as Json);
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: "Buzz Map area created",
+      payment_intent_id: body.paymentIntentId ?? null,
+      area_id: area?.id,
+      level: nextLevel,
+      radius_km: radiusKm,
+      cost_m1u: costM1U,
+      price_eur: priceEur
+    }), { headers: { "Content-Type": "application/json" }});
+  } catch (e) {
+    return new Response(JSON.stringify({ success: false, error: String(e?.message ?? e) }), { status: 500 });
+  }
+});

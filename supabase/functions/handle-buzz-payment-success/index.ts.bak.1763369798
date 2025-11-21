@@ -1,0 +1,137 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+type J = Record<string, unknown>;
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+const PLAN = [
+  { radius: 500, m1u:  50 },
+  { radius: 450, m1u:  60 },
+  { radius: 410, m1u:  70 },
+  { radius: 365, m1u:  80 },
+  { radius: 325, m1u:  90 },
+  { radius: 295, m1u: 100 },
+  { radius: 275, m1u: 110 },
+  { radius: 255, m1u: 120 },
+  { radius: 235, m1u: 130 },
+  { radius: 220, m1u: 140 },
+  { radius: 205, m1u: 150 },
+  { radius: 190, m1u: 160 },
+  { radius: 175, m1u: 170 },
+  { radius: 165, m1u: 180 },
+  { radius: 155, m1u: 190 },
+  { radius: 145, m1u: 200 },
+  { radius: 135, m1u: 210 },
+  { radius: 125, m1u: 220 },
+  { radius: 115, m1u: 230 },
+  { radius: 105, m1u: 240 },
+  { radius:  95, m1u: 250 },
+  { radius:  85, m1u: 260 },
+  { radius:  75, m1u: 270 },
+  { radius:  65, m1u: 280 },
+  { radius:  55, m1u: 290 },
+  { radius:  45, m1u: 300 },
+  { radius:  35, m1u: 310 },
+  { radius:  25, m1u: 320 },
+];
+
+function pickByIndex(n: number) {
+  const i = Math.min(n, PLAN.length - 1);
+  return PLAN[i];
+}
+
+serve(async (req) => {
+  const db = createClient(SUPABASE_URL, SERVICE_ROLE, {
+    global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+  });
+
+  try {
+    const b = (await req.json()) as {
+      paymentIntentId?: string;
+      isBuzzMap?: boolean;
+      coordinates?: { lat: number; lng: number };
+      amount?: number;       // cents EUR
+      amount_m1u?: number;   // optional override M1U
+      dry_run?: boolean;
+    };
+
+    if (!b?.isBuzzMap) {
+      return new Response(JSON.stringify({ success: false, error: "isBuzzMap=false" }), { status: 400 });
+    }
+
+    const { data: au } = await db.auth.getUser();
+    const uid = au?.user?.id;
+    if (!uid) return new Response(JSON.stringify({ success: false, error: "unauthorized" }), { status: 401 });
+
+    if (b.paymentIntentId) {
+      const { data: ex } = await db
+        .from("buzz_map_actions")
+        .select("payment_intent_id")
+        .eq("payment_intent_id", b.paymentIntentId)
+        .maybeSingle();
+      if (ex) {
+        return new Response(JSON.stringify({
+          success: true, message: "Already processed", payment_intent_id: b.paymentIntentId
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+    }
+
+    const { count } = await db
+      .from("user_map_areas")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", uid)
+      .eq("source", "buzz_map");
+
+    const prev = count ?? 0;
+    const nextLevel = prev + 1;
+    const plan = pickByIndex(prev);
+
+    const radiusKm = plan.radius;
+    const costM1U  = Number.isFinite(b.amount_m1u) ? Number(b.amount_m1u) : plan.m1u;
+    const priceEur = typeof b.amount === "number" ? Math.round(b.amount) / 100 : null;
+
+    if (b.dry_run) {
+      return new Response(JSON.stringify({
+        success: true,
+        message: "Buzz Map DRY-RUN",
+        prev_count: prev,
+        next_level: nextLevel,
+        radius_km: radiusKm,
+        cost_m1u: costM1U,
+        price_eur: priceEur
+      }), { headers: { "Content-Type": "application/json" } });
+    }
+
+    const { data: area, error: areaErr } = await db
+      .from("user_map_areas")
+      .insert({ user_id: uid, source: "buzz_map", radius_km: radiusKm, level: nextLevel } as J)
+      .select("id")
+      .single();
+    if (areaErr) throw areaErr;
+
+    await db.from("buzz_map_actions").insert({
+      user_id: uid,
+      payment_intent_id: b.paymentIntentId ?? null,
+      radius_generated: radiusKm,
+      cost_eur: priceEur,
+      cost_m1u: costM1U,
+      coordinates: b.coordinates ? { lat: b.coordinates.lat, lng: b.coordinates.lng } : null
+    } as J);
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: "Buzz Map area created",
+      payment_intent_id: b.paymentIntentId ?? null,
+      area_id: area?.id,
+      level: nextLevel,
+      radius_km: radiusKm,
+      cost_m1u: costM1U,
+      price_eur: priceEur
+    }), { headers: { "Content-Type": "application/json" } });
+  } catch (e) {
+    return new Response(JSON.stringify({ success: false, error: String((e as Error)?.message ?? e) }), { status: 500 });
+  }
+});

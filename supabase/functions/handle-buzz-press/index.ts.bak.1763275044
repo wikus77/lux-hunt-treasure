@@ -1,0 +1,300 @@
+// === M1SSION™ CORS INLINE HOTFIX (no business logic changes) ===
+const __BASE_ALLOWED_HEADERS = ['authorization','apikey','content-type','x-client-info','x-m1-debug'];
+function __mergeAllow(req: Request) {
+  const reqH = (req.headers.get('Access-Control-Request-Headers') ?? '')
+    .split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+  return Array.from(new Set([...__BASE_ALLOWED_HEADERS, ...reqH])).join(', ');
+}
+function __corsHeaders(req: Request) {
+  const origin = req.headers.get('Origin') ?? '*';
+  return new Headers({
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Access-Control-Allow-Headers': __mergeAllow(req),
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
+  });
+}
+function __withCors(handler: (req: Request)=>Promise<Response>|Response) {
+  return async (req: Request) => {
+    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: __corsHeaders(req) });
+    const res = await handler(req);
+    const merged = new Headers(res.headers);
+    __corsHeaders(req).forEach((v, k) => merged.set(k, v));
+    return new Response(res.body, { status: res.status, headers: merged });
+  };
+}
+// === END CORS HOTFIX ===
+// === M1SSION™ CORS INLINE HOTFIX (no business logic changes) ===
+const __BASE_ALLOWED_HEADERS = ['authorization','apikey','content-type','x-client-info','x-m1-debug'];
+function __mergeAllow(req: Request) {
+  const reqH = (req.headers.get('Access-Control-Request-Headers') ?? '')
+    .split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+  return Array.from(new Set([...__BASE_ALLOWED_HEADERS, ...reqH])).join(', ');
+}
+function __corsHeaders(req: Request) {
+  const origin = req.headers.get('Origin') ?? '*';
+  return new Headers({
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Access-Control-Allow-Headers': __mergeAllow(req),
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
+  });
+}
+function __withCors(handler: (req: Request)=>Promise<Response>|Response) {
+  return async (req: Request) => {
+    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: __corsHeaders(req) });
+    const res = await handler(req);
+    const merged = new Headers(res.headers);
+    __corsHeaders(req).forEach((v, k) => merged.set(k, v));
+    return new Response(res.body, { status: res.status, headers: merged });
+  };
+}
+// === END CORS HOTFIX ===
+// === M1SSION™ CORS INLINE HOTFIX (no business logic changes) ===
+const __BASE_ALLOWED_HEADERS = ['authorization','apikey','content-type','x-client-info','x-m1-debug'];
+function __mergeAllow(req: Request) {
+  const reqH = (req.headers.get('Access-Control-Request-Headers') ?? '')
+    .split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+  return Array.from(new Set([...__BASE_ALLOWED_HEADERS, ...reqH])).join(', ');
+}
+function __corsHeaders(req: Request) {
+  const origin = req.headers.get('Origin') ?? '*';
+  return new Headers({
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Access-Control-Allow-Headers': __mergeAllow(req),
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
+  });
+}
+function __withCors(handler: (req: Request)=>Promise<Response>|Response) {
+  return async (req: Request) => {
+    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: __corsHeaders(req) });
+    const res = await handler(req);
+    const merged = new Headers(res.headers);
+    __corsHeaders(req).forEach((v, k) => merged.set(k, v));
+    return new Response(res.body, { status: res.status, headers: merged });
+  };
+}
+// === END CORS HOTFIX ===
+// © 2025 M1SSION™ – Handle BUZZ Press Edge Function
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
+import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts'
+
+serve(__withCors(async (req) => {
+  // --- CORS preflight guard ---
+  if (req.method === "OPTIONS") return handleOptions(req);
+  // --- CORS preflight guard ---
+  if (req.method === "OPTIONS") return handleOptions(req);
+  if (req.method === 'OPTIONS') return preflight(req);
+  if (req.method === 'OPTIONS') return preflight(req);
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: __corsHeaders(req) }));
+  }
+
+  try {
+    console.log('🎯 [HANDLE-BUZZ-PRESS] Function started');
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get user from JWT
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ code:401, message:'Missing authorization header' }), { status:401, headers: __corsHeaders(req) as HeadersInit });
+    }
+
+    const jwt = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    
+    if (userError || !user) {
+      console.error('❌ [HANDLE-BUZZ-PRESS] Auth error:', userError);
+      return new Response(JSON.stringify({ code:401, message:'Unauthorized' }), { status:401, headers: __corsHeaders(req) as HeadersInit });
+    }
+
+    console.log('👤 [HANDLE-BUZZ-PRESS] User authenticated:', user.id);
+
+    // Parse request body to check if this is BUZZ MAP
+    const body = await req.json().catch(() => ({}));
+    const { generateMap, coordinates, sessionId } = body;
+    
+    // Handle BUZZ MAP flow
+    if (generateMap && coordinates) {
+      console.log('🗺️ [HANDLE-BUZZ-PRESS] Processing BUZZ MAP generation');
+      
+      // Count existing buzz map areas to determine level
+      const { count, error: countError } = await supabase
+        .from('user_map_areas')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('source', 'buzz_map');
+        
+      if (countError) {
+        console.error('❌ [HANDLE-BUZZ-PRESS] Error counting map areas:', countError);
+        throw new Error('Failed to count existing areas');
+      }
+      
+      const currentCount = count ?? 0;
+      const level = Math.min(currentCount + 1, 60);
+      const buzzLevel = getBuzzLevelFromCount(currentCount);
+      
+      console.log('🗺️ [HANDLE-BUZZ-PRESS] Creating BUZZ MAP area:', {
+        level,
+        radiusKm: buzzLevel.radiusKm,
+        priceCents: buzzLevel.priceCents,
+        coordinates
+      });
+      
+      // Create the map area
+      const { data: mapArea, error: mapError } = await supabase
+        .from('user_map_areas')
+        .insert({
+          user_id: user.id,
+          lat: coordinates.lat,
+          lng: coordinates.lng,
+          center_lat: coordinates.lat,
+          center_lng: coordinates.lng,
+          radius_km: buzzLevel.radiusKm,
+          source: 'buzz_map',
+          level: level,
+          price_eur: buzzLevel.priceCents / 100,
+          week: Math.ceil(Date.now() / (7 * 24 * 60 * 60 * 1000))
+        })
+        .select()
+        .single();
+        
+      if (mapError) {
+        console.error('❌ [HANDLE-BUZZ-PRESS] Error creating map area:', mapError);
+        throw new Error('Failed to create map area');
+      }
+      
+      // Log the action
+      const { error: actionError } = await supabase
+        .from('buzz_map_actions')
+        .insert({
+          user_id: user.id,
+          clue_count: level,
+          cost_eur: buzzLevel.priceCents / 100,
+          radius_generated: buzzLevel.radiusKm
+        });
+        
+      if (actionError) {
+        console.error('❌ [HANDLE-BUZZ-PRESS] Error logging action:', actionError);
+      }
+      
+      const response = {
+        success: true,
+        level: level,
+        radius_km: buzzLevel.radiusKm,
+        price_eur: buzzLevel.priceCents / 100,
+        coordinates: coordinates,
+        area_id: mapArea.id,
+        message: 'BUZZ MAP area created successfully'
+      };
+      
+      console.log('🎉 [HANDLE-BUZZ-PRESS] BUZZ MAP completed:', response);
+      
+      return new Response(
+        JSON.stringify(response),
+        { 
+          headers: __corsHeaders(req),
+          status: 200
+        }
+      );
+    }
+
+    // Generate random clue text (regular BUZZ logic)
+    const clueTexts = [
+      "Cerca dove l'innovazione italiana splende più forte...",
+      "L'indizio si nasconde tra i corridoi del progresso...", 
+      "Segui le tracce della tecnologia che ha cambiato il mondo...",
+      "Nel cuore della ricerca italiana troverai la chiave...",
+      "Dove la scienza incontra l'arte, là troverai la risposta...",
+      "L'indizio danza tra le onde dell'innovazione...",
+      "Cerca nei luoghi dove il futuro prende forma..."
+    ];
+    
+    const clueText = clueTexts[Math.floor(Math.random() * clueTexts.length)];
+
+    // Log the BUZZ action
+    const { error: logError } = await supabase
+      .from('buzz_logs')
+      .insert({
+        user_id: user.id,
+        action: 'buzz_press',
+        metadata: {
+          clue_text: clueText,
+          source: 'handle_buzz_press',
+          timestamp: new Date().toISOString()
+        }
+      });
+
+    if (logError) {
+      console.error('❌ [HANDLE-BUZZ-PRESS] Log error:', logError);
+    } else {
+      console.log('✅ [HANDLE-BUZZ-PRESS] BUZZ logged successfully');
+    }
+
+    // Create notification
+    const { error: notificationError } = await supabase
+      .from('user_notifications')
+      .insert({
+        user_id: user.id,
+        type: 'buzz',
+        title: '🎯 Nuovo Indizio BUZZ!',
+        message: clueText,
+        metadata: {
+          clue_text: clueText,
+          source: 'buzz_press'
+        }
+      });
+
+    if (notificationError) {
+      console.error('❌ [HANDLE-BUZZ-PRESS] Notification error:', notificationError);
+    } else {
+      console.log('✅ [HANDLE-BUZZ-PRESS] Notification created successfully');
+    }
+
+    const response = {
+      success: true,
+      clue_text: clueText,
+      message: 'BUZZ processed successfully'
+    };
+
+    console.log('🎉 [HANDLE-BUZZ-PRESS] Function completed successfully:', response);
+
+    return new Response(
+      JSON.stringify(response),
+      { 
+        headers: __corsHeaders(req),
+        status: 200
+      }
+    );
+
+  } catch (error) {
+    console.error('❌ [HANDLE-BUZZ-PRESS] Function error:', error);
+    
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }),
+      { 
+        status: 200,
+        headers: __corsHeaders(req) 
+      }
+    );
+  }
+});
+// redeploy 2025-11-16T06:04:31Z
+// redeploy 2025-11-16T06:16:07Z
+// redeploy 2025-11-16T06:18:18Z
+// redeploy 2025-11-16T06:23:24Z
+// redeploy 2025-11-16T06:27:04Z
+// redeploy 2025-11-16T06:34:50Z

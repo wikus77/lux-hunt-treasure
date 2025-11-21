@@ -1,0 +1,37 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from './types';
+
+const env: any = (import.meta as any).env ?? {};
+const RAW_URL = String(env.VITE_SUPABASE_URL || process.env?.VITE_SUPABASE_URL || '').trim();
+const RAW_KEY = String(env.VITE_SUPABASE_ANON_KEY || process.env?.VITE_SUPABASE_ANON_KEY || '').trim();
+
+// In DEV, se l'URL non è quello giusto, forziamo quello corretto per evitare "progetto vecchio"
+const CORRECT_HOST = 'vkjrqirvdvjbemsfzxof.supabase.co';
+let SUPABASE_URL = RAW_URL || `https://${CORRECT_HOST}`;
+if (import.meta.env.DEV && SUPABASE_URL && !SUPABASE_URL.includes(CORRECT_HOST)) {
+  console.warn('⚠️ Overriding Supabase URL for DEV. Was:', SUPABASE_URL);
+  SUPABASE_URL = `https://${CORRECT_HOST}`;
+}
+
+const SUPABASE_ANON_KEY = RAW_KEY;
+if (!SUPABASE_ANON_KEY) {
+  console.error('❌ Missing VITE_SUPABASE_ANON_KEY. Check .env.local');
+}
+
+const _client: SupabaseClient<Database> = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+});
+
+// Debug a runtime: stampa project id
+try {
+  if (typeof window !== 'undefined') {
+    const host = new URL(SUPABASE_URL).hostname;
+    (window as any).__DBG_SUPA__ = { url: SUPABASE_URL, project: host.split('.')[0] };
+    console.log('🔗 Supabase:', (window as any).__DBG_SUPA__);
+  }
+} catch {}
+
+export const supabase = _client;
+export const client = _client;
+export default _client;

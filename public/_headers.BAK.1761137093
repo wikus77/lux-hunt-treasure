@@ -1,0 +1,30 @@
+# © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+# Cloudflare Pages Headers - Security Hardening
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Cache-Control: public, max-age=0, must-revalidate
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://js.stripe.com https://www.gstatic.com https://www.googletagmanager.com 'wasm-unsafe-eval' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://fcm.googleapis.com https://firebaseinstallations.googleapis.com https://www.gstatic.com https://tile.openstreetmap.org https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; frame-src https://js.stripe.com https://hooks.stripe.com; frame-ancestors 'self'; worker-src 'self' blob:; child-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: data:; upgrade-insecure-requests;
+
+/sw.js
+  Cache-Control: no-store
+  Service-Worker-Allowed: /
+
+/vapid-public.txt
+  Cache-Control: no-store
+
+/manifest.webmanifest
+  Cache-Control: no-store
+
+/BUILD_ID.txt
+  Cache-Control: no-store
+
+<<<<<<< Updated upstream
+/offline.html
+=======
+/vapid-public.txt
+  Content-Type: text/plain; charset=utf-8
+>>>>>>> Stashed changes
+  Cache-Control: no-store

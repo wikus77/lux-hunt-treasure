@@ -1,0 +1,19 @@
+[2025-11-02T03:14:26.944Z] $ bash -lc corepack enable || true
+[2025-11-02T03:14:27.875Z] $ bash -lc corepack prepare pnpm@9.12.3 --activate || true
+Preparing pnpm@9.12.3 for immediate activation...
+[2025-11-02T03:14:28.042Z] $ bash -lc pnpm -v || true
+9.12.3
+[2025-11-02T03:14:29.079Z] $ bash -lc pnpm install --frozen-lockfile
+ WARN  A pnpm-lock.yaml file exists. The current configuration prohibits to read or write a lockfile
+ ERROR  Headless installation requires a pnpm-lock.yaml file
+
+pnpm: Headless installation requires a pnpm-lock.yaml file
+    at _install (/Users/josephmule/.cache/node/corepack/v1/pnpm/9.12.3/dist/pnpm.cjs:196916:21)
+    at async mutateModules (/Users/josephmule/.cache/node/corepack/v1/pnpm/9.12.3/dist/pnpm.cjs:196783:23)
+    at async install (/Users/josephmule/.cache/node/corepack/v1/pnpm/9.12.3/dist/pnpm.cjs:196711:45)
+    at async installDeps (/Users/josephmule/.cache/node/corepack/v1/pnpm/9.12.3/dist/pnpm.cjs:198707:31)
+    at async /Users/josephmule/.cache/node/corepack/v1/pnpm/9.12.3/dist/pnpm.cjs:234722:21
+    at async main (/Users/josephmule/.cache/node/corepack/v1/pnpm/9.12.3/dist/pnpm.cjs:234681:34)
+    at async runPnpm (/Users/josephmule/.cache/node/corepack/v1/pnpm/9.12.3/dist/pnpm.cjs:234953:5)
+    at async /Users/josephmule/.cache/node/corepack/v1/pnpm/9.12.3/dist/pnpm.cjs:234945:7
+[2025-11-02T03:14:29.986Z] EXIT 1
