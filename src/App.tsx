@@ -90,13 +90,9 @@ function App() {
 
   
   return (
-    <div className="app-shell bg-obsidian">
-      {/* Aurora overlay + grain */}
-      <div className="aurora-overlay" aria-hidden="true" />
-      <div className="grain-layer" aria-hidden="true" />
-      <div className="content-above-aurora">
-        <PushFrozenNotice />
-        <div className="ios-safe-top"></div>
+    <div className="app-shell">
+      <PushFrozenNotice />
+      <div className="ios-safe-top"></div>
       <ErrorBoundary fallback={
         <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
           <div className="glass-card p-6 max-w-md mx-auto text-center">
@@ -155,9 +151,8 @@ function App() {
       </ProductionSafetyWrapper>
       </ErrorBoundary>
       
-        {/* Service Worker Update Banner - outside router/auth context */}
-        <UpdateBanner />
-      </div>
+      {/* Service Worker Update Banner - outside router/auth context */}
+      <UpdateBanner />
     </div>
   );
 }
