@@ -42,9 +42,9 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     updateDailyBuzzCounter
   } = useBuzzCounter(user?.id);
   
-  // 🔥 FIX: Always show actual M1U cost (payment logic handles free buzz separately)
-  const currentCostM1U = getCurrentBuzzCostM1U();
-  const currentPriceDisplay = getCurrentBuzzDisplayCostM1U();
+  // 🔥 FIX: Show "GRATIS" if free buzz available, otherwise show M1U cost
+  const currentCostM1U = hasFreeBuzz ? 0 : getCurrentBuzzCostM1U();
+  const currentPriceDisplay = hasFreeBuzz ? 'GRATIS' : getCurrentBuzzDisplayCostM1U();
   
   // 🔥 FIX: Pass actual M1U cost to useBuzzHandler to avoid price check blocking
   const { buzzing, showShockwave, handleBuzz } = useBuzzHandler({
@@ -185,6 +185,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       costM1U,
       currentBalance,
       userId: user.id,
+      hasFreeBuzz,
       timestamp: new Date().toISOString()
     });
 
@@ -199,7 +200,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     }
 
     try {
-      console.log('💳 M1SSION™ M1U BUZZ: Calling buzz_spend_m1u RPC...', { costM1U });
+      console.log('💳 M1SSION™ M1U BUZZ: Calling buzz_spend_m1u RPC...', { costM1U, currentBalance });
       
       // Call RPC to spend M1U
       const { data: spendResult, error: spendError } = await (supabase as any).rpc('buzz_spend_m1u', {

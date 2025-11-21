@@ -40,6 +40,9 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
   const { vibrate, triggerHaptic } = usePWAHardwareStub();
   const { checkAbuseAndLog } = useAbuseProtection();
   const { scheduleBuzzAvailableNotification } = useBuzzNotificationScheduler();
+  
+  // 🔥 FIX: useBuzzApi MUST be called at top level (React Hooks Rule)
+  const { callBuzzApi } = useBuzzApi();
 
   const handleBuzz = async () => {
     console.log('🚀 BUZZ PRESSED - Start handleBuzz - RESET COMPLETO 17/07/2025', { 
@@ -96,7 +99,6 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
 
       // ✅ CHIAMATA API BUZZ DOPO PAGAMENTO VERIFICATO
       console.log('🚨 CALLING BUZZ API AFTER PAYMENT...');
-      const { callBuzzApi } = useBuzzApi();
       
       const buzzResult = await callBuzzApi({
         userId: user.id,
@@ -168,10 +170,16 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         return;
       }
       
-      // Log the buzz action
+      // Log the buzz action with M1U cost
+      console.log('📊 Logging buzz action to database...', { 
+        userId: user.id, 
+        costM1U: currentPrice, 
+        clueCount: 1 
+      });
+      
       await supabase.from('buzz_map_actions').insert({
         user_id: user.id,
-        cost_eur: currentPrice,
+        cost_m1u: currentPrice, // 🔥 FIX: Use cost_m1u instead of cost_eur
         clue_count: 1,
         radius_generated: 0 // Regular BUZZ has no radius
       });
