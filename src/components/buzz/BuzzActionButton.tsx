@@ -213,45 +213,32 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     }
 
     try {
-      console.log('💳 M1SSION™ M1U BUZZ: Calling buzz_spend_m1u RPC...', { costM1U, currentBalance });
+      console.log('💳 M1SSION™ M1U BUZZ: Deducting credits directly from profiles...', { costM1U, currentBalance });
       
-      // Call RPC to spend M1U
-      const { data: spendResult, error: spendError } = await (supabase as any).rpc('buzz_spend_m1u', {
-        p_cost_m1u: costM1U
-      });
+      // OLD SCHEMA: Deduct credits directly from profiles table
+      const newBalance = currentBalance - costM1U;
+      
+      // @ts-ignore - Old schema uses 'credits' instead of 'm1_units'
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ credits: newBalance } as any)
+        .eq('id', user.id);
 
-      console.log('💳 M1SSION™ M1U BUZZ: RPC response', { spendResult, spendError });
-
-      if (spendError) {
-        console.error('❌ M1SSION™ M1U BUZZ: RPC error', spendError);
+      if (updateError) {
+        console.error('❌ M1SSION™ M1U BUZZ: Update error', updateError);
         toast.error('Errore nel processare il pagamento M1U');
         return;
       }
 
-      if (!(spendResult as any)?.success) {
-        const errorType = (spendResult as any)?.error || 'unknown';
-        console.error('❌ M1SSION™ M1U BUZZ: Payment failed', { 
-          error: errorType,
-          fullResult: spendResult 
-        });
-        
-        if (errorType === 'insufficient_m1u') {
-          showInsufficientM1UToast(costM1U, (spendResult as any).current_balance || 0);
-        } else {
-          toast.error(`Errore: ${errorType}`);
-        }
-        return;
-      }
-
-      // M1U spent successfully
-      console.log('✅ M1SSION™ M1U BUZZ: M1U debited successfully!', {
-        spent: (spendResult as any).spent,
-        oldBalance: (spendResult as any).old_balance,
-        newBalance: (spendResult as any).new_balance,
-        timestamp: (spendResult as any).timestamp
+      // Log the transaction for tracking
+      console.log('✅ M1SSION™ M1U BUZZ: Credits debited successfully!', {
+        spent: costM1U,
+        oldBalance: currentBalance,
+        newBalance: newBalance,
+        timestamp: new Date().toISOString()
       });
 
-      showM1UDebitSuccessToast((spendResult as any).spent, (spendResult as any).new_balance);
+      showM1UDebitSuccessToast(costM1U, newBalance);
       
       // Refresh M1U balance to show updated value
       await refetchM1U();
