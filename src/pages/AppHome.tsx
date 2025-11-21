@@ -145,7 +145,26 @@ const { isConnected } = useRealTimeNotifications();
   }
 
   return (
-    <div className="min-h-screen">
+    <div 
+      className="min-h-screen" 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 1,
+        overflowY: 'auto',
+        backgroundColor: '#ffffff',
+        backgroundImage: `
+          radial-gradient(circle at 20% 30%, rgba(0, 209, 255, 0.15), transparent 50%),
+          radial-gradient(circle at 80% 70%, rgba(123, 92, 255, 0.12), transparent 50%),
+          radial-gradient(circle at 50% 50%, rgba(240, 89, 255, 0.08), transparent 60%),
+          linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)
+        `,
+        backgroundAttachment: 'fixed'
+      }}
+    >
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
@@ -196,10 +215,8 @@ const { isConnected } = useRealTimeNotifications();
                     role="banner"
                     aria-label="M1SSION Centro di Comando Agente"
                   >
-                    <span className="text-[#00D1FF]" style={{ 
-                      textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-                    }}>M1</span>
-                    <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+                    <span className="text-[#0a0b0f]">M1</span>
+                    <span className="text-[#0a0b0f]">SSION<span className="text-xs align-top">™</span></span>
                   </h1>
                   
                   {/* ON M1SSION Badge Portal - Fixed slot for MissionBadgeInjector */}
@@ -210,7 +227,7 @@ const { isConnected } = useRealTimeNotifications();
                     className="flex justify-center my-3"
                   />
                   
-                  <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
+                  <p className="text-gray-700 mt-2">Centro di Comando Agente</p>
 
                   {/* M1U Pill Slot - Home (inside hero, aligned left) */}
                   <div
