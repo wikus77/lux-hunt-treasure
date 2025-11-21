@@ -12,26 +12,38 @@ export const useBuzzCounter = (userId: string | undefined) => {
 
   // Load daily BUZZ counter for pricing calculation
   const loadDailyBuzzCounter = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      console.log('🔍 BUZZ COUNTER DEBUG: No userId, skipping load');
+      return;
+    }
+
+    const todayDate = new Date().toISOString().split('T')[0];
+    console.log('🔍 BUZZ COUNTER DEBUG: Loading counter', { userId, todayDate });
 
     try {
       const { data, error } = await supabase
         .from('user_buzz_counter')
         .select('daily_count')
         .eq('user_id', userId)
-        .eq('counter_date', new Date().toISOString().split('T')[0])
-        .single();
+        .eq('counter_date', todayDate)
+        .maybeSingle();
+
+      console.log('🔍 BUZZ COUNTER DEBUG: Query result', { data, error });
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Error loading daily buzz counter:', error);
+        console.error('❌ BUZZ COUNTER ERROR: Failed to load', error);
         return;
       }
 
       const buzzCount = data?.daily_count || 0;
       setDailyBuzzCounter(buzzCount);
-      console.log('📊 PROGRESSIVE PRICING - Daily buzz counter loaded:', buzzCount);
+      console.log('✅ BUZZ COUNTER: Loaded successfully', { 
+        buzzCount, 
+        nextClickPrice: calculateBuzzPrice(buzzCount),
+        nextClickCostM1U: calculateBuzzCostM1U(buzzCount)
+      });
     } catch (err) {
-      console.error('Exception loading daily buzz counter:', err);
+      console.error('❌ BUZZ COUNTER EXCEPTION:', err);
     }
   }, [userId]);
 
@@ -40,6 +52,13 @@ export const useBuzzCounter = (userId: string | undefined) => {
     if (!userId) return 0;
 
     const newBuzzCounter = dailyBuzzCounter + 1;
+    
+    console.log('🔄 BUZZ COUNTER: Updating counter', { 
+      oldCount: dailyBuzzCounter, 
+      newCount: newBuzzCounter,
+      nextPrice: calculateBuzzPrice(newBuzzCounter),
+      nextCostM1U: calculateBuzzCostM1U(newBuzzCounter)
+    });
     
     try {
       await supabase
@@ -51,11 +70,11 @@ export const useBuzzCounter = (userId: string | undefined) => {
         });
       
       setDailyBuzzCounter(newBuzzCounter);
-      console.log('🎨 PROGRESSIVE PRICING - Updated buzz counter:', newBuzzCounter);
+      console.log('✅ BUZZ COUNTER: Updated successfully', { newBuzzCounter });
       
       return newBuzzCounter;
     } catch (err) {
-      console.error('Exception updating daily buzz counter:', err);
+      console.error('❌ BUZZ COUNTER: Update failed', err);
       return dailyBuzzCounter;
     }
   }, [userId, dailyBuzzCounter]);
