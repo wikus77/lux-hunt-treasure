@@ -63,44 +63,27 @@ export const useBuzzGrants = () => {
   };
 
   const consumeFreeBuzz = async (): Promise<boolean> => {
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check daily limit first
-    if (dailyUsed) {
-      console.log('Daily free BUZZ already used');
+    if (totalRemaining <= 0) {
+      console.log('❌ No free buzz grants remaining');
       return false;
     }
-    
-    if (totalRemaining <= 0) return false;
 
     try {
-      // Check one more time if already used today via database
-      const today = new Date().toISOString().split('T')[0];
       const userId = (await supabase.auth.getUser()).data.user?.id;
       
       if (!userId) {
         console.error('❌ No user ID found');
         return false;
       }
-      
-      // © 2025 M1SSION™ - Fixed: use daily_count and counter_date
-      const { data: todayCheck } = await supabase
-        .from('user_buzz_counter')
-        .select('daily_count')
-        .eq('user_id', userId)
-        .eq('counter_date', today)
-        .single();
-
-      // © 2025 M1SSION™ - Fixed: use daily_count
-      if (todayCheck && todayCheck.daily_count > 0) {
-        console.log('❌ Daily BUZZ already used - database check');
-        setDailyUsed(true);
-        return false;
-      }
 
       // Find the first grant with remaining buzz
       const grantToUse = grants.find(g => g.remaining > 0);
-      if (!grantToUse) return false;
+      if (!grantToUse) {
+        console.log('❌ No grant found with remaining buzz');
+        return false;
+      }
 
-      console.log('🎁 CONSUMING FREE BUZZ GRANT:', grantToUse.id);
+      console.log('🎁 CONSUMING FREE BUZZ GRANT:', grantToUse.id, 'Remaining:', grantToUse.remaining);
 
       const { error } = await supabase
         .from('buzz_grants')
@@ -193,7 +176,7 @@ export const useBuzzGrants = () => {
     error,
     fetchGrants,
     consumeFreeBuzz,
-    hasFreeBuzz: totalRemaining > 0 && !dailyUsed, // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+    hasFreeBuzz: totalRemaining > 0, // 🔥 FIX: Only check totalRemaining, remove dailyUsed restriction
     dailyUsed
   };
 };

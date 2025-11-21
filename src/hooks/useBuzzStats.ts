@@ -40,7 +40,7 @@ export const useBuzzStats = () => {
         .select('daily_count')
         .eq('user_id', user.id)
         .eq('counter_date', new Date().toISOString().split('T')[0])
-        .single();
+        .maybeSingle(); // 🔥 FIX: Use maybeSingle() to avoid error when no row exists
 
       // Get total buzz count
       const { data: totalData } = await supabase
