@@ -77,7 +77,24 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
+          {/* Animated glow strip like header */}
+          <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
+            <div 
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
+              style={{
+                animation: 'slideGlow 3s ease-in-out infinite',
+                width: '200%',
+                left: '-100%'
+              }}
+            />
+          </div>
+          <style>{`
+            @keyframes slideGlow {
+              0% { transform: translateX(0); }
+              50% { transform: translateX(50%); }
+              100% { transform: translateX(0); }
+            }
+          `}</style>
           <div className="flex items-center space-x-2 mb-2">
             <div className="w-2 h-2 bg-green-400 rounded-full" />
             <span className="text-white/80 text-sm">Indizi trovati</span>
@@ -174,7 +191,17 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
+          {/* Animated glow strip like header */}
+          <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
+            <div 
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
+              style={{
+                animation: 'slideGlow 3s ease-in-out infinite',
+                width: '200%',
+                left: '-100%'
+              }}
+            />
+          </div>
           <div className="flex items-center space-x-2 mb-2">
             <div className="w-2 h-2 bg-amber-400 rounded-full" />
             <span className="text-white/80 text-sm">Tempo rimasto</span>
@@ -240,7 +267,17 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
+          {/* Animated glow strip like header */}
+          <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
+            <div 
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
+              style={{
+                animation: 'slideGlow 3s ease-in-out infinite',
+                width: '200%',
+                left: '-100%'
+              }}
+            />
+          </div>
           <div className="flex items-center space-x-2 mb-2">
             <div className="w-2 h-2 bg-[#00D1FF] rounded-full" />
             <span className="text-white/80 text-sm">Stato missione</span>

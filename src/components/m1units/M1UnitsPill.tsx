@@ -53,18 +53,18 @@ export const M1UnitsPill = ({ className = '', showLabel = true, showPlusButton =
   return (
     <>
       <div className="inline-flex items-center gap-2">
-        {/* M1U Pill */}
+        {/* M1U Pill - Responsive for PWA */}
         <motion.div
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl backdrop-blur-md bg-gradient-to-r from-[#070818]/80 to-[#131524]/80 border border-white/10 shadow-lg ${className}`}
+          className={`inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl backdrop-blur-md bg-gradient-to-r from-[#070818]/80 to-[#131524]/80 border border-white/10 shadow-lg ${className}`}
           animate={pulseAnimation ? { scale: [1, 1.05, 1] } : {}}
           transition={{ duration: 0.3 }}
         >
-          {/* M1 Badge - Yellow Circle */}
+          {/* M1 Badge - Yellow Circle - Responsive */}
           <motion.div 
-            className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] shadow-md"
+            className="flex items-center justify-center w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] shadow-md"
             animate={pulseAnimation ? { rotate: [0, 10, -10, 0] } : {}}
           >
-            <span className="text-xs font-bold text-black">M1</span>
+            <span className="text-[10px] sm:text-xs font-bold text-black">M1</span>
           </motion.div>
 
           {/* Balance Display */}
@@ -77,10 +77,10 @@ export const M1UnitsPill = ({ className = '', showLabel = true, showPlusButton =
               className="flex items-center gap-1.5"
             >
               {showLabel && (
-                <span className="text-sm font-semibold text-white/90">M1U</span>
+                <span className="text-xs sm:text-sm font-semibold text-white/90">M1U</span>
               )}
               <span 
-                className={`text-sm font-bold ${
+                className={`text-xs sm:text-sm font-bold ${
                   isLoading ? 'text-white/50 animate-pulse' : 
                   error ? 'text-white/40' : 
                   'text-white'
@@ -102,16 +102,16 @@ export const M1UnitsPill = ({ className = '', showLabel = true, showPlusButton =
           )}
         </motion.div>
 
-        {/* Plus Button to open M1U Shop */}
+        {/* Plus Button to open M1U Shop - Responsive for PWA */}
         {showPlusButton && (
           <motion.button
             onClick={() => setShowShopModal(true)}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-[#00D1FF]/20 to-[#00D1FF]/10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF]/60 transition-all duration-300 hover:scale-110"
+            className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-[#00D1FF]/20 to-[#00D1FF]/10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF]/60 transition-all duration-300 hover:scale-110"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             aria-label="Acquista M1 Units"
           >
-            <Plus className="w-5 h-5 text-[#00D1FF]" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-[#00D1FF]" />
           </motion.button>
         )}
       </div>
