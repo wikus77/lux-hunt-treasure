@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -351,6 +352,22 @@ const HallOfWinnersStyledPage: React.FC = () => {
         </div>
       </main>
 
+      {/* Decorative gradient effect at bottom */}
+      <motion.div
+        className="fixed bottom-24 left-0 right-0 h-32 pointer-events-none z-[9]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.8 }}
+        style={{
+          background: `
+            radial-gradient(ellipse at 50% 100%, rgba(0, 209, 255, 0.18), transparent 70%),
+            radial-gradient(ellipse at 20% 100%, rgba(123, 92, 255, 0.15), transparent 60%),
+            radial-gradient(ellipse at 80% 100%, rgba(240, 89, 255, 0.12), transparent 65%)
+          `,
+          filter: 'blur(20px)'
+        }}
+      />
+      
       <BottomNavigation />
     </div>
   );
