@@ -219,16 +219,34 @@ const Home = () => {
       </div>
       
       <div 
-        className="min-h-screen bg-[#070818]" 
+        className="min-h-screen" 
         style={{ 
           paddingTop: '140px', 
           paddingBottom: '120px',
           width: '100vw',
           maxWidth: '100vw',
           overflowX: 'hidden',
-          position: 'relative'
+          position: 'relative',
+          background: `
+            radial-gradient(circle at 20% 30%, rgba(0, 209, 255, 0.15), transparent 50%),
+            radial-gradient(circle at 80% 70%, rgba(123, 92, 255, 0.12), transparent 50%),
+            radial-gradient(circle at 50% 50%, rgba(240, 89, 255, 0.08), transparent 60%),
+            linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)
+          `,
+          backgroundAttachment: 'fixed'
         }}
       >
+        {/* Texture tramata */}
+        <div 
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05' /%3E%3C/svg%3E")`,
+            pointerEvents: 'none',
+            mixBlendMode: 'overlay',
+            opacity: 0.4
+          }}
+        />
         <Helmet>
           <title>M1SSION™ - Home</title>
         </Helmet>
@@ -274,7 +292,7 @@ const Home = () => {
                   <span className="text-[#00D1FF]" style={{ 
                     textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
                   }}>M1</span>
-                  <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+                  <span className="text-[#0a0b0f]">SSION<span className="text-xs align-top">™</span></span>
                 </h1>
               </motion.div>
 
