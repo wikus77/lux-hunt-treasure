@@ -155,7 +155,7 @@ export const BuzzPage: React.FC = () => {
 
             {/* Container con descrizione - Sistema 200 indizi - RESET COMPLETO 17/07/2025 */}
             <div 
-              className="p-4 sm:p-6 mb-6 max-w-3xl w-full mx-4"
+              className="p-4 sm:p-6 mb-6 max-w-3xl w-full mx-4 relative overflow-hidden"
               style={{
                 background: 'rgba(0, 0, 0, 0.05)',
                 backdropFilter: 'blur(40px)',
@@ -165,6 +165,24 @@ export const BuzzPage: React.FC = () => {
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
               }}
             >
+              {/* Animated glow strip like header */}
+              <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
+                <div 
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
+                  style={{
+                    animation: 'slideGlowBuzz 3s ease-in-out infinite',
+                    width: '200%',
+                    left: '-100%'
+                  }}
+                />
+              </div>
+              <style>{`
+                @keyframes slideGlowBuzz {
+                  0% { transform: translateX(0); }
+                  50% { transform: translateX(50%); }
+                  100% { transform: translateX(0); }
+                }
+              `}</style>
               <div className="text-center space-y-4">
                 {/* Descrizione BUZZ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025 */}
                 <div className="text-white/80 space-y-2">
