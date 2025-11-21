@@ -49,9 +49,9 @@ export const CountdownTimer = () => {
 
   return (
     <div className="flex justify-center w-full mt-4">
-      <div className="bg-black/80 neon-border px-10 py-7 rounded-3xl shadow-2xl flex gap-7 items-center animate-fade-in"
+      <div className="m1-card m1-elev-1 px-10 py-7 flex gap-7 items-center m1-motion"
         style={{
-          boxShadow: "0 8px 38px 0 rgba(30,174,219,0.18), 0 0px 64px 0 #00e5ff2a"
+          borderRadius: 24
         }}>
         <div>
           <div className="text-base text-cyan-200 pb-0.5 text-center font-orbitron tracking-wider">Giorni</div>
