@@ -101,11 +101,21 @@ export const useBuzzCounter = (userId: string | undefined) => {
     return getBuzzDisplayCostM1U(dailyBuzzCounter);
   }, [dailyBuzzCounter]);
 
+  // Reload counter when userId changes or dailyBuzzCounter updates
   useEffect(() => {
     if (userId) {
       loadDailyBuzzCounter();
     }
   }, [userId, loadDailyBuzzCounter]);
+
+  // Log current pricing for debugging
+  useEffect(() => {
+    console.log('📊 BUZZ COUNTER STATE UPDATE:', {
+      dailyBuzzCounter,
+      nextClickCostM1U: calculateBuzzCostM1U(dailyBuzzCounter),
+      timestamp: new Date().toISOString()
+    });
+  }, [dailyBuzzCounter]);
 
   return {
     dailyBuzzCounter,
