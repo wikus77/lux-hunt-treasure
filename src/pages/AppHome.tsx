@@ -145,32 +145,16 @@ const { isConnected } = useRealTimeNotifications();
   }
 
   return (
-    <div 
-      className="min-h-screen" 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 1,
-        overflowY: 'auto',
-        backgroundColor: '#ffffff',
-        backgroundImage: `
-          radial-gradient(circle at 20% 30%, rgba(0, 209, 255, 0.15), transparent 50%),
-          radial-gradient(circle at 80% 70%, rgba(123, 92, 255, 0.12), transparent 50%),
-          radial-gradient(circle at 50% 50%, rgba(240, 89, 255, 0.08), transparent 60%),
-          linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)
-        `,
-        backgroundAttachment: 'fixed'
-      }}
-    >
+    <div className="min-h-screen m1-app-bg relative">
+      {/* Micro-grain overlay for depth */}
+      <div className="m1-grain" />
+      
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
       {/* CRITICAL FIX: Remove duplicate header/nav - GlobalLayout handles these */}
-      <div className="px-4 space-y-6">
+      <div className="px-4 space-y-6 relative z-10">
         <AnimatePresence>
           {isLoaded && (
             <motion.div
@@ -211,12 +195,12 @@ const { isConnected } = useRealTimeNotifications();
                   <h1 
                     id="m1-home-title"
                     data-m1-anchor="home-title"
-                    className="text-4xl font-orbitron font-bold"
+                    className="text-4xl font-orbitron font-bold neon-text-cyan"
                     role="banner"
                     aria-label="M1SSION Centro di Comando Agente"
                   >
-                    <span className="text-[#0a0b0f]">M1</span>
-                    <span className="text-[#0a0b0f]">SSION<span className="text-xs align-top">™</span></span>
+                    <span className="text-auroraCyan">M1</span>
+                    <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
                   </h1>
                   
                   {/* ON M1SSION Badge Portal - Fixed slot for MissionBadgeInjector */}
@@ -227,7 +211,7 @@ const { isConnected } = useRealTimeNotifications();
                     className="flex justify-center my-3"
                   />
                   
-                  <p className="text-gray-700 mt-2">Centro di Comando Agente</p>
+                  <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
 
                   {/* M1U Pill Slot - Home (inside hero, aligned left) */}
                   <div

@@ -181,7 +181,7 @@ export default function CommandCenterHome() {
     <div className="w-full">
       {/* Full-width Prize Vision at the top */}
       <motion.div 
-        className="mb-6 w-full"
+        className="mb-6 w-full m1-card"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -202,7 +202,7 @@ export default function CommandCenterHome() {
 
     {/* Active Mission Box below the Prize Vision */}
       <motion.div 
-        className="mb-6"
+        className="mb-6 m1-panel"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
@@ -221,7 +221,7 @@ export default function CommandCenterHome() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Left Column - M1SSION BATTLE (Battle Console) */}
         <motion.div 
-          className="order-2 md:order-1"
+          className="order-2 md:order-1 m1-card"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -231,7 +231,7 @@ export default function CommandCenterHome() {
 
         {/* Right Column - M1SSION AGENT (Agent Diary) */}
         <motion.div 
-          className="order-3 md:order-2"
+          className="order-3 md:order-2 m1-card"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
