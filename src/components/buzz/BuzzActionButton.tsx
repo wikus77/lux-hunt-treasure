@@ -213,15 +213,14 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     }
 
     try {
-      console.log('💳 M1SSION™ M1U BUZZ: Deducting credits directly from profiles...', { costM1U, currentBalance });
+      console.log('💳 M1SSION™ M1U BUZZ: Deducting M1U directly from profiles...', { costM1U, currentBalance });
       
-      // OLD SCHEMA: Deduct credits directly from profiles table
+      // Deduct M1U directly from profiles table
       const newBalance = currentBalance - costM1U;
       
-      // @ts-ignore - Old schema uses 'credits' instead of 'm1_units'
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ credits: newBalance } as any)
+        .update({ m1_units: newBalance })
         .eq('id', user.id);
 
       if (updateError) {
@@ -231,7 +230,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       }
 
       // Log the transaction for tracking
-      console.log('✅ M1SSION™ M1U BUZZ: Credits debited successfully!', {
+      console.log('✅ M1SSION™ M1U BUZZ: M1U debited successfully!', {
         spent: costM1U,
         oldBalance: currentBalance,
         newBalance: newBalance,

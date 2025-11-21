@@ -34,7 +34,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
   const [error, setError] = useState<string | null>(null);
   const [heartbeatTimer, setHeartbeatTimer] = useState<NodeJS.Timeout | null>(null);
 
-  // Fetch initial M1 Units data from profiles.credits (OLD SCHEMA)
+  // Fetch initial M1 Units data from profiles.m1_units
   const fetchUnits = useCallback(async () => {
     if (!userId) {
       setIsLoading(false);
@@ -45,11 +45,10 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       setIsLoading(true);
       setError(null);
 
-      // Read directly from profiles.credits (OLD DATABASE SCHEMA)
-      // @ts-ignore - Old schema uses 'credits' instead of 'm1_units'
+      // Read from profiles.m1_units (CORRECT SCHEMA)
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('credits, username, energy')
+        .select('m1_units, nickname, pulse_energy')
         .eq('id', userId)
         .single();
 
@@ -60,9 +59,9 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       if (profile) {
         setUnitsData({
           user_id: userId,
-          balance: (profile as any).credits || 0,
-          total_earned: 0, // Not tracked in old schema
-          total_spent: 0,  // Not tracked in old schema
+          balance: profile.m1_units || 0,
+          total_earned: 0,
+          total_spent: 0,
           updated_at: new Date().toISOString(),
         });
       }
@@ -84,7 +83,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
     if (!userId) return;
 
     try {
-      // Simply refetch data to simulate ping (no RPC in old schema)
+      // Simply refetch data to simulate ping
       await fetchUnits();
       
       // Heartbeat received
@@ -124,7 +123,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
           filter: `id=eq.${userId}`,
         },
         async (payload) => {
-          // On UPDATE to profiles.credits, refetch data
+          // On UPDATE to profiles.m1_units, refetch data
           await fetchUnits();
           
           // Trigger heartbeat visual feedback
