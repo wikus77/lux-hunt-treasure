@@ -57,7 +57,7 @@ export function generateFollowUpReply(
 ): string {
   const sentiment = detectSentiment(userInput);
   const nba = nextBestAction(ctx, phase, sentiment);
-  const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
+  const agentName = ctx?.agent?.username || ctx?.agent?.code || 'Agente';
 
   // Friendly intro - v6: più naturale
   const intros = [

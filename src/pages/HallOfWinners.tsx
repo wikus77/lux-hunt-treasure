@@ -14,7 +14,7 @@ interface Winner {
   id: string;
   completion_time: string;
   winner_user_id: string;
-  nickname: string | null;
+  username: string | null;
   avatar_url: string | null;
   agent_code: string | null;
   mission_title: string | null;
@@ -45,7 +45,13 @@ export default function HallOfWinners() {
 
       if (fetchError) throw fetchError;
 
-      setWinners(data || []);
+      // Map database results supporting both username and nickname for compatibility
+      const mappedData = (data || []).map((row: any) => ({
+        ...row,
+        username: row.username || row.nickname || null
+      }));
+
+      setWinners(mappedData);
     } catch (err) {
       console.error('Error loading winners:', err);
       setError('Failed to load winners');
@@ -179,7 +185,7 @@ export default function HallOfWinners() {
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-bold text-lg text-foreground truncate">
-                            {winner.nickname || 'Anonymous Agent'}
+                            {winner.username || 'Anonymous Agent'}
                           </h3>
                           <p className="text-sm text-muted-foreground">
                             {winner.agent_code || 'No Code'}

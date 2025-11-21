@@ -72,7 +72,7 @@ const HallOfWinnersPage: React.FC = () => {
         user_id: row.winner_user_id || '',
         mission_id: row.mission_id || '',
         agent_code: row.agent_code || 'N/A',
-        full_name: row.nickname || 'Anonymous Agent',
+        full_name: row.username || 'Anonymous Agent',
         avatar_url: row.avatar_url,
         city: 'Unknown', // Not available in current schema
         prize_image: '/api/placeholder/400/300',

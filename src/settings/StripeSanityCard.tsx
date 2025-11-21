@@ -29,7 +29,7 @@ export const StripeSanityCard: React.FC = () => {
         body: {
           amount: 100, // 1 EUR = 100 cents (minimal test)
           currency: 'eur',
-          m1_units: 100,
+          credits: 100,
           payment_type: 'sanity_test',
           metadata: {
             user_id: user.id,
