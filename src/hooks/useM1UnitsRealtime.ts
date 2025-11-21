@@ -34,7 +34,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
   const [error, setError] = useState<string | null>(null);
   const [heartbeatTimer, setHeartbeatTimer] = useState<NodeJS.Timeout | null>(null);
 
-  // Fetch initial M1 Units data using RPC
+  // Fetch initial M1 Units data from profiles.credits (OLD SCHEMA)
   const fetchUnits = useCallback(async () => {
     if (!userId) {
       setIsLoading(false);
@@ -45,21 +45,25 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       setIsLoading(true);
       setError(null);
 
-      // Use RPC m1u_get_summary() - no arguments, uses auth.uid()
-      const { data: summary, error: rpcError } = await (supabase as any)
-        .rpc('m1u_get_summary');
+      // Read directly from profiles.credits (OLD DATABASE SCHEMA)
+      // @ts-ignore - Old schema uses 'credits' instead of 'm1_units'
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('credits, username, energy')
+        .eq('id', userId)
+        .single();
 
-      if (rpcError) {
-        throw new Error(rpcError.message || 'Failed to fetch M1U summary');
+      if (profileError) {
+        throw new Error(profileError.message || 'Failed to fetch profile');
       }
 
-      if (summary) {
+      if (profile) {
         setUnitsData({
-          user_id: summary.user_id || userId,
-          balance: summary.balance || 0,
-          total_earned: summary.total_earned || 0,
-          total_spent: summary.total_spent || 0,
-          updated_at: summary.updated_at || new Date().toISOString(),
+          user_id: userId,
+          balance: (profile as any).credits || 0,
+          total_earned: 0, // Not tracked in old schema
+          total_spent: 0,  // Not tracked in old schema
+          updated_at: new Date().toISOString(),
         });
       }
     } catch (err) {
@@ -80,10 +84,8 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
     if (!userId) return;
 
     try {
-      // Call without arguments - RPC defaults to auth.uid()
-      const { data, error: pingError } = await (supabase as any).rpc('m1u_ping');
-
-      if (pingError) throw pingError;
+      // Simply refetch data to simulate ping (no RPC in old schema)
+      await fetchUnits();
       
       // Heartbeat received
       setConnectionState('HEARTBEAT');
@@ -100,7 +102,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
         console.warn('[M1U] Ping error:', errorMsg);
       }
     }
-  }, [userId]);
+  }, [userId, fetchUnits]);
 
   // Subscribe to realtime updates
   useEffect(() => {
@@ -118,11 +120,11 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'user_m1_units',
-          filter: `user_id=eq.${userId}`,
+          table: 'profiles',
+          filter: `id=eq.${userId}`,
         },
         async (payload) => {
-          // On UPDATE, refetch summary to get complete data
+          // On UPDATE to profiles.credits, refetch data
           await fetchUnits();
           
           // Trigger heartbeat visual feedback
