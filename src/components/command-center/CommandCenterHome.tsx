@@ -19,7 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import InviteFloatingButton from "@/components/home/InviteFloatingButton";
 import DNAQuickAction from "@/components/dna/DNAQuickAction";
 import { PULSE_ENABLED } from "@/config/featureFlags";
-import GlobalPulseBar from "@/components/pulse/GlobalPulseBar";
+import { PulseBar } from "@/features/pulse";
 
 export default function CommandCenterHome() {
   // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
@@ -193,7 +193,7 @@ export default function CommandCenterHome() {
       />
     </motion.div>
 
-    {/* THE PULSE™ - Re-enabled */}
+    {/* THE PULSE™ - Re-enabled with original component */}
     {PULSE_ENABLED && (
       <motion.div 
         className="mb-6"
@@ -201,7 +201,7 @@ export default function CommandCenterHome() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.05 }}
       >
-        <GlobalPulseBar />
+        <PulseBar variant="inline" />
       </motion.div>
     )}
 
