@@ -34,7 +34,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
   const [error, setError] = useState<string | null>(null);
   const [heartbeatTimer, setHeartbeatTimer] = useState<NodeJS.Timeout | null>(null);
 
-  // Fetch initial M1 Units data from profiles.m1_units
+  // Fetch initial M1 Units data using RPC
   const fetchUnits = useCallback(async () => {
     if (!userId) {
       setIsLoading(false);
@@ -45,24 +45,21 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       setIsLoading(true);
       setError(null);
 
-      // Read from profiles.m1_units (CORRECT SCHEMA)
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('m1_units, nickname, pulse_energy')
-        .eq('id', userId)
-        .single();
+      // Use RPC m1u_get_summary() - no arguments, uses auth.uid()
+      const { data: summary, error: rpcError } = await (supabase as any)
+        .rpc('m1u_get_summary');
 
-      if (profileError) {
-        throw new Error(profileError.message || 'Failed to fetch profile');
+      if (rpcError) {
+        throw new Error(rpcError.message || 'Failed to fetch M1U summary');
       }
 
-      if (profile) {
+      if (summary) {
         setUnitsData({
-          user_id: userId,
-          balance: profile.m1_units || 0,
-          total_earned: 0,
-          total_spent: 0,
-          updated_at: new Date().toISOString(),
+          user_id: summary.user_id || userId,
+          balance: summary.balance || 0,
+          total_earned: summary.total_earned || 0,
+          total_spent: summary.total_spent || 0,
+          updated_at: summary.updated_at || new Date().toISOString(),
         });
       }
     } catch (err) {
@@ -83,8 +80,10 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
     if (!userId) return;
 
     try {
-      // Simply refetch data to simulate ping
-      await fetchUnits();
+      // Call without arguments - RPC defaults to auth.uid()
+      const { data, error: pingError } = await (supabase as any).rpc('m1u_ping');
+
+      if (pingError) throw pingError;
       
       // Heartbeat received
       setConnectionState('HEARTBEAT');
@@ -101,7 +100,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
         console.warn('[M1U] Ping error:', errorMsg);
       }
     }
-  }, [userId, fetchUnits]);
+  }, [userId]);
 
   // Subscribe to realtime updates
   useEffect(() => {
@@ -119,11 +118,11 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${userId}`,
+          table: 'user_m1_units',
+          filter: `user_id=eq.${userId}`,
         },
         async (payload) => {
-          // On UPDATE to profiles.m1_units, refetch data
+          // On UPDATE, refetch summary to get complete data
           await fetchUnits();
           
           // Trigger heartbeat visual feedback

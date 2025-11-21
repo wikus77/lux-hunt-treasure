@@ -213,31 +213,45 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     }
 
     try {
-      console.log('💳 M1SSION™ M1U BUZZ: Deducting M1U directly from profiles...', { costM1U, currentBalance });
+      console.log('💳 M1SSION™ M1U BUZZ: Calling buzz_spend_m1u RPC...', { costM1U, currentBalance });
       
-      // Deduct M1U directly from profiles table
-      const newBalance = currentBalance - costM1U;
-      
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ m1_units: newBalance })
-        .eq('id', user.id);
+      // Call RPC to spend M1U
+      const { data: spendResult, error: spendError } = await (supabase as any).rpc('buzz_spend_m1u', {
+        p_cost_m1u: costM1U
+      });
 
-      if (updateError) {
-        console.error('❌ M1SSION™ M1U BUZZ: Update error', updateError);
+      console.log('💳 M1SSION™ M1U BUZZ: RPC response', { spendResult, spendError });
+
+      if (spendError) {
+        console.error('❌ M1SSION™ M1U BUZZ: RPC error', spendError);
         toast.error('Errore nel processare il pagamento M1U');
         return;
       }
 
-      // Log the transaction for tracking
+      if (!(spendResult as any)?.success) {
+        const errorType = (spendResult as any)?.error || 'unknown';
+        console.error('❌ M1SSION™ M1U BUZZ: Payment failed', { 
+          error: errorType,
+          fullResult: spendResult 
+        });
+        
+        if (errorType === 'insufficient_m1u') {
+          showInsufficientM1UToast(costM1U, (spendResult as any).current_balance || 0);
+        } else {
+          toast.error(`Errore: ${errorType}`);
+        }
+        return;
+      }
+
+      // M1U spent successfully
       console.log('✅ M1SSION™ M1U BUZZ: M1U debited successfully!', {
-        spent: costM1U,
-        oldBalance: currentBalance,
-        newBalance: newBalance,
-        timestamp: new Date().toISOString()
+        spent: (spendResult as any).spent,
+        oldBalance: (spendResult as any).old_balance,
+        newBalance: (spendResult as any).new_balance,
+        timestamp: (spendResult as any).timestamp
       });
 
-      showM1UDebitSuccessToast(costM1U, newBalance);
+      showM1UDebitSuccessToast((spendResult as any).spent, (spendResult as any).new_balance);
       
       // Refresh M1U balance to show updated value
       await refetchM1U();
