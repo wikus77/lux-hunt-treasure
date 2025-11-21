@@ -28,7 +28,24 @@ const LuxuryCarsSection = () => {
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05), 0 0 24px rgba(0, 229, 255, 0.15)'
         }}
       >
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#F059FF] opacity-90" />
+        {/* Animated glow strip like header */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] overflow-hidden">
+          <div 
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
+            style={{
+              animation: 'slideGlow 3s ease-in-out infinite',
+              width: '200%',
+              left: '-100%'
+            }}
+          />
+        </div>
+        <style>{`
+          @keyframes slideGlow {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(50%); }
+            100% { transform: translateX(0); }
+          }
+        `}</style>
         <FuturisticCarsCarousel />
       </div>
     </div>
