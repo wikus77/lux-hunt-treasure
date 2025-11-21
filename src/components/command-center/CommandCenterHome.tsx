@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import InviteFloatingButton from "@/components/home/InviteFloatingButton";
 import DNAQuickAction from "@/components/dna/DNAQuickAction";
 import { PULSE_ENABLED } from "@/config/featureFlags";
+import GlobalPulseBar from "@/components/pulse/GlobalPulseBar";
 
 export default function CommandCenterHome() {
   // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
@@ -192,7 +193,17 @@ export default function CommandCenterHome() {
       />
     </motion.div>
 
-    {/* THE PULSE™ - Disabled (see featureFlags.ts) */}
+    {/* THE PULSE™ - Re-enabled */}
+    {PULSE_ENABLED && (
+      <motion.div 
+        className="mb-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.05 }}
+      >
+        <GlobalPulseBar />
+      </motion.div>
+    )}
 
 {/* Floating Invite circle button in top-right */}
 <InviteFloatingButton />
@@ -200,19 +211,19 @@ export default function CommandCenterHome() {
 {/* DNA Quick Action below Invite */}
 <DNAQuickAction />
 
-    {/* Active Mission Box below the Prize Vision */}
-      <motion.div 
-        className="mb-6 m1-panel"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-      >
-        <ActiveMissionBox 
-          mission={activeMission} 
-          purchasedClues={purchasedClues}
-          progress={progress}
-        />
-      </motion.div>
+    {/* Active Mission Box below the Prize Vision - Wrapper removed */}
+    <motion.div 
+      className="mb-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
+    >
+      <ActiveMissionBox 
+        mission={activeMission} 
+        purchasedClues={purchasedClues}
+        progress={progress}
+      />
+    </motion.div>
 
 {/* Floating button handles invitations; removed inline list button */}
 
