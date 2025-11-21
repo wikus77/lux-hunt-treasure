@@ -79,7 +79,11 @@ const config: Config = {
           'yellow': '#FACC15',
           'deep-blue': '#131524',
           'deep': '#07111A',
-        }
+        },
+        'obsidian': '#0a0b0f',
+        'ink': '#0e1116',
+        'auroraCyan': '#00e5ff',
+        'auroraViolet': '#7b5cff',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -98,6 +102,11 @@ const config: Config = {
         'm1-card': '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)',
         'm1-glow-cyan': '0 0 24px rgba(0, 229, 255, 0.38)',
         'm1-glow-violet': '0 16px 60px rgba(122, 92, 255, 0.44)',
+        'm1-e1': '0 6px 20px rgba(0, 0, 0, 0.22)',
+        'm1-e2': '0 12px 32px rgba(0, 0, 0, 0.28)',
+        'm1-stroke': 'inset 0 0 0 1px rgba(255, 255, 255, 0.10)',
+        'm1-rim': 'inset 0 1px 0 rgba(255, 255, 255, 0.10)',
+        'm1-ao': 'inset 0 12px 30px rgba(0, 0, 0, 0.35)',
       },
       keyframes: {
         'accordion-down': {
@@ -239,3 +248,5 @@ const config: Config = {
 };
 
 export default config;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
