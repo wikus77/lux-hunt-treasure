@@ -327,19 +327,17 @@ export const NotificationsPage: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen" 
+      className="min-h-screen m1-app-bg relative" 
       style={{ 
         paddingTop: '140px', 
         paddingBottom: '120px',
         width: '100vw',
         maxWidth: '100vw',
-        overflowX: 'hidden',
-        position: 'relative',
-        background: 'rgba(7, 8, 24, 0.6)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)'
+        overflowX: 'hidden'
       }}
     >
+      {/* Micro-grain overlay for depth */}
+      <div className="m1-grain" />
       <div className="container mx-auto px-3" style={{
         paddingLeft: 'max(16px, env(safe-area-inset-left, 16px))',
         paddingRight: 'max(16px, env(safe-area-inset-right, 16px))'
@@ -348,18 +346,10 @@ export const NotificationsPage: React.FC = () => {
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="m1ssion-glass-card p-6 mb-8 relative"
-        style={{
-          background: 'rgba(0, 0, 0, 0.05)',
-          backdropFilter: 'blur(40px)',
-          WebkitBackdropFilter: 'blur(40px)',
-          borderRadius: '24px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-        }}
+        className="m1-panel relative mb-8"
       >
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
-        <div className="flex items-center justify-between"
+        <div className="flex items-center justify-between p-6"
       >
         <div className="flex items-center gap-3">
           <Bell className="w-8 h-8 neon-text-cyan" />
@@ -419,16 +409,9 @@ export const NotificationsPage: React.FC = () => {
                   className={`${style.glowClass}`}
                 >
                   <Card 
-                    className={`m1ssion-glass-card ${style.bgColor} ${
+                    className="m1-card ${style.bgColor} ${
                       !notification.is_read ? 'ring-1 ring-[#00D1FF]' : ''
-                    }`}
-                    style={{
-                      background: 'rgba(0, 0, 0, 0.05)',
-                      backdropFilter: 'blur(40px)',
-                      WebkitBackdropFilter: 'blur(40px)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-                    }}
+                    }"
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">

@@ -147,13 +147,14 @@ const HallOfWinnersStyledPage: React.FC = () => {
 
   return (
     <div 
-      className="w-full"
+      className="w-full m1-app-bg relative"
       style={{ 
-        minHeight: '100dvh',
-        position: 'relative',
-        background: 'linear-gradient(to bottom, #0a0b14 0%, #050508 100%)'
+        minHeight: '100dvh'
       }}
     >
+      {/* Micro-grain overlay for depth */}
+      <div className="m1-grain" />
+      
       <UnifiedHeader />
       
       <main 
@@ -168,16 +169,14 @@ const HallOfWinnersStyledPage: React.FC = () => {
       >
         <div className="max-w-lg mx-auto space-y-6">
           <div className="mb-6 text-center">
-            <h1 className="text-4xl font-orbitron font-bold">
+            <h1 className="text-4xl font-orbitron font-bold neon-text-cyan">
               <span 
-                className="text-[#00F7FF]"
-                style={{ textShadow: "0 0 10px rgba(0, 247, 255, 0.6), 0 0 20px rgba(0, 247, 255, 0.3)" }}
+                className="text-auroraCyan"
               >
                 Hall of 
               </span>
               <span 
                 className="text-white"
-                style={{ textShadow: "0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.3)" }}
               >
                 Winners
               </span>
@@ -186,14 +185,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
           </div>
 
           <Card 
-            className="border-0"
-            style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              borderRadius: '24px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-            }}
+            className="border-0 m1-panel"
           >
             <CardHeader className="text-center pb-4">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400/20 to-yellow-400/10 mb-4 mx-auto">
@@ -206,40 +198,19 @@ const HallOfWinnersStyledPage: React.FC = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div 
-                  className="text-center p-3 border-0"
-                  style={{
-                    background: 'rgba(0, 0, 0, 0.05)',
-                    backdropFilter: 'blur(40px)',
-                    WebkitBackdropFilter: 'blur(40px)',
-                    borderRadius: '16px',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-                  }}
+                  className="text-center p-3 border-0 m1-card"
                 >
                   <p className="text-sm text-muted-foreground">Vincitori</p>
                   <p className="font-semibold text-lg text-yellow-400">{winners.length}</p>
                 </div>
                 <div 
-                  className="text-center p-3 border-0"
-                  style={{
-                    background: 'rgba(0, 0, 0, 0.05)',
-                    backdropFilter: 'blur(40px)',
-                    WebkitBackdropFilter: 'blur(40px)',
-                    borderRadius: '16px',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-                  }}
+                  className="text-center p-3 border-0 m1-card"
                 >
                   <p className="text-sm text-muted-foreground">Premi</p>
                   <p className="font-semibold text-lg text-green-400">{winners.length}</p>
                 </div>
                 <div 
-                  className="text-center p-3 border-0"
-                  style={{
-                    background: 'rgba(0, 0, 0, 0.05)',
-                    backdropFilter: 'blur(40px)',
-                    WebkitBackdropFilter: 'blur(40px)',
-                    borderRadius: '16px',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-                  }}
+                  className="text-center p-3 border-0 m1-card"
                 >
                   <p className="text-sm text-muted-foreground">Città</p>
                   <p className="font-semibold text-lg text-cyan-400">
@@ -251,14 +222,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
           </Card>
 
           <Card 
-            className="border-0"
-            style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              borderRadius: '24px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-            }}
+            className="border-0 m1-panel"
           >
             <CardHeader>
               <CardTitle className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent flex items-center gap-2">
@@ -284,14 +248,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
                 winners.slice(0, 3).map((winner, index) => (
                   <div 
                     key={winner.id} 
-                    className="p-4 border-0"
-                    style={{
-                      background: 'rgba(0, 0, 0, 0.05)',
-                      backdropFilter: 'blur(40px)',
-                      WebkitBackdropFilter: 'blur(40px)',
-                      borderRadius: '16px',
-                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-                    }}
+                    className="p-4 border-0 m1-card"
                   >
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0">
@@ -334,14 +291,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
           </Card>
 
           <Card 
-            className="border-0"
-            style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              borderRadius: '24px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-            }}
+            className="border-0 m1-panel"
           >
             <CardHeader>
               <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
@@ -372,14 +322,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
               </div>
               
               <div 
-                className="p-4 border-0"
-                style={{
-                  background: 'rgba(0, 0, 0, 0.05)',
-                  backdropFilter: 'blur(40px)',
-                  WebkitBackdropFilter: 'blur(40px)',
-                  borderRadius: '16px',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-                }}
+                className="p-4 border-0 m1-card"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -391,14 +334,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
               </div>
               
               <div 
-                className="p-4 border-0"
-                style={{
-                  background: 'rgba(0, 0, 0, 0.05)',
-                  backdropFilter: 'blur(40px)',
-                  WebkitBackdropFilter: 'blur(40px)',
-                  borderRadius: '16px',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-                }}
+                className="p-4 border-0 m1-card"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
