@@ -219,12 +219,7 @@
   animation: neon-pulse 2s ease-in-out infinite;
 }
 
-/* Reduced Blur on Mobile */
-@media (max-width: 768px) {
-  .m1ssion-glass-card {
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-}
+/* .m1ssion-glass-card mobile override removed - style defined ONLY in theme.css */
+/* This ensures consistent 3D Obsidian + Aurora effect across all devices */
 
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
