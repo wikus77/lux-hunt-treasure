@@ -12,6 +12,889 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
+  auth: {
+    Tables: {
+      audit_log_entries: {
+        Row: {
+          created_at: string | null
+          id: string
+          instance_id: string | null
+          ip_address: string
+          payload: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          instance_id?: string | null
+          ip_address?: string
+          payload?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          instance_id?: string | null
+          ip_address?: string
+          payload?: Json | null
+        }
+        Relationships: []
+      }
+      flow_state: {
+        Row: {
+          auth_code: string
+          auth_code_issued_at: string | null
+          authentication_method: string
+          code_challenge: string
+          code_challenge_method: Database["auth"]["Enums"]["code_challenge_method"]
+          created_at: string | null
+          id: string
+          provider_access_token: string | null
+          provider_refresh_token: string | null
+          provider_type: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth_code: string
+          auth_code_issued_at?: string | null
+          authentication_method: string
+          code_challenge: string
+          code_challenge_method: Database["auth"]["Enums"]["code_challenge_method"]
+          created_at?: string | null
+          id: string
+          provider_access_token?: string | null
+          provider_refresh_token?: string | null
+          provider_type: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth_code?: string
+          auth_code_issued_at?: string | null
+          authentication_method?: string
+          code_challenge?: string
+          code_challenge_method?: Database["auth"]["Enums"]["code_challenge_method"]
+          created_at?: string | null
+          id?: string
+          provider_access_token?: string | null
+          provider_refresh_token?: string | null
+          provider_type?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      identities: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          identity_data: Json
+          last_sign_in_at: string | null
+          provider: string
+          provider_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          identity_data: Json
+          last_sign_in_at?: string | null
+          provider: string
+          provider_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          identity_data?: Json
+          last_sign_in_at?: string | null
+          provider?: string
+          provider_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identities_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instances: {
+        Row: {
+          created_at: string | null
+          id: string
+          raw_base_config: string | null
+          updated_at: string | null
+          uuid: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          raw_base_config?: string | null
+          updated_at?: string | null
+          uuid?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          raw_base_config?: string | null
+          updated_at?: string | null
+          uuid?: string | null
+        }
+        Relationships: []
+      }
+      mfa_amr_claims: {
+        Row: {
+          authentication_method: string
+          created_at: string
+          id: string
+          session_id: string
+          updated_at: string
+        }
+        Insert: {
+          authentication_method: string
+          created_at: string
+          id: string
+          session_id: string
+          updated_at: string
+        }
+        Update: {
+          authentication_method?: string
+          created_at?: string
+          id?: string
+          session_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mfa_amr_claims_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mfa_challenges: {
+        Row: {
+          created_at: string
+          factor_id: string
+          id: string
+          ip_address: unknown
+          otp_code: string | null
+          verified_at: string | null
+          web_authn_session_data: Json | null
+        }
+        Insert: {
+          created_at: string
+          factor_id: string
+          id: string
+          ip_address: unknown
+          otp_code?: string | null
+          verified_at?: string | null
+          web_authn_session_data?: Json | null
+        }
+        Update: {
+          created_at?: string
+          factor_id?: string
+          id?: string
+          ip_address?: unknown
+          otp_code?: string | null
+          verified_at?: string | null
+          web_authn_session_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mfa_challenges_auth_factor_id_fkey"
+            columns: ["factor_id"]
+            isOneToOne: false
+            referencedRelation: "mfa_factors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mfa_factors: {
+        Row: {
+          created_at: string
+          factor_type: Database["auth"]["Enums"]["factor_type"]
+          friendly_name: string | null
+          id: string
+          last_challenged_at: string | null
+          last_webauthn_challenge_data: Json | null
+          phone: string | null
+          secret: string | null
+          status: Database["auth"]["Enums"]["factor_status"]
+          updated_at: string
+          user_id: string
+          web_authn_aaguid: string | null
+          web_authn_credential: Json | null
+        }
+        Insert: {
+          created_at: string
+          factor_type: Database["auth"]["Enums"]["factor_type"]
+          friendly_name?: string | null
+          id: string
+          last_challenged_at?: string | null
+          last_webauthn_challenge_data?: Json | null
+          phone?: string | null
+          secret?: string | null
+          status: Database["auth"]["Enums"]["factor_status"]
+          updated_at: string
+          user_id: string
+          web_authn_aaguid?: string | null
+          web_authn_credential?: Json | null
+        }
+        Update: {
+          created_at?: string
+          factor_type?: Database["auth"]["Enums"]["factor_type"]
+          friendly_name?: string | null
+          id?: string
+          last_challenged_at?: string | null
+          last_webauthn_challenge_data?: Json | null
+          phone?: string | null
+          secret?: string | null
+          status?: Database["auth"]["Enums"]["factor_status"]
+          updated_at?: string
+          user_id?: string
+          web_authn_aaguid?: string | null
+          web_authn_credential?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mfa_factors_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_authorizations: {
+        Row: {
+          approved_at: string | null
+          authorization_code: string | null
+          authorization_id: string
+          client_id: string
+          code_challenge: string | null
+          code_challenge_method:
+            | Database["auth"]["Enums"]["code_challenge_method"]
+            | null
+          created_at: string
+          expires_at: string
+          id: string
+          redirect_uri: string
+          resource: string | null
+          response_type: Database["auth"]["Enums"]["oauth_response_type"]
+          scope: string
+          state: string | null
+          status: Database["auth"]["Enums"]["oauth_authorization_status"]
+          user_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          authorization_code?: string | null
+          authorization_id: string
+          client_id: string
+          code_challenge?: string | null
+          code_challenge_method?:
+            | Database["auth"]["Enums"]["code_challenge_method"]
+            | null
+          created_at?: string
+          expires_at?: string
+          id: string
+          redirect_uri: string
+          resource?: string | null
+          response_type?: Database["auth"]["Enums"]["oauth_response_type"]
+          scope: string
+          state?: string | null
+          status?: Database["auth"]["Enums"]["oauth_authorization_status"]
+          user_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          authorization_code?: string | null
+          authorization_id?: string
+          client_id?: string
+          code_challenge?: string | null
+          code_challenge_method?:
+            | Database["auth"]["Enums"]["code_challenge_method"]
+            | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          redirect_uri?: string
+          resource?: string | null
+          response_type?: Database["auth"]["Enums"]["oauth_response_type"]
+          scope?: string
+          state?: string | null
+          status?: Database["auth"]["Enums"]["oauth_authorization_status"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_authorizations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oauth_authorizations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_clients: {
+        Row: {
+          client_name: string | null
+          client_secret_hash: string | null
+          client_type: Database["auth"]["Enums"]["oauth_client_type"]
+          client_uri: string | null
+          created_at: string
+          deleted_at: string | null
+          grant_types: string
+          id: string
+          logo_uri: string | null
+          redirect_uris: string
+          registration_type: Database["auth"]["Enums"]["oauth_registration_type"]
+          updated_at: string
+        }
+        Insert: {
+          client_name?: string | null
+          client_secret_hash?: string | null
+          client_type?: Database["auth"]["Enums"]["oauth_client_type"]
+          client_uri?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          grant_types: string
+          id: string
+          logo_uri?: string | null
+          redirect_uris: string
+          registration_type: Database["auth"]["Enums"]["oauth_registration_type"]
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string | null
+          client_secret_hash?: string | null
+          client_type?: Database["auth"]["Enums"]["oauth_client_type"]
+          client_uri?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          grant_types?: string
+          id?: string
+          logo_uri?: string | null
+          redirect_uris?: string
+          registration_type?: Database["auth"]["Enums"]["oauth_registration_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      oauth_consents: {
+        Row: {
+          client_id: string
+          granted_at: string
+          id: string
+          revoked_at: string | null
+          scopes: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          granted_at?: string
+          id: string
+          revoked_at?: string | null
+          scopes: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          granted_at?: string
+          id?: string
+          revoked_at?: string | null
+          scopes?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_consents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oauth_consents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      one_time_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          relates_to: string
+          token_hash: string
+          token_type: Database["auth"]["Enums"]["one_time_token_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          relates_to: string
+          token_hash: string
+          token_type: Database["auth"]["Enums"]["one_time_token_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          relates_to?: string
+          token_hash?: string
+          token_type?: Database["auth"]["Enums"]["one_time_token_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "one_time_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      refresh_tokens: {
+        Row: {
+          created_at: string | null
+          id: number
+          instance_id: string | null
+          parent: string | null
+          revoked: boolean | null
+          session_id: string | null
+          token: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          instance_id?: string | null
+          parent?: string | null
+          revoked?: boolean | null
+          session_id?: string | null
+          token?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          instance_id?: string | null
+          parent?: string | null
+          revoked?: boolean | null
+          session_id?: string | null
+          token?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refresh_tokens_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saml_providers: {
+        Row: {
+          attribute_mapping: Json | null
+          created_at: string | null
+          entity_id: string
+          id: string
+          metadata_url: string | null
+          metadata_xml: string
+          name_id_format: string | null
+          sso_provider_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          attribute_mapping?: Json | null
+          created_at?: string | null
+          entity_id: string
+          id: string
+          metadata_url?: string | null
+          metadata_xml: string
+          name_id_format?: string | null
+          sso_provider_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          attribute_mapping?: Json | null
+          created_at?: string | null
+          entity_id?: string
+          id?: string
+          metadata_url?: string | null
+          metadata_xml?: string
+          name_id_format?: string | null
+          sso_provider_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saml_providers_sso_provider_id_fkey"
+            columns: ["sso_provider_id"]
+            isOneToOne: false
+            referencedRelation: "sso_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saml_relay_states: {
+        Row: {
+          created_at: string | null
+          flow_state_id: string | null
+          for_email: string | null
+          id: string
+          redirect_to: string | null
+          request_id: string
+          sso_provider_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          flow_state_id?: string | null
+          for_email?: string | null
+          id: string
+          redirect_to?: string | null
+          request_id: string
+          sso_provider_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          flow_state_id?: string | null
+          for_email?: string | null
+          id?: string
+          redirect_to?: string | null
+          request_id?: string
+          sso_provider_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saml_relay_states_flow_state_id_fkey"
+            columns: ["flow_state_id"]
+            isOneToOne: false
+            referencedRelation: "flow_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saml_relay_states_sso_provider_id_fkey"
+            columns: ["sso_provider_id"]
+            isOneToOne: false
+            referencedRelation: "sso_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schema_migrations: {
+        Row: {
+          version: string
+        }
+        Insert: {
+          version: string
+        }
+        Update: {
+          version?: string
+        }
+        Relationships: []
+      }
+      sessions: {
+        Row: {
+          aal: Database["auth"]["Enums"]["aal_level"] | null
+          created_at: string | null
+          factor_id: string | null
+          id: string
+          ip: unknown
+          not_after: string | null
+          oauth_client_id: string | null
+          refresh_token_counter: number | null
+          refresh_token_hmac_key: string | null
+          refreshed_at: string | null
+          tag: string | null
+          updated_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          aal?: Database["auth"]["Enums"]["aal_level"] | null
+          created_at?: string | null
+          factor_id?: string | null
+          id: string
+          ip?: unknown
+          not_after?: string | null
+          oauth_client_id?: string | null
+          refresh_token_counter?: number | null
+          refresh_token_hmac_key?: string | null
+          refreshed_at?: string | null
+          tag?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          aal?: Database["auth"]["Enums"]["aal_level"] | null
+          created_at?: string | null
+          factor_id?: string | null
+          id?: string
+          ip?: unknown
+          not_after?: string | null
+          oauth_client_id?: string | null
+          refresh_token_counter?: number | null
+          refresh_token_hmac_key?: string | null
+          refreshed_at?: string | null
+          tag?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_oauth_client_id_fkey"
+            columns: ["oauth_client_id"]
+            isOneToOne: false
+            referencedRelation: "oauth_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sso_domains: {
+        Row: {
+          created_at: string | null
+          domain: string
+          id: string
+          sso_provider_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          domain: string
+          id: string
+          sso_provider_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          domain?: string
+          id?: string
+          sso_provider_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sso_domains_sso_provider_id_fkey"
+            columns: ["sso_provider_id"]
+            isOneToOne: false
+            referencedRelation: "sso_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sso_providers: {
+        Row: {
+          created_at: string | null
+          disabled: boolean | null
+          id: string
+          resource_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          disabled?: boolean | null
+          id: string
+          resource_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          disabled?: boolean | null
+          id?: string
+          resource_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          aud: string | null
+          banned_until: string | null
+          confirmation_sent_at: string | null
+          confirmation_token: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          deleted_at: string | null
+          email: string | null
+          email_change: string | null
+          email_change_confirm_status: number | null
+          email_change_sent_at: string | null
+          email_change_token_current: string | null
+          email_change_token_new: string | null
+          email_confirmed_at: string | null
+          encrypted_password: string | null
+          id: string
+          instance_id: string | null
+          invited_at: string | null
+          is_anonymous: boolean
+          is_sso_user: boolean
+          is_super_admin: boolean | null
+          last_sign_in_at: string | null
+          phone: string | null
+          phone_change: string | null
+          phone_change_sent_at: string | null
+          phone_change_token: string | null
+          phone_confirmed_at: string | null
+          raw_app_meta_data: Json | null
+          raw_user_meta_data: Json | null
+          reauthentication_sent_at: string | null
+          reauthentication_token: string | null
+          recovery_sent_at: string | null
+          recovery_token: string | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          aud?: string | null
+          banned_until?: string | null
+          confirmation_sent_at?: string | null
+          confirmation_token?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          email_change?: string | null
+          email_change_confirm_status?: number | null
+          email_change_sent_at?: string | null
+          email_change_token_current?: string | null
+          email_change_token_new?: string | null
+          email_confirmed_at?: string | null
+          encrypted_password?: string | null
+          id: string
+          instance_id?: string | null
+          invited_at?: string | null
+          is_anonymous?: boolean
+          is_sso_user?: boolean
+          is_super_admin?: boolean | null
+          last_sign_in_at?: string | null
+          phone?: string | null
+          phone_change?: string | null
+          phone_change_sent_at?: string | null
+          phone_change_token?: string | null
+          phone_confirmed_at?: string | null
+          raw_app_meta_data?: Json | null
+          raw_user_meta_data?: Json | null
+          reauthentication_sent_at?: string | null
+          reauthentication_token?: string | null
+          recovery_sent_at?: string | null
+          recovery_token?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aud?: string | null
+          banned_until?: string | null
+          confirmation_sent_at?: string | null
+          confirmation_token?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          email_change?: string | null
+          email_change_confirm_status?: number | null
+          email_change_sent_at?: string | null
+          email_change_token_current?: string | null
+          email_change_token_new?: string | null
+          email_confirmed_at?: string | null
+          encrypted_password?: string | null
+          id?: string
+          instance_id?: string | null
+          invited_at?: string | null
+          is_anonymous?: boolean
+          is_sso_user?: boolean
+          is_super_admin?: boolean | null
+          last_sign_in_at?: string | null
+          phone?: string | null
+          phone_change?: string | null
+          phone_change_sent_at?: string | null
+          phone_change_token?: string | null
+          phone_confirmed_at?: string | null
+          raw_app_meta_data?: Json | null
+          raw_user_meta_data?: Json | null
+          reauthentication_sent_at?: string | null
+          reauthentication_token?: string | null
+          recovery_sent_at?: string | null
+          recovery_token?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      email: { Args: never; Returns: string }
+      jwt: { Args: never; Returns: Json }
+      role: { Args: never; Returns: string }
+      uid: { Args: never; Returns: string }
+    }
+    Enums: {
+      aal_level: "aal1" | "aal2" | "aal3"
+      code_challenge_method: "s256" | "plain"
+      factor_status: "unverified" | "verified"
+      factor_type: "totp" | "webauthn" | "phone"
+      oauth_authorization_status: "pending" | "approved" | "denied" | "expired"
+      oauth_client_type: "public" | "confidential"
+      oauth_registration_type: "dynamic" | "manual"
+      oauth_response_type: "code"
+      one_time_token_type:
+        | "confirmation_token"
+        | "reauthentication_token"
+        | "recovery_token"
+        | "email_change_token_new"
+        | "email_change_token_current"
+        | "phone_change_token"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       abuse_alerts: {
@@ -61,6 +944,94 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: unknown
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          target_table: string | null
+          target_user_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          target_table?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          target_table?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_audit_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_audit_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_audit_logs_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_audit_logs_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_audit_logs_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       admin_buzz_overrides: {
         Row: {
@@ -138,7 +1109,29 @@ export type Database = {
           user_agent?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "admin_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       admin_prizes: {
         Row: {
@@ -174,7 +1167,29 @@ export type Database = {
           type?: string
           week?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "admin_prizes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_prizes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_prizes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       admin_roles: {
         Row: {
@@ -198,7 +1213,50 @@ export type Database = {
           is_active?: boolean | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "admin_roles_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_roles_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_roles_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       agent_buzz_actions: {
         Row: {
@@ -222,7 +1280,29 @@ export type Database = {
           meta?: Json | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "agent_buzz_actions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_buzz_actions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_buzz_actions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       agent_clues: {
         Row: {
@@ -246,37 +1326,179 @@ export type Database = {
           meta?: Json | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "agent_clues_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_clues_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_clues_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       agent_dna: {
         Row: {
+          archetype: string | null
           audacia: number
           etica: number
           intuito: number
+          mutated_at: string | null
           rischio: number
           updated_at: string
           user_id: string
           vibrazione: number
         }
         Insert: {
+          archetype?: string | null
           audacia?: number
           etica?: number
           intuito?: number
+          mutated_at?: string | null
           rischio?: number
           updated_at?: string
           user_id: string
           vibrazione?: number
         }
         Update: {
+          archetype?: string | null
           audacia?: number
           etica?: number
           intuito?: number
+          mutated_at?: string | null
           rischio?: number
           updated_at?: string
           user_id?: string
           vibrazione?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "agent_dna_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_dna_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_dna_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      agent_dna_events: {
+        Row: {
+          created_at: string
+          delta: Json
+          id: number
+          note: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: Json
+          id?: number
+          note?: string | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: Json
+          id?: number
+          note?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_dna_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_dna_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_dna_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      agent_dna_visual: {
+        Row: {
+          created_at: string | null
+          data: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_dna_visual_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_dna_visual_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_dna_visual_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       agent_finalshot_attempts: {
         Row: {
@@ -300,7 +1522,29 @@ export type Database = {
           result?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "agent_finalshot_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_finalshot_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_finalshot_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       agent_missions: {
         Row: {
@@ -324,7 +1568,29 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "agent_missions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_missions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_missions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       agent_profiles: {
         Row: {
@@ -350,6 +1616,70 @@ export type Database = {
           streak_days?: number
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "agent_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      agent_ranks: {
+        Row: {
+          code: string
+          color: string
+          created_at: string | null
+          description: string | null
+          id: number
+          name_en: string
+          name_it: string
+          pe_max: number | null
+          pe_min: number
+          symbol: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          color: string
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          name_en: string
+          name_it: string
+          pe_max?: number | null
+          pe_min: number
+          symbol: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          color?: string
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          name_en?: string
+          name_it?: string
+          pe_max?: number | null
+          pe_min?: number
+          symbol?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -487,6 +1817,27 @@ export type Database = {
             referencedRelation: "ai_sessions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "ai_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ai_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ai_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       ai_generated_clues: {
@@ -556,6 +1907,49 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "ai_memories_user_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ai_memories_user_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ai_memories_user_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      ai_offtopic_log: {
+        Row: {
+          created_at: string
+          id: string
+          text: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          text: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          text?: string
+          user_id?: string | null
+        }
         Relationships: []
       }
       ai_sessions: {
@@ -588,6 +1982,46 @@ export type Database = {
           started_at?: string | null
           subscription_tier?: string | null
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ai_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ai_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      ai_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }
@@ -758,31 +2192,31 @@ export type Database = {
       }
       auto_push_log: {
         Row: {
-          created_at: string
-          delivery: Json | null
+          details: Json | null
           id: string
-          sent_at: string
-          sent_date: string
+          sent_at: string | null
+          sent_date: string | null
+          status: string | null
           template_id: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
-          created_at?: string
-          delivery?: Json | null
+          details?: Json | null
           id?: string
-          sent_at?: string
-          sent_date?: string
+          sent_at?: string | null
+          sent_date?: string | null
+          status?: string | null
           template_id?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
-          created_at?: string
-          delivery?: Json | null
+          details?: Json | null
           id?: string
-          sent_at?: string
-          sent_date?: string
+          sent_at?: string | null
+          sent_date?: string | null
+          status?: string | null
           template_id?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -792,43 +2226,82 @@ export type Database = {
             referencedRelation: "auto_push_templates"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "auto_push_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "auto_push_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "auto_push_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       auto_push_templates: {
         Row: {
-          active: boolean
+          ab_key: string | null
+          ab_variant: string | null
           body: string
-          created_at: string
+          condition_sql: string | null
+          created_at: string | null
+          data_json: Json | null
+          deeplink: string | null
+          enabled: boolean
+          freq_cap_user_per_day: number
           id: string
-          image_url: string | null
-          kind: string
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          segment: string | null
           title: string
-          updated_at: string
-          url: string
+          type: string
           weight: number
         }
         Insert: {
-          active?: boolean
+          ab_key?: string | null
+          ab_variant?: string | null
           body: string
-          created_at?: string
+          condition_sql?: string | null
+          created_at?: string | null
+          data_json?: Json | null
+          deeplink?: string | null
+          enabled?: boolean
+          freq_cap_user_per_day?: number
           id?: string
-          image_url?: string | null
-          kind: string
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          segment?: string | null
           title: string
-          updated_at?: string
-          url?: string
+          type: string
           weight?: number
         }
         Update: {
-          active?: boolean
+          ab_key?: string | null
+          ab_variant?: string | null
           body?: string
-          created_at?: string
+          condition_sql?: string | null
+          created_at?: string | null
+          data_json?: Json | null
+          deeplink?: string | null
+          enabled?: boolean
+          freq_cap_user_per_day?: number
           id?: string
-          image_url?: string | null
-          kind?: string
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          segment?: string | null
           title?: string
-          updated_at?: string
-          url?: string
+          type?: string
           weight?: number
         }
         Relationships: []
@@ -893,28 +2366,93 @@ export type Database = {
         }
         Relationships: []
       }
+      battle_admin_actions: {
+        Row: {
+          action_type: string
+          battle_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          metadata: Json | null
+          reason: string | null
+        }
+        Insert: {
+          action_type: string
+          battle_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+        }
+        Update: {
+          action_type?: string
+          battle_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_admin_actions_battle_id_fkey"
+            columns: ["battle_id"]
+            isOneToOne: false
+            referencedRelation: "battles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "battle_admin_actions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_admin_actions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_admin_actions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       battle_audit: {
         Row: {
           battle_id: string
+          created_by: string | null
           event_type: string
           id: string
           payload: Json
+          rng_seed: string | null
           timestamp: string
           user_id: string | null
         }
         Insert: {
           battle_id: string
+          created_by?: string | null
           event_type: string
           id?: string
           payload?: Json
+          rng_seed?: string | null
           timestamp?: string
           user_id?: string | null
         }
         Update: {
           battle_id?: string
+          created_by?: string | null
           event_type?: string
           id?: string
           payload?: Json
+          rng_seed?: string | null
           timestamp?: string
           user_id?: string | null
         }
@@ -925,6 +2463,48 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "battles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "battle_audit_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_audit_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_audit_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_audit_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_audit_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_audit_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -973,6 +2553,27 @@ export type Database = {
             referencedRelation: "battles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "battle_energy_traces_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_energy_traces_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_energy_traces_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       battle_ghost_mode: {
@@ -1006,7 +2607,135 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "battle_ghost_mode_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_ghost_mode_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_ghost_mode_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      battle_items: {
+        Row: {
+          base_price_m1u: number
+          code: string
+          created_at: string
+          description: string | null
+          icon_key: string
+          id: string
+          is_active: boolean
+          max_stack: number
+          metadata: Json | null
+          min_rank: number
+          name: string
+          power: number
+          rarity: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          base_price_m1u: number
+          code: string
+          created_at?: string
+          description?: string | null
+          icon_key?: string
+          id?: string
+          is_active?: boolean
+          max_stack?: number
+          metadata?: Json | null
+          min_rank?: number
+          name: string
+          power?: number
+          rarity?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          base_price_m1u?: number
+          code?: string
+          created_at?: string
+          description?: string | null
+          icon_key?: string
+          id?: string
+          is_active?: boolean
+          max_stack?: number
+          metadata?: Json | null
+          min_rank?: number
+          name?: string
+          power?: number
+          rarity?: string
+          type?: string
+          updated_at?: string
+        }
         Relationships: []
+      }
+      battle_notifications: {
+        Row: {
+          consumed: boolean | null
+          created_at: string | null
+          dedupe_key: string | null
+          id: string
+          payload: Json
+          type: string
+          user_id_target: string
+        }
+        Insert: {
+          consumed?: boolean | null
+          created_at?: string | null
+          dedupe_key?: string | null
+          id?: string
+          payload: Json
+          type: string
+          user_id_target: string
+        }
+        Update: {
+          consumed?: boolean | null
+          created_at?: string | null
+          dedupe_key?: string | null
+          id?: string
+          payload?: Json
+          type?: string
+          user_id_target?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "battle_notifications_user_id_target_fkey"
+            columns: ["user_id_target"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_notifications_user_id_target_fkey"
+            columns: ["user_id_target"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_notifications_user_id_target_fkey"
+            columns: ["user_id_target"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       battle_participants: {
         Row: {
@@ -1050,6 +2779,27 @@ export type Database = {
             referencedRelation: "battles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "battle_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       battle_transfers: {
@@ -1090,6 +2840,48 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "battles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "battle_transfers_from_user_id_fkey"
+            columns: ["from_user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_transfers_from_user_id_fkey"
+            columns: ["from_user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_transfers_from_user_id_fkey"
+            columns: ["from_user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_transfers_to_user_id_fkey"
+            columns: ["to_user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_transfers_to_user_id_fkey"
+            columns: ["to_user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_transfers_to_user_id_fkey"
+            columns: ["to_user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1181,7 +2973,71 @@ export type Database = {
           status?: string
           winner_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "battles_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battles_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battles_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battles_opponent_id_fkey"
+            columns: ["opponent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battles_opponent_id_fkey"
+            columns: ["opponent_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battles_opponent_id_fkey"
+            columns: ["opponent_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battles_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battles_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battles_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       blocked_ips: {
         Row: {
@@ -1277,7 +3133,29 @@ export type Database = {
           week_number?: number
           year?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "buzz_generation_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "buzz_generation_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "buzz_generation_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       buzz_grants: {
         Row: {
@@ -1336,7 +3214,9 @@ export type Database = {
       buzz_map_actions: {
         Row: {
           clue_count: number
+          coordinates: Json | null
           cost_eur: number
+          cost_m1u: number | null
           created_at: string
           id: string
           payment_intent_id: string | null
@@ -1345,7 +3225,9 @@ export type Database = {
         }
         Insert: {
           clue_count: number
+          coordinates?: Json | null
           cost_eur: number
+          cost_m1u?: number | null
           created_at?: string
           id?: string
           payment_intent_id?: string | null
@@ -1354,14 +3236,38 @@ export type Database = {
         }
         Update: {
           clue_count?: number
+          coordinates?: Json | null
           cost_eur?: number
+          cost_m1u?: number | null
           created_at?: string
           id?: string
           payment_intent_id?: string | null
           radius_generated?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "buzz_map_actions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "buzz_map_actions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "buzz_map_actions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       category_tag_map: {
         Row: {
@@ -1427,7 +3333,29 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "checkout_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "checkout_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "checkout_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       clues: {
         Row: {
@@ -1514,7 +3442,29 @@ export type Database = {
           user_agent?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "consent_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "consent_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "consent_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       contacts: {
         Row: {
@@ -1543,6 +3493,39 @@ export type Database = {
           name?: string
           phone?: string | null
           subject?: string | null
+        }
+        Relationships: []
+      }
+      control_zones: {
+        Row: {
+          color: string
+          control: number
+          created_at: string
+          id: string
+          label: string
+          polygon: Json
+          team: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          control?: number
+          created_at?: string
+          id?: string
+          label: string
+          polygon: Json
+          team: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          control?: number
+          created_at?: string
+          id?: string
+          label?: string
+          polygon?: Json
+          team?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1592,7 +3575,29 @@ export type Database = {
           street_number?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "current_mission_data_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "current_mission_data_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "current_mission_data_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       daily_final_shot_limits: {
         Row: {
@@ -1652,7 +3657,29 @@ export type Database = {
           rotation_deg?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "daily_spin_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "daily_spin_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "daily_spin_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       device_tokens: {
         Row: {
@@ -1685,7 +3712,474 @@ export type Database = {
           token?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "device_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "device_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "device_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      dna_mf_links: {
+        Row: {
+          created_at: string
+          id: string
+          length: number
+          node_from: string
+          node_to: string
+          seed: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          length: number
+          node_from: string
+          node_to: string
+          seed: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          length?: number
+          node_from?: string
+          node_to?: string
+          seed?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_mf_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_mf_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_mf_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      dna_mf_nodes_seen: {
+        Row: {
+          first_seen_at: string
+          id: string
+          node_id: string
+          seed: number
+          user_id: string
+        }
+        Insert: {
+          first_seen_at?: string
+          id?: string
+          node_id: string
+          seed: number
+          user_id: string
+        }
+        Update: {
+          first_seen_at?: string
+          id?: string
+          node_id?: string
+          seed?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_mf_nodes_seen_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_mf_nodes_seen_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_mf_nodes_seen_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      dna_mind_fractal_sessions: {
+        Row: {
+          completion_ratio: number
+          created_at: string | null
+          id: string
+          moves: number
+          seed: number
+          time_spent: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completion_ratio?: number
+          created_at?: string | null
+          id?: string
+          moves?: number
+          seed: number
+          time_spent?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completion_ratio?: number
+          created_at?: string | null
+          id?: string
+          moves?: number
+          seed?: number
+          time_spent?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_mind_fractal_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_mind_fractal_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_mind_fractal_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      dna_mind_links: {
+        Row: {
+          created_at: string
+          id: string
+          intensity: number
+          node_a: number
+          node_b: number
+          seed: number
+          theme: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intensity?: number
+          node_a: number
+          node_b: number
+          seed: number
+          theme: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intensity?: number
+          node_a?: number
+          node_b?: number
+          seed?: number
+          theme?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_mind_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_mind_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_mind_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      dna_mind_milestones: {
+        Row: {
+          created_at: string
+          id: string
+          level: number
+          message: string
+          seed: number
+          theme: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level: number
+          message: string
+          seed: number
+          theme: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: number
+          message?: string
+          seed?: number
+          theme?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_mind_milestones_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_mind_milestones_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_mind_milestones_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      dna_neural_moves: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+          payload: Json
+          session_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+          payload: Json
+          session_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+          payload?: Json
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_neural_moves_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "dna_neural_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dna_neural_sessions: {
+        Row: {
+          elapsed_seconds: number
+          id: string
+          last_state: Json
+          moves: number
+          pairs_count: number
+          seed: string
+          solved: boolean
+          solved_at: string | null
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          elapsed_seconds?: number
+          id?: string
+          last_state?: Json
+          moves?: number
+          pairs_count: number
+          seed: string
+          solved?: boolean
+          solved_at?: string | null
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          elapsed_seconds?: number
+          id?: string
+          last_state?: Json
+          moves?: number
+          pairs_count?: number
+          seed?: string
+          solved?: boolean
+          solved_at?: string | null
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_neural_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_neural_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_neural_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      dna_rubik_moves: {
+        Row: {
+          created_at: string
+          id: number
+          move: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          move: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          move?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_rubik_moves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_rubik_moves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_rubik_moves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      dna_rubik_state: {
+        Row: {
+          scramble_seed: string
+          size: number
+          solved: boolean
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          scramble_seed: string
+          size?: number
+          solved?: boolean
+          state: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          scramble_seed?: string
+          size?: number
+          solved?: boolean
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_rubik_state_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_rubik_state_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_rubik_state_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       event_tickets: {
         Row: {
@@ -1716,28 +4210,52 @@ export type Database = {
       }
       events: {
         Row: {
-          created_at: string | null
+          created_at: string
           description: string | null
           end_date: string | null
           event_id: string
+          id: string
+          lat: number
+          lng: number
           name: string
+          radius: number
           start_date: string | null
+          timestamp: string
+          title: string
+          type: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           end_date?: string | null
           event_id?: string
+          id?: string
+          lat: number
+          lng: number
           name: string
+          radius?: number
           start_date?: string | null
+          timestamp?: string
+          title: string
+          type?: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           end_date?: string | null
           event_id?: string
+          id?: string
+          lat?: number
+          lng?: number
           name?: string
+          radius?: number
           start_date?: string | null
+          timestamp?: string
+          title?: string
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1856,7 +4374,29 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fcm_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fcm_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fcm_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       feed_crawler_runs: {
         Row: {
@@ -2066,7 +4606,29 @@ export type Database = {
           status_code?: number | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "idempotency_keys_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "idempotency_keys_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "idempotency_keys_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       intel_messages: {
         Row: {
@@ -2101,6 +4663,27 @@ export type Database = {
             referencedRelation: "intel_sessions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "intel_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "intel_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "intel_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       intel_sessions: {
@@ -2122,7 +4705,29 @@ export type Database = {
           meta?: Json | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "intel_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "intel_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "intel_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       intelligence_tool_usage: {
         Row: {
@@ -2149,7 +4754,29 @@ export type Database = {
           used_on?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "intelligence_tool_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "intelligence_tool_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "intelligence_tool_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       interest_signals: {
         Row: {
@@ -2188,7 +4815,29 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "interest_signals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "interest_signals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "interest_signals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       legal_documents: {
         Row: {
@@ -2254,7 +4903,29 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "live_activity_state_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "live_activity_state_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "live_activity_state_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       live_events: {
         Row: {
@@ -2273,6 +4944,150 @@ export type Database = {
           message?: string
         }
         Relationships: []
+      }
+      m1_units_balance: {
+        Row: {
+          balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "m1_units_balance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "m1_units_balance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "m1_units_balance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      m1_units_ledger: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          meta: Json | null
+          reason: string | null
+          ref_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          meta?: Json | null
+          reason?: string | null
+          ref_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          meta?: Json | null
+          reason?: string | null
+          ref_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "m1_units_ledger_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "m1_units_ledger_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "m1_units_ledger_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      m1u_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          metadata: Json | null
+          source: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          source: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          source?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "m1u_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "m1u_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "m1u_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       map_click_events: {
         Row: {
@@ -2332,7 +5147,29 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "map_notes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "map_notes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "map_notes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       map_points: {
         Row: {
@@ -2362,7 +5199,29 @@ export type Database = {
           title?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "map_points_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "map_points_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "map_points_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       marker_claims: {
         Row: {
@@ -2460,6 +5319,43 @@ export type Database = {
         }
         Relationships: []
       }
+      mcp_whitelist: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcp_whitelist_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mcp_whitelist_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mcp_whitelist_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       mission_enrollments: {
         Row: {
           joined_at: string
@@ -2490,6 +5386,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "missions"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_enrollments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mission_enrollments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mission_enrollments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -2534,6 +5451,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "prize_categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_prizes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mission_prizes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mission_prizes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "mission_prizes_mission_id_fkey"
@@ -2713,7 +5651,88 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_subscribers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "newsletter_subscribers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "newsletter_subscribers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      norah_audio: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          id: string
+          kind: string
+          session_id: string | null
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          kind: string
+          session_id?: string | null
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          kind?: string
+          session_id?: string | null
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "norah_audio_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "norah_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "norah_audio_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_audio_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_audio_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       norah_events: {
         Row: {
@@ -2746,6 +5765,93 @@ export type Database = {
           sentiment?: string | null
           user_id?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "norah_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      norah_kb_chunks: {
+        Row: {
+          content: string
+          created_at: string
+          document_id: string | null
+          embedding: string | null
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          document_id?: string | null
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          document_id?: string | null
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "norah_kb_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "norah_kb_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      norah_kb_documents: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          title?: string
+          updated_at?: string
+        }
         Relationships: []
       }
       norah_memory_episodes: {
@@ -2773,7 +5879,29 @@ export type Database = {
           summary?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "norah_memory_episodes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_memory_episodes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_memory_episodes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       norah_messages: {
         Row: {
@@ -2784,6 +5912,7 @@ export type Database = {
           id: string
           intent: string | null
           role: string
+          session_id: string | null
           user_id: string
         }
         Insert: {
@@ -2794,6 +5923,7 @@ export type Database = {
           id?: string
           intent?: string | null
           role: string
+          session_id?: string | null
           user_id: string
         }
         Update: {
@@ -2804,9 +5934,39 @@ export type Database = {
           id?: string
           intent?: string | null
           role?: string
+          session_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "norah_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "norah_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "norah_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       norah_proactive_notifications: {
         Row: {
@@ -2845,7 +6005,274 @@ export type Database = {
           title?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "norah_proactive_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_proactive_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_proactive_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      norah_profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          locale: string | null
+          updated_at: string
+          user_id: string
+          voice_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          locale?: string | null
+          updated_at?: string
+          user_id: string
+          voice_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          locale?: string | null
+          updated_at?: string
+          user_id?: string
+          voice_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "norah_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      norah_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          status: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "norah_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      norah_settings: {
+        Row: {
+          created_at: string
+          model: string | null
+          speaking_ms: number | null
+          temperature: number | null
+          tts_voice: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          model?: string | null
+          speaking_ms?: number | null
+          temperature?: number | null
+          tts_voice?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          model?: string | null
+          speaking_ms?: number | null
+          temperature?: number | null
+          tts_voice?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "norah_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      norah_usage: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          kind: string
+          period: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          kind: string
+          period?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          period?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "norah_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      norah_webhooks: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload: Json
+          source: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "norah_webhooks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_webhooks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "norah_webhooks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       notification_counters: {
         Row: {
@@ -2863,7 +6290,29 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notification_counters_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notification_counters_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notification_counters_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       notification_preferences: {
         Row: {
@@ -2890,7 +6339,29 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       notification_quota: {
         Row: {
@@ -2908,7 +6379,29 @@ export type Database = {
           sent_today?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notification_quota_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notification_quota_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notification_quota_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       panel_logs: {
         Row: {
@@ -2982,7 +6475,29 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payment_intents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "payment_intents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "payment_intents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       payment_transactions: {
         Row: {
@@ -3018,7 +6533,29 @@ export type Database = {
           status?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       personality_quiz_results: {
         Row: {
@@ -3167,7 +6704,29 @@ export type Database = {
           id?: string
           name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "prize_categories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "prize_categories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "prize_categories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       prize_clues: {
         Row: {
@@ -3295,6 +6854,7 @@ export type Database = {
           can_access_app: boolean | null
           choose_plan_seen: boolean
           city: string | null
+          cookie_consent: Json | null
           country: string | null
           created_at: string
           credits: number | null
@@ -3322,7 +6882,10 @@ export type Database = {
           pre_registration_date: string | null
           preferred_language: string | null
           preferred_rewards: string[] | null
+          pulse_energy: number
           push_notifications_enabled: boolean | null
+          rank_id: number | null
+          rank_updated_at: string | null
           recovery_key: string | null
           referral_code: string | null
           role: string
@@ -3354,6 +6917,7 @@ export type Database = {
           can_access_app?: boolean | null
           choose_plan_seen?: boolean
           city?: string | null
+          cookie_consent?: Json | null
           country?: string | null
           created_at?: string
           credits?: number | null
@@ -3381,7 +6945,10 @@ export type Database = {
           pre_registration_date?: string | null
           preferred_language?: string | null
           preferred_rewards?: string[] | null
+          pulse_energy?: number
           push_notifications_enabled?: boolean | null
+          rank_id?: number | null
+          rank_updated_at?: string | null
           recovery_key?: string | null
           referral_code?: string | null
           role?: string
@@ -3413,6 +6980,7 @@ export type Database = {
           can_access_app?: boolean | null
           choose_plan_seen?: boolean
           city?: string | null
+          cookie_consent?: Json | null
           country?: string | null
           created_at?: string
           credits?: number | null
@@ -3440,7 +7008,10 @@ export type Database = {
           pre_registration_date?: string | null
           preferred_language?: string | null
           preferred_rewards?: string[] | null
+          pulse_energy?: number
           push_notifications_enabled?: boolean | null
+          rank_id?: number | null
+          rank_updated_at?: string | null
           recovery_key?: string | null
           referral_code?: string | null
           role?: string
@@ -3457,7 +7028,36 @@ export type Database = {
           walkthrough_step_buzz_map?: number | null
           weekly_hints?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "profiles_rank_id_fkey"
+            columns: ["rank_id"]
+            isOneToOne: false
+            referencedRelation: "agent_ranks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pulse_abuse_counters: {
         Row: {
@@ -3478,7 +7078,29 @@ export type Database = {
           user_id?: string
           window_start?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pulse_abuse_counters_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pulse_abuse_counters_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pulse_abuse_counters_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       pulse_config_weights: {
         Row: {
@@ -3578,6 +7200,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pulse_config_weights"
             referencedColumns: ["type"]
+          },
+          {
+            foreignKeyName: "pulse_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pulse_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pulse_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -3766,6 +7409,27 @@ export type Database = {
             referencedRelation: "pulse_cosmetics"
             referencedColumns: ["key"]
           },
+          {
+            foreignKeyName: "pulse_user_cosmetics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pulse_user_cosmetics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pulse_user_cosmetics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       push_config: {
@@ -3817,7 +7481,29 @@ export type Database = {
           status_code?: number | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "push_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       push_notification_logs: {
         Row: {
@@ -3880,7 +7566,50 @@ export type Database = {
           target_user_id?: string | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "push_notification_logs_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_notification_logs_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_notification_logs_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_notification_logs_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_notification_logs_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_notification_logs_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       push_notifications_log: {
         Row: {
@@ -3919,7 +7648,29 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "push_notifications_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_notifications_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_notifications_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
@@ -4024,7 +7775,29 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       qr_buzz_codes: {
         Row: {
@@ -4075,7 +7848,29 @@ export type Database = {
           used_at?: string | null
           used_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "qr_buzz_codes_used_by_fkey"
+            columns: ["used_by"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "qr_buzz_codes_used_by_fkey"
+            columns: ["used_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "qr_buzz_codes_used_by_fkey"
+            columns: ["used_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       qr_code_claims: {
         Row: {
@@ -4103,6 +7898,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "qr_codes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_code_claims_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "qr_code_claims_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "qr_code_claims_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -4132,6 +7948,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "qr_codes"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_code_discoveries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "qr_code_discoveries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "qr_code_discoveries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -4220,7 +8057,29 @@ export type Database = {
           title?: string
           type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "qr_codes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "qr_codes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "qr_codes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       qr_redemption_logs: {
         Row: {
@@ -4259,7 +8118,29 @@ export type Database = {
           user_lat?: number | null
           user_lng?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "qr_redemption_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "qr_redemption_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "qr_redemption_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       qr_redemptions: {
         Row: {
@@ -4351,7 +8232,98 @@ export type Database = {
           scansioni?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "qr_rewards_creato_da_fkey"
+            columns: ["creato_da"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "qr_rewards_creato_da_fkey"
+            columns: ["creato_da"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "qr_rewards_creato_da_fkey"
+            columns: ["creato_da"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      rank_history: {
+        Row: {
+          created_at: string | null
+          delta_pe: number
+          id: string
+          metadata: Json | null
+          new_rank_id: number
+          old_rank_id: number | null
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          delta_pe: number
+          id?: string
+          metadata?: Json | null
+          new_rank_id: number
+          old_rank_id?: number | null
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          delta_pe?: number
+          id?: string
+          metadata?: Json | null
+          new_rank_id?: number
+          old_rank_id?: number | null
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rank_history_new_rank_id_fkey"
+            columns: ["new_rank_id"]
+            isOneToOne: false
+            referencedRelation: "agent_ranks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rank_history_old_rank_id_fkey"
+            columns: ["old_rank_id"]
+            isOneToOne: false
+            referencedRelation: "agent_ranks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rank_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "rank_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "rank_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       role_change_audit: {
         Row: {
@@ -4456,7 +8428,29 @@ export type Database = {
           radius?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "search_areas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "search_areas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "search_areas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       security_audit_log: {
         Row: {
@@ -4489,7 +8483,29 @@ export type Database = {
           user_agent?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "security_audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "security_audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "security_audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       security_events: {
         Row: {
@@ -4519,7 +8535,29 @@ export type Database = {
           user_agent?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "security_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "security_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "security_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       stripe_webhook_events: {
         Row: {
@@ -4615,7 +8653,29 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       suggested_notifications: {
         Row: {
@@ -4655,6 +8715,76 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "external_feed_items"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggested_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "suggested_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "suggested_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      system_roles: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          label: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          label: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          label?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "system_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "system_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -4700,6 +8830,68 @@ export type Database = {
         }
         Relationships: []
       }
+      user_battle_items: {
+        Row: {
+          acquired_at: string
+          id: string
+          is_equipped: boolean
+          item_id: string
+          last_used_at: string | null
+          metadata: Json | null
+          quantity: number
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string
+          id?: string
+          is_equipped?: boolean
+          item_id: string
+          last_used_at?: string | null
+          metadata?: Json | null
+          quantity?: number
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string
+          id?: string
+          is_equipped?: boolean
+          item_id?: string
+          last_used_at?: string | null
+          metadata?: Json | null
+          quantity?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_battle_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "battle_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_battle_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_battle_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_battle_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       user_buzz_bonuses: {
         Row: {
           awarded_at: string
@@ -4728,7 +8920,29 @@ export type Database = {
           used?: boolean
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_buzz_bonuses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_buzz_bonuses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_buzz_bonuses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_buzz_counter: {
         Row: {
@@ -4867,7 +9081,29 @@ export type Database = {
           user_id?: string
           week_map_counts?: number[] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_buzz_map_counter_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_buzz_map_counter_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_buzz_map_counter_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_clue_lines: {
         Row: {
@@ -5048,7 +9284,29 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_consents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_consents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_consents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_cookie_preferences: {
         Row: {
@@ -5081,7 +9339,29 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_cookie_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_cookie_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_cookie_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_credits: {
         Row: {
@@ -5105,7 +9385,29 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_custom_rewards: {
         Row: {
@@ -5134,6 +9436,145 @@ export type Database = {
         }
         Relationships: []
       }
+      user_dna_neural_links: {
+        Row: {
+          created_at: string
+          id: string
+          link_length: number
+          node_a: number
+          node_b: number
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link_length: number
+          node_a: number
+          node_b: number
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link_length?: number
+          node_a?: number
+          node_b?: number
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_dna_neural_links_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "user_dna_neural_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_dna_neural_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          duration_ms: number
+          id: string
+          links_made: number
+          moves: number
+          pairs_count: number
+          seed: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number
+          id?: string
+          links_made?: number
+          moves?: number
+          pairs_count?: number
+          seed: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number
+          id?: string
+          links_made?: number
+          moves?: number
+          pairs_count?: number
+          seed?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_dna_neural_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_dna_neural_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_dna_neural_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_dna_profile: {
+        Row: {
+          last_seed: string | null
+          level: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          last_seed?: string | null
+          level?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          last_seed?: string | null
+          level?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_dna_profile_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_dna_profile_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_dna_profile_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       user_flags: {
         Row: {
           hide_tutorial: boolean
@@ -5150,7 +9591,29 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_flags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_flags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_flags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_interest_profile: {
         Row: {
@@ -5168,7 +9631,72 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_interest_profile_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_interest_profile_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_interest_profile_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_locations: {
+        Row: {
+          lat: number
+          lng: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          lat: number
+          lng: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          lat?: number
+          lng?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_logs: {
         Row: {
@@ -5198,7 +9726,121 @@ export type Database = {
           user_agent?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_m1_units: {
+        Row: {
+          balance: number
+          total_earned: number
+          total_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_m1_units_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_m1_units_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_m1_units_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      user_m1_units_events: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_m1_units_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_m1_units_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_m1_units_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_map_areas: {
         Row: {
@@ -5231,7 +9873,7 @@ export type Database = {
           radius_km: number
           source?: string | null
           user_id: string
-          week: number
+          week?: number
         }
         Update: {
           center_lat?: number | null
@@ -5279,7 +9921,29 @@ export type Database = {
           score?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_minigames_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_minigames_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_minigames_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_mission_registrations: {
         Row: {
@@ -5371,7 +10035,29 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_mission_status_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_mission_status_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_mission_status_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_notifications: {
         Row: {
@@ -5410,7 +10096,29 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_payment_methods: {
         Row: {
@@ -5446,7 +10154,29 @@ export type Database = {
           stripe_pm_id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_payment_methods_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_payment_methods_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_payment_methods_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_payment_transactions: {
         Row: {
@@ -5491,7 +10221,29 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_payment_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_payment_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_payment_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_permissions: {
         Row: {
@@ -5521,7 +10273,29 @@ export type Database = {
           permission_value?: boolean | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_plan_events: {
         Row: {
@@ -5563,7 +10337,29 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_plan_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_plan_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_plan_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_profiles: {
         Row: {
@@ -5614,7 +10410,29 @@ export type Database = {
           surname?: string | null
           via?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_push_settings: {
         Row: {
@@ -5635,7 +10453,29 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_push_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_push_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_push_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_push_tokens: {
         Row: {
@@ -5665,7 +10505,29 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_referrals: {
         Row: {
@@ -5695,7 +10557,50 @@ export type Database = {
           updated_at?: string
           xp_awarded?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_referrals_invitee_id_fkey"
+            columns: ["invitee_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_referrals_invitee_id_fkey"
+            columns: ["invitee_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_referrals_invitee_id_fkey"
+            columns: ["invitee_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_referrals_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_referrals_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_referrals_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_rewards: {
         Row: {
@@ -5733,6 +10638,27 @@ export type Database = {
             referencedRelation: "markers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_rewards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_rewards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_rewards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       user_roles: {
@@ -5757,7 +10683,29 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_used_clues: {
         Row: {
@@ -5826,7 +10774,29 @@ export type Database = {
           week_number?: number
           week_start_date?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_weekly_buzz_limits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_weekly_buzz_limits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_weekly_buzz_limits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_xp: {
         Row: {
@@ -5856,7 +10826,29 @@ export type Database = {
           user_id?: string
           xp_since_reward?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_xp_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_xp_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_xp_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       webpush_subscriptions: {
         Row: {
@@ -5889,7 +10881,29 @@ export type Database = {
           last_used_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "webpush_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "webpush_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "webpush_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       weekly_buzz_allowances: {
         Row: {
@@ -5919,7 +10933,29 @@ export type Database = {
           week_number?: number
           year?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "weekly_buzz_allowances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "weekly_buzz_allowances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "weekly_buzz_allowances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       weekly_leaderboard: {
         Row: {
@@ -5952,10 +10988,116 @@ export type Database = {
           week_number?: number
           year?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "weekly_leaderboard_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "weekly_leaderboard_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "weekly_leaderboard_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {
+      admin_audit_logs_readable: {
+        Row: {
+          action: string | null
+          admin_email: string | null
+          changed_fields: Json | null
+          created_at: string | null
+          details: Json | null
+          id: string | null
+          ip_address: unknown
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          target_email: string | null
+          target_table: string | null
+          user_agent: string | null
+        }
+        Relationships: []
+      }
+      admin_audit_logs_stats: {
+        Row: {
+          first_operation: string | null
+          last_operation: string | null
+          log_date: string | null
+          operation: string | null
+          operation_count: number | null
+          target_table: string | null
+          unique_admins: number | null
+        }
+        Relationships: []
+      }
+      agent_locations: {
+        Row: {
+          agent_id: string | null
+          lat: number | null
+          lng: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          lat?: number | null
+          lng?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          lat?: number | null
+          lng?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_locations_user_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_locations_user_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_locations_user_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      agent_profile_view: {
+        Row: {
+          agent_code: string | null
+          buzz: number | null
+          progress: Json | null
+          pulse: number | null
+          rank: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       ai_docs_kpis: {
         Row: {
           documents: number | null
@@ -5975,7 +11117,29 @@ export type Database = {
           win_rate_percentage: number | null
           wins: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "battle_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "battle_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       battle_top_agents: {
         Row: {
@@ -5985,7 +11149,29 @@ export type Database = {
           username: string | null
           wins: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       buzz_map_markers: {
         Row: {
@@ -6020,6 +11206,64 @@ export type Database = {
           rank: number | null
           total_xp: number | null
           user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_leaderboard_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "weekly_leaderboard_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "weekly_leaderboard_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      events_view: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          lat: number | null
+          lng: number | null
+          radius: number | null
+          timestamp: string | null
+          title: string | null
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: never
+          lat?: number | null
+          lng?: number | null
+          radius?: number | null
+          timestamp?: never
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: never
+          lat?: number | null
+          lng?: number | null
+          radius?: number | null
+          timestamp?: never
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -6157,6 +11401,58 @@ export type Database = {
           },
         ]
       }
+      online_agents: {
+        Row: {
+          accuracy: number | null
+          last_seen: string | null
+          lat: number | null
+          lng: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accuracy?: never
+          last_seen?: string | null
+          lat?: number | null
+          lng?: number | null
+          status?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accuracy?: never
+          last_seen?: string | null
+          lat?: number | null
+          lng?: number | null
+          status?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       pulse_leaderboard_daily: {
         Row: {
           agent_code: string | null
@@ -6174,15 +11470,6 @@ export type Database = {
           full_name: string | null
           last_contribution: string | null
           total_contribution: number | null
-        }
-        Relationships: []
-      }
-      push_stats_daily: {
-        Row: {
-          date: string | null
-          success_rate: number | null
-          successful: number | null
-          total_sent: number | null
         }
         Relationships: []
       }
@@ -6208,7 +11495,29 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       v_agent_status: {
         Row: {
@@ -6229,13 +11538,184 @@ export type Database = {
           progress_ratio?: never
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      v_dna_mind_links_recent: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          intensity: number | null
+          node_a: number | null
+          node_b: number | null
+          seed: number | null
+          theme: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dna_mind_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_mind_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dna_mind_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      v_online_agents: {
+        Row: {
+          accuracy: number | null
+          last_seen: string | null
+          lat: number | null
+          lng: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accuracy?: never
+          last_seen?: string | null
+          lat?: number | null
+          lng?: number | null
+          status?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accuracy?: never
+          last_seen?: string | null
+          lat?: number | null
+          lng?: number | null
+          status?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       v_pref_users: {
         Row: {
           user_id: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      v_units_me: {
+        Row: {
+          balance: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          balance?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          balance?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "m1_units_balance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "m1_units_balance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "m1_units_balance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       v_user_intel_clues: {
         Row: {
@@ -6258,13 +11738,53 @@ export type Database = {
         }
         Relationships: []
       }
+      v_user_m1_units: {
+        Row: {
+          balance: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      v_user_m1u_summary: {
+        Row: {
+          balance: number | null
+          earned: number | null
+          spent: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       v_user_resolved_tags: {
         Row: {
           active_categories: number | null
           resolved_tags: string[] | null
           user_id: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       v_user_suggest_throttle: {
         Row: {
@@ -6272,7 +11792,29 @@ export type Database = {
           total_sent: number | null
           user_id: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "suggested_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "suggested_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "suggested_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       v_webpush_diag: {
         Row: {
@@ -6338,10 +11880,33 @@ export type Database = {
           p256dh?: never
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "webpush_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profile_view"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "webpush_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1_units"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "webpush_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_m1u_summary"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Functions: {
+      _ensure_balance_row: { Args: { p_user: string }; Returns: undefined }
       _gen_unique_agent_code: { Args: { len?: number }; Returns: string }
       _upsert_premium_feed_source: {
         Args: {
@@ -6403,7 +11968,25 @@ export type Database = {
             }[]
           }
         | { Args: { k: number; minscore: number; qvec: string }; Returns: Json }
+      append_assistant_message: {
+        Args: { _meta?: Json; _session: string; _text: string }
+        Returns: string
+      }
+      append_user_message: {
+        Args: { _session: string; _text: string }
+        Returns: string
+      }
       assign_area_radius: { Args: { p_mission_id: string }; Returns: number }
+      audit_battle: { Args: { p_battle_id: string }; Returns: Json }
+      award_pulse_energy: {
+        Args: {
+          p_delta_pe: number
+          p_metadata?: Json
+          p_reason: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       award_xp:
         | {
             Args: { p_source: string; p_user_id: string; p_xp_amount: number }
@@ -6418,6 +12001,31 @@ export type Database = {
         }
         Returns: undefined
       }
+      buzz_map_spend_m1u:
+        | {
+            Args: {
+              p_cost_m1u: number
+              p_latitude: number
+              p_longitude: number
+              p_radius_km: number
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_cost_m1u: number
+              p_latitude: number
+              p_longitude: number
+              p_radius_km: number
+              p_user_id: string
+            }
+            Returns: {
+              area_id: string
+              message: string
+              success: boolean
+            }[]
+          }
+      buzz_spend_m1u: { Args: { p_cost_m1u: number }; Returns: Json }
       buzz_today_count: { Args: { p_user_id: string }; Returns: number }
       calculate_access_start_date: {
         Args: { plan_name: string }
@@ -6469,7 +12077,15 @@ export type Database = {
       cleanup_expired_idempotency_keys: { Args: never; Returns: undefined }
       cleanup_expired_push_tokens: { Args: never; Returns: undefined }
       cleanup_old_abuse_logs: { Args: never; Returns: undefined }
+      cleanup_old_admin_audit_logs: {
+        Args: { _days_to_keep?: number }
+        Returns: number
+      }
       cleanup_security_tables: { Args: never; Returns: undefined }
+      compute_battle_rng_seed: {
+        Args: { p_battle_id: string; p_event_type: string; p_timestamp: string }
+        Returns: string
+      }
       consume_buzz_mappa: { Args: { p_user_id: string }; Returns: Json }
       consume_buzz_usage: { Args: { p_user_id: string }; Returns: boolean }
       consume_credit: {
@@ -6491,8 +12107,18 @@ export type Database = {
       count_push_tokens_since: { Args: { since: string }; Returns: number }
       create_free_subscription: { Args: never; Returns: Json }
       debug_vec_info: { Args: never; Returns: Json }
+      dna_get_rubik_state: { Args: never; Returns: Json }
+      dna_log_rubik_move: { Args: { p_move: string }; Returns: undefined }
+      dna_set_rubik_state: {
+        Args: { p_scramble_seed: string; p_solved: boolean; p_state: Json }
+        Returns: undefined
+      }
       ensure_agent_dna: { Args: { p_user: string }; Returns: undefined }
       exec_sql: { Args: { sql: string }; Returns: Json }
+      flag_battle_suspicious: {
+        Args: { p_battle_id: string; p_reason: string }
+        Returns: undefined
+      }
       fn_candidates_for_user: {
         Args: { p_limit?: number; p_user_id: string }
         Returns: {
@@ -6504,6 +12130,25 @@ export type Database = {
           title: string
           url: string
         }[]
+      }
+      fn_dna_apply_delta: {
+        Args: {
+          p_delta: Json
+          p_note?: string
+          p_source: string
+          p_user: string
+        }
+        Returns: undefined
+      }
+      fn_dna_compute_archetype: {
+        Args: {
+          p_a: number
+          p_e: number
+          p_i: number
+          p_r: number
+          p_v: number
+        }
+        Returns: string
       }
       force_subscription_sync: { Args: { p_user_id: string }; Returns: boolean }
       force_user_to_base_tier: { Args: { p_user_id: string }; Returns: Json }
@@ -6549,6 +12194,9 @@ export type Database = {
           tier: string
         }[]
       }
+      get_agent_dna_visual:
+        | { Args: { user_id: string }; Returns: Json }
+        | { Args: { seed?: boolean }; Returns: Json }
       get_authenticated_user_id: { Args: never; Returns: string }
       get_buzz_override: {
         Args: never
@@ -6594,6 +12242,10 @@ export type Database = {
       }
       get_max_buzz_for_week: { Args: { week_num: number }; Returns: number }
       get_max_map_generations: { Args: { p_week: number }; Returns: number }
+      get_mf_progress: {
+        Args: { p_seed: number; p_user_id: string }
+        Returns: Json
+      }
       get_my_agent_code: {
         Args: never
         Returns: {
@@ -6601,6 +12253,16 @@ export type Database = {
         }[]
       }
       get_my_balance: { Args: never; Returns: Json }
+      get_recent_links: {
+        Args: { p_limit?: number; p_seed: number; p_user_id: string }
+        Returns: {
+          created_at: string
+          intensity: number
+          node_a: number
+          node_b: number
+          theme: string
+        }[]
+      }
       get_top_agents: {
         Args: never
         Returns: {
@@ -6612,9 +12274,27 @@ export type Database = {
         }[]
       }
       get_unread_count: { Args: { p_user_id?: string }; Returns: number }
+      get_user_battle_inventory: {
+        Args: never
+        Returns: {
+          acquired_at: string
+          code: string
+          description: string
+          icon_key: string
+          inventory_id: string
+          is_equipped: boolean
+          item_id: string
+          last_used_at: string
+          name: string
+          power: number
+          quantity: number
+          rarity: string
+          type: string
+        }[]
+      }
       get_user_by_email: {
         Args: { email_param: string }
-        Returns: unknown[]
+        Returns: Database["auth"]["Tables"]["users"]["Row"][]
         SetofOptions: {
           from: "*"
           to: "users"
@@ -6654,10 +12334,15 @@ export type Database = {
         | { Args: never; Returns: boolean }
         | { Args: { user_id_param: string }; Returns: boolean }
       has_mission_started: { Args: never; Returns: boolean }
-      has_role: {
-        Args: { role_name: string; user_id: string }
-        Returns: boolean
-      }
+      has_role:
+        | {
+            Args: {
+              role_name: Database["public"]["Enums"]["app_role"]
+              user_id: string
+            }
+            Returns: boolean
+          }
+        | { Args: { role_name: string; user_id: string }; Returns: boolean }
       has_user_played_spin_today: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -6667,7 +12352,9 @@ export type Database = {
         Returns: number
       }
       inc_buzz_today: { Args: { p_user_id: string }; Returns: number }
-      increment_buzz_counter: { Args: { p_user_id: string }; Returns: number }
+      increment_buzz_counter:
+        | { Args: { p_user_id: string }; Returns: number }
+        | { Args: { p_date: string; p_user_id: string }; Returns: undefined }
       increment_buzz_map_counter: {
         Args: { p_user_id: string }
         Returns: number
@@ -6675,6 +12362,10 @@ export type Database = {
       increment_daily_final_shot_counter: {
         Args: { p_mission_id: string; p_user_id: string }
         Returns: undefined
+      }
+      increment_dna_attribute: {
+        Args: { p_attribute: string; p_user: string }
+        Returns: boolean
       }
       increment_map_generation_counter: {
         Args: { p_user_id: string; p_week: number }
@@ -6685,11 +12376,33 @@ export type Database = {
         Returns: undefined
       }
       interest_track: { Args: { payload: Json }; Returns: undefined }
+      invoke_auto_push_cron:
+        | { Args: never; Returns: Json }
+        | { Args: { p_body?: Json }; Returns: Json }
       is_admin: { Args: { user_id?: string }; Returns: boolean }
       is_admin_email_safe: { Args: { p_email: string }; Returns: boolean }
       is_admin_secure: { Args: never; Returns: boolean }
       is_admin_user: { Args: never; Returns: boolean }
       is_ip_blocked: { Args: { ip_addr: unknown }; Returns: boolean }
+      list_available_battle_items: {
+        Args: never
+        Returns: {
+          base_price_m1u: number
+          code: string
+          description: string
+          icon_key: string
+          is_equipped: boolean
+          is_owned: boolean
+          item_id: string
+          max_stack: number
+          min_rank: number
+          name: string
+          owned_quantity: number
+          power: number
+          rarity: string
+          type: string
+        }[]
+      }
       list_my_redemptions: {
         Args: { limit_rows?: number; offset_rows?: number }
         Returns: {
@@ -6708,6 +12421,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      log_custom_admin_action: {
+        Args: { _action: string; _details?: Json }
+        Returns: string
       }
       log_potential_abuse: {
         Args: { p_event_type: string; p_user_id: string }
@@ -6738,9 +12455,34 @@ export type Database = {
         Returns: string
       }
       lookup_user_id_by_email: { Args: { p_email: string }; Returns: string }
+      m1_get_next_buzz_level: {
+        Args: { p_user_id: string }
+        Returns: {
+          current_count: number
+          current_week: number
+          level: number
+          m1u: number
+          radius_km: number
+        }[]
+      }
+      m1_pulse_heartbeat: { Args: never; Returns: undefined }
+      m1u_ensure_row: { Args: { _uid: string }; Returns: undefined }
+      m1u_fake_update: { Args: { _delta?: number }; Returns: Json }
+      m1u_get_balance: { Args: never; Returns: number }
+      m1u_get_summary: { Args: never; Returns: Json }
+      m1u_ping: { Args: never; Returns: Json }
       mark_choose_plan_seen: { Args: never; Returns: undefined }
       mark_norah_notification_clicked: {
         Args: { p_notification_id: string }
+        Returns: undefined
+      }
+      mf_add_link: {
+        Args: { p_from: string; p_length: number; p_seed: number; p_to: string }
+        Returns: undefined
+      }
+      mf_health: { Args: never; Returns: Json }
+      mf_upsert_seen: {
+        Args: { p_node_ids: string[]; p_seed: number }
         Returns: undefined
       }
       mirror_get_watermark: { Args: { p_name: string }; Returns: string }
@@ -6771,6 +12513,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      purchase_battle_item: {
+        Args: { p_item_id: string; p_quantity?: number }
+        Returns: Json
+      }
       qr_admin_upsert: {
         Args: {
           p_center_lat?: number
@@ -6791,6 +12537,7 @@ export type Database = {
         Args: { p_code: string; p_lat?: number; p_lon?: number }
         Returns: Json
       }
+      recompute_rank: { Args: { p_user_id: string }; Returns: undefined }
       record_intelligence_tool_usage: {
         Args: { p_mission_id: string; p_tool_name: string; p_user_id: string }
         Returns: boolean
@@ -6814,6 +12561,57 @@ export type Database = {
         Args: { user_id_input: string }
         Returns: Json
       }
+      rpc_neural_complete:
+        | {
+            Args: {
+              p_duration_ms: number
+              p_session_id: string
+              p_xp_gain: number
+            }
+            Returns: undefined
+          }
+        | { Args: { p_session: string }; Returns: undefined }
+      rpc_neural_link: {
+        Args: {
+          p_length: number
+          p_node_a: number
+          p_node_b: number
+          p_session_id: string
+        }
+        Returns: undefined
+      }
+      rpc_neural_save: {
+        Args: {
+          p_elapsed: number
+          p_moves: number
+          p_session: string
+          p_state: Json
+        }
+        Returns: undefined
+      }
+      rpc_neural_start:
+        | {
+            Args: { p_pairs?: number }
+            Returns: {
+              elapsed_seconds: number
+              id: string
+              last_state: Json
+              moves: number
+              pairs_count: number
+              seed: string
+              solved: boolean
+              solved_at: string | null
+              started_at: string
+              user_id: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "dna_neural_sessions"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | { Args: { p_pairs?: number; p_seed: string }; Returns: string }
       rpc_pulse_decay_tick: {
         Args: { p_decay_percent?: number }
         Returns: Json
@@ -6828,6 +12626,25 @@ export type Database = {
       rpc_pulse_ritual_start: { Args: never; Returns: Json }
       rpc_pulse_ritual_test_fire: { Args: never; Returns: Json }
       rpc_pulse_state_read: { Args: never; Returns: Json }
+      rpc_units_credit: {
+        Args: {
+          _delta: number
+          _meta?: Json
+          _reason?: string
+          _ref_id?: string
+        }
+        Returns: number
+      }
+      secure_upsert_agent_location: {
+        Args: {
+          p_accuracy: number
+          p_lat: number
+          p_lng: number
+          p_status?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       send_user_notification: {
         Args: {
           p_message: string
@@ -6838,8 +12655,21 @@ export type Database = {
         }
         Returns: string
       }
+      set_agent_dna_visual: { Args: { payload: Json }; Returns: boolean }
       set_hide_tutorial: { Args: { p_hide: boolean }; Returns: undefined }
+      set_my_agent_location:
+        | { Args: { lat: number; lng: number }; Returns: undefined }
+        | {
+            Args: {
+              p_accuracy?: number
+              p_lat: number
+              p_lng: number
+              p_status?: string
+            }
+            Returns: undefined
+          }
       setup_developer_user: { Args: { uid: string }; Returns: undefined }
+      start_norah_session: { Args: { _title?: string }; Returns: string }
       submit_final_shot: {
         Args: { p_latitude: number; p_longitude: number; p_mission_id: string }
         Returns: Json
@@ -6886,6 +12716,26 @@ export type Database = {
         }
         Returns: string
       }
+      upsert_dna_mind_fractal_session: {
+        Args: {
+          p_completion_ratio: number
+          p_moves: number
+          p_seed: number
+          p_time_spent: number
+        }
+        Returns: undefined
+      }
+      upsert_dna_mind_link: {
+        Args: {
+          p_a: number
+          p_b: number
+          p_intensity?: number
+          p_seed: number
+          p_theme: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       upsert_fcm_subscription: {
         Args: {
           p_device_info?: Json
@@ -6916,6 +12766,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       push_kind: "morning" | "buzz" | "buzzmap" | "motivation" | "custom"
       referral_status: "pending" | "registered"
     }
@@ -6925,6 +12776,511 @@ export type Database = {
         free_remaining: number | null
         message: string | null
       }
+    }
+  }
+  storage: {
+    Tables: {
+      buckets: {
+        Row: {
+          allowed_mime_types: string[] | null
+          avif_autodetection: boolean | null
+          created_at: string | null
+          file_size_limit: number | null
+          id: string
+          name: string
+          owner: string | null
+          owner_id: string | null
+          public: boolean | null
+          type: Database["storage"]["Enums"]["buckettype"]
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_mime_types?: string[] | null
+          avif_autodetection?: boolean | null
+          created_at?: string | null
+          file_size_limit?: number | null
+          id: string
+          name: string
+          owner?: string | null
+          owner_id?: string | null
+          public?: boolean | null
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_mime_types?: string[] | null
+          avif_autodetection?: boolean | null
+          created_at?: string | null
+          file_size_limit?: number | null
+          id?: string
+          name?: string
+          owner?: string | null
+          owner_id?: string | null
+          public?: boolean | null
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      buckets_analytics: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          format: string
+          id: string
+          name: string
+          type: Database["storage"]["Enums"]["buckettype"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          format?: string
+          id?: string
+          name: string
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          format?: string
+          id?: string
+          name?: string
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      buckets_vectors: {
+        Row: {
+          created_at: string
+          id: string
+          type: Database["storage"]["Enums"]["buckettype"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      migrations: {
+        Row: {
+          executed_at: string | null
+          hash: string
+          id: number
+          name: string
+        }
+        Insert: {
+          executed_at?: string | null
+          hash: string
+          id: number
+          name: string
+        }
+        Update: {
+          executed_at?: string | null
+          hash?: string
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      objects: {
+        Row: {
+          bucket_id: string | null
+          created_at: string | null
+          id: string
+          last_accessed_at: string | null
+          level: number | null
+          metadata: Json | null
+          name: string | null
+          owner: string | null
+          owner_id: string | null
+          path_tokens: string[] | null
+          updated_at: string | null
+          user_metadata: Json | null
+          version: string | null
+        }
+        Insert: {
+          bucket_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_accessed_at?: string | null
+          level?: number | null
+          metadata?: Json | null
+          name?: string | null
+          owner?: string | null
+          owner_id?: string | null
+          path_tokens?: string[] | null
+          updated_at?: string | null
+          user_metadata?: Json | null
+          version?: string | null
+        }
+        Update: {
+          bucket_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_accessed_at?: string | null
+          level?: number | null
+          metadata?: Json | null
+          name?: string | null
+          owner?: string | null
+          owner_id?: string | null
+          path_tokens?: string[] | null
+          updated_at?: string | null
+          user_metadata?: Json | null
+          version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objects_bucketId_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prefixes: {
+        Row: {
+          bucket_id: string
+          created_at: string | null
+          level: number
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string | null
+          level?: number
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string | null
+          level?: number
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prefixes_bucketId_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      s3_multipart_uploads: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          id: string
+          in_progress_size: number
+          key: string
+          owner_id: string | null
+          upload_signature: string
+          user_metadata: Json | null
+          version: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          id: string
+          in_progress_size?: number
+          key: string
+          owner_id?: string | null
+          upload_signature: string
+          user_metadata?: Json | null
+          version: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          id?: string
+          in_progress_size?: number
+          key?: string
+          owner_id?: string | null
+          upload_signature?: string
+          user_metadata?: Json | null
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "s3_multipart_uploads_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      s3_multipart_uploads_parts: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          etag: string
+          id: string
+          key: string
+          owner_id: string | null
+          part_number: number
+          size: number
+          upload_id: string
+          version: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          etag: string
+          id?: string
+          key: string
+          owner_id?: string | null
+          part_number: number
+          size?: number
+          upload_id: string
+          version: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          etag?: string
+          id?: string
+          key?: string
+          owner_id?: string | null
+          part_number?: number
+          size?: number
+          upload_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "s3_multipart_uploads_parts_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "s3_multipart_uploads_parts_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "s3_multipart_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vector_indexes: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          data_type: string
+          dimension: number
+          distance_metric: string
+          id: string
+          metadata_configuration: Json | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          data_type: string
+          dimension: number
+          distance_metric: string
+          id?: string
+          metadata_configuration?: Json | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          data_type?: string
+          dimension?: number
+          distance_metric?: string
+          id?: string
+          metadata_configuration?: Json | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vector_indexes_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets_vectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      add_prefixes: {
+        Args: { _bucket_id: string; _name: string }
+        Returns: undefined
+      }
+      can_insert_object: {
+        Args: { bucketid: string; metadata: Json; name: string; owner: string }
+        Returns: undefined
+      }
+      delete_leaf_prefixes: {
+        Args: { bucket_ids: string[]; names: string[] }
+        Returns: undefined
+      }
+      delete_prefix: {
+        Args: { _bucket_id: string; _name: string }
+        Returns: boolean
+      }
+      extension: { Args: { name: string }; Returns: string }
+      filename: { Args: { name: string }; Returns: string }
+      foldername: { Args: { name: string }; Returns: string[] }
+      get_level: { Args: { name: string }; Returns: number }
+      get_prefix: { Args: { name: string }; Returns: string }
+      get_prefixes: { Args: { name: string }; Returns: string[] }
+      get_size_by_bucket: {
+        Args: never
+        Returns: {
+          bucket_id: string
+          size: number
+        }[]
+      }
+      list_multipart_uploads_with_delimiter: {
+        Args: {
+          bucket_id: string
+          delimiter_param: string
+          max_keys?: number
+          next_key_token?: string
+          next_upload_token?: string
+          prefix_param: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          key: string
+        }[]
+      }
+      list_objects_with_delimiter: {
+        Args: {
+          bucket_id: string
+          delimiter_param: string
+          max_keys?: number
+          next_token?: string
+          prefix_param: string
+          start_after?: string
+        }
+        Returns: {
+          id: string
+          metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+      lock_top_prefixes: {
+        Args: { bucket_ids: string[]; names: string[] }
+        Returns: undefined
+      }
+      operation: { Args: never; Returns: string }
+      search: {
+        Args: {
+          bucketname: string
+          levels?: number
+          limits?: number
+          offsets?: number
+          prefix: string
+          search?: string
+          sortcolumn?: string
+          sortorder?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+      search_legacy_v1: {
+        Args: {
+          bucketname: string
+          levels?: number
+          limits?: number
+          offsets?: number
+          prefix: string
+          search?: string
+          sortcolumn?: string
+          sortorder?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+      search_v1_optimised: {
+        Args: {
+          bucketname: string
+          levels?: number
+          limits?: number
+          offsets?: number
+          prefix: string
+          search?: string
+          sortcolumn?: string
+          sortorder?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+      search_v2: {
+        Args: {
+          bucket_name: string
+          levels?: number
+          limits?: number
+          prefix: string
+          sort_column?: string
+          sort_column_after?: string
+          sort_order?: string
+          start_after?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          key: string
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+    }
+    Enums: {
+      buckettype: "STANDARD" | "ANALYTICS" | "VECTOR"
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
@@ -7047,10 +13403,36 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  auth: {
+    Enums: {
+      aal_level: ["aal1", "aal2", "aal3"],
+      code_challenge_method: ["s256", "plain"],
+      factor_status: ["unverified", "verified"],
+      factor_type: ["totp", "webauthn", "phone"],
+      oauth_authorization_status: ["pending", "approved", "denied", "expired"],
+      oauth_client_type: ["public", "confidential"],
+      oauth_registration_type: ["dynamic", "manual"],
+      oauth_response_type: ["code"],
+      one_time_token_type: [
+        "confirmation_token",
+        "reauthentication_token",
+        "recovery_token",
+        "email_change_token_new",
+        "email_change_token_current",
+        "phone_change_token",
+      ],
+    },
+  },
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       push_kind: ["morning", "buzz", "buzzmap", "motivation", "custom"],
       referral_status: ["pending", "registered"],
+    },
+  },
+  storage: {
+    Enums: {
+      buckettype: ["STANDARD", "ANALYTICS", "VECTOR"],
     },
   },
 } as const

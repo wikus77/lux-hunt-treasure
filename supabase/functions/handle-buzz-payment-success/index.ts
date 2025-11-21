@@ -1,258 +1,146 @@
-/**
- * © 2025 M1SSION™ — Handle Buzz Payment Success Edge Function
- */ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'jsr:@supabase/supabase-js@2.49.8';
-import { corsHeaders } from '../_shared/cors.ts';
-// Helper: calculate ISO week number (UTC)
-function isoWeekUTC(d = new Date()) {
-  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-  const dayNum = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+type J = Record<string, unknown>;
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+const PLAN = [
+  { radius: 500, m1u:  50 },
+  { radius: 450, m1u:  60 },
+  { radius: 410, m1u:  70 },
+  { radius: 365, m1u:  80 },
+  { radius: 325, m1u:  90 },
+  { radius: 295, m1u: 100 },
+  { radius: 275, m1u: 110 },
+  { radius: 255, m1u: 120 },
+  { radius: 235, m1u: 130 },
+  { radius: 220, m1u: 140 },
+  { radius: 205, m1u: 150 },
+  { radius: 190, m1u: 160 },
+  { radius: 175, m1u: 170 },
+  { radius: 165, m1u: 180 },
+  { radius: 155, m1u: 190 },
+  { radius: 145, m1u: 200 },
+  { radius: 135, m1u: 210 },
+  { radius: 125, m1u: 220 },
+  { radius: 115, m1u: 230 },
+  { radius: 105, m1u: 240 },
+  { radius:  95, m1u: 250 },
+  { radius:  85, m1u: 260 },
+  { radius:  75, m1u: 270 },
+  { radius:  65, m1u: 280 },
+  { radius:  55, m1u: 290 },
+  { radius:  45, m1u: 300 },
+  { radius:  35, m1u: 310 },
+  { radius:  25, m1u: 320 },
+];
+
+function pickByIndex(n: number) {
+  const i = Math.min(n, PLAN.length - 1);
+  return PLAN[i];
 }
-serve(async (req)=>{
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', {
-      headers: corsHeaders
-    });
-  }
+
+serve(async (req) => {
+  const db = createClient(SUPABASE_URL, SERVICE_ROLE, {
+    global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+  });
+
   try {
-    console.log('💳[HBPS] Function started');
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    // Get user from JWT
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.log('💳[HBPS] Missing authorization header');
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Unauthorized'
-      }), {
-        status: 401,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
+    const b = (await req.json()) as {
+      paymentIntentId?: string;
+      isBuzzMap?: boolean;
+      coordinates?: { lat: number; lng: number };
+      amount?: number;       // cents EUR
+      amount_m1u?: number;   // optional override M1U
+      dry_run?: boolean;
+    };
+
+    if (!b?.isBuzzMap) {
+      return new Response(JSON.stringify({ success: false, error: "isBuzzMap=false" }), { status: 400 });
     }
-    const jwt = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
-      console.log('💳[HBPS] Authentication failed:', userError?.message);
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Unauthorized'
-      }), {
-        status: 401,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
-    }
-    console.log('💳[HBPS] User authenticated:', user.id);
-    // Parse request body - handle both camelCase and snake_case formats
-    const body = await req.json();
-    const pid = body.payment_intent_id ?? body.paymentIntentId;
-    const isMap = body.is_buzz_map ?? body.isBuzzMap ?? false;
-    const coords = body.coordinates ?? body.coords ?? null;
-    const amount = body.amount || 0;
-    console.log('💳[HBPS] Normalized payload:', {
-      payment_intent_id: pid,
-      is_buzz_map: isMap,
-      coordinates: coords,
-      amount: amount,
-      user_id: user.id
-    });
-    if (!pid) {
-      throw new Error('Missing payment_intent_id');
-    }
-    // Handle BUZZ MAP payment success
-    if (isMap === true) {
-      console.log('💳[HBPS] Processing BUZZ MAP payment');
-      if (!coords || !coords.lat || !coords.lng) {
-        await supabase.from('buzz_logs').insert({
-          user_id: user.id,
-          action: 'buzz_map_area_failed',
-          step: 'missing_coordinates',
-          details: {
-            payment_intent_id: pid
-          }
-        });
+
+    const { data: au } = await db.auth.getUser();
+    const uid = au?.user?.id;
+    if (!uid) return new Response(JSON.stringify({ success: false, error: "unauthorized" }), { status: 401 });
+
+    if (b.paymentIntentId) {
+      const { data: ex } = await db
+        .from("buzz_map_actions")
+        .select("payment_intent_id")
+        .eq("payment_intent_id", b.paymentIntentId)
+        .maybeSingle();
+      if (ex) {
         return new Response(JSON.stringify({
-          success: false,
-          error: 'missing_coordinates'
-        }), {
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        });
+          success: true, message: "Already processed", payment_intent_id: b.paymentIntentId
+        }), { headers: { "Content-Type": "application/json" } });
       }
-      const radiusKm = 500; // fallback sicuro (mantieni la tua logica se già presente)
-      const priceEur = amount != null ? Math.round(amount) / 100 : 4.99;
-      const week = isoWeekUTC(); // richiesto dal tuo schema NOT NULL
-      console.log('💳[HBPS] BUZZ MAP data:', {
-        radiusKm,
-        priceEur,
-        week,
-        coordinates: coords
-      });
-      // primo tentativo: includi anche center_lat/center_lng (se la tabella li ha, ok; se no, ritentiamo senza)
-      const areaInsertBase = {
-        user_id: user.id,
-        source: 'buzz_map',
-        lat: Number(coords.lat),
-        lng: Number(coords.lng),
-        radius_km: radiusKm,
-        week
-      };
-      const withCenter = {
-        ...areaInsertBase,
-        center_lat: Number(coords.lat),
-        center_lng: Number(coords.lng)
-      };
-      let areaId = null;
-      // try 1: con center_*
-      let ins1 = await supabase.from('user_map_areas').insert(withCenter).select('id').single();
-      if (ins1.error) {
-        const msg = `${ins1.error.message || ''}`.toLowerCase();
-        const isUndefinedCenterCols = msg.includes('column') && (msg.includes('center_lat') || msg.includes('center_lng')) && msg.includes('does not exist');
-        if (isUndefinedCenterCols) {
-          console.log('💳[HBPS] center_* columns do not exist, retrying without them');
-          // try 2: senza center_*
-          const ins2 = await supabase.from('user_map_areas').insert(areaInsertBase).select('id').single();
-          if (ins2.error) {
-            console.error('💳[HBPS] user_map_areas insert error:', ins2.error);
-            await supabase.from('buzz_logs').insert({
-              user_id: user.id,
-              action: 'buzz_map_area_failed',
-              step: 'insert_error',
-              details: {
-                payment_intent_id: pid,
-                error: ins2.error.message,
-                attempted_insert: areaInsertBase
-              }
-            });
-            return new Response(JSON.stringify({
-              success: false,
-              error: 'area_insert_failed'
-            }), {
-              status: 500,
-              headers: {
-                ...corsHeaders,
-                'Content-Type': 'application/json'
-              }
-            });
-          }
-          areaId = ins2.data?.id ?? null;
-        } else {
-          console.error('💳[HBPS] user_map_areas insert error:', ins1.error);
-          await supabase.from('buzz_logs').insert({
-            user_id: user.id,
-            action: 'buzz_map_area_failed',
-            step: 'insert_error',
-            details: {
-              payment_intent_id: pid,
-              error: ins1.error.message,
-              attempted_insert: withCenter
-            }
-          });
-          return new Response(JSON.stringify({
-            success: false,
-            error: 'area_insert_failed'
-          }), {
-            status: 500,
-            headers: {
-              ...corsHeaders,
-              'Content-Type': 'application/json'
-            }
-          });
-        }
-      } else {
-        areaId = ins1.data?.id ?? null;
-      }
-      console.log('💳[HBPS] Map area created with ID:', areaId);
-      // azione storica (non vincolante)
-      const actionInsert = {
-        user_id: user.id,
-        cost_eur: priceEur,
-        clue_count: 1,
-        radius_generated: radiusKm,
-        payment_intent_id: pid
-      };
-      const act = await supabase.from('buzz_map_actions').insert(actionInsert);
-      if (act.error && `${act.error.message}`.includes('does not exist')) {
-        console.log('💳[HBPS] payment_intent_id column does not exist in buzz_map_actions, retrying without it');
-        // best-effort: ritenta senza payment_intent_id
-        await supabase.from('buzz_map_actions').insert({
-          user_id: user.id,
-          cost_eur: priceEur,
-          clue_count: 1,
-          radius_generated: radiusKm
-        });
-      } else if (act.error) {
-        console.error('💳[HBPS] buzz_map_actions insert error:', act.error);
-      } else {
-        console.log('💳[HBPS] buzz_map_actions insert successful');
-      }
-      await supabase.from('buzz_logs').insert({
-        user_id: user.id,
-        action: 'buzz_map_area_created',
-        step: 'payment_completed',
-        details: {
-          payment_intent_id: pid,
-          area_id: areaId,
-          radius_km: radiusKm,
-          price_eur: priceEur,
-          coordinates: coords
-        }
-      });
-      console.log('💳[HBPS] BUZZ MAP processing completed successfully');
+    }
+
+    const { count } = await db
+      .from("user_map_areas")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", uid)
+      .eq("source", "buzz_map");
+
+    const prev = count ?? 0;
+    const nextLevel = prev + 1;
+    const plan = pickByIndex(prev);
+
+    const radiusKm = plan.radius;
+    const costM1U  = Number.isFinite(b.amount_m1u) ? Number(b.amount_m1u) : plan.m1u;
+    const priceEur = typeof b.amount === "number" ? Math.round(b.amount) / 100 : null;
+
+    if (b.dry_run) {
       return new Response(JSON.stringify({
         success: true,
-        message: 'Buzz Map area created',
-        payment_intent_id: pid,
-        area_id: areaId,
+        message: "Buzz Map DRY-RUN",
+        prev_count: prev,
+        next_level: nextLevel,
         radius_km: radiusKm,
+        cost_m1u: costM1U,
         price_eur: priceEur
-      }), {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
+      }), { headers: { "Content-Type": "application/json" } });
     }
-    // Handle regular BUZZ payment (existing logic unchanged)
-    console.log('💳[HBPS] Processing regular BUZZ payment');
-    const response = {
-      success: true,
-      type: "buzz",
-      message: "Regular BUZZ processed successfully",
-      payment_intent_id: pid
-    };
-    return new Response(JSON.stringify(response), {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
-  } catch (error) {
-    console.error('💳[HBPS] Function error:', error);
+
+    const { data: area, error: areaErr } = await db
+      .from("user_map_areas")
+      .insert({
+        user_id: uid,
+        source: "buzz_map",
+        lat: (b?.coordinates?.lat ?? b?.lat),
+        lng: (b?.coordinates?.lng ?? b?.lng),
+        radius_km: radiusKm,
+        level: nextLevel
+      } as J)
+      .select("id")
+      .single();
+    if (areaErr) throw areaErr;
+
+    await db.from("buzz_map_actions").insert({
+      user_id: uid,
+      payment_intent_id: b.paymentIntentId ?? null,
+      radius_generated: radiusKm,
+      cost_eur: priceEur,
+      cost_m1u: costM1U,
+      coordinates: b.coordinates ? { lat: b.coordinates.lat, lng: b.coordinates.lng } : null
+    } as J);
+
     return new Response(JSON.stringify({
-      success: false,
-      error: error.message
-    }), {
-      status: 400,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
+      success: true,
+      message: "Buzz Map area created",
+      payment_intent_id: b.paymentIntentId ?? null,
+      area_id: area?.id,
+      level: nextLevel,
+      radius_km: radiusKm,
+      cost_m1u: costM1U,
+      price_eur: priceEur
+    ,
+      coordinates: (body?.coordinates ? { lat: body.coordinates.lat, lng: body.coordinates.lng } : null)
+    }), { headers: { "Content-Type": "application/json" } });
+  } catch (e) {
+    return new Response(JSON.stringify({ success: false, error: String((e as Error)?.message ?? e) }), { status: 500 });
   }
 });

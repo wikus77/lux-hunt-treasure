@@ -49,3 +49,5 @@ supabase/.temp/
 # local backups
 .backup_*
 .lovable-logs
+.env*
+.env.local

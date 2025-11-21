@@ -1,3 +1,4 @@
+import './dev/sw-off';
 import "@/lib/pwa/sw-autorun";
 import { ensureSWAnyHost } from "//@/lib/pwa/sw-register-anyhost";
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

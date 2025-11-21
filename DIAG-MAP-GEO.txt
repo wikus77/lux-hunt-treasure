@@ -1,0 +1,154 @@
+src/intel/norah/utils/telemetry.ts:31:    await supabase.from('norah_events').insert({
+src/intel/norah/state/messageStore.ts:113:    const { data, error } = await supabase.from('norah_messages').insert({
+src/intel/norah/state/messageStore.ts:195:    const { data, error } = await supabase.from('norah_memory_episodes').insert({
+src/intel/norah/engine/emotionalContext.ts:121:    await supabase.from('norah_events').insert({
+src/features/pulse/components/PulseLeaderboard.tsx:34:        const { data, error } = await supabase.from(viewName).select('*').limit(50);
+src/features/pulse/hooks/usePulseRealtime.ts:46:      const { data, error: rpcError } = await supabase.rpc('rpc_pulse_state_read');
+src/features/pulse/ritual/OpenButton.tsx:72:        const { data, error } = await supabase.rpc('rpc_pulse_ritual_claim', {
+src/features/living-map/adapters/readOnlyData.ts:128:  // const { data } = await supabase.from('portals').select('*');
+src/utils/security-hardening.ts:190:    await supabase.from('security_audit_log').insert({
+src/components/RagQuery.tsx.bak.geofix:19:        await supabase.from('norah_events').insert({
+src/components/landing/pre-registration/preRegistrationService.ts:285:    const { error } = await supabase.rpc('add_referral_credits', {
+src/components/landing/pre-registration/preRegistrationService.ts.bak.geofix:285:    const { error } = await supabase.rpc('add_referral_credits', {
+src/components/intelligence/FinalShotManager.tsx.bak.geofix:98:      const { data, error } = await supabase.rpc('submit_final_shot', {
+src/components/intelligence/FinalShotPage.tsx:159:      const { data, error } = await supabase.rpc('submit_final_shot', {
+src/components/intelligence/FinalShotPage.tsx.bak.geofix:159:      const { data, error } = await supabase.rpc('submit_final_shot', {
+src/components/intelligence/FinalShotManager.tsx:98:      const { data, error } = await supabase.rpc('submit_final_shot', {
+src/components/auth/debug-auth.tsx.bak.geofix:180:      const { data, error } = await supabase.from('profiles').select('count').limit(1);
+src/components/auth/debug-auth.tsx:180:      const { data, error } = await supabase.from('profiles').select('count').limit(1);
+src/components/gamification/DailyCheckInButton.tsx.bak.geofix:81:      const { error: xpError } = await supabase.rpc('award_xp', {
+src/components/gamification/DailyCheckInButton.tsx:81:      const { error: xpError } = await supabase.rpc('award_xp', {
+src/components/payment/FakeStripeCheckout.tsx.bak.geofix:47:      await supabase.from('subscriptions').upsert({
+src/components/payment/FakeStripeCheckout.tsx.bak.geofix:61:      await supabase.from('payment_transactions').insert({
+src/components/payment/FakeStripeCheckout.tsx:47:      await supabase.from('subscriptions').upsert({
+src/components/payment/FakeStripeCheckout.tsx:61:      await supabase.from('payment_transactions').insert({
+src/components/contacts/ContactForm.tsx.bak.geofix:35:      await supabase.from('abuse_logs').insert({
+src/components/contacts/SimpleContactForm.tsx.bak.geofix:35:      await supabase.from('abuse_logs').insert({
+src/components/contacts/SimpleContactForm.tsx:35:      await supabase.from('abuse_logs').insert({
+src/components/contacts/ContactForm.tsx:35:      await supabase.from('abuse_logs').insert({
+src/components/RagQuery.tsx:19:        await supabase.from('norah_events').insert({
+src/components/map/MapContainer.tsx:126:      navigator.geolocation.getCurrentPosition(
+src/components/map/MapZoomControls.tsx.bak.geofix:19:    if (navigator.geolocation) {
+src/components/map/MapZoomControls.tsx.bak.geofix:20:      navigator.geolocation.getCurrentPosition(
+src/components/map/MapMarkers.tsx.bak.geofix:172:      await supabase.rpc('award_xp', {
+src/components/map/BuzzMapButtonSecure.tsx.bak.1763365112.bak.geofix:43:    if (!navigator.geolocation) return;
+src/components/map/BuzzMapButtonSecure.tsx.bak.1763365112.bak.geofix:44:    const watchId = navigator.geolocation.watchPosition(
+src/components/map/BuzzMapButtonSecure.tsx.bak.1763365112.bak.geofix:54:    return () => navigator.geolocation.clearWatch(watchId);
+src/components/map/MapZoomControls.tsx:19:    if (navigator.geolocation) {
+src/components/map/MapZoomControls.tsx:20:      navigator.geolocation.getCurrentPosition(
+src/components/map/BuzzMapButtonSecure.tsx.bak.1763365112:43:    if (!navigator.geolocation) return;
+src/components/map/BuzzMapButtonSecure.tsx.bak.1763365112:44:    const watchId = navigator.geolocation.watchPosition(
+src/components/map/BuzzMapButtonSecure.tsx.bak.1763365112:54:    return () => navigator.geolocation.clearWatch(watchId);
+src/components/map/BuzzMapButtonSecure.tsx.bak.1763364701:46:    if (!navigator.geolocation) return;
+src/components/map/BuzzMapButtonSecure.tsx.bak.1763364701:48:    const watchId = navigator.geolocation.watchPosition(
+src/components/map/BuzzMapButtonSecure.tsx.bak.1763364701:64:    return () => navigator.geolocation.clearWatch(watchId);
+src/components/map/BuzzMapButtonSecure.tsx.bak.geofix:40:    if (!navigator.geolocation) return;
+src/components/map/BuzzMapButtonSecure.tsx.bak.geofix:41:    const watchId = navigator.geolocation.watchPosition(
+src/components/map/BuzzMapButtonSecure.tsx.bak.geofix:49:    return () => navigator.geolocation.clearWatch(watchId);
+src/components/map/MapMarkers.tsx:172:      await supabase.rpc('award_xp', {
+src/components/map/MapContainer.tsx.bak.geofix:126:      navigator.geolocation.getCurrentPosition(
+src/components/map/BuzzMapButtonSecure.tsx:40:    if (!navigator.geolocation) return;
+src/components/map/BuzzMapButtonSecure.tsx:41:    const watchId = navigator.geolocation.watchPosition(
+src/components/map/BuzzMapButtonSecure.tsx:49:    return () => navigator.geolocation.clearWatch(watchId);
+src/components/map/BuzzMapButtonSecure.tsx.bak.1763364701.bak.geofix:46:    if (!navigator.geolocation) return;
+src/components/map/BuzzMapButtonSecure.tsx.bak.1763364701.bak.geofix:48:    const watchId = navigator.geolocation.watchPosition(
+src/components/map/BuzzMapButtonSecure.tsx.bak.1763364701.bak.geofix:64:    return () => navigator.geolocation.clearWatch(watchId);
+src/components/profile/EnhancedPersonalityQuiz.tsx:319:      const { error } = await supabase.rpc('update_personality_quiz_result', {
+src/components/profile/EnhancedPersonalityQuiz.tsx.bak.geofix:319:      const { error } = await supabase.rpc('update_personality_quiz_result', {
+src/components/buzz/BuzzMapRewardHandler.tsx:39:      const { data: consumed, error: consumeErr } = await supabase.rpc('consume_credit', {
+src/components/buzz/BuzzRewardHandler.tsx:39:      const { data: consumed, error: consumeErr } = await supabase.rpc('consume_credit', {
+src/components/buzz/BuzzRewardHandler.tsx.bak.geofix:39:      const { data: consumed, error: consumeErr } = await supabase.rpc('consume_credit', {
+src/components/buzz/BuzzActionButton.tsx:82:      const { data: consumed, error: consumeErr } = await supabase.rpc('consume_credit', {
+src/components/buzz/BuzzMapRewardHandler.tsx.bak.geofix:39:      const { data: consumed, error: consumeErr } = await supabase.rpc('consume_credit', {
+src/components/buzz/BuzzActionButton.tsx.bak.geofix:82:      const { data: consumed, error: consumeErr } = await supabase.rpc('consume_credit', {
+src/components/legal/CookieBanner.tsx.bak.geofix:181:        await supabase.from('user_consents').upsert({
+src/components/legal/CookieBanner.tsx:181:        await supabase.from('user_consents').upsert({
+src/components/prizes/SmartPrizeManager.tsx:128:    if (!navigator.geolocation) {
+src/components/prizes/SmartPrizeManager.tsx:142:        navigator.geolocation.getCurrentPosition(
+src/components/prizes/SmartPrizeManager.tsx:173:        navigator.geolocation.watchPosition(
+src/components/prizes/SmartPrizeManager.tsx.bak.geofix:128:    if (!navigator.geolocation) {
+src/components/prizes/SmartPrizeManager.tsx.bak.geofix:142:        navigator.geolocation.getCurrentPosition(
+src/components/prizes/SmartPrizeManager.tsx.bak.geofix:173:        navigator.geolocation.watchPosition(
+src/hooks/useIPGeolocation.ts:66:          navigator.geolocation.getCurrentPosition(
+src/hooks/useGeoWatcher.ts:54:    if (watchId.current !== null && navigator.geolocation) {
+src/hooks/useGeoWatcher.ts:55:      try { navigator.geolocation.clearWatch(watchId.current); } catch {}
+src/hooks/useGeoWatcher.ts:121:    if (err.code === 1 && navigator.geolocation) {
+src/hooks/useGeoWatcher.ts:123:      navigator.geolocation.getCurrentPosition(
+src/hooks/useGeoWatcher.ts:156:    if (!navigator.geolocation) {
+src/hooks/useGeoWatcher.ts:165:          lastError: 'navigator.geolocation not available',
+src/hooks/useGeoWatcher.ts:177:      console.log('🌍 CRITICAL INIT GEO - Starting geolocation for:', { isIOS, isPWA, hasGeolocation: !!navigator.geolocation });
+src/hooks/useGeoWatcher.ts:203:      // First try getCurrentPosition
+src/hooks/useGeoWatcher.ts:204:      navigator.geolocation.getCurrentPosition(
+src/hooks/useGeoWatcher.ts:211:            watchId.current = navigator.geolocation.watchPosition(
+src/hooks/useGeoWatcher.ts:229:          navigator.geolocation.getCurrentPosition(
+src/hooks/useGeoWatcher.ts:280:        watchId.current = navigator.geolocation.watchPosition(onSuccess, onError, options);
+src/hooks/useGeoWatcher.ts:317:      // First try getCurrentPosition
+src/hooks/useGeoWatcher.ts:318:      navigator.geolocation.getCurrentPosition(
+src/hooks/useGeoWatcher.ts:325:            watchId.current = navigator.geolocation.watchPosition(
+src/hooks/useGeoWatcher.ts:343:          navigator.geolocation.getCurrentPosition(
+src/hooks/useGeoWatcher.ts:417:      // Force permission prompt with getCurrentPosition
+src/hooks/useGeoWatcher.ts:418:      if (navigator.geolocation) {
+src/hooks/useGeoWatcher.ts:420:          navigator.geolocation.getCurrentPosition(
+src/hooks/use-registration.ts:155:            const { data: codeResult } = await supabase.rpc('generate_unique_agent_code');
+src/hooks/useOnboardingTutorial.ts:23:          const { data, error } = await supabase.rpc('get_user_flags');
+src/hooks/useOnboardingTutorial.ts:60:        const { error } = await supabase.rpc('set_hide_tutorial', { p_hide: true });
+src/hooks/useGeolocation.ts:37:    if (watchId.current != null) navigator.geolocation.clearWatch(watchId.current);
+src/hooks/useGeolocation.ts:47:    watchId.current = navigator.geolocation.watchPosition(
+src/hooks/useGeolocation.ts:58:      if (watchId.current != null) navigator.geolocation.clearWatch(watchId.current);
+src/hooks/useNorahProactiveListener.ts:49:          supabase.rpc('mark_norah_notification_clicked', {
+src/hooks/useSimpleGeolocation.ts:27:      geolocationAvailable: !!navigator.geolocation,
+src/hooks/useSimpleGeolocation.ts:33:    if (!navigator.geolocation) {
+src/hooks/useSimpleGeolocation.ts:49:    console.log('🎯 SIMPLE GEO: Calling getCurrentPosition with options:', {
+src/hooks/useSimpleGeolocation.ts:55:    navigator.geolocation.getCurrentPosition(
+src/hooks/useNewMapPage.ts:154:    if (navigator.geolocation) {
+src/hooks/useNewMapPage.ts:155:      navigator.geolocation.getCurrentPosition(
+src/hooks/usePanelAccessProtection.ts:41:      await supabase.from('admin_logs').insert({
+src/hooks/map/useNewMapPage.ts:180:    if (navigator.geolocation) {
+src/hooks/map/useNewMapPage.ts:182:      navigator.geolocation.getCurrentPosition(
+src/hooks/profile/useProfileSubscription.ts:176:        const { error: insertError } = await supabase.from('subscriptions').insert({
+src/hooks/useXpSystem.ts:37:      const { data, error } = await supabase.rpc('get_user_xp_status', {
+src/hooks/useXpSystem.ts:84:      const { data, error } = await supabase.rpc('consume_credit', {
+src/hooks/useGeoMarkerAlert.ts:55:        navigator.geolocation.getCurrentPosition(resolve, reject, {
+src/hooks/buzz/useBuzzHandler.ts:136:      await supabase.from('buzz_map_actions').insert({
+src/hooks/buzz/useAbuseProtection.ts:29:      await supabase.from('abuse_logs').insert({
+src/hooks/useQRMapIntegration.ts:68:    if (navigator.geolocation) {
+src/hooks/useQRMapIntegration.ts:69:      navigator.geolocation.getCurrentPosition(
+src/lib/ai-gateway/aiGateway.ts:199:      await supabase.from('ai_events').insert({
+src/lib/push/mirrorAdapter.ts:87:    const { data, error } = await supabase.rpc('exec_sql', { sql });
+src/lib/dna/dnaClient.ts:18:      const { error } = await supabase.rpc('ensure_agent_dna', {
+src/pages/settings/PrivacyPermissionsSettings.tsx:111:              navigator.geolocation.getCurrentPosition(resolve, reject);
+src/pages/settings/SettingsPage.tsx:46:    if (navigator.geolocation) {
+src/pages/settings/SettingsPage.tsx:47:      navigator.geolocation.getCurrentPosition(
+src/pages/settings/LegalSettings.tsx:62:      await supabase.from('user_clues').delete().eq('user_id', user.id);
+src/pages/settings/LegalSettings.tsx:63:      await supabase.from('user_buzz_counter').delete().eq('user_id', user.id);
+src/pages/settings/LegalSettings.tsx:64:      await supabase.from('user_notifications').delete().eq('user_id', user.id);
+src/pages/settings/LegalSettings.tsx:65:      await supabase.from('subscriptions').delete().eq('user_id', user.id);
+src/pages/settings/LegalSettings.tsx:68:      await supabase.from('profiles').delete().eq('id', user.id);
+src/pages/settings/SecuritySettings.tsx:49:      await supabase.from('profiles').update({ 
+src/pages/BattleArena.tsx:100:    await supabase.from('battles').select('id').eq('id', battleId).single();
+src/pages/DiagSupabase.tsx:21:        const { data, error } = await supabase.rpc('supabase_client_health' as any);
+src/pages/admin/MissionPanelPage.tsx:72:        const { data: profile, error } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+src/pages/map/useMapLogic.ts.bak.geofix:40:    if (navigator.geolocation) {
+src/pages/map/useMapLogic.ts.bak.geofix:42:      navigator.geolocation.getCurrentPosition(
+src/pages/map/useMapLogic.ts:40:    if (navigator.geolocation) {
+src/pages/map/useMapLogic.ts:42:      navigator.geolocation.getCurrentPosition(
+src/pages/map/components/BuzzButton.tsx:102:          await supabase.from('abuse_logs').insert({
+src/pages/map/components/BuzzButton.tsx.bak.geofix:102:          await supabase.from('abuse_logs').insert({
+src/pages/map/components/MapZoomControls.tsx.bak.geofix:22:    if (navigator.geolocation) {
+src/pages/map/components/MapZoomControls.tsx.bak.geofix:25:          navigator.geolocation.getCurrentPosition(resolve, reject, {
+src/pages/map/components/MapZoomControls.tsx:22:    if (navigator.geolocation) {
+src/pages/map/components/MapZoomControls.tsx:25:          navigator.geolocation.getCurrentPosition(resolve, reject, {
+src/pages/map/hooks/usePricingLogic.ts:85:      await supabase.from('buzz_map_actions').insert({
+src/pages/map/hooks/useNewMapPage.ts:388:    if (navigator.geolocation) {
+src/pages/map/hooks/useNewMapPage.ts:390:      navigator.geolocation.getCurrentPosition(
+src/pages/map/hooks/usePricingLogic.ts.bak.geofix:85:      await supabase.from('buzz_map_actions').insert({
+src/pages/map/hooks/useNewMapPage.ts.bak.geofix:388:    if (navigator.geolocation) {
+src/pages/map/hooks/useNewMapPage.ts.bak.geofix:390:      navigator.geolocation.getCurrentPosition(
+src/pages/map/MapStateProvider.tsx.bak.geofix:44:    navigator.geolocation.getCurrentPosition(
+src/pages/map/MapStateProvider.tsx:44:    navigator.geolocation.getCurrentPosition(
+src/pages/ChoosePlanPage.tsx:107:        await supabase.rpc('mark_choose_plan_seen');
+src/pages/ChoosePlanPage.tsx:131:      const { data, error } = await supabase.rpc('create_free_subscription');
+src/pages/ChoosePlanPage.tsx:139:        await supabase.rpc('mark_choose_plan_seen');
+src/pages/AdminPrizeForm.tsx:27:        const { data, error } = await supabase.from('prizes').select('count()');
+src/pages/BattleLobby.tsx:129:      const { data, error } = await supabase.rpc('get_top_agents' as any);
+src/services/newsletterService.ts:18:    const { error } = await supabase.from('newsletter_subscribers').insert([
