@@ -409,9 +409,9 @@ export const NotificationsPage: React.FC = () => {
                   className={`${style.glowClass}`}
                 >
                   <Card 
-                    className="m1-card ${style.bgColor} ${
+                    className={`m1-card ${style.bgColor} ${
                       !notification.is_read ? 'ring-1 ring-[#00D1FF]' : ''
-                    }"
+                    }`}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
