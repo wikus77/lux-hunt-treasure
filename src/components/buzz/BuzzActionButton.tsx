@@ -261,8 +261,20 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       // Execute BUZZ action FIRST
       await handleBuzz();
       
+      // Log counter state before update
+      console.log('🔄 BEFORE UPDATE COUNTER:', { 
+        currentState: dailyBuzzCounter,
+        timestamp: new Date().toISOString()
+      });
+      
       // Only increment counter if BUZZ was successful
-      await updateDailyBuzzCounter();
+      const newCount = await updateDailyBuzzCounter();
+      
+      console.log('✅ AFTER UPDATE COUNTER:', { 
+        newState: newCount,
+        timestamp: new Date().toISOString()
+      });
+      
       onSuccess();
 
       console.log('🎉 M1SSION™ M1U BUZZ: Complete flow successful!');
