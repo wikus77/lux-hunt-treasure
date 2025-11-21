@@ -19,7 +19,7 @@ export const MissionStatusBox: React.FC<MissionStatusBoxProps> = ({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="bg-gradient-to-br from-gray-900/80 to-black/60 backdrop-blur-md rounded-2xl p-6 border border-cyan-500/20 mb-8"
+      className="m1-card m1-elev-1 p-6 mb-8 m1-motion"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">

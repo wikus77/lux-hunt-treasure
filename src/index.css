@@ -21,6 +21,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import './styles/m1-glass.css';
+
 @layer utilities {
   .font-orbitron {
     font-family: "Orbitron", sans-serif;

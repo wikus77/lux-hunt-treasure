@@ -1,0 +1,99 @@
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+/* Apple Glass / iOS 26 Style Layer */
+
+:root {
+  --m1-bg: rgba(8, 10, 14, 0.45);            /* vetro scuro */
+  --m1-stroke: rgba(255, 255, 255, 0.10);    /* hairline */
+  --m1-inner: rgba(255, 255, 255, 0.06);     /* inner line */
+  --m1-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --m1-radius: 16px;
+  --m1-blur: 14px;
+  --m1-accent: rgba(0, 200, 255, 0.85);      /* tint sobrio (cyan) */
+  --m1-focus: 0 0 0 2px rgba(0, 200, 255, 0.35);
+  --m1-transition: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --m1-bg: rgb(12, 14, 18);
+    --m1-blur: 0px;
+  }
+}
+
+/* Card/Panel di base (vetro satinato) */
+.m1-card {
+  background: var(--m1-bg);
+  backdrop-filter: blur(var(--m1-blur));
+  -webkit-backdrop-filter: blur(var(--m1-blur));
+  border-radius: var(--m1-radius);
+  border: 1px solid var(--m1-stroke);
+  box-shadow: var(--m1-shadow);
+  transition: transform var(--m1-transition), box-shadow var(--m1-transition), background var(--m1-transition);
+}
+
+/* Modificatori di elevazione */
+.m1-elev-0 {
+  box-shadow: none;
+}
+
+.m1-elev-1 {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.30);
+}
+
+.m1-elev-2 {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.40);
+}
+
+/* Header/separators (da usare dentro i container) */
+.m1-hairline {
+  border-top: 1px solid var(--m1-inner);
+}
+
+.m1-stroke {
+  border: 1px solid var(--m1-stroke);
+  border-radius: inherit;
+}
+
+/* Tint/Focus */
+.m1-tint {
+  outline: 0;
+}
+
+.m1-tint:focus {
+  box-shadow: var(--m1-focus);
+  outline: 0;
+}
+
+/* Motion delicata */
+.m1-motion:hover {
+  transform: translateY(-1px);
+}
+
+.m1-press:active {
+  transform: translateY(0);
+}
+
+/* Tipografia suggerita */
+.m1-title {
+  @apply text-white/95 font-semibold tracking-tight;
+}
+
+.m1-sub {
+  @apply text-white/75 font-medium;
+}
+
+.m1-body {
+  @apply text-white/80;
+}
+
+/* Liste / rows */
+.m1-row {
+  @apply flex items-center justify-between;
+  border-bottom: 1px solid var(--m1-inner);
+}
+
+.m1-row:last-child {
+  border-bottom: 0;
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
