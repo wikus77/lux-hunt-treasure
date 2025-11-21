@@ -244,13 +244,13 @@ serve(withCors(async (req: Request): Promise<Response> => {
       // Get user's weekly BUZZ count
       const { data: counterData } = await supabase
         .from('user_buzz_counter')
-        .select('buzz_count')
+        .select('daily_count')
         .eq('user_id', user.id)
         .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
         .order('date', { ascending: false });
       
       if (counterData && counterData.length > 0) {
-        buzzCount = counterData.reduce((sum, row) => sum + (row.buzz_count || 0), 0);
+        buzzCount = counterData.reduce((sum, row) => sum + (row.daily_count || 0), 0);
       }
     } catch (error) {
       console.error('❌ [HANDLE-BUZZ-PRESS] Error fetching buzz count:', error);
@@ -268,27 +268,43 @@ serve(withCors(async (req: Request): Promise<Response> => {
       textPreview: clueText.substring(0, 50) + '...'
     });
 
-    // Increment buzz counter using safe RPC to avoid 409 conflicts
+    // Increment buzz counter with direct UPSERT
     const today = new Date().toISOString().split('T')[0];
-    const { error: counterError } = await supabase.rpc('increment_buzz_counter', {
-      p_user_id: user.id,
-      p_date: today
-    });
+    
+    // Get current counter
+    const { data: currentCounter } = await supabase
+      .from('user_buzz_counter')
+      .select('daily_count')
+      .eq('user_id', user.id)
+      .eq('counter_date', today)
+      .maybeSingle();
+    
+    const newCount = (currentCounter?.daily_count || 0) + 1;
+    
+    // Upsert new count
+    const { error: counterError } = await supabase
+      .from('user_buzz_counter')
+      .upsert({
+        user_id: user.id,
+        counter_date: today,
+        daily_count: newCount
+      }, {
+        onConflict: 'user_id,counter_date'
+      });
     
     if (counterError) {
       console.error('❌ [HANDLE-BUZZ-PRESS] Error incrementing counter:', counterError);
       // NON bloccare il flusso - il clue è già stato generato
     } else {
-      console.log('✅ [HANDLE-BUZZ-PRESS] Counter incremented successfully');
+      console.log('✅ [HANDLE-BUZZ-PRESS] Counter incremented successfully to:', newCount);
     }
 
     // Log the BUZZ action
     const { error: logError } = await supabase
-      .from('buzz_logs')
+      .from('buzz_activations')
       .insert({
         user_id: user.id,
-        action: 'buzz_press',
-        metadata: {
+        location: {
           clue_text: clueText,
           source: 'handle_buzz_press',
           timestamp: new Date().toISOString()
