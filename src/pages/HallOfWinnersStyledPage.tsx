@@ -186,8 +186,33 @@ const HallOfWinnersStyledPage: React.FC = () => {
           </div>
 
           <Card 
-            className="border-0 m1-panel"
+            className="border-0 m1-panel relative overflow-hidden"
+            style={{
+              background: 'rgba(0, 0, 0, 0.05)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            }}
           >
+            {/* Animated glow strip like header */}
+            <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
+              <div 
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
+                style={{
+                  animation: 'slideGlowWinners1 3s ease-in-out infinite',
+                  width: '200%',
+                  left: '-100%'
+                }}
+              />
+            </div>
+            <style>{`
+              @keyframes slideGlowWinners1 {
+                0% { transform: translateX(0); }
+                50% { transform: translateX(50%); }
+                100% { transform: translateX(0); }
+              }
+            `}</style>
             <CardHeader className="text-center pb-4">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400/20 to-yellow-400/10 mb-4 mx-auto">
                 <Trophy className="h-10 w-10 text-yellow-400" />
@@ -223,8 +248,33 @@ const HallOfWinnersStyledPage: React.FC = () => {
           </Card>
 
           <Card 
-            className="border-0 m1-panel"
+            className="border-0 m1-panel relative overflow-hidden"
+            style={{
+              background: 'rgba(0, 0, 0, 0.05)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            }}
           >
+            {/* Animated glow strip like header */}
+            <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
+              <div 
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
+                style={{
+                  animation: 'slideGlowWinners2 3s ease-in-out infinite',
+                  width: '200%',
+                  left: '-100%'
+                }}
+              />
+            </div>
+            <style>{`
+              @keyframes slideGlowWinners2 {
+                0% { transform: translateX(0); }
+                50% { transform: translateX(50%); }
+                100% { transform: translateX(0); }
+              }
+            `}</style>
             <CardHeader>
               <CardTitle className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent flex items-center gap-2">
                 <Star className="h-5 w-5 text-yellow-400" />
@@ -292,8 +342,33 @@ const HallOfWinnersStyledPage: React.FC = () => {
           </Card>
 
           <Card 
-            className="border-0 m1-panel"
+            className="border-0 m1-panel relative overflow-hidden"
+            style={{
+              background: 'rgba(0, 0, 0, 0.05)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            }}
           >
+            {/* Animated glow strip like header */}
+            <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
+              <div 
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
+                style={{
+                  animation: 'slideGlowWinners3 3s ease-in-out infinite',
+                  width: '200%',
+                  left: '-100%'
+                }}
+              />
+            </div>
+            <style>{`
+              @keyframes slideGlowWinners3 {
+                0% { transform: translateX(0); }
+                50% { transform: translateX(50%); }
+                100% { transform: translateX(0); }
+              }
+            `}</style>
             <CardHeader>
               <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
                 <Award className="h-5 w-5 text-purple-400" />
