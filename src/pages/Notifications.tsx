@@ -58,8 +58,7 @@ const Notifications = () => {
       style={{ 
         height: '100dvh',
         overflow: 'hidden',
-        position: 'relative',
-        background: 'linear-gradient(to bottom, #0a0b14 0%, #050508 100%)'
+        position: 'relative'
       }}
     >
       <UnifiedHeader />
