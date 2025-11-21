@@ -2367,6 +2367,7 @@ export type Database = {
           success: boolean
         }[]
       }
+      buzz_spend_m1u: { Args: { p_cost_m1u: number }; Returns: Json }
       can_user_access_mission: { Args: { p_user: string }; Returns: boolean }
       consume_credit: {
         Args: { p_amount: number; p_credit_type: string; p_user_id: string }

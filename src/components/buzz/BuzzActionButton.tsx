@@ -42,9 +42,9 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     updateDailyBuzzCounter
   } = useBuzzCounter(user?.id);
   
-  // M1U pricing calculation (free if grants available)
-  const currentCostM1U = hasFreeBuzz ? 0 : getCurrentBuzzCostM1U();
-  const currentPriceDisplay = hasFreeBuzz ? 'GRATIS' : getCurrentBuzzDisplayCostM1U();
+  // 🔥 FIX: Always show actual M1U cost (payment logic handles free buzz separately)
+  const currentCostM1U = getCurrentBuzzCostM1U();
+  const currentPriceDisplay = getCurrentBuzzDisplayCostM1U();
   
   // 🔥 FIX: Pass actual M1U cost to useBuzzHandler to avoid price check blocking
   const { buzzing, showShockwave, handleBuzz } = useBuzzHandler({
