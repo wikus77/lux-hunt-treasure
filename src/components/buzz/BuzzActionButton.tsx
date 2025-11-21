@@ -32,7 +32,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   const { user } = useUnifiedAuth();
   const { hasFreeBuzz, consumeFreeBuzz, totalRemaining, dailyUsed } = useBuzzGrants();
   const { playSound } = useSoundEffects();
-  const { unitsData } = useM1UnitsRealtime(user?.id);
+  const { unitsData, refetch: refetchM1U } = useM1UnitsRealtime(user?.id);
   
   // Enhanced BUZZ counter with M1U pricing
   const { 
@@ -45,6 +45,17 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   // 🔥 FIX: Show "GRATIS" if free buzz available, otherwise show M1U cost
   const currentCostM1U = hasFreeBuzz ? 0 : getCurrentBuzzCostM1U();
   const currentPriceDisplay = hasFreeBuzz ? 'GRATIS' : getCurrentBuzzDisplayCostM1U();
+  
+  // Log price updates for debugging
+  React.useEffect(() => {
+    console.log('💰 BUZZ BUTTON PRICE UPDATE:', {
+      dailyBuzzCounter,
+      hasFreeBuzz,
+      currentCostM1U,
+      currentPriceDisplay,
+      timestamp: new Date().toISOString()
+    });
+  }, [dailyBuzzCounter, hasFreeBuzz, currentCostM1U, currentPriceDisplay]);
   
   // 🔥 FIX: Pass actual M1U cost to useBuzzHandler to avoid price check blocking
   const { buzzing, showShockwave, handleBuzz } = useBuzzHandler({
@@ -160,9 +171,11 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       console.log('🎁 M1SSION™ FREE BUZZ: Using free grant', { remaining: totalRemaining });
       const consumed = await consumeFreeBuzz();
       if (consumed) {
-        // Execute buzz action directly without payment
-        await updateDailyBuzzCounter();
+        // Execute buzz action FIRST
         await handleBuzz();
+        
+        // Only increment counter if BUZZ was successful
+        await updateDailyBuzzCounter();
         onSuccess();
         if (!__buzz.shown) {
           toast.success('BUZZ gratuito utilizzato!');
@@ -239,12 +252,17 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       });
 
       showM1UDebitSuccessToast((spendResult as any).spent, (spendResult as any).new_balance);
+      
+      // Refresh M1U balance to show updated value
+      await refetchM1U();
 
       console.log('🎯 M1SSION™ M1U BUZZ: Proceeding with BUZZ generation...');
       
-      // Execute BUZZ action
-      await updateDailyBuzzCounter();
+      // Execute BUZZ action FIRST
       await handleBuzz();
+      
+      // Only increment counter if BUZZ was successful
+      await updateDailyBuzzCounter();
       onSuccess();
 
       console.log('🎉 M1SSION™ M1U BUZZ: Complete flow successful!');
