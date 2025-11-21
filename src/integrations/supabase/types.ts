@@ -1598,6 +1598,7 @@ export type Database = {
           created_at: string | null
           description_it: string | null
           id: string
+          metadata: Json | null
           title_it: string | null
           unlocked_at: string | null
           user_id: string
@@ -1609,6 +1610,7 @@ export type Database = {
           created_at?: string | null
           description_it?: string | null
           id?: string
+          metadata?: Json | null
           title_it?: string | null
           unlocked_at?: string | null
           user_id: string
@@ -1620,6 +1622,7 @@ export type Database = {
           created_at?: string | null
           description_it?: string | null
           id?: string
+          metadata?: Json | null
           title_it?: string | null
           unlocked_at?: string | null
           user_id?: string
@@ -1691,6 +1694,30 @@ export type Database = {
           free_buzz_map_credit?: number
           id?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_m1_units: {
+        Row: {
+          balance: number
+          total_earned: number
+          total_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
