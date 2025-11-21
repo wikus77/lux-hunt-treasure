@@ -104,13 +104,14 @@ export const useBuzzGrants = () => {
         .from('user_clues')
         .insert({
           user_id: userId,
-          // clue_id removed - let DB generate UUID with gen_random_uuid()
           title_it: "🎁 Indizio BUZZ Gratuito",
           description_it: uniqueClue,
           clue_type: "buzz",
           buzz_cost: 0,
-          week_number: Math.ceil(Date.now() / (1000 * 60 * 60 * 24 * 7)),
-          metadata: { free_buzz_token: `free_buzz_${Date.now()}` } // Save token in metadata
+          metadata: { 
+            free_buzz_token: `free_buzz_${Date.now()}`,
+            source: 'buzz_grant'
+          }
         });
 
       if (clueError) {
