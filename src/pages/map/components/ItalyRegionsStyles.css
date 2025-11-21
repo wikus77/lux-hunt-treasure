@@ -103,30 +103,8 @@
   }
 }
 
-/* M1SSION glass card enhancements for map sections */
-.m1ssion-glass-card {
-  border-radius: 24px;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(123, 46, 255, 0.15);
-  box-shadow: 
-    0 10px 25px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(123, 46, 255, 0.1),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.m1ssion-glass-card:before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(to right, #00D1FF, #7B2EFF, #F059FF);
-  opacity: 0.8;
-}
+/* .m1ssion-glass-card is now defined ONLY in theme.css for 3D Obsidian + Aurora effect */
+/* DO NOT redefine here to avoid CSS cascade conflicts */
 
 /* Note box styling */
 .note-box {
