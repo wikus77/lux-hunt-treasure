@@ -199,10 +199,14 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     }
 
     try {
+      console.log('💳 M1SSION™ M1U BUZZ: Calling buzz_spend_m1u RPC...', { costM1U });
+      
       // Call RPC to spend M1U
       const { data: spendResult, error: spendError } = await (supabase as any).rpc('buzz_spend_m1u', {
         p_cost_m1u: costM1U
       });
+
+      console.log('💳 M1SSION™ M1U BUZZ: RPC response', { spendResult, spendError });
 
       if (spendError) {
         console.error('❌ M1SSION™ M1U BUZZ: RPC error', spendError);
@@ -212,7 +216,10 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
 
       if (!(spendResult as any)?.success) {
         const errorType = (spendResult as any)?.error || 'unknown';
-        console.error('❌ M1SSION™ M1U BUZZ: Payment failed', { error: errorType });
+        console.error('❌ M1SSION™ M1U BUZZ: Payment failed', { 
+          error: errorType,
+          fullResult: spendResult 
+        });
         
         if (errorType === 'insufficient_m1u') {
           showInsufficientM1UToast(costM1U, (spendResult as any).current_balance || 0);
@@ -223,20 +230,26 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       }
 
       // M1U spent successfully
-      console.log('✅ M1SSION™ M1U BUZZ: M1U spent successfully', {
+      console.log('✅ M1SSION™ M1U BUZZ: M1U debited successfully!', {
         spent: (spendResult as any).spent,
-        newBalance: (spendResult as any).new_balance
+        oldBalance: (spendResult as any).old_balance,
+        newBalance: (spendResult as any).new_balance,
+        timestamp: (spendResult as any).timestamp
       });
 
       showM1UDebitSuccessToast((spendResult as any).spent, (spendResult as any).new_balance);
 
+      console.log('🎯 M1SSION™ M1U BUZZ: Proceeding with BUZZ generation...');
+      
       // Execute BUZZ action
       await updateDailyBuzzCounter();
       await handleBuzz();
       onSuccess();
 
+      console.log('🎉 M1SSION™ M1U BUZZ: Complete flow successful!');
+
     } catch (error: any) {
-      console.error('❌ M1SSION™ M1U BUZZ: Exception', error);
+      console.error('❌ M1SSION™ M1U BUZZ: Exception during payment', error);
       toast.error('Errore durante il BUZZ. Riprova.');
     }
   };
