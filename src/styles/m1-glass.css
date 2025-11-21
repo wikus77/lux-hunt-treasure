@@ -96,4 +96,40 @@
   border-bottom: 0;
 }
 
+/* Main Card Style - Apple Glass / iOS 26 with gradient top border */
+.m1ssion-glass-card {
+  background: var(--m1-bg);
+  backdrop-filter: blur(var(--m1-blur));
+  -webkit-backdrop-filter: blur(var(--m1-blur));
+  border-radius: var(--m1-radius);
+  border: 1px solid var(--m1-stroke);
+  box-shadow: var(--m1-shadow);
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--m1-transition), box-shadow var(--m1-transition), background var(--m1-transition);
+}
+
+.m1ssion-glass-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.40);
+}
+
+.m1ssion-glass-card:active {
+  transform: translateY(0);
+}
+
+/* Gradient top border for M1SSION brand identity */
+.m1ssion-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, #00D1FF, #7B2EFF, #F059FF, #FACC15);
+  opacity: 0.9;
+  z-index: 1;
+  pointer-events: none;
+}
+
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
