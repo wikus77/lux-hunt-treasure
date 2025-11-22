@@ -72,6 +72,7 @@ import PanelUsersPage from "@/pages/PanelUsersPage";
 import BulkMarkerDropPage from "@/pages/panel/BulkMarkerDropPage";
 import NorahAdmin from "@/pages/panel/NorahAdmin";
 import DiagSupabase from "@/pages/DiagSupabase";
+import SupabaseConnectionTest from "@/pages/SupabaseConnectionTest";
 import PushTest from "@/pages/debug/PushTest";
 import DNAPage from "@/pages/DNAPage";
 import PushDiagnostic from "@/pages/debug/PushDiagnostic";
@@ -681,6 +682,12 @@ const WouterRoutes: React.FC = () => {
           <Route path="/diag-supabase">
             <ProtectedRoute>
               <DiagSupabase />
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/supabase-test">
+            <ProtectedRoute>
+              <SupabaseConnectionTest />
             </ProtectedRoute>
           </Route>
 

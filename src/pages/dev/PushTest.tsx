@@ -50,8 +50,10 @@ export default function PushTest() {
         hasToken: !!adminToken
       });
 
+      // Use centralized config instead of hardcoded URL
+      const functionsBaseUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '') || '';
       const response = await fetch(
-        `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/webpush-targeted-send`,
+        `${functionsBaseUrl}/functions/v1/webpush-targeted-send`,
         {
           method: 'POST',
           headers: {
