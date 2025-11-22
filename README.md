@@ -104,6 +104,16 @@ All environment variables and secrets are managed through:
 - Capacitor native configuration
 - Firebase project settings
 
+### 🔄 Supabase Migration (Post-Remix)
+
+**IMPORTANT**: If you need to disconnect from Lovable Cloud and connect to your own Supabase instance:
+
+1. **See the full guide**: `SUPABASE_MIGRATION_GUIDE.md`
+2. **Test your connection**: Navigate to `/supabase-test` after migration
+3. **Verify diagnostics**: Check `/diag-supabase` for singleton status
+
+The codebase is now **environment-agnostic** and uses only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` variables, which are automatically populated by Lovable after reconnecting to your Supabase project.
+
 ### Norah AI E2E Testing (Dev Only)
 
 Test the complete Norah pipeline with curl:
