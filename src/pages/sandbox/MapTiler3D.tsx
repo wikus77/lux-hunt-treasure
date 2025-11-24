@@ -79,29 +79,53 @@ export default function MapTiler3D() {
     error: null
   });
 
-  // 🧪 Expose runtime ENV for debugging (read-only, no SW/PWA impact) + cache clear
+  // 🔥 AGGRESSIVE CACHE BUSTING: Force fresh bundle with MapTiler secrets
   useEffect(() => {
+    const CACHE_CLEARED_FLAG = 'M1_MAP3D_CACHE_V2';
+    const isCacheCleared = sessionStorage.getItem(CACHE_CLEARED_FLAG);
+    
+    // Aggressive cache clear on first mount of this session
+    if (!isCacheCleared) {
+      console.warn('🔥 [Map3D] Aggressive cache clear starting...');
+      
+      (async () => {
+        try {
+          // 1. Unregister ALL Service Workers
+          const regs = await navigator.serviceWorker.getRegistrations();
+          console.log(`🔥 [Map3D] Unregistering ${regs.length} Service Workers...`);
+          await Promise.all(regs.map(r => r.unregister()));
+          
+          // 2. Delete ALL browser caches
+          const keys = await caches.keys();
+          console.log(`🔥 [Map3D] Deleting ${keys.length} cache keys...`);
+          await Promise.all(keys.map(k => caches.delete(k)));
+          
+          // 3. Mark as cleared for this session
+          sessionStorage.setItem(CACHE_CLEARED_FLAG, 'true');
+          
+          console.log('✅ [Map3D] ✅ Cache cleared aggressively (forced fresh bundle)');
+          
+          // 4. Force reload ONCE to get fresh bundle with updated ENV
+          console.warn('🔥 [Map3D] Reloading page to load fresh bundle...');
+          setTimeout(() => location.reload(), 500);
+        } catch (e) {
+          console.warn('[Map3D] ⚠️ Cache clear failed (non-critical):', e);
+          sessionStorage.setItem(CACHE_CLEARED_FLAG, 'true'); // Don't retry on error
+        }
+      })();
+    }
+    
+    // Expose runtime ENV for debugging
     if (typeof window !== 'undefined' && !(window as any).__M1_ENV__) {
       (window as any).__M1_ENV__ = {
         LIVING_MOCK: import.meta.env.VITE_LIVING_MAP_USE_MOCK === 'true',
         MAP3D_MOCKS: import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true',
-        MODE: import.meta.env.MODE
+        MODE: import.meta.env.MODE,
+        MAPTILER_DEV: import.meta.env.VITE_MAPTILER_KEY_DEV ? '✅' : '❌',
+        MAPTILER_PROD: import.meta.env.VITE_MAPTILER_KEY_PROD ? '✅' : '❌'
       };
       console.debug('[Map3D] ENV exposed for debugging:', (window as any).__M1_ENV__);
     }
-
-    // 🔄 One-time cache clear to ensure fresh bundle with updated ENV
-    (async () => {
-      try {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r => r.update()));
-        const keys = await caches.keys();
-        await Promise.all(keys.map(k => caches.delete(k)));
-        console.log('[Map3D] Cache cleared once (fresh ENV)');
-      } catch (e) {
-        console.debug('[Map3D] Cache clear skipped:', e);
-      }
-    })();
   }, []);
   
   // Layer visibility state
@@ -478,6 +502,10 @@ export default function MapTiler3D() {
     const devKey = import.meta.env.VITE_MAPTILER_KEY_DEV || '';
     const prodKey = import.meta.env.VITE_MAPTILER_KEY_PROD || '';
     
+    // 🔍 Debug log: Verify secrets are loaded
+    console.log('✅ [Map3D] MapTiler KEY (DEV):', devKey ? `${devKey.slice(0, 8)}...` : '❌ MISSING');
+    console.log('✅ [Map3D] MapTiler KEY (PROD):', prodKey ? `${prodKey.slice(0, 8)}...` : '❌ MISSING');
+    
     let key: string;
     let mode: string;
     
@@ -491,6 +519,17 @@ export default function MapTiler3D() {
       key = isPreview ? devKey : prodKey;
       mode = isPreview ? 'DEV (auto)' : 'PROD (auto)';
     }
+    
+    // 🚨 CRITICAL: If key is missing, alert user and stop
+    if (!key) {
+      const msg = 'MapTiler secrets not loaded. Please wait for rebuild or hard refresh.';
+      console.error('❌ [Map3D]', msg);
+      toast.error(msg);
+      setDiag(prev => ({ ...prev, error: msg }));
+      return;
+    }
+    
+    console.log(`✅ [Map3D] Using MapTiler ${mode} key: ${key.slice(0, 8)}...`);
     
     const lat = parseFloat(sp.get('lat') || '41.9028');
     const lng = parseFloat(sp.get('lng') || '12.4964');
