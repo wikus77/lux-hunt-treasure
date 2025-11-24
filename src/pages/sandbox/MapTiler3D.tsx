@@ -1,4 +1,5 @@
 // @ts-nocheck
+// Force rebuild to load MapTiler secrets from environment
 import { useEffect, useRef, useState, useMemo } from 'react';
 import maplibregl, { Map as MLMap } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
