@@ -39,6 +39,10 @@ interface BuzzApiResponse {
 const DEBUG_BUZZ = import.meta.env.VITE_DEBUG_BUZZ_MAP === '1';
 const dlog = (...args: any[]) => { if (DEBUG_BUZZ) console.log(...args); };
 
+// 🔐 EXTERNAL PROJECT CONSTANTS (vkjrqirvdvjbemsfzxof ONLY)
+const EXTERNAL_FUNCTIONS_URL = 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1';
+const EXTERNAL_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 export function useBuzzApi() {
   const handleBuzzPress = async ({ userId, mode, generateMap, coordinates, prizeId, sessionId }: BuzzApiParams): Promise<BuzzApiResponse> => {
     try {
@@ -108,15 +112,60 @@ export function useBuzzApi() {
         return { success: false, error: true, errorMessage: "Sessione non valida. Effettua l'accesso nuovamente." };
       }
       
-      // Call edge function with verified session and explicit auth header
-      console.log(`🔐 Calling ${functionName} edge function with authenticated user...`);
-      const { data, error } = await supabase.functions.invoke(functionName, {
-        body: payload,
-        headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`,
-          'Content-Type': 'application/json'
+      // 🔥 FIX: Direct fetch for buzz-map-resolve to bypass Lovable Cloud interference
+      let data: any;
+      let error: any = null;
+      
+      if (generateMap) {
+        // Direct HTTP call to vkjrqirvdvjbemsfzxof project for buzz-map-resolve
+        console.log(`🔐 Calling buzz-map-resolve via direct fetch to ${EXTERNAL_FUNCTIONS_URL}...`);
+        console.log(`📡 Access Token: ${sessionData.session.access_token.substring(0, 20)}...`);
+        console.log(`🔑 API Key: ${EXTERNAL_ANON_KEY?.substring(0, 20)}...`);
+        
+        try {
+          const response = await fetch(`${EXTERNAL_FUNCTIONS_URL}/buzz-map-resolve`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${sessionData.session.access_token}`,
+              'apikey': EXTERNAL_ANON_KEY || ''
+            },
+            body: JSON.stringify(payload)
+          });
+          
+          console.log(`📡 buzz-map-resolve HTTP Response: ${response.status} ${response.statusText}`);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`❌ buzz-map-resolve HTTP error: ${response.status}`, errorText);
+            error = { 
+              message: `HTTP ${response.status}: ${errorText}`,
+              status: response.status
+            };
+          } else {
+            data = await response.json();
+            console.log('✅ buzz-map-resolve response data:', data);
+          }
+        } catch (fetchError: any) {
+          console.error('❌ buzz-map-resolve fetch exception:', fetchError);
+          error = { 
+            message: fetchError.message || 'Network error',
+            details: fetchError
+          };
         }
-      });
+      } else {
+        // Standard supabase.functions.invoke for handle-buzz-press
+        console.log(`🔐 Calling handle-buzz-press via supabase.functions.invoke...`);
+        const result = await supabase.functions.invoke('handle-buzz-press', {
+          body: payload,
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        data = result.data;
+        error = result.error;
+      }
       
       console.log('🚨 EDGE FUNCTION CALL RESULT:', {
         hasData: !!data,
