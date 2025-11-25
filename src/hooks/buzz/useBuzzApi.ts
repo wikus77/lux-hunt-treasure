@@ -81,8 +81,8 @@ export function useBuzzApi() {
         coords: payload.coordinates
       });
       
-      // 🎯 Route to handle-buzz-map when generateMap is true, otherwise handle-buzz-press
-      const functionName = generateMap ? 'handle-buzz-map' : 'handle-buzz-press';
+      // 🎯 Route to buzz-map-resolve when generateMap is true, otherwise handle-buzz-press
+      const functionName = generateMap ? 'buzz-map-resolve' : 'handle-buzz-press';
       console.log(`📡 Calling ${functionName} with unified payload (generateMap: ${generateMap}):`, payload);
       console.log(`📍 Coordinates being sent:`, JSON.stringify(payload.coordinates));
       console.log(`🔧 Payload structure:`, {
