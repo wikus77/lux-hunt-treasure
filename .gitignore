@@ -49,3 +49,7 @@ supabase/.temp/
 # local backups
 .backup_*
 m1ssion-one-clean/
+
+# Supabase local backups
+supabase/backups/
+supabase/functions/buzz-map-resolve/backups/
