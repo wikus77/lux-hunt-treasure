@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { RefreshCw, CheckCircle, XCircle, Send, Users } from 'lucide-react';
 import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
-import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+import { getSupabaseAnonKey } from '@/lib/supabase/clientUtils';
 
 
 
@@ -126,7 +126,7 @@ const PushDebugPanel: React.FC = () => {
 
       const SUPABASE_URL = `${functionsBaseUrl}`;
 
-      const SUPABASE_ANON_KEY: string = SUPABASE_CONFIG.anonKey;
+      const SUPABASE_ANON_KEY: string = getSupabaseAnonKey();
       const SUPABASE_ANON_MASK = (SUPABASE_ANON_KEY && typeof SUPABASE_ANON_KEY === 'string')
         ? (SUPABASE_ANON_KEY.slice(0,4) + '…' + SUPABASE_ANON_KEY.slice(-4))
         : '<env>';

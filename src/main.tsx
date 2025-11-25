@@ -3,7 +3,7 @@
 import './styles/map.css';
 import './styles/effects/ritual-distortion.css';
 import './styles/ios-native.css';
-import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/supabase/clientUtils';
 
 // ✅ TASK 4: Auto-register SW on all hosts (not just *.pages.dev)
 import '@/lib/pwa/sw-autorun';
@@ -270,8 +270,8 @@ if (typeof window !== 'undefined') {
     env: { 
       TERRAIN: !!import.meta.env.VITE_TERRAIN_URL,
       CONTOUR: !!import.meta.env.VITE_CONTOUR_URL,
-      SUPABASE_URL: !!SUPABASE_CONFIG.url,
-      SUPABASE_ANON_KEY: !!SUPABASE_CONFIG.anonKey,
+      SUPABASE_URL: !!getSupabaseUrl(),
+      SUPABASE_ANON_KEY: !!getSupabaseAnonKey(),
     },
     presence: {
       status: 'INIT',

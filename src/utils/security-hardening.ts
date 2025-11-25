@@ -4,7 +4,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { securityAlert } from './security-config';
-import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+import { getSupabaseUrl, getProjectRef, getAuthTokenKey } from '@/lib/supabase/clientUtils';
 
 export interface SecurityCheckResult {
   level: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'PASS';
@@ -150,7 +150,7 @@ const checkSessionSecurity = (): SecurityIssue[] => {
   const issues: SecurityIssue[] = [];
 
   // Check for insecure session storage
-  const authToken = localStorage.getItem(`sb-${SUPABASE_CONFIG.projectRef}-auth-token`);
+  const authToken = localStorage.getItem(getAuthTokenKey());
   if (authToken) {
     try {
       const tokenData = JSON.parse(authToken);

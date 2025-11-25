@@ -2,10 +2,10 @@
 // Push Center API Helpers - UNIFIED LOGIC (aligned with SendTab pipeline)
 
 import { getProjectRef, functionsBaseUrl } from '@/lib/supabase/functionsBase';
-import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+import { getSupabaseAnonKey, getSupabaseUrl } from '@/lib/supabase/clientUtils';
 
-const SUPABASE_URL = `https://${getProjectRef()}.supabase.co`;
-const SUPABASE_ANON_KEY = SUPABASE_CONFIG.anonKey;
+const SUPABASE_URL = getSupabaseUrl();
+const SUPABASE_ANON_KEY = getSupabaseAnonKey();
 
 export interface PushSendRequest {
   audience?: 'all' | 'list' | { user_id: string } | { endpoint: string };
