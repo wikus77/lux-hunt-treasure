@@ -81,9 +81,9 @@ export function useBuzzApi() {
         coords: payload.coordinates
       });
       
-      // 🎯 Determine which edge function to call based on generateMap flag
-      const functionName = generateMap ? 'handle-buzz-map' : 'handle-buzz-press';
-      console.log(`📡 Calling ${functionName} with unified payload:`, payload);
+      // 🎯 Use handle-buzz-press for both modes (it handles generateMap flag internally)
+      const functionName = 'handle-buzz-press';
+      console.log(`📡 Calling ${functionName} with unified payload (generateMap: ${generateMap}):`, payload);
       console.log(`📍 Coordinates being sent:`, JSON.stringify(payload.coordinates));
       console.log(`🔧 Payload structure:`, {
         hasUserId: !!payload.userId,
