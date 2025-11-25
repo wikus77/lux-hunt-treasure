@@ -52,11 +52,28 @@ serve(withCors(async (req: Request): Promise<Response> => {
 
     console.log('👤 [HANDLE-BUZZ-MAP] User authenticated:', user.id);
 
-    // Parse request body
-    const rawBody = await req.json().catch(() => ({}));
+    // Parse request body with detailed logging
+    let rawBody: any;
+    try {
+      rawBody = await req.json();
+      console.log('📦 [HANDLE-BUZZ-MAP] Raw body received:', JSON.stringify(rawBody));
+    } catch (parseError) {
+      console.error('❌ [HANDLE-BUZZ-MAP] Failed to parse JSON body:', parseError);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: true,
+        errorMessage: 'Invalid JSON in request body' 
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const userId = rawBody.userId ?? rawBody.user_id ?? user.id;
     const body = { ...rawBody, userId };
     const { coordinates: rawCoordinates } = body;
+    
+    console.log('🔍 [HANDLE-BUZZ-MAP] Parsed coordinates:', rawCoordinates);
     
     // 🔥 FIX: Normalize coordinates with strict validation
     function normalizeCoordinates(c: any): { lat: number; lng: number } | null {
@@ -71,8 +88,18 @@ serve(withCors(async (req: Request): Promise<Response> => {
     const coordinates = normalizeCoordinates(rawCoordinates);
     
     if (!coordinates) {
-      console.error('❌ [HANDLE-BUZZ-MAP] Invalid or missing coordinates');
-      throw new Error('Valid coordinates are required for BUZZ MAP');
+      console.error('❌ [HANDLE-BUZZ-MAP] Invalid or missing coordinates:', {
+        raw: rawCoordinates,
+        normalized: coordinates
+      });
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: true,
+        errorMessage: 'Valid coordinates are required for BUZZ MAP. Please ensure lat/lng are provided.' 
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
     
     // TRACE: Payload
@@ -225,19 +252,25 @@ serve(withCors(async (req: Request): Promise<Response> => {
 
   } catch (error: any) {
     console.error('❌ [HANDLE-BUZZ-MAP] Function error:', error);
+    console.error('❌ [HANDLE-BUZZ-MAP] Error stack:', error.stack);
     
     const debugBlock = wantsDebug ? {
       sawAuthorizationHeader: !!req.headers.get('Authorization'),
       requestOrigin: origin,
-      error: error.message
+      error: error.message,
+      errorType: error.name
     } : undefined;
 
-    const errorResponse = wantsDebug
-      ? { success: false, error: 'Internal error', detail: String(error?.message || error), __debug: debugBlock }
-      : { success: false, error: 'Internal error', detail: String(error?.message || error) };
+    const errorResponse = {
+      success: false, 
+      error: true,
+      errorMessage: error.message || 'Internal server error',
+      ...(wantsDebug && { __debug: debugBlock })
+    };
 
     return new Response(JSON.stringify(errorResponse), {
-      status: 500,
+      status: error.message?.includes('Unauthorized') ? 401 : 
+             error.message?.includes('insufficient') ? 402 : 500,
       headers: { 'Content-Type': 'application/json' }
     });
   }
