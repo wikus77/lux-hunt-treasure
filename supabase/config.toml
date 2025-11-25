@@ -43,3 +43,9 @@ verify_jwt = false
 
 [functions.get-firebase-config]
 verify_jwt = false
+
+[functions.handle-buzz-press]
+verify_jwt = true
+
+[functions.handle-buzz-map]
+verify_jwt = true
