@@ -54,43 +54,51 @@ export function useBuzzApi() {
         return { success: false, error: true, errorMessage: "ID utente non valido" };
       }
 
-      // Build correct payload for unified backend logic
-      const payload: any = { 
-        userId, 
-        generateMap 
-      };
-
-      // 🔥 FIX: Add explicit mode parameter
-      if (mode) {
-        payload.mode = mode;
-      }
-
-      // Add coordinates if generateMap is true and coordinates provided
-      if (generateMap && coordinates) {
-        payload.coordinates = coordinates;
-        console.log(`🗺️ BUZZ API Call with generateMap=true and coordinates:`, coordinates);
-      }
-
-      // Add optional parameters only if they exist
-      if (prizeId) payload.prizeId = prizeId;
-      if (sessionId) payload.sessionId = sessionId;
-      
-      dlog('📡 [DBG] PAYLOAD', {
-        generateMap: payload.generateMap,
-        typeGenerateMap: typeof payload.generateMap,
-        coords: payload.coordinates
-      });
-      
       // 🎯 Route to buzz-map-resolve when generateMap is true, otherwise handle-buzz-press
       const functionName = generateMap ? 'buzz-map-resolve' : 'handle-buzz-press';
-      console.log(`📡 Calling ${functionName} with unified payload (generateMap: ${generateMap}):`, payload);
-      console.log(`📍 Coordinates being sent:`, JSON.stringify(payload.coordinates));
-      console.log(`🔧 Payload structure:`, {
-        hasUserId: !!payload.userId,
-        hasGenerateMap: 'generateMap' in payload,
-        hasCoordinates: !!payload.coordinates,
-        coordinatesType: typeof payload.coordinates,
-        coordinatesValue: payload.coordinates
+      
+      // Build correct payload based on which function we're calling
+      const payload: any = {};
+      
+      if (functionName === 'buzz-map-resolve') {
+        // 🗺️ BUZZ MAP RESOLVE: expects { lat, lng } directly in body
+        if (!coordinates) {
+          console.error('❌ buzz-map-resolve requires coordinates');
+          return { success: false, error: true, errorMessage: "Coordinate mancanti per BUZZ MAP" };
+        }
+        payload.lat = coordinates.lat;
+        payload.lng = coordinates.lng;
+        if (DEBUG_BUZZ) payload.debug = true;
+        console.log(`🗺️ BUZZ MAP RESOLVE payload:`, payload);
+      } else {
+        // 🎯 HANDLE-BUZZ-PRESS: uses unified payload with userId/generateMap/coordinates
+        payload.userId = userId;
+        payload.generateMap = generateMap;
+        
+        // 🔥 FIX: Add explicit mode parameter
+        if (mode) {
+          payload.mode = mode;
+        }
+        
+        // Add coordinates if generateMap is true and coordinates provided
+        if (generateMap && coordinates) {
+          payload.coordinates = coordinates;
+          console.log(`🗺️ BUZZ API Call with generateMap=true and coordinates:`, coordinates);
+        }
+        
+        // Add optional parameters only if they exist
+        if (prizeId) payload.prizeId = prizeId;
+        if (sessionId) payload.sessionId = sessionId;
+        
+        console.log(`🎯 HANDLE-BUZZ-PRESS payload:`, payload);
+      }
+      
+      dlog('📡 [DBG] PAYLOAD', {
+        functionName,
+        generateMap: payload.generateMap,
+        hasLat: 'lat' in payload,
+        hasLng: 'lng' in payload,
+        hasCoordinates: 'coordinates' in payload
       });
       
       // Check user session before calling edge function
