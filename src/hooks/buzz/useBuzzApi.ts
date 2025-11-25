@@ -103,15 +103,28 @@ export function useBuzzApi() {
       
       // Check user session before calling edge function
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      const jwt = sessionData?.session?.access_token || '';
+      
+      // 🔍 DIAGNOSTIC TRACE (as requested in task)
+      console.debug('BUZZ_MAP_FRONTEND_AUTH', {
+        hasSession: !!sessionData?.session,
+        hasJwt: !!jwt,
+        jwtPrefix: jwt ? jwt.substring(0, 20) : 'none',
+        jwtLength: jwt.length,
+        userId: sessionData?.session?.user?.id,
+        sessionError: sessionError?.message
+      });
+      
       console.log('🔐 SESSION CHECK:', {
         hasSession: !!sessionData?.session,
         hasUser: !!sessionData?.session?.user,
         userId: sessionData?.session?.user?.id,
         sessionError: sessionError?.message,
-        hasToken: !!sessionData?.session?.access_token
+        hasToken: !!jwt
       });
       
-      if (!sessionData?.session?.access_token) {
+      if (!jwt) {
         console.error('❌ No active session or access token found');
         return { success: false, error: true, errorMessage: "Sessione non valida. Effettua l'accesso nuovamente." };
       }
@@ -120,7 +133,7 @@ export function useBuzzApi() {
       // to avoid potential AuthSessionMissingError in invoke mechanism
       console.log(`🔐 Calling ${functionName} via direct fetch with explicit JWT...`);
       console.log(`📡 User ID: ${sessionData.session.user.id}`);
-      console.log(`🔑 Has Access Token: ${!!sessionData.session.access_token}`);
+      console.log(`🔑 JWT Length: ${jwt.length}, Prefix: ${jwt.substring(0, 20)}`);
       
       const supabaseUrl = (supabase as any).supabaseUrl || 'https://vkjrqirvdvjbemsfzxof.supabase.co';
       const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
@@ -132,7 +145,7 @@ export function useBuzzApi() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionData.session.access_token}`,
+          'Authorization': `Bearer ${jwt}`,
           'apikey': (supabase as any).supabaseKey
         },
         body: JSON.stringify(payload)
