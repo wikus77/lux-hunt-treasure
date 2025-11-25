@@ -116,14 +116,43 @@ export function useBuzzApi() {
         return { success: false, error: true, errorMessage: "Sessione non valida. Effettua l'accesso nuovamente." };
       }
       
-      // ✅ Use supabase.functions.invoke for both functions (passes JWT automatically)
-      console.log(`🔐 Calling ${functionName} via supabase.functions.invoke with JWT...`);
+      // 🔥 FIX: Use direct fetch with explicit JWT instead of supabase.functions.invoke
+      // to avoid potential AuthSessionMissingError in invoke mechanism
+      console.log(`🔐 Calling ${functionName} via direct fetch with explicit JWT...`);
       console.log(`📡 User ID: ${sessionData.session.user.id}`);
       console.log(`🔑 Has Access Token: ${!!sessionData.session.access_token}`);
       
-      const { data, error } = await supabase.functions.invoke(functionName, {
-        body: payload
+      const supabaseUrl = (supabase as any).supabaseUrl || 'https://vkjrqirvdvjbemsfzxof.supabase.co';
+      const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
+      
+      console.log(`📡 Function URL: ${functionUrl}`);
+      console.log(`📦 Payload:`, JSON.stringify(payload));
+      
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+          'apikey': (supabase as any).supabaseKey
+        },
+        body: JSON.stringify(payload)
       });
+      
+      console.log(`📡 Response status: ${response.status}`);
+      
+      let data: any = null;
+      let error: any = null;
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Edge function error (${response.status}):`, errorText);
+        error = {
+          message: `Edge function returned ${response.status}: ${errorText}`,
+          status: response.status
+        };
+      } else {
+        data = await response.json();
+      }
       
       console.log('🚨 EDGE FUNCTION CALL RESULT:', {
         hasData: !!data,
