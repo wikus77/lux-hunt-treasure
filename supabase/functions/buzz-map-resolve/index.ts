@@ -37,13 +37,39 @@ serve(withCors(async (req: Request): Promise<Response> => {
     // Get user from JWT (same pattern as handle-buzz-press)
     const authHeader = req.headers.get('Authorization');
     
+    // 🔍 DIAGNOSTIC TRACE (as requested in task)
+    console.log('BUZZ_MAP_AUTH_TRACE', {
+      hasAuthHeader: !!authHeader,
+      authHeaderPrefix: authHeader?.substring(0, 20),
+      authHeaderLength: authHeader?.length,
+      supabaseUrl,
+      usingServiceRole: !!supabaseKey,
+      serviceRoleKeyPrefix: supabaseKey?.substring(0, 20)
+    });
+    
     if (!authHeader) {
       console.error('❌ [BUZZ-MAP-RESOLVE] Missing authorization header');
       throw new Error('Missing authorization header');
     }
 
     const jwt = authHeader.replace('Bearer ', '');
+    
+    console.log('BUZZ_MAP_JWT_EXTRACTED', {
+      jwtLength: jwt.length,
+      jwtPrefix: jwt.substring(0, 20),
+      jwtSuffix: jwt.substring(jwt.length - 20)
+    });
+    
     const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    
+    // 🔍 DIAGNOSTIC TRACE (as requested in task)
+    console.log('BUZZ_MAP_AUTH_USER_RESULT', {
+      hasUser: !!user,
+      userId: user?.id,
+      hasError: !!userError,
+      errorMessage: userError?.message,
+      errorName: userError?.name
+    });
     
     if (userError || !user) {
       console.error('❌ [BUZZ-MAP-RESOLVE] Auth error:', userError);
