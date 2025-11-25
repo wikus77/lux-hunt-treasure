@@ -55,14 +55,34 @@ serve(withCors(async (req: Request): Promise<Response> => {
     // Parse request body with detailed logging
     let rawBody: any;
     try {
-      rawBody = await req.json();
-      console.log('📦 [HANDLE-BUZZ-MAP] Raw body received:', JSON.stringify(rawBody));
-    } catch (parseError) {
-      console.error('❌ [HANDLE-BUZZ-MAP] Failed to parse JSON body:', parseError);
+      // 🔥 CRITICAL FIX: Read body as text first to debug
+      const bodyText = await req.text();
+      console.log('📦 [HANDLE-BUZZ-MAP] Raw body text:', bodyText.substring(0, 500));
+      
+      if (!bodyText || bodyText.trim() === '') {
+        console.error('❌ [HANDLE-BUZZ-MAP] Empty request body');
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: true,
+          errorMessage: 'Request body is empty' 
+        }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      rawBody = JSON.parse(bodyText);
+      console.log('✅ [HANDLE-BUZZ-MAP] Body parsed successfully:', {
+        keys: Object.keys(rawBody),
+        hasCoordinates: !!rawBody.coordinates,
+        hasUserId: !!(rawBody.userId || rawBody.user_id)
+      });
+    } catch (parseError: any) {
+      console.error('❌ [HANDLE-BUZZ-MAP] JSON parse error:', parseError.message);
       return new Response(JSON.stringify({ 
         success: false, 
         error: true,
-        errorMessage: 'Invalid JSON in request body' 
+        errorMessage: 'Invalid JSON in request body: ' + parseError.message 
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -270,7 +290,8 @@ serve(withCors(async (req: Request): Promise<Response> => {
 
     return new Response(JSON.stringify(errorResponse), {
       status: error.message?.includes('Unauthorized') ? 401 : 
-             error.message?.includes('insufficient') ? 402 : 500,
+             error.message?.includes('insufficient') ? 402 : 
+             error.message?.includes('coordinates') ? 400 : 500,
       headers: { 'Content-Type': 'application/json' }
     });
   }
