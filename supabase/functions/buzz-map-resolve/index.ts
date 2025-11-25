@@ -27,7 +27,8 @@ interface SpendResult {
 serve(withCors(async (req: Request): Promise<Response> => {
   try {
     console.log('🗺️ [BUZZ-MAP-RESOLVE] Function started');
-    console.log('[DEPLOY] buzz-map-resolve build:', new Date().toISOString());
+    console.log('[DEPLOY-VERIFIED] buzz-map-resolve FINAL FIX:', new Date().toISOString());
+    console.log('[AUTH-PATTERN] Using SERVICE_ROLE_KEY + getUser(jwt) - aligned with handle-buzz-press');
 
     // Initialize Supabase client (same pattern as handle-buzz-press)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
