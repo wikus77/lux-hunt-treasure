@@ -81,7 +81,9 @@ export function useBuzzApi() {
         coords: payload.coordinates
       });
       
-      console.log(`📡 Calling handle-buzz-press with unified payload:`, payload);
+      // 🎯 Determine which edge function to call based on generateMap flag
+      const functionName = generateMap ? 'handle-buzz-map' : 'handle-buzz-press';
+      console.log(`📡 Calling ${functionName} with unified payload:`, payload);
       
       // Check user session before calling edge function
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -99,8 +101,8 @@ export function useBuzzApi() {
       }
       
       // Call edge function with verified session and explicit auth header
-      console.log('🔐 Calling edge function with authenticated user...');
-      const { data, error } = await supabase.functions.invoke("handle-buzz-press", {
+      console.log(`🔐 Calling ${functionName} edge function with authenticated user...`);
+      const { data, error } = await supabase.functions.invoke(functionName, {
         body: payload,
         headers: {
           Authorization: `Bearer ${sessionData.session.access_token}`,
@@ -164,7 +166,7 @@ export function useBuzzApi() {
 
       // Handle successful response
       if (data?.success) {
-        console.log("✅ handle-buzz-press success:", data);
+        console.log(`✅ ${functionName} success:`, data);
         
         // Gestione biforcata basata su mode
         if (data.mode === 'buzz') {
