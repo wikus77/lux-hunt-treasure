@@ -12,7 +12,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { MissionConfig } from './MissionConfig';
 import { MissionUsers } from './missions/MissionUsers';
 import { MissionPrizes } from './missions/MissionPrizes';
-import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+import { getProjectRef } from '@/lib/supabase/functionsBase';
 
 interface Mission {
   id: string;
@@ -303,13 +303,13 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
   };
 
   // Extract project ref from env or Supabase URL
-  const getProjectRef = () => {
-    return SUPABASE_CONFIG.projectRef;
+  const getProjectRefLocal = () => {
+    return getProjectRef();
   };
 
   // Generate Supabase table editor URL with public schema
   const supaTableUrl = (table: 'missions' | 'mission_prizes' | 'prize_categories' | 'user_mission_registrations') =>
-    `https://supabase.com/dashboard/project/${getProjectRef()}/database/tables/public/${table}`;
+    `https://supabase.com/dashboard/project/${getProjectRefLocal()}/database/tables/public/${table}`;
 
   // Calculate published/live missions count
   const getPublishedCount = () => {

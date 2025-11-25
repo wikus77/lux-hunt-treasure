@@ -1,8 +1,8 @@
-import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/supabase/clientUtils';
 
 // URL e chiavi dalla configurazione centralizzata
-export const BASE = SUPABASE_CONFIG.url;
-export const ANON = SUPABASE_CONFIG.anonKey;
+export const BASE = getSupabaseUrl();
+export const ANON = getSupabaseAnonKey();
 
 // Helper comodi (se servono)
 export const functionsUrl = (path: string) =>

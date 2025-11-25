@@ -8,20 +8,44 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { verifySupabaseConnection, type ConnectionStatus } from '@/lib/supabase/verifyConnection';
-import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+import { supabase } from '@/integrations/supabase/client';
+import { getSupabaseConfig } from '@/lib/supabase/clientUtils';
 import { CheckCircle2, XCircle, AlertTriangle, RefreshCw } from 'lucide-react';
+
+const SUPABASE_CONFIG = getSupabaseConfig();
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 export default function SupabaseConnectionTest() {
-  const [status, setStatus] = useState<ConnectionStatus | null>(null);
+  const [status, setStatus] = useState<{
+    connected: boolean;
+    projectRef: string;
+    url: string;
+    errors: string[];
+    warnings: string[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
   const runTest = async () => {
     setLoading(true);
-    const result = await verifySupabaseConnection();
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    try {
+      const { error } = await supabase.from('profiles').select('id').limit(1);
+      if (error) errors.push(`Database query failed: ${error.message}`);
+    } catch (err: any) {
+      errors.push(`Database connection error: ${err?.message || 'Unknown error'}`);
+    }
+    
+    const result = {
+      connected: errors.length === 0,
+      projectRef: SUPABASE_CONFIG.projectRef,
+      url: SUPABASE_CONFIG.url,
+      errors,
+      warnings
+    };
     setStatus(result);
     setLoading(false);
   };

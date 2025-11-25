@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+import { getAuthTokenKey } from '@/lib/supabase/clientUtils';
 
 interface SessionManagerResult {
   user: User | null;
@@ -62,7 +62,7 @@ export const useAuthSessionManager = (): SessionManagerResult => {
             version: '2.0'
           };
           
-          localStorage.setItem(`sb-${SUPABASE_CONFIG.projectRef}-auth-token`, JSON.stringify(sessionBackup));
+          localStorage.setItem(getAuthTokenKey(), JSON.stringify(sessionBackup));
           console.log('💾 Enhanced session backup stored in localStorage');
           
           return true;
@@ -149,7 +149,7 @@ export const useAuthSessionManager = (): SessionManagerResult => {
           }
         };
         
-        localStorage.setItem(`sb-${SUPABASE_CONFIG.projectRef}-auth-token`, JSON.stringify(sessionBackup));
+        localStorage.setItem(getAuthTokenKey(), JSON.stringify(sessionBackup));
         console.log('💾 Enhanced manual session stored with full diagnostics');
         
         return true;
@@ -169,7 +169,7 @@ export const useAuthSessionManager = (): SessionManagerResult => {
     console.log('🧹 Clearing all session data (enhanced)...');
     setSession(null);
     setUser(null);
-    localStorage.removeItem(`sb-${SUPABASE_CONFIG.projectRef}-auth-token`);
+    localStorage.removeItem(getAuthTokenKey());
     try {
       await supabase.auth.signOut();
     } catch (error) {
@@ -203,7 +203,7 @@ export const useAuthSessionManager = (): SessionManagerResult => {
         }
         
         // Method 2: Check localStorage for developer session backup
-        const storedSession = localStorage.getItem(`sb-${SUPABASE_CONFIG.projectRef}-auth-token`);
+        const storedSession = localStorage.getItem(getAuthTokenKey());
         if (storedSession) {
           try {
             const parsedSession = JSON.parse(storedSession);
@@ -247,11 +247,11 @@ export const useAuthSessionManager = (): SessionManagerResult => {
               }
             } else {
               console.log('⚠️ STORED SESSION EXPIRED OR INVALID, clearing...');
-              localStorage.removeItem(`sb-${SUPABASE_CONFIG.projectRef}-auth-token`);
+              localStorage.removeItem(getAuthTokenKey());
             }
           } catch (parseError) {
             console.error('❌ PARSE STORED SESSION ERROR:', parseError);
-            localStorage.removeItem(`sb-${SUPABASE_CONFIG.projectRef}-auth-token`);
+            localStorage.removeItem(getAuthTokenKey());
           }
         }
         
@@ -286,7 +286,7 @@ export const useAuthSessionManager = (): SessionManagerResult => {
           version: '2.0',
           event_type: event
         };
-        localStorage.setItem(`sb-${SUPABASE_CONFIG.projectRef}-auth-token`, JSON.stringify(sessionBackup));
+        localStorage.setItem(getAuthTokenKey(), JSON.stringify(sessionBackup));
       } else if (event === 'SIGNED_OUT') {
         console.log('👋 User signed out, clearing enhanced session...');
         await clearSession();

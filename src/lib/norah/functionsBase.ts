@@ -3,8 +3,8 @@
  * Functions Base URL from centralized configuration
  */
 
-import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+import { getFunctionsUrl } from '@/lib/supabase/clientUtils';
 
 export function getFunctionsBase(): string {
-  return SUPABASE_CONFIG.functionsUrl;
+  return getFunctionsUrl();
 }

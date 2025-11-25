@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { sanitizeHTML } from '@/lib/sanitize/htmlSanitizer';
-import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/supabase/clientUtils';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -203,13 +203,13 @@ async function streamChat({
   onDelta: (chunk: string) => void;
   onDone: () => void;
 }) {
-  const CHAT_URL = `${SUPABASE_CONFIG.url}/functions/v1/norah-chat`;
+  const CHAT_URL = `${getSupabaseUrl()}/functions/v1/norah-chat`;
 
   const resp = await fetch(CHAT_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${SUPABASE_CONFIG.anonKey}`,
+      Authorization: `Bearer ${getSupabaseAnonKey()}`,
     },
     body: JSON.stringify({ messages }),
   });

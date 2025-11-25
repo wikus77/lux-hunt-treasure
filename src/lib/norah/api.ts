@@ -134,9 +134,9 @@ async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
   checkOrigin();
   
   // Use centralized Supabase config
-  const { functionsUrl, anonKey } = await import('@/lib/supabase/config').then(m => m.SUPABASE_CONFIG);
-  const url = `${functionsUrl}/${path}`;
-  const key = anonKey;
+  const { getFunctionsUrl, getSupabaseAnonKey } = await import('@/lib/supabase/clientUtils');
+  const url = `${getFunctionsUrl()}/${path}`;
+  const key = getSupabaseAnonKey();
   const corr = getClientId();
   const cleanCid = normalizeUuid(corr) || corr;
 

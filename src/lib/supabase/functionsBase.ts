@@ -1,16 +1,17 @@
 /**
  * Guard-safe helpers for Supabase endpoints.
  * Uses centralized configuration to ensure consistency.
+ * © 2025 Joseph MULÉ – M1SSION™
  */
 
-import { SUPABASE_CONFIG } from './config';
+import { getProjectRef as _getProjectRef, getFunctionsUrl, getSupabaseAnonKey } from './clientUtils';
 
 export function getProjectRef(): string | null {
-  return SUPABASE_CONFIG.projectRef;
+  return _getProjectRef();
 }
 
 export function functionsBaseUrl(fn: string) {
-  return `${SUPABASE_CONFIG.functionsUrl}/functions/v1/${fn}`;
+  return `${getFunctionsUrl()}/${fn}`;
 }
 
 export async function verifyEdgeFunction(fn: string) {
@@ -26,7 +27,7 @@ export async function verifyEdgeFunction(fn: string) {
 }
 
 export function norahHeaders() {
-  const anon = SUPABASE_CONFIG.anonKey;
+  const anon = getSupabaseAnonKey();
   return {
     "Content-Type": "application/json",
     "apikey": anon,
