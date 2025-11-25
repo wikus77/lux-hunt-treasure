@@ -84,6 +84,14 @@ export function useBuzzApi() {
       // 🎯 Determine which edge function to call based on generateMap flag
       const functionName = generateMap ? 'handle-buzz-map' : 'handle-buzz-press';
       console.log(`📡 Calling ${functionName} with unified payload:`, payload);
+      console.log(`📍 Coordinates being sent:`, JSON.stringify(payload.coordinates));
+      console.log(`🔧 Payload structure:`, {
+        hasUserId: !!payload.userId,
+        hasGenerateMap: 'generateMap' in payload,
+        hasCoordinates: !!payload.coordinates,
+        coordinatesType: typeof payload.coordinates,
+        coordinatesValue: payload.coordinates
+      });
       
       // Check user session before calling edge function
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
