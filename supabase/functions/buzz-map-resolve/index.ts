@@ -35,9 +35,14 @@ Deno.serve(async (req) => {
 
   try {
     console.log('🗺️ buzz-map-resolve: Request received');
+    console.log('🌍 SUPABASE_URL:', Deno.env.get('SUPABASE_URL'));
+    console.log('🔑 SUPABASE_ANON_KEY present:', !!Deno.env.get('SUPABASE_ANON_KEY'));
 
     // Get Supabase client with user JWT
     const authHeader = req.headers.get('Authorization');
+    console.log('🔐 Authorization header present:', !!authHeader);
+    console.log('🔐 Authorization header value:', authHeader?.substring(0, 50) + '...');
+    
     if (!authHeader) {
       console.error('❌ No authorization header');
       return new Response(
@@ -49,7 +54,7 @@ Deno.serve(async (req) => {
     // Use standard Supabase env vars (auto-provided by Deno for the deployed project)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    console.log('🔧 Using Supabase:', supabaseUrl);
+    console.log('🔧 Creating Supabase client with URL:', supabaseUrl);
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: {
         headers: { Authorization: authHeader },
@@ -57,7 +62,10 @@ Deno.serve(async (req) => {
     });
 
     // Get authenticated user
+    console.log('👤 Attempting to get user...');
     const { data: { user }, error: userError } = await supabase.auth.getUser();
+    console.log('👤 getUser result:', { user: !!user, error: userError?.message });
+    
     if (userError || !user) {
       console.error('❌ Authentication failed:', userError);
       return new Response(
