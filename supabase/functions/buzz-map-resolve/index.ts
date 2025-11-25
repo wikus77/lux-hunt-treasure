@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // BUZZ MAP RESOLVE - SERVER-AUTHORITATIVE EDGE FUNCTION
+// FORCE REDEPLOY: 2025-11-25T15:20:33Z - FIX RPC buzz_map_spend_m1u SIGNATURE
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
