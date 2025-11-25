@@ -51,9 +51,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Use standard Supabase env vars (auto-provided by Deno for the deployed project)
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    // Use EXTERNAL secrets to ensure correct project (vkjrqirvdvjbemsfzxof)
+    const supabaseUrl = Deno.env.get('EXTERNAL_SUPABASE_URL') || Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('EXTERNAL_SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_ANON_KEY')!;
     console.log('🔧 Creating Supabase client with URL:', supabaseUrl);
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: {
