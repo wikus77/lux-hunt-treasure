@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+import { getProjectRef } from '@/lib/supabase/clientUtils';
 
 type SettingsSection = 
   | 'agent-profile' 
@@ -36,7 +36,7 @@ const SettingsPage = () => {
   const [sessionStatus, setSessionStatus] = useState<string>('Verifica...');
   const geo = useGeolocation();
   
-  const supabaseProjectId = SUPABASE_CONFIG.projectRef;
+  const supabaseProjectId = getProjectRef();
 
   useEffect(() => {
     checkGeolocation();

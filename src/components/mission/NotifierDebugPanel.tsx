@@ -5,9 +5,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { getProjectRef } from '@/lib/supabase/functionsBase';
-import { SUPABASE_CONFIG } from '@/lib/supabase/config';
+import { getSupabaseAnonKey } from '@/lib/supabase/clientUtils';
 
-const SUPABASE_ANON_KEY = SUPABASE_CONFIG.anonKey;
+const SUPABASE_ANON_KEY = getSupabaseAnonKey();
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

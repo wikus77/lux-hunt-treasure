@@ -3,11 +3,11 @@
  * Uses centralized Supabase configuration
  */
 
-import { SUPABASE_CONFIG } from './supabase/config';
+import { getSupabaseUrl } from './supabase/clientUtils';
 
 const fromEnv = import.meta.env.VITE_NORAH_BASE_URL?.trim();
 
-export const NORAH_BASE = fromEnv || `${SUPABASE_CONFIG.url}/functions/v1`;
+export const NORAH_BASE = fromEnv || `${getSupabaseUrl()}/functions/v1`;
 
 export const NORAH_ROUTES = {
   ingest: `${NORAH_BASE}/norah-ingest`,

@@ -6,7 +6,9 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { SUPABASE_CONFIG } from './config';
+import { getSupabaseConfig } from './clientUtils';
+
+const SUPABASE_CONFIG = getSupabaseConfig();
 
 export interface ConnectionStatus {
   connected: boolean;
