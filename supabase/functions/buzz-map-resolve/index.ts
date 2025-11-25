@@ -38,32 +38,29 @@ Deno.serve(async (req) => {
     console.log('🌍 SUPABASE_URL:', Deno.env.get('SUPABASE_URL'));
     console.log('🔑 SUPABASE_ANON_KEY present:', !!Deno.env.get('SUPABASE_ANON_KEY'));
 
-    // Get Supabase client with user JWT
+    // Get Supabase client with SERVICE_ROLE_KEY (same pattern as handle-buzz-press)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Get user from JWT (same pattern as handle-buzz-press)
     const authHeader = req.headers.get('Authorization');
     console.log('🔐 Authorization header present:', !!authHeader);
-    console.log('🔐 Authorization header value:', authHeader?.substring(0, 50) + '...');
     
     if (!authHeader) {
       console.error('❌ No authorization header');
       return new Response(
-        JSON.stringify({ error: 'unauthorized', message: 'No authorization header' }),
+        JSON.stringify({ error: 'unauthorized', message: 'Missing authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Use EXTERNAL secrets to ensure correct project (vkjrqirvdvjbemsfzxof)
-    const supabaseUrl = Deno.env.get('EXTERNAL_SUPABASE_URL') || Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('EXTERNAL_SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_ANON_KEY')!;
-    console.log('🔧 Creating Supabase client with URL:', supabaseUrl);
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: {
-        headers: { Authorization: authHeader },
-      },
-    });
-
-    // Get authenticated user
-    console.log('👤 Attempting to get user...');
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const jwt = authHeader.replace('Bearer ', '');
+    console.log('🔑 JWT length:', jwt.length);
+    
+    // Get authenticated user with explicit JWT (same as handle-buzz-press)
+    console.log('👤 Attempting to get user with JWT...');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
     console.log('👤 getUser result:', { user: !!user, error: userError?.message });
     
     if (userError || !user) {
