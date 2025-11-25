@@ -1,13 +1,22 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
-import { withCors } from '../_shared/cors.ts'
 
 // 🔍 Debug switch (controlled by ENV)
 const DEBUG = Deno.env.get('DEBUG_BUZZ_MAP') === '1';
 const dlog = (...args: unknown[]) => { if (DEBUG) console.log(...args); };
 
-serve(withCors(async (req: Request): Promise<Response> => {
+// CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
   // Debug/trace flags
   const wantsDebug = req.headers.get('x-m1-debug') === '1' || Deno.env.get('DEBUG_PANELS') === 'true';
   const wantsTrace = req.headers.get('x-debug') === '1';
@@ -67,7 +76,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
           errorMessage: 'Request body is empty' 
         }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
@@ -85,7 +94,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
         errorMessage: 'Invalid JSON in request body: ' + parseError.message 
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
@@ -118,7 +127,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
         errorMessage: 'Valid coordinates are required for BUZZ MAP. Please ensure lat/lng are provided.' 
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
     
@@ -267,7 +276,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
     
     return new Response(JSON.stringify(responseBody), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error: any) {
@@ -292,9 +301,9 @@ serve(withCors(async (req: Request): Promise<Response> => {
       status: error.message?.includes('Unauthorized') ? 401 : 
              error.message?.includes('insufficient') ? 402 : 
              error.message?.includes('coordinates') ? 400 : 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
-}));
+});
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
