@@ -103,7 +103,13 @@ serve(withCors(async (req: Request): Promise<Response> => {
     const level = nextLevelData.level;
     const radiusKm = nextLevelData.radius_km;
     const costM1U = nextLevelData.cost_m1u;
-    const currentWeek = nextLevelData.current_week;
+    
+    // Calculate current week (RPC doesn't return it)
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const diff = now.getTime() - startOfYear.getTime();
+    const oneWeek = 1000 * 60 * 60 * 24 * 7;
+    const currentWeek = Math.ceil(diff / oneWeek);
 
     console.log('📊 [BUZZ-MAP-RESOLVE] Server-calculated pricing:', { level, radiusKm, costM1U, currentWeek });
 
@@ -145,7 +151,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
         radius_km: radiusKm,
         source: 'buzz_map',
         level: level,
-        price_eur: costM1U / 10,
+        price_eur: costM1U / 100, // M1U to EUR conversion
         week: currentWeek
       })
       .select()
@@ -169,7 +175,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
       .insert({
         user_id: user.id,
         clue_count: level,
-        cost_eur: costM1U / 10,
+        cost_eur: costM1U / 100, // M1U to EUR conversion
         radius_generated: radiusKm
       });
       
@@ -191,7 +197,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
       area_id: mapArea.id,
       level: level,
       radius_km: radiusKm,
-      price_eur: costM1U / 10,
+      price_eur: costM1U / 100, // M1U to EUR conversion
       cost_m1u: costM1U,
       new_balance: spendResult.new_balance,
       week: currentWeek
