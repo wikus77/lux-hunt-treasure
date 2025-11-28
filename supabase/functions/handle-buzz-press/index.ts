@@ -3,7 +3,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
 import { withCors } from '../_shared/cors.ts'
 import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts'
-import { generateMissionClue, getCurrentWeekOfYear } from '../_shared/clueGenerator.ts'
+// 🔥 REMOVED: No longer using hardcoded clue generator - now using prize_clues from database
 
 // 🔍 Debug switch (controlled by ENV)
 const DEBUG = Deno.env.get('DEBUG_BUZZ_MAP') === '1';
@@ -236,60 +236,131 @@ serve(withCors(async (req: Request): Promise<Response> => {
       });
     }
 
-    // 🎯 M1SSION™ CLUE ENGINE: Generate clue using original logic with weeks/tiers/antiforcing
-    console.log('🎯 [HANDLE-BUZZ-PRESS] Generating clue using M1SSION™ engine...');
+    // 🎯 M1SSION™ CLUE ENGINE V2: Progressive weekly clues with anti-duplication
+    console.log('🎯 [HANDLE-BUZZ-PRESS] Loading clue from database (V2)...');
     
-    let buzzCount = 0;
+    let clueText = '';
+    let clueId = '';
+    
     try {
-      // Get user's weekly BUZZ count
-      const { data: counterData } = await supabase
-        .from('user_buzz_counter')
-        .select('daily_count')
-        .eq('user_id', user.id)
-        .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-        .order('date', { ascending: false });
+      // 1. Get active prize with start_date for week calculation
+      const { data: activePrize, error: prizeError } = await supabase
+        .from('prizes')
+        .select('id, title, start_date')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       
-      if (counterData && counterData.length > 0) {
-        buzzCount = counterData.reduce((sum, row) => sum + (row.daily_count || 0), 0);
+      if (prizeError) {
+        console.error('❌ [HANDLE-BUZZ-PRESS] Error fetching active prize:', prizeError);
+      }
+      
+      if (activePrize) {
+        console.log('🎁 [HANDLE-BUZZ-PRESS] Active prize found:', activePrize.title);
+        
+        // 2. Calculate current week (1-4) based on mission start date
+        const missionStart = activePrize.start_date 
+          ? new Date(activePrize.start_date) 
+          : new Date();
+        
+        const now = new Date();
+        const daysSinceStart = Math.floor((now.getTime() - missionStart.getTime()) / (1000 * 60 * 60 * 24));
+        const currentWeek = Math.min(4, Math.max(1, Math.floor(daysSinceStart / 7) + 1));
+        
+        console.log('📅 [HANDLE-BUZZ-PRESS] Mission timing:', { missionStart, daysSinceStart, currentWeek });
+        
+        // 3. Get user's already unlocked clue IDs
+        const { data: userUnlockedClues } = await supabase
+          .from('user_clues')
+          .select('clue_id')
+          .eq('user_id', user.id);
+        
+        const unlockedClueIds = new Set((userUnlockedClues || []).map(uc => uc.clue_id));
+        console.log('🔓 [HANDLE-BUZZ-PRESS] User has unlocked', unlockedClueIds.size, 'clues');
+        
+        // 4. Get clues up to current week
+        const { data: prizeClues, error: cluesError } = await supabase
+          .from('prize_clues')
+          .select('id, description_it, week, clue_category, is_fake')
+          .eq('prize_id', activePrize.id)
+          .lte('week', currentWeek)
+          .order('week', { ascending: true });
+        
+        if (cluesError) {
+          console.error('❌ [HANDLE-BUZZ-PRESS] Error fetching prize clues:', cluesError);
+        }
+        
+        if (prizeClues && prizeClues.length > 0) {
+          // 5. Filter out already seen clues
+          const availableClues = prizeClues.filter(c => !unlockedClueIds.has(c.id));
+          
+          console.log('📊 [HANDLE-BUZZ-PRESS] Clue stats:', {
+            total: prizeClues.length,
+            available: availableClues.length,
+            currentWeek
+          });
+          
+          if (availableClues.length > 0) {
+            // 6. Balance location vs prize (50/50)
+            const locationClues = availableClues.filter(c => c.clue_category === 'location');
+            const prizeOnlyClues = availableClues.filter(c => c.clue_category === 'prize');
+            
+            const useLocation = unlockedClueIds.size % 2 === 0;
+            let pool = useLocation && locationClues.length > 0 
+              ? locationClues 
+              : prizeOnlyClues.length > 0 ? prizeOnlyClues : availableClues;
+            
+            // 7. Random selection
+            const selected = pool[Math.floor(Math.random() * pool.length)];
+            clueText = selected.description_it || 'Indizio non disponibile';
+            clueId = selected.id;
+            
+            console.log('🎯 [HANDLE-BUZZ-PRESS] Clue selected:', {
+              clueId, week: selected.week, category: selected.clue_category, isFake: selected.is_fake
+            });
+          } else {
+            clueText = `Hai sbloccato tutti gli indizi della settimana ${currentWeek}. Torna la prossima settimana!`;
+            clueId = `week_complete_${currentWeek}_${Date.now()}`;
+          }
+        } else {
+          clueText = 'Gli indizi non sono ancora stati generati. Contatta l\'amministratore.';
+          clueId = `no_clues_${Date.now()}`;
+        }
+      } else {
+        clueText = 'Nessuna missione attiva al momento. Resta sintonizzato!';
+        clueId = `no_mission_${Date.now()}`;
       }
     } catch (error) {
-      console.error('❌ [HANDLE-BUZZ-PRESS] Error fetching buzz count:', error);
+      console.error('❌ [HANDLE-BUZZ-PRESS] Error in clue generation:', error);
+      clueText = 'Errore nel caricamento. Riprova...';
+      clueId = `error_${Date.now()}`;
     }
-
-    const weekOfYear = getCurrentWeekOfYear();
-    const clueData = generateMissionClue({ userId: user.id, buzzCount, weekOfYear });
-    const clueText = clueData.text;
     
-    console.log('🎯 [HANDLE-BUZZ-PRESS] CLUE GENERATED:', {
-      tier: clueData.tier,
-      week: clueData.week,
-      difficulty: clueData.difficulty,
-      buzzCount,
-      textPreview: clueText.substring(0, 50) + '...'
-    });
+    console.log('🎯 [HANDLE-BUZZ-PRESS] CLUE READY:', { clueId, textPreview: clueText.substring(0, 50) + '...' });
 
-    // Increment buzz counter with direct UPSERT
+    // Increment buzz counter with direct UPSERT - FIX: use correct column names
     const today = new Date().toISOString().split('T')[0];
     
     // Get current counter
     const { data: currentCounter } = await supabase
       .from('user_buzz_counter')
-      .select('daily_count')
+      .select('buzz_count')
       .eq('user_id', user.id)
-      .eq('counter_date', today)
+      .eq('date', today)
       .maybeSingle();
     
-    const newCount = (currentCounter?.daily_count || 0) + 1;
+    const newCount = (currentCounter?.buzz_count || 0) + 1;
     
     // Upsert new count
     const { error: counterError } = await supabase
       .from('user_buzz_counter')
       .upsert({
         user_id: user.id,
-        counter_date: today,
-        daily_count: newCount
+        date: today,
+        buzz_count: newCount
       }, {
-        onConflict: 'user_id,counter_date'
+        onConflict: 'user_id,date'
       });
     
     if (counterError) {
@@ -324,17 +395,36 @@ serve(withCors(async (req: Request): Promise<Response> => {
         user_id: user.id,
         type: 'buzz',
         title: '🎯 Nuovo Indizio BUZZ!',
-        message: clueText,
-        metadata: {
-          clue_text: clueText,
-          source: 'buzz_press'
-        }
+        message: clueText
       });
 
     if (notificationError) {
       console.error('❌ [HANDLE-BUZZ-PRESS] Notification error:', notificationError);
     } else {
       console.log('✅ [HANDLE-BUZZ-PRESS] Notification created successfully');
+    }
+    
+    // 🔥 Save clue to user_clues table (only if it's a real clue, not fallback)
+    if (clueId && !clueId.startsWith('fallback_') && !clueId.startsWith('error_')) {
+      const { error: saveClueError } = await supabase
+        .from('user_clues')
+        .upsert({
+          user_id: user.id,
+          clue_id: clueId,
+          title_it: '🎯 Indizio BUZZ',
+          description_it: clueText,
+          clue_type: 'buzz',
+          buzz_cost: 20,
+          unlocked_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,clue_id'
+        });
+      
+      if (saveClueError) {
+        console.error('❌ [HANDLE-BUZZ-PRESS] Error saving clue to user_clues:', saveClueError);
+      } else {
+        console.log('✅ [HANDLE-BUZZ-PRESS] Clue saved to user_clues:', clueId);
+      }
     }
 
     const response = {

@@ -13,12 +13,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { SafeSelect } from '@/components/ui/SafeSelect';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Swords, Trophy, Zap, Users, Clock, Shuffle, Crown } from 'lucide-react';
+import { Swords, Trophy, Zap, Users, Clock, Shuffle, Crown, Target } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createBattle, acceptBattle, getRandomOpponent } from '@/lib/battle/invokeBattle';
 import { ErrorBoundary } from '@/components/utils/ErrorBoundary';
 import { Input } from '@/components/ui/input';
 import { STAKE_TYPES, STAKE_PERCENTS, StakeType, StakePercent } from '@/lib/battle/constants';
+import { PracticeMode } from '@/components/battle/PracticeMode';
 
 export default function BattleLobby() {
   const navigate = useSafeNavigate();
@@ -26,7 +27,7 @@ export default function BattleLobby() {
   const [userId, setUserId] = useState<string | null>(null);
   
   // Battle creation state with safe defaults
-  const [stakeType, setStakeType] = useState<StakeType>('energy');
+  const [stakeType, setStakeType] = useState<StakeType>('m1u');
   const [stakePercentage, setStakePercentage] = useState<StakePercent>(25);
   const [opponentHandle, setOpponentHandle] = useState<string>('');
   const [opponentId, setOpponentId] = useState<string>('');
@@ -305,20 +306,42 @@ export default function BattleLobby() {
           </Card>
         )}
 
-        <Tabs defaultValue="create" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 bg-gray-800/50">
+        <Tabs defaultValue="practice" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-5 bg-gray-800/50">
+            <TabsTrigger value="practice" className="gap-1">
+              <Target className="w-3 h-3" />
+              Practice
+            </TabsTrigger>
             <TabsTrigger value="create">Create</TabsTrigger>
             <TabsTrigger value="top">
               <Crown className="w-3 h-3 mr-1" />
               Top
             </TabsTrigger>
             <TabsTrigger value="pending">
-              Challenges ({pendingBattles.length})
+              ({pendingBattles.length})
             </TabsTrigger>
             <TabsTrigger value="active">
-              Active ({myBattles.length})
+              ({myBattles.length})
             </TabsTrigger>
           </TabsList>
+
+          {/* Practice Mode - Train against AI */}
+          <TabsContent value="practice">
+            <Card className="bg-gray-800/50 border-cyan-500/30">
+              <CardHeader>
+                <CardTitle className="text-cyan-400 flex items-center gap-2 text-lg">
+                  <Target className="w-5 h-5" />
+                  Training Arena
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Practice your reaction time against AI opponents
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {userId && <PracticeMode userId={userId} />}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Create Battle */}
           <TabsContent value="create">

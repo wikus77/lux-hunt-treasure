@@ -72,13 +72,26 @@ export function BattleConsole({ className }: BattleConsoleProps) {
   };
 
   const loadStats = async (uid: string) => {
-    const { data } = await supabase
-      .from('battle_metrics')
-      .select('*')
-      .eq('user_id', uid)
-      .single();
+    try {
+      // Use maybeSingle() to avoid 406 errors when table doesn't exist
+      const { data, error } = await supabase
+        .from('battle_metrics')
+        .select('*')
+        .eq('user_id', uid)
+        .maybeSingle();
 
-    setStats(data);
+      // Silently handle 406 errors (table/view may not exist)
+      if (error && (error.code === '406' || error.code === 'PGRST116' || error.code === '42P01')) {
+        console.debug('[BattleConsole] battle_metrics not available');
+        return;
+      }
+
+      if (data) {
+        setStats(data);
+      }
+    } catch (e) {
+      console.debug('[BattleConsole] Stats load error (non-critical):', e);
+    }
   };
 
   const handleHeaderClick = () => {

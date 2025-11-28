@@ -100,25 +100,34 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
 
     console.log('[BUZZ MAP 3D] Initializing with Neon 3D style...');
     
-    // Process the Neon 3D style to inject MapTiler API key
+    // Process the Neon 3D style to inject MapTiler API key (LOVABLE METHOD)
     const processedStyle = JSON.parse(JSON.stringify(neonStyle));
     const apiKey = mapTilerConfig.getKey();
     
     if (apiKey && processedStyle.sources) {
       Object.keys(processedStyle.sources).forEach((sourceKey) => {
         const source = processedStyle.sources[sourceKey];
+        
+        // Replace {key} placeholder
         if (source.url && source.url.includes('{key}')) {
           source.url = source.url.replace('{key}', apiKey);
         }
+        // Also replace YOUR_MAPTILER_API_KEY_HERE placeholder
+        if (source.url && source.url.includes('YOUR_MAPTILER_API_KEY_HERE')) {
+          source.url = source.url.replace('YOUR_MAPTILER_API_KEY_HERE', apiKey);
+        }
+        
         if (source.tiles) {
           source.tiles = source.tiles.map((tile: string) => 
-            tile.replace('{key}', apiKey)
+            tile.replace('{key}', apiKey).replace('YOUR_MAPTILER_API_KEY_HERE', apiKey)
           );
         }
       });
       
       if (processedStyle.glyphs) {
-        processedStyle.glyphs = processedStyle.glyphs.replace('{key}', apiKey);
+        processedStyle.glyphs = processedStyle.glyphs
+          .replace('{key}', apiKey)
+          .replace('YOUR_MAPTILER_API_KEY_HERE', apiKey);
       }
     }
 
@@ -217,7 +226,7 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
     };
   }, [center]); // Only re-init if center changes initially
 
-  // Refresh handler - reload Neon 3D style
+  // Refresh handler - reload Neon 3D style (LOVABLE METHOD)
   const handleRefresh = useCallback(() => {
     if (!map.current || !mapReady) return;
     
@@ -228,18 +237,27 @@ const MapContainerMapLibre: React.FC<MapContainerMapLibreProps> = ({
     if (apiKey && processedStyle.sources) {
       Object.keys(processedStyle.sources).forEach((sourceKey) => {
         const source = processedStyle.sources[sourceKey];
+        
+        // Replace {key} placeholder
         if (source.url && source.url.includes('{key}')) {
           source.url = source.url.replace('{key}', apiKey);
         }
+        // Also replace YOUR_MAPTILER_API_KEY_HERE placeholder
+        if (source.url && source.url.includes('YOUR_MAPTILER_API_KEY_HERE')) {
+          source.url = source.url.replace('YOUR_MAPTILER_API_KEY_HERE', apiKey);
+        }
+        
         if (source.tiles) {
           source.tiles = source.tiles.map((tile: string) => 
-            tile.replace('{key}', apiKey)
+            tile.replace('{key}', apiKey).replace('YOUR_MAPTILER_API_KEY_HERE', apiKey)
           );
         }
       });
       
       if (processedStyle.glyphs) {
-        processedStyle.glyphs = processedStyle.glyphs.replace('{key}', apiKey);
+        processedStyle.glyphs = processedStyle.glyphs
+          .replace('{key}', apiKey)
+          .replace('YOUR_MAPTILER_API_KEY_HERE', apiKey);
       }
     }
 

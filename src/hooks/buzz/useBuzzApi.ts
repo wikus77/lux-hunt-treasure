@@ -55,12 +55,12 @@ export function useBuzzApi() {
       }
 
       // 🎯 Route to buzz-map-resolve when generateMap is true, otherwise handle-buzz-press
-      const functionName = generateMap ? 'buzz-map-resolve' : 'handle-buzz-press';
+      const functionName = generateMap ? 'buzz-map-resolve-v2' : 'handle-buzz-press';
       
       // Build correct payload based on which function we're calling
       const payload: any = {};
       
-      if (functionName === 'buzz-map-resolve') {
+      if (functionName === 'buzz-map-resolve-v2') {
         // 🗺️ BUZZ MAP RESOLVE: expects { lat, lng } directly in body
         if (!coordinates) {
           console.error('❌ buzz-map-resolve requires coordinates');

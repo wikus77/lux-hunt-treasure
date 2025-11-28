@@ -34,7 +34,22 @@ export const M1UnitsPill = ({ className = '', showLabel = true, showPlusButton =
     getUser();
   }, []);
 
-  const { unitsData, isLoading, error, connectionState } = useM1UnitsRealtime(userId);
+  const { unitsData, isLoading, error, connectionState, refetch } = useM1UnitsRealtime(userId);
+
+  // 🔥 FIX: Listen for BUZZ events to refetch M1U immediately
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log('💰 M1UnitsPill: BUZZ event received, refetching balance...');
+      setTimeout(() => refetch(), 500);
+    };
+
+    window.addEventListener('buzzAreaCreated', handleRefresh);
+    window.addEventListener('buzzClueCreated', handleRefresh);
+    return () => {
+      window.removeEventListener('buzzAreaCreated', handleRefresh);
+      window.removeEventListener('buzzClueCreated', handleRefresh);
+    };
+  }, [refetch]);
 
   // Trigger pulse animation on balance change
   useEffect(() => {

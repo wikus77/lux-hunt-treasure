@@ -38,8 +38,7 @@ declare global {
     getStripe?: () => any;
     __STRIPE_PK__?: string;
     DEBUG_PAGES?: boolean;
-    OneSignal?: any;
-    OneSignalInitialized?: boolean;
+    // OneSignal RIMOSSO - Solo FCM e VAPID Web Push
     plausible?: (event: string, options?: { props?: Record<string, any> }) => void;
   }
 }

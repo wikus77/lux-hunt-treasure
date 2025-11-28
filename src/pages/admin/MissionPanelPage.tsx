@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Trash2, Plus, Map, AlertTriangle, Wrench, Send } from 'lucide-react';
+import { Trash2, Plus, Map, AlertTriangle, Wrench, Send, Gift } from 'lucide-react';
+import MarkerRewardManager from '@/components/admin/MarkerRewardManager';
 import { Badge } from '@/components/ui/badge';
 import { useLocation } from 'wouter';
 import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
@@ -332,15 +333,36 @@ const MissionPanelPage: React.FC = () => {
           </Card>
         )}
 
-        {/* Bulk Marker Drop Card */}
-        <Card className="border-cyan-500/20 hover:border-cyan-500/40 transition-colors">
+        {/* NEW: Unified Marker Reward Manager */}
+        <Card className="border-emerald-500/20 hover:border-emerald-500/40 transition-colors">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-emerald-400" />
+              🎯 Marker Reward Manager
+            </CardTitle>
+            <CardDescription>
+              Gestione completa marker reward: inserimento manuale con mappa, generazione bulk, M1U, Indizi, Premi Fisici
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => setLocation('/panel/marker-rewards')}
+              className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500"
+            >
+              Apri Marker Manager
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Legacy Bulk Marker Drop Card */}
+        <Card className="border-cyan-500/20 hover:border-cyan-500/40 transition-colors opacity-70">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Map className="h-5 w-5 text-cyan-400" />
-              Bulk Marker Drop
+              Bulk Marker Drop (Legacy)
             </CardTitle>
             <CardDescription>
-              Genera e distribuisce marker casuali sulla Buzz Map con reward personalizzati
+              Genera marker casuali sulla Buzz Map (usa il nuovo Marker Manager per più opzioni)
             </CardDescription>
           </CardHeader>
           <CardContent>

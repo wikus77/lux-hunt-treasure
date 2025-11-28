@@ -9,6 +9,7 @@ interface RewardMarker {
   lat: number;
   lng: number;
   title?: string;
+  claimed?: boolean; // Se true, marker diventa VIOLA
 }
 
 interface RewardsLayer3DProps {
@@ -16,11 +17,16 @@ interface RewardsLayer3DProps {
   enabled: boolean;
   markers?: RewardMarker[];
   userPosition?: { lat: number; lng: number };
+  isAdmin?: boolean; // Admin vede SEMPRE tutti i marker
 }
 
-const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers = [], userPosition }) => {
+// 🎯 ZOOM MINIMO per vedere i marker reward (utente deve essere molto vicino)
+const MIN_ZOOM_FOR_REWARDS = 17;
+
+const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers = [], userPosition, isAdmin = false }) => {
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
+  const [currentZoom, setCurrentZoom] = useState(0);
   const { rewards } = useMarkerRewards(selectedMarker);
   const rafRef = React.useRef<number | null>(null);
 
@@ -34,6 +40,7 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
         newPositions.set(marker.id, { x: point.x, y: point.y });
       });
       setPositions(newPositions);
+      setCurrentZoom(map.getZoom());
     };
 
     const updateOnRender = () => {
@@ -56,24 +63,21 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
     };
   }, [map, markers, enabled]);
 
+  // 🎯 Non mostrare nulla se layer disabilitato
   if (!enabled || markers.length === 0) return null;
+  
+  // 🟣 Marker VIOLA (riscattati) → SEMPRE visibili a qualsiasi zoom
+  // 🟢 Marker VERDI (non riscattati) → solo con zoom >= MIN_ZOOM_FOR_REWARDS
+  const visibleMarkers = markers.filter(m => 
+    m.claimed || currentZoom >= MIN_ZOOM_FOR_REWARDS
+  );
+  
+  if (visibleMarkers.length === 0) return null;
 
   return (
     <>
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 660 }}>
-        {markers
-          .filter(m => {
-            if (!userPosition) return true;
-            // Haversine distance, meters
-            const R = 6371e3;
-            const toRad = (d: number) => d * Math.PI / 180;
-            const dLat = toRad(m.lat - userPosition.lat);
-            const dLng = toRad(m.lng - userPosition.lng);
-            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(userPosition.lat)) * Math.cos(toRad(m.lat)) * Math.sin(dLng / 2) ** 2;
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            const d = R * c;
-            return d <= 90; // show only within 90m
-          })
+        {visibleMarkers // 🎯 VIOLA sempre visibili, VERDI solo da vicino
           .map((marker) => {
             const pos = positions.get(marker.id);
             if (!pos) return null;
@@ -92,15 +96,18 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
                 <div
                   className="m1-reward-marker"
                   style={{
-                    width: 10,
-                    height: 10,
+                    width: marker.claimed ? 12 : 10,
+                    height: marker.claimed ? 12 : 10,
                     borderRadius: '50%',
-                    background: '#10b981',
+                    // 🎯 VERDE = non riscattato, VIOLA = riscattato
+                    background: marker.claimed ? '#8B5CF6' : '#10b981',
                     border: '2px solid rgba(255, 255, 255, 0.6)',
-                    boxShadow: '0 0 8px 2px rgba(16, 185, 129, 0.8), 0 0 16px 4px rgba(16, 185, 129, 0.4)',
-                    animation: 'rewardPulse 2s ease-in-out infinite'
+                    boxShadow: marker.claimed 
+                      ? '0 0 8px 2px rgba(139, 92, 246, 0.8), 0 0 16px 4px rgba(139, 92, 246, 0.4)'
+                      : '0 0 8px 2px rgba(16, 185, 129, 0.8), 0 0 16px 4px rgba(16, 185, 129, 0.4)',
+                    animation: marker.claimed ? 'none' : 'rewardPulse 2s ease-in-out infinite'
                   }}
-                  title={marker.title || 'Reward'}
+                  title={marker.claimed ? `${marker.title || 'Reward'} (Riscattato)` : marker.title || 'Reward'}
                 />
               </div>
             );

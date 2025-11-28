@@ -212,6 +212,19 @@ const config: Config = {
             textShadow: '0 0 6px rgba(0, 255, 255, 0.6)',
           },
         },
+        // 🔥 M1SSION™ Skeleton Loader Animations
+        'shimmer': {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
+        'fadeIn': {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        'slideInUp': {
+          from: { opacity: '0', transform: 'translateY(10px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -231,6 +244,10 @@ const config: Config = {
         'marquee-animation': 'marquee 20s linear infinite',
         'wave-text': 'wave-text-effect 2.5s ease-in-out infinite',
         'glow': 'glow 0.6s ease-in-out 2s forwards',
+        // 🔥 M1SSION™ Skeleton & Page Transition Animations
+        'shimmer': 'shimmer 2s infinite linear',
+        'fadeIn': 'fadeIn 0.3s ease-out forwards',
+        'slideInUp': 'slideInUp 0.3s ease-out forwards',
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],

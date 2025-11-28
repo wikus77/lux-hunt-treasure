@@ -107,16 +107,81 @@ export function BattleShop({ userId }: { userId: string }) {
     }
 
     setPurchasing(item.item_id);
+    console.log('[BattleShop] 🛒 Starting purchase:', { item_id: item.item_id, price: item.base_price_m1u, currentBalance: balance });
 
     try {
+      // Try RPC first
       const { data, error } = await (supabase.rpc as any)('purchase_battle_item', {
         p_item_id: item.item_id,
         p_quantity: 1,
       });
 
-      if (error) throw error;
+      console.log('[BattleShop] 📦 RPC Response:', { data, error });
+
+      if (error) {
+        console.error('[BattleShop] ❌ RPC Error:', error);
+        
+        // FALLBACK: Direct DB operations if RPC fails
+        console.log('[BattleShop] 🔄 Trying direct DB fallback...');
+        
+        // 1. Deduct M1U directly
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            m1_units: balance - item.base_price_m1u,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userId);
+        
+        if (updateError) {
+          console.error('[BattleShop] ❌ Direct update error:', updateError);
+          throw updateError;
+        }
+        
+        console.log('[BattleShop] ✅ M1U deducted directly');
+        
+        // 2. Add to inventory (upsert)
+        const { error: inventoryError } = await supabase
+          .from('user_battle_items')
+          .upsert({
+            user_id: userId,
+            item_id: item.item_id,
+            quantity: (item.owned_quantity || 0) + 1,
+            purchased_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id,item_id'
+          });
+        
+        if (inventoryError) {
+          console.error('[BattleShop] ❌ Inventory error:', inventoryError);
+          // Rollback M1U
+          await supabase.from('profiles').update({ m1_units: balance }).eq('id', userId);
+          throw inventoryError;
+        }
+        
+        console.log('[BattleShop] ✅ Item added to inventory');
+        
+        // 🔥 Emit event for M1UPill to update immediately
+        const newBalance = balance - item.base_price_m1u;
+        window.dispatchEvent(new CustomEvent('m1u-spent', {
+          detail: {
+            amount: item.base_price_m1u,
+            newBalance: newBalance,
+            reason: 'battle_item_purchase_fallback'
+          }
+        }));
+        
+        toast({
+          title: '✅ Purchase Complete!',
+          description: `${item.name} added to your inventory (-${item.base_price_m1u} M1U)`,
+        });
+        
+        await Promise.all([loadItems(), refetchM1U()]);
+        return;
+      }
 
       const result = data as any;
+      console.log('[BattleShop] 📊 Result:', result);
 
       if (!result?.success) {
         throw new Error(result?.error || 'Purchase failed');
@@ -124,13 +189,22 @@ export function BattleShop({ userId }: { userId: string }) {
 
       toast({
         title: '✅ Purchase Complete!',
-        description: `${item.name} added to your inventory`,
+        description: `${item.name} added to your inventory (-${result.total_cost || item.base_price_m1u} M1U)`,
       });
+
+      // 🔥 Emit event for M1UPill to update immediately
+      window.dispatchEvent(new CustomEvent('m1u-spent', {
+        detail: {
+          amount: result.total_cost || item.base_price_m1u,
+          newBalance: result.new_balance,
+          reason: 'battle_item_purchase'
+        }
+      }));
 
       // Reload shop and M1U balance
       await Promise.all([loadItems(), refetchM1U()]);
     } catch (error: any) {
-      console.error('[BattleShop] Purchase error:', error);
+      console.error('[BattleShop] ❌ Purchase error:', error);
       toast({
         title: 'Purchase Failed',
         description: error?.message || 'Unknown error',

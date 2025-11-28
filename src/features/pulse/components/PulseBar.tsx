@@ -1,44 +1,33 @@
 /**
- * THE PULSE™ — Pulse Bar (Living Energy Bar)
- * Barra viva collegata al backend con animazioni dinamiche, soglie e realtime
+ * THE PULSE™ — Living Energy Bar (ORIGINALE)
+ * Barra viva con gradient animato cyan/magenta — SENZA CONTAINER
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import { usePulseRealtime } from '../hooks/usePulseRealtime';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { PULSE_ENABLED } from '@/config/featureFlags';
 
 interface PulseBarProps {
   onTap?: () => void;
-  variant?: 'inline' | 'fixed';
+  variant?: 'inline' | 'fixed' | 'floating';
 }
 
-export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
+export const PulseBar = ({ onTap, variant = 'inline' }: PulseBarProps) => {
   const { pulseState, lastUpdate } = usePulseRealtime();
   const [showSurge, setShowSurge] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
-  const [visualValue, setVisualValue] = useState(0);
 
   const value = pulseState?.value ?? 0;
   
   // Map value to living organism parameters
-  const flowSpeed = value < 25 ? '6s' : value < 50 ? '4.8s' : value < 75 ? '3.6s' : '3s';
-  const breathSpeed = value < 25 ? '2.6s' : value < 50 ? '2.2s' : value < 75 ? '1.8s' : '1.5s';
-  const brightness = value < 25 ? '0.85' : value < 50 ? '0.95' : value < 75 ? '1.05' : '1.15';
-  const outlineIntensity = value < 25 ? '0.7' : value < 50 ? '0.9' : value < 75 ? '1.1' : '1.3';
+  const flowSpeed = value < 25 ? '6s' : value < 50 ? '4s' : value < 75 ? '3s' : '2.5s';
+  const brightness = value < 25 ? 0.7 : value < 50 ? 0.85 : value < 75 ? 1 : 1.1;
+  const pulseScale = value < 25 ? 1 : value < 50 ? 1.01 : value < 75 ? 1.02 : 1.03;
+  const outlineIntensity = value < 25 ? 0.7 : value < 50 ? 0.9 : value < 75 ? 1.1 : 1.3;
+  const breathSpeed = value < 25 ? '2.5s' : value < 50 ? '2s' : value < 75 ? '1.6s' : '1.2s';
   
-  // Intro surge: 0 → 100% → real value (visual effect only)
-  useEffect(() => {
-    const t1 = setTimeout(() => setVisualValue(100), 30);
-    const t2 = setTimeout(() => setVisualValue(Math.max(0, Math.min(100, value))), 900);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
-
-  // Follow real value changes smoothly
-  useEffect(() => {
-    setVisualValue(Math.max(0, Math.min(100, value)));
-  }, [value]);
-
   // Check accessibility preference
   useEffect(() => {
     const prefersReducedMotion = localStorage.getItem('pulse_reduce_motion') === 'true';
@@ -54,107 +43,136 @@ export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
     }
   }, [lastUpdate?.threshold, reduceMotion]);
   
-  // Set CSS variables on :root
-  useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty('--flow-speed', flowSpeed);
-    root.style.setProperty('--breath-speed', breathSpeed);
-    root.style.setProperty('--pulse-brightness', brightness);
-    root.style.setProperty('--outline-intensity', outlineIntensity);
-  }, [flowSpeed, breathSpeed, brightness, outlineIntensity]);
-  
   // Random energy spikes every 20-40s
   useEffect(() => {
     if (reduceMotion) return;
     
     const triggerSpike = () => {
       const root = document.documentElement;
-      root.style.setProperty('--flow-mult', '0.6');
-      root.style.setProperty('--glow-mult', '1.25');
+      root.style.setProperty('--flow-speed', '1.2s');
+      root.style.setProperty('--pulse-brightness', '1.3');
       
       setTimeout(() => {
-        root.style.setProperty('--flow-mult', '1');
-        root.style.setProperty('--glow-mult', '1');
-      }, 1200);
+        root.style.setProperty('--flow-speed', flowSpeed);
+        root.style.setProperty('--pulse-brightness', String(brightness));
+      }, 1500);
     };
     
-    const interval = setInterval(triggerSpike, Math.floor(20000 + Math.random() * 20000));
+    const interval = setInterval(triggerSpike, Math.random() * 20000 + 20000);
     return () => clearInterval(interval);
-  }, [reduceMotion]);
+  }, [flowSpeed, brightness, reduceMotion]);
+
+  if (!PULSE_ENABLED) return null;
 
   return (
     <motion.div
-      className={`${variant === 'fixed' ? 'fixed top-0 left-0 right-0 safe-area-inset-top' : 'relative w-full p-4 bg-card/30 backdrop-blur-sm rounded-xl border border-border/30'} z-[120]`}
-      initial={variant === 'fixed' ? { y: -100 } : { opacity: 0, y: 10 }}
-      animate={variant === 'fixed' ? { y: 0 } : { opacity: 1, y: 0 }}
-      transition={{ type: 'spring', damping: 20 }}
+      className="relative w-full"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
       onClick={onTap}
       style={{ cursor: onTap ? 'pointer' : 'default' }}
     >
-      {/* Label for inline variant */}
-      {variant === 'inline' && (
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-technovier text-muted-foreground tracking-wide uppercase">
-            The Pulse™
-          </span>
-          <span className="text-xs font-technovier text-primary/70">
-            Global Energy
-          </span>
-        </div>
-      )}
-
-      {/* Energy Bar Container — Living Organism with Real Progress */}
+      {/* Energy Bar — Living Organism — NO CONTAINER */}
       <motion.div 
-        className="relative w-full h-[14px] rounded-full overflow-hidden"
+        className="relative w-full h-[12px] rounded-full overflow-hidden"
+        style={{
+          boxShadow: '0 0 20px rgba(0,231,255,0.5), 0 0 40px rgba(255,77,240,0.3)',
+        }}
         animate={showSurge ? {
           scale: [1, 1.03, 1],
+          boxShadow: [
+            '0 0 20px rgba(0,231,255,0.5)',
+            '0 0 50px rgba(255,77,240,0.9)',
+            '0 0 20px rgba(0,231,255,0.5)'
+          ]
         } : {}}
         transition={{ duration: 0.9, ease: 'easeInOut' }}
       >
-        {/* TRACK (dark, static background) */}
-        <div className="absolute inset-0 bg-[rgba(12,16,24,0.6)] backdrop-blur-[2px]"></div>
-
-        {/* FILL (visual progress with intro surge, width-based mask) */}
-        <div 
-          className="absolute inset-y-0 left-0 rounded-full overflow-hidden pulse-fill-transition will-change-transform"
-          style={{ width: `${visualValue}%` }}
-        >
-          {/* Energy flowing INSIDE the fill */}
-          <div 
-            className={reduceMotion ? 'absolute inset-0 bg-[linear-gradient(270deg,#ff4df0,#00eaff,#e0ffff,#00eaff,#ff4df0)]' : 'absolute inset-0 animate-energyFlow bg-[linear-gradient(270deg,#ff4df0,#00eaff,#e0ffff,#00eaff,#ff4df0)]'}
-          />
-          
-          {/* Breath / glow coherent with fill */}
-          <div 
-            className={reduceMotion ? '' : 'absolute inset-0 animate-pulseBreath bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.28)_0%,transparent_78%)]'}
-          />
-        </div>
-
-        {/* CONTORNO VIVO sincronizzato alla barra */}
-        <div
-          className={reduceMotion ? 'absolute inset-0 rounded-full pointer-events-none border border-[rgba(255,255,255,0.3)]' : 'absolute inset-0 rounded-full pointer-events-none pulse-outline'}
-          aria-hidden="true"
+        {/* ENERGY FLOW — Breathing Gradient */}
+        <motion.div 
+          className="absolute inset-0"
+          style={{ 
+            background: 'linear-gradient(270deg, #ff4df0, #00eaff, #e0ffff, #00eaff, #ff4df0)',
+            backgroundSize: '400% 400%',
+            filter: `brightness(${brightness})`,
+          }}
+          animate={reduceMotion ? {} : {
+            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+          }}
+          transition={{
+            duration: parseFloat(flowSpeed),
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+        />
+        
+        {/* GLOW / BREATH — Pulsing Life */}
+        <motion.div 
+          className="absolute inset-0"
+          style={{ 
+            background: 'radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, transparent 70%)',
+          }}
+          animate={reduceMotion ? {} : {
+            scale: [1, pulseScale, 1],
+            opacity: [0.5, 0.8, 0.5],
+          }}
+          transition={{
+            duration: parseFloat(breathSpeed),
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
         />
 
-        {/* PERCENTUALE (clean typography) */}
-        <span className="pulse-percent absolute right-2 top-1/2 -translate-y-1/2
-                         text-[0.8rem] font-technovier tracking-wide text-white/90
-                         antialiased [text-rendering:optimizeLegibility]
-                         drop-shadow-[0_0_6px_rgba(0,231,255,0.8)]">
-          {Math.round(value)}%
-        </span>
+        {/* OUTLINE ENERGY — Living Border Glow */}
+        <motion.div 
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{ 
+            border: '1px solid rgba(255,255,255,0.4)',
+            boxShadow: `inset 0 0 10px rgba(0,200,255,${0.3 * outlineIntensity})`,
+          }}
+          animate={reduceMotion ? {} : {
+            boxShadow: [
+              `inset 0 0 10px rgba(0,200,255,${0.3 * outlineIntensity})`,
+              `inset 0 0 15px rgba(255,77,240,${0.4 * outlineIntensity})`,
+              `inset 0 0 10px rgba(0,200,255,${0.3 * outlineIntensity})`,
+            ],
+          }}
+          transition={{
+            duration: parseFloat(breathSpeed),
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+
+        {/* Percentage — Clean & Glowing */}
+        <div className="absolute inset-0 flex items-center justify-end pr-3">
+          <motion.span 
+            className="text-[10px] font-mono font-bold text-white tracking-wider tabular-nums"
+            style={{ 
+              textShadow: '0 0 8px rgba(0,231,255,0.9), 0 0 12px rgba(255,77,240,0.6)',
+              filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))',
+            }}
+            key={value}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            {Math.round(value)}%
+          </motion.span>
+        </div>
         
-        {/* Threshold Surge Particles */}
+        {/* Threshold Surge Flash */}
         <AnimatePresence>
           {showSurge && !reduceMotion && (
             <motion.div
               className="absolute inset-0 pointer-events-none"
               initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 1, 0] }}
+              animate={{ opacity: [0, 0.8, 0] }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.9 }}
             >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.6)_0%,transparent_60%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.7)_0%,transparent_60%)]" />
             </motion.div>
           )}
         </AnimatePresence>

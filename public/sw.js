@@ -81,6 +81,7 @@ self.addEventListener('fetch', (event) => {
   const isSupabaseRest = url.pathname.startsWith('/rest/v1');
   const isSupabaseAuth = url.pathname.startsWith('/auth/v1');
   const isSupabaseFunctions = url.pathname.includes('/functions/v1/');
+  const isEdgeFunctions = url.pathname.includes('/functions/') || url.pathname.includes('/edge/');
   const isServiceWorker = url.pathname === '/sw.js';
   const isVapid = url.pathname === '/vapid-public.txt';
   

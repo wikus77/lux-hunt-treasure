@@ -15,6 +15,9 @@ import { useLocation } from "wouter";
 import { Cpu } from "lucide-react";
 import { useDeepLinkQR } from "@/hooks/useDeepLinkQR";
 import M1UPill from "@/features/m1u/M1UPill";
+import { PageSkeleton } from "@/components/ui/skeleton-loader";
+import { AgentEnergyPill } from "@/features/pulse";
+import { PULSE_ENABLED } from "@/config/featureFlags";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -89,15 +92,9 @@ const { isConnected } = useRealTimeNotifications();
   
   // 🔐 SAFE EARLY RETURN - Now all hooks are called above
   // CRITICAL FIX: Ensure consistent return to prevent hook count mismatch
+  // 🔥 M1SSION™: Skeleton loader invece di "Caricamento..." per UX nativa
   if (!isAuthenticated || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#070818]">
-        <div className="text-center">
-          <div className="w-8 h-8 border-t-2 border-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white/70">Caricamento...</p>
-        </div>
-      </div>
-    );
+    return <PageSkeleton variant="default" />;
   }
 
   // CRITICAL FIX: Second check for user without causing hook issues
@@ -216,7 +213,7 @@ const { isConnected } = useRealTimeNotifications();
                   {/* M1U Pill Slot - Home (inside hero, aligned left) */}
                   <div
                     id="m1u-pill-home-slot"
-                    className="absolute top-0 left-0 z-[1000] flex items-center gap-3"
+                    className="absolute top-0 left-0 z-[1000] flex flex-col items-start gap-2"
                     style={{ 
                       pointerEvents: 'auto',
                       paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))'
@@ -224,6 +221,7 @@ const { isConnected } = useRealTimeNotifications();
                     aria-hidden={false}
                   >
                     <M1UPill showLabel showPlusButton />
+                    {PULSE_ENABLED && <AgentEnergyPill />}
                   </div>
                 </motion.div>
 

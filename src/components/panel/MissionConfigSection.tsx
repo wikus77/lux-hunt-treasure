@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings, Save, MapPin } from "lucide-react";
+import { Settings, Save, MapPin, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface MissionData {
@@ -35,6 +35,8 @@ export const MissionConfigSection: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingClues, setIsGeneratingClues] = useState(false);
+  const [activePrizeId, setActivePrizeId] = useState<string | null>(null);
 
   useEffect(() => {
     loadCurrentMission();
@@ -68,10 +70,87 @@ export const MissionConfigSection: React.FC = () => {
           prize_category: data.prize_category || ''
         });
       }
+
+      // Load active prize ID
+      const { data: prizeData } = await supabase
+        .from('prizes')
+        .select('id')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (prizeData) {
+        setActivePrizeId(prizeData.id);
+      }
     } catch (error) {
       console.error('Error loading mission:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // 🎯 M1SSION™ - Generate mission clues automatically
+  const handleGenerateClues = async () => {
+    if (!activePrizeId) {
+      toast.error('❌ NESSUN PREMIO ATTIVO', {
+        description: 'Devi prima creare e attivare un premio'
+      });
+      return;
+    }
+
+    if (!missionData.city || !missionData.country) {
+      toast.error('❌ DATI MANCANTI', {
+        description: 'Inserisci almeno città e paese prima di generare gli indizi'
+      });
+      return;
+    }
+
+    setIsGeneratingClues(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Sessione non trovata');
+      }
+
+      const payload = {
+        prize_id: activePrizeId,
+        city: missionData.city,
+        country: missionData.country,
+        prize_type: missionData.prize_type,
+        prize_color: missionData.prize_color,
+        prize_material: missionData.prize_material,
+        prize_category: missionData.prize_category,
+      };
+      
+      console.log('🎯 [GENERATE-CLUES] Sending payload:', payload);
+      
+      // Use supabase.functions.invoke (proper way, no hardcoded refs)
+      const { data: result, error: invokeError } = await supabase.functions.invoke('generate-mission-clues', {
+        body: payload,
+      });
+
+      if (invokeError) {
+        console.error('❌ [GENERATE-CLUES] Error response:', invokeError);
+        throw new Error(`Errore: ${invokeError.message}`);
+      }
+      
+      if (result.success) {
+        toast.success('✅ INDIZI GENERATI!', {
+          description: `Creati ${result.breakdown?.total || 0} indizi per la missione`
+        });
+      } else {
+        throw new Error(result.error || 'Generazione fallita');
+      }
+
+    } catch (error: any) {
+      console.error('❌ Generate clues error:', error);
+      toast.error('❌ ERRORE GENERAZIONE', {
+        description: error.message || 'Errore sconosciuto durante la generazione'
+      });
+    } finally {
+      setIsGeneratingClues(false);
     }
   };
 
@@ -262,14 +341,32 @@ export const MissionConfigSection: React.FC = () => {
           </div>
         </div>
 
-        <Button 
-          onClick={handleSave}
-          disabled={isSaving || isLoading}
-          className="w-full"
-        >
-          <Save className="mr-2 h-4 w-4" />
-          {isSaving ? 'SALVANDO...' : 'SALVA CONFIGURAZIONE MISSIONE'}
-        </Button>
+        <div className="flex gap-4">
+          <Button 
+            onClick={handleSave}
+            disabled={isSaving || isLoading}
+            className="flex-1"
+          >
+            <Save className="mr-2 h-4 w-4" />
+            {isSaving ? 'SALVANDO...' : 'SALVA CONFIGURAZIONE'}
+          </Button>
+          
+          <Button 
+            onClick={handleGenerateClues}
+            disabled={isGeneratingClues || isLoading || !activePrizeId}
+            variant="secondary"
+            className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+          >
+            <Wand2 className="mr-2 h-4 w-4" />
+            {isGeneratingClues ? 'GENERANDO...' : 'GENERA 400 INDIZI'}
+          </Button>
+        </div>
+        
+        {!activePrizeId && (
+          <p className="text-sm text-muted-foreground text-center mt-2">
+            ⚠️ Nessun premio attivo. Crea e attiva un premio prima di generare gli indizi.
+          </p>
+        )}
       </CardContent>
     </Card>
   );

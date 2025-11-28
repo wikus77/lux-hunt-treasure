@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 // Static imports for Capacitor iOS compatibility
 import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
+import { PageSkeleton } from "@/components/ui/skeleton-loader";
 
 // Intel module components
 import CoordinateSelector from '@/components/intelligence/CoordinateSelector';
@@ -36,6 +37,7 @@ import AppHome from "@/pages/AppHome";
 import LivingMap3D from "@/pages/LivingMap3D";
 import { BuzzPage } from "@/pages/BuzzPage";
 import IntelligenceStyledPage from "@/pages/IntelligenceStyledPage";
+import IntelligencePage from "@/pages/IntelligencePage";
 import IntelligenceRAG from "@/pages/IntelligenceRAG";
 import IntelligenceAnswerTest from "@/pages/IntelligenceAnswerTest";
 import HallOfWinnersStyledPage from "@/pages/HallOfWinnersStyledPage";
@@ -70,6 +72,7 @@ import PanelAccessPage from "@/pages/PanelAccessPage";
 import PushDiagnosi from "@/pages/PushDiagnosi";
 import PanelUsersPage from "@/pages/PanelUsersPage";
 import BulkMarkerDropPage from "@/pages/panel/BulkMarkerDropPage";
+import MarkerRewardsPage from "@/pages/panel/MarkerRewardsPage";
 import NorahAdmin from "@/pages/panel/NorahAdmin";
 import DiagSupabase from "@/pages/DiagSupabase";
 import SupabaseConnectionTest from "@/pages/SupabaseConnectionTest";
@@ -205,12 +208,7 @@ const WouterRoutes: React.FC = () => {
           {/* Landing page - FAIL-OPEN FIRST VISIT LOGIC */}
           <Route path="/">
             {isLoading ? (
-              <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="text-center space-y-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                  <p className="text-muted-foreground font-orbitron">Inizializzazione M1SSION™...</p>
-                </div>
-              </div>
+              <PageSkeleton variant="default" />
             ) : !isAuthenticated ? (
               (() => {
                 try {
@@ -241,6 +239,11 @@ const WouterRoutes: React.FC = () => {
                 </GlobalLayout>
               </ProtectedRoute>
             )}
+          </Route>
+
+          {/* Landing Page - Always accessible */}
+          <Route path="/landing">
+            <LandingPage />
           </Route>
 
           {/* Protected routes */}
@@ -278,7 +281,7 @@ const WouterRoutes: React.FC = () => {
 
           <Route path="/intelligence">
             <ProtectedRoute>
-              <GlobalLayout><IntelligenceStyledPage /></GlobalLayout>
+              <IntelligencePage />
             </ProtectedRoute>
           </Route>
 
@@ -670,6 +673,12 @@ const WouterRoutes: React.FC = () => {
           <Route path="/panel/bulk-marker-drop">
             <ProtectedRoute>
               <BulkMarkerDropPage />
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/panel/marker-rewards">
+            <ProtectedRoute>
+              <MarkerRewardsPage />
             </ProtectedRoute>
           </Route>
 

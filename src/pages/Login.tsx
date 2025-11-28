@@ -148,7 +148,7 @@ const Login = () => {
               </Link>
             </p>
             <p className="text-sm text-white/50">
-              <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+              <Link to="/landing" className="text-cyan-400 hover:text-cyan-300 transition-colors">
                 ← Torna alla homepage
               </Link>
             </p>

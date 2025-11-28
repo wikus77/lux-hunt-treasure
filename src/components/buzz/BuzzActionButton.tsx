@@ -277,6 +277,11 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
 
       console.log('🎉 M1SSION™ M1U BUZZ: Complete flow successful!');
 
+      // 🔥 FIX: Dispatch event to trigger M1U refresh in all pills
+      window.dispatchEvent(new CustomEvent('buzzClueCreated', {
+        detail: { costM1U, newBalance: updatedProfile.m1_units }
+      }));
+
     } catch (error: any) {
       console.error('❌ M1SSION™ M1U BUZZ: Exception during payment', error);
       toast.error('Errore durante il BUZZ. Riprova.');

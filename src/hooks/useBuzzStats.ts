@@ -37,15 +37,15 @@ export const useBuzzStats = () => {
       // Get today's buzz count
       const { data: todayData } = await supabase
         .from('user_buzz_counter')
-        .select('daily_count')
+        .select('buzz_count')
         .eq('user_id', user.id)
-        .eq('counter_date', new Date().toISOString().split('T')[0])
+        .eq('date', new Date().toISOString().split('T')[0])
         .maybeSingle(); // 🔥 FIX: Use maybeSingle() to avoid error when no row exists
 
       // Get total buzz count
       const { data: totalData } = await supabase
         .from('user_buzz_counter')
-        .select('daily_count')
+        .select('buzz_count')
         .eq('user_id', user.id);
 
       // Get buzz map actions for history and credits
@@ -62,8 +62,8 @@ export const useBuzzStats = () => {
         .select('id')
         .eq('user_id', user.id);
 
-      const today_count = todayData?.daily_count || 0;
-      const total_count = totalData?.reduce((sum, day) => sum + day.daily_count, 0) || 0;
+      const today_count = todayData?.buzz_count || 0;
+      const total_count = totalData?.reduce((sum, day) => sum + day.buzz_count, 0) || 0;
       const areas_unlocked = areasData?.length || 0;
       const credits_spent = mapActions?.reduce((sum, action) => sum + Number(action.cost_eur), 0) || 0;
 

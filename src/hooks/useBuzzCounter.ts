@@ -23,9 +23,9 @@ export const useBuzzCounter = (userId: string | undefined) => {
     try {
       const { data, error } = await supabase
         .from('user_buzz_counter')
-        .select('daily_count')
+        .select('buzz_count')
         .eq('user_id', userId)
-        .eq('counter_date', todayDate)
+        .eq('date', todayDate)
         .maybeSingle();
 
       console.log('🔍 BUZZ COUNTER DEBUG: Query result', { data, error });
@@ -35,7 +35,7 @@ export const useBuzzCounter = (userId: string | undefined) => {
         return;
       }
 
-      const buzzCount = data?.daily_count || 0;
+      const buzzCount = data?.buzz_count || 0;
       setDailyBuzzCounter(buzzCount);
       console.log('✅ BUZZ COUNTER: Loaded successfully', { 
         buzzCount, 
@@ -65,9 +65,9 @@ export const useBuzzCounter = (userId: string | undefined) => {
         .from('user_buzz_counter')
         .upsert({
           user_id: userId,
-          counter_date: new Date().toISOString().split('T')[0],
-          daily_count: newBuzzCounter
-        });
+          date: new Date().toISOString().split('T')[0],
+          buzz_count: newBuzzCounter
+        }, { onConflict: 'user_id,date' });
       
       // ✅ UPDATE STATE IMMEDIATELY
       setDailyBuzzCounter(newBuzzCounter);

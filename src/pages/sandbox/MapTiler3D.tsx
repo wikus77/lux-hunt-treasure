@@ -31,6 +31,7 @@ import BuzzDebugBadge from './map3d/components/BuzzDebugBadge';
 import MapVerificationPanel from './map3d/components/MapVerificationPanel';
 import NotesLayer3D from './map3d/layers/NotesLayer3D';
 import LayerTogglePanel from './map3d/components/LayerTogglePanel';
+import { GeolocationPermissionGuide } from '@/components/map/GeolocationPermissionGuide';
 import '@/styles/map-dock.css';
 import '@/styles/portal-container.css';
 import '@/styles/portals.css';
@@ -46,8 +47,10 @@ import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import DevNotesPanel from './map3d/components/DevNotesPanel';
 import DevAreasPanel from './map3d/components/DevAreasPanel';
 import BattleFxLayer from '@/components/map/battle/BattleFxLayer';
+import { MapBattleOverlay } from '@/components/map/battle/MapBattleOverlay';
 import { usePerformanceSettings } from '@/hooks/usePerformanceSettings';
 import { BattlePill } from '@/components/battle/BattlePill';
+import { BattleShopPill } from '@/components/battle/BattleShopPill';
 import { AgentBattleCard } from '@/components/battle/AgentBattleCard';
 import { BattleModal } from '@/components/battle/BattleModal';
 import { useDebugFlag } from '@/debug/useDebugFlag';
@@ -143,7 +146,7 @@ export default function MapTiler3D() {
   const devMocks = use3DDevMocks();
 
   const { areas, currentWeekAreas, reloadAreas } = useBuzzMapLogic();
-  const { position, status: geoStatus, enable: enableGeo, enabled: geoEnabled } = useGeolocation();
+  const { position, status: geoStatus, enable: enableGeo, enabled: geoEnabled, isBlocked, isIOS, isPWA, retry: retryGeo, error: geoError } = useGeolocation();
   
   // Auto-update user position in agent_locations for real-time tracking
   useAgentLocationUpdater(position || undefined, geoEnabled);
@@ -180,9 +183,20 @@ export default function MapTiler3D() {
   } = useMapMarkersLogic();
   
   // Rewards (indizi) live from Supabase when authenticated
-  type RewardMarkerMinimal = { id: string; lat: number; lng: number; title?: string };
+  type RewardMarkerMinimal = { id: string; lat: number; lng: number; title?: string; claimed?: boolean };
   const { isAuthenticated, user } = useUnifiedAuth();
   const [rewardMarkersLive, setRewardMarkersLive] = useState<RewardMarkerMinimal[]>([]);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
+
+  // Check if user is admin
+  useEffect(() => {
+    if (!user?.id) { setIsUserAdmin(false); return; }
+    const checkAdmin = async () => {
+      const { data } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+      setIsUserAdmin(!!data?.role && ['admin', 'owner'].some(r => data.role.toLowerCase().includes(r)));
+    };
+    checkAdmin();
+  }, [user?.id]);
 
   useEffect(() => {
     let mounted = true;
@@ -190,7 +204,8 @@ export default function MapTiler3D() {
     const now = new Date().toISOString();
     const load = async () => {
       try {
-        const { data, error } = await supabase
+        // Load markers
+        const { data: markersData, error } = await supabase
           .from('markers')
           .select('id, lat, lng, title, active, visible_from, visible_to')
           .eq('active', true)
@@ -199,13 +214,30 @@ export default function MapTiler3D() {
           .limit(2000);
         if (!mounted) return;
         if (error) { console.warn('[Map3D] markers load error', error); return; }
-        setRewardMarkersLive((data || []).map((m:any) => ({ id: m.id, lat: m.lat, lng: m.lng, title: m.title })));
+        
+        // Load claims to know which markers are claimed
+        const markerIds = (markersData || []).map(m => m.id);
+        const { data: claimsData } = await supabase
+          .from('marker_claims')
+          .select('marker_id')
+          .in('marker_id', markerIds);
+        
+        const claimedIds = new Set((claimsData || []).map(c => c.marker_id));
+        
+        setRewardMarkersLive((markersData || []).map((m:any) => ({ 
+          id: m.id, 
+          lat: m.lat, 
+          lng: m.lng, 
+          title: m.title,
+          claimed: claimedIds.has(m.id) // 🟣 VIOLA se riscattato
+        })));
       } catch (e) { console.warn('[Map3D] markers load exception', e); }
     };
     load();
     const channel = supabase
       .channel('markers-changes-3d')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'markers' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'marker_claims' }, () => load())
       .subscribe();
     return () => { mounted = false; supabase.removeChannel(channel); };
   }, [isAuthenticated]);
@@ -364,7 +396,42 @@ export default function MapTiler3D() {
   
   // Prepare effective data with dev fallbacks (prefer live when available)
   // Use ONLY live agents; never fallback to dev ones here
-  const effectiveAgents = (liveAgents && liveAgents.length > 0) ? liveAgents : [];
+  const realAgents = (liveAgents && liveAgents.length > 0) ? liveAgents : [];
+  
+  // 🤖 BATTLE TEST: Generate 10 fake agents in RANDOM WORLD LOCATIONS for testing
+  const fakeAgents = useMemo(() => {
+    // 10 agents scattered around the world
+    const WORLD_AGENTS = [
+      { name: 'AG-CHINA', lat: 39.9042, lng: 116.4074, country: 'Beijing, China' },
+      { name: 'AG-RUSSIA', lat: 55.7558, lng: 37.6173, country: 'Moscow, Russia' },
+      { name: 'AG-AUSTRALIA', lat: -33.8688, lng: 151.2093, country: 'Sydney, Australia' },
+      { name: 'AG-USA', lat: 40.7128, lng: -74.0060, country: 'New York, USA' },
+      { name: 'AG-BRAZIL', lat: -22.9068, lng: -43.1729, country: 'Rio de Janeiro, Brazil' },
+      { name: 'AG-JAPAN', lat: 35.6762, lng: 139.6503, country: 'Tokyo, Japan' },
+      { name: 'AG-INDIA', lat: 28.6139, lng: 77.2090, country: 'New Delhi, India' },
+      { name: 'AG-EGYPT', lat: 30.0444, lng: 31.2357, country: 'Cairo, Egypt' },
+      { name: 'AG-UK', lat: 51.5074, lng: -0.1278, country: 'London, UK' },
+      { name: 'AG-SOUTH-AFRICA', lat: -33.9249, lng: 18.4241, country: 'Cape Town, South Africa' },
+    ];
+    
+    return WORLD_AGENTS.map((agent, index) => ({
+      id: `fake-agent-${index}`,
+      username: agent.name,
+      agent_code: agent.name,
+      status: 'online' as const,
+      lat: agent.lat,
+      lng: agent.lng,
+      avatar_url: undefined,
+      lastSeen: new Date().toISOString(),
+      rank_id: Math.floor(Math.random() * 5) + 1,
+      is_fake: true,
+      country: agent.country // Extra info for display
+    }));
+  }, []);
+  
+  // Combine real + fake agents
+  const effectiveAgents = [...realAgents, ...fakeAgents];
+  
   const effectiveRewardMarkers = DEV_MOCKS ? devMocks.rewards : rewardMarkersLive;
   
   // 🔍 M1-3D VERIFY: Extended area type with debug fields
@@ -557,19 +624,48 @@ export default function MapTiler3D() {
 
     const style = JSON.parse(JSON.stringify(neonStyleTemplate));
     
-    if (style.sources?.openmaptiles?.url) {
-      style.sources.openmaptiles.url = style.sources.openmaptiles.url.replace(
-        'YOUR_MAPTILER_API_KEY_HERE',
-        key
-      );
+    // 🔑 STEP 3: Inject API key into all sources and glyphs (LOVABLE METHOD)
+    if (key && style.sources) {
+      Object.keys(style.sources).forEach((sourceKey) => {
+        const source = style.sources[sourceKey];
+        
+        // Replace {key} placeholder in URL
+        if (source.url && source.url.includes('{key}')) {
+          source.url = source.url.replace('{key}', key);
+          console.log(`✅ [Map3D] Replaced {key} in source: ${sourceKey}`);
+        }
+        
+        // Also replace YOUR_MAPTILER_API_KEY_HERE placeholder
+        if (source.url && source.url.includes('YOUR_MAPTILER_API_KEY_HERE')) {
+          source.url = source.url.replace('YOUR_MAPTILER_API_KEY_HERE', key);
+          console.log(`✅ [Map3D] Replaced YOUR_MAPTILER_API_KEY_HERE in source: ${sourceKey}`);
+        }
+        
+        // Handle tile arrays
+        if (source.tiles && Array.isArray(source.tiles)) {
+          source.tiles = source.tiles.map((tile: string) => 
+            tile.replace('{key}', key).replace('YOUR_MAPTILER_API_KEY_HERE', key)
+          );
+        }
+      });
+      
+      // Inject into glyphs URL
+      if (style.glyphs) {
+        style.glyphs = style.glyphs
+          .replace('{key}', key)
+          .replace('YOUR_MAPTILER_API_KEY_HERE', key);
+        console.log('✅ [Map3D] Replaced key in glyphs');
+      }
+      
+      // Inject into sprite URL if present
+      if (style.sprite) {
+        style.sprite = style.sprite
+          .replace('{key}', key)
+          .replace('YOUR_MAPTILER_API_KEY_HERE', key);
+      }
     }
     
-    if (style.glyphs) {
-      style.glyphs = style.glyphs.replace(
-        'YOUR_MAPTILER_API_KEY_HERE',
-        key
-      );
-    }
+    console.log('✅ [Map3D] Style processed, sources:', Object.keys(style.sources || {}));
 
     let sanitized = false;
     if (Array.isArray(style.layers)) {
@@ -1048,8 +1144,21 @@ export default function MapTiler3D() {
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [showAgentCard, setShowAgentCard] = useState(false);
   const [showBattleModal, setShowBattleModal] = useState(false);
-  const [preSelectedOpponent, setPreSelectedOpponent] = useState<{ id: string; name: string } | undefined>();
+  const [preSelectedOpponent, setPreSelectedOpponent] = useState<{ id: string; name: string; lat?: number; lng?: number } | undefined>();
   const [selectedAgentRank, setSelectedAgentRank] = useState<string>('Agent');
+  
+  // 🔥 BATTLE ON MAP: State for active battle
+  const [activeBattleOnMap, setActiveBattleOnMap] = useState<{
+    attackerLat: number;
+    attackerLng: number;
+    defenderLat: number;
+    defenderLng: number;
+    defenderName: string;
+    duration: number;
+    startTime: number;
+  } | null>(null);
+  const [battleTimeLeft, setBattleTimeLeft] = useState(0);
+  const [showBattleResult, setShowBattleResult] = useState<{ won: boolean } | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -1094,9 +1203,77 @@ export default function MapTiler3D() {
     setPreSelectedOpponent({
       id: selectedAgent.id,
       name: selectedAgent.username || selectedAgent.agent_code || `Agent ${selectedAgent.id.slice(0, 6)}`,
+      lat: selectedAgent.lat,
+      lng: selectedAgent.lng,
     });
     setShowBattleModal(true);
   };
+  
+  // 🔥 BATTLE ON MAP: Listen for battle start event
+  useEffect(() => {
+    const handleBattleStart = (event: CustomEvent) => {
+      const { defenderLat, defenderLng, defenderName, battleDuration } = event.detail;
+      
+      console.log('🚀 [Map3D] Battle started on map!', event.detail);
+      
+      // Use current user position as attacker position
+      const attackerLat = position?.lat || 0;
+      const attackerLng = position?.lng || 0;
+      
+      setActiveBattleOnMap({
+        attackerLat,
+        attackerLng,
+        defenderLat,
+        defenderLng,
+        defenderName,
+        duration: battleDuration,
+        startTime: Date.now(),
+      });
+      setBattleTimeLeft(battleDuration);
+      
+      // Close the battle modal
+      setShowBattleModal(false);
+    };
+    
+    window.addEventListener('battle-map-start', handleBattleStart as EventListener);
+    return () => {
+      window.removeEventListener('battle-map-start', handleBattleStart as EventListener);
+    };
+  }, [position]);
+  
+  // 🔥 BATTLE ON MAP: Countdown timer
+  useEffect(() => {
+    if (!activeBattleOnMap || battleTimeLeft <= 0) return;
+    
+    const timer = setInterval(() => {
+      setBattleTimeLeft(prev => {
+        if (prev <= 1) {
+          // Battle ended!
+          clearInterval(timer);
+          
+          // Determine winner (random for fake agents)
+          const won = Math.random() > 0.35; // 65% win rate
+          setShowBattleResult({ won });
+          
+          // Dispatch battle end event
+          window.dispatchEvent(new CustomEvent('battle-map-end', { 
+            detail: { won } 
+          }));
+          
+          // Clear battle after showing result
+          setTimeout(() => {
+            setActiveBattleOnMap(null);
+            setShowBattleResult(null);
+          }, 5000);
+          
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [activeBattleOnMap, battleTimeLeft]);
 
   return (
     <>
@@ -1148,6 +1325,24 @@ export default function MapTiler3D() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Geolocation Blocked Banner */}
+      {isBlocked && (
+        <div style={{
+          position: 'fixed',
+          top: 'calc(env(safe-area-inset-top, 0px) + 64px)',
+          left: 0,
+          right: 0,
+          zIndex: 9999,
+          padding: '8px'
+        }}>
+          <GeolocationPermissionGuide 
+            isIOS={isIOS}
+            isPWA={isPWA}
+            onRetry={retryGeo}
+          />
+        </div>
+      )}
 
       <div 
         ref={containerRef} 
@@ -1230,6 +1425,7 @@ export default function MapTiler3D() {
         enabled={layerVisibility.agents}
         agents={effectiveAgents}
         mePosition={position ? { lat: position.lat, lng: position.lng } : null}
+        currentUserId={user?.id || null}
         onAgentClick={handleAgentClick}
       />
       <PortalsLayer3D map={mapRef.current} enabled={layerVisibility.portals} />
@@ -1238,6 +1434,7 @@ export default function MapTiler3D() {
         enabled={layerVisibility.rewards} 
         markers={effectiveRewardMarkers}
         userPosition={position ? { lat: position.lat, lng: position.lng } : undefined}
+        isAdmin={isUserAdmin} // Admin vede SEMPRE tutti i marker
       />
       <AreasLayer3D 
         map={mapRef.current} 
@@ -1254,6 +1451,16 @@ export default function MapTiler3D() {
         <BattleFxLayer 
           map={mapRef.current} 
           battleFxMode={battleFxMode}
+        />
+      )}
+      
+      {/* 🔥 MAP BATTLE OVERLAY - Missile animation on map */}
+      {mapRef.current && activeBattleOnMap && (
+        <MapBattleOverlay
+          map={mapRef.current}
+          battle={activeBattleOnMap}
+          timeLeft={battleTimeLeft}
+          result={showBattleResult}
         />
       )}
 
@@ -1285,6 +1492,19 @@ export default function MapTiler3D() {
 
       {/* Layer Toggle Panel */}
       <LayerTogglePanel layers={layerVisibility} onToggle={toggleLayer} />
+
+      {/* Battle Shop Pill - Above Battle Pill */}
+      {battleUserId && (
+        <div 
+          className="fixed z-[1001]"
+          style={{
+            left: '16px',
+            bottom: 'calc(env(safe-area-inset-bottom, 34px) + 310px)',
+          }}
+        >
+          <BattleShopPill userId={battleUserId} />
+        </div>
+      )}
 
       {/* Battle Pill - Circular floating button */}
       <BattlePill userId={battleUserId} />

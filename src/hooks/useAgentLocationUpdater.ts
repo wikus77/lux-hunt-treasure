@@ -37,6 +37,11 @@ function calculateDistance(pos1: Position, pos2: Position): number {
 /**
  * Updates or inserts user's current position in agent_locations table
  * Auth gate: Only proceeds if valid session exists
+ * 
+ * NOTE: Requires SQL setup from SQL_SETUP_MARKER_GEOLOCATION.sql:
+ * - Function: set_my_agent_location(p_lat, p_lng, p_accuracy, p_status)
+ * - Table: user_locations
+ * - Views: agent_locations, online_agents, v_online_agents
  */
 async function upsertAgentLocation(userId: string, position: Position): Promise<void> {
   try {
@@ -58,18 +63,24 @@ async function upsertAgentLocation(userId: string, position: Position): Promise<
     if (error) {
       // 🚨 EXPLICIT 406 ERROR LOGGING for debugging
       if (error.code === '406' || error.message?.includes('406') || error.message?.includes('Not Acceptable')) {
-        console.error('🚨 [AgentLocation] 406 NOT ACCEPTABLE - RPC call rejected:', {
-          errorCode: error.code,
-          errorMessage: error.message,
-          params: { p_lat: position.lat, p_lng: position.lng, p_accuracy: position.acc },
-          hint: 'Check RPC permissions: GRANT EXECUTE ON FUNCTION set_my_agent_location TO authenticated'
+        console.warn('⚠️ [AgentLocation] 406 NOT ACCEPTABLE - RPC may not be deployed:', {
+          hint: 'Run SQL_SETUP_MARKER_GEOLOCATION.sql in Supabase SQL Editor'
+        });
+        return;
+      }
+      
+      // Function doesn't exist - common on first setup
+      if (error.code === 'PGRST202' || error.message?.includes('Could not find the function')) {
+        console.warn('⚠️ [AgentLocation] RPC function not found. Please run SQL setup:', {
+          file: 'SQL_SETUP_MARKER_GEOLOCATION.sql',
+          hint: 'Execute in Supabase Dashboard > SQL Editor'
         });
         return;
       }
       
       // Silent handling: expected when function doesn't exist
       if (error.code === 'PGRST116' || error.code === '42P01' || error.code === 'PGRST301') {
-        console.debug('[AgentLocation] RPC skipped (function absent):', error.code);
+        console.debug('[AgentLocation] RPC skipped (function/table absent):', error.code);
         return;
       }
       

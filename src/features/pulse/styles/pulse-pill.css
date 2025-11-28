@@ -1,0 +1,107 @@
+/* Pulse Energy Pill UI Styles - M1SSION Orb Design
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */
+
+/* PE Orb Button - Same style as M1U Plus Orb */
+.pe-pill-orb {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.08),
+    rgba(0, 0, 0, 0.4) 80%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 2px 12px rgba(0, 0, 0, 0.35),
+    0 0 20px rgba(0, 255, 200, 0.15) inset;
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: visible;
+  transition: all 0.2s ease;
+}
+
+/* Rotating rings */
+.pe-pill-orb:before,
+.pe-pill-orb:after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 64px;
+  height: 64px;
+  margin: -32px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 255, 200, 0.25);
+  animation: peRingSpin 12s linear infinite;
+  transform-origin: center;
+  pointer-events: none;
+}
+
+.pe-pill-orb:after {
+  border-color: rgba(139, 92, 246, 0.25);
+  animation-duration: 18s;
+  animation-direction: reverse;
+}
+
+/* Orbiting dot */
+.pe-pill-orb .pe-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  top: 4px;
+  left: 50%;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00ffc8, #8b5cf6);
+  box-shadow: 0 0 8px #00ffc8;
+  transform-origin: 2.5px 22px;
+  animation: peOrbit 14s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes peRingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes peOrbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hover glow */
+.pe-pill-orb:hover {
+  box-shadow: 
+    0 2px 12px rgba(0, 0, 0, 0.35),
+    0 0 28px rgba(0, 255, 200, 0.35) inset;
+}
+
+/* Active state */
+.pe-pill-orb:active {
+  transform: scale(0.97);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .pe-pill-orb {
+    width: 46px;
+    height: 46px;
+  }
+  .pe-pill-orb:before,
+  .pe-pill-orb:after {
+    width: 56px;
+    height: 56px;
+    margin: -28px;
+  }
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+

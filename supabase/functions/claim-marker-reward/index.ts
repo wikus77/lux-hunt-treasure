@@ -78,9 +78,12 @@ serve(async (req) => {
 
     for (const reward of rewards) {
       const { reward_type, payload, description } = reward;
+      const rewardTypeLower = (reward_type || '').toLowerCase(); // 🔥 FIX: case-insensitive
+      
+      console.log(`M1QR-TRACE: Processing reward type: "${reward_type}" -> "${rewardTypeLower}", payload:`, payload);
       
       try {
-        switch (reward_type) {
+        switch (rewardTypeLower) {
           case 'buzz_free': {
             const buzzCount = payload.buzzCount || 1;
             const { error: buzzError } = await admin
@@ -281,6 +284,178 @@ serve(async (req) => {
             break;
           }
 
+          // 🔥 NEW: M1U Credits reward (10-1000 M1U)
+          case 'm1u': {
+            const m1uAmount = Math.min(1000, Math.max(10, payload.amount || 50));
+            
+            // Update user's M1U balance directly
+            const { data: currentProfile, error: profileError } = await admin
+              .from("profiles")
+              .select("m1_units")
+              .eq("id", user_id)
+              .single();
+            
+            if (profileError) throw profileError;
+            
+            const currentM1U = currentProfile?.m1_units || 0;
+            const newM1U = currentM1U + m1uAmount;
+            
+            const { error: m1uError } = await admin
+              .from("profiles")
+              .update({ m1_units: newM1U })
+              .eq("id", user_id);
+            
+            if (m1uError) throw m1uError;
+            
+            // Create notification for M1U reward
+            const { error: m1uNotificationError } = await admin
+              .from("user_notifications")
+              .insert([{
+                user_id,
+                notification_type: 'reward',
+                title: '💰 M1U Ricevuti!',
+                message: `Hai ricevuto ${m1uAmount} M1U! Il tuo saldo è ora ${newM1U} M1U`,
+                metadata: { source: `marker:${markerId}`, reward_type: 'm1u', amount: m1uAmount, new_balance: newM1U }
+              }]);
+            
+            if (m1uNotificationError) {
+              console.error(`M1QR-TRACE: notification creation error for M1U:`, m1uNotificationError);
+            } else {
+              console.log(`M1QR-TRACE: M1U notification created successfully - ${m1uAmount} M1U`);
+            }
+            
+            // Dispatch event for UI refresh
+            summary.push({ type: 'm1u', info: { amount: m1uAmount, new_balance: newM1U } });
+            if (!nextRoute) nextRoute = '/profile';
+            break;
+          }
+
+          // 🔥 NEW: Clue (Indizio) linked to active mission
+          case 'clue': {
+            const clueText = payload.text || description || "Indizio segreto trovato!";
+            const clueType = payload.clue_type || 'location'; // 'location' or 'prize'
+            
+            // Get active mission
+            const { data: activeMission } = await admin
+              .from("missions")
+              .select("id, title")
+              .eq("status", "active")
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            
+            const missionId = activeMission?.id || null;
+            
+            // Insert clue into user_clues table
+            const { error: clueError } = await admin
+              .from("user_clues")
+              .insert([{
+                user_id,
+                mission_id: missionId,
+                clue_text: clueText,
+                clue_type: clueType,
+                source: `marker:${markerId}`,
+                is_unlocked: true,
+                unlocked_at: new Date().toISOString()
+              }]);
+            
+            if (clueError) {
+              console.error(`M1QR-TRACE: clue insertion error:`, clueError);
+              // Don't throw - continue with notification
+            }
+            
+            // Create notification for clue (saved in Notice)
+            const { error: clueNotificationError } = await admin
+              .from("user_notifications")
+              .insert([{
+                user_id,
+                notification_type: 'clue',
+                title: '🔍 Indizio Trovato!',
+                message: clueText,
+                metadata: { 
+                  source: `marker:${markerId}`, 
+                  reward_type: 'clue', 
+                  clue_type: clueType,
+                  mission_id: missionId,
+                  mission_title: activeMission?.title || 'Missione Attiva'
+                }
+              }]);
+            
+            if (clueNotificationError) {
+              console.error(`M1QR-TRACE: notification creation error for clue:`, clueNotificationError);
+            } else {
+              console.log(`M1QR-TRACE: Clue notification created successfully`);
+            }
+            
+            summary.push({ type: 'clue', info: { text: clueText, mission_id: missionId } });
+            if (!nextRoute) nextRoute = '/notice';
+            break;
+          }
+
+          // 🔥 NEW: Physical Prize (iPhone, AirPods, GoPro, etc.)
+          case 'physical_prize': {
+            const prizeName = payload.prize_name || 'Premio Fisico';
+            const prizeDescription = payload.description || description || prizeName;
+            
+            // Generate unique claim code
+            const claimCode = `M1-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+            
+            // Insert into prize_claims table
+            const { error: prizeClaimError } = await admin
+              .from("prize_claims")
+              .insert([{
+                user_id,
+                marker_id: markerId,
+                prize_name: prizeName,
+                prize_description: prizeDescription,
+                claim_code: claimCode,
+                status: 'pending', // pending, verified, shipped, delivered
+                claimed_at: new Date().toISOString()
+              }]);
+            
+            if (prizeClaimError) {
+              console.error(`M1QR-TRACE: prize claim insertion error:`, prizeClaimError);
+              // Continue with notification even if claim table fails
+            }
+            
+            // Create notification with claim code
+            const { error: prizeNotificationError } = await admin
+              .from("user_notifications")
+              .insert([{
+                user_id,
+                notification_type: 'prize',
+                title: `🎉 PREMIO VINTO: ${prizeName}!`,
+                message: `Congratulazioni! Hai vinto ${prizeName}! Il tuo codice di riscatto è: ${claimCode}. Conserva questo codice per ritirare il premio.`,
+                metadata: { 
+                  source: `marker:${markerId}`, 
+                  reward_type: 'physical_prize',
+                  prize_name: prizeName,
+                  claim_code: claimCode,
+                  status: 'pending'
+                }
+              }]);
+            
+            if (prizeNotificationError) {
+              console.error(`M1QR-TRACE: notification creation error for physical prize:`, prizeNotificationError);
+            } else {
+              console.log(`M1QR-TRACE: Physical prize notification created - Code: ${claimCode}`);
+            }
+            
+            // Log admin alert for physical prize
+            await admin
+              .from('admin_logs')
+              .insert({
+                event_type: 'physical_prize_claimed',
+                user_id,
+                note: `🎁 PHYSICAL PRIZE CLAIMED: ${prizeName} - Code: ${claimCode}`,
+                context: `marker:${markerId},prize:${prizeName},code:${claimCode}`
+              });
+            
+            summary.push({ type: 'physical_prize', info: { prize_name: prizeName, claim_code: claimCode } });
+            if (!nextRoute) nextRoute = '/notifications';
+            break;
+          }
+
           default:
             console.warn(`M1QR-TRACE: unknown reward type: ${reward_type}`);
         }
@@ -291,7 +466,7 @@ serve(async (req) => {
       }
     }
 
-    // 🔔 CRITICAL: Send OneSignal push notification for marker discovery
+    // 🔔 CRITICAL: Send push notification via FCM/WebPush for marker discovery
     try {
       console.log(`M1QR-TRACE: rewardClaimStarted - user:${user_id} marker:${markerId}`);
       
@@ -305,56 +480,101 @@ serve(async (req) => {
           context: `rewards:${rewards.map(r => r.reward_type).join(',')}`
         });
 
-      console.log(`M1QR-TRACE: rewardInsertOK - sending push notification...`);
+      console.log(`M1QR-TRACE: rewardInsertOK - sending push notification via FCM...`);
       
-      const pushResponse = await fetch(`${url}/functions/v1/send-push-notification-onesignal`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${service}`,
-        },
-        body: JSON.stringify({
-          user_id,
-          title: '🛡️ Premio Trovato!',
-          message: 'Hai conquistato un premio segreto su M1SSION™',
-          data: {
-            marker_id: markerId,
-            reward_types: rewards.map(r => r.reward_type).join(','),
-            source: 'marker_discovery',
-            redirect_url: '/profile'
-          }
-        }),
-      });
+      // Try FCM first
+      let pushSent = false;
+      let pushResult: any = null;
+      
+      // Get FCM tokens for user
+      const { data: fcmTokens } = await admin
+        .from('fcm_subscriptions')
+        .select('token')
+        .eq('user_id', user_id)
+        .eq('is_active', true);
 
-      const pushResult = await pushResponse.json();
+      if (fcmTokens && fcmTokens.length > 0) {
+        const fcmResponse = await fetch(`${url}/functions/v1/fcm-send`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${service}`,
+          },
+          body: JSON.stringify({
+            tokens: fcmTokens.map(t => t.token),
+            title: '🛡️ Premio Trovato!',
+            body: 'Hai conquistato un premio segreto su M1SSION™',
+            data: {
+              marker_id: markerId,
+              reward_types: rewards.map(r => r.reward_type).join(','),
+              source: 'marker_discovery',
+              url: '/profile'
+            }
+          }),
+        });
+
+        pushResult = await fcmResponse.json();
+        if (fcmResponse.ok && pushResult.sent > 0) {
+          pushSent = true;
+          console.log(`M1QR-TRACE: ✅ pushSent - FCM success:`, pushResult);
+        }
+      }
+
+      // Fallback to WebPush if FCM didn't work
+      if (!pushSent) {
+        const webpushResponse = await fetch(`${url}/functions/v1/webpush-targeted-send`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': Deno.env.get('PUSH_ADMIN_TOKEN') || service,
+          },
+          body: JSON.stringify({
+            user_ids: [user_id],
+            payload: {
+              title: '🛡️ Premio Trovato!',
+              body: 'Hai conquistato un premio segreto su M1SSION™',
+              url: '/profile',
+              extra: {
+                marker_id: markerId,
+                reward_types: rewards.map(r => r.reward_type).join(','),
+                source: 'marker_discovery'
+              }
+            }
+          }),
+        });
+
+        pushResult = await webpushResponse.json();
+        if (webpushResponse.ok && pushResult.sent > 0) {
+          pushSent = true;
+          console.log(`M1QR-TRACE: ✅ pushSent - WebPush success:`, pushResult);
+        }
+      }
       
-      if (pushResponse.ok) {
-        console.log(`M1QR-TRACE: ✅ pushSent - OneSignal success:`, pushResult);
-        
+      if (pushSent) {
         // Log successful push
         await admin
           .from('admin_logs')
           .insert({
             event_type: 'marker_reward_push_sent',
             user_id,
-            note: `OneSignal push sent successfully for marker ${markerId}`,
-            context: `onesignal_id:${pushResult.onesignal_id || 'unknown'}`
+            note: `Push sent successfully for marker ${markerId}`,
+            context: `sent:${pushResult?.sent || 0}`
           });
       } else {
-        console.error(`M1QR-TRACE: ❌ OneSignal push failed:`, pushResult);
+        console.warn(`M1QR-TRACE: ⚠️ Push notification not sent (no tokens or failed)`);
         
-        // Log push failure
+        // Log push skip (not a failure, just no tokens)
         await admin
           .from('admin_logs')
           .insert({
-            event_type: 'marker_reward_push_failed',
+            event_type: 'marker_reward_push_skipped',
             user_id,
-            note: `OneSignal push failed for marker ${markerId}: ${JSON.stringify(pushResult)}`,
-            context: 'push_notification_error'
+            note: `No push tokens available for marker ${markerId}`,
+            context: 'no_tokens_or_failed'
           });
       }
     } catch (pushError) {
-      console.error(`M1QR-TRACE: ❌ OneSignal push error:`, pushError);
+      console.error(`M1QR-TRACE: ❌ Push notification error:`, pushError);
       
       // Log push error
       await admin
@@ -362,7 +582,7 @@ serve(async (req) => {
         .insert({
           event_type: 'marker_reward_push_error',
           user_id,
-          note: `OneSignal push error for marker ${markerId}: ${String(pushError)}`,
+          note: `Push error for marker ${markerId}: ${String(pushError)}`,
           context: 'push_notification_exception'
         });
       

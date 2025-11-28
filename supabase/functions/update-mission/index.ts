@@ -2,7 +2,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'jsr:@supabase/supabase-js@2.49.8';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -75,12 +75,9 @@ serve(async (req) => {
 
     const { missionData } = await req.json();
     
-    // Validate required fields
-    const requiredFields = ['city', 'country', 'street', 'street_number', 'prize_type', 'prize_color', 'prize_material', 'prize_category'];
-    const missingFields = requiredFields.filter(field => !missionData[field] || missionData[field].trim() === '');
-    
-    if (missingFields.length > 0) {
-      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+    // Validate only essential required fields (city and country)
+    if (!missionData?.city?.trim() || !missionData?.country?.trim()) {
+      throw new Error('Missing required fields: city, country');
     }
 
     console.log(`🎯 MISSION UPDATE: Updating mission data for user ${user.id}`);
@@ -91,18 +88,18 @@ serve(async (req) => {
       .update({ is_active: false })
       .eq('is_active', true);
 
-    // Insert new mission data
+    // Insert new mission data (handle optional fields)
     const { data: newMission, error: insertError } = await supabase
       .from('current_mission_data')
       .insert({
-        city: missionData.city.trim(),
-        country: missionData.country.trim(),
-        street: missionData.street.trim(),
-        street_number: missionData.street_number.trim(),
-        prize_type: missionData.prize_type.trim(),
-        prize_color: missionData.prize_color.trim(),
-        prize_material: missionData.prize_material.trim(),
-        prize_category: missionData.prize_category.trim(),
+        city: missionData.city?.trim() || '',
+        country: missionData.country?.trim() || '',
+        street: missionData.street?.trim() || '',
+        street_number: missionData.street_number?.trim() || '',
+        prize_type: missionData.prize_type?.trim() || '',
+        prize_color: missionData.prize_color?.trim() || '',
+        prize_material: missionData.prize_material?.trim() || '',
+        prize_category: missionData.prize_category?.trim() || '',
         created_by: user.id,
         is_active: true
       })
