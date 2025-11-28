@@ -53,11 +53,16 @@ const useKeyboardShortcut = (key: string, callback: () => void) => {
 const IntelligenceStyledPage: React.FC = () => {
   const [, setLocation] = useLocation();
   const [panelOpen, setPanelOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Set up realtime subscriptions on mount
+  // Set up realtime subscriptions on mount (with error handling)
   useEffect(() => {
-    const cleanup = setupRealtimeSubscriptions();
-    return cleanup;
+    try {
+      const cleanup = setupRealtimeSubscriptions();
+      return cleanup;
+    } catch (err) {
+      console.error('[Intelligence] Realtime setup error:', err);
+    }
   }, []);
   
   // AI Analyst hook
@@ -73,6 +78,14 @@ const IntelligenceStyledPage: React.FC = () => {
     sendMessage,
     toggleTTS
   } = useIntelAnalyst();
+  
+  // Fast loading - reduce wait time
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500); // Reduced from 2000ms
+    return () => clearTimeout(timer);
+  }, []);
 
   // Feature flag: URL ?intel_ai=1 or default ON
   const aiEnabled = (() => {
@@ -176,6 +189,18 @@ const IntelligenceStyledPage: React.FC = () => {
     const path = INTEL_ROUTES[moduleId];
     if (path) setLocation(path);
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#070818] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto" />
+          <p className="text-cyan-400 font-orbitron">Caricamento Intelligence...</p>
+        </div>
+      </div>
+    );
+  }
 
   // New Stage UI when AI enabled
   if (aiEnabled) {

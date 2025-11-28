@@ -339,7 +339,7 @@ const LandingPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.5 }}
           >
-            M1SSION STARTS ON 19 AUGUST
+            M1SSION STARTS ON 19 DECEMBER
           </motion.p>
           
           <motion.p 

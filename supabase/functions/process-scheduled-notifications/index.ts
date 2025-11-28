@@ -55,41 +55,69 @@ serve(async (req) => {
     // Process each notification
     for (const notification of dueNotifications) {
       try {
-        // Get user's push token
-        const { data: deviceTokens } = await supabase
-          .from('device_tokens')
-          .select('token')
+        // Get user's webpush subscriptions (primary) and FCM tokens (fallback)
+        const { data: webpushSubs } = await supabase
+          .from('webpush_subscriptions')
+          .select('endpoint, keys, user_id')
           .eq('user_id', notification.user_id)
-          .eq('device_type', 'web_push');
+          .eq('is_active', true);
 
-        if (deviceTokens && deviceTokens.length > 0) {
-          // Send push notification for each device
-          for (const device of deviceTokens) {
+        const { data: fcmTokens } = await supabase
+          .from('fcm_subscriptions')
+          .select('token, user_id')
+          .eq('user_id', notification.user_id)
+          .eq('is_active', true);
+
+        const hasWebPush = webpushSubs && webpushSubs.length > 0;
+        const hasFCM = fcmTokens && fcmTokens.length > 0;
+
+        if (hasWebPush || hasFCM) {
+          // Call webpush-targeted-send for actual push delivery
+          const pushAdminToken = Deno.env.get('PUSH_ADMIN_TOKEN');
+          if (pushAdminToken) {
             try {
-              // Parse the subscription object
-              const subscription = JSON.parse(device.token);
-              
-              // In production, you would use web-push library here
-              // For now, we'll create an in-app notification
-              await supabase
-                .from('user_notifications')
-                .insert({
-                  user_id: notification.user_id,
-                  title: notification.title,
-                  message: notification.message,
-                  type: 'push',
-                  is_read: false,
-                  payload: notification.payload
-                });
+              const pushResponse = await fetch(`${supabaseUrl}/functions/v1/webpush-targeted-send`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-admin-token': pushAdminToken
+                },
+                body: JSON.stringify({
+                  user_ids: [notification.user_id],
+                  payload: {
+                    title: notification.title,
+                    body: notification.message,
+                    url: notification.payload?.deepLink || '/notifications',
+                    extra: notification.payload
+                  }
+                })
+              });
 
-              console.log(`📱 Sent notification to user ${notification.user_id}: ${notification.title}`);
-            } catch (deviceError) {
-              console.error('Error sending to device:', deviceError);
-              errors.push(`Device error for user ${notification.user_id}: ${deviceError.message}`);
+              if (pushResponse.ok) {
+                console.log(`📱 Push sent to user ${notification.user_id}: ${notification.title}`);
+              } else {
+                console.warn(`⚠️ Push failed for user ${notification.user_id}`);
+              }
+            } catch (pushError) {
+              console.error('Push send error:', pushError);
             }
           }
+
+          // Also create in-app notification
+          await supabase
+            .from('user_notifications')
+            .insert({
+              user_id: notification.user_id,
+              title: notification.title,
+              message: notification.message,
+              type: 'push',
+              is_read: false,
+              payload: notification.payload
+            });
+
+          console.log(`📱 Notification sent to user ${notification.user_id}: ${notification.title}`);
         } else {
-          // Still create in-app notification even without push token
+          // No push subscriptions - create in-app notification only
           await supabase
             .from('user_notifications')
             .insert({
@@ -101,7 +129,7 @@ serve(async (req) => {
               payload: notification.payload
             });
 
-          console.log(`📧 Created in-app notification for user ${notification.user_id}: ${notification.title}`);
+          console.log(`📧 In-app notification for user ${notification.user_id}: ${notification.title}`);
         }
 
         // Mark notification as sent

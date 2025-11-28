@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin, QrCode, Send, Map, Users } from 'lucide-react';
+import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin, QrCode, Send, Map, Users, Gift } from 'lucide-react';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import { useProfileImage } from '@/hooks/useProfileImage';
@@ -16,7 +16,8 @@ import { usePanelAccessProtection } from '@/hooks/usePanelAccessProtection';
 import { Spinner } from '@/components/ui/spinner';
 import { QRControlPanel } from '@/components/admin/QRControlPanel';
 // Removed obsolete debug panels - now using unified Push Center
-import BulkMarkerDropComponent from '@/components/admin/BulkMarkerDropComponent';
+// BulkMarkerDropComponent removed - replaced by MarkerRewardManager
+import MarkerRewardManager from '@/components/admin/MarkerRewardManager';
 import UsersRealtimePanel from '@/components/panel/UsersRealtimePanel';
 import { useLocation } from 'wouter';
 import { useAdminCheck } from '@/hooks/admin/useAdminCheck';
@@ -26,7 +27,7 @@ import PushControlPanelPage from '@/pages/panel/PushControlPanelPage';
 import PushAutoPreflightPage from '@/pages/panel/PushAutoPreflightPage';
 import { PUSH_PREFLIGHT_ENABLED } from '@/config/featureFlags';
 
-type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'bulk-marker-drop' | 'push-center' | 'push-control' | 'push-sender' | 'push-preflight';
+type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'marker-rewards' | 'push-center' | 'push-control' | 'push-sender' | 'push-preflight';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -256,11 +257,12 @@ const PanelAccessPage = () => {
     );
   }
 
-  if (currentView === 'bulk-marker-drop' && hasAccess) {
+  // 🎯 Marker Reward Manager View (replaces old Bulk Marker Drop)
+  if (currentView === 'marker-rewards' && hasAccess) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
         <Helmet>
-          <title>M1SSION PANEL™ - Bulk Marker Drop</title>
+          <title>M1SSION PANEL™ - Marker Reward Manager</title>
         </Helmet>
         <UnifiedHeader profileImage={profileImage} />
         <div 
@@ -270,7 +272,7 @@ const PanelAccessPage = () => {
             paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
           }}
         >
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="flex items-center gap-4 mb-8">
               <button 
                 onClick={() => setCurrentView('home')}
@@ -278,9 +280,8 @@ const PanelAccessPage = () => {
               >
                 ← Torna al Panel
               </button>
-              <h1 className="text-2xl font-bold text-white">Bulk Marker Drop</h1>
             </div>
-            <BulkMarkerDropComponent />
+            <MarkerRewardManager />
           </div>
         </div>
       </div>
@@ -513,23 +514,6 @@ const PanelAccessPage = () => {
               <motion.div 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setLocation('/panel/bulk-marker-drop')}
-                className="glass-card p-4 border border-blue-500/30 cursor-pointer group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <MapPin className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">Bulk Marker Drop</h3>
-                    <p className="text-gray-400 text-sm">Creazione in massa di marker personalizzati</p>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={() => setCurrentView('qr-control')}
                 className="glass-card p-4 border border-cyan-500/30 cursor-pointer group"
               >
@@ -544,19 +528,20 @@ const PanelAccessPage = () => {
                 </div>
               </motion.div>
 
+              {/* 🎯 Marker Reward Manager - Replaces Bulk Marker Drop */}
               <motion.div 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setCurrentView('bulk-marker-drop')}
-                className="glass-card p-4 border border-blue-500/30 cursor-pointer group"
+                onClick={() => setCurrentView('marker-rewards')}
+                className="glass-card p-4 border border-emerald-500/30 cursor-pointer group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Map className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-emerald-600 to-cyan-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Gift className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Bulk Marker Drop</h3>
-                    <p className="text-gray-400 text-sm">Distribuzione massiva marker sulla mappa</p>
+                    <h3 className="font-semibold text-white">🎯 Marker Reward Manager</h3>
+                    <p className="text-gray-400 text-sm">Gestione completa marker con mappa interattiva, M1U, Indizi, Premi Fisici</p>
                   </div>
                 </div>
               </motion.div>

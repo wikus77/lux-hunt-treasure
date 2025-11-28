@@ -29,13 +29,26 @@ export function usePerformanceSettings(): PerformanceSettings {
   useEffect(() => {
     const loadSettings = async () => {
       try {
+        // Always try localStorage first as fallback source
+        const savedModeLocal = localStorage.getItem(STORAGE_KEY) as BattleFxPerformanceMode | null;
+        if (savedModeLocal === 'high' || savedModeLocal === 'low') {
+          setBattleFxModeState(savedModeLocal);
+        }
+
         if (isAuthenticated && user?.id) {
           // Try loading from user_settings table (with type casting)
+          // Use maybeSingle() to avoid 406 errors when table doesn't exist or no row
           const { data, error } = await supabase
             .from('user_settings' as any)
             .select('preferences')
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
+
+          // Silently handle 406 errors (table may not exist)
+          if (error && (error.code === '406' || error.code === 'PGRST116' || error.code === '42P01')) {
+            console.debug('[PerformanceSettings] user_settings table not available, using localStorage');
+            return;
+          }
 
           if (!error && data) {
             const settingsData = data as any;
@@ -47,16 +60,9 @@ export function usePerformanceSettings(): PerformanceSettings {
               console.log('[PerformanceSettings] Loaded from DB:', savedMode);
             }
           }
-        } else {
-          // Fallback to localStorage for non-authenticated users
-          const savedMode = localStorage.getItem(STORAGE_KEY) as BattleFxPerformanceMode | null;
-          if (savedMode === 'high' || savedMode === 'low') {
-            setBattleFxModeState(savedMode);
-            console.log('[PerformanceSettings] Loaded from localStorage:', savedMode);
-          }
         }
       } catch (e) {
-        console.warn('[PerformanceSettings] Load error:', e);
+        console.debug('[PerformanceSettings] Load error (non-critical):', e);
       } finally {
         setIsLoading(false);
       }

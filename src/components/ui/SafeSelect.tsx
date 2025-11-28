@@ -5,8 +5,7 @@
  */
 
 import React from 'react';
-
-type StakeType = 'energy' | 'buzz' | 'clue';
+import { StakeType, STAKE_TYPES } from '@/lib/battle/constants';
 
 interface SafeSelectProps {
   value: StakeType;
@@ -20,7 +19,7 @@ export function SafeSelect({ value, onChange, disabled, className = '' }: SafeSe
     const selectedValue = e.target.value as StakeType;
     
     // Validate before calling onChange
-    if (selectedValue === 'energy' || selectedValue === 'buzz' || selectedValue === 'clue') {
+    if (STAKE_TYPES.some(t => t.value === selectedValue)) {
       onChange(selectedValue);
     } else {
       console.warn('⚠️ Invalid stake type value:', selectedValue);
@@ -46,9 +45,11 @@ export function SafeSelect({ value, onChange, disabled, className = '' }: SafeSe
         paddingRight: '2.5rem',
       }}
     >
-      <option value="energy">⚡ Energy Fragments</option>
-      <option value="buzz">📡 Buzz Points</option>
-      <option value="clue">🔍 Clues</option>
+      {STAKE_TYPES.map((type) => (
+        <option key={type.value} value={type.value}>
+          {type.icon} {type.label}
+        </option>
+      ))}
     </select>
   );
 }

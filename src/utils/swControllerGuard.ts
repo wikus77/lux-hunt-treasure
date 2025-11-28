@@ -3,7 +3,8 @@
 
 /**
  * Ensures our app Service Worker is the controller without touching push SWs
- * Guards against FCM/OneSignal SWs taking over the main app controller
+ * Guards against FCM SW taking over the main app controller
+ * (OneSignal RIMOSSO - Solo FCM e VAPID Web Push)
  */
 export async function ensureAppSWController(): Promise<boolean> {
   if (!('serviceWorker' in navigator)) {

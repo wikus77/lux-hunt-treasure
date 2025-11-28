@@ -36,6 +36,9 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
       case 'message': return '📩';
       case 'event_ticket': return '🎫';
       case 'badge': return '🏅';
+      case 'm1u': return '💰';
+      case 'clue': return '🔍';
+      case 'physical_prize': return '🎁';
       default: return '🎁';
     }
   };
@@ -59,28 +62,50 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
     }
 
     if (data?.ok === true) {
-      console.log('M1QR-TRACE', { step: 'claim_success', nextRoute: data?.nextRoute, summary: data?.summary });
-      toast.success('🎁 Premio riscattato con successo!', {
-        description: 'Controlla le tue notifiche per i dettagli'
-      });
+      console.log('M1QR-TRACE', { step: 'claim_success', summary: data?.summary });
+      
+      // 🎯 Determina il tipo di premio per azioni specifiche
+      const rewardType = rewards[0]?.reward_type?.toLowerCase() || 'unknown';
+      // 🔥 FIX: Cerca m1u nel summary (già in lowercase dall'Edge Function)
+      const m1uSummary = data?.summary?.find((s: any) => s.type === 'm1u' || s.type === 'M1U');
+      const m1uAmount = m1uSummary?.info?.amount || rewards[0]?.payload?.amount || 0;
+      
+      console.log('M1QR-TRACE: Claim result', { rewardType, m1uAmount, summary: data?.summary, rewards });
+      
+      // 🎉 Mostra toast appropriato
+      if (rewardType === 'm1u') {
+        toast.success(`💰 +${m1uAmount} M1U accreditati!`, {
+          description: 'I crediti sono stati aggiunti al tuo conto'
+        });
+        // 🔄 Trigger evento per aggiornare il pill M1U con animazione
+        window.dispatchEvent(new CustomEvent('m1u-credited', { detail: { amount: m1uAmount } }));
+      } else if (rewardType === 'buzz_free') {
+        toast.success('⚡ Buzz gratuito sbloccato!', {
+          description: 'Vai alla pagina Buzz per usarlo'
+        });
+      } else {
+        toast.success('🎁 Premio riscattato!', {
+          description: data?.summary?.[0]?.info?.toString() || 'Controlla le notifiche'
+        });
+      }
 
       // GA4 tracking
       import('@/lib/analytics/ga4').then(({ trackMarkerRewardClaimed }) => {
-        const rewardType = rewards[0]?.reward_type || 'unknown';
         trackMarkerRewardClaimed(markerId, rewardType);
       });
 
       onClose?.();
       
-      // Force notifications refresh after successful claim
-      setTimeout(() => {
-        if (data?.nextRoute) {
-          window.location.href = data.nextRoute;
-        } else {
-          // Default to notifications page to show the new notification
-          window.location.href = '/notifications';
-        }
-      }, 1000);
+      // 🎯 SOLO per BUZZ_FREE: reindirizza alla pagina Buzz
+      if (rewardType === 'buzz_free') {
+        setTimeout(() => {
+          window.location.href = '/buzz';
+        }, 1500);
+      }
+      // ✅ Per tutti gli altri premi: NESSUN REDIRECT - resta dove sei
+      
+      // Callback opzionale per il parent
+      onSuccess?.();
       return;
     }
 
@@ -210,6 +235,9 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
                                  reward.reward_type === 'message' ? 'PREMIO MESSAGGIO' :
                                  reward.reward_type === 'event_ticket' ? 'BIGLIETTO EVENTO' :
                                  reward.reward_type === 'badge' ? 'DISTINTIVO' :
+                                 reward.reward_type === 'm1u' ? 'CREDITI M1U' :
+                                 reward.reward_type === 'clue' ? 'INDIZIO SEGRETO' :
+                                 reward.reward_type === 'physical_prize' ? 'PREMIO FISICO' :
                                  displayDescription || `Premio ${reward.reward_type}`}
                               </div>
                               {reward.reward_type === 'buzz_free' && (
@@ -235,6 +263,21 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
                               {reward.reward_type === 'badge' && displayDescription && (
                                 <div className="text-gray-300 text-sm">
                                   {displayDescription}
+                                </div>
+                              )}
+                              {reward.reward_type === 'm1u' && (
+                                <div className="text-[#FFD700] text-sm font-semibold">
+                                  +{reward.payload?.amount || 50} M1U sul tuo conto
+                                </div>
+                              )}
+                              {reward.reward_type === 'clue' && (
+                                <div className="text-[#00D1FF] text-sm font-semibold">
+                                  Indizio per la missione attiva
+                                </div>
+                              )}
+                              {reward.reward_type === 'physical_prize' && (
+                                <div className="text-[#FF1493] text-sm font-semibold">
+                                  🎁 {reward.payload?.prize_name || 'Premio speciale'}
                                 </div>
                               )}
                             </div>

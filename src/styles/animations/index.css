@@ -269,15 +269,158 @@
   animation: pulse-ritual-precharge 1s ease-in-out infinite;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   FUTURISTIC PULSE BAR ANIMATIONS — CYBERPUNK STYLE
+═══════════════════════════════════════════════════════════════ */
+
+/* Futuristic outline with multi-layer glow */
+.pulse-outline-futuristic {
+  animation: 
+    pulseOutlineFuturistic 2s ease-in-out infinite,
+    pulseOutlineRotate 4s linear infinite;
+}
+
+@keyframes pulseOutlineFuturistic {
+  0%, 100% {
+    box-shadow:
+      0 0 4px var(--pulse-primary, #00d4ff),
+      0 0 8px var(--pulse-primary, #00d4ff),
+      0 0 16px var(--pulse-secondary, #ff00ff),
+      inset 0 0 4px var(--pulse-accent, #00ff88);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 8px var(--pulse-primary, #00d4ff),
+      0 0 16px var(--pulse-secondary, #ff00ff),
+      0 0 24px var(--pulse-accent, #00ff88),
+      inset 0 0 8px var(--pulse-primary, #00d4ff);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+}
+
+@keyframes pulseOutlineRotate {
+  0% {
+    background: linear-gradient(0deg, transparent, transparent);
+  }
+  25% {
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      var(--pulse-accent, #00ff88) 50%, 
+      transparent 100%);
+    background-size: 30% 100%;
+    background-position: -30% 0;
+  }
+  50% {
+    background-position: 130% 0;
+  }
+  75%, 100% {
+    background: linear-gradient(0deg, transparent, transparent);
+  }
+}
+
+/* Plasma shimmer effect */
+@keyframes plasmaShimmer {
+  0% {
+    filter: hue-rotate(0deg) brightness(1);
+  }
+  33% {
+    filter: hue-rotate(10deg) brightness(1.1);
+  }
+  66% {
+    filter: hue-rotate(-10deg) brightness(0.95);
+  }
+  100% {
+    filter: hue-rotate(0deg) brightness(1);
+  }
+}
+
+.animate-plasma {
+  animation: plasmaShimmer 3s ease-in-out infinite;
+}
+
+/* Digital noise flicker */
+@keyframes digitalNoise {
+  0%, 100% { opacity: 0; }
+  10% { opacity: 0.03; }
+  20% { opacity: 0; }
+  30% { opacity: 0.05; }
+  40% { opacity: 0.02; }
+  50% { opacity: 0; }
+  60% { opacity: 0.04; }
+  70% { opacity: 0; }
+  80% { opacity: 0.03; }
+  90% { opacity: 0.01; }
+}
+
+.animate-noise {
+  animation: digitalNoise 0.5s steps(10) infinite;
+}
+
+/* Energy surge wave */
+@keyframes energySurge {
+  0% {
+    transform: translateX(-100%) scaleY(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(200%) scaleY(1.5);
+    opacity: 0;
+  }
+}
+
+.animate-energy-surge {
+  animation: energySurge 2s ease-in-out infinite;
+}
+
+/* Cyber heartbeat */
+@keyframes cyberHeartbeat {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  10% {
+    transform: scale(1.02);
+    filter: brightness(1.2);
+  }
+  20% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  30% {
+    transform: scale(1.01);
+    filter: brightness(1.1);
+  }
+  40%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+.animate-cyber-heartbeat {
+  animation: cyberHeartbeat 1.5s ease-in-out infinite;
+}
+
 /* accessibilità: riduci animazioni */
 @media (prefers-reduced-motion: reduce) {
   .animate-energyFlow,
   .animate-pulseBreath,
   .animate-outlineFlux,
   .pulse-outline,
+  .pulse-outline-futuristic,
   .aura-spin,
   .ritual-chromatic,
-  .animate-pulse-ritual-precharge {
+  .animate-pulse-ritual-precharge,
+  .animate-plasma,
+  .animate-noise,
+  .animate-energy-surge,
+  .animate-cyber-heartbeat {
     animation: none !important;
   }
 }

@@ -393,6 +393,31 @@ ${error?.stack || error?.message || String(error)}
   });
 };
 
+// 🎨 M1SSION™ ASCII LOGO - Console Branding
+const showM1Logo = () => {
+  // FORCE visibility with console.error (always shown in red)
+  console.error(`
+╔═══════════════════════════════════════╗
+║                                       ║
+║     ███╗   ███╗ ██╗                   ║
+║     ████╗ ████║███║   M1SSION™        ║
+║     ██╔████╔██║╚██║                   ║
+║     ██║╚██╔╝██║ ██║   Caccia al       ║
+║     ██║ ╚═╝ ██║ ██║   Tesoro          ║
+║     ╚═╝     ╚═╝ ╚═╝                   ║
+║                                       ║
+║  © 2025 Joseph MULÉ - NIYVORA KFT™    ║
+║                                       ║
+╚═══════════════════════════════════════╝
+  `);
+  console.error('🎯 M1SSION™ Console Ready | Build: ' + (import.meta.env.VITE_BUILD_ID || 'PROD'));
+};
+
+// Show logo on app start
+if (typeof window !== 'undefined') {
+  showM1Logo();
+}
+
 // Enhanced error handling for better debugging
 const renderApp = () => {
   console.log("🚀 ENHANCED APP INITIALIZATION - Starting render");

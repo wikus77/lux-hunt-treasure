@@ -28,6 +28,11 @@ const M1UPill: React.FC<M1UPillProps> = ({
   const [pulseAnimation, setPulseAnimation] = useState(false);
   const [prevBalance, setPrevBalance] = useState<number | null>(null);
   const [showShopModal, setShowShopModal] = useState(false);
+  
+  // 🎰 SLOT MACHINE ANIMATION STATE
+  const [displayedBalance, setDisplayedBalance] = useState<number>(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const animationRef = React.useRef<number | null>(null);
 
   // Get current user ID
   useEffect(() => {
@@ -40,18 +45,140 @@ const M1UPill: React.FC<M1UPillProps> = ({
     getUser();
   }, []);
 
-  const { unitsData, isLoading, error } = useM1UnitsRealtime(userId);
+  const { unitsData, isLoading, error, refetch } = useM1UnitsRealtime(userId);
 
-  // Trigger pulse animation on balance change
+  // 🎰 SLOT MACHINE ANIMATION - Animates numbers rolling up like a jackpot
+  const animateBalance = (startValue: number, endValue: number, duration: number = 2000) => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    
+    const startTime = performance.now();
+    const difference = endValue - startValue;
+    
+    setIsAnimating(true);
+    setPulseAnimation(true);
+    
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function for smooth deceleration (like a slot machine slowing down)
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      
+      const currentValue = Math.round(startValue + (difference * easeOutQuart));
+      setDisplayedBalance(currentValue);
+      
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        setDisplayedBalance(endValue);
+        setIsAnimating(false);
+        setPulseAnimation(false);
+        animationRef.current = null;
+      }
+    };
+    
+    animationRef.current = requestAnimationFrame(animate);
+  };
+
+  // 🔥 FIX: Listen for BUZZ events and SHOP purchases to refetch M1U immediately
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log('💰 M1UPill: Event received, refetching balance...');
+      refetch();
+    };
+
+    // Also listen for shop purchases (M1U spent)
+    const handleM1USpent = (event: CustomEvent) => {
+      const amount = event.detail?.amount || 0;
+      const newBalance = event.detail?.newBalance;
+      console.log('💸 M1UPill: M1U spent event!', { amount, newBalance });
+      
+      // Immediately update displayed balance if we have the new value
+      if (newBalance !== undefined) {
+        setDisplayedBalance(newBalance);
+        setPrevBalance(newBalance);
+      }
+      
+      // Also refetch to be sure
+      setTimeout(() => refetch(), 300);
+    };
+
+    window.addEventListener('buzzAreaCreated', handleRefresh);
+    window.addEventListener('buzzClueCreated', handleRefresh);
+    window.addEventListener('m1u-spent', handleM1USpent as EventListener);
+    window.addEventListener('m1u-balance-changed', handleRefresh);
+    
+    return () => {
+      window.removeEventListener('buzzAreaCreated', handleRefresh);
+      window.removeEventListener('buzzClueCreated', handleRefresh);
+      window.removeEventListener('m1u-spent', handleM1USpent as EventListener);
+      window.removeEventListener('m1u-balance-changed', handleRefresh);
+    };
+  }, [refetch]);
+
+  // 🎉 Listen for M1U credited event (from marker rewards) - trigger SLOT MACHINE animation
+  useEffect(() => {
+    const handleM1UCredited = (event: CustomEvent) => {
+      const amount = event.detail?.amount || 0;
+      console.log('💰 M1UPill: M1U credited event received!', amount);
+      
+      // 🎰 Start slot machine animation from current displayed value
+      const currentDisplayed = displayedBalance;
+      const newBalance = currentDisplayed + amount;
+      
+      // Refetch to get actual new balance from server
+      setTimeout(() => refetch(), 100);
+      
+      // Start the rolling animation
+      animateBalance(currentDisplayed, newBalance, 2500); // 2.5 seconds for dramatic effect
+      
+      // Show celebratory toast
+      toast.success(`💰 +${amount} M1U!`, {
+        description: 'Guarda i tuoi crediti salire! 🎰',
+        duration: 3000
+      });
+    };
+
+    window.addEventListener('m1u-credited', handleM1UCredited as EventListener);
+    return () => {
+      window.removeEventListener('m1u-credited', handleM1UCredited as EventListener);
+    };
+  }, [refetch, displayedBalance]);
+
+  // Initialize displayed balance when data loads - FIXED SYNC LOGIC
+  useEffect(() => {
+    if (unitsData?.balance !== undefined && !isAnimating) {
+      // Always sync if difference exists (was broken before!)
+      if (displayedBalance !== unitsData.balance) {
+        console.log('💰 M1UPill: Syncing balance', { displayed: displayedBalance, actual: unitsData.balance });
+        setDisplayedBalance(unitsData.balance);
+      }
+    }
+  }, [unitsData?.balance, isAnimating, displayedBalance]);
+
+  // Trigger pulse animation on balance change (for non-event changes)
   useEffect(() => {
     if (unitsData?.balance !== undefined && prevBalance !== null && unitsData.balance !== prevBalance) {
-      setPulseAnimation(true);
-      setTimeout(() => setPulseAnimation(false), 800);
+      // Only animate if difference is significant and not already animating
+      if (!isAnimating && Math.abs(unitsData.balance - prevBalance) >= 5) {
+        animateBalance(prevBalance, unitsData.balance, 1500);
+      }
     }
     if (unitsData?.balance !== undefined) {
       setPrevBalance(unitsData.balance);
     }
-  }, [unitsData?.balance, prevBalance]);
+  }, [unitsData?.balance, prevBalance, isAnimating]);
+  
+  // Cleanup animation on unmount
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
 
   const balance = unitsData?.balance ?? 0;
   const lowBalance = balance < 100;
@@ -126,9 +253,29 @@ const M1UPill: React.FC<M1UPillProps> = ({
                 {showLabel && (
                   <span className="text-sm font-semibold text-white/90 font-orbitron">M1U</span>
                 )}
-                <span className="text-sm font-bold text-white font-orbitron tracking-wide">
-                  {balance.toLocaleString('it-IT')}
+                <span 
+                  className={`text-sm font-bold font-orbitron tracking-wide transition-all ${
+                    isAnimating 
+                      ? 'text-[#FFD700] scale-110 drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]' 
+                      : 'text-white'
+                  }`}
+                  style={{
+                    textShadow: isAnimating ? '0 0 10px rgba(255, 215, 0, 0.9)' : 'none'
+                  }}
+                >
+                  {displayedBalance.toLocaleString('it-IT')}
                 </span>
+                {/* 🎰 Sparkle effect during animation */}
+                {isAnimating && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5] }}
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                    className="text-yellow-400 text-xs"
+                  >
+                    ✨
+                  </motion.span>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

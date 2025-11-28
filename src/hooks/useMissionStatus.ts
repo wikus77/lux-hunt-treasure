@@ -35,15 +35,20 @@ export const useMissionStatus = () => {
       setError(null);
 
       // 🔥 Fetch the current active mission from missions table
+      // Using maybeSingle() to avoid 406 errors when no active mission exists
       const { data: activeMissionData, error: missionFetchError } = await supabase
         .from('missions')
         .select('id, title')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (missionFetchError && missionFetchError.code !== 'PGRST116') {
+      // Silently handle expected errors (no rows, table issues)
+      if (missionFetchError && 
+          missionFetchError.code !== 'PGRST116' && 
+          missionFetchError.code !== '406' &&
+          missionFetchError.code !== '42P01') {
         console.error('Error loading active mission:', missionFetchError);
       }
 

@@ -96,4 +96,83 @@ export function trackMarkerRewardClaimed(markerId: string, rewardType: string): 
   });
 }
 
+/**
+ * Track M1U transaction
+ */
+export function trackM1UTransaction(type: 'spend' | 'purchase' | 'reward', amount: number, source: string): void {
+  trackEvent('m1u_transaction', {
+    transaction_type: type,
+    amount,
+    source,
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Track mission enrollment
+ */
+export function trackMissionEnrollment(missionId: string): void {
+  trackEvent('mission_enrolled', {
+    mission_id: missionId,
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Track battle action
+ */
+export function trackBattleAction(action: 'create' | 'join' | 'complete' | 'abandon', battleId: string, result?: string): void {
+  trackEvent('battle_action', {
+    action,
+    battle_id: battleId,
+    result,
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Track authentication event
+ */
+export function trackAuth(action: 'login' | 'logout' | 'signup' | 'anonymous', method?: string): void {
+  trackEvent(`auth_${action}`, {
+    method: method || 'unknown',
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Track error for monitoring (non-PII)
+ */
+export function trackError(errorId: string, errorType: string, componentName?: string): void {
+  trackEvent('app_error', {
+    error_id: errorId,
+    error_type: errorType,
+    component: componentName || 'unknown',
+    page_path: window.location.pathname,
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Track push notification interaction
+ */
+export function trackPushInteraction(action: 'received' | 'clicked' | 'dismissed', notificationId?: string): void {
+  trackEvent('push_notification', {
+    action,
+    notification_id: notificationId || 'unknown',
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Track subscription change
+ */
+export function trackSubscription(action: 'subscribe' | 'upgrade' | 'downgrade' | 'cancel', plan: string): void {
+  trackEvent('subscription_change', {
+    action,
+    plan,
+    timestamp: new Date().toISOString()
+  });
+}
+
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

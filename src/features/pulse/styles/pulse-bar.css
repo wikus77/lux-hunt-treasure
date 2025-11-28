@@ -1,0 +1,126 @@
+/* THE PULSE™ — Smoky Energy Bar Styles
+ * Effetto fumo/energia con glow neon e animazione respiro
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */
+
+/* Container - sfondo nero assoluto, nessun bordo */
+.pulse-bar-container {
+  position: relative;
+  width: 100%;
+  background: transparent;
+  overflow: visible;
+  cursor: pointer;
+}
+
+/* SVG principale */
+.pulse-bar-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Animazione glow pulsante */
+.pulse-bar-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.6;
+    filter: url(#smokeBlur) brightness(1);
+  }
+  50% {
+    opacity: 0.85;
+    filter: url(#smokeBlur) brightness(1.15);
+  }
+}
+
+/* Animazione smoke drift */
+.pulse-bar-smoke {
+  animation: smokeDrift 6s ease-in-out infinite;
+}
+
+@keyframes smokeDrift {
+  0%, 100% {
+    transform: translateY(0) scaleY(1);
+    opacity: 0.85;
+  }
+  25% {
+    transform: translateY(-1px) scaleY(1.02);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(0) scaleY(0.98);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translateY(1px) scaleY(1.01);
+    opacity: 0.88;
+  }
+}
+
+/* Animazione linea base */
+.pulse-bar-line {
+  animation: lineGlow 3s ease-in-out infinite;
+}
+
+@keyframes lineGlow {
+  0%, 100% {
+    stroke-opacity: 0.8;
+    filter: url(#glowFilter) drop-shadow(0 0 4px #00ffbf);
+  }
+  50% {
+    stroke-opacity: 1;
+    filter: url(#glowFilter) drop-shadow(0 0 10px #00ffbf) drop-shadow(0 0 20px #00ffa3);
+  }
+}
+
+/* Layer CSS aggiuntivo per effetto fumo */
+.pulse-bar-smoke-css {
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 70%;
+  background: radial-gradient(
+    ellipse 60% 100% at 50% 100%,
+    rgba(0, 255, 191, 0.25) 0%,
+    rgba(0, 255, 163, 0.12) 40%,
+    rgba(0, 255, 136, 0.05) 70%,
+    transparent 100%
+  );
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.pulse-bar-smoke-css.animate {
+  animation: smokeCss 5s ease-in-out infinite;
+}
+
+@keyframes smokeCss {
+  0%, 100% {
+    transform: scaleX(1) scaleY(1);
+    opacity: 0.5;
+  }
+  33% {
+    transform: scaleX(1.03) scaleY(1.05);
+    opacity: 0.6;
+  }
+  66% {
+    transform: scaleX(0.98) scaleY(0.97);
+    opacity: 0.45;
+  }
+}
+
+/* Rispetta prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .pulse-bar-glow,
+  .pulse-bar-smoke,
+  .pulse-bar-line,
+  .pulse-bar-smoke-css {
+    animation: none !important;
+  }
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+

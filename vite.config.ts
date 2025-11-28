@@ -20,10 +20,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   esbuild: {
-    target: 'es2020',
+    target: 'es2022', // Native class fields without helpers
     logOverride: { 'this-is-undefined-in-esm': 'silent' },
-    // In produzione NON droppiamo "console" a livello esbuild per preservare error/warn.
-    // La rimozione selettiva di log/info/debug è gestita da Terser (pure_funcs) in build.
     drop: mode === 'production' ? ['debugger'] : [],
   },
   plugins: [
@@ -45,8 +43,9 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    target: 'es2020',
-    minify: mode === 'production' ? 'terser' : false,
+    target: 'esnext',
+    // Disable minification to fix MapLibre worker issue
+    minify: false,
     sourcemap: mode === 'development',
     rollupOptions: {
       output: {
@@ -61,6 +60,7 @@ export default defineConfig(({ mode }) => ({
           'animation-vendor': ['framer-motion', 'lottie-react'],
           'three-vendor': ['three', '@react-three/drei'],
           'map-vendor': ['leaflet', 'react-leaflet', '@react-google-maps/api'],
+          // maplibre-gl is bundled separately to fix worker issues
           'stripe-vendor': ['@stripe/stripe-js', '@stripe/react-stripe-js']
         }
       },
@@ -75,19 +75,6 @@ export default defineConfig(({ mode }) => ({
     cssCodeSplit: true,
     chunkSizeWarningLimit: 2000,
     reportCompressedSize: false,
-    terserOptions: {
-      compress: {
-        drop_console: false, // Keep console for error debugging
-        drop_debugger: true,
-        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
-      },
-      mangle: {
-        safari10: true
-      },
-      format: {
-        comments: false,
-      },
-    },
   },
   define: {
     global: 'globalThis',
@@ -98,8 +85,36 @@ export default defineConfig(({ mode }) => ({
     ),
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
-    exclude: ['@capacitor/core'],
+    include: [
+      'react', 
+      'react-dom', 
+      'react-router-dom',
+      // Librerie con class fields che DEVONO essere pre-bundlate
+      // 'maplibre-gl', // Excluded to fix worker issue
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei',
+      'framer-motion',
+      'zustand',
+      'zustand/middleware',
+      '@supabase/supabase-js',
+      'firebase/app',
+      'firebase/auth',
+      'firebase/messaging',
+      'lottie-react',
+      '@tanstack/react-query',
+      'sonner',
+      'gsap',
+      'howler',
+      'postprocessing',
+    ],
+    exclude: ['@capacitor/core', 'maplibre-gl'],
+    esbuildOptions: {
+      target: 'esnext',
+    },
+  },
+  ssr: {
+    noExternal: ['maplibre-gl', 'three', 'gsap'],
   },
   assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.mp3', '**/*.wav']
 }));

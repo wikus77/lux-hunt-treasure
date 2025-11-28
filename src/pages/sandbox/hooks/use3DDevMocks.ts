@@ -49,13 +49,28 @@ export function use3DDevMocks() {
     };
   }
 
-  // 1) AGENTS (red dots) - 18 mock agents around Monaco
-  const agents: AgentDTO[] = Array.from({ length: 18 }).map((_, i) => ({
-    id: generateId('agent', i),
-    username: `AG-X${String(1000 + i)}`,
+  // 1) AGENTS (red dots) - 10 GLOBAL mock agents for battle testing
+  // Scattered around the world for long-distance attack testing
+  const globalLocations = [
+    { name: 'USA', lat: 40.7128, lng: -74.0060, code: 'AG-USA' },      // New York
+    { name: 'RUSSIA', lat: 55.7558, lng: 37.6173, code: 'AG-RUSSIA' }, // Moscow
+    { name: 'CHINA', lat: 39.9042, lng: 116.4074, code: 'AG-CHINA' },  // Beijing
+    { name: 'AUSTRALIA', lat: -33.8688, lng: 151.2093, code: 'AG-AUSSIE' }, // Sydney
+    { name: 'BRAZIL', lat: -23.5505, lng: -46.6333, code: 'AG-BRAZIL' }, // Sao Paulo
+    { name: 'JAPAN', lat: 35.6762, lng: 139.6503, code: 'AG-JAPAN' },  // Tokyo
+    { name: 'UK', lat: 51.5074, lng: -0.1278, code: 'AG-UK' },         // London
+    { name: 'EGYPT', lat: 30.0444, lng: 31.2357, code: 'AG-EGYPT' },   // Cairo
+    { name: 'INDIA', lat: 28.6139, lng: 77.2090, code: 'AG-INDIA' },   // Delhi
+    { name: 'SOUTH_AFRICA', lat: -33.9249, lng: 18.4241, code: 'AG-SAFRICA' }, // Cape Town
+  ];
+  
+  const agents: AgentDTO[] = globalLocations.map((loc, i) => ({
+    id: `fake-agent-${i}`, // IMPORTANT: Must start with "fake-agent-" for battle detection!
+    username: loc.code,
+    agent_code: loc.code,
     status: (i % 3 === 0 ? 'idle' : 'online') as 'online' | 'idle' | 'offline',
-    lat: 43.80 + (Math.random() * 0.03),
-    lng: 7.63 + (Math.random() * 0.03),
+    lat: loc.lat + (Math.random() * 0.01 - 0.005), // Small random offset
+    lng: loc.lng + (Math.random() * 0.01 - 0.005),
     avatar_url: undefined,
     lastSeen: new Date().toISOString()
   }));
