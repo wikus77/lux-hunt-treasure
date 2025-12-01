@@ -196,3 +196,6 @@ GRANT SELECT, INSERT, UPDATE ON public.user_settings TO authenticated;
 -- ============================================
 -- © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
+
+
+

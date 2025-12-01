@@ -14,7 +14,7 @@ interface CommandModulesSectionProps {
 
 const CommandModulesSection = ({ unlockedModules, handleModuleClick }: CommandModulesSectionProps) => {
   return (
-    <div className="grid gap-6 px-4">
+    <div className="grid gap-4 px-3 m1-dense-grid"> {/* 🚀 NATIVE: Gap ridotto */}
       {/* Mission Panel - Always available */}
       <CommandModuleCard
         title="Missione Attiva"

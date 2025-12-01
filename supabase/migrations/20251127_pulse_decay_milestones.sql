@@ -333,3 +333,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
+
+
+

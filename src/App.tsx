@@ -25,7 +25,7 @@ import { useState, useEffect } from "react";
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 import { InterestSignalsProvider } from "./components/InterestSignalsProvider";
 import FirstLoginQuizManager from "./components/quiz/FirstLoginQuizManager";
-import { WalkthroughManager } from "./components/walkthrough/WalkthroughManager";
+// WalkthroughManager RIMOSSO - verrà ricreato
 import DNAManager from "./components/dna/DNAManager";
 import { CookieConsentManager } from "./features/consent/CookieConsentManager";
 // Import per esporre funzione popolamento KB globalmente
@@ -34,6 +34,7 @@ import { NorahProactiveManager } from "./components/norah/NorahProactiveManager"
 import { MissionBadgeInjector } from "./components/home/MissionBadgeInjector";
 import { UpdateBanner } from "./components/sw/UpdateBanner";
 import '@/features/living-map/styles/livingMap.css';
+import { OnboardingProvider, OnboardingOverlay } from "./components/onboarding";
 import { PULSE_ENABLED } from "@/config/featureFlags";
 import { RouteAnnouncer } from "./components/a11y/RouteAnnouncer";
 import { useRouteAnnouncements } from "./hooks/useRouteAnnouncements";
@@ -41,6 +42,8 @@ import { ReconnectBadge } from "./components/net/ReconnectBadge";
 import { M1UnitsDebugPanel } from "./components/debug/M1UnitsDebugPanel";
 import { initGA4, trackPageView } from './lib/analytics/ga4';
 import { useLocation } from 'wouter';
+import { usePullToRefresh } from "./hooks/usePullToRefresh";
+import PullToRefreshIndicator from "./components/pwa/PullToRefreshIndicator";
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration
@@ -88,12 +91,28 @@ function App() {
   // Initialize PWA stabilizer (prevents reload loops and manages push)
   usePWAStabilizer();
 
+  // Pull to Refresh - scroll down prolungato per refresh
+  // DISABILITATO su pagine mappa per evitare conflitti con touch events
+  const isMapPage = location.includes('map') || location.includes('buzz');
+  const { pullDistance, isRefreshing, progress } = usePullToRefresh({
+    threshold: 120, // pixels to pull before refresh
+    enabled: !isMapPage // Disabilitato su pagine mappa
+  });
   
   return (
-    <div className="app-shell m1-app-bg relative">
+    <div className="app-shell relative">
+      {/* SFONDO GRADIENTE CHE COPRE TUTTO INCLUSA SAFE AREA iOS */}
+      <div className="m1-fullscreen-bg" />
       <div className="m1-grain"></div>
+      
+      {/* Pull to Refresh Indicator */}
+      <PullToRefreshIndicator 
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+        progress={progress}
+      />
+      
       <PushFrozenNotice />
-      <div className="ios-safe-top"></div>
       <ErrorBoundary fallback={
         <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
           <div className="glass-card p-6 max-w-md mx-auto text-center">
@@ -123,14 +142,17 @@ function App() {
               <Router>
               <SoundProvider>
                 <AuthProvider>
+                  <OnboardingProvider>
                   <InterestSignalsProvider>
                     {/* OneSignal rimosso - usando solo FCM */}
                     {/* © 2025 M1SSION™ - Conditional render to prevent loop */}
                     {!localStorage.getItem('m1ssion_legal_consent') && <LegalOnboarding />}
-                    <FirstLoginQuizManager />
+                    {/* 🚫 QUIZ AGENTE DISABILITATO - Da ricreare in futuro */}
+                    {/* <FirstLoginQuizManager /> */}
                     <DNAManager />
                     <CookieConsentManager />
-                    <WalkthroughManager />
+                    {/* Onboarding Tutorial Interattivo */}
+                    <OnboardingOverlay />
                     <WouterRoutes />
                     <InstallPrompt />
                     <IOSPermissionManager />
@@ -144,6 +166,7 @@ function App() {
                     <BadgeAuditReport />
                     <M1UnitsDebugPanel />
                   </InterestSignalsProvider>
+                  </OnboardingProvider>
                 </AuthProvider>
               </SoundProvider>
             </Router>

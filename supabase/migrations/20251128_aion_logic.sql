@@ -345,3 +345,6 @@ GRANT EXECUTE ON FUNCTION public.get_aion_status() TO authenticated;
 -- © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 -- =====================================================================
 
+
+
+

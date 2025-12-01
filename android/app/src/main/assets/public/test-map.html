@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>M1SSION MapTiler Test</title>
+  <script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #03070D; }
+    #map { width: 100vw; height: 100vh; }
+    #status { 
+      position: fixed; 
+      top: 10px; 
+      left: 10px; 
+      background: rgba(0,0,0,0.9); 
+      color: #0AEFFF; 
+      padding: 15px 20px; 
+      border-radius: 8px; 
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      z-index: 1000;
+      border: 1px solid rgba(10, 239, 255, 0.3);
+      box-shadow: 0 0 20px rgba(10, 239, 255, 0.2);
+    }
+    .success { color: #00ff00; }
+    .error { color: #ff0000; }
+  </style>
+</head>
+<body>
+  <div id="status">🔄 Inizializzazione MapTiler...</div>
+  <div id="map"></div>
+  <script>
+    // M1SSION MapTiler Test - Neon 3D Style
+    const MAPTILER_KEY = 'gw2gQRfg512G0yw3DbWn';
+    const statusEl = document.getElementById('status');
+    
+    // Custom Neon 3D Style (matching M1SSION)
+    const neonStyle = {
+      version: 8,
+      name: "M1SSION Neon 3D Test",
+      sources: {
+        openmaptiles: {
+          type: "vector",
+          url: `https://api.maptiler.com/tiles/v3/tiles.json?key=${MAPTILER_KEY}`
+        }
+      },
+      glyphs: `https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=${MAPTILER_KEY}`,
+      layers: [
+        {
+          id: "background",
+          type: "background",
+          paint: { "background-color": "#03070D" }
+        },
+        {
+          id: "water",
+          type: "fill",
+          source: "openmaptiles",
+          "source-layer": "water",
+          paint: { "fill-color": "#0A1526", "fill-opacity": 1 }
+        },
+        {
+          id: "water-outline",
+          type: "line",
+          source: "openmaptiles",
+          "source-layer": "water",
+          paint: {
+            "line-color": "#27E1FF",
+            "line-width": 0.6,
+            "line-blur": 2.5,
+            "line-opacity": 0.7
+          }
+        },
+        {
+          id: "roads-major",
+          type: "line",
+          source: "openmaptiles",
+          "source-layer": "transportation",
+          filter: ["in", "class", "primary", "secondary", "tertiary", "trunk", "motorway"],
+          paint: {
+            "line-color": "#27E1FF",
+            "line-width": 2,
+            "line-blur": 4,
+            "line-opacity": 0.8
+          }
+        },
+        {
+          id: "buildings-extrusion",
+          type: "fill-extrusion",
+          source: "openmaptiles",
+          "source-layer": "building",
+          minzoom: 12,
+          paint: {
+            "fill-extrusion-color": "#3C46FF",
+            "fill-extrusion-opacity": 0.85,
+            "fill-extrusion-height": ["coalesce", ["get", "render_height"], ["get", "height"], 15],
+            "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], ["get", "min_height"], 0]
+          }
+        },
+        {
+          id: "place-labels",
+          type: "symbol",
+          source: "openmaptiles",
+          "source-layer": "place",
+          layout: {
+            "text-field": ["get", "name"],
+            "text-font": ["Noto Sans Regular"],
+            "text-size": 11
+          },
+          paint: {
+            "text-color": "#7DEBFF",
+            "text-halo-color": "#03070D",
+            "text-halo-width": 1.5,
+            "text-opacity": 0.5
+          }
+        }
+      ],
+      light: {
+        anchor: "viewport",
+        color: "#7DEBFF",
+        intensity: 0.35,
+        position: [1.5, 210, 50]
+      }
+    };
+
+    // Test API key first
+    statusEl.innerHTML = '🔄 Verifica API Key...';
+    
+    fetch(`https://api.maptiler.com/tiles/v3/tiles.json?key=${MAPTILER_KEY}`)
+      .then(r => {
+        if (r.status === 200) {
+          statusEl.innerHTML = '✅ API Key OK! Caricamento mappa 3D...';
+          initMap();
+        } else if (r.status === 403) {
+          statusEl.innerHTML = '<span class="error">❌ 403 Forbidden - Aggiungi "localhost" su MapTiler Cloud</span>';
+        } else {
+          statusEl.innerHTML = `<span class="error">❌ Errore ${r.status}</span>`;
+        }
+      })
+      .catch(e => {
+        statusEl.innerHTML = `<span class="error">❌ Errore rete: ${e.message}</span>`;
+      });
+    
+    function initMap() {
+      try {
+        const map = new maplibregl.Map({
+          container: 'map',
+          style: neonStyle,
+          center: [12.4964, 41.9028], // Roma
+          zoom: 14,
+          pitch: 55,
+          bearing: 25,
+          attributionControl: false
+        });
+        
+        map.on('load', () => {
+          statusEl.innerHTML = '<span class="success">✅ MAPPA 3D NEON CARICATA!</span><br><small>Stile M1SSION funzionante</small>';
+          console.log('✅ M1SSION Neon 3D Map loaded successfully!');
+          
+          // Add terrain for 3D elevation
+          map.addSource('terrain-rgb', {
+            type: 'raster-dem',
+            url: `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${MAPTILER_KEY}`,
+            tileSize: 512
+          });
+          
+          map.setTerrain({
+            source: 'terrain-rgb',
+            exaggeration: 1.2
+          });
+          
+          console.log('✅ 3D Terrain enabled');
+        });
+        
+        map.on('error', (e) => {
+          console.error('Map error:', e);
+          statusEl.innerHTML = `<span class="error">❌ Errore mappa: ${e.error?.message || 'Sconosciuto'}</span>`;
+        });
+        
+      } catch (err) {
+        statusEl.innerHTML = `<span class="error">❌ Errore inizializzazione: ${err.message}</span>`;
+        console.error('Init error:', err);
+      }
+    }
+  </script>
+</body>
+</html>

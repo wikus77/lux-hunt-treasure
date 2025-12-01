@@ -43,11 +43,11 @@ const ReferralCodeDisplay: React.FC = () => {
         }}
       />
       
-      {/* Agent Code - Stesso font della scritta M1SSION™ */}
+      {/* Agent Code - 🚀 NATIVE: Font più grande e visibile */}
       <span 
-        className="text-sm font-orbitron font-bold text-white"
+        className="text-[15px] font-orbitron font-bold text-[#00D1FF] agent-code-badge tracking-wider"
         style={{
-          textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+          textShadow: "0 0 12px rgba(0, 209, 255, 0.7), 0 0 24px rgba(0, 209, 255, 0.4)"
         }}
       >
         {agentCode}

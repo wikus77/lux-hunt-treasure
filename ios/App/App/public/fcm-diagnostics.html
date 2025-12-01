@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>FCM Diagnostics - M1SSION™</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: monospace; background: #000; color: #0f0; padding: 20px; margin: 0; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #fff; text-align: center; margin-bottom: 30px; }
+        .section { background: #111; border: 1px solid #333; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .status { display: inline-block; padding: 2px 8px; border-radius: 3px; font-weight: bold; }
+        .status.ok { background: #0a0; color: #fff; }
+        .status.error { background: #a00; color: #fff; }
+        .status.warning { background: #aa0; color: #000; }
+        .code { background: #222; padding: 10px; margin: 10px 0; border-radius: 3px; overflow-x: auto; }
+        button { background: #333; color: #0f0; border: 1px solid #0f0; padding: 8px 16px; margin: 5px; cursor: pointer; }
+        button:hover { background: #0f0; color: #000; }
+        .log { background: #000; color: #0f0; padding: 10px; margin: 10px 0; border: 1px solid #333; height: 200px; overflow-y: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 FCM Diagnostics - M1SSION™</h1>
+        
+        <div class="section">
+            <h3>🌐 Domain & Support</h3>
+            <p>Domain: <span id="domain">-</span></p>
+            <p>FCM Support: <span id="fcm-support" class="status">-</span></p>
+            <p>Notification API: <span id="notification-api" class="status">-</span></p>
+        </div>
+
+        <div class="section">
+            <h3>🔧 Service Worker</h3>
+            <p>SW Active: <span id="sw-active" class="status">-</span></p>
+            <p>SW URL: <span id="sw-url">-</span></p>
+            <p>Expected: <code>https://m1ssion.eu/firebase-messaging-sw.js</code></p>
+        </div>
+
+        <div class="section">
+            <h3>🔐 Permissions</h3>
+            <p>Notification Permission: <span id="notification-permission" class="status">-</span></p>
+            <button onclick="requestPermission()">Request Permission</button>
+        </div>
+
+        <div class="section">
+            <h3>⚙️ Firebase Config</h3>
+            <p>Config Loaded: <span id="config-loaded" class="status">-</span></p>
+            <div class="code" id="config-display">Loading...</div>
+            <button onclick="loadConfig()">Reload Config</button>
+        </div>
+
+        <div class="section">
+            <h3>🎯 FCM Token</h3>
+            <p>Token Generated: <span id="token-status" class="status">-</span></p>
+            <div class="code" id="token-display">-</div>
+            <button onclick="generateToken()">Generate Token</button>
+            <button onclick="saveToken()">Save to Supabase</button>
+        </div>
+
+        <div class="section">
+            <h3>🗄️ Database Storage</h3>
+            <p>Supabase Auth: <span id="supabase-auth" class="status">-</span></p>
+            <p>Token Storage: <span id="token-storage" class="status">-</span></p>
+            <button onclick="checkSupabaseStatus()">Check Supabase Status</button>
+        </div>
+
+        <div class="section">
+            <h3>📱 Test Notification</h3>
+            <button onclick="sendLocalNotification()">Send Local Test Notification</button>
+            <button onclick="testServiceWorkerNotification()">Test SW Notification</button>
+        </div>
+
+        <div class="section">
+            <h3>📋 Debug Log</h3>
+            <div class="log" id="debug-log"></div>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <script src="/fcm-diagnostics.js"></script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Lombardia"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [9.4, 46.2],
+            [8.5, 45.8],
+            [8.4, 45.2],
+            [9.0, 44.8],
+            [10.0, 44.9],
+            [10.8, 45.2],
+            [11.0, 45.8],
+            [10.5, 46.5],
+            [10.0, 46.6],
+            [9.4, 46.2]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Piemonte"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [8.5, 45.8],
+            [7.0, 45.9],
+            [6.6, 45.1],
+            [7.0, 44.1],
+            [8.0, 43.8],
+            [8.5, 44.2],
+            [8.4, 45.2],
+            [8.5, 45.8]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Valle d'Aosta"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [7.0, 45.9],
+            [6.8, 46.2],
+            [6.8, 45.9],
+            [7.0, 45.9]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Liguria"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [8.0, 43.8],
+            [7.5, 43.7],
+            [8.0, 44.0],
+            [9.0, 44.0],
+            [10.0, 44.0],
+            [9.0, 44.8],
+            [8.4, 45.2],
+            [8.5, 44.2],
+            [8.0, 43.8]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Veneto"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [11.0, 45.8],
+            [12.0, 45.5],
+            [13.0, 45.6],
+            [13.5, 46.5],
+            [12.5, 46.7],
+            [11.0, 46.5],
+            [11.0, 45.8]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Trentino-Alto Adige"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [11.0, 46.5],
+            [12.5, 46.7],
+            [12.0, 47.0],
+            [10.5, 47.0],
+            [10.5, 46.5],
+            [11.0, 46.5]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Friuli-Venezia Giulia"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [13.0, 45.6],
+            [13.8, 45.6],
+            [13.8, 46.5],
+            [13.5, 46.5],
+            [13.0, 45.6]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Emilia-Romagna"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [9.5, 44.5],
+            [10.0, 44.9],
+            [10.8, 45.2],
+            [11.0, 45.8],
+            [12.0, 45.5],
+            [12.5, 44.5],
+            [12.8, 44.0],
+            [12.5, 43.8],
+            [11.0, 43.8],
+            [10.5, 44.0],
+            [9.5, 44.5]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Toscana"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [10.5, 44.0],
+            [11.0, 43.8],
+            [11.5, 43.5],
+            [11.5, 42.5],
+            [11.0, 42.0],
+            [10.0, 42.5],
+            [10.5, 44.0]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Umbria"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [12.5, 43.8],
+            [12.5, 43.0],
+            [13.0, 42.5],
+            [12.5, 42.5],
+            [12.0, 43.0],
+            [12.5, 43.8]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Marche"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [12.5, 43.8],
+            [13.5, 43.5],
+            [14.0, 42.5],
+            [13.0, 42.5],
+            [12.5, 43.0],
+            [12.5, 43.8]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Lazio"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [13.0, 42.5],
+            [12.5, 42.5],
+            [12.0, 43.0],
+            [11.5, 42.5],
+            [11.5, 41.5],
+            [12.5, 41.0],
+            [13.5, 41.5],
+            [14.0, 42.5],
+            [13.0, 42.5]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Abruzzo"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [14.0, 42.5],
+            [14.5, 42.0],
+            [14.0, 41.5],
+            [13.5, 41.5],
+            [14.0, 42.5]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Molise"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [14.5, 42.0],
+            [15.0, 41.5],
+            [14.5, 41.0],
+            [14.0, 41.5],
+            [14.5, 42.0]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Campania"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [14.0, 41.5],
+            [14.5, 41.0],
+            [15.5, 40.5],
+            [15.0, 40.0],
+            [14.0, 40.5],
+            [13.5, 41.5],
+            [14.0, 41.5]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Puglia"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [15.5, 40.5],
+            [16.0, 41.0],
+            [18.0, 40.0],
+            [17.0, 39.0],
+            [16.5, 39.5],
+            [15.5, 40.0],
+            [15.5, 40.5]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Basilicata"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [15.5, 40.5],
+            [16.5, 40.5],
+            [16.5, 39.5],
+            [15.5, 40.0],
+            [15.5, 40.5]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Calabria"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [16.5, 39.5],
+            [17.0, 39.0],
+            [16.5, 38.0],
+            [15.5, 38.0],
+            [16.0, 39.0],
+            [16.5, 39.5]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Sicilia"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [15.5, 38.0],
+            [15.0, 37.5],
+            [14.0, 37.0],
+            [13.0, 37.5],
+            [12.5, 38.0],
+            [14.0, 38.5],
+            [15.5, 38.0]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Sardegna"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [8.5, 41.0],
+            [8.0, 39.0],
+            [9.0, 39.0],
+            [10.0, 40.0],
+            [9.5, 41.0],
+            [8.5, 41.0]
+          ]
+        ]
+      }
+    }
+  ]
+}

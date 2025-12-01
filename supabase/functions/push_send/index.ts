@@ -120,7 +120,7 @@ serve(async (req) => {
 
     let webpushQuery = supabase
       .from('webpush_subscriptions')
-      .select('user_id, endpoint, p256dh, auth, platform')
+      .select('user_id, endpoint, keys, platform')
       .eq('is_active', true);
 
     // Apply filters based on audience
@@ -258,10 +258,10 @@ serve(async (req) => {
     if (vapidPrivateKey && vapidPublicKey && vapidContact && webpushSubs?.length && 
         !(body.audience === 'segment' && body.filters?.segment && ['ios', 'android'].includes(body.filters.segment))) {
       
-      // Import webpush for WebPush API
-      const webpush = await import('https://deno.land/x/webpush@0.1.4/mod.ts');
+      // Import webpush for WebPush API (FIXED: use npm instead of broken deno.land)
+      const webpush = await import('npm:web-push@3.6.7');
       
-      webpush.setVapidDetails(
+      webpush.default.setVapidDetails(
         vapidContact,
         vapidPublicKey,
         vapidPrivateKey
@@ -280,13 +280,10 @@ serve(async (req) => {
             }
           };
 
-          await webpush.sendNotification(
+          await webpush.default.sendNotification(
             {
               endpoint: sub.endpoint,
-              keys: {
-                p256dh: sub.p256dh,
-                auth: sub.auth,
-              }
+              keys: sub.keys  // keys è già JSONB con p256dh e auth
             },
             JSON.stringify(webpushPayload)
           );

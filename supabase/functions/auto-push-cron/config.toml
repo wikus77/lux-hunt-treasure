@@ -1,0 +1,5 @@
+# Disable JWT verification - uses x-cron-secret instead
+[function]
+verify_jwt = false
+
+

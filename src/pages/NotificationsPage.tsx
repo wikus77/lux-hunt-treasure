@@ -1,4 +1,5 @@
 // M1SSION™ - Notifications Page for iOS Capacitor
+// With Chat/Messages Tab
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -11,17 +12,23 @@ import {
   Target,
   Gift,
   Clock,
-  X
+  X,
+  MessageCircle
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { preserveFunctionName } from '@/utils/pwaStubs';
 import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { toast } from 'sonner';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import { ChatList } from '@/components/chat/ChatList';
+import { ChatView } from '@/components/chat/ChatView';
+import { NewChatModal } from '@/components/chat/NewChatModal';
+import { useChat } from '@/hooks/useChat';
 
 interface Notification {
   id: string;
@@ -39,6 +46,16 @@ export const NotificationsPage: React.FC = () => {
   const [markingAsRead, setMarkingAsRead] = useState<string | null>(null);
   const { user } = useAuth();
   const { vibrate } = usePWAHardwareStub();
+  
+  // Chat state
+  const [activeTab, setActiveTab] = useState<'notifications' | 'messages'>('notifications');
+  const [selectedConversation, setSelectedConversation] = useState<{
+    id: string;
+    name: string;
+    avatar: string | null;
+  } | null>(null);
+  const [showNewChatModal, setShowNewChatModal] = useState(false);
+  const { totalUnreadCount: chatUnreadCount } = useChat();
 
   // Load notifications
   const loadNotifications = preserveFunctionName(async () => {
@@ -325,12 +342,72 @@ export const NotificationsPage: React.FC = () => {
     );
   }
 
+  // Handle chat conversation selection
+  const handleSelectConversation = (conversationId: string) => {
+    // Find conversation details from chat hook
+    setSelectedConversation({
+      id: conversationId,
+      name: 'Chat', // Will be updated by ChatView
+      avatar: null
+    });
+  };
+
+  const handleChatCreated = (conversationId: string, recipientName: string, recipientAvatar: string | null) => {
+    setSelectedConversation({
+      id: conversationId,
+      name: recipientName,
+      avatar: recipientAvatar
+    });
+  };
+
+  // If viewing a chat conversation
+  if (selectedConversation) {
+    return (
+      <div 
+        className="min-h-screen m1-app-bg relative flex flex-col" 
+        style={{ 
+          paddingTop: '90px', 
+          paddingBottom: '100px',
+          width: '100vw',
+          maxWidth: '100vw',
+          overflowX: 'hidden'
+        }}
+      >
+        <div className="m1-grain" />
+        <div className="flex-1 container mx-auto" style={{
+          paddingLeft: 'max(8px, env(safe-area-inset-left, 8px))',
+          paddingRight: 'max(8px, env(safe-area-inset-right, 8px))'
+        }}>
+          <ChatView
+            conversationId={selectedConversation.id}
+            recipientName={selectedConversation.name}
+            recipientAvatar={selectedConversation.avatar}
+            onBack={() => setSelectedConversation(null)}
+          />
+        </div>
+        <div 
+          id="mission-bottom-nav-container"
+          style={{ 
+            position: 'fixed', 
+            bottom: 0, 
+            left: 0, 
+            right: 0, 
+            width: '100vw',
+            zIndex: 10000,
+          } as React.CSSProperties}
+        >
+          <BottomNavigation />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
       className="min-h-screen m1-app-bg relative" 
       style={{ 
-        paddingTop: '140px', 
-        paddingBottom: '120px',
+        paddingTop: '90px', 
+        paddingBottom: '100px',
         width: '100vw',
         maxWidth: '100vw',
         overflowX: 'hidden'
@@ -342,38 +419,59 @@ export const NotificationsPage: React.FC = () => {
         paddingLeft: 'max(16px, env(safe-area-inset-left, 16px))',
         paddingRight: 'max(16px, env(safe-area-inset-right, 16px))'
       }}>
-      {/* Header */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="m1-panel relative mb-8"
-      >
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
-        <div className="flex items-center justify-between p-6"
-      >
-        <div className="flex items-center gap-3">
-          <Bell className="w-8 h-8 neon-text-cyan" />
-          <div>
-            <h1 className="text-2xl font-bold neon-text-cyan">Notifiche</h1>
-            {unreadCount > 0 && (
-              <p className="text-sm text-gray-400">
-                {unreadCount} nuove notifiche
-              </p>
-            )}
-          </div>
-        </div>
+      
+      {/* Header with Tabs */}
+      <div data-onboarding="notice-page" className="mb-6">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="m1-panel relative"
+        >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
+          
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'notifications' | 'messages')} className="w-full">
+            <TabsList className="w-full grid grid-cols-2 bg-transparent border-b border-white/10 rounded-none h-auto p-0">
+              <TabsTrigger 
+                value="notifications" 
+                className="flex items-center gap-2 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-cyan-500 data-[state=active]:bg-transparent"
+              >
+                <Bell className="w-5 h-5" />
+                <span>Notifiche</span>
+                {unreadCount > 0 && (
+                  <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-xs">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="messages" 
+                className="flex items-center gap-2 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent"
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span>Messaggi</span>
+                {chatUnreadCount > 0 && (
+                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">
+                    {chatUnreadCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
 
-        {unreadCount > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={markAllAsRead}
-          >
-            Segna tutte come lette
-          </Button>
-        )}
-        </div>
-      </motion.div>
+            {/* Notifications Tab Content */}
+            <TabsContent value="notifications" className="mt-0 p-4">
+              {/* Mark all as read button */}
+              {unreadCount > 0 && (
+                <div className="flex justify-end mb-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={markAllAsRead}
+                  >
+                    Segna tutte come lette
+                  </Button>
+                </div>
+              )}
 
       {/* Notifications List */}
       <div className="space-y-4">
@@ -496,21 +594,39 @@ export const NotificationsPage: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* Footer Info */}
-      {notifications.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-center py-4"
-        >
-          <p className="text-sm text-gray-500">
-            Le notifiche vengono aggiornate in tempo reale
-          </p>
+              {/* Footer Info */}
+              {notifications.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-center py-4"
+                >
+                  <p className="text-sm text-gray-500">
+                    Le notifiche vengono aggiornate in tempo reale
+                  </p>
+                </motion.div>
+              )}
+            </TabsContent>
+
+            {/* Messages Tab Content */}
+            <TabsContent value="messages" className="mt-0 p-4">
+              <ChatList 
+                onSelectConversation={handleSelectConversation}
+                onNewChat={() => setShowNewChatModal(true)}
+              />
+            </TabsContent>
+          </Tabs>
         </motion.div>
-      )}
+      </div>
+
+      {/* New Chat Modal */}
+      <NewChatModal
+        isOpen={showNewChatModal}
+        onClose={() => setShowNewChatModal(false)}
+        onChatCreated={handleChatCreated}
+      />
       
-      {/* Bottom Navigation - Unified across all sections */}
       </div>
       
       {/* Bottom Navigation - Uniform positioning like Home */}

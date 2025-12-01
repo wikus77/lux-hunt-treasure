@@ -89,19 +89,40 @@
   transform: scale(0.97);
 }
 
-/* Responsive */
-@media (max-width: 480px) {
+/* 🚀 NATIVE APP: Responsive */
+@media (max-width: 640px) {
   .pe-pill-orb {
-    width: 46px;
-    height: 46px;
+    width: 44px;
+    height: 44px;
   }
   .pe-pill-orb:before,
   .pe-pill-orb:after {
-    width: 56px;
-    height: 56px;
-    margin: -28px;
+    width: 54px;
+    height: 54px;
+    margin: -27px;
+  }
+  .pe-pill-orb .pe-dot {
+    transform-origin: 2.5px 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .pe-pill-orb {
+    width: 38px;
+    height: 38px;
+  }
+  .pe-pill-orb:before,
+  .pe-pill-orb:after {
+    width: 48px;
+    height: 48px;
+    margin: -24px;
+  }
+  .pe-pill-orb .pe-dot {
+    transform-origin: 2.5px 15px;
   }
 }
 
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+
+
 

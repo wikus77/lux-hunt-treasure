@@ -1,6 +1,7 @@
 /**
  * Battle Pill - Circular floating button for battle system
  * Replaces BattleWidget with pill + modal approach
+ * Uses pill-orb style like other map pills
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
@@ -10,6 +11,7 @@ import { Swords } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useMyActiveBattles } from '@/hooks/useMyActiveBattles';
 import { BattleModal } from './BattleModal';
+import '@/features/m1u/m1u-ui.css'; // For pill-orb style
 
 interface BattlePillProps {
   userId: string | null;
@@ -25,25 +27,23 @@ export function BattlePill({ userId }: BattlePillProps) {
 
   return (
     <>
-      {/* Circular Battle Pill */}
+      {/* Battle Pill - pill-orb style */}
       <motion.button
-        className="fixed z-[1001] h-14 w-14 rounded-full flex items-center justify-center"
+        className="pill-orb fixed z-[1001]"
         style={{
           left: '16px',
           bottom: 'calc(env(safe-area-inset-bottom, 34px) + 240px)',
-          background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.12), rgba(0,0,0,.3) 68%)',
-          border: '1.5px solid rgba(0, 209, 255, 0.3)',
-          boxShadow: '0 4px 20px rgba(0, 209, 255, 0.25), 0 0 30px rgba(138, 43, 226, 0.15) inset',
-          backdropFilter: 'blur(16px)',
         }}
         onClick={() => setIsModalOpen(true)}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+        aria-label="Battle System"
       >
-        <Swords className="h-6 w-6 text-cyan-400" />
+        <Swords className="w-5 h-5 text-red-400" />
+        <span className="dot" style={{ background: '#f44', boxShadow: '0 0 8px #f44' }} />
         
         {/* Badge counter */}
         {totalBadgeCount > 0 && (

@@ -81,12 +81,12 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
         {/* Header */}
         <UnifiedHeader />
         
-        {/* Main content with header padding */}
+        {/* Main content with header padding - REDUCED for tighter layout */}
         <main 
-          className="relative z-10 pt-[119px] pb-20"
+          className="relative z-10 pt-[80px] pb-20"
           style={{
-            minHeight: 'calc(100vh - 119px - 80px)', // Account for header and bottom nav
-            paddingTop: isCapacitor ? 'calc(119px + env(safe-area-inset-top, 0px))' : '119px'
+            minHeight: 'calc(100vh - 80px - 80px)', // Account for header and bottom nav
+            paddingTop: isCapacitor ? 'calc(80px + env(safe-area-inset-top, 0px))' : '80px'
           }}
         >
           {children}

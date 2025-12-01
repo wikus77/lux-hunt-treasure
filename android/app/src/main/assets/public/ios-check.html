@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M1SSION™ - iOS Push Check</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #000; color: #fff; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 8px; }
+        .ok { background: #1f5f3f; border: 1px solid #22c55e; }
+        .error { background: #5f1f1f; border: 1px solid #ef4444; }
+        .warning { background: #5f4f1f; border: 1px solid #eab308; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2563eb; }
+        .endpoint { font-family: monospace; font-size: 12px; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <h1>🍎 M1SSION™ iOS Push Check</h1>
+    <p>Questo tool verifica il supporto Web Push su iOS Safari.</p>
+    
+    <div id="results"></div>
+    
+    <button onclick="runCheck()">🔍 Verifica iOS Push</button>
+    <button onclick="clearSubscription()">🧹 Clear Subscription</button>
+    <button onclick="testSubscribe()">📱 Test Subscribe</button>
+    <button onclick="testSend()" id="send-btn" disabled>🚀 Test Send Push</button>
+    <button onclick="testVAPIDKey()">🔑 Test VAPID Key</button>
+    <button onclick="generateNewKeys()">🔧 Generate New VAPID</button>
+    
+    <script>
+        // UNIFIED VAPID key - same as React app
+        const VAPID_KEY_M1SSION = 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
+        let currentSubscription = null;
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        function urlBase64ToUint8Array(base64String) {
+            try {
+                const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + padding)
+                    .replace(/-/g, '+')
+                    .replace(/_/g, '/');
+                
+                const rawData = window.atob(base64);
+                const outputArray = new Uint8Array(rawData.length);
+                
+                for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+                }
+                
+                // Validate P-256 key format
+                if (outputArray.length !== 65) {
+                    throw new Error(`Invalid key length: ${outputArray.length} (expected 65)`);
+                }
+                if (outputArray[0] !== 0x04) {
+                    throw new Error(`Invalid key format: first byte 0x${outputArray[0].toString(16)} (expected 0x04)`);
+                }
+                
+                console.log('✅ VAPID key validated:', outputArray.length, 'bytes');
+                return outputArray;
+            } catch (error) {
+                console.error('❌ VAPID conversion failed:', error);
+                throw error;
+            }
+        }
+        
+        async function runCheck() {
+            document.getElementById('results').innerHTML = '';
+            
+            // 1. Platform Detection MIGLIORATA 
+            const ua = navigator.userAgent;
+            console.log('🔍 User Agent completo:', ua);
+            console.log('🔍 Platform:', navigator.platform);
+            console.log('🔍 maxTouchPoints:', navigator.maxTouchPoints);
+            
+            // Rilevamento iOS più accurato
+            const isRealIOS = /iPad|iPhone|iPod/.test(ua);
+            const isIOSWebView = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+            const isMacSafari = navigator.platform === 'MacIntel' && navigator.maxTouchPoints === 0;
+            const isIOS = isRealIOS || isIOSWebView || isMacSafari; // Include Mac Safari per test
+            const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+            
+            log(`🔍 Platform: ${navigator.platform}`, 'info');
+            log(`📱 Real iOS Device: ${isRealIOS ? 'YES' : 'NO'}`, isRealIOS ? 'ok' : 'info');
+            log(`📱 iOS WebView: ${isIOSWebView ? 'YES' : 'NO'}`, isIOSWebView ? 'ok' : 'info');
+            log(`🖥️ Mac Safari: ${isMacSafari ? 'YES' : 'NO'}`, isMacSafari ? 'ok' : 'info');
+            log(`📱 iOS Device: ${isIOS ? 'YES' : 'NO'}`, isIOS ? 'ok' : 'warning');
+            log(`🦁 Safari Browser: ${isSafari ? 'YES' : 'NO'}`, isSafari ? 'ok' : 'warning');
+            
+            // 2. API Support
+            const hasSW = 'serviceWorker' in navigator;
+            const hasPush = 'PushManager' in window;
+            const hasNotif = 'Notification' in window;
+            
+            log(`⚙️ Service Worker: ${hasSW ? 'SUPPORTED' : 'NOT SUPPORTED'}`, hasSW ? 'ok' : 'error');
+            log(`📨 Push Manager: ${hasPush ? 'SUPPORTED' : 'NOT SUPPORTED'}`, hasPush ? 'ok' : 'error');
+            log(`🔔 Notifications: ${hasNotif ? 'SUPPORTED' : 'NOT SUPPORTED'}`, hasNotif ? 'ok' : 'error');
+            
+            // 3. Permissions
+            if (hasNotif) {
+                log(`🔐 Permission: ${Notification.permission}`, 
+                     Notification.permission === 'granted' ? 'ok' : 'warning');
+            }
+            
+            // 4. Check existing subscription
+            if (hasSW && hasPush) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        const subscription = await registration.pushManager.getSubscription();
+                        if (subscription) {
+                            const endpoint = subscription.endpoint;
+                            const isApple = endpoint.includes('web.push.apple.com') || endpoint.includes('api.push.apple.com');
+                            
+                            log(`✅ Existing Subscription Found`, 'ok');
+                            log(`🔗 Endpoint: <div class="endpoint">${endpoint}</div>`, 'info');
+                            log(`🍎 Apple Push: ${isApple ? 'YES' : 'NO'}`, isApple ? 'ok' : 'warning');
+                        } else {
+                            log(`ℹ️ No existing subscription`, 'info');
+                        }
+                    }
+                } catch (error) {
+                    log(`❌ Error checking subscription: ${error.message}`, 'error');
+                }
+            }
+            
+            // 5. Expected behavior
+            if (isIOS && isSafari && hasPush) {
+                log(`🎯 iOS Safari should create web.push.apple.com endpoints`, 'ok');
+            } else if (!isIOS && hasPush) {
+                log(`🎯 Non-iOS should create fcm.googleapis.com endpoints`, 'ok');
+            }
+        }
+        
+        async function clearSubscription() {
+            try {
+                log(`🧹 Clearing existing subscription...`, 'info');
+                
+                const registration = await navigator.serviceWorker.getRegistration();
+                if (registration) {
+                    const subscription = await registration.pushManager.getSubscription();
+                    if (subscription) {
+                        await subscription.unsubscribe();
+                        log(`✅ Subscription cleared successfully!`, 'ok');
+                    } else {
+                        log(`ℹ️ No existing subscription to clear`, 'info');
+                    }
+                } else {
+                    log(`ℹ️ No service worker registration found`, 'info');
+                }
+                
+                // Clear current subscription reference
+                currentSubscription = null;
+                document.getElementById('send-btn').disabled = true;
+                
+            } catch (error) {
+                log(`❌ Failed to clear subscription: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSubscribe() {
+            try {
+                log(`🚀 Starting subscription test...`, 'info');
+                
+                if (Notification.permission !== 'granted') {
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        throw new Error('Permission denied');
+                    }
+                }
+                
+                // CRITICAL: Clear any existing subscription with different VAPID key
+                const existingReg = await navigator.serviceWorker.getRegistration();
+                if (existingReg) {
+                    const existingSub = await existingReg.pushManager.getSubscription();
+                    if (existingSub) {
+                        log(`⚠️ Found existing subscription, clearing to avoid key mismatch...`, 'warning');
+                        await existingSub.unsubscribe();
+                    }
+                }
+                
+                // CRITICAL FIX: Register SW with correct scope "/" 
+                const registration = await navigator.serviceWorker.register('/sw.js', { 
+                  scope: '/' 
+                });
+                await navigator.serviceWorker.ready;
+                log(`⚙️ Service Worker registered with scope: ${registration.scope}`, 'ok');
+                
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_KEY_M1SSION)
+                });
+                
+                // Get complete subscription data using toJSON()
+                const subscriptionJSON = subscription.toJSON();
+                const endpoint = subscriptionJSON.endpoint;
+                const isApple = endpoint.includes('web.push.apple.com') || endpoint.includes('api.push.apple.com');
+                const isFCM = endpoint.includes('fcm.googleapis.com');
+                
+                log(`✅ Subscription successful!`, 'ok');
+                log(`🔗 Endpoint: <div class="endpoint">${endpoint}</div>`, 'info');
+                log(`🍎 Apple Push: ${isApple ? 'YES' : 'NO'}`, isApple ? 'ok' : 'warning');
+                log(`🟢 FCM Push: ${isFCM ? 'YES' : 'NO'}`, isFCM ? 'ok' : 'warning');
+                
+                // Save to Supabase with complete subscription data
+                const platform = endpoint.includes('web.push.apple.com') ? 'apple' : 'fcm';
+                const client_id = crypto.randomUUID();
+                
+                const savePayload = {
+                    subscription: subscriptionJSON, // Complete subscription with endpoint and keys
+                    client_id,
+                    platform,
+                    ua: navigator.userAgent
+                };
+                
+                log(`💾 Saving to database... Payload: ${JSON.stringify(savePayload, null, 2)}`, 'info');
+                
+                const saveResult = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+                    },
+                    body: JSON.stringify(savePayload)
+                });
+                
+                if (saveResult.ok) {
+                    const data = await saveResult.json();
+                    log(`💾 Saved to database: ${data.endpoint_type || 'Success'}`, 'ok');
+                    log(`📊 Response: ${JSON.stringify(data, null, 2)}`, 'info');
+                    
+                    // Enable send button and store subscription
+                    currentSubscription = subscription;
+                    document.getElementById('send-btn').disabled = false;
+                } else {
+                    const errorText = await saveResult.text();
+                    log(`⚠️ Failed to save to database: ${saveResult.status} - ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Subscription failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testSend() {
+            try {
+                if (!currentSubscription) {
+                    log(`⚠️ No subscription found. Subscribe first.`, 'warning');
+                    return;
+                }
+                
+                log(`🚀 [L2-FIX] Sending test push via CANARY endpoint...`, 'info');
+                
+                // L2 Fix: Use canary endpoint with detailed endpoint type detection
+                const endpoint = currentSubscription.endpoint;
+                const endpointType = endpoint.includes('fcm.googleapis.com') ? 'FCM' : 
+                                   endpoint.includes('web.push.apple.com') ? 'APNS' : 'UNKNOWN';
+                
+                log(`📱 Detected endpoint type: ${endpointType}`, 'info');
+                
+                const sendPayload = {
+                    user_id: '495246c1-9154-4f01-a428-7f37fe230180', // User ID di wikus77@hotmail.it
+                    title: 'M1SSION™ iOS Test ✅',
+                    body: 'iOS Safari push working perfectly!',
+                    data: { url: '/ios-check.html', src: 'ios-test' }
+                };
+                
+                log(`📤 Send payload: ${JSON.stringify(sendPayload, null, 2)}`, 'info');
+                
+                const sendResult = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/send-push-canary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+                    },
+                    body: JSON.stringify(sendPayload)
+                });
+                
+                if (sendResult.ok) {
+                    const result = await sendResult.json();
+                    
+                    // L2 Fix: Parse response correctly - determine TRUE success/failure
+                    const sentCount = Array.isArray(result.sent) ? result.sent.length : (result.sent || 0);
+                    const failedCount = Array.isArray(result.failed) ? result.failed.length : (result.failed || 0);
+                    const removedCount = Array.isArray(result.to_delete) ? result.to_delete.length : (result.removed || 0);
+                    
+                    // TRUE SUCCESS: Only if sent > 0 AND failed === 0
+                    const isTrueSuccess = sentCount > 0 && failedCount === 0;
+                    
+                    log(`📊 RAW Response: ${JSON.stringify(result, null, 2)}`, 'info');
+                    log(`📊 Parsed Results: Sent: ${sentCount}, Failed: ${failedCount}, Removed: ${removedCount}`, 'info');
+                    
+                    if (isTrueSuccess) {
+                        log(`🎉 ✅ VERA SUCCESS: Push delivered successfully! Check your device.`, 'ok');
+                    } else if (failedCount > 0) {
+                        log(`❌ VERA FAILURE: ${failedCount} pushes failed, ${sentCount} succeeded`, 'error');
+                        
+                        // L2 Fix: Show specific error codes from results
+                        if (result.failed && Array.isArray(result.failed)) {
+                            result.failed.forEach((failure, i) => {
+                                const errorCode = failure.error_code || failure.status || 'unknown';
+                                const errorMsg = failure.error?.substring(0, 100) || 'no details';
+                                log(`❌ Error ${i+1}: ${errorCode} - ${errorMsg}`, 'error');
+                            });
+                        }
+                    } else {
+                        log(`⚠️ UNCLEAR: Response received but unclear success status`, 'warning');
+                    }
+                } else {
+                    const errorText = await sendResult.text();
+                    // L2 Fix: If DB save fails, show message but continue
+                    if (sendResult.status === 500 && errorText.includes('invalid input syntax for type uuid')) {
+                        log(`⚠️ Database save failed (UUID error), but attempting to send anyway...`, 'warning');
+                        log(`💾 DB Error: ${errorText}`, 'warning');
+                    } else {
+                        log(`❌ Failed to send push: ${sendResult.status} - ${errorText}`, 'error');
+                    }
+                }
+                
+            } catch (error) {
+                log(`❌ Send test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testVAPIDKey() {
+            try {
+                log(`🔑 Testing VAPID key format...`, 'info');
+                log(`🔑 Key: ${VAPID_KEY_M1SSION}`, 'info');
+                log(`🔑 Key length: ${VAPID_KEY_M1SSION.length}`, 'info');
+                
+                // Test if it's a valid base64url
+                const padding = '='.repeat((4 - VAPID_KEY_M1SSION.length % 4) % 4);
+                const base64 = (VAPID_KEY_M1SSION + padding)
+                    .replace(/-/g, '+')
+                    .replace(/_/g, '/');
+                
+                const rawData = window.atob(base64);
+                const outputArray = new Uint8Array(rawData.length);
+                
+                for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+                }
+                
+                log(`🔑 Decoded length: ${outputArray.length} bytes`, 'info');
+                log(`🔑 Expected: 65 bytes for P-256 key`, 'info');
+                log(`🔑 First bytes: [${Array.from(outputArray.slice(0, 10)).join(', ')}]`, 'info');
+                
+                if (outputArray.length === 65) {
+                    log(`✅ VAPID key format is correct!`, 'ok');
+                } else {
+                    log(`❌ VAPID key format is incorrect! Expected 65 bytes, got ${outputArray.length}`, 'error');
+                }
+                
+                // Test with actual subscription
+                try {
+                    const testArray = urlBase64ToUint8Array(VAPID_KEY_M1SSION);
+                    log(`🔑 Test conversion successful: ${testArray.length} bytes`, 'ok');
+                } catch (conversionError) {
+                    log(`❌ VAPID key conversion failed: ${conversionError.message}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ VAPID key test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function generateNewKeys() {
+            try {
+                log(`🔧 Generating new VAPID keys...`, 'info');
+                
+                const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/vapid_generator', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+                    }
+                });
+                
+                if (response.ok) {
+                    const keys = await response.json();
+                    log(`✅ New VAPID keys generated!`, 'ok');
+                    log(`🔑 Public Key: ${keys.publicKey}`, 'info');
+                    log(`🔑 Private Key: ${keys.privateKey.substring(0, 20)}...`, 'info');
+                    log(`📋 Now updating push_send edge function with new keys...`, 'warning');
+                    
+                    // Test chiave pubblica automaticamente
+                    VAPID_KEY_M1SSION = keys.publicKey;
+                    await testVAPIDKey();
+                    
+                    // Mostra istruzioni per aggiornare il backend
+                    log(`🚀 COPY THESE KEYS TO UPDATE BACKEND:`, 'warning');
+                    log(`Frontend: ${keys.publicKey}`, 'info');  
+                    log(`Backend privateKey: ${keys.privateKey}`, 'info');
+                    
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Failed to generate keys: ${response.status} - ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Key generation failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run check on load
+        window.addEventListener('load', runCheck);
+    </script>
+</body>
+</html>

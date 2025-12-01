@@ -51,7 +51,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isMicEnabled, setIsMicEnabled] = useState(false);
+  const [isMicEnabled, setIsMicEnabled] = useState(true); // ON by default - AION must speak!
   const [status, setStatus] = useState<'idle' | 'listening' | 'speaking'>('idle');
   const [aionStatus, setAionStatus] = useState<AionStatus | null>(null);
   
@@ -229,15 +229,23 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         aionEntityRef.current.play(visemes);
       }
 
-      // TTS con ElevenLabs (voce naturale)
-      speak(reply, {
-        useCloud: true,
-        voice: 'callum',
-        onEnd: () => {
+      // TTS con ElevenLabs (voce naturale) - only if mic/speaker enabled
+      if (isMicEnabled) {
+        speak(reply, {
+          useCloud: true,
+          voice: 'callum',
+          onEnd: () => {
+            setStatus('idle');
+            aionEntityRef?.current?.idle();
+          }
+        });
+      } else {
+        // No TTS, just reset status
+        setTimeout(() => {
           setStatus('idle');
           aionEntityRef?.current?.idle();
-        }
-      });
+        }, 500);
+      }
 
     } catch (error) {
       console.error('[AION] Chat error:', error);

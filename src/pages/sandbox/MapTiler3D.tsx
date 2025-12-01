@@ -53,6 +53,8 @@ import { BattlePill } from '@/components/battle/BattlePill';
 import { BattleShopPill } from '@/components/battle/BattleShopPill';
 import { AgentBattleCard } from '@/components/battle/AgentBattleCard';
 import { BattleModal } from '@/components/battle/BattleModal';
+import { RewardCounterPill } from '@/components/map/RewardCounterPill';
+import '@/features/m1u/m1u-ui.css'; // For pill-orb style
 import { useDebugFlag } from '@/debug/useDebugFlag';
 import { DebugMapPanel } from '@/debug/DebugMapPanel';
 
@@ -1354,6 +1356,7 @@ export default function MapTiler3D() {
         }} 
       />
 
+      {/* Right side pills - pill-orb style like Shop */}
       <div 
         style={{
           position: 'fixed',
@@ -1362,56 +1365,52 @@ export default function MapTiler3D() {
           zIndex: 1000,
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px'
+          gap: '12px'
         }}
       >
-        <Button
+        <motion.button
           onClick={handleResetBearing}
-          size="sm"
-          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/80 hover:shadow-cyan-500/40 p-0 shadow-lg shadow-cyan-500/20 transition-all duration-300"
-          style={{
-            background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.4) 68%)',
-          }}
+          className="pill-orb"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           title="Reset bearing to north"
         >
-          <Compass className="h-5 w-5 text-cyan-400" />
-        </Button>
+          <Compass className="w-5 h-5 text-cyan-400" />
+          <span className="dot" style={{ background: '#0ff', boxShadow: '0 0 8px #0ff' }} />
+        </motion.button>
 
-        <Button
+        <motion.button
           onClick={handleFindMyLocation}
-          size="sm"
-          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/80 hover:shadow-cyan-500/40 p-0 shadow-lg shadow-cyan-500/20 transition-all duration-300"
-          style={{
-            background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.4) 68%)',
-          }}
+          className="pill-orb"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           title="Find my location"
         >
-          <Navigation className="h-5 w-5 text-cyan-400" />
-        </Button>
+          <Navigation className="w-5 h-5 text-cyan-400" />
+          <span className="dot" style={{ background: '#0ff', boxShadow: '0 0 8px #0ff' }} />
+        </motion.button>
 
-        <Button
+        <motion.button
           onClick={handleCenterLocation}
-          size="sm"
-          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/80 hover:shadow-cyan-500/40 p-0 shadow-lg shadow-cyan-500/20 transition-all duration-300"
-          style={{
-            background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.4) 68%)',
-          }}
+          className="pill-orb"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           title="Centra su posizione"
         >
-          <Crosshair className="h-5 w-5 text-cyan-400" />
-        </Button>
+          <Crosshair className="w-5 h-5 text-cyan-400" />
+          <span className="dot" style={{ background: '#0ff', boxShadow: '0 0 8px #0ff' }} />
+        </motion.button>
 
-        <Button
+        <motion.button
           onClick={handleResetView}
-          size="sm"
-          className="h-12 w-12 rounded-full bg-black/70 backdrop-blur-md border border-cyan-500/30 hover:bg-black/80 hover:border-cyan-500/80 hover:shadow-cyan-500/40 p-0 shadow-lg shadow-cyan-500/20 transition-all duration-300"
-          style={{
-            background: 'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.4) 68%)',
-          }}
+          className="pill-orb"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           title="Reset vista"
         >
-          <RotateCcw className="h-5 w-5 text-cyan-400" />
-        </Button>
+          <RotateCcw className="w-5 h-5 text-cyan-400" />
+          <span className="dot" style={{ background: '#0ff', boxShadow: '0 0 8px #0ff' }} />
+        </motion.button>
       </div>
       
       <PortalContainer 
@@ -1492,6 +1491,17 @@ export default function MapTiler3D() {
 
       {/* Layer Toggle Panel */}
       <LayerTogglePanel layers={layerVisibility} onToggle={toggleLayer} />
+
+      {/* Reward Counter Pill - Shows available rewards */}
+      <div 
+        className="fixed z-[1001]"
+        style={{
+          left: '16px',
+          bottom: 'calc(env(safe-area-inset-bottom, 34px) + 380px)',
+        }}
+      >
+        <RewardCounterPill />
+      </div>
 
       {/* Battle Shop Pill - Above Battle Pill */}
       {battleUserId && (

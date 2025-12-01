@@ -1,0 +1,379 @@
+/* © 2025 Joseph MULÉ – M1SSION™ – NATIVE APP UI UPGRADE
+ * 
+ * 🚀 NATIVE APP UI UPGRADE - Look & Feel migliorato
+ * 
+ * Questo file contiene SOLO modifiche estetiche:
+ * - Pulsanti e icone più grandi (tap target ≥48px)
+ * - Micro-animazioni leggere (breathing, glow, pop)
+ * - Spaziatura ottimizzata per mobile
+ * 
+ * ⚠️ ROLLBACK: Per tornare indietro, rimuovere l'import da index.css
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TASK 1: PULSANTI E ICONE PIÙ GRANDI
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Bottom Navigation - Icone e testo più grandi */
+.bottom-navigation-ios .bottom-nav-icon {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.bottom-navigation-ios .bottom-nav-label {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px;
+}
+
+/* Tap target garantito ≥48px su mobile */
+@media (max-width: 768px) {
+  .bottom-navigation-ios button,
+  .bottom-navigation-ios a {
+    min-width: 52px !important;
+    min-height: 52px !important;
+    padding: 6px 4px !important;
+  }
+}
+
+/* Header - Pulsanti più prominenti */
+.unified-header-btn {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 12px !important;
+}
+
+/* M1SSION Logo - Leggermente più grande su mobile */
+@media (max-width: 640px) {
+  .m1ssion-logo {
+    font-size: 1.4rem !important;
+  }
+}
+
+/* Agent Code Badge - Più visibile */
+.agent-code-badge {
+  font-size: 0.875rem !important;
+  padding: 4px 10px !important;
+  font-weight: 700 !important;
+}
+
+/* Card Prize - Pulsanti più grandi */
+.prize-card-btn {
+  min-height: 48px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+}
+
+/* Generic tap targets enhancement */
+.tap-target-enhanced {
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TASK 2: MICRO-ANIMAZIONI COSTANTI
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Breathing Animation - Pulsante principale */
+@keyframes m1-breathing {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.95;
+  }
+}
+
+.m1-breathing {
+  animation: m1-breathing 3s ease-in-out infinite;
+}
+
+/* Glow Pulse - Per elementi attivi */
+@keyframes m1-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(0, 209, 255, 0.4),
+                0 0 16px rgba(0, 209, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(0, 209, 255, 0.6),
+                0 0 32px rgba(0, 209, 255, 0.3),
+                0 0 48px rgba(0, 209, 255, 0.15);
+  }
+}
+
+.m1-glow-pulse {
+  animation: m1-glow-pulse 3s ease-in-out infinite;
+}
+
+/* Text Glow Pulse */
+@keyframes m1-text-glow {
+  0%, 100% {
+    text-shadow: 0 0 8px rgba(0, 209, 255, 0.5),
+                 0 0 16px rgba(0, 209, 255, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 12px rgba(0, 209, 255, 0.7),
+                 0 0 24px rgba(0, 209, 255, 0.4),
+                 0 0 36px rgba(0, 209, 255, 0.2);
+  }
+}
+
+.m1-text-glow {
+  animation: m1-text-glow 4s ease-in-out infinite;
+}
+
+/* Pop Animation - Per badge e notifiche */
+@keyframes m1-pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.m1-pop {
+  animation: m1-pop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Badge Bounce - Loop lento per notifiche */
+@keyframes m1-badge-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+.m1-badge-bounce {
+  animation: m1-badge-bounce 2s ease-in-out infinite;
+}
+
+/* Border Glow - Per card speciali */
+@keyframes m1-border-glow {
+  0%, 100% {
+    border-color: rgba(0, 209, 255, 0.3);
+  }
+  50% {
+    border-color: rgba(0, 209, 255, 0.6);
+  }
+}
+
+.m1-border-glow {
+  animation: m1-border-glow 4s ease-in-out infinite;
+}
+
+/* Shimmer Effect - Per loading states e highlight */
+@keyframes m1-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.m1-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 209, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: m1-shimmer 3s ease-in-out infinite;
+}
+
+/* Float Animation - Per elementi decorativi */
+@keyframes m1-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.m1-float {
+  animation: m1-float 3s ease-in-out infinite;
+}
+
+/* Accessibilità: Disabilita animazioni se preferito */
+@media (prefers-reduced-motion: reduce) {
+  .m1-breathing,
+  .m1-glow-pulse,
+  .m1-text-glow,
+  .m1-badge-bounce,
+  .m1-border-glow,
+  .m1-shimmer,
+  .m1-float {
+    animation: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TASK 3: RIDURRE SPAZI VUOTI - LAYOUT COMPATTO
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Riduzione padding verticale globale su mobile */
+@media (max-width: 768px) {
+  .m1-compact-section {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+  
+  .m1-compact-gap {
+    gap: 0.75rem !important;
+  }
+  
+  .m1-compact-mb {
+    margin-bottom: 0.75rem !important;
+  }
+  
+  .m1-compact-mt {
+    margin-top: 0.75rem !important;
+  }
+}
+
+/* Home Content - Spaziatura ridotta */
+.home-content-compact {
+  padding-top: 0.5rem;
+}
+
+.home-content-compact > * + * {
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .home-content-compact > * + * {
+    margin-top: 0.75rem;
+  }
+}
+
+/* Card sections più compatte */
+.m1-card-compact {
+  padding: 1rem !important;
+}
+
+@media (max-width: 640px) {
+  .m1-card-compact {
+    padding: 0.875rem !important;
+  }
+}
+
+/* Section headers più compatti */
+.m1-section-header-compact {
+  margin-bottom: 0.75rem !important;
+}
+
+.m1-section-header-compact h2 {
+  font-size: 1.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.m1-section-header-compact p {
+  font-size: 0.875rem !important;
+  line-height: 1.4 !important;
+}
+
+/* Grid più denso */
+.m1-dense-grid {
+  gap: 0.75rem !important;
+}
+
+@media (min-width: 768px) {
+  .m1-dense-grid {
+    gap: 1rem !important;
+  }
+}
+
+/* Bottom padding ridotto per scrolling content */
+.m1-reduced-bottom-padding {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 80px) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ENHANCED VISUAL EFFECTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Neon glow più intenso per elementi chiave */
+.m1-neon-intense {
+  box-shadow: 
+    0 0 10px rgba(0, 209, 255, 0.5),
+    0 0 20px rgba(0, 209, 255, 0.3),
+    0 0 40px rgba(0, 209, 255, 0.15),
+    inset 0 0 10px rgba(0, 209, 255, 0.1) !important;
+}
+
+/* Active nav item enhanced */
+.bottom-navigation-ios .nav-active {
+  text-shadow: 0 0 10px rgba(0, 209, 255, 0.8) !important;
+}
+
+.bottom-navigation-ios .nav-active .bottom-nav-icon {
+  filter: drop-shadow(0 0 6px rgba(0, 209, 255, 0.8)) !important;
+}
+
+/* Indicator bar più visibile */
+.bottom-navigation-ios .active-indicator {
+  height: 3px !important;
+  width: 24px !important;
+  box-shadow: 0 0 8px rgba(0, 209, 255, 0.8) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE-FIRST OPTIMIZATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Ensure proper viewport usage */
+.m1-full-viewport {
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+}
+
+/* Safe area padding helpers */
+.m1-safe-top {
+  padding-top: max(env(safe-area-inset-top), 12px);
+}
+
+.m1-safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 12px);
+}
+
+/* Prevent horizontal overflow */
+.m1-no-overflow-x {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+
+/* Touch feedback enhanced */
+.m1-touch-feedback {
+  -webkit-tap-highlight-color: rgba(0, 209, 255, 0.2);
+  transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+}
+
+.m1-touch-feedback:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* Smooth scroll for content areas */
+.m1-smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+
+

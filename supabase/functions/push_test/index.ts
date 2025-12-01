@@ -112,10 +112,10 @@ serve(async (req) => {
       }
 
       try {
-        // Import webpush for WebPush API
-        const webpush = await import('https://deno.land/x/webpush@0.1.4/mod.ts');
+        // Import webpush for WebPush API (FIXED)
+        const webpush = await import('npm:web-push@3.6.7');
         
-        webpush.setVapidDetails(
+        webpush.default.setVapidDetails(
           vapidContact,
           vapidPublicKey,
           vapidPrivateKey
@@ -138,7 +138,7 @@ serve(async (req) => {
 
         // Note: For a real test, you would need the full subscription object with keys
         // This is a simplified version
-        await webpush.sendNotification(
+        await webpush.default.sendNotification(
           {
             endpoint: testToken,
             keys: {

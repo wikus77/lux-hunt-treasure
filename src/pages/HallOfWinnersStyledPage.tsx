@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Trophy, 
   Crown, 
   Medal, 
   MapPin, 
@@ -22,6 +21,13 @@ import {
   Award,
   Target
 } from 'lucide-react';
+
+// Custom Triangle Icon (inverted) - same as bottom nav
+const TriangleIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polygon points="12,20 3,6 21,6" />
+  </svg>
+);
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
@@ -130,9 +136,9 @@ const HallOfWinnersStyledPage: React.FC = () => {
       case 1:
         return <Medal className="w-6 h-6 text-gray-300" />;
       case 2:
-        return <Trophy className="w-6 h-6 text-amber-600" />;
+        return <TriangleIcon className="w-6 h-6 text-amber-600" />;
       default:
-        return <Trophy className="w-6 h-6 text-primary" />;
+        return <TriangleIcon className="w-6 h-6 text-primary" />;
     }
   };
 
@@ -160,8 +166,8 @@ const HallOfWinnersStyledPage: React.FC = () => {
       
       <main 
         style={{
-          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 8px) + 10px)',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 20px))',
           minHeight: '100dvh',
           position: 'relative',
           zIndex: 0
@@ -215,7 +221,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
             `}</style>
             <CardHeader className="text-center pb-4">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400/20 to-yellow-400/10 mb-4 mx-auto">
-                <Trophy className="h-10 w-10 text-yellow-400" />
+                <TriangleIcon className="h-10 w-10 text-yellow-400" />
               </div>
               <CardTitle className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 bg-clip-text text-transparent">
                 Hall of Winners
@@ -289,7 +295,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
                 </div>
               ) : winners.length === 0 ? (
                 <div className="text-center py-8">
-                  <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <TriangleIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-muted-foreground mb-2">Nessun vincitore</h3>
                   <p className="text-sm text-muted-foreground/70">
                     Sii il primo a vincere una missione!

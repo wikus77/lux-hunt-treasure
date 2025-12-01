@@ -29,7 +29,10 @@ export const useBuzzStats = () => {
 
   // Load BUZZ statistics
   const loadBuzzStats = preserveFunctionName(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);

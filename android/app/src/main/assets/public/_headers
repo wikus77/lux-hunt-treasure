@@ -1,0 +1,23 @@
+# © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+# Cloudflare Pages Headers - NO CSP for testing
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/sw.js
+  Cache-Control: no-store
+  Service-Worker-Allowed: /
+
+/vapid-public.txt
+  Cache-Control: no-store
+
+/manifest.webmanifest
+  Cache-Control: no-store
+
+/BUILD_ID.txt
+  Cache-Control: no-store
+
+/offline.html
+  Cache-Control: no-store

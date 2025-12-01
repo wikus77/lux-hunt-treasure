@@ -9,7 +9,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        CAPBridgeConfig().serverURL = URL(string: "http://localhost:3000")!
+        // Production: nessun server URL custom, usa il bundle locale
         return true
     }
 

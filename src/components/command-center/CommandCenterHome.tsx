@@ -183,6 +183,7 @@ export default function CommandCenterHome() {
       {/* Full-width Prize Vision at the top */}
       <motion.div 
         className="mb-6 w-full m1-card"
+        data-onboarding="prize-vision"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -209,11 +210,14 @@ export default function CommandCenterHome() {
 <InviteFloatingButton />
 
 {/* DNA Quick Action below Invite */}
-<DNAQuickAction />
+<div data-onboarding="dna-hub">
+  <DNAQuickAction />
+</div>
 
     {/* Active Mission Box below the Prize Vision - Wrapper removed */}
     <motion.div 
       className="mb-6"
+      data-onboarding="mission-card"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.1 }}
@@ -233,6 +237,7 @@ export default function CommandCenterHome() {
         {/* Left Column - M1SSION BATTLE (Battle Console) */}
         <motion.div 
           className="order-2 md:order-1 m1-card"
+          data-onboarding="battle"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}

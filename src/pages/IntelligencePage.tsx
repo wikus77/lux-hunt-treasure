@@ -64,6 +64,7 @@ const IntelligencePage: React.FC = () => {
       {/* Chat Panel */}
       <div 
         className="relative z-10 flex-1 px-4 mt-8 pb-24"
+        data-onboarding="ai-chat"
         style={{ maxWidth: '48rem', margin: '2rem auto 0', width: '100%' }}
       >
         <IntelChatPanel 

@@ -77,7 +77,7 @@ const NorahAssistant = () => {
             </p>
           </div>
 
-          <div className="h-full">
+          <div className="h-full" data-onboarding="ai-chat">
             {userId && <NorahChatLLM userId={userId} />}
             {!userId && <p className="text-white/60 px-4">{t('loading')}</p>}
           </div>

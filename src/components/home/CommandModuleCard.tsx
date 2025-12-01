@@ -36,33 +36,36 @@ const CommandModuleCard = ({
       initial={{ opacity: opacity }}
       animate={{ opacity: unlocked ? 1 : opacity }}
       transition={{ duration: 0.5 }}
-      className="relative"
+      className="relative m1-touch-feedback cursor-pointer"
       onClick={onClick}
+      whileTap={{ scale: 0.98 }}
     >
+      {/* 🚀 NATIVE: Card con bordo glow animato */}
       <div 
-        className={`m1ssion-glass-card p-4 relative overflow-hidden ${unlocked ? '' : 'opacity-60'}`}
+        className={`m1ssion-glass-card p-3 sm:p-4 relative overflow-hidden m1-card-compact ${unlocked ? 'm1-border-glow' : 'opacity-60'}`}
         style={{
           background: 'rgba(0, 0, 0, 0.6)',
           backdropFilter: `blur(${unlocked ? '40px' : '20px'})`,
           WebkitBackdropFilter: `blur(${unlocked ? '40px' : '20px'})`,
-          borderRadius: '24px',
+          borderRadius: '20px',
           boxShadow: unlocked 
             ? '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05), 0 0 24px rgba(0, 229, 255, 0.15)'
             : '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)',
-          border: '0'
+          border: unlocked ? '1px solid rgba(0, 209, 255, 0.3)' : '1px solid rgba(100, 100, 100, 0.2)'
         }}
       >
         {unlocked && (
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#F059FF] opacity-90" />
         )}
-          <div className="flex justify-between items-center mb-3">
-            <h2 className={`text-lg font-medium font-orbitron ${unlocked ? 'neon-text-cyan' : 'text-gray-500'}`}>
-              <Icon className="inline-block mr-2 w-4 h-4" /> {title}
+          {/* 🚀 NATIVE: Icone più grandi */}
+          <div className="flex justify-between items-center mb-2">
+            <h2 className={`text-base sm:text-lg font-semibold font-orbitron ${unlocked ? 'neon-text-cyan m1-text-glow' : 'text-gray-500'}`}>
+              <Icon className="inline-block mr-2 w-5 h-5" /> {title}
             </h2>
             {unlocked ? (
-              <span className={`text-xs bg-${statusColor}-500/20 text-${statusColor}-400 px-2 py-1 rounded-full font-orbitron`}>{statusText}</span>
+              <span className={`text-[11px] bg-${statusColor}-500/20 text-${statusColor}-400 px-2.5 py-1 rounded-full font-orbitron font-semibold`}>{statusText}</span>
             ) : (
-              <span className="text-xs bg-gray-800 text-gray-500 px-2 py-1 rounded-full font-orbitron">Bloccato</span>
+              <span className="text-[11px] bg-gray-800 text-gray-500 px-2.5 py-1 rounded-full font-orbitron">Bloccato</span>
             )}
           </div>
           

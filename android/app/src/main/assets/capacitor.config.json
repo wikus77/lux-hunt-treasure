@@ -1,0 +1,23 @@
+{
+	"appId": "app.lovable.2716f91b957c47ba91e06f572f3ce00d",
+	"appName": "m1ssion",
+	"webDir": "dist",
+	"server": {
+		"androidScheme": "https"
+	},
+	"plugins": {
+		"PushNotifications": {
+			"presentationOptions": [
+				"badge",
+				"sound",
+				"alert"
+			]
+		}
+	},
+	"ios": {
+		"scheme": "M1SSION"
+	},
+	"android": {
+		"allowMixedContent": true
+	}
+}

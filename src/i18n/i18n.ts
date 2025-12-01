@@ -125,4 +125,7 @@ export function useI18nSafe() {
   };
 }
 
+// Auto-inizializzazione all'import
+initI18n().catch(console.error);
+
 export default i18next;

@@ -171,7 +171,7 @@ export function WeeklyLeaderboard() {
                   </div>
                   <div>
                     <p className="font-semibold">La tua posizione</p>
-                    <p className="text-xs text-muted-foreground">Continua a guadagnare XP!</p>
+                    <p className="text-xs text-muted-foreground">Continua a guadagnare PE!</p>
                   </div>
                 </div>
               </motion.div>

@@ -92,7 +92,7 @@ export function DailyCheckInButton() {
       setLastCheckIn(today);
 
       toast.success(
-        `🔥 Check-in completato! Streak: ${newStreak} giorni (+10 XP)`,
+        `🔥 Check-in completato! Streak: ${newStreak} giorni (+10 PE)`,
         { duration: 3000 }
       );
 

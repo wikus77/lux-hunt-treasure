@@ -11,21 +11,11 @@ export const removeProductionLogs = () => {
   }
 };
 
-// Optimized image loading with WebP support
+// Optimized image loading - REMOVED icon preload to avoid console warnings
+// Icons are not critical for initial render and cause "preload not used" warnings
 export const optimizeImageLoading = () => {
-  // Preload critical images
-  const criticalImages = [
-    '/icons/icon-192x192.png',
-    '/icons/icon-512x512.png'
-  ];
-
-  criticalImages.forEach(src => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = src;
-    document.head.appendChild(link);
-  });
+  // PWA icons are loaded via manifest.webmanifest, no need for preload
+  // This prevents console warnings: "resource was preloaded but not used"
 };
 
 // Service Worker registration now handled by dedicated swUpdater.ts

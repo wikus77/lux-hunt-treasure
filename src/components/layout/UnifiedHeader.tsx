@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { Link, useLocation } from "wouter";
 import { Settings, ArrowLeft } from "lucide-react";
+import { hapticLight } from "@/utils/haptics";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import ProfileDropdown from "@/components/profile/ProfileDropdown";
@@ -200,7 +201,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const reduceAnimations = location === '/profile' || location === '/settings/agent-profile';
   
   // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT - Pages that should NOT show back arrow 
-  const bottomNavPages = ['/', '/home', '/map', '/buzz', '/games', '/notifications', '/leaderboard', '/intelligence'];
+  const bottomNavPages = ['/', '/home', '/map', '/buzz', '/games', '/notifications', '/leaderboard', '/intelligence', '/map-3d-tiler'];
   const isBottomNavPage = bottomNavPages.includes(location);
   const isMap = location === '/map';
 
@@ -239,78 +240,83 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           <ReferralCodeDisplay />
         </div>
       </MinimalHeaderStrip>
+      {/* FLOATING PILL HEADER - Same style as bottom nav */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          display: 'flex',
+          justifyContent: 'center',
+          paddingTop: isPWA ? 'calc(env(safe-area-inset-top, 0px) + 12px)' : '16px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
+          pointerEvents: 'none',
+        }}
+      >
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="fixed left-0 right-0 z-50 backdrop-blur-xl rounded-b-lg"
-      style={{
-        top: '0px',
-        background: 'transparent',
-        backdropFilter: 'none',
-        WebkitBackdropFilter: 'none',
-        borderBottom: 'none',
-        boxShadow: 'none',
-        paddingTop: isPWA ? 'max(env(safe-area-inset-top, 0px), 16px)' : 'max(env(safe-area-inset-top, 0px), 12px)',
-        height: 'calc(72px + max(env(safe-area-inset-top, 0px), 8px))',
-        isolation: 'isolate',
-      }}
-    >
-        <motion.div
-          className="absolute inset-0 pointer-events-none rounded-b-lg"
-          animate={{ opacity: hideHeader ? 0 : 1 }}
-          transition={{ duration: 0.3 }}
-          style={{
-            background: 'rgba(0, 0, 0, 0.3)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderBottom: '1px solid rgba(0, 209, 255, 0.2)',
-            boxShadow: '0 4px 24px rgba(0, 209, 255, 0.18), 0 2px 12px rgba(0, 209, 255, 0.12), inset 0 -1px 0 rgba(0, 209, 255, 0.12)'
-          }}
-        />
-        <div className="container mx-auto h-full max-w-screen-xl relative">
+        style={{
+          width: '100%',
+          maxWidth: '600px',
+          height: '64px',
+          background: 'linear-gradient(180deg, #2A3441 0%, #1E2630 100%)',
+          borderRadius: '32px',
+          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.05)',
+          pointerEvents: 'auto',
+          position: 'relative',
+          isolation: 'isolate',
+        }}
+      >
+        {/* Hidden background div for compatibility */}
+        <div className="hidden" />
+        <div className="h-full w-full relative">
           {/* Main Header Row */}
-          <div className="flex items-center justify-between h-[72px] px-3 sm:px-4 relative">
+          <div className="flex items-center justify-between h-full px-4 sm:px-6 relative">
             {/* Left Section */}
             <motion.div className="flex items-center" animate={{ opacity: hideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
               {leftComponent ? (
                 leftComponent
               ) : (
                 <div className="flex items-center">
-                  {/* Back Button - Only show for non-home pages that aren't bottom nav pages */}
+                  {/* Back Button - 🚀 NATIVE: Più grande e tappabile */}
                   {!isHomePage && !isBottomNavPage && canGoBack && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => goBackWithFeedback()}
-                      className="mr-2 rounded-full hover:bg-white/10"
+                      onClick={() => { hapticLight(); goBackWithFeedback(); }}
+                      className="mr-2 rounded-xl hover:bg-white/10 unified-header-btn w-11 h-11 m1-touch-feedback"
                     >
-                      <ArrowLeft className="w-5 h-5" />
+                      <ArrowLeft className="w-6 h-6" />
                     </Button>
                   )}
                   
                   <Link
                     to="/home"
-                    className="text-xl sm:text-2xl font-orbitron font-bold"
+                    className="text-2xl sm:text-[1.75rem] font-orbitron font-bold m1ssion-logo m1-text-glow"
                   >
                     <span className="text-[#00D1FF]" style={{ 
-                      textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                      textShadow: "0 0 12px rgba(0, 209, 255, 0.7), 0 0 24px rgba(0, 209, 255, 0.4)"
                     }}>M1</span>
-                    <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+                    <span className="text-white">SSION<span className="text-[10px] align-top ml-0.5">™</span></span>
                   </Link>
                 </div>
               )}
             </motion.div>
 
-            {/* Center section - Agent Code Vertical Layout - © 2025 Joseph MULÉ – M1SSION™ */}
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
+            {/* Center section - Agent Code Vertical Layout - 🚀 NATIVE: Badge più visibile */}
+            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5">
               {/* CODE con pallino pulsante */}
               <div className="flex items-center gap-2">
                 <motion.div
-                  className="w-2 h-2 bg-[#00D1FF] rounded-full"
+                  className="w-2.5 h-2.5 bg-[#00D1FF] rounded-full m1-glow-pulse"
                   animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [1, 0.7, 1],
+                    scale: [1, 1.3, 1],
+                    opacity: [1, 0.8, 1],
                   }}
                   transition={{
                     duration: 1.6,
@@ -318,13 +324,13 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                     ease: "easeInOut"
                   }}
                   style={{
-                    boxShadow: "0 0 8px rgba(0, 209, 255, 0.6), 0 0 16px rgba(0, 209, 255, 0.4)"
+                    boxShadow: "0 0 10px rgba(0, 209, 255, 0.7), 0 0 20px rgba(0, 209, 255, 0.5)"
                   }}
                 />
                 <span 
-                  className="text-xs font-orbitron font-bold text-white tracking-wider"
+                  className="text-[11px] font-orbitron font-bold text-white tracking-widest"
                   style={{
-                    textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                    textShadow: "0 0 12px rgba(0, 209, 255, 0.7), 0 0 24px rgba(0, 209, 255, 0.4)"
                   }}
                 >
                   CODE
@@ -336,27 +342,27 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
             {/* Right Section */}
             <motion.div className="flex items-center space-x-1 sm:space-x-3" animate={{ opacity: hideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
-              {/* Settings - Always accessible for authenticated users */}
+              {/* Settings - 🚀 NATIVE: Pulsante più grande */}
               <Link to="/settings">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="rounded-full hover:bg-white/10"
+                  className="rounded-xl hover:bg-white/10 unified-header-btn w-11 h-11 m1-touch-feedback"
                 >
                   <motion.div
                     animate={{ 
                       rotate: [0, 360],
-                      scale: [1, 1.05, 1]
+                      scale: [1, 1.08, 1]
                     }}
                     transition={{ 
                       rotate: { duration: reduceAnimations ? 1.6 : 8, repeat: reduceAnimations ? 0 : Infinity, ease: "linear" },
                       scale: { duration: reduceAnimations ? 1.2 : 4, repeat: reduceAnimations ? 0 : Infinity, ease: "easeInOut" }
                     }}
                     style={{
-                      filter: "drop-shadow(0 0 8px rgba(0, 209, 255, 0.4))"
+                      filter: "drop-shadow(0 0 10px rgba(0, 209, 255, 0.5))"
                     }}
                   >
-                    <Settings className="w-5 h-5 text-[#00D1FF]" />
+                    <Settings className="w-6 h-6 text-[#00D1FF]" />
                   </motion.div>
                 </Button>
               </Link>
@@ -369,14 +375,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </motion.div>
           </div>
 
-          {/* Animated color line at bottom of header - same as bottom navigation */}
-          <motion.div 
-            className="line-glow absolute bottom-0 left-0 w-full"
-            animate={{ opacity: hideHeader ? 0 : 1 }}
-            transition={{ duration: 0.3 }}
-          />
         </div>
       </motion.header>
+      </div>
     </>
   );
 };

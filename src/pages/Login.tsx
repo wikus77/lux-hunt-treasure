@@ -12,10 +12,12 @@ import BackgroundParticles from "@/components/ui/background-particles";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import AdminEmergencyLogin from "@/components/auth/AdminEmergencyLogin";
 import { postLoginRedirectFixed } from "@/utils/postLoginRedirectFixed";
+import M1LogoSplash from "@/components/intro/M1LogoSplash";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [showEmergencyLogin, setShowEmergencyLogin] = useState(false);
+  const [showSplash, setShowSplash] = useState(true); // 🚀 M1 Logo Splash Animation
   const { navigate } = useWouterNavigation();
   const { isAuthenticated, isLoading } = useUnifiedAuth();
   const searchParams = new URLSearchParams(window.location.search);
@@ -69,9 +71,18 @@ const Login = () => {
     if (isAuthenticated && !isLoading && !redirectAttemptedRef.current) {
       console.log('🔄 LOGIN PAGE: User already authenticated, initiating redirect (POST_LOGIN_REDIRECT)');
       redirectAttemptedRef.current = true;
+      setShowSplash(false); // Skip splash for authenticated users
       postLoginRedirectFixed(navigate);
     }
   }, [isAuthenticated, isLoading]);
+
+  // Skip splash if coming from another page (not fresh load)
+  useEffect(() => {
+    const hasSeenSplash = sessionStorage.getItem('m1_splash_shown');
+    if (hasSeenSplash) {
+      setShowSplash(false);
+    }
+  }, []);
 
   // ⏱️ FALLBACK TIMER - PWA iOS Safari Emergency Exit
   useEffect(() => {
@@ -107,8 +118,22 @@ const Login = () => {
     }
   }, [navigate]);
 
+  // Handle splash completion
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+    sessionStorage.setItem('m1_splash_shown', 'true');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
+      {/* 🚀 M1 Logo Splash Animation - 7 seconds */}
+      {showSplash && (
+        <M1LogoSplash 
+          onComplete={handleSplashComplete} 
+          duration={7000} 
+        />
+      )}
+      
       <BackgroundParticles count={15} />
 
       <motion.div 

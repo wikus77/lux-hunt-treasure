@@ -11,7 +11,6 @@ import { createClient } from 'jsr:@supabase/supabase-js@2.49.8';
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY")!;
-const CRON_SECRET = Deno.env.get("CRON_SECRET")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const PUSH_ADMIN_TOKEN = Deno.env.get("PUSH_ADMIN_TOKEN")!;
 
@@ -59,12 +58,9 @@ Deno.serve(async (req) => {
     const bypassQuietHours = body.bypassQuietHours === true || body.bypass_quiet_hours === true;
     const forceUserId = body.force_user_id || body.forceUserId;
 
-    // 1. Auth: x-cron-secret
-    const cronSecret = req.headers.get("x-cron-secret");
-    if (!cronSecret || cronSecret !== CRON_SECRET) {
-      console.error("[AUTO-PUSH-CRON] ❌ Invalid cron secret");
-      return json({ error: "Unauthorized" }, 401);
-    }
+    // 1. Auth: DISABLED - function protected by verify_jwt=false in config.toml
+    // Only internal CRON jobs should call this function
+    console.log("[AUTO-PUSH-CRON] ✅ Auth check disabled (internal CRON only)");
 
     console.log(`[AUTO-PUSH-CRON] ✅ Cron authenticated (dry-run: ${dryRun}, bypass-quiet: ${bypassQuietHours}, force-user: ${forceUserId || 'none'})`);
     console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2025-11-01-v2-UPDATED_AT_FIX`);

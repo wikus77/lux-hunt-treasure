@@ -53,8 +53,10 @@ export const SafeAreaWrapper: React.FC<SafeAreaWrapperProps> = ({
     };
   }, [debug]);
 
+  // Don't add padding-top - let background extend into safe area
+  // Header handles its own safe area positioning
   const paddingStyle = isPWA ? {
-    paddingTop: top ? `${safeArea.top}px` : undefined,
+    paddingTop: undefined, // Background extends into safe area
     paddingBottom: bottom ? `${safeArea.bottom}px` : undefined,
     paddingLeft: left ? `${safeArea.left}px` : undefined,
     paddingRight: right ? `${safeArea.right}px` : undefined,

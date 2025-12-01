@@ -41,7 +41,7 @@ export const RewardBadgeCard: React.FC = () => {
             .from('badges')
             .insert({
               name: 'BUZZ Gratuito',
-              description: 'Hai guadagnato un BUZZ gratuito con gli XP!',
+              description: 'Hai guadagnato un BUZZ gratuito con i PE!',
               icon: 'zap'
             })
             .select()
@@ -94,7 +94,7 @@ export const RewardBadgeCard: React.FC = () => {
             .from('badges')
             .insert({
               name: 'BUZZ MAPPA Gratuito',
-              description: 'Hai guadagnato un BUZZ MAPPA gratuito con gli XP!',
+              description: 'Hai guadagnato un BUZZ MAPPA gratuito con i PE!',
               icon: 'target'
             })
             .select()

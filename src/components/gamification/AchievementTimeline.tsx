@@ -39,15 +39,18 @@ export const AchievementTimeline: React.FC = () => {
           .order('created_at', { ascending: false })
           .limit(10);
 
-        if (!badgeError && badgeData) {
-          // Fetch badge details for each user badge
-          for (const userBadge of badgeData) {
-            const { data: badgeInfo } = await supabase
-              .from('badges')
-              .select('name, description')
-              .eq('badge_id', userBadge.badge_id)
-              .single();
+        if (!badgeError && badgeData && badgeData.length > 0) {
+          // Fetch ALL badge details in ONE query
+          const badgeIds = badgeData.map(b => b.badge_id);
+          const { data: badgesInfo } = await supabase
+            .from('badges')
+            .select('badge_id, name, description')
+            .in('badge_id', badgeIds);
 
+          const badgeMap = new Map(badgesInfo?.map(b => [b.badge_id, b]) || []);
+
+          for (const userBadge of badgeData) {
+            const badgeInfo = badgeMap.get(userBadge.badge_id);
             timeline.push({
               id: userBadge.id,
               type: 'badge',

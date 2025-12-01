@@ -1,0 +1,20 @@
+{
+  "gdpr": {
+    "cookieTitle": "Cookie Settings",
+    "cookieDescription": "We use cookies to enhance your experience, analyze site usage, and assist in our marketing efforts. By clicking \"Accept All\", you consent to our use of cookies.",
+    "cookieSettings": "Cookie Settings",
+    "cookiePreferences": "Cookie Preferences",
+    "acceptAll": "Accept All",
+    "rejectAll": "Reject All",
+    "saveSettings": "Save Settings",
+    "required": "Required",
+    "necessaryCookies": "Necessary Cookies",
+    "necessaryDescription": "Essential for the website to function properly. Cannot be disabled.",
+    "functionalCookies": "Functional Cookies",
+    "functionalDescription": "Enable enhanced functionality and personalization.",
+    "analyticsCookies": "Analytics Cookies",
+    "analyticsDescription": "Help us understand how visitors interact with the website.",
+    "marketingCookies": "Marketing Cookies",
+    "marketingDescription": "Used to track visitors and display relevant ads."
+  }
+}
