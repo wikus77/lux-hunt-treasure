@@ -1,0 +1,5 @@
+# Disable JWT verification for CRON access
+[function]
+verify_jwt = false
+
+

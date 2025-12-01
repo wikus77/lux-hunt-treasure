@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCM Diagnostics - M1SSION™</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #00ff00;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .status-item {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .status-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            background: #555;
+        }
+        .status-indicator.green { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        .status-indicator.red { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        .status-indicator.yellow { background: #ffff00; box-shadow: 0 0 10px #ffff00; }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 15px #00ff00;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #log {
+            background: #000;
+            border: 1px solid #333;
+            padding: 20px;
+            min-height: 400px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.4;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 3px 0;
+        }
+        .log-entry.success { color: #00ff00; }
+        .log-entry.error { color: #ff4444; }
+        .log-entry.warning { color: #ffaa00; }
+        .log-entry.info { color: #00aaff; }
+        
+        .token-display {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            word-break: break-all;
+            font-size: 12px;
+        }
+        .copy-btn {
+            font-size: 12px;
+            padding: 5px 10px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 FCM Diagnostics - M1SSION™</h1>
+        
+        <div class="status-grid">
+            <div class="status-item">
+                <div class="status-indicator" id="status-domain"></div>
+                <div>Domain</div>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="status-sw"></div>
+                <div>Service Worker</div>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="status-permissions"></div>
+                <div>Permissions</div>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="status-config"></div>
+                <div>Firebase Config</div>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="status-vapid"></div>
+                <div>VAPID Key</div>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="status-token"></div>
+                <div>Token Generation</div>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="status-database"></div>
+                <div>Database Storage</div>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="status-function"></div>
+                <div>Edge Function</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="runFullDiagnostics()">🔍 Run Full Diagnostics</button>
+            <button onclick="sendTestNotification()" id="test-btn" disabled>🚀 Send Test Notification</button>
+            <button onclick="cleanSwAndCache()">🧹 Clean SW & Cache</button>
+            <button onclick="clearLog()">📄 Clear Log</button>
+        </div>
+        
+        <div id="token-container" style="display: none;">
+            <h3>Generated FCM Token:</h3>
+            <div class="token-display">
+                <span id="token-display"></span>
+                <button class="copy-btn" onclick="copyToken()">📋 Copy</button>
+            </div>
+        </div>
+        
+        <div id="log"></div>
+    </div>
+
+    <script>
+        let currentToken = null;
+        let firebaseApp = null;
+        let messaging = null;
+
+        function updateStatus(element, status) {
+            const indicator = document.getElementById(element);
+            indicator.className = 'status-indicator ' + status;
+        }
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        async function checkDomain() {
+            log('🌐 Checking domain...', 'info');
+            try {
+                const domain = window.location.hostname;
+                log(`Domain: ${domain}`, 'info');
+                
+                if (domain === 'localhost' || domain.includes('m1ssion') || domain.includes('pages.dev')) {
+                    updateStatus('status-domain', 'green');
+                    log('✅ Domain check passed', 'success');
+                    return true;
+                } else {
+                    updateStatus('status-domain', 'yellow');
+                    log('⚠️ Unknown domain, proceeding anyway', 'warning');
+                    return true;
+                }
+            } catch (error) {
+                updateStatus('status-domain', 'red');
+                log(`❌ Domain check failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function loadFirebaseSDK() {
+            log('📦 Loading Firebase SDK v8...', 'info');
+            try {
+                // Load Firebase App
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+
+                // Load Firebase Messaging
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+
+                log('✅ Firebase SDK loaded', 'success');
+                return true;
+            } catch (error) {
+                log(`❌ Failed to load Firebase SDK: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function loadFirebaseConfig() {
+            log('⚙️ Loading Firebase config...', 'info');
+            try {
+                // Load config with cache buster
+                const configScript = document.createElement('script');
+                configScript.src = `/firebase-init.js?t=${Date.now()}`;
+                
+                await new Promise((resolve, reject) => {
+                    configScript.onload = resolve;
+                    configScript.onerror = reject;
+                    document.head.appendChild(configScript);
+                });
+
+                // Wait a bit for config to be available
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                if (!self.__FIREBASE_CFG__) {
+                    throw new Error('Firebase config not found');
+                }
+
+                const config = self.__FIREBASE_CFG__;
+                log(`✅ Config loaded for project: ${config.projectId}`, 'success');
+                
+                // Validate VAPID key
+                if (!config.vapidKey) {
+                    updateStatus('status-vapid', 'red');
+                    log('❌ VAPID key missing', 'error');
+                    return false;
+                }
+                
+                // Check VAPID key format (base64url)
+                try {
+                    const vapidBytes = atob(config.vapidKey.replace(/-/g, '+').replace(/_/g, '/'));
+                    if (vapidBytes.length !== 65) {
+                        throw new Error('Invalid VAPID key length');
+                    }
+                    updateStatus('status-vapid', 'green');
+                    log('✅ VAPID key format valid', 'success');
+                } catch (vapidError) {
+                    updateStatus('status-vapid', 'red');
+                    log(`❌ Invalid VAPID key format: ${vapidError.message}`, 'error');
+                    return false;
+                }
+                
+                updateStatus('status-config', 'green');
+                return true;
+            } catch (error) {
+                updateStatus('status-config', 'red');
+                log(`❌ Failed to load config: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function registerServiceWorker() {
+            log('🔧 Registering Service Worker...', 'info');
+            try {
+                if (!('serviceWorker' in navigator)) {
+                    throw new Error('Service Worker not supported');
+                }
+
+                const registration = await navigator.serviceWorker.register('/sw.js', {
+                    scope: '/'
+                });
+
+                await navigator.serviceWorker.ready;
+                
+                updateStatus('status-sw', 'green');
+                log(`✅ Service Worker registered: ${registration.scope}`, 'success');
+                return registration;
+            } catch (error) {
+                updateStatus('status-sw', 'red');
+                log(`❌ Service Worker registration failed: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        async function requestPermissions() {
+            log('🔐 Requesting notification permissions...', 'info');
+            try {
+                if (!('Notification' in window)) {
+                    throw new Error('Notifications not supported');
+                }
+
+                const permission = await Notification.requestPermission();
+                
+                if (permission === 'granted') {
+                    updateStatus('status-permissions', 'green');
+                    log('✅ Notification permission granted', 'success');
+                    return true;
+                } else {
+                    updateStatus('status-permissions', 'red');
+                    log(`❌ Notification permission denied: ${permission}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                updateStatus('status-permissions', 'red');
+                log(`❌ Permission request failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function initializeFirebase() {
+            log('🔥 Initializing Firebase...', 'info');
+            try {
+                const config = self.__FIREBASE_CFG__;
+                firebaseApp = firebase.initializeApp(config);
+                
+                if (!firebase.messaging.isSupported()) {
+                    throw new Error('Firebase Messaging not supported');
+                }
+                
+                messaging = firebase.messaging();
+                log('✅ Firebase initialized', 'success');
+                return true;
+            } catch (error) {
+                log(`❌ Firebase initialization failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function generateToken() {
+            log('🎯 Generating FCM token...', 'info');
+            try {
+                const config = self.__FIREBASE_CFG__;
+                const registration = await navigator.serviceWorker.ready;
+                
+                const token = await messaging.getToken({
+                    vapidKey: config.vapidKey,
+                    serviceWorkerRegistration: registration
+                });
+
+                if (!token) {
+                    throw new Error('No token received');
+                }
+
+                currentToken = token;
+                updateStatus('status-token', 'green');
+                log(`✅ Token generated: ${token.substring(0, 30)}...`, 'success');
+                
+                // Show token display
+                document.getElementById('token-display').textContent = token;
+                document.getElementById('token-container').style.display = 'block';
+                document.getElementById('test-btn').disabled = false;
+                
+                return token;
+            } catch (error) {
+                updateStatus('status-token', 'red');
+                if (error.name === 'InvalidCharacterError') {
+                    log('❌ VAPID key is not valid base64url format', 'error');
+                } else {
+                    log(`❌ Token generation failed: ${error.message}`, 'error');
+                }
+                return null;
+            }
+        }
+
+        async function testDatabaseStorage() {
+            log('💾 Testing database storage...', 'info');
+            try {
+                // This would require authentication, so just mark as optional
+                updateStatus('status-database', 'yellow');
+                log('⚠️ Database storage test skipped (requires auth)', 'warning');
+                return true;
+            } catch (error) {
+                updateStatus('status-database', 'red');
+                log(`❌ Database test failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testEdgeFunction() {
+            log('⚡ Testing Edge Function...', 'info');
+            try {
+                updateStatus('status-function', 'yellow');
+                log('⚠️ Edge Function test requires token generation first', 'warning');
+                return true;
+            } catch (error) {
+                updateStatus('status-function', 'red');
+                log(`❌ Edge Function test failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function runFullDiagnostics() {
+            log('🚀 Starting FCM Full Diagnostics...', 'info');
+            log('=' * 50, 'info');
+            
+            // Reset all status indicators
+            ['domain', 'sw', 'permissions', 'config', 'vapid', 'token', 'database', 'function'].forEach(item => {
+                updateStatus(`status-${item}`, '');
+            });
+
+            const steps = [
+                checkDomain,
+                loadFirebaseSDK,
+                loadFirebaseConfig,
+                registerServiceWorker,
+                requestPermissions,
+                initializeFirebase,
+                generateToken,
+                testDatabaseStorage,
+                testEdgeFunction
+            ];
+
+            let allPassed = true;
+            for (const step of steps) {
+                const result = await step();
+                if (!result) {
+                    allPassed = false;
+                    // Continue with other tests
+                }
+                await new Promise(resolve => setTimeout(resolve, 500)); // Small delay between steps
+            }
+
+            log('=' * 50, 'info');
+            if (allPassed) {
+                log('🎉 All diagnostics completed successfully!', 'success');
+            } else {
+                log('⚠️ Some diagnostics failed - check logs above', 'warning');
+            }
+        }
+
+        async function sendTestNotification() {
+            if (!currentToken) {
+                log('❌ No token available for test', 'error');
+                return;
+            }
+
+            log('📱 Sending test notification...', 'info');
+            try {
+                const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/send-push-canary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+                    },
+                    body: JSON.stringify({
+                        token: currentToken,
+                        title: '🚀 M1SSION™ Test',
+                        body: 'FCM diagnostics working correctly!',
+                        link: 'https://m1ssion.eu/notifications'
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.ok) {
+                    updateStatus('status-function', 'green');
+                    log(`✅ Test notification sent: ${result.fcmId}`, 'success');
+                } else {
+                    updateStatus('status-function', 'red');
+                    log(`❌ Test notification failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                updateStatus('status-function', 'red');
+                log(`❌ Test notification error: ${error.message}`, 'error');
+            }
+        }
+
+        async function cleanSwAndCache() {
+            log('🧹 Cleaning Service Workers and Cache...', 'info');
+            try {
+                // Unregister all service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                        log(`✅ Unregistered SW: ${registration.scope}`, 'success');
+                    }
+                }
+
+                // Clear all caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    for (const cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                        log(`✅ Deleted cache: ${cacheName}`, 'success');
+                    }
+                }
+
+                // Clear IndexedDB
+                try {
+                    const deleteDB = indexedDB.deleteDatabase('firebase-messaging-database');
+                    deleteDB.onsuccess = () => log('✅ Deleted Firebase messaging database', 'success');
+                    deleteDB.onerror = () => log('⚠️ Firebase messaging database not found', 'warning');
+                } catch (dbError) {
+                    log('⚠️ Could not delete IndexedDB', 'warning');
+                }
+
+                // Clear localStorage
+                try {
+                    localStorage.removeItem('fcm_token');
+                    log('✅ Cleared localStorage FCM token', 'success');
+                } catch (lsError) {
+                    log('⚠️ Could not clear localStorage', 'warning');
+                }
+
+                // Reset UI
+                currentToken = null;
+                document.getElementById('token-container').style.display = 'none';
+                document.getElementById('test-btn').disabled = true;
+                
+                // Reset status indicators
+                ['domain', 'sw', 'permissions', 'config', 'vapid', 'token', 'database', 'function'].forEach(item => {
+                    updateStatus(`status-${item}`, '');
+                });
+
+                log('🎉 Cleanup completed successfully!', 'success');
+                log('ℹ️ Refresh the page to restart diagnostics', 'info');
+                
+            } catch (error) {
+                log(`❌ Cleanup failed: ${error.message}`, 'error');
+            }
+        }
+
+        function copyToken() {
+            if (currentToken) {
+                navigator.clipboard.writeText(currentToken).then(() => {
+                    log('📋 Token copied to clipboard', 'success');
+                }).catch(err => {
+                    log('❌ Failed to copy token', 'error');
+                });
+            }
+        }
+
+        // Initialize page
+        log('🔔 FCM Diagnostics initialized', 'info');
+        log('ℹ️ Click "Run Full Diagnostics" to start testing', 'info');
+    </script>
+</body>
+</html>

@@ -34,12 +34,13 @@ export const useIntelAnalyst = () => {
   const [currentMode, setCurrentMode] = useState<AnalystMode>('analyze');
   const [clues, setClues] = useState<Clue[]>([]);
   const [isLoadingClues, setIsLoadingClues] = useState(false);
-  const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(true); // ON by default - AION must speak!
   const [audioLevel, setAudioLevel] = useState(0);
   const [agentContext, setAgentContext] = useState<AgentContextData | null>(null);
   
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
   const userIdRef = useRef<string | undefined>(undefined);
+  const voicesLoadedRef = useRef(false);
 
   // Use realtime intel hook
   const { clues: realtimeClues, loading: realtimeLoading } = useRealtimeIntel();
@@ -48,6 +49,35 @@ export const useIntelAnalyst = () => {
   useEffect(() => {
     loadUserId();
     loadAgentContext();
+    
+    // iOS Safari TTS warmup: force voice loading
+    if ('speechSynthesis' in window) {
+      // Trigger voice loading
+      window.speechSynthesis.getVoices();
+      
+      // Load voices async
+      window.speechSynthesis.onvoiceschanged = () => {
+        const voices = window.speechSynthesis.getVoices();
+        console.log('🔊 TTS voices loaded:', voices.length);
+        voicesLoadedRef.current = true;
+      };
+      
+      // iOS Safari: unlock TTS on first user interaction
+      const unlockTTS = () => {
+        if ('speechSynthesis' in window) {
+          const warmup = new SpeechSynthesisUtterance('');
+          warmup.volume = 0;
+          window.speechSynthesis.speak(warmup);
+          console.log('🔊 TTS unlocked via user interaction');
+        }
+        // Remove listeners after first interaction
+        document.removeEventListener('touchstart', unlockTTS);
+        document.removeEventListener('click', unlockTTS);
+      };
+      
+      document.addEventListener('touchstart', unlockTTS, { once: true });
+      document.addEventListener('click', unlockTTS, { once: true });
+    }
   }, []);
 
   // Sync realtime clues to local clues
@@ -69,32 +99,123 @@ export const useIntelAnalyst = () => {
   };
 
   const speakText = useCallback((text: string) => {
-    if (!ttsEnabled || !('speechSynthesis' in window)) return;
+    if (!ttsEnabled || !('speechSynthesis' in window)) {
+      console.log('🔊 TTS skipped: enabled=', ttsEnabled);
+      return;
+    }
     
-    // Cancel any ongoing speech
+    console.log('🔊 TTS attempting to speak:', text.substring(0, 50) + '...');
+    
+    // Cancel any ongoing speech first
     window.speechSynthesis.cancel();
     
-    // Create new utterance
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'it-IT';
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-    
-    // Simulate audio level during speech
-    let intervalId: NodeJS.Timeout;
-    utterance.onstart = () => {
-      intervalId = setInterval(() => {
-        setAudioLevel(Math.random() * 0.8 + 0.2); // 0.2-1.0
-      }, 100);
+    // Core speak function
+    const doSpeak = () => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'it-IT';
+      utterance.rate = 0.9; // Slightly slower for clarity
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      
+      // Get best voice (prefer Italian)
+      const voices = window.speechSynthesis.getVoices();
+      console.log('🔊 Available voices:', voices.length);
+      
+      const italianVoice = voices.find(v => 
+        v.lang === 'it-IT' || v.lang.startsWith('it')
+      ) || voices.find(v => 
+        v.name.toLowerCase().includes('italian') || v.name.toLowerCase().includes('italy')
+      );
+      
+      if (italianVoice) {
+        utterance.voice = italianVoice;
+        console.log('🔊 Using voice:', italianVoice.name);
+      } else if (voices.length > 0) {
+        // Fallback to first available voice
+        utterance.voice = voices[0];
+        console.log('🔊 Fallback voice:', voices[0].name);
+      }
+      
+      // Audio level animation
+      let intervalId: NodeJS.Timeout;
+      
+      utterance.onstart = () => {
+        console.log('🔊 TTS STARTED');
+        intervalId = setInterval(() => {
+          setAudioLevel(Math.random() * 0.8 + 0.2);
+        }, 100);
+      };
+      
+      utterance.onend = () => {
+        console.log('🔊 TTS ENDED');
+        clearInterval(intervalId);
+        setAudioLevel(0);
+      };
+      
+      utterance.onerror = (e) => {
+        console.error('🔊 TTS ERROR:', e.error);
+        clearInterval(intervalId);
+        setAudioLevel(0);
+        
+        // Retry once on error (iOS sometimes fails first time)
+        if (e.error !== 'canceled') {
+          console.log('🔊 Retrying TTS...');
+          setTimeout(() => {
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+          }, 300);
+        }
+      };
+      
+      speechSynthesisRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
     };
     
-    utterance.onend = () => {
-      clearInterval(intervalId);
-      setAudioLevel(0);
-    };
+    // Ensure voices are loaded before speaking
+    const voices = window.speechSynthesis.getVoices();
     
-    speechSynthesisRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
+    if (voices.length > 0) {
+      // Voices ready, speak immediately
+      doSpeak();
+    } else {
+      // iOS Safari: wait for voices with multiple fallbacks
+      console.log('🔊 Waiting for voices to load...');
+      
+      const trySpeak = () => {
+        const v = window.speechSynthesis.getVoices();
+        if (v.length > 0) {
+          doSpeak();
+          return true;
+        }
+        return false;
+      };
+      
+      // Method 1: onvoiceschanged event
+      const handler = () => {
+        if (trySpeak()) {
+          window.speechSynthesis.onvoiceschanged = null;
+        }
+      };
+      window.speechSynthesis.onvoiceschanged = handler;
+      
+      // Method 2: Polling fallback (iOS sometimes doesn't fire event)
+      let attempts = 0;
+      const pollInterval = setInterval(() => {
+        attempts++;
+        if (trySpeak() || attempts > 10) {
+          clearInterval(pollInterval);
+          window.speechSynthesis.onvoiceschanged = null;
+        }
+      }, 200);
+      
+      // Method 3: Final timeout fallback
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        if (!trySpeak()) {
+          console.warn('🔊 TTS: Could not load voices, speaking anyway...');
+          doSpeak(); // Try anyway
+        }
+      }, 2000);
+    }
   }, [ttsEnabled]);
 
   const sendMessage = useCallback(async (content: string, mode: AnalystMode = 'analyze') => {
@@ -167,10 +288,21 @@ export const useIntelAnalyst = () => {
   }, [realtimeClues, isProcessing, ttsEnabled, speakText, agentContext]);
 
   const toggleTTS = useCallback(() => {
-    setTtsEnabled(prev => !prev);
-    if (ttsEnabled && speechSynthesisRef.current) {
+    const newEnabled = !ttsEnabled;
+    setTtsEnabled(newEnabled);
+    
+    if (!newEnabled && speechSynthesisRef.current) {
       window.speechSynthesis.cancel();
       setAudioLevel(0);
+    }
+    
+    // iOS Safari: "unlock" audio on user interaction by speaking empty/silent
+    if (newEnabled && 'speechSynthesis' in window) {
+      // This user-initiated call unlocks TTS on iOS
+      const warmup = new SpeechSynthesisUtterance('');
+      warmup.volume = 0;
+      window.speechSynthesis.speak(warmup);
+      console.log('🔊 TTS enabled & unlocked for iOS');
     }
   }, [ttsEnabled]);
 

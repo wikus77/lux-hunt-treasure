@@ -105,78 +105,48 @@ export const useTTS = () => {
       console.error('[TTS] ElevenLabs error:', error);
       setIsLoading(false);
       setIsSpeaking(false);
-      // NO fallback to browser - only use ElevenLabs
-      options.onError?.(error as Error);
-      options.onEnd?.(); // Signal end so UI doesn't hang
+      
+      // 🔄 RETRY once after 500ms if ElevenLabs fails
+      console.log('[TTS] Retrying ElevenLabs in 500ms...');
+      setTimeout(async () => {
+        try {
+          const { data: retryData, error: retryError } = await supabase.functions.invoke('tts-elevenlabs', {
+            body: { text, voice }
+          });
+          
+          if (retryError || !retryData?.audio) {
+            console.error('[TTS] Retry also failed');
+            options.onEnd?.();
+            return;
+          }
+          
+          const audioBlob = new Blob(
+            [Uint8Array.from(atob(retryData.audio), c => c.charCodeAt(0))],
+            { type: 'audio/mp3' }
+          );
+          const audioUrl = URL.createObjectURL(audioBlob);
+          const audio = new Audio(audioUrl);
+          audioRef.current = audio;
+          
+          audio.onplay = () => { setIsSpeaking(true); onStart?.(); };
+          audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(audioUrl); onEnd?.(); };
+          audio.onerror = () => { setIsSpeaking(false); URL.revokeObjectURL(audioUrl); onEnd?.(); };
+          
+          await audio.play();
+        } catch (retryErr) {
+          console.error('[TTS] Retry failed:', retryErr);
+          options.onEnd?.();
+        }
+      }, 500);
     }
   }, []);
 
-  // Browser TTS (fallback)
-  const speakWithBrowser = useCallback((text: string, options: TTSOptions = {}) => {
-    if (!isSupported) {
-      console.warn('[TTS] Speech synthesis not supported');
-      return;
-    }
-
-    const {
-      lang = 'it-IT',
-      rate = 0.95,
-      pitch = 1.0,
-      volume = 1.0,
-      onEnd,
-      onStart,
-      onError
-    } = options;
-
-    window.speechSynthesis.cancel();
-
-    const normalizedText = normalizeForSpeech(text);
-    const utterance = new SpeechSynthesisUtterance(normalizedText);
-    utterance.lang = lang;
-    utterance.rate = rate;
-    utterance.pitch = pitch;
-    utterance.volume = volume;
-
-    // Get best Italian voice
-    const voices = window.speechSynthesis.getVoices();
-    const italianVoice = voices.find(v => v.lang.startsWith('it'));
-    if (italianVoice) {
-      utterance.voice = italianVoice;
-    }
-
-    utterance.onstart = () => {
-      setIsSpeaking(true);
-      setIsPaused(false);
-      onStart?.();
-    };
-
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      setIsPaused(false);
-      onEnd?.();
-    };
-
-    utterance.onerror = (event) => {
-      setIsSpeaking(false);
-      setIsPaused(false);
-      onError?.(new Error(event.error));
-    };
-
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-  }, [isSupported]);
-
-  // Main speak function
+  // Main speak function - ALWAYS uses ElevenLabs Callum voice
   const speak = useCallback((text: string, options: TTSOptions = {}) => {
-    const { useCloud = true } = options;
-
-    if (useCloud) {
-      // Usa ElevenLabs TTS (voce naturale)
-      speakWithElevenLabs(text, options);
-    } else {
-      speakWithBrowser(text, options);
-    }
-  }, [speakWithElevenLabs, speakWithBrowser]);
+    // Force Callum voice always
+    const forcedOptions = { ...options, voice: 'callum' as const };
+    speakWithElevenLabs(text, forcedOptions);
+  }, [speakWithElevenLabs]);
 
   const stop = useCallback(() => {
     if (audioRef.current) {

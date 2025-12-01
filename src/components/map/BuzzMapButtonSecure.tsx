@@ -340,6 +340,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         }}
       >
         <motion.button
+          data-onboarding="buzz-map-button"
           className="relative rounded-full transition-all duration-300 bg-gradient-to-br from-purple-500 to-red-500 hover:scale-110 active:scale-95"
           onClick={handleBuzzMapPress}
           disabled={!isAuthenticated || isProcessing || pricingLoading}

@@ -18,6 +18,7 @@ import M1UPill from "@/features/m1u/M1UPill";
 import { PageSkeleton } from "@/components/ui/skeleton-loader";
 import { AgentEnergyPill } from "@/features/pulse";
 import { PULSE_ENABLED } from "@/config/featureFlags";
+import StreakPill from "@/components/gamification/StreakPill";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -183,16 +184,39 @@ const { isConnected } = useRealTimeNotifications();
               )}
 
                   <div className="container mx-auto px-3 pb-20">
+                {/* 🚀 NATIVE: Layout responsive per pill + titolo */}
                 <motion.div
-                  className="relative text-center my-6"
+                  className="relative my-4 sm:my-6"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
                 >
+                  {/* Row 1: M1U Pills */}
+                  <div
+                    id="m1u-pill-home-slot"
+                    data-onboarding="m1u-pill"
+                    className="flex flex-wrap items-center gap-2 mb-2 justify-center sm:justify-start"
+                    style={{ pointerEvents: 'auto' }}
+                  >
+                    <M1UPill showLabel showPlusButton />
+                    {PULSE_ENABLED && <AgentEnergyPill />}
+                  </div>
+                  
+                  {/* Row 2: Streak Pills (sotto M1U) */}
+                  <div
+                    data-onboarding="streak-pill"
+                    className="flex flex-wrap items-center gap-2 mb-3 justify-center sm:justify-start"
+                    style={{ pointerEvents: 'auto' }}
+                  >
+                    <StreakPill showLabel />
+                  </div>
+
+                  {/* Row 2: Titolo centrato */}
                   <h1 
                     id="m1-home-title"
                     data-m1-anchor="home-title"
-                    className="text-4xl font-orbitron font-bold neon-text-cyan"
+                    data-onboarding="m1ssion-title"
+                    className="text-3xl sm:text-4xl font-orbitron font-bold neon-text-cyan text-center"
                     role="banner"
                     aria-label="M1SSION Centro di Comando Agente"
                   >
@@ -205,24 +229,10 @@ const { isConnected } = useRealTimeNotifications();
                     id="mission-status-badge-portal" 
                     data-anchor="m1-header-badge"
                     data-persistent="true"
-                    className="flex justify-center my-3"
+                    className="flex justify-center my-2 sm:my-3"
                   />
                   
-                  <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
-
-                  {/* M1U Pill Slot - Home (inside hero, aligned left) */}
-                  <div
-                    id="m1u-pill-home-slot"
-                    className="absolute top-0 left-0 z-[1000] flex flex-col items-start gap-2"
-                    style={{ 
-                      pointerEvents: 'auto',
-                      paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))'
-                    }}
-                    aria-hidden={false}
-                  >
-                    <M1UPill showLabel showPlusButton />
-                    {PULSE_ENABLED && <AgentEnergyPill />}
-                  </div>
+                  <p className="text-gray-400 mt-1 sm:mt-2 text-center text-sm sm:text-base">Centro di Comando Agente</p>
                 </motion.div>
 
 

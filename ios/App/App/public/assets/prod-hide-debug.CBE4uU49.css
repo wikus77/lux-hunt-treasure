@@ -1,0 +1,35 @@
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+/* Production Debug Content Hide - Emergency CSS Rules */
+
+/* Hide any stray pre/code elements that may contain debug content */
+body > pre,
+body > code {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide any debug dump elements */
+[data-shim-dump],
+.shim-dump,
+#stripe-shim-dump,
+[data-debug-dump],
+.debug-dump {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide any elements that might contain Stripe debug info */
+pre:has-text("Stripe Shim Globale"),
+code:has-text("window.getStripe"),
+div:has-text("STRIPE_PK") {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Global safety net for any debug text blocks */
+[data-stripe-debug],
+.stripe-debug,
+[data-debug-visible="false"] {
+  display: none !important;
+  visibility: hidden !important;
+}

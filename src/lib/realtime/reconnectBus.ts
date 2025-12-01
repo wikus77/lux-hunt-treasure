@@ -86,11 +86,14 @@ export function emitError(reason: string, channelName?: string): void {
   });
   window.dispatchEvent(event);
   
-  // Silence non-critical broadcast channel errors (pulse_notifications uses broadcast, not postgres_changes)
-  const isBroadcastChannel = channelName === 'pulse_notifications' || channelName?.includes('_notifications');
-  if (!isBroadcastChannel || reason === 'TIMED_OUT') {
-    // Only log non-broadcast errors or timeouts
-    console.error('❌ [Realtime] Error', { channelName, reason });
+  // Silence non-critical realtime errors in production - they clutter the console
+  // Only log timeouts which may indicate real connection issues
+  const isCritical = reason === 'TIMED_OUT' || reason === 'NETWORK_ERROR';
+  if (isCritical) {
+    console.warn('⚠️ [Realtime] Connection issue', { channelName, reason });
+  } else {
+    // Use debug level for non-critical errors (won't show in normal console view)
+    console.debug('🔌 [Realtime] Channel state', { channelName, reason });
   }
 }
 

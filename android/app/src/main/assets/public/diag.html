@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M1SSION - Diagnostica Sistema</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: #000; 
+            color: #fff; 
+            padding: 20px; 
+            max-width: 800px; 
+            margin: 0 auto; 
+        }
+        .section { 
+            background: rgba(255,255,255,0.1); 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+        }
+        .status { padding: 8px; border-radius: 4px; margin: 5px 0; }
+        .success { background: rgba(0,255,0,0.2); }
+        .warning { background: rgba(255,255,0,0.2); }
+        .error { background: rgba(255,0,0,0.2); }
+        button { 
+            background: #4361ee; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        button:hover { background: #3142bb; }
+        .danger { background: #dc2626; }
+        .danger:hover { background: #b91c1c; }
+        pre { background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 M1SSION - Diagnostica Sistema</h1>
+    
+    <div class="section">
+        <h2>Stato Base</h2>
+        <div id="base-status"></div>
+        <button onclick="checkBaseStatus()">🔍 Verifica Base</button>
+    </div>
+    
+    <div class="section">
+        <h2>Service Worker</h2>
+        <div id="sw-status"></div>
+        <button onclick="checkServiceWorker()">🔍 Verifica SW</button>
+        <button onclick="unregisterSW()" class="danger">🗑️ Disattiva SW</button>
+    </div>
+    
+    <div class="section">
+        <h2>Push Notifications</h2>
+        <div id="push-status"></div>
+        <button onclick="checkPushStatus()">🔍 Verifica Push</button>
+        <button onclick="togglePushKillSwitch()">⚡ Toggle Kill Switch</button>
+    </div>
+    
+    <div class="section">
+        <h2>Storage & Cache</h2>
+        <div id="storage-status"></div>
+        <button onclick="checkStorage()">🔍 Verifica Storage</button>
+        <button onclick="clearAllStorage()" class="danger">🧹 Pulisci Tutto</button>
+    </div>
+    
+    <div class="section">
+        <h2>Azioni Emergenza</h2>
+        <button onclick="window.location.href='/?__noPush=1'">🚨 Vai Home (No Push)</button>
+        <button onclick="fullReset()" class="danger">💥 Reset Completo</button>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            console.log(`[DIAG] ${message}`);
+        }
+
+        function showStatus(elementId, status, type = 'info') {
+            const element = document.getElementById(elementId);
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = status;
+            element.appendChild(div);
+        }
+
+        function clearStatus(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+
+        async function checkBaseStatus() {
+            clearStatus('base-status');
+            
+            // Check DOM
+            const rootExists = !!document.getElementById('root');
+            showStatus('base-status', `DOM Root: ${rootExists ? '✅ Presente' : '❌ Mancante'}`, rootExists ? 'success' : 'error');
+            
+            // Check basic APIs
+            const swSupported = 'serviceWorker' in navigator;
+            showStatus('base-status', `Service Worker API: ${swSupported ? '✅ Supportato' : '❌ Non supportato'}`, swSupported ? 'success' : 'error');
+            
+            const pushSupported = 'PushManager' in window;
+            showStatus('base-status', `Push Manager API: ${pushSupported ? '✅ Supportato' : '❌ Non supportato'}`, pushSupported ? 'success' : 'warning');
+            
+            const notificationSupported = 'Notification' in window;
+            showStatus('base-status', `Notification API: ${notificationSupported ? '✅ Supportato' : '❌ Non supportato'}`, notificationSupported ? 'success' : 'warning');
+            
+            // Check permission
+            if (notificationSupported) {
+                showStatus('base-status', `Notification Permission: ${Notification.permission}`, 
+                    Notification.permission === 'granted' ? 'success' : 'warning');
+            }
+        }
+
+        async function checkServiceWorker() {
+            clearStatus('sw-status');
+            
+            if (!('serviceWorker' in navigator)) {
+                showStatus('sw-status', '❌ Service Worker non supportato', 'error');
+                return;
+            }
+            
+            try {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                showStatus('sw-status', `🔍 Registrazioni trovate: ${regs.length}`, 'info');
+                
+                regs.forEach((reg, i) => {
+                    const url = reg.active?.scriptURL || reg.installing?.scriptURL || reg.waiting?.scriptURL || 'unknown';
+                    const state = reg.active ? 'active' : reg.installing ? 'installing' : reg.waiting ? 'waiting' : 'unknown';
+                    showStatus('sw-status', `SW ${i+1}: ${url} (${state})`, 'info');
+                });
+                
+                if (regs.length === 0) {
+                    showStatus('sw-status', '⚠️ Nessun Service Worker registrato', 'warning');
+                }
+            } catch (error) {
+                showStatus('sw-status', `❌ Errore: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkPushStatus() {
+            clearStatus('push-status');
+            
+            // Check kill switch
+            const killSwitch = localStorage.getItem('push:disable') === '1';
+            showStatus('push-status', `Kill Switch: ${killSwitch ? '🔴 ATTIVO' : '🟢 Disattivo'}`, killSwitch ? 'warning' : 'success');
+            
+            // Check URL param
+            const urlDisable = window.location.search.includes('__noPush=1');
+            showStatus('push-status', `URL Disable: ${urlDisable ? '🔴 ATTIVO' : '🟢 Disattivo'}`, urlDisable ? 'warning' : 'success');
+            
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                showStatus('push-status', '❌ Push non supportato in questo browser', 'error');
+                return;
+            }
+            
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.getSubscription();
+                
+                if (subscription) {
+                    showStatus('push-status', '✅ Push subscription attiva', 'success');
+                    const endpoint = subscription.endpoint;
+                    if (endpoint.includes('web.push.apple.com')) {
+                        showStatus('push-status', '🍎 Tipo: Apple Push (iOS PWA)', 'success');
+                    } else if (endpoint.includes('fcm.googleapis.com')) {
+                        showStatus('push-status', '🤖 Tipo: Firebase FCM', 'success');
+                    } else {
+                        showStatus('push-status', `🔍 Tipo: ${endpoint.substring(0, 50)}...`, 'info');
+                    }
+                } else {
+                    showStatus('push-status', '⚠️ Nessuna subscription attiva', 'warning');
+                }
+            } catch (error) {
+                showStatus('push-status', `❌ Errore push: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkStorage() {
+            clearStatus('storage-status');
+            
+            // LocalStorage
+            const lsCount = localStorage.length;
+            showStatus('storage-status', `LocalStorage items: ${lsCount}`, 'info');
+            
+            // SessionStorage  
+            const ssCount = sessionStorage.length;
+            showStatus('storage-status', `SessionStorage items: ${ssCount}`, 'info');
+            
+            // Cache API
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    showStatus('storage-status', `Cache storages: ${cacheNames.length}`, 'info');
+                    cacheNames.forEach(name => {
+                        showStatus('storage-status', `  - ${name}`, 'info');
+                    });
+                } catch (error) {
+                    showStatus('storage-status', `❌ Errore cache: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        function togglePushKillSwitch() {
+            const current = localStorage.getItem('push:disable') === '1';
+            if (current) {
+                localStorage.removeItem('push:disable');
+                showStatus('push-status', '🟢 Kill switch disattivato', 'success');
+            } else {
+                localStorage.setItem('push:disable', '1');
+                showStatus('push-status', '🔴 Kill switch attivato', 'warning');
+            }
+        }
+
+        async function unregisterSW() {
+            if (!('serviceWorker' in navigator)) {
+                alert('Service Worker non supportato');
+                return;
+            }
+            
+            try {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                let count = 0;
+                for (const reg of regs) {
+                    await reg.unregister();
+                    count++;
+                }
+                showStatus('sw-status', `✅ ${count} Service Worker disattivati`, 'success');
+            } catch (error) {
+                showStatus('sw-status', `❌ Errore: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearAllStorage() {
+            // Clear storage
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Clear caches
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                for (const name of cacheNames) {
+                    await caches.delete(name);
+                }
+            }
+            
+            showStatus('storage-status', '✅ Tutto lo storage è stato pulito', 'success');
+        }
+
+        async function fullReset() {
+            if (!confirm('ATTENZIONE: Questo resetterà completamente l\'app. Continuare?')) {
+                return;
+            }
+            
+            try {
+                // Clear all storage
+                await clearAllStorage();
+                
+                // Unregister all SW
+                await unregisterSW();
+                
+                // Set kill switch
+                localStorage.setItem('push:disable', '1');
+                
+                alert('✅ Reset completo eseguito. Reindirizzamento alla home...');
+                window.location.href = '/?__noPush=1';
+            } catch (error) {
+                alert(`❌ Errore durante il reset: ${error.message}`);
+            }
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            checkBaseStatus();
+            checkServiceWorker();
+            checkPushStatus();
+            checkStorage();
+        });
+    </script>
+</body>
+</html>

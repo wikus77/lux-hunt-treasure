@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Reimposta password • M1SSION</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;background:#0b0f17;color:#e6f0ff;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}
+    .card{width:min(520px,92vw);background:#111827;border:1px solid #1f2937;border-radius:14px;padding:26px 22px;box-shadow:0 6px 30px rgba(0,0,0,.35)}
+    h1{font-size:20px;margin:0 0 8px}
+    p{opacity:.85}
+    form{display:grid;gap:12px;margin-top:12px}
+    input{padding:12px 14px;border-radius:10px;border:1px solid #243041;background:#0b1220;color:#e6f0ff}
+    button{padding:12px 14px;border-radius:10px;border:0;background:#06b6d4;color:#001018;font-weight:700;cursor:pointer}
+    .muted{opacity:.7;font-size:13px;margin-top:10px}
+    .ok{color:#34d399}.err{color:#fca5a5}
+    a{color:#93c5fd}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Reimposta password</h1>
+    <p id="status">Verifico il link…</p>
+
+    <form id="form" hidden>
+      <input id="pwd1" type="password" placeholder="Nuova password" minlength="8" required />
+      <input id="pwd2" type="password" placeholder="Ripeti password" minlength="8" required />
+      <button type="submit">Aggiorna password</button>
+    </form>
+
+    <p class="muted">Problemi? Riapri questa pagina dal link ricevuto via email.</p>
+    <p class="muted"><a href="/">Torna all’app</a></p>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const SUPABASE_URL = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const statusEl = document.getElementById('status');
+    const formEl = document.getElementById('form');
+
+    function parseHash(){
+      const h = location.hash.startsWith('#') ? location.hash.slice(1) : location.hash;
+      const p = new URLSearchParams(h);
+      return Object.fromEntries(p.entries());
+    }
+
+    const h = parseHash();
+
+    (async () => {
+      if (h.access_token && h.refresh_token) {
+        const { error } = await supabase.auth.setSession({
+          access_token: h.access_token,
+          refresh_token: h.refresh_token
+        });
+        if (error) {
+          statusEl.textContent = 'Link non valido o scaduto.';
+          statusEl.className = 'err';
+          return;
+        }
+        statusEl.textContent = 'Inserisci la nuova password.';
+        formEl.hidden = false;
+      } else {
+        statusEl.textContent = 'Apri questa pagina dal link della mail di reset (manca il token).';
+        statusEl.className = 'err';
+      }
+    })();
+
+    formEl.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const p1 = document.getElementById('pwd1').value.trim();
+      const p2 = document.getElementById('pwd2').value.trim();
+      if (p1 !== p2) {
+        statusEl.textContent = 'Le password non coincidono.';
+        statusEl.className = 'err';
+        return;
+      }
+      const { error } = await supabase.auth.updateUser({ password: p1 });
+      if (error) {
+        statusEl.textContent = 'Errore: ' + error.message;
+        statusEl.className = 'err';
+        return;
+      }
+      statusEl.textContent = 'Password aggiornata! Ora puoi tornare all’app.';
+      statusEl.className = 'ok';
+      formEl.hidden = true;
+    });
+  </script>
+</body>
+</html>

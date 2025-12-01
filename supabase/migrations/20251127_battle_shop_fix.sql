@@ -316,3 +316,6 @@ GRANT EXECUTE ON FUNCTION public.get_user_battle_inventory() TO authenticated;
 
 -- © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
+
+
+

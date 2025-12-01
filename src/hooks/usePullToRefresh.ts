@@ -1,141 +1,107 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import { useState, useEffect, useCallback, useRef } from 'react';
+// Pull to Refresh Hook for PWA
 
-interface PullToRefreshState {
-  isPulling: boolean;
-  pullDistance: number;
-  isRefreshing: boolean;
+import { useEffect, useRef, useState } from 'react';
+
+interface PullToRefreshOptions {
+  onRefresh?: () => void | Promise<void>;
+  threshold?: number; // pixels to pull before triggering refresh
+  enabled?: boolean;
 }
 
-const PULL_THRESHOLD = 80;
-const MAX_PULL_DISTANCE = 120;
-
-function isScrollable(el: Element | null): el is HTMLElement {
-  if (!el || !(el instanceof HTMLElement)) return false;
-  const style = window.getComputedStyle(el);
-  const overflowY = style.overflowY;
-  const canScroll = el.scrollHeight > el.clientHeight;
-  return canScroll && (overflowY === 'auto' || overflowY === 'scroll');
-}
-
-export const usePullToRefresh = (onRefresh: () => void | Promise<void>) => {
+export const usePullToRefresh = (options: PullToRefreshOptions = {}) => {
+  const { 
+    onRefresh = () => window.location.reload(), 
+    threshold = 150,
+    enabled = true 
+  } = options;
+  
   const [isPulling, setIsPulling] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const startY = useRef<number>(0);
-  const currentY = useRef<number>(0);
-  const isPWA = useRef<boolean>(false);
-  const scrollElRef = useRef<HTMLElement | null>(null);
-  const pullingRef = useRef(false);
-  const distanceRef = useRef(0);
-  const refreshingRef = useRef(false);
-
-  const stableOnRefresh = useCallback(onRefresh, []);
-
-  // Sync refs with state (for handler closures without deps)
-  useEffect(() => { pullingRef.current = isPulling; }, [isPulling]);
-  useEffect(() => { distanceRef.current = pullDistance; }, [pullDistance]);
-  useEffect(() => { refreshingRef.current = isRefreshing; }, [isRefreshing]);
+  
+  const startY = useRef(0);
+  const currentY = useRef(0);
 
   useEffect(() => {
-    console.log('🔄 Pull-to-Refresh hook mounted');
-
-    isPWA.current = 
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true ||
-      document.referrer.includes('android-app://');
-
-    const isMobile = /iPad|iPhone|iPod|Android|Mobile/i.test(navigator.userAgent);
-    console.log('📱 Device check:', { isMobile, isPWA: isPWA.current });
-    if (!isMobile && !isPWA.current) return;
-
-    const findScrollableAncestor = (start: Element | null): HTMLElement | null => {
-      let node: Element | null = start as Element | null;
-      while (node && node !== document.body) {
-        if (isScrollable(node)) return node as HTMLElement;
-        node = node.parentElement;
-      }
-      // Fallback to main scroll containers commonly used
-      const mapMain = document.querySelector('main');
-      if (isScrollable(mapMain as Element)) return mapMain as HTMLElement;
-      // Finally, fallback to document.scrollingElement
-      return (document.scrollingElement as HTMLElement) || document.body;
-    };
+    if (!enabled) return;
 
     const handleTouchStart = (e: TouchEvent) => {
-      // Identify scrollable container related to touch target
-      const path = (e.composedPath && e.composedPath()) || [];
-      const target = (path[0] as Element) || (e.target as Element | null);
-      scrollElRef.current = findScrollableAncestor(target);
-
-      const scrollTop = scrollElRef.current?.scrollTop ?? window.scrollY;
-      if (scrollTop === 0 && !refreshingRef.current) {
+      // Only activate when at top of page
+      if (window.scrollY <= 0) {
         startY.current = e.touches[0].clientY;
-        currentY.current = startY.current;
-        // Do not set pulling yet; wait for positive delta
-      } else {
-        // Not at top; ignore gesture
-        startY.current = 0;
-        currentY.current = 0;
+        setIsPulling(true);
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (refreshingRef.current) return;
-      if (!startY.current) return;
-
-      const container = scrollElRef.current;
-      const scrollTop = container ? container.scrollTop : window.scrollY;
-      if (scrollTop !== 0) return; // only when container is at very top
-
+      if (!isPulling || isRefreshing) return;
+      
       currentY.current = e.touches[0].clientY;
-      const rawDistance = currentY.current - startY.current;
-      if (rawDistance <= 0) return;
-
-      if (e.cancelable) e.preventDefault(); // prevent native scroll
-
-      const resistance = Math.min(rawDistance / 2, MAX_PULL_DISTANCE);
-      if (!pullingRef.current) setIsPulling(true);
-      setPullDistance(resistance);
+      const distance = currentY.current - startY.current;
+      
+      // Only track downward pulls when at top
+      if (distance > 0 && window.scrollY <= 0) {
+        // Apply resistance (pull feels harder as you go)
+        const resistedDistance = Math.min(distance * 0.5, threshold * 1.5);
+        setPullDistance(resistedDistance);
+        
+        // Prevent default scroll when pulling
+        if (distance > 10) {
+          e.preventDefault();
+        }
+      }
     };
 
     const handleTouchEnd = async () => {
-      if (!pullingRef.current) {
-        // reset
-        startY.current = 0; currentY.current = 0; return;
-      }
-
-      const didReachThreshold = distanceRef.current >= PULL_THRESHOLD;
-      setIsPulling(false);
-      setPullDistance(0);
-
-      if (didReachThreshold) {
+      if (!isPulling || isRefreshing) return;
+      
+      if (pullDistance >= threshold) {
+        // Trigger refresh
         setIsRefreshing(true);
+        setPullDistance(threshold); // Keep at threshold during refresh
+        
         try {
-          await stableOnRefresh();
-          await new Promise((r) => setTimeout(r, 400));
+          await onRefresh();
         } catch (error) {
-          console.error('❌ Pull-to-refresh error:', error);
-        } finally {
-          setIsRefreshing(false);
+          console.error('Pull to refresh error:', error);
         }
+        
+        // Small delay before hiding
+        setTimeout(() => {
+          setIsRefreshing(false);
+          setPullDistance(0);
+          setIsPulling(false);
+        }, 500);
+      } else {
+        // Reset without refresh
+        setPullDistance(0);
+        setIsPulling(false);
       }
-
+      
       startY.current = 0;
       currentY.current = 0;
     };
 
-    document.addEventListener('touchstart', handleTouchStart, { passive: true, capture: true });
-    document.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true, capture: true });
+    // Add listeners with passive: false to allow preventDefault
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
-      document.removeEventListener('touchstart', handleTouchStart, { capture: true } as any);
-      document.removeEventListener('touchmove', handleTouchMove, { capture: true } as any);
-      document.removeEventListener('touchend', handleTouchEnd, { capture: true } as any);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [stableOnRefresh]);
+  }, [enabled, isPulling, isRefreshing, pullDistance, threshold, onRefresh]);
 
-  return { isPulling, pullDistance, isRefreshing } as PullToRefreshState;
+  return {
+    isPulling,
+    pullDistance,
+    isRefreshing,
+    progress: Math.min(pullDistance / threshold, 1), // 0 to 1
+    shouldRefresh: pullDistance >= threshold
+  };
 };
+
+export default usePullToRefresh;

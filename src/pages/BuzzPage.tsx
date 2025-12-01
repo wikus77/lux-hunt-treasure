@@ -20,10 +20,11 @@ import { DebugBuzzPanel } from '@/debug/DebugBuzzPanel';
 
 export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
-  const { user } = useUnifiedAuth();
+  const { user, isLoading: authLoading } = useUnifiedAuth();
   const { playSound } = useSoundEffects();
   const vortexSoundRef = useRef<ReturnType<typeof createVortexSound> | null>(null);
   const debugEnabled = useDebugFlag();
+  const [forceShow, setForceShow] = React.useState(false);
   
   // 🔥 FIXED: Use centralized pricing logic from useBuzzCounter
   const { 
@@ -35,6 +36,17 @@ export const BuzzPage: React.FC = () => {
   // 🔥 FIXED: Use only centralized M1U pricing
   const isBlocked = false; // Never blocked, progressive pricing continues
   const currentPriceDisplay = getCurrentBuzzDisplayCostM1U();
+
+  // ⏱️ Safety timeout: force show page after 3 seconds to prevent infinite spinner
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading || authLoading) {
+        console.warn('⚠️ Buzz page: Force showing after timeout');
+        setForceShow(true);
+      }
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [loading, authLoading]);
 
   // Start procedural vortex sound ONLY when on /buzz page
   useEffect(() => {
@@ -85,7 +97,10 @@ export const BuzzPage: React.FC = () => {
     console.log('✅ All stats reloaded after BUZZ');
   };
 
-  if (loading) {
+  // Show loading only if loading AND not forced AND auth not loading
+  const showLoading = (loading || authLoading) && !forceShow;
+  
+  if (showLoading) {
     return (
       <div className="min-h-screen w-full fixed inset-0 flex items-center justify-center bg-background">
         <motion.div
@@ -167,7 +182,7 @@ export const BuzzPage: React.FC = () => {
           {/* Container centrato verticalmente e orizzontalmente */}
           <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
             {/* Pulsante BUZZ centrato */}
-            <div className="text-center mb-6">
+            <div className="text-center mb-6" data-onboarding="buzz-button">
               <BuzzActionButton
                 isBlocked={isBlocked}
                 onSuccess={handleBuzzSuccess}

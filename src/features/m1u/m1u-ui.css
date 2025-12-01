@@ -104,17 +104,51 @@
     0 0 24px rgba(0, 255, 255, 0.35) inset;
 }
 
-/* Responsive tweaks */
-@media (max-width: 480px) {
-  .pill-orb {
-    width: 52px;
-    height: 52px;
+/* 🚀 NATIVE APP: Responsive tweaks for mobile */
+@media (max-width: 640px) {
+  .m1u-pill-main {
+    min-height: 36px;
+    padding: 6px 12px !important;
+    gap: 6px !important;
   }
+  
+  .m1u-pill-main .text-sm {
+    font-size: 12px !important;
+  }
+  
+  .pill-orb {
+    width: 44px;
+    height: 44px;
+  }
+  
   .pill-orb:before,
   .pill-orb:after {
-    width: 64px;
-    height: 64px;
-    margin: -32px;
+    width: 54px;
+    height: 54px;
+    margin: -27px;
+  }
+  
+  .pill-orb .dot {
+    transform-origin: 18px 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .m1u-pill-main {
+    min-height: 32px;
+    padding: 4px 10px !important;
+  }
+  
+  .pill-orb {
+    width: 38px;
+    height: 38px;
+  }
+  
+  .pill-orb:before,
+  .pill-orb:after {
+    width: 48px;
+    height: 48px;
+    margin: -24px;
   }
 }
 

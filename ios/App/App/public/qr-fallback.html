@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M1SSION™ QR - Safari iOS Fallback</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            background: linear-gradient(45deg, #00ff88, #0066ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .icon {
+            font-size: 48px;
+            margin: 16px 0;
+        }
+        
+        h1 {
+            font-size: 20px;
+            margin: 16px 0;
+            color: #ff4444;
+        }
+        
+        p {
+            margin: 12px 0;
+            line-height: 1.5;
+            color: #cccccc;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #0066ff, #00ff88);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .debug {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 16px 0;
+            font-family: monospace;
+            font-size: 12px;
+            color: #888;
+            word-break: break-all;
+        }
+        
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #0066ff;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+            margin: 16px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">M1SSION™</div>
+        <div class="icon">🚨</div>
+        <h1>Safari iOS - JavaScript Fallback</h1>
+        <p>La pagina QR non si è caricata correttamente su Safari iOS. Questo fallback HTML conferma che:</p>
+        
+        <div class="debug">
+            ✅ QR ID: 4959a400-abae-45c9-bdc1-d3920bcb54f8<br>
+            ✅ Database: QR esistente e attivo<br>
+            ✅ Routing: URL raggiungibile<br>
+            ❌ React/JS: Fallito su Safari iOS
+        </div>
+        
+        <p><strong>Problemi identificati:</strong></p>
+        <p>• Safari iOS blocca il rendering React</p>
+        <p>• Serve fallback statico HTML</p>
+        <p>• QR sistema funziona nel database</p>
+        
+        <div class="spinner"></div>
+        <p>Tentativo di apertura nell'app M1SSION...</p>
+        
+        <button id="openApp" class="btn">📱 Apri in M1SSION App</button>
+        <a href="/home" class="btn">🏠 Versione Web</a>
+    </div>
+    
+    <script>
+        console.log('🚨 SAFARI iOS QR FALLBACK LOADED');
+        console.log('📍 URL:', window.location.href);
+        
+        const qrId = '4959a400-abae-45c9-bdc1-d3920bcb54f8';
+        
+        // Function to try opening the app
+        function tryOpenApp() {
+            console.log('🔄 Attempting to open M1SSION app...');
+            
+            // Try deep link to app - replace with your actual app scheme
+            const appScheme = `m1ssion://qr/${qrId}`;
+            const webFallback = `/home#qr=${qrId}`;
+            
+            // Create hidden iframe to try app launch
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = appScheme;
+            document.body.appendChild(iframe);
+            
+            // Fallback after 2 seconds
+            setTimeout(() => {
+                console.log('🔄 App launch timeout, redirecting to web...');
+                window.location.href = webFallback;
+            }, 2000);
+        }
+        
+        // Auto-try app opening
+        setTimeout(tryOpenApp, 1000);
+        
+        // Manual button
+        document.getElementById('openApp').addEventListener('click', tryOpenApp);
+    </script>
+</body>
+</html>

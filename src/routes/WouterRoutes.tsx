@@ -42,6 +42,7 @@ import IntelligenceRAG from "@/pages/IntelligenceRAG";
 import IntelligenceAnswerTest from "@/pages/IntelligenceAnswerTest";
 import HallOfWinnersStyledPage from "@/pages/HallOfWinnersStyledPage";
 import HallOfWinners from "@/pages/HallOfWinners";
+import LeaderboardPage from "@/pages/LeaderboardPage";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
 import NorahAssistant from "@/pages/NorahAssistant";
@@ -88,6 +89,7 @@ const PushDebug = React.lazy(() => import("@/pages/PushDebug"));
 import { PushReport } from "@/pages/PushReport";
 // QR pages removed - rewards now handled by popup in map
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
+import OnboardingSandbox from "@/pages/OnboardingSandbox";
 
 import Terms from "@/pages/Terms";
 import Contact from "@/pages/Contact";
@@ -398,7 +400,7 @@ const WouterRoutes: React.FC = () => {
 
           <Route path="/leaderboard">
             <ProtectedRoute>
-              <GlobalLayout><HallOfWinnersStyledPage /></GlobalLayout>
+              <GlobalLayout><LeaderboardPage /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
@@ -691,6 +693,13 @@ const WouterRoutes: React.FC = () => {
           <Route path="/diag-supabase">
             <ProtectedRoute>
               <DiagSupabase />
+            </ProtectedRoute>
+          </Route>
+
+          {/* 🧪 ONBOARDING SANDBOX - Test Tutorial */}
+          <Route path="/onboarding-sandbox">
+            <ProtectedRoute>
+              <OnboardingSandbox />
             </ProtectedRoute>
           </Route>
 

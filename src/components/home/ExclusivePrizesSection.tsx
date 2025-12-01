@@ -24,7 +24,7 @@ const ExclusivePrizesSection = () => {
   };
   
   return (
-    <div className="mt-8 mb-12">
+    <div className="mt-4 mb-8"> {/* 🚀 NATIVE: Margini ridotti */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -32,14 +32,14 @@ const ExclusivePrizesSection = () => {
         className="max-w-4xl mx-auto"
       >
         <div 
-          className="m1ssion-glass-card p-6 overflow-hidden relative"
+          className="m1ssion-glass-card p-4 sm:p-6 overflow-hidden relative m1-border-glow m1-card-compact"
           style={{
             background: 'rgba(0, 0, 0, 0.6)',
             backdropFilter: 'blur(40px)',
             WebkitBackdropFilter: 'blur(40px)',
-            borderRadius: '24px',
+            borderRadius: '20px',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)',
-            border: '0'
+            border: '1px solid rgba(0, 209, 255, 0.3)'
           }}
         >
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] via-[#F059FF] to-[#FACC15] opacity-90" />
@@ -54,8 +54,8 @@ const ExclusivePrizesSection = () => {
           {/* Gradient divider */}
           <div className="h-0.5 w-full mb-6 bg-gradient-to-r from-purple-600 via-cyan-500 to-blue-500" />
           
-          {/* Prize cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Prize cards - 🚀 NATIVE: Grid più compatta */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 m1-dense-grid">
             {mysteryPrizes.map((prize, index) => (
               <motion.div
                 key={index}
@@ -165,10 +165,10 @@ const ExclusivePrizesSection = () => {
             ))}
           </div>
           
-          {/* Call to action */}
-          <div className="mt-6 text-center">
+          {/* Call to action - 🚀 NATIVE: Pulsante più grande con breathing */}
+          <div className="mt-5 text-center">
             <Button
-              className="bg-gradient-to-r from-cyan-600 to-blue-700 hover:opacity-90 text-white"
+              className="bg-gradient-to-r from-cyan-600 to-blue-700 hover:opacity-90 text-white prize-card-btn px-8 py-3 text-base font-semibold m1-breathing m1-glow-pulse m1-touch-feedback"
             >
               Partecipa alle missioni
             </Button>

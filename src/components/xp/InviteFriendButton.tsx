@@ -49,7 +49,7 @@ export const InviteFriendButton: React.FC = () => {
           transition={{ delay: 0.4 }}
           className="text-center text-xs text-gray-400 mt-2"
         >
-          💰 +25 XP per ogni amico che si registra
+          💰 +25 PE per ogni amico che si registra
         </motion.p>
       </motion.div>
 

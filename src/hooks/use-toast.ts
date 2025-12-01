@@ -1,6 +1,7 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Enhanced Toast with Debouncing
 import { useState, useCallback, useRef } from 'react';
 import { toast as sonnerToast } from 'sonner';
+import { hapticSuccess, hapticError } from '@/utils/haptics';
 
 export interface Toast {
   id?: string;
@@ -40,12 +41,14 @@ export function useToast() {
 
     switch (variant) {
       case 'destructive':
+        hapticError(); // Vibrazione per errore
         sonnerToast.error(title || description || 'Errore', {
           description: title ? description : undefined,
           duration,
         });
         break;
       default:
+        hapticSuccess(); // Vibrazione per successo
         sonnerToast.success(title || description || 'Successo', {
           description: title ? description : undefined,
           duration,

@@ -27,7 +27,7 @@ export const mapAreasData: MapArea[] = [
     radius: 500,
     buzzCost: 1,
     difficulty: 'easy',
-    rewards: ['Indizio Base', '+50 XP'],
+    rewards: ['Indizio Base', '+50 PE'],
     isActive: true,
     hints: [
       'Guarda verso i grattacieli',
@@ -43,7 +43,7 @@ export const mapAreasData: MapArea[] = [
     radius: 800,
     buzzCost: 2,
     difficulty: 'easy',
-    rewards: ['Documento Cifrato', '+75 XP'],
+    rewards: ['Documento Cifrato', '+75 PE'],
     isActive: true,
     hints: [
       'I riflessi sull\'acqua nascondono segreti',
@@ -59,7 +59,7 @@ export const mapAreasData: MapArea[] = [
     radius: 600,
     buzzCost: 2,
     difficulty: 'easy',
-    rewards: ['Traccia GPS', '+60 XP'],
+    rewards: ['Traccia GPS', '+60 PE'],
     isActive: true,
     hints: [
       'Il rumore nasconde altri suoni',
@@ -77,7 +77,7 @@ export const mapAreasData: MapArea[] = [
     radius: 400,
     buzzCost: 3,
     difficulty: 'medium',
-    rewards: ['Chiave Digitale', 'Accesso VIP', '+100 XP'],
+    rewards: ['Chiave Digitale', 'Accesso VIP', '+100 PE'],
     isActive: true,
     hints: [
       'Lusso significa sicurezza avanzata',
@@ -93,7 +93,7 @@ export const mapAreasData: MapArea[] = [
     radius: 1000,
     buzzCost: 4,
     difficulty: 'medium',
-    rewards: ['Codice di Accesso', 'Mappa Segreta', '+125 XP'],
+    rewards: ['Codice di Accesso', 'Mappa Segreta', '+125 PE'],
     isActive: true,
     hints: [
       'I grattacieli hanno occhi elettronici',
@@ -111,7 +111,7 @@ export const mapAreasData: MapArea[] = [
     radius: 700,
     buzzCost: 5,
     difficulty: 'hard',
-    rewards: ['Documento Storico', 'Passaggio Segreto', '+150 XP'],
+    rewards: ['Documento Storico', 'Passaggio Segreto', '+150 PE'],
     isActive: true,
     hints: [
       'La storia si ripete in digitale',
@@ -127,7 +127,7 @@ export const mapAreasData: MapArea[] = [
     radius: 300,
     buzzCost: 6,
     difficulty: 'hard',
-    rewards: ['Invito Esclusivo', 'Codice Artistico', '+175 XP'],
+    rewards: ['Invito Esclusivo', 'Codice Artistico', '+175 PE'],
     isActive: true,
     hints: [
       'La musica maschera le comunicazioni',
@@ -145,7 +145,7 @@ export const mapAreasData: MapArea[] = [
     radius: 2000,
     buzzCost: 8,
     difficulty: 'extreme',
-    rewards: ['Manifesto di Volo', 'Codice Doganale', 'Accesso Hangar', '+250 XP'],
+    rewards: ['Manifesto di Volo', 'Codice Doganale', 'Accesso Hangar', '+250 PE'],
     isActive: false, // Bloccata inizialmente
     hints: [
       'Terminal 1 ha una sezione riservata',
@@ -161,7 +161,7 @@ export const mapAreasData: MapArea[] = [
     radius: 1500,
     buzzCost: 10,
     difficulty: 'extreme',
-    rewards: ['Chiave del Garage', 'Documento di Gara', 'Premio Finale', '+300 XP'],
+    rewards: ['Chiave del Garage', 'Documento di Gara', 'Premio Finale', '+300 PE'],
     isActive: false, // Bloccata inizialmente
     hints: [
       'Curve leggendarie nascondono segreti',

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M1SSION FCM Test</title>
+    <style>
+        body { font-family: monospace; margin: 20px; background: #0a0a0a; color: #00ff00; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #333; background: #111; }
+        .success { color: #00ff00; }
+        .error { color: #ff0040; }
+        .info { color: #00aaff; }
+        button { padding: 10px 20px; margin: 5px; background: #333; color: #fff; border: 1px solid #555; cursor: pointer; }
+        button:hover { background: #444; }
+        button:disabled { opacity: 0.5; }
+        textarea { width: 100%; height: 300px; background: #000; color: #00ff00; border: 1px solid #333; font-family: monospace; padding: 10px; }
+        pre { background: #000; padding: 10px; border: 1px solid #333; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 M1SSION FCM Acceptance Test</h1>
+        
+        <div class="section">
+            <h3>Authentication Status</h3>
+            <div id="auth-status" class="info">Not checked</div>
+            <button onclick="checkAuth()">Check Auth</button>
+        </div>
+
+        <div class="section">
+            <h3>Worker Endpoint Tests</h3>
+            <button onclick="testWorkerEndpoints()">Test All Endpoints</button>
+            <div id="worker-results"></div>
+        </div>
+
+        <div class="section">
+            <h3>FCM Token Storage Test</h3>
+            <button onclick="testTokenStorage()" id="token-test-btn" disabled>Test Token Storage</button>
+            <div id="token-results"></div>
+        </div>
+
+        <div class="section">
+            <h3>Curl Test Commands</h3>
+            <pre id="curl-commands">
+# Test Worker Endpoints
+curl -s "https://m1ssion.eu/firebase-messaging-sw.js?bust=$(date +%s)" | grep setBackgroundMessageHandler
+curl -s "https://m1ssion.eu/sw-m1ssion.js?bust=$(date +%s)" | grep setBackgroundMessageHandler
+curl -s "https://m1ssion.eu/firebase-init.js?bust=$(date +%s)" | grep '"appId": "1:21417361168:web:58841299455ee4bcc7af95"'
+curl -sI "https://m1ssion.eu/icons/badge-72.png?bust=$(date +%s)" | grep content-type
+
+# Test Edge Function (requires JWT token)
+curl -sS -X POST "https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/store-fcm-token" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Origin: https://m1ssion.eu" \
+  -d '{"fid":"testfid123","token":"tok123"}'
+            </pre>
+        </div>
+
+        <div class="section">
+            <h3>Test Results Log</h3>
+            <textarea id="log" readonly placeholder="Test results will appear here..."></textarea>
+            <button onclick="clearLog()">Clear Log</button>
+            <button onclick="exportResults()">Export Results</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const log = document.getElementById('log');
+        const authStatus = document.getElementById('auth-status');
+        const workerResults = document.getElementById('worker-results');
+        const tokenResults = document.getElementById('token-results');
+        const tokenTestBtn = document.getElementById('token-test-btn');
+
+        let supabase = null;
+        let currentUser = null;
+
+        function addLog(msg, type = 'info') {
+            const timestamp = new Date().toISOString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            log.value += `[${timestamp}] ${prefix} ${msg}\n`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function clearLog() {
+            log.value = '';
+        }
+
+        function exportResults() {
+            const results = log.value;
+            const blob = new Blob([results], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fcm-test-results-${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize Supabase
+        window.addEventListener('load', () => {
+            supabase = window.supabase.createClient(
+                'https://vkjrqirvdvjbemsfzxof.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+            );
+            addLog('Supabase client initialized', 'success');
+        });
+
+        async function checkAuth() {
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) throw error;
+
+                if (session?.user) {
+                    currentUser = session.user;
+                    authStatus.innerHTML = `<span class="success">✅ Authenticated as ${session.user.email}</span>`;
+                    tokenTestBtn.disabled = false;
+                    addLog(`Authentication successful: ${session.user.id}`, 'success');
+                } else {
+                    authStatus.innerHTML = '<span class="error">❌ Not authenticated</span>';
+                    addLog('User not authenticated - please login first', 'error');
+                }
+            } catch (error) {
+                authStatus.innerHTML = '<span class="error">❌ Auth check failed</span>';
+                addLog(`Auth check error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testWorkerEndpoints() {
+            addLog('=== WORKER ENDPOINT TESTS ===', 'info');
+            workerResults.innerHTML = '<div class="info">Testing endpoints...</div>';
+            
+            const endpoints = [
+                { path: '/firebase-messaging-sw.js', expected: ['setBackgroundMessageHandler', 'firebase-app.js', 'firebase-messaging.js'] },
+                { path: '/sw-m1ssion.js', expected: ['setBackgroundMessageHandler', 'firebase-app.js', 'firebase-messaging.js'] },
+                { path: '/firebase-init.js', expected: ['"appId": "1:21417361168:web:58841299455ee4bcc7af95"', 'vapidKey'] },
+                { path: '/icons/badge-72.png', expectedType: 'image/png' }
+            ];
+
+            let allPassed = true;
+            const results = [];
+
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${endpoint.path}?bust=${Date.now()}`, {
+                        cache: 'no-cache'
+                    });
+                    
+                    const workerVersion = response.headers.get('x-worker-version');
+                    const contentType = response.headers.get('content-type');
+                    
+                    let passed = true;
+                    let details = [];
+
+                    // Check worker version header
+                    if (workerVersion) {
+                        details.push(`✅ Worker version: ${workerVersion}`);
+                        addLog(`${endpoint.path}: Worker version ${workerVersion}`, 'success');
+                    } else {
+                        details.push('❌ Missing x-worker-version header');
+                        addLog(`${endpoint.path}: Missing x-worker-version header`, 'error');
+                        passed = false;
+                        allPassed = false;
+                    }
+
+                    // Check content type
+                    if (endpoint.expectedType) {
+                        if (contentType && contentType.includes(endpoint.expectedType)) {
+                            details.push(`✅ Content-Type: ${contentType}`);
+                            addLog(`${endpoint.path}: Correct content-type ${contentType}`, 'success');
+                        } else {
+                            details.push(`❌ Wrong Content-Type: ${contentType}`);
+                            addLog(`${endpoint.path}: Wrong content-type ${contentType}`, 'error');
+                            passed = false;
+                            allPassed = false;
+                        }
+                    } else {
+                        // Check content for JS files
+                        const content = await response.text();
+                        for (const expected of endpoint.expected) {
+                            if (content.includes(expected)) {
+                                details.push(`✅ Contains: ${expected}`);
+                                addLog(`${endpoint.path}: Contains ${expected}`, 'success');
+                            } else {
+                                details.push(`❌ Missing: ${expected}`);
+                                addLog(`${endpoint.path}: Missing ${expected}`, 'error');
+                                passed = false;
+                                allPassed = false;
+                            }
+                        }
+                    }
+
+                    results.push({
+                        endpoint: endpoint.path,
+                        passed,
+                        details
+                    });
+
+                } catch (error) {
+                    addLog(`${endpoint.path}: Error - ${error.message}`, 'error');
+                    results.push({
+                        endpoint: endpoint.path,
+                        passed: false,
+                        details: [`❌ Request failed: ${error.message}`]
+                    });
+                    allPassed = false;
+                }
+            }
+
+            // Display results
+            let html = '<h4>Endpoint Test Results:</h4>';
+            for (const result of results) {
+                const status = result.passed ? 'success' : 'error';
+                html += `<div class="${status}">
+                    <strong>${result.endpoint}</strong>: ${result.passed ? '✅ PASS' : '❌ FAIL'}
+                    <ul>`;
+                for (const detail of result.details) {
+                    html += `<li>${detail}</li>`;
+                }
+                html += `</ul></div>`;
+            }
+            
+            if (allPassed) {
+                html += '<div class="success"><strong>🎉 All worker endpoints passed!</strong></div>';
+                addLog('All worker endpoint tests PASSED', 'success');
+            } else {
+                html += '<div class="error"><strong>⚠️ Some worker endpoints failed</strong></div>';
+                addLog('Some worker endpoint tests FAILED', 'error');
+            }
+
+            workerResults.innerHTML = html;
+            addLog('=== WORKER ENDPOINT TESTS COMPLETE ===', 'info');
+        }
+
+        async function testTokenStorage() {
+            if (!currentUser) {
+                addLog('Cannot test token storage: user not authenticated', 'error');
+                return;
+            }
+
+            addLog('=== FCM TOKEN STORAGE TEST ===', 'info');
+            tokenResults.innerHTML = '<div class="info">Testing token storage...</div>';
+
+            try {
+                const testFid = `test_fid_${Date.now()}`;
+                const testToken = `test_token_${Date.now()}`;
+                
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                addLog(`Testing with FID: ${testFid}`, 'info');
+                addLog(`Testing with Token: ${testToken.substring(0, 20)}...`, 'info');
+
+                const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/store-fcm-token', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`,
+                        'Content-Type': 'application/json',
+                        'Origin': 'https://m1ssion.eu'
+                    },
+                    body: JSON.stringify({
+                        fid: testFid,
+                        token: testToken
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    tokenResults.innerHTML = '<div class="success">✅ Token storage test PASSED</div>';
+                    addLog(`Token storage SUCCESS: ${JSON.stringify(result)}`, 'success');
+                    
+                    // Test duplicate FID (should update, not conflict)
+                    const response2 = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/store-fcm-token', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${session.access_token}`,
+                            'Content-Type': 'application/json',
+                            'Origin': 'https://m1ssion.eu'
+                        },
+                        body: JSON.stringify({
+                            fid: testFid,
+                            token: `updated_${testToken}`
+                        })
+                    });
+
+                    const result2 = await response2.json();
+                    
+                    if (response2.ok) {
+                        addLog(`Token update SUCCESS: ${JSON.stringify(result2)}`, 'success');
+                        tokenResults.innerHTML += '<div class="success">✅ Token update test PASSED</div>';
+                    } else {
+                        addLog(`Token update FAILED: ${response2.status} - ${JSON.stringify(result2)}`, 'error');
+                        tokenResults.innerHTML += '<div class="error">❌ Token update test FAILED</div>';
+                    }
+                    
+                } else {
+                    tokenResults.innerHTML = `<div class="error">❌ Token storage test FAILED: ${result.error}</div>`;
+                    addLog(`Token storage FAILED: ${response.status} - ${JSON.stringify(result)}`, 'error');
+                }
+                
+            } catch (error) {
+                tokenResults.innerHTML = '<div class="error">❌ Token storage test ERROR</div>';
+                addLog(`Token storage ERROR: ${error.message}`, 'error');
+            }
+
+            addLog('=== FCM TOKEN STORAGE TEST COMPLETE ===', 'info');
+        }
+    </script>
+</body>
+</html>

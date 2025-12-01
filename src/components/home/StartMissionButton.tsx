@@ -115,6 +115,7 @@ export const StartMissionButton: React.FC = () => {
     <motion.button
       onClick={handleStartMission}
       disabled={isLoading}
+      data-onboarding="start-mission"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-[#00D1FF]/10 border border-[#00D1FF]/30 hover:bg-[#00D1FF]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M1SSION™ - Quick Push Test</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #000; color: #fff; }
+        .status { padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .ok { background: #1f5f3f; border: 1px solid #22c55e; }
+        .error { background: #5f1f1f; border: 1px solid #ef4444; }
+        .info { background: #1f3f5f; border: 1px solid #3b82f6; }
+        button { background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin: 5px; font-weight: 500; }
+        button:hover { background: #2563eb; }
+        button:disabled { background: #374151; cursor: not-allowed; }
+        .endpoint { font-family: monospace; font-size: 11px; word-break: break-all; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 5px 0; }
+        pre { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 M1SSION™ Quick Push Test</h1>
+    <p>Fast test for W3C Push API with full debugging.</p>
+    
+    <div id="results"></div>
+    
+    <button onclick="quickTest()">⚡ Quick Subscribe & Send Test</button>
+    <button onclick="checkStatus()">🔍 Check Current Status</button>
+    
+    <script>
+        const SUPABASE_URL = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+        const VAPID_PUBLIC_KEY = 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        function clearLog() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        function urlB64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/-/g, '+')
+                .replace(/_/g, '/');
+            
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+        
+        async function checkStatus() {
+            clearLog();
+            log('🔍 Checking current push subscription status...', 'info');
+            
+            try {
+                const reg = await navigator.serviceWorker.getRegistration('/');
+                if (!reg) {
+                    log('❌ No service worker registration found', 'error');
+                    return;
+                }
+                
+                const subscription = await reg.pushManager.getSubscription();
+                if (subscription) {
+                    const endpoint = subscription.endpoint;
+                    const isApple = endpoint.includes('web.push.apple.com');
+                    const isFCM = endpoint.includes('fcm.googleapis.com');
+                    
+                    log(`✅ Active subscription found!`, 'ok');
+                    log(`🔗 Type: ${isApple ? '🍎 Apple Push' : isFCM ? '🟢 FCM' : '❓ Other'}`, 'info');
+                    log(`<div class="endpoint">Endpoint: ${endpoint}</div>`, 'info');
+                } else {
+                    log('ℹ️ No active subscription', 'info');
+                }
+            } catch (error) {
+                log(`❌ Error checking status: ${error.message}`, 'error');
+            }
+        }
+        
+        async function quickTest() {
+            clearLog();
+            log('🚀 Starting quick push test...', 'info');
+            
+            try {
+                // Step 1: Request permission
+                if (Notification.permission !== 'granted') {
+                    log('🔐 Requesting notification permission...', 'info');
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        throw new Error('Permission denied');
+                    }
+                    log('✅ Permission granted!', 'ok');
+                }
+                
+                // Step 2: Register service worker
+                log('⚙️ Ensuring service worker...', 'info');
+                const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                await navigator.serviceWorker.ready;
+                log('✅ Service worker ready!', 'ok');
+                
+                // Step 3: Subscribe to push
+                log('📝 Creating push subscription...', 'info');
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+                });
+                
+                const subscriptionJSON = subscription.toJSON();
+                const endpoint = subscriptionJSON.endpoint;
+                const isApple = endpoint.includes('web.push.apple.com');
+                const platform = isApple ? 'apple' : 'fcm';
+                
+                log(`✅ Subscription created!`, 'ok');
+                log(`🔗 Type: ${isApple ? '🍎 Apple Push' : '🟢 FCM'}`, 'ok');
+                log(`<div class="endpoint">Endpoint: ${endpoint}</div>`, 'info');
+                
+                // Step 4: Save to database
+                log('💾 Saving to database...', 'info');
+                const savePayload = {
+                    subscription: subscriptionJSON,
+                    client_id: crypto.randomUUID(),
+                    platform,
+                    ua: navigator.userAgent,
+                    user_id: 'quick-test-' + Date.now()
+                };
+                
+                const saveResponse = await fetch(`${SUPABASE_URL}/functions/v1/push_subscribe`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+                    body: JSON.stringify(savePayload)
+                });
+                
+                if (!saveResponse.ok) {
+                    const errorText = await saveResponse.text();
+                    throw new Error(`Save failed: ${saveResponse.status} - ${errorText}`);
+                }
+                
+                const saveResult = await saveResponse.json();
+                log(`✅ Saved to database successfully!`, 'ok');
+                log(`📊 Result: ${JSON.stringify(saveResult, null, 2)}`, 'info');
+                
+                // Step 5: Send test push
+                log('🚀 Sending test push notification...', 'info');
+                const sendPayload = {
+                    endpoint: subscriptionJSON.endpoint,
+                    title: 'M1SSION™ Quick Test ✅',
+                    body: `${isApple ? 'iOS Safari' : 'Desktop'} push working perfectly!`,
+                    data: { url: '/test-push.html', src: 'quick-test' }
+                };
+                
+                const sendResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-push-canary`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+                    body: JSON.stringify(sendPayload)
+                });
+                
+                if (!sendResponse.ok) {
+                    const errorText = await sendResponse.text();
+                    throw new Error(`Send failed: ${sendResponse.status} - ${errorText}`);
+                }
+                
+                const sendResult = await sendResponse.json();
+                log(`✅ Push sent successfully!`, 'ok');
+                log(`📊 Send result: ${JSON.stringify(sendResult, null, 2)}`, 'info');
+                
+                if (sendResult.sent > 0) {
+                    log(`🎉 SUCCESS! Check your device for the notification!`, 'ok');
+                } else {
+                    log(`⚠️ Push was sent but no notifications delivered. Check results above.`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Quick test failed: ${error.message}`, 'error');
+                console.error('Quick test error:', error);
+            }
+        }
+        
+        // Auto-check status on load
+        window.addEventListener('load', checkStatus);
+    </script>
+</body>
+</html>

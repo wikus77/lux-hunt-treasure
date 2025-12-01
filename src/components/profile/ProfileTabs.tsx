@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
+import { BadgeShowcase } from "@/components/gamification/BadgeShowcase";
 
 interface ProfileTabsProps {
   stats: {
@@ -164,47 +165,9 @@ const ProfileTabs = ({
         </div>
       </TabsContent>
       
-      {/* Badges Tab */}
+      {/* Badges Tab - Premium Showcase */}
       <TabsContent value="badges" className="p-4 bg-black/20 rounded-md mt-2">
-        <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-          <Award className="h-4 w-4 text-cyan-400" />
-          Badge e Traguardi
-        </h3>
-        
-        <div className="grid grid-cols-2 gap-3">
-          {badges.map((badge) => (
-            <div 
-              key={badge.id} 
-              className={`p-3 rounded-md border ${badge.unlocked 
-                ? badge.pinned 
-                  ? 'border-amber-500 bg-amber-900/20' 
-                  : 'border-cyan-900/40 bg-cyan-900/10'
-                : 'border-gray-700 bg-black/30 opacity-50'}`}
-            >
-              <div className="flex justify-between items-start">
-                <span className={`text-sm font-bold ${badge.pinned ? 'text-amber-400' : ''}`}>
-                  {badge.name}
-                </span>
-                {badge.unlocked && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={() => togglePinBadge(badge.id)}
-                  >
-                    <Award className={`h-4 w-4 ${badge.pinned ? 'text-amber-400 fill-amber-400' : 'text-gray-400'}`} />
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-gray-400 mt-1">{badge.description}</p>
-              <div className="mt-2 text-xs">
-                {badge.unlocked 
-                  ? <span className="text-green-400">Sbloccato</span> 
-                  : <span className="text-gray-500">Bloccato</span>}
-              </div>
-            </div>
-          ))}
-        </div>
+        <BadgeShowcase />
       </TabsContent>
       
       {/* Account Tab */}

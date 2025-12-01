@@ -23,10 +23,8 @@ export const useProfileSubscription = () => {
       if (!currentUser) return;
 
       try {
-        console.log('🔄 M1SSION™ Checking active subscriptions...');
-        
-        // PRIORITÀ 1: Subscription attiva
-        const { data: activeSubscription } = await supabase
+        // PRIORITÀ 1: Subscription attiva (silent error handling)
+        const { data: activeSubscription, error: subError } = await supabase
           .from('subscriptions')
           .select('*')
           .eq('user_id', currentUser.id)
@@ -35,31 +33,27 @@ export const useProfileSubscription = () => {
           .limit(1);
 
         // PRIORITÀ 2: Fallback profilo
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('subscription_tier, tier')
           .eq('id', currentUser.id)
           .single();
 
+        if (profileError) return; // Silent fail
+
         // Determina piano finale con logica prioritaria
         let finalPlan = "Base";
         
-        if (activeSubscription && activeSubscription.length > 0) {
+        if (!subError && activeSubscription && activeSubscription.length > 0) {
           const sub = activeSubscription[0];
           const isExpired = sub.end_date && new Date(sub.end_date) < new Date();
           
           if (!isExpired) {
             finalPlan = sub.tier;
-            console.log('✅ M1SSION™ Active subscription found:', finalPlan);
           }
         } else if (profileData?.subscription_tier) {
           finalPlan = profileData.subscription_tier;
-          console.log('📋 M1SSION™ Using profile tier:', finalPlan);
         }
-        
-        // 🚨 REMOVED: All developer overrides for production consistency
-        // Subscription tier is now managed purely by database state
-        console.log('📋 M1SSION™ Using pure database tier without overrides:', finalPlan);
 
         // Update subscription based on active plan
         switch (finalPlan) {
@@ -120,7 +114,7 @@ export const useProfileSubscription = () => {
         triggerGlobalSync(finalPlan);
         
       } catch (error) {
-        console.error('Error loading subscription:', error);
+        // Silent error - don't flood console
       }
     };
 

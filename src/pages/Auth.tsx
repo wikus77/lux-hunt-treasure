@@ -161,14 +161,15 @@ const Auth = () => {
         <Login />
       ) : !emailVerified ? (
         <VerificationPendingView />
-      ) : !hasCompletedQuiz ? (
+      ) : /* 🚫 QUIZ AGENTE DISABILITATO - Da ricreare in futuro
+      !hasCompletedQuiz ? (
         <div className="min-h-screen bg-black">
           <h2 className="text-2xl font-bold text-white text-center pt-8 mb-4">
             Completa il tuo profilo
           </h2>
           <EnhancedPersonalityQuiz onComplete={handleQuizComplete} userId={userId!} />
         </div>
-      ) : !accessControl.canAccess ? (
+      ) : */ !accessControl.canAccess ? (
         // Nuovo: Controllo di accesso M1SSION
         <AccessBlockedView
           subscriptionPlan={accessControl.subscriptionPlan}

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M1SSION™ - Push Diagnostics</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #000; color: #fff; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .status { padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .ok { background: #1f5f3f; border: 1px solid #22c55e; }
+        .error { background: #5f1f1f; border: 1px solid #ef4444; }
+        .warning { background: #5f4f1f; border: 1px solid #eab308; }
+        .info { background: #1f3f5f; border: 1px solid #3b82f6; }
+        button { background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin: 5px; font-weight: 500; }
+        button:hover { background: #2563eb; }
+        button:disabled { background: #374151; cursor: not-allowed; }
+        .endpoint { font-family: monospace; font-size: 11px; word-break: break-all; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; margin: 5px 0; }
+        pre { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+        h1 { color: #00D1FF; }
+        h2 { color: #fff; border-bottom: 1px solid #333; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 M1SSION™ Push Diagnostics</h1>
+        <p>Tool completo per diagnosi e test delle notifiche push W3C.</p>
+        
+        <h2>🔍 Controlli Sistema</h2>
+        <div id="system-checks"></div>
+        <button onclick="runSystemChecks()">🔍 Esegui Controlli</button>
+        
+        <h2>📱 Gestione Sottoscrizione</h2>
+        <div id="subscription-status"></div>
+        <button onclick="subscribeAndSave()" id="subscribe-btn">📝 Sottoscrivi & Salva</button>
+        <button onclick="unsubscribe()" id="unsubscribe-btn">🗑️ Cancella Sottoscrizione</button>
+        
+        <h2>🧪 Test Invio</h2>
+        <div id="send-status"></div>
+        <button onclick="testSend()" id="send-btn">🚀 Invia Test Push</button>
+        
+        <h2>📊 Database</h2>
+        <div id="db-status"></div>
+        <button onclick="checkDatabase()">📋 Verifica DB</button>
+        
+        <div id="logs"></div>
+    </div>
+    
+    <script>
+        const SUPABASE_URL = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+        // UNIFIED VAPID key (65 bytes P-256) - matches main app
+        const VAPID_PUBLIC_KEY = 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
+        
+        let currentSubscription = null;
+        
+        function log(...args) {
+            const pre = document.createElement('pre');
+            pre.textContent = new Date().toISOString() + ' - ' + args.join(' ');
+            document.getElementById('logs').appendChild(pre);
+        }
+        
+        function showStatus(elementId, message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            document.getElementById(elementId).appendChild(div);
+        }
+        
+        function clearStatus(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+        
+        function urlB64ToUint8Array(base64String) {
+            try {
+                const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + padding)
+                    .replace(/-/g, '+')
+                    .replace(/_/g, '/');
+                
+                const rawData = window.atob(base64);
+                const outputArray = new Uint8Array(rawData.length);
+                
+                for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+                }
+                
+                // Validate P-256 key format (65 bytes, starts with 0x04)
+                if (outputArray.length !== 65) {
+                    throw new Error(`Invalid VAPID key length: ${outputArray.length} bytes (expected 65)`);
+                }
+                if (outputArray[0] !== 0x04) {
+                    throw new Error(`Invalid VAPID key format: first byte 0x${outputArray[0].toString(16)} (expected 0x04)`);
+                }
+                
+                console.log('✅ VAPID key validation passed:', outputArray.length, 'bytes');
+                return outputArray;
+            } catch (error) {
+                console.error('❌ VAPID key conversion failed:', error);
+                throw error;
+            }
+        }
+        
+        async function runSystemChecks() {
+            clearStatus('system-checks');
+            log('Starting system checks...');
+            
+            // Platform detection
+            const ua = navigator.userAgent;
+            const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+            const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+            
+            showStatus('system-checks', `
+                🔍 <strong>Platform Detection</strong><br/>
+                Platform: ${navigator.platform}<br/>
+                iOS Device: ${isIOS ? '✅' : '❌'}<br/>
+                Safari Browser: ${isSafari ? '✅' : '❌'}<br/>
+                PWA Mode: ${isStandalone ? '✅' : '❌'}
+            `, 'info');
+            
+            // API Support
+            const hasSW = 'serviceWorker' in navigator;
+            const hasPush = 'PushManager' in window;
+            const hasNotif = 'Notification' in window;
+            
+            showStatus('system-checks', `
+                ⚙️ <strong>API Support</strong><br/>
+                Service Worker: ${hasSW ? '✅' : '❌'}<br/>
+                Push Manager: ${hasPush ? '✅' : '❌'}<br/>
+                Notifications: ${hasNotif ? '✅' : '❌'}
+            `, hasSW && hasPush && hasNotif ? 'ok' : 'error');
+            
+            // Permission status
+            if (hasNotif) {
+                showStatus('system-checks', `
+                    🔐 <strong>Permissions</strong><br/>
+                    Current: ${Notification.permission}<br/>
+                    ${Notification.permission === 'granted' ? '✅ Ready to receive notifications' : 
+                      Notification.permission === 'denied' ? '❌ Notifications blocked' : 
+                      '⚠️ Permission not requested yet'}
+                `, Notification.permission === 'granted' ? 'ok' : 'warning');
+            }
+            
+            // Check existing subscription
+            if (hasSW && hasPush) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        const subscription = await registration.pushManager.getSubscription();
+                        if (subscription) {
+                            currentSubscription = subscription;
+                            const endpoint = subscription.endpoint;
+                            const isApple = endpoint.includes('web.push.apple.com') || endpoint.includes('api.push.apple.com');
+                            const isFCM = endpoint.includes('fcm.googleapis.com');
+                            
+                            showStatus('system-checks', `
+                                ✅ <strong>Active Subscription</strong><br/>
+                                Endpoint Type: ${isApple ? '🍎 Apple Push' : isFCM ? '🟢 FCM' : '❓ Other'}<br/>
+                                <div class="endpoint">Endpoint: ${endpoint}</div>
+                            `, 'ok');
+                            
+                            document.getElementById('subscribe-btn').textContent = '🔄 Aggiorna Sottoscrizione';
+                            document.getElementById('unsubscribe-btn').disabled = false;
+                            document.getElementById('send-btn').disabled = false;
+                        } else {
+                            showStatus('system-checks', 'ℹ️ No active subscription found', 'info');
+                            document.getElementById('subscribe-btn').textContent = '📝 Sottoscrivi & Salva';
+                            document.getElementById('unsubscribe-btn').disabled = true;
+                            document.getElementById('send-btn').disabled = true;
+                        }
+                    }
+                } catch (error) {
+                    showStatus('system-checks', `❌ Error checking subscription: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        async function subscribeAndSave() {
+            clearStatus('subscription-status');
+            log('Starting subscription process...');
+            
+            try {
+                // Request permission
+                if (Notification.permission !== 'granted') {
+                    showStatus('subscription-status', '🔐 Requesting notification permission...', 'info');
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        throw new Error('Permission denied');
+                    }
+                }
+                
+                // Register service worker
+                showStatus('subscription-status', '⚙️ Registering service worker...', 'info');
+                const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                await navigator.serviceWorker.ready;
+                log('Service worker registered');
+                
+                // Create subscription
+                showStatus('subscription-status', '📝 Creating push subscription...', 'info');
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+                });
+                
+                currentSubscription = subscription;
+                const endpoint = subscription.endpoint;
+                const isApple = endpoint.includes('web.push.apple.com') || endpoint.includes('api.push.apple.com');
+                
+                showStatus('subscription-status', `
+                    ✅ <strong>Subscription Created</strong><br/>
+                    Type: ${isApple ? '🍎 Apple Push Service' : '🟢 FCM'}<br/>
+                    <div class="endpoint">Endpoint: ${endpoint}</div>
+                `, 'ok');
+                
+                // Save to Supabase using complete subscription data
+                showStatus('subscription-status', '💾 Saving to database...', 'info');
+                const subscriptionJSON = subscription.toJSON();
+                const platform = endpoint.includes('web.push.apple.com') ? 'apple' : 'fcm';
+                const client_id = crypto.randomUUID();
+                
+                const subscriptionData = {
+                    subscription: subscriptionJSON, // Complete subscription with endpoint and keys
+                    client_id,
+                    platform,
+                    ua: navigator.userAgent,
+                    user_id: 'push-diag-test-' + Date.now()
+                };
+                
+                log('Subscription data being sent:', subscriptionData);
+                
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/push_subscribe_canary`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        subscription: subscriptionJSON,
+                        user_id: '495246c1-9154-4f01-a428-7f37fe230180', // Default test user
+                        client: 'push-diag',
+                        ua: navigator.userAgent,
+                        platform: platform
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showStatus('subscription-status', `✅ <strong>Saved to Database</strong><br/>Type: ${result.endpoint_type || 'Success'}`, 'ok');
+                    log('Subscription saved:', result);
+                    
+                    document.getElementById('subscribe-btn').textContent = '🔄 Aggiorna Sottoscrizione';
+                    document.getElementById('unsubscribe-btn').disabled = false;
+                    document.getElementById('send-btn').disabled = false;
+                } else {
+                    const error = await response.text();
+                    showStatus('subscription-status', `❌ <strong>Save Failed</strong><br/>Status: ${response.status}<br/>Error: ${error}`, 'error');
+                    log('Save error response:', error);
+                    throw new Error(`Database save failed: ${response.status} - ${error}`);
+                }
+                
+            } catch (error) {
+                showStatus('subscription-status', `❌ <strong>Subscription Failed</strong><br/>${error.message}`, 'error');
+                log('Subscription error:', error);
+            }
+        }
+        
+        async function unsubscribe() {
+            clearStatus('subscription-status');
+            log('Unsubscribing...');
+            
+            try {
+                if (currentSubscription) {
+                    await currentSubscription.unsubscribe();
+                    currentSubscription = null;
+                    
+                    showStatus('subscription-status', '✅ Successfully unsubscribed', 'ok');
+                    document.getElementById('subscribe-btn').textContent = '📝 Sottoscrivi & Salva';
+                    document.getElementById('unsubscribe-btn').disabled = true;
+                    document.getElementById('send-btn').disabled = true;
+                } else {
+                    showStatus('subscription-status', 'ℹ️ No active subscription to remove', 'info');
+                }
+            } catch (error) {
+                showStatus('subscription-status', `❌ Unsubscribe failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testSend() {
+            clearStatus('send-status');
+            log('Sending test push...');
+            
+            if (!currentSubscription) {
+                showStatus('send-status', '⚠️ No active subscription. Subscribe first.', 'warning');
+                return;
+            }
+            
+            try {
+                // L2 Fix: Always print endpoint_type deduced
+                const endpoint = currentSubscription.endpoint;
+                const endpointType = endpoint.includes('fcm.googleapis.com') ? 'FCM' : 
+                                   endpoint.includes('web.push.apple.com') ? 'APNS' : 'UNKNOWN';
+                
+                showStatus('send-status', `📱 Endpoint Type: ${endpointType}`, 'info');
+                log(`Endpoint type deduced: ${endpointType}`);
+                
+                const testPayload = {
+                    user_id: '495246c1-9154-4f01-a428-7f37fe230180', // Default test user
+                    title: 'M1SSION CANARY OK',
+                    body: `E2E test da push-diag.html - ${new Date().toLocaleTimeString()}`,
+                    data: { 
+                        src: 'push-diag', 
+                        testId: Date.now().toString(),
+                        url: 'https://m1ssion.eu' 
+                    }
+                };
+                
+                showStatus('send-status', '🚀 Sending test push via canary...', 'info');
+                
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/send-push-canary`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: JSON.stringify(testPayload)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // L2 Fix: Parse response correctly - no more [object Object]
+                    const sent = typeof result.sent === 'number' ? result.sent : (result.sent?.length || 0);
+                    const failed = typeof result.failed === 'number' ? result.failed : (result.failed?.length || 0);
+                    const toDelete = typeof result.to_delete === 'number' ? result.to_delete : (result.to_delete?.length || 0);
+                    
+                    showStatus('send-status', 
+                        `✅ Canary test completato! ✅ ${sent} inviati, ❌ ${failed} falliti${toDelete > 0 ? `, 🗑️ ${toDelete} da eliminare` : ''}`, 
+                        sent > 0 ? 'ok' : 'warning'
+                    );
+                    
+                    // L2 Fix: Show raw JSON response with details expansion
+                    const jsonStr = JSON.stringify(result, null, 2);
+                    showStatus('send-status', 
+                        `📋 Raw Response: <pre style="font-size: 10px; max-height: 200px; overflow: auto; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px;">${jsonStr.substring(0, 1000)}${jsonStr.length > 1000 ? '\n... (truncated)' : ''}</pre>`, 
+                        'info'
+                    );
+                    
+                    log('Canary test result:', result);
+                } else {
+                    const error = await response.text();
+                    // L2 Fix: If DB save fails (invalid UUID), show message but continue with send if possible
+                    if (response.status === 500 && error.includes('invalid input syntax for type uuid')) {
+                        showStatus('send-status', 
+                            `⚠️ <strong>Database Save Failed (UUID Error)</strong><br/>Continuing with send attempt anyway...<br/><small>${error}</small>`, 
+                            'warning'
+                        );
+                        log('DB save failed due to UUID error, but continuing:', error);
+                    } else {
+                        throw new Error(`Canary test failed: ${response.status} - ${error}`);
+                    }
+                }
+                
+            } catch (error) {
+                showStatus('send-status', `❌ <strong>Send Failed</strong><br/>${error.message}`, 'error');
+                log('Send error:', error);
+            }
+        }
+        
+        async function checkDatabase() {
+            clearStatus('db-status');
+            log('Checking database...');
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?select=*&order=created_at.desc&limit=5`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    }
+                });
+                
+                if (response.ok) {
+                    const subscriptions = await response.json();
+                    
+                    if (subscriptions.length > 0) {
+                        const appleCount = subscriptions.filter(s => s.endpoint && (s.endpoint.includes('web.push.apple.com') || s.endpoint.includes('api.push.apple.com'))).length;
+                        const fcmCount = subscriptions.filter(s => s.endpoint && s.endpoint.includes('fcm.googleapis.com')).length;
+                        
+                        showStatus('db-status', `
+                            📊 <strong>Database Status</strong><br/>
+                            Total subscriptions: ${subscriptions.length}<br/>
+                            🍎 Apple Push: ${appleCount}<br/>
+                            🟢 FCM: ${fcmCount}<br/>
+                            Latest: ${new Date(subscriptions[0].created_at).toLocaleString()}
+                        `, 'ok');
+                        
+                        // Show recent endpoints
+                        subscriptions.forEach((sub, i) => {
+                            const isApple = sub.endpoint && (sub.endpoint.includes('web.push.apple.com') || sub.endpoint.includes('api.push.apple.com'));
+                            showStatus('db-status', `
+                                ${i + 1}. ${isApple ? '🍎' : '🟢'} <div class="endpoint">${sub.endpoint || 'N/A'}</div>
+                                Created: ${new Date(sub.created_at).toLocaleString()}
+                            `, 'info');
+                        });
+                    } else {
+                        showStatus('db-status', 'ℹ️ No subscriptions found in database', 'info');
+                    }
+                } else {
+                    throw new Error(`Database check failed: ${response.status}`);
+                }
+                
+            } catch (error) {
+                showStatus('db-status', `❌ Database check failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run system checks on load
+        window.addEventListener('load', runSystemChecks);
+    </script>
+</body>
+</html>

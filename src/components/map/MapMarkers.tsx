@@ -183,7 +183,7 @@ const MapMarkers: React.FC = () => {
   };
 
   const getRewardDescription = (marker: MarkerData): string => {
-    return `${marker.title} - 10 XP`;
+    return `${marker.title} - 10 PE`;
   };
 
   if (loading) {
