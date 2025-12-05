@@ -54,6 +54,7 @@ import { BattleShopPill } from '@/components/battle/BattleShopPill';
 import { AgentBattleCard } from '@/components/battle/AgentBattleCard';
 import { BattleModal } from '@/components/battle/BattleModal';
 import { RewardCounterPill } from '@/components/map/RewardCounterPill';
+import { FinalShootPill, FinalShootOverlay, FinalShootProvider } from '@/components/final-shoot';
 import '@/features/m1u/m1u-ui.css'; // For pill-orb style
 import { useDebugFlag } from '@/debug/useDebugFlag';
 import { DebugMapPanel } from '@/debug/DebugMapPanel';
@@ -698,7 +699,8 @@ export default function MapTiler3D() {
         zoom: z,
         pitch,
         bearing,
-        hash: true
+        hash: true,
+        attributionControl: false // Hide MapLibre/MapTiler attribution
       });
 
       console.log('✅ MapLibre instance created');
@@ -1278,7 +1280,7 @@ export default function MapTiler3D() {
   }, [activeBattleOnMap, battleTimeLeft]);
 
   return (
-    <>
+    <FinalShootProvider>
       <div
         id="mission-header-container"
         style={{ 
@@ -1355,6 +1357,9 @@ export default function MapTiler3D() {
           zIndex: 1
         }} 
       />
+
+      {/* FINAL SHOOT Overlay - Captures map clicks when active */}
+      <FinalShootOverlay map={mapRef.current} />
 
       {/* Right side pills - pill-orb style like Shop */}
       <div 
@@ -1492,6 +1497,17 @@ export default function MapTiler3D() {
       {/* Layer Toggle Panel */}
       <LayerTogglePanel layers={layerVisibility} onToggle={toggleLayer} />
 
+      {/* FINAL SHOOT Pill - Only visible in last 7 days of mission */}
+      <div 
+        className="fixed z-[1001]"
+        style={{
+          left: '16px',
+          bottom: 'calc(env(safe-area-inset-bottom, 34px) + 450px)',
+        }}
+      >
+        <FinalShootPill />
+      </div>
+
       {/* Reward Counter Pill - Shows available rewards */}
       <div 
         className="fixed z-[1001]"
@@ -1593,7 +1609,7 @@ export default function MapTiler3D() {
 
       {/* BUZZ Diagnostic Panel (dev-only) */}
       <BuzzDiagnosticPanel />
-    </>
+    </FinalShootProvider>
   );
 }
 

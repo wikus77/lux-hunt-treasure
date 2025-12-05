@@ -160,10 +160,12 @@ export function useRealtimeLeaderboard(options: UseRealtimeLeaderboardOptions = 
       }
 
       // Mark current user and calculate changes
+      // Note: change is set to 0 as we don't track historical position changes yet
+      // This is better than showing random/fake numbers to users
       const enrichedData = data.map(u => ({
         ...u,
         isCurrentUser: u.id === user?.id,
-        change: Math.floor(Math.random() * 11) - 5 // TODO: Real change from history
+        change: 0 // Real change tracking would require storing position history
       }));
 
       setLeaderboard(enrichedData);

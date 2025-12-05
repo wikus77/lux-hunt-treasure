@@ -35,7 +35,7 @@ const DNAQuickAction: React.FC = () => {
     <motion.button
       aria-label={`M1SSION DNA - ${archetypeConfig.nameIt}`}
       onClick={handleClick}
-      className="fixed z-[70] top-48 right-4 md:top-56 md:right-8 w-12 h-12 md:w-14 md:h-14 rounded-full backdrop-blur-md border shadow-lg transition-all flex items-center justify-center"
+      className="fixed z-[70] top-52 right-4 md:top-60 md:right-8 w-12 h-12 md:w-14 md:h-14 rounded-full backdrop-blur-md border shadow-lg transition-all flex items-center justify-center"
       style={{
         backgroundColor: `${archetypeConfig.color}15`,
         borderColor: `${archetypeConfig.color}40`,

@@ -95,10 +95,20 @@ export const ProfilePage: React.FC = () => {
       const clues_unlocked = cluesResult.data?.length || 0;
       const buzz_used = buzzResult.data?.reduce((sum, day) => sum + day.buzz_count, 0) || 0;
 
+      // Fetch prizes won from marker_reward_claims
+      const { count: prizesCount } = await supabase
+        .from('marker_reward_claims')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Missions completed = 1 if user has been playing (clues > 0), else 0
+      // Full mission tracking would require a missions_completed table
+      const missionsCompleted = clues_unlocked > 0 ? 1 : 0;
+
       setStats({
         clues_unlocked,
-        prizes_won: 0, // TODO: implement when prizes table is ready
-        missions_completed: 0, // TODO: implement missions tracking
+        prizes_won: prizesCount || 0,
+        missions_completed: missionsCompleted,
         buzz_used
       });
 

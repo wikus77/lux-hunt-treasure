@@ -6,11 +6,7 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { withCors } from "../_shared/cors.ts";
 
 interface CreateBattleRequest {
   opponent_id?: string;
@@ -25,11 +21,7 @@ interface CreateBattleRequest {
 const VALID_STAKE_TYPES = ['energy', 'buzz', 'clue'] as const;
 const VALID_STAKE_PERCENTAGES = [25, 50, 75] as const;
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+serve(withCors(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
     const supabase = createClient(
@@ -40,7 +32,7 @@ serve(async (req) => {
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
+      return jsonResponse({ error: 'Unauthorized' }, 401);
     }
 
     const body: CreateBattleRequest = await req.json();
@@ -50,41 +42,32 @@ serve(async (req) => {
 
     // Validation: must have opponent_id OR opponent_handle
     if (!opponent_id && !opponent_handle) {
-      return Response.json(
-        { 
-          code: 'INVALID_INPUT',
-          error: 'Missing opponent',
-          hint: 'Provide opponent_id or opponent_handle',
-          success: false 
-        },
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ 
+        code: 'INVALID_INPUT',
+        error: 'Missing opponent',
+        hint: 'Provide opponent_id or opponent_handle',
+        success: false 
+      }, 400);
     }
 
     // Validate stake_type
     if (!stake_type || !VALID_STAKE_TYPES.includes(stake_type as any)) {
-      return Response.json(
-        { 
-          code: 'INVALID_INPUT',
-          error: 'Invalid stake_type',
-          hint: `stake_type must be one of: ${VALID_STAKE_TYPES.join(', ')}`,
-          success: false 
-        },
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ 
+        code: 'INVALID_INPUT',
+        error: 'Invalid stake_type',
+        hint: `stake_type must be one of: ${VALID_STAKE_TYPES.join(', ')}`,
+        success: false 
+      }, 400);
     }
 
     // Validate stake_percentage
     if (!stake_percentage || !VALID_STAKE_PERCENTAGES.includes(stake_percentage as any)) {
-      return Response.json(
-        { 
-          code: 'INVALID_INPUT',
-          error: 'Invalid stake_percentage',
-          hint: `stake_percentage must be one of: ${VALID_STAKE_PERCENTAGES.join(', ')}`,
-          success: false 
-        },
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ 
+        code: 'INVALID_INPUT',
+        error: 'Invalid stake_percentage',
+        hint: `stake_percentage must be one of: ${VALID_STAKE_PERCENTAGES.join(', ')}`,
+        success: false 
+      }, 400);
     }
 
     // Resolve opponent_handle to opponent_id if needed
@@ -96,30 +79,24 @@ serve(async (req) => {
         .single();
 
       if (!opponentProfile) {
-        return Response.json(
-          { 
-            code: 'OPPONENT_NOT_FOUND',
-            error: 'Opponent not found',
-            hint: `No user found with handle or agent_code: "${opponent_handle}"`,
-            success: false 
-          },
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return jsonResponse({ 
+          code: 'OPPONENT_NOT_FOUND',
+          error: 'Opponent not found',
+          hint: `No user found with handle or agent_code: "${opponent_handle}"`,
+          success: false 
+        }, 404);
       }
 
       opponent_id = opponentProfile.id;
     }
 
     if (opponent_id === user.id) {
-      return Response.json(
-        { 
-          code: 'INVALID_INPUT',
-          error: 'Cannot battle yourself',
-          hint: 'Choose a different opponent',
-          success: false 
-        },
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ 
+        code: 'INVALID_INPUT',
+        error: 'Cannot battle yourself',
+        hint: 'Choose a different opponent',
+        success: false 
+      }, 400);
     }
 
     // Check ghost mode
@@ -130,15 +107,12 @@ serve(async (req) => {
       .single();
 
     if (ghostMode?.ghost_mode_active && ghostMode?.ghost_until && new Date(ghostMode.ghost_until) > new Date()) {
-      return Response.json(
-        { 
-          code: 'GHOST_MODE',
-          error: 'You are in ghost mode',
-          hint: `Ghost mode active until ${ghostMode.ghost_until}`,
-          success: false 
-        },
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ 
+        code: 'GHOST_MODE',
+        error: 'You are in ghost mode',
+        hint: `Ghost mode active until ${ghostMode.ghost_until}`,
+        success: false 
+      }, 403);
     }
 
     // Get creator profile for stake calculation
@@ -149,15 +123,12 @@ serve(async (req) => {
       .single();
 
     if (!profile) {
-      return Response.json(
-        { 
-          code: 'PROFILE_NOT_FOUND',
-          error: 'User profile not found',
-          hint: 'Complete your profile setup before creating battles',
-          success: false 
-        },
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ 
+        code: 'PROFILE_NOT_FOUND',
+        error: 'User profile not found',
+        hint: 'Complete your profile setup before creating battles',
+        success: false 
+      }, 404);
     }
 
     // Calculate stake amount
@@ -169,15 +140,12 @@ serve(async (req) => {
     const stakeAmount = Math.floor((availableAmount * stake_percentage) / 100);
 
     if (stakeAmount <= 0) {
-      return Response.json(
-        { 
-          code: 'INSUFFICIENT_BALANCE',
-          error: `Insufficient ${stake_type} balance`,
-          hint: `You have ${availableAmount} ${stake_type}, need at least ${stake_percentage}% for stake (minimum 1)`,
-          success: false 
-        },
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ 
+        code: 'INSUFFICIENT_BALANCE',
+        error: `Insufficient ${stake_type} balance`,
+        hint: `You have ${availableAmount} ${stake_type}, need at least ${stake_percentage}% for stake (minimum 1)`,
+        success: false 
+      }, 400);
     }
 
     console.log(`✅ Stake validated: ${stakeAmount} ${stake_type} (${stake_percentage}% of ${availableAmount})`);
@@ -208,15 +176,12 @@ serve(async (req) => {
 
     if (battleError) {
       console.error('❌ Battle creation DB error:', battleError);
-      return Response.json(
-        { 
-          code: 'DATABASE_ERROR',
-          error: 'Failed to create battle',
-          hint: battleError.message,
-          success: false 
-        },
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ 
+        code: 'DATABASE_ERROR',
+        error: 'Failed to create battle',
+        hint: battleError.message,
+        success: false 
+      }, 500);
     }
 
     // Log audit
@@ -262,15 +227,12 @@ serve(async (req) => {
       // Non-blocking error - battle creation succeeded
     }
 
-    return Response.json(
-      {
-        success: true,
-        battle_id: battle.id,
-        arena_name: arenaName,
-        stake_amount: stakeAmount,
-      },
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({
+      success: true,
+      battle_id: battle.id,
+      arena_name: arenaName,
+      stake_amount: stakeAmount,
+    }, 200);
 
   } catch (error) {
     console.error('❌ Unexpected error in battle-create:', error);
@@ -289,16 +251,21 @@ serve(async (req) => {
       }
     }
     
-    return Response.json(
-      { 
-        code: 'INTERNAL_ERROR',
-        error: 'Internal server error',
-        hint: errorMessage,
-        success: false 
-      },
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ 
+      code: 'INTERNAL_ERROR',
+      error: 'Internal server error',
+      hint: errorMessage,
+      success: false 
+    }, 500);
   }
-});
+}));
+
+// Helper function for JSON responses (CORS handled by withCors wrapper)
+function jsonResponse(payload: unknown, status = 200) {
+  return new Response(JSON.stringify(payload), { 
+    status, 
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

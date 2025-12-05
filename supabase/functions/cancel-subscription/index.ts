@@ -1,25 +1,25 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Cancel Subscription Edge Function - Sistema Abbonamenti M1SSION™
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { withCors } from "../_shared/cors.ts";
+import { maskValue } from "../_shared/secureLog.ts";
 
 const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[M1SSION-CANCEL] ${step}${detailsStr}`);
+  // Mask sensitive fields before logging
+  if (details) {
+    const masked = { ...details };
+    if (masked.email) masked.email = maskValue(masked.email, 'email');
+    if (masked.userId) masked.userId = maskValue(masked.userId, 'uuid');
+    console.log(`[M1SSION-CANCEL] ${step} - ${JSON.stringify(masked)}`);
+  } else {
+    console.log(`[M1SSION-CANCEL] ${step}`);
+  }
 };
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+serve(withCors(async (req) => {
   try {
     logStep("🚀 M1SSION™ Cancel Subscription Started");
 
@@ -66,7 +66,7 @@ serve(async (req) => {
           } catch (stripeError) {
             logStep("⚠️ Failed to cancel Stripe subscription", { 
               subscriptionId: sub.stripe_subscription_id, 
-              error: stripeError.message 
+              error: (stripeError as Error).message 
             });
             // Continue with other subscriptions even if one fails
           }
@@ -90,14 +90,14 @@ serve(async (req) => {
                 await stripe.subscriptions.cancel(subscription.id);
                 logStep("✅ Additional Stripe subscription canceled", { subscriptionId: subscription.id });
               } catch (error) {
-                logStep("⚠️ Error canceling additional subscription", { error: error.message });
+                logStep("⚠️ Error canceling additional subscription", { error: (error as Error).message });
               }
             }
           }
         }
       }
     } catch (error) {
-      logStep("⚠️ Error searching customer subscriptions", { error: error.message });
+      logStep("⚠️ Error searching customer subscriptions", { error: (error as Error).message });
     }
 
     // 🚨 CRITICAL FIX: Force update ALL subscriptions to canceled
@@ -147,7 +147,7 @@ serve(async (req) => {
       success: true,
       message: "Subscription canceled successfully"
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       status: 200,
     });
 
@@ -159,10 +159,10 @@ serve(async (req) => {
       error: errorMessage,
       timestamp: new Date().toISOString()
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       status: 500,
     });
   }
-});
+}));
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

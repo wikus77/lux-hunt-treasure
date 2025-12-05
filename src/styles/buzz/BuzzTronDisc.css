@@ -298,4 +298,98 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   VARIANTE ROSSA PER BUZZ MAP - Solo modifiche estetiche (colore + dimensione)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.tron-disc.tron-disc-red {
+  /* 50% smaller */
+  width: clamp(140px, 27.5vw, 190px);
+  
+  /* Red outer border with glow */
+  box-shadow:
+    0 0 0 3px #ff3333,
+    0 0 20px rgba(255, 51, 51, 0.6),
+    0 0 40px rgba(255, 51, 51, 0.3),
+    inset 0 -30px 60px rgba(0, 0, 0, 0.8),
+    inset 0 2px 8px rgba(255, 255, 255, 0.05);
+}
+
+.tron-disc.tron-disc-red:not(:disabled):hover {
+  box-shadow:
+    0 0 0 3px #ff3333,
+    0 0 25px rgba(255, 51, 51, 0.6),
+    0 0 50px rgba(255, 51, 51, 0.4),
+    0 8px 30px rgba(255, 51, 51, 0.3),
+    inset 0 -30px 60px rgba(0, 0, 0, 0.8),
+    inset 0 2px 8px rgba(255, 255, 255, 0.08);
+}
+
+.tron-disc.tron-disc-red:not(:disabled):active {
+  box-shadow:
+    0 0 0 3px #ff3333,
+    0 0 15px rgba(255, 51, 51, 0.6),
+    0 0 30px rgba(255, 51, 51, 0.3),
+    inset 0 -30px 60px rgba(0, 0, 0, 0.9),
+    inset 0 2px 8px rgba(255, 255, 255, 0.03);
+}
+
+/* Panel lines - asterisco ROSSO */
+.tron-disc.tron-disc-red::before {
+  background: 
+    linear-gradient(90deg, transparent 48%, rgba(255, 51, 51, 0.08) 49%, rgba(255, 51, 51, 0.08) 51%, transparent 52%),
+    linear-gradient(0deg, transparent 48%, rgba(255, 51, 51, 0.08) 49%, rgba(255, 51, 51, 0.08) 51%, transparent 52%),
+    linear-gradient(45deg, transparent 48%, rgba(255, 51, 51, 0.05) 49%, rgba(255, 51, 51, 0.05) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(255, 51, 51, 0.05) 49%, rgba(255, 51, 51, 0.05) 51%, transparent 52%);
+}
+
+/* LED ring ROSSO */
+.tron-disc.tron-disc-red .tron-led-ring::before {
+  border-color: rgba(255, 51, 51, 0.2);
+  box-shadow: 
+    inset 0 0 8px rgba(255, 51, 51, 0.1),
+    0 0 8px rgba(255, 51, 51, 0.1);
+}
+
+.tron-disc.tron-disc-red .tron-led-ring.loading::after {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    #ff3333 90deg,
+    transparent 90deg
+  );
+  filter: drop-shadow(0 0 12px #ff3333);
+}
+
+/* Dots ROSSI */
+.tron-disc.tron-disc-red .tron-disc-dots::before,
+.tron-disc.tron-disc-red .tron-disc-dots::after,
+.tron-disc.tron-disc-red .tron-disc-dots-sides::before,
+.tron-disc.tron-disc-red .tron-disc-dots-sides::after {
+  background: #ff3333;
+  box-shadow: 
+    0 0 8px #ff3333,
+    0 0 16px rgba(255, 51, 51, 0.5);
+}
+
+/* Loading spinner ROSSO */
+.tron-disc.tron-disc-red .tron-loading-spinner {
+  border-top-color: #ff3333;
+  border-right-color: #ff3333;
+}
+
+/* Font size ridotto per versione 50% più piccola */
+.tron-disc.tron-disc-red .tron-price {
+  font-size: clamp(16px, 3.5vw, 24px);
+}
+
+/* Dots più piccoli */
+.tron-disc.tron-disc-red .tron-disc-dots::before,
+.tron-disc.tron-disc-red .tron-disc-dots::after,
+.tron-disc.tron-disc-red .tron-disc-dots-sides::before,
+.tron-disc.tron-disc-red .tron-disc-dots-sides::after {
+  width: 4px;
+  height: 4px;
+}
+
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

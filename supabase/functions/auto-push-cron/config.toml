@@ -1,5 +1,9 @@
-# Disable JWT verification - uses x-cron-secret instead
+# 🔒 SECURITY NOTE:
+# verify_jwt = false because this function is called by:
+# - Supabase pg_cron (database scheduled jobs)
+# - Internal triggers
+# JWT verification is done manually in code via CRON_SECRET check
+# Set CRON_SECRET env var in Supabase Dashboard for strict auth
+
 [function]
 verify_jwt = false
-
-

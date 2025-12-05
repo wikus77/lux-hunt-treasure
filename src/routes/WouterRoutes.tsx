@@ -92,11 +92,15 @@ import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import OnboardingSandbox from "@/pages/OnboardingSandbox";
 
 import Terms from "@/pages/Terms";
+import TermsConditions from "@/pages/legal/TermsConditions";
+import PrivacyPolicyComplete from "@/pages/legal/PrivacyPolicyComplete";
+import CookiePolicyComplete from "@/pages/legal/CookiePolicyComplete";
 import Contact from "@/pages/Contact";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import CookiePolicy from "@/pages/CookiePolicy";
 import SafeCreative from "@/pages/SafeCreative";
 import GameRules from "@/pages/GameRules";
+import Policies from "@/pages/legal/Policies";
 
 // Subscription plan pages
 import SilverPlanPage from "@/pages/subscriptions/SilverPlanPage";
@@ -266,6 +270,17 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          {/* Buzz Map alias - redirects to map-3d-tiler */}
+          <Route path="/buzz-map">
+            <ProtectedRoute>
+              <GlobalLayout>
+                <React.Suspense fallback={<div>Loading 3D Map...</div>}>
+                  {React.createElement(React.lazy(() => import('@/pages/sandbox/MapTiler3D')))}
+                </React.Suspense>
+              </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
           {/* Living Map 3D - Route Alias */}
           <Route path="/living-map-3d">
             <ProtectedRoute>
@@ -283,7 +298,9 @@ const WouterRoutes: React.FC = () => {
 
           <Route path="/intelligence">
             <ProtectedRoute>
-              <IntelligencePage />
+              <GlobalLayout>
+                <IntelligencePage />
+              </GlobalLayout>
             </ProtectedRoute>
           </Route>
 
@@ -770,15 +787,19 @@ const WouterRoutes: React.FC = () => {
 
           {/* Legal routes */}
           <Route path="/terms">
-            <GlobalLayout><Terms /></GlobalLayout>
+            <GlobalLayout><TermsConditions /></GlobalLayout>
+          </Route>
+          
+          <Route path="/terms-conditions">
+            <GlobalLayout><TermsConditions /></GlobalLayout>
           </Route>
           
           <Route path="/privacy-policy">
-            <GlobalLayout><PrivacyPolicy /></GlobalLayout>
+            <GlobalLayout><PrivacyPolicyComplete /></GlobalLayout>
           </Route>
           
           <Route path="/cookie-policy">
-            <GlobalLayout><CookiePolicy /></GlobalLayout>
+            <GlobalLayout><CookiePolicyComplete /></GlobalLayout>
           </Route>
           
           <Route path="/safecreative">
@@ -787,6 +808,14 @@ const WouterRoutes: React.FC = () => {
           
           <Route path="/game-rules">
             <GlobalLayout><GameRules /></GlobalLayout>
+          </Route>
+          
+          <Route path="/policies">
+            <GlobalLayout><Policies /></GlobalLayout>
+          </Route>
+          
+          <Route path="/game-policies">
+            <GlobalLayout><Policies /></GlobalLayout>
           </Route>
 
           {/* Contact route */}

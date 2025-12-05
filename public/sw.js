@@ -273,6 +273,11 @@ self.addEventListener('message', (event) => {
     console.log('[M1SSION SW] ⏭️ SKIP_WAITING received, activating new SW...');
     self.skipWaiting();
   }
+  
+  // Keep-alive ping from app to prevent SW termination
+  if (event.data && event.data.type === 'KEEP_ALIVE') {
+    // Silent acknowledgment - keeps SW active
+  }
 });
 
 console.log(`[M1SSION SW] ✅ Service Worker v${SW_VERSION} loaded successfully`);

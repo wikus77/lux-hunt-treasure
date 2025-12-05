@@ -18,8 +18,9 @@ const LandingFooter = () => {
           <div className="flex flex-wrap gap-4 justify-center md:justify-end">
             <Link to="/privacy-policy" className="text-base text-white/80 hover:text-cyan-400 transition-colors font-medium px-2 py-1">Privacy Policy</Link>
             <Link to="/cookie-policy" className="text-base text-white/80 hover:text-cyan-400 transition-colors font-medium px-2 py-1">Cookie Policy</Link>
-            <Link to="/terms" className="text-base text-white/80 hover:text-cyan-400 transition-colors font-medium px-2 py-1">Termini e Condizioni</Link>
-            <Link to="/contact" className="text-base text-white/80 hover:text-cyan-400 transition-colors font-medium px-2 py-1">Contatti</Link>
+            <Link to="/terms" className="text-base text-white/80 hover:text-cyan-400 transition-colors font-medium px-2 py-1">Terms</Link>
+            <Link to="/policies" className="text-base text-white/80 hover:text-cyan-400 transition-colors font-medium px-2 py-1">Policies</Link>
+            <Link to="/contact" className="text-base text-white/80 hover:text-cyan-400 transition-colors font-medium px-2 py-1">Contact</Link>
           </div>
         </div>
         <div className="border-t border-white/20 pt-8 text-center md:text-left">

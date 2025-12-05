@@ -1,22 +1,13 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
+import { withCors } from '../_shared/cors.ts';
 
 // 🔍 Debug switch (controlled by ENV)
 const DEBUG = Deno.env.get('DEBUG_BUZZ_MAP') === '1';
 const dlog = (...args: unknown[]) => { if (DEBUG) console.log(...args); };
 
-// CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-serve(async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+serve(withCors(async (req: Request): Promise<Response> => {
   // Debug/trace flags
   const wantsDebug = req.headers.get('x-m1-debug') === '1' || Deno.env.get('DEBUG_PANELS') === 'true';
   const wantsTrace = req.headers.get('x-debug') === '1';
@@ -70,14 +61,11 @@ serve(async (req: Request): Promise<Response> => {
       
       if (!bodyText || bodyText.trim() === '') {
         console.error('❌ [HANDLE-BUZZ-MAP] Empty request body');
-        return new Response(JSON.stringify({ 
+        return jsonResponse({ 
           success: false, 
           error: true,
           errorMessage: 'Request body is empty' 
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        }, 400);
       }
 
       rawBody = JSON.parse(bodyText);
@@ -88,14 +76,11 @@ serve(async (req: Request): Promise<Response> => {
       });
     } catch (parseError: any) {
       console.error('❌ [HANDLE-BUZZ-MAP] JSON parse error:', parseError.message);
-      return new Response(JSON.stringify({ 
+      return jsonResponse({ 
         success: false, 
         error: true,
         errorMessage: 'Invalid JSON in request body: ' + parseError.message 
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      }, 400);
     }
 
     const userId = rawBody.userId ?? rawBody.user_id ?? user.id;
@@ -121,14 +106,11 @@ serve(async (req: Request): Promise<Response> => {
         raw: rawCoordinates,
         normalized: coordinates
       });
-      return new Response(JSON.stringify({ 
+      return jsonResponse({ 
         success: false, 
         error: true,
         errorMessage: 'Valid coordinates are required for BUZZ MAP. Please ensure lat/lng are provided.' 
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      }, 400);
     }
     
     // TRACE: Payload
@@ -274,10 +256,7 @@ serve(async (req: Request): Promise<Response> => {
     
     console.log('🎉 [HANDLE-BUZZ-MAP] Function completed successfully');
     
-    return new Response(JSON.stringify(responseBody), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return jsonResponse(responseBody, 200);
 
   } catch (error: any) {
     console.error('❌ [HANDLE-BUZZ-MAP] Function error:', error);
@@ -297,13 +276,20 @@ serve(async (req: Request): Promise<Response> => {
       ...(wantsDebug && { __debug: debugBlock })
     };
 
-    return new Response(JSON.stringify(errorResponse), {
-      status: error.message?.includes('Unauthorized') ? 401 : 
-             error.message?.includes('insufficient') ? 402 : 
-             error.message?.includes('coordinates') ? 400 : 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    const statusCode = error.message?.includes('Unauthorized') ? 401 : 
+                       error.message?.includes('insufficient') ? 402 : 
+                       error.message?.includes('coordinates') ? 400 : 500;
+
+    return jsonResponse(errorResponse, statusCode);
   }
-});
+}));
+
+// Helper function for JSON responses (CORS handled by withCors wrapper)
+function jsonResponse(payload: unknown, status = 200) {
+  return new Response(JSON.stringify(payload), { 
+    status, 
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

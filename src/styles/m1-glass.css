@@ -99,6 +99,47 @@
 /* .m1ssion-glass-card is now EXCLUSIVELY defined in src/styles/theme.css */
 /* Using "Obsidian + Aurora 3D" style with solid background and 4-layer depth */
 /* DO NOT redefine here to avoid CSS cascade conflicts */
-/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+
+/* ========== M1 RELIEF 3D EFFECT ========== */
+/* Effetto rilievo 3D per container - © 2025 Joseph MULÉ */
+.m1-relief {
+  background: linear-gradient(160deg, rgba(15, 25, 45, 0.95) 0%, rgba(5, 10, 25, 0.98) 50%, rgba(10, 20, 40, 0.95) 100%) !important;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 2px solid rgba(0, 209, 255, 0.4) !important;
+  border-top-color: rgba(0, 209, 255, 0.6) !important;
+  border-bottom-color: rgba(0, 150, 200, 0.3) !important;
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.7),
+    0 15px 40px rgba(0, 0, 0, 0.5),
+    0 5px 20px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.15),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(0, 209, 255, 0.25),
+    0 0 60px rgba(0, 209, 255, 0.15),
+    0 -5px 30px rgba(0, 209, 255, 0.1) !important;
+  transform: translateY(-4px);
+  position: relative;
+}
+
+/* Versione più sottile per container più piccoli */
+.m1-relief-sm {
+  background: linear-gradient(160deg, rgba(15, 25, 45, 0.92) 0%, rgba(5, 10, 25, 0.95) 50%, rgba(10, 20, 40, 0.92) 100%) !important;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1.5px solid rgba(0, 209, 255, 0.35) !important;
+  border-top-color: rgba(0, 209, 255, 0.5) !important;
+  border-bottom-color: rgba(0, 150, 200, 0.25) !important;
+  box-shadow: 
+    0 15px 50px rgba(0, 0, 0, 0.6),
+    0 8px 25px rgba(0, 0, 0, 0.4),
+    0 3px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 3px rgba(255, 255, 255, 0.12),
+    inset 0 -1px 3px rgba(0, 0, 0, 0.35),
+    0 0 20px rgba(0, 209, 255, 0.2),
+    0 0 40px rgba(0, 209, 255, 0.1) !important;
+  transform: translateY(-2px);
+  position: relative;
+}
 
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

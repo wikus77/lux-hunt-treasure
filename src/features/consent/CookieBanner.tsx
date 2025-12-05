@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Cookie } from 'lucide-react';
@@ -19,6 +20,7 @@ interface CookieBannerProps {
  * - Shows only if no consent decision exists
  * - iOS/Safari safe-area aware
  * - Accessible (44x44 touch targets, aria-labels)
+ * - Localized IT/EN via i18next
  * - Doesn't interfere with DNA Manager or other overlays
  */
 export const CookieBanner: React.FC<CookieBannerProps> = ({
@@ -27,6 +29,8 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({
   onRejectAll,
   onManagePreferences,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -64,15 +68,13 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({
                     id="cookie-banner-title"
                     className="text-lg font-bold text-foreground mb-2"
                   >
-                    Cookie & Privacy
+                    {t('cookie_banner_title')}
                   </h3>
                   <p 
                     id="cookie-banner-description"
                     className="text-sm text-muted-foreground leading-relaxed"
                   >
-                    Utilizziamo cookie tecnici necessari per il funzionamento del sito e, con il tuo consenso, 
-                    cookie di analisi e marketing per migliorare l'esperienza. 
-                    Puoi modificare le tue preferenze in qualsiasi momento.
+                    {t('cookie_banner_description')}
                   </p>
                 </div>
 
@@ -81,25 +83,25 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({
                   <Button
                     onClick={onAcceptAll}
                     className="min-h-[44px] touch-manipulation font-semibold"
-                    aria-label="Accetta tutti i cookie"
+                    aria-label={t('cookie_accept_all')}
                   >
-                    Accetta tutto
+                    {t('cookie_accept_all')}
                   </Button>
                   <Button
                     onClick={onRejectAll}
                     variant="outline"
                     className="min-h-[44px] touch-manipulation"
-                    aria-label="Rifiuta cookie non necessari"
+                    aria-label={t('cookie_reject_all')}
                   >
-                    Rifiuta
+                    {t('cookie_reject_all')}
                   </Button>
                   <Button
                     onClick={onManagePreferences}
                     variant="ghost"
                     className="min-h-[44px] touch-manipulation text-primary hover:text-primary/80"
-                    aria-label="Gestisci preferenze cookie"
+                    aria-label={t('cookie_manage_preferences')}
                   >
-                    Gestisci preferenze
+                    {t('cookie_manage_preferences')}
                   </Button>
                 </div>
               </div>

@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
-import CookieBanner from '@/components/legal/CookieBanner';
+// CookieBanner RIMOSSO - gestito centralmente da CookieConsentManager in App.tsx
 import TermsBanner from '@/components/legal/TermsBanner';
 import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
 import { useOnboardingTutorial } from "@/hooks/useOnboardingTutorial";
@@ -326,9 +326,6 @@ const Home = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      
-      {/* Cookie Banner */}
-      <CookieBanner />
       
       {/* Terms Banner */}
       <TermsBanner />

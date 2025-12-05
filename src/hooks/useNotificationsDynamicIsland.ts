@@ -1,57 +1,45 @@
-// FILE CREATO — BY JOSEPH MULE
-import { useEffect } from 'react';
-import { useDynamicIsland } from './useDynamicIsland';
-import { useMissionManager } from './useMissionManager';
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Notifications Dynamic Island Integration - FIXED for new Context
+
+import { useEffect, useRef } from 'react';
+import { useDynamicIsland } from '@/contexts/DynamicIslandContext';
 import { Notification } from './useNotifications';
 
 export const useNotificationsDynamicIsland = (notifications: Notification[]) => {
-  const { startActivity, updateActivity, endActivity } = useDynamicIsland();
-  const { currentMission } = useMissionManager();
+  const { updateData, setPage } = useDynamicIsland();
+  const prevUnreadRef = useRef<number>(-1);
 
-  // Fixed Dynamic Island integration to prevent infinite loops
+  // Update Dynamic Island when unread count changes
   useEffect(() => {
-    if (!notifications.length) return;
+    const unreadCount = notifications.filter(n => !n.read).length;
     
-    const unreadNotifications = notifications.filter(n => !n.read);
+    // Only update if count actually changed
+    if (unreadCount === prevUnreadRef.current) return;
+    prevUnreadRef.current = unreadCount;
     
-    if (unreadNotifications.length > 0) {
-      console.log('📨 NOTIFICATIONS: Starting Dynamic Island for unread messages:', unreadNotifications.length);
-      startActivity({
-        missionId: `notifications-${Date.now()}`,
-        title: "📨 Nuove notifiche",
-        status: `${unreadNotifications.length} messaggi da HQ`,
-        progress: 0,
-        timeLeft: 0,
-      });
-    } else {
-      console.log('📨 NOTIFICATIONS: All read, closing Dynamic Island');
-      endActivity();
-    }
-  }, [notifications.length, notifications.filter(n => !n.read).length]);
+    console.log('📨 NOTIFICATIONS: Updating Dynamic Island unread count:', unreadCount);
+    
+    updateData({ unreadCount });
+  }, [notifications, updateData]);
 
-  // Cleanup when component unmounts
+  // Set page to notifications when component mounts
   useEffect(() => {
+    setPage('notifications');
     return () => {
-      if (currentMission?.name?.includes('Nuove notifiche') || currentMission?.name?.includes('📨')) {
-        console.log('📨 NOTIFICATIONS: Cleaning up notification-related Live Activity');
-        endActivity();
-      }
+      // Reset to default when leaving notifications page
+      setPage('default');
     };
-  }, [endActivity, currentMission]);
+  }, [setPage]);
 
   const updateDynamicIslandOnRead = (notificationId: string) => {
     const remainingUnread = notifications.filter(n => !n.read && n.id !== notificationId).length;
-    if (remainingUnread > 0) {
-      updateActivity({
-        status: `${remainingUnread} messaggi da HQ`,
-      });
-    } else {
-      endActivity();
-    }
+    console.log('📨 NOTIFICATIONS: Marked as read, remaining:', remainingUnread);
+    updateData({ unreadCount: remainingUnread });
   };
 
   const closeDynamicIsland = () => {
-    endActivity();
+    // No-op - Dynamic Island is managed globally now
+    console.log('📨 NOTIFICATIONS: closeDynamicIsland called (no-op)');
   };
 
   return {

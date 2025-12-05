@@ -34,6 +34,20 @@ Deno.serve(async req => {
 
     const sb = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     const body = await req.json().catch(()=>({}));
+    
+    // 🔒 SECURITY: Verify internal secret for cron calls
+    const CRON_SECRET = Deno.env.get("CRON_SECRET") || Deno.env.get("INTERNAL_SECRET");
+    const providedSecret = req.headers.get("x-cron-secret") || req.headers.get("x-internal-secret") || body?.cron_secret;
+    
+    const authHeader = req.headers.get("authorization");
+    const isServiceRole = authHeader?.includes(SERVICE_ROLE_KEY?.slice(0, 20) || "NONE");
+    
+    if (CRON_SECRET && providedSecret !== CRON_SECRET && !isServiceRole) {
+      console.warn("[GEOFENCE] ⚠️ Missing or invalid cron secret - allowing for backwards compatibility");
+      // NOTE: Enable this block to enforce strict auth:
+      // return new Response(JSON.stringify({error:"Unauthorized"}),{status:401,headers:corsHeaders});
+    }
+    
     const dry  = body?.dry === true || req.url.includes("dry=1");
     const force_user_id = body?.force_user_id as string | undefined;
     const test_position = body?.test_position as {lat:number,lng:number}|undefined;

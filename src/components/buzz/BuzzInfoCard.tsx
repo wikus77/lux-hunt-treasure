@@ -6,14 +6,7 @@ import { Info } from 'lucide-react';
 const BuzzInfoCard: React.FC = () => {
   return (
     <Card 
-      className="relative overflow-hidden rounded-[24px]"
-      style={{
-        background: 'rgba(0, 0, 0, 0.05)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-      }}
+      className="m1-relief relative overflow-hidden rounded-[24px]"
     >
       {/* Animated glow strip like header */}
       <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">

@@ -56,14 +56,7 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
 
   return (
     <motion.div 
-      className="m1ssion-glass-card rounded-[20px] overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] mb-4 relative"
-      style={{
-        background: 'rgba(0, 0, 0, 0.05)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-      }}
+      className="m1-relief rounded-[20px] overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] mb-4 relative"
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >

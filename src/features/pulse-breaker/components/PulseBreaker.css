@@ -1,0 +1,904 @@
+/**
+ * PULSE BREAKER - Modern Futuristic Design with Depth
+ * RESTYLED with M1SSION™ App Palette (Cyan + Violet + Magenta)
+ * © 2025 Joseph MULÉ – M1SSION™ – NIYVORA KFT™
+ */
+
+/* ========== OVERLAY ========== */
+.pb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background:
+    radial-gradient(1000px 600px at 75% 0%, rgba(0, 229, 255, 0.25), transparent 60%),
+    radial-gradient(800px 500px at -10% 15%, rgba(123, 92, 255, 0.22), transparent 60%),
+    linear-gradient(180deg, #0a0b0f, #0e1116 50%, #0a0b0f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 16px 90px;
+  overflow-y: auto;
+}
+
+/* Crash flash effect */
+.pb-crash-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: radial-gradient(circle at center, rgba(252, 30, 255, 0.5), rgba(255, 50, 80, 0.4), transparent);
+  pointer-events: none;
+}
+
+/* ========== CONTAINER ========== */
+.pb-container {
+  width: 100%;
+  max-width: 420px;
+  background: linear-gradient(180deg, 
+    rgba(15, 20, 35, 0.97) 0%, 
+    rgba(10, 12, 25, 0.98) 50%,
+    rgba(8, 10, 20, 0.99) 100%
+  );
+  border-radius: 24px;
+  border: 1px solid rgba(123, 92, 255, 0.25);
+  box-shadow: 
+    0 0 100px rgba(123, 46, 255, 0.15),
+    0 0 60px rgba(0, 200, 255, 0.1),
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  position: relative;
+}
+
+.pb-container::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 25px;
+  background: linear-gradient(135deg, 
+    rgba(0, 231, 255, 0.3) 0%, 
+    rgba(123, 46, 255, 0.2) 25%,
+    transparent 50%,
+    rgba(252, 30, 255, 0.15) 75%,
+    rgba(0, 200, 255, 0.2) 100%
+  );
+  z-index: -1;
+  pointer-events: none;
+  animation: borderGlow 4s ease-in-out infinite;
+}
+
+@keyframes borderGlow {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+/* ========== CLOSE BUTTON ========== */
+.pb-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(123, 92, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(123, 92, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: all 0.2s ease;
+}
+
+.pb-close-btn:hover {
+  background: rgba(252, 30, 255, 0.25);
+  border-color: rgba(252, 30, 255, 0.5);
+  color: #fff;
+}
+
+.pb-close-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ========== HEADER ========== */
+.pb-header-section {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 18px 60px 14px 18px;
+  border-bottom: 1px solid rgba(123, 92, 255, 0.15);
+  background: linear-gradient(180deg, rgba(123, 46, 255, 0.08) 0%, rgba(0, 100, 150, 0.05) 100%);
+}
+
+.pb-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pb-logo-icon {
+  width: 26px;
+  height: 26px;
+  color: #FC1EFF;
+  filter: drop-shadow(0 0 8px rgba(252, 30, 255, 0.6));
+}
+
+.pb-logo-text {
+  font-family: 'Orbitron', monospace;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  background: linear-gradient(90deg, #00e7ff, #FC1EFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* M1U Balance Pill */
+.pb-balance-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255, 180, 0, 0.15) 0%, rgba(252, 30, 255, 0.1) 100%);
+  border: 1px solid rgba(255, 180, 0, 0.35);
+  margin-left: auto;
+}
+
+.pb-pill-icon {
+  width: 14px;
+  height: 14px;
+  color: #FFB400;
+}
+
+.pb-pill-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFB400;
+}
+
+.pb-pill-label {
+  font-size: 10px;
+  color: rgba(255, 180, 0, 0.7);
+  font-weight: 600;
+}
+
+/* ========== GAME AREA ========== */
+.pb-game-area {
+  position: relative;
+  margin: 16px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(180deg, 
+    rgba(10, 15, 30, 0.95) 0%, 
+    rgba(5, 8, 20, 0.98) 100%
+  );
+  border: 2px solid rgba(123, 92, 255, 0.25);
+  box-shadow: 
+    inset 0 0 60px rgba(123, 46, 255, 0.06),
+    inset 0 0 100px rgba(0, 150, 200, 0.05),
+    0 4px 30px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(123, 46, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.pb-game-area::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0, 229, 255, 0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 50% 100%, rgba(123, 46, 255, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.pb-game-area.crashed {
+  border-color: rgba(252, 30, 255, 0.6);
+  box-shadow: 
+    inset 0 0 100px rgba(255, 50, 80, 0.2),
+    inset 0 0 60px rgba(252, 30, 255, 0.15),
+    0 0 60px rgba(255, 50, 80, 0.4),
+    0 0 80px rgba(252, 30, 255, 0.2);
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.pb-canvas {
+  width: 100%;
+  height: 220px;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+/* ========== MULTIPLIER DISPLAY ========== */
+.pb-multiplier-display {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  font-family: 'Orbitron', monospace;
+  z-index: 10;
+}
+
+.pb-live-mult {
+  font-size: 52px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #00e7ff 0%, #7B2EFF 50%, #00e7ff 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: multGradient 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(0, 231, 255, 0.6)) drop-shadow(0 0 40px rgba(123, 46, 255, 0.4));
+  display: block;
+}
+
+@keyframes multGradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.pb-crashed-display,
+.pb-win-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.pb-crash-text {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ff1744;
+  text-shadow: 0 0 30px rgba(255, 23, 68, 0.8), 0 0 60px rgba(252, 30, 255, 0.4);
+  letter-spacing: 4px;
+  animation: crashPulse 0.3s ease-in-out infinite;
+}
+
+@keyframes crashPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.pb-crash-mult {
+  font-size: 48px;
+  font-weight: 900;
+  color: #FC1EFF;
+  text-shadow: 0 0 30px rgba(252, 30, 255, 0.8);
+}
+
+.pb-win-text {
+  font-size: 20px;
+  font-weight: 800;
+  color: #00ff88;
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+  letter-spacing: 3px;
+}
+
+.pb-win-mult {
+  font-size: 44px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #00ff88 0%, #00e7ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.6));
+}
+
+.pb-win-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #FFB400;
+  text-shadow: 0 0 15px rgba(255, 180, 0, 0.5);
+}
+
+/* ========== CONTROLS ========== */
+.pb-controls-section {
+  padding: 20px;
+  background: linear-gradient(180deg, transparent 0%, rgba(123, 46, 255, 0.05) 50%, rgba(0, 50, 80, 0.08) 100%);
+}
+
+.pb-idle-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pb-crash-history {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(123, 92, 255, 0.2);
+}
+
+.pb-history-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pb-history-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pb-history-pill {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pb-history-pill.low {
+  background: rgba(255, 50, 80, 0.2);
+  border: 1px solid rgba(255, 50, 80, 0.4);
+  color: #ff5252;
+}
+
+.pb-history-pill.mid {
+  background: rgba(255, 180, 0, 0.2);
+  border: 1px solid rgba(255, 180, 0, 0.4);
+  color: #FFB400;
+}
+
+.pb-history-pill.high {
+  background: rgba(0, 255, 136, 0.2);
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  color: #00ff88;
+}
+
+/* Currency Selector */
+.pb-currency-selector {
+  display: flex;
+  gap: 10px;
+}
+
+.pb-curr-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(123, 92, 255, 0.25);
+  background: rgba(123, 46, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pb-curr-btn.active {
+  border-color: #00e7ff;
+  background: linear-gradient(135deg, rgba(0, 231, 255, 0.15) 0%, rgba(123, 46, 255, 0.1) 100%);
+  color: #00e7ff;
+  box-shadow: 0 0 20px rgba(0, 231, 255, 0.2);
+}
+
+/* Bet Presets */
+.pb-bet-presets {
+  display: flex;
+  gap: 8px;
+}
+
+.pb-preset {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(123, 92, 255, 0.3);
+  background: linear-gradient(180deg, rgba(123, 46, 255, 0.08) 0%, rgba(0, 100, 150, 0.08) 100%);
+  color: #00e7ff;
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pb-preset.active {
+  border-color: #00e7ff;
+  background: linear-gradient(180deg, rgba(0, 231, 255, 0.2) 0%, rgba(123, 46, 255, 0.15) 100%);
+  box-shadow: 0 0 15px rgba(0, 231, 255, 0.3);
+}
+
+.pb-preset:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Bet Input */
+.pb-bet-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pb-bet-input {
+  width: 100%;
+  padding: 14px 60px 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(123, 92, 255, 0.3);
+  background: rgba(10, 15, 30, 0.8);
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.pb-bet-input:focus {
+  outline: none;
+  border-color: #00e7ff;
+  box-shadow: 0 0 20px rgba(0, 231, 255, 0.2);
+}
+
+.pb-input-currency {
+  position: absolute;
+  right: 16px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Start Button */
+.pb-start-btn {
+  width: 100%;
+  padding: 18px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #00e7ff 0%, #7B2EFF 50%, #FC1EFF 100%);
+  background-size: 200% 100%;
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 4px 25px rgba(123, 46, 255, 0.4),
+    0 0 40px rgba(0, 231, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.pb-start-btn:hover:not(:disabled) {
+  background-position: 100% 0%;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 35px rgba(252, 30, 255, 0.4),
+    0 0 50px rgba(123, 46, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.pb-start-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ========== RUNNING CONTROLS ========== */
+.pb-running-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+
+.pb-potential-win {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.pb-potential-win strong {
+  color: #FFB400;
+  font-family: 'Orbitron', monospace;
+}
+
+.pb-extract-btn {
+  width: 100%;
+  padding: 20px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #00ff88 0%, #00e7ff 50%, #00ff88 100%);
+  background-size: 200% 100%;
+  color: #000;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 4px 30px rgba(0, 255, 136, 0.4),
+    0 0 50px rgba(0, 231, 255, 0.3);
+}
+
+.pb-extract-btn:hover:not(:disabled) {
+  background-position: 100% 0%;
+  transform: scale(1.02);
+}
+
+.pb-warning-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #FC1EFF;
+  animation: warningPulse 1s ease-in-out infinite;
+}
+
+@keyframes warningPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ========== RESULT CONTROLS ========== */
+.pb-result-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pb-win-banner {
+  padding: 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 231, 255, 0.1) 100%);
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  color: #00ff88;
+  font-size: 16px;
+  text-align: center;
+}
+
+.pb-win-banner strong {
+  font-family: 'Orbitron', monospace;
+  font-weight: 800;
+}
+
+.pb-lose-banner {
+  padding: 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(252, 30, 255, 0.1) 0%, rgba(255, 50, 80, 0.08) 100%);
+  border: 1px solid rgba(252, 30, 255, 0.35);
+  color: #FC1EFF;
+  font-size: 13px;
+  text-align: center;
+}
+
+.pb-near-miss {
+  padding: 10px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(255, 180, 0, 0.15) 0%, rgba(252, 30, 255, 0.1) 100%);
+  border: 1px solid rgba(255, 180, 0, 0.4);
+  color: #ffcc00;
+  font-size: 13px;
+  text-align: center;
+}
+
+.pb-near-miss strong {
+  font-family: 'Orbitron', monospace;
+}
+
+.pb-replay-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: 2px solid rgba(123, 92, 255, 0.4);
+  background: linear-gradient(135deg, rgba(123, 46, 255, 0.15) 0%, rgba(0, 100, 150, 0.1) 100%);
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pb-replay-btn:hover {
+  border-color: #00e7ff;
+  background: linear-gradient(135deg, rgba(0, 231, 255, 0.15) 0%, rgba(123, 46, 255, 0.1) 100%);
+  box-shadow: 0 0 25px rgba(0, 231, 255, 0.3);
+}
+
+.pb-error-msg {
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 50, 80, 0.15);
+  border: 1px solid rgba(255, 50, 80, 0.3);
+  color: #ff5252;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Speed zone indicator */
+.pb-speed-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.pb-speed-indicator.normal {
+  background: rgba(0, 229, 255, 0.2);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  color: #00e5ff;
+}
+
+.pb-speed-indicator.fast {
+  background: rgba(100, 200, 255, 0.25);
+  border: 1px solid rgba(100, 200, 255, 0.5);
+  color: #64c8ff;
+  animation: speedPulse 0.5s ease-in-out;
+}
+
+.pb-speed-indicator.supersonic {
+  background: rgba(150, 100, 255, 0.3);
+  border: 1px solid rgba(150, 100, 255, 0.6);
+  color: #9664ff;
+  text-shadow: 0 0 10px #9664ff;
+  animation: speedPulse 0.3s ease-in-out;
+}
+
+.pb-speed-indicator.warp {
+  background: rgba(255, 100, 255, 0.35);
+  border: 1px solid rgba(255, 100, 255, 0.7);
+  color: #ff64ff;
+  text-shadow: 0 0 15px #ff64ff;
+  animation: warpGlow 0.2s ease-in-out infinite alternate;
+}
+
+@keyframes speedPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes warpGlow {
+  from { box-shadow: 0 0 10px rgba(255, 100, 255, 0.5); }
+  to { box-shadow: 0 0 25px rgba(255, 100, 255, 0.8); }
+}
+
+/* Sonic boom effect overlay */
+.pb-sonic-boom {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.pb-sonic-boom.supersonic-enter {
+  animation: sonicBoom 0.4s ease-out forwards;
+}
+
+.pb-sonic-boom.warp-enter {
+  animation: warpBoom 0.5s ease-out forwards;
+}
+
+@keyframes sonicBoom {
+  0% {
+    background: radial-gradient(circle at center, rgba(150, 100, 255, 0.8), transparent 30%);
+  }
+  50% {
+    background: radial-gradient(circle at center, rgba(150, 100, 255, 0.4), transparent 60%);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes warpBoom {
+  0% {
+    background: radial-gradient(circle at center, rgba(255, 100, 255, 1), transparent 20%);
+    backdrop-filter: blur(2px);
+  }
+  30% {
+    background: radial-gradient(circle at center, rgba(255, 100, 255, 0.6), transparent 50%);
+  }
+  100% {
+    background: transparent;
+    backdrop-filter: none;
+  }
+}
+
+/* Small screens */
+@media (max-width: 400px) {
+  .pb-canvas {
+    height: 180px;
+  }
+  
+  .pb-live-mult {
+    font-size: 42px;
+  }
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+
+/* ========== LEGAL DISCLAIMER ========== */
+
+/* Footer Disclaimer - Always visible */
+.pb-disclaimer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(123, 92, 255, 0.15);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.pb-disclaimer-text {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  letter-spacing: 0.3px;
+  line-height: 1.3;
+}
+
+.pb-disclaimer-info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  background: rgba(0, 229, 255, 0.1);
+  color: rgba(0, 229, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.pb-disclaimer-info-btn:hover {
+  background: rgba(0, 229, 255, 0.2);
+  color: #00e7ff;
+  border-color: rgba(0, 229, 255, 0.5);
+}
+
+/* Full Disclaimer Modal */
+.pb-disclaimer-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.pb-disclaimer-modal {
+  width: 100%;
+  max-width: 360px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, 
+    rgba(20, 25, 45, 0.98) 0%, 
+    rgba(15, 18, 35, 0.99) 100%
+  );
+  border-radius: 16px;
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  padding: 20px;
+  position: relative;
+}
+
+.pb-disclaimer-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.pb-disclaimer-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.pb-disclaimer-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: #00e7ff;
+  margin-bottom: 16px;
+  padding-right: 30px;
+  text-align: center;
+}
+
+.pb-disclaimer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pb-disclaimer-intro {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(123, 92, 255, 0.2);
+}
+
+.pb-disclaimer-section {
+  padding: 8px 0;
+}
+
+.pb-disclaimer-section h4 {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.pb-disclaimer-section p {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.4;
+}
+
+.pb-disclaimer-legal {
+  font-size: 9px;
+  color: rgba(255, 180, 0, 0.7);
+  text-align: center;
+  padding: 12px 0;
+  border-top: 1px solid rgba(123, 92, 255, 0.2);
+  margin-top: 8px;
+}
+
+.pb-disclaimer-copyright {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – NIYVORA KFT™ – LEGAL COMPLIANCE */

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'wouter';
 import { dnaClient, type AgentDNA } from '@/lib/dna/dnaClient';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
@@ -19,6 +20,7 @@ const DNA_PARAMS = [
 ] as const;
 
 const AgentDNAWidget = ({ compact = false }: AgentDNAWidgetProps) => {
+  const [, setLocation] = useLocation();
   const [dna, setDna] = useState<AgentDNA | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -110,7 +112,7 @@ const AgentDNAWidget = ({ compact = false }: AgentDNAWidgetProps) => {
           variant="outline" 
           size="sm" 
           className="w-full text-xs mt-2"
-          onClick={() => {/* TODO: Open DNA panel */}}
+          onClick={() => setLocation('/dna')}
         >
           Visualizza DNA
         </Button>

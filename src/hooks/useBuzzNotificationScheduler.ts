@@ -47,11 +47,11 @@ export const useBuzzNotificationScheduler = () => {
 
       console.log(`✅ ${notificationText} notification scheduled successfully`);
       
-      // Show confirmation toast
-      toast.success(`🔔 Notifica programmata`, {
-        description: `Riceverai un avviso quando ${notificationText} sarà disponibile tra ${cooldownHours} ore`,
-        duration: 4000,
-      });
+      // 🔇 MUTED: Toast notifica programmata - solo indizio visibile per ora
+      // toast.success(`🔔 Notifica programmata`, {
+      //   description: `Riceverai un avviso quando ${notificationText} sarà disponibile tra ${cooldownHours} ore`,
+      //   duration: 4000,
+      // });
 
       return true;
     } catch (error) {

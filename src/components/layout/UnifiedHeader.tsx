@@ -256,10 +256,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           pointerEvents: 'none',
         }}
       >
-      <motion.header
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+      <header
         style={{
           width: '100%',
           maxWidth: '600px',
@@ -376,7 +373,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           </div>
 
         </div>
-      </motion.header>
+      </header>
       </div>
     </>
   );

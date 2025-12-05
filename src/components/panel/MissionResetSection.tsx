@@ -31,7 +31,7 @@ export const MissionResetSection: React.FC = () => {
       }
 
       console.log('🔄 Chiamata reset-mission con codice:', confirmationCode);
-      console.log('👤 User session:', session.user.email);
+      console.log('👤 User session active');
       
       // Fix: Use fetch directly to properly send JSON body
       const supabaseUrl = `https://${getProjectRef()}.supabase.co`;

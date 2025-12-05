@@ -15,17 +15,30 @@ export function useStreakReminder() {
     if (!user) return;
 
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error: queryError } = await supabase
         .from('profiles')
         .select('current_streak_days, last_check_in_date')
         .eq('id', user.id)
         .single();
 
-      if (!profile) return;
+      if (queryError) {
+        console.warn('[StreakReminder] Query error (non-fatal):', queryError.message);
+        return; // Non-fatal - just skip reminder scheduling
+      }
+
+      if (!profile) {
+        console.log('[StreakReminder] No profile found, skipping reminder');
+        return;
+      }
 
       const today = new Date().toISOString().split('T')[0];
       const hasCheckedInToday = profile.last_check_in_date === today;
       const hasActiveStreak = (profile.current_streak_days || 0) > 0;
+
+      console.log('[StreakReminder] Status:', { 
+        streak: profile.current_streak_days, 
+        checkedInToday: hasCheckedInToday 
+      });
 
       // If user has a streak but hasn't checked in today, schedule reminder
       if (hasActiveStreak && !hasCheckedInToday) {
@@ -33,7 +46,8 @@ export function useStreakReminder() {
       }
 
     } catch (err) {
-      console.error('[StreakReminder] Error checking streak:', err);
+      // Non-fatal error - streak reminder is not critical
+      console.warn('[StreakReminder] Error checking streak (non-fatal):', err);
     }
   }, [user]);
 
@@ -79,26 +93,39 @@ export function useStreakReminder() {
     if (!user) return;
 
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error: queryError } = await supabase
         .from('profiles')
         .select('last_check_in_date')
         .eq('id', user.id)
         .single();
 
+      if (queryError) {
+        console.warn('[StreakReminder] Query error when checking reminder:', queryError.message);
+        return; // Non-fatal, skip notification
+      }
+
       const today = new Date().toISOString().split('T')[0];
       
       if (profile?.last_check_in_date !== today) {
         // Still hasn't checked in, send notification
-        new Notification('🔥 Non perdere la tua streak!', {
-          body: `Hai ${streak} giorni consecutivi! Fai check-in prima di mezzanotte!`,
-          icon: '/icons/icon-192x192.png',
-          badge: '/icons/icon-72x72.png',
-          tag: 'streak-reminder',
-          requireInteraction: true
-        });
+        try {
+          new Notification('🔥 Non perdere la tua streak!', {
+            body: `Hai ${streak} giorni consecutivi! Fai check-in prima di mezzanotte!`,
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/icon-72x72.png',
+            tag: 'streak-reminder',
+            requireInteraction: true
+          });
+          console.log('[StreakReminder] Notification sent successfully');
+        } catch (notifError) {
+          console.warn('[StreakReminder] Failed to send notification:', notifError);
+        }
+      } else {
+        console.log('[StreakReminder] User already checked in, no reminder needed');
       }
     } catch (err) {
-      console.error('[StreakReminder] Error sending reminder:', err);
+      // Non-fatal error
+      console.warn('[StreakReminder] Error in checkIfStillNeedsReminder (non-fatal):', err);
     }
   };
 

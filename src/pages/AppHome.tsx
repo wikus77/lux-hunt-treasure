@@ -184,46 +184,53 @@ const { isConnected } = useRealTimeNotifications();
               )}
 
                   <div className="container mx-auto px-3 pb-20">
-                {/* 🚀 NATIVE: Layout responsive per pill + titolo */}
+                {/* 🚀 FLOATING PILLS - LEFT SIDE (same style as Invite/DNA on right) */}
+                {/* M1U Pill - Floating top left */}
                 <motion.div
-                  className="relative my-4 sm:my-6"
+                  id="m1u-pill-home-slot"
+                  data-onboarding="m1u-pill"
+                  className="fixed z-[70] top-36 left-4 md:top-40 md:left-8"
+                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  style={{ pointerEvents: 'auto' }}
+                >
+                  <M1UPill showLabel showPlusButton />
+                </motion.div>
+                
+                {/* Streak Pill - Floating below M1U */}
+                <motion.div
+                  data-onboarding="streak-pill"
+                  className="fixed z-[70] top-48 left-4 md:top-52 md:left-8"
+                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  style={{ pointerEvents: 'auto' }}
+                >
+                  <StreakPill showLabel />
+                </motion.div>
+                
+                {/* Agent Energy Pill (PE/Rank Progress) - Floating below Streak */}
+                {PULSE_ENABLED && (
+                  <motion.div
+                    className="fixed z-[70] top-60 left-4 md:top-64 md:left-8"
+                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.15 }}
+                    style={{ pointerEvents: 'auto' }}
+                  >
+                    <AgentEnergyPill />
+                  </motion.div>
+                )}
+
+                {/* 🚀 NATIVE: Layout responsive per titolo */}
+                <motion.div
+                  className="relative my-4 sm:my-6 pt-16"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
                 >
-                  {/* Row 1: M1U Pills */}
-                  <div
-                    id="m1u-pill-home-slot"
-                    data-onboarding="m1u-pill"
-                    className="flex flex-wrap items-center gap-2 mb-2 justify-center sm:justify-start"
-                    style={{ pointerEvents: 'auto' }}
-                  >
-                    <M1UPill showLabel showPlusButton />
-                    {PULSE_ENABLED && <AgentEnergyPill />}
-                  </div>
-                  
-                  {/* Row 2: Streak Pills (sotto M1U) */}
-                  <div
-                    data-onboarding="streak-pill"
-                    className="flex flex-wrap items-center gap-2 mb-3 justify-center sm:justify-start"
-                    style={{ pointerEvents: 'auto' }}
-                  >
-                    <StreakPill showLabel />
-                  </div>
 
-                  {/* Row 2: Titolo centrato */}
-                  <h1 
-                    id="m1-home-title"
-                    data-m1-anchor="home-title"
-                    data-onboarding="m1ssion-title"
-                    className="text-3xl sm:text-4xl font-orbitron font-bold neon-text-cyan text-center"
-                    role="banner"
-                    aria-label="M1SSION Centro di Comando Agente"
-                  >
-                    <span className="text-auroraCyan">M1</span>
-                    <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
-                  </h1>
-                  
                   {/* ON M1SSION Badge Portal - Fixed slot for MissionBadgeInjector */}
                   <div 
                     id="mission-status-badge-portal" 

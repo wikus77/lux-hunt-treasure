@@ -192,14 +192,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
           </div>
 
           <Card 
-            className="border-0 m1-panel relative overflow-hidden"
-            style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-            }}
+            className="m1-relief border-0 m1-panel relative overflow-hidden"
           >
             {/* Animated glow strip like header */}
             <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
@@ -254,14 +247,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
           </Card>
 
           <Card 
-            className="border-0 m1-panel relative overflow-hidden"
-            style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-            }}
+            className="m1-relief border-0 m1-panel relative overflow-hidden"
           >
             {/* Animated glow strip like header */}
             <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
@@ -348,14 +334,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
           </Card>
 
           <Card 
-            className="border-0 m1-panel relative overflow-hidden"
-            style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-            }}
+            className="m1-relief border-0 m1-panel relative overflow-hidden"
           >
             {/* Animated glow strip like header */}
             <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
@@ -383,13 +362,9 @@ const HallOfWinnersStyledPage: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <div 
-                className="p-4 border-0"
+                className="m1-relief-sm p-4 border-0"
                 style={{
-                  background: 'rgba(0, 0, 0, 0.05)',
-                  backdropFilter: 'blur(40px)',
-                  WebkitBackdropFilter: 'blur(40px)',
-                  borderRadius: '16px',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+                  borderRadius: '16px'
                 }}
               >
                 <div className="flex items-center justify-between">

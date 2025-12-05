@@ -32,19 +32,21 @@ export function NewChatModal({ isOpen, onClose, onChatCreated }: NewChatModalPro
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState<string | null>(null);
 
-  // Search agents
+  // Search agents - Carica TUTTI gli utenti reali dalla tabella profiles
   useEffect(() => {
     if (!isOpen) return;
     
     const searchAgents = async () => {
       setIsLoading(true);
       try {
-        // NOTA: Permesso chattare con se stessi per testing
+        console.log('[NewChatModal] 🔍 Cercando agenti...');
+        
+        // Query diretta senza filtri iniziali per vedere TUTTI gli utenti
         let query = supabase
           .from('profiles')
           .select('id, username, avatar_url, agent_code')
-          // .neq('id', user?.id || '') // Rimosso per permettere self-chat testing
-          .limit(20);
+          .order('username', { ascending: true })
+          .limit(50); // Aumentato per vedere più utenti
 
         if (searchQuery.trim()) {
           query = query.or(`username.ilike.%${searchQuery}%,agent_code.ilike.%${searchQuery}%`);
@@ -52,14 +54,18 @@ export function NewChatModal({ isOpen, onClose, onChatCreated }: NewChatModalPro
 
         const { data, error } = await query;
 
+        console.log('[NewChatModal] 📊 Risultato:', { count: data?.length, error, data });
+
         if (error) {
-          console.error('[NewChatModal] Search error:', error);
+          console.error('[NewChatModal] ❌ Errore query:', error);
           return;
         }
 
+        // MOSTRA TUTTI - anche quelli con solo agent_code
+        console.log('[NewChatModal] ✅ Agenti trovati:', data?.length || 0);
         setAgents((data || []) as Agent[]);
       } catch (err) {
-        console.error('[NewChatModal] Exception:', err);
+        console.error('[NewChatModal] ❌ Exception:', err);
       } finally {
         setIsLoading(false);
       }

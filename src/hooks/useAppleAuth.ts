@@ -94,7 +94,7 @@ export const useAppleAuth = () => {
       }
 
       if (session?.user) {
-        console.log('✅ Apple auth successful:', session.user.email);
+        console.log('✅ Apple auth successful');
         
         // Check if user profile exists, create if needed
         const { data: existingProfile } = await supabase

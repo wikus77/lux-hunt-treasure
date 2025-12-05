@@ -34,6 +34,9 @@ export function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGroupModal
   const [groupName, setGroupName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  
+  // PROTEZIONE DOPPIO CLICK con useRef (sopravvive ai re-render)
+  const isCreatingRef = React.useRef(false);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -42,21 +45,26 @@ export function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGroupModal
       setSearchQuery('');
       setSelectedMembers([]);
       setGroupName('');
+      setIsCreating(false);
+      isCreatingRef.current = false; // Reset ref quando si riapre
     }
   }, [isOpen]);
 
-  // Search agents
+  // Search agents - Carica TUTTI gli utenti reali
   useEffect(() => {
     if (!isOpen) return;
     
     const searchAgents = async () => {
       setIsLoading(true);
       try {
+        console.log('[NewGroupModal] 🔍 Cercando agenti...');
+        
         let query = supabase
           .from('profiles')
           .select('id, username, avatar_url, agent_code')
           .neq('id', user?.id || '') // Exclude self for groups
-          .limit(30);
+          .order('username', { ascending: true })
+          .limit(50);
 
         if (searchQuery.trim()) {
           query = query.or(`username.ilike.%${searchQuery}%,agent_code.ilike.%${searchQuery}%`);
@@ -64,14 +72,18 @@ export function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGroupModal
 
         const { data, error } = await query;
 
+        console.log('[NewGroupModal] 📊 Risultato:', { count: data?.length, error });
+
         if (error) {
-          console.error('[NewGroupModal] Search error:', error);
+          console.error('[NewGroupModal] ❌ Errore query:', error);
           return;
         }
 
+        // MOSTRA TUTTI - anche quelli con solo agent_code
+        console.log('[NewGroupModal] ✅ Agenti trovati:', data?.length || 0);
         setAgents((data || []) as Agent[]);
       } catch (err) {
-        console.error('[NewGroupModal] Exception:', err);
+        console.error('[NewGroupModal] ❌ Exception:', err);
       } finally {
         setIsLoading(false);
       }
@@ -98,20 +110,36 @@ export function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGroupModal
   };
 
   const handleCreateGroup = async () => {
+    // DOPPIA PROTEZIONE: state + ref
+    if (isCreating || isCreatingRef.current) {
+      console.log('[NewGroupModal] ⚠️ Already creating, skipping');
+      return;
+    }
     if (!groupName.trim() || selectedMembers.length < 1) return;
     
+    // Imposta ENTRAMBI
+    isCreatingRef.current = true;
     setIsCreating(true);
+    
+    console.log('[NewGroupModal] 🚀 Creating group:', groupName.trim());
+    
     try {
       const memberIds = selectedMembers.map(m => m.id);
       const conversationId = await createGroupChat(memberIds, groupName.trim());
       
+      console.log('[NewGroupModal] ✅ Group created:', conversationId);
+      
       if (conversationId) {
-        onGroupCreated(conversationId, groupName.trim());
         onClose();
+        onGroupCreated(conversationId, groupName.trim());
+      } else {
+        // Reset se fallisce senza errore
+        isCreatingRef.current = false;
+        setIsCreating(false);
       }
     } catch (err) {
-      console.error('[NewGroupModal] Error creating group:', err);
-    } finally {
+      console.error('[NewGroupModal] ❌ Error:', err);
+      isCreatingRef.current = false;
       setIsCreating(false);
     }
   };

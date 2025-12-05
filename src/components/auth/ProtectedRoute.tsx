@@ -26,8 +26,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       isAuthenticated,
       isLoading,
       isEmailVerified,
-      user: getCurrentUser()?.id,
-      userEmail: getCurrentUser()?.email,
+      hasUser: !!getCurrentUser()?.id,
       userRole,
       isDeveloper: hasRole('developer')
     });
@@ -45,24 +44,24 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   
   // Check authentication
   if (!isAuthenticated) {
-    console.log("❌ AUTH CHECK FAILED - User not authenticated, redirecting to:", redirectTo);
+    console.log("❌ AUTH CHECK FAILED - User not authenticated");
     navigate(redirectTo);
     return null;
   }
   
-  console.log("✅ AUTH CHECK PASSED - User authenticated");
+  console.log("✅ AUTH CHECK PASSED");
   
   // Developer users bypass email verification
   const currentUser = getCurrentUser();
   const isDeveloper = hasRole('developer');
   
   if (requireEmailVerification && !isEmailVerified && !isDeveloper) {
-    console.log("📧 EMAIL VERIFICATION CHECK - Not verified, redirecting");
+    console.log("📧 EMAIL VERIFICATION REQUIRED - redirecting");
     navigate("/login?verification=pending");
     return null;
   }
   
-  console.log("🎯 PROTECTED ROUTE SUCCESS - Rendering protected content for:", currentUser?.email);
+  console.log("🎯 PROTECTED ROUTE SUCCESS");
   return <>{children}</>;
 };
 

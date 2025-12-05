@@ -142,7 +142,7 @@ export const useBuzzGrants = () => {
         .upsert({
           user_id: userId,
           clues_found: 1,
-          mission_progress_percent: Math.round((1 / 200) * 100),
+          mission_progress_percent: Math.round((1 / 250) * 100),
           updated_at: new Date().toISOString()
         });
 

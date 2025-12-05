@@ -23,5 +23,29 @@
   "send_enter": "Press Enter to send • Shortcut: A to open/close",
   "clues_analyzed": "clues analyzed",
   "norah_ai_assistant": "NORAH AI Assistant",
-  "assistant_description": "Your intelligent companion for navigating M1SSION™. Ask questions, get strategic insights, and unlock the secrets of the hunt."
+  "assistant_description": "Your intelligent companion for navigating M1SSION™. Ask questions, get strategic insights, and unlock the secrets of the hunt.",
+
+  "cookie_banner_title": "Cookies & Privacy",
+  "cookie_banner_description": "We use essential cookies for the app to function properly and, with your consent, analytics and marketing cookies to improve your experience. You can change your preferences at any time.",
+  "cookie_accept_all": "Accept all",
+  "cookie_reject_all": "Reject",
+  "cookie_manage_preferences": "Manage preferences",
+
+  "cookie_preferences_title": "Manage cookie preferences",
+  "cookie_preferences_description": "Customize your cookie preferences. Required cookies are always active.",
+  "cookie_save_preferences": "Save preferences",
+  "cookie_cancel": "Cancel",
+
+  "cookie_necessary_title": "Required cookies",
+  "cookie_necessary_description": "Essential for the app to function: authentication, sessions, security, and payments. Always active.",
+  "cookie_necessary_always_active": "Always active",
+
+  "cookie_analytics_title": "Analytics cookies",
+  "cookie_analytics_description": "Help us understand how users interact with the app to improve features and performance.",
+
+  "cookie_marketing_title": "Marketing cookies",
+  "cookie_marketing_description": "Used to deliver personalized ads and measure the effectiveness of advertising campaigns.",
+
+  "cookie_personalization_title": "Personalization cookies",
+  "cookie_personalization_description": "Store preferences such as language, theme, layout, and UI settings to personalize your experience."
 }

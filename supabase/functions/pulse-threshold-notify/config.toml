@@ -1,0 +1,9 @@
+# 🔒 SECURITY NOTE:
+# verify_jwt = false because this function is called by:
+# - SQL triggers via pg_net
+# - Internal Edge Functions
+# Auth verification is done manually in code via INTERNAL_SECRET check
+# Set CRON_SECRET or INTERNAL_SECRET env var for strict auth
+
+[function]
+verify_jwt = false

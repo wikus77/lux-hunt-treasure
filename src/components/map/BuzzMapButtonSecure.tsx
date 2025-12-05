@@ -9,6 +9,7 @@ import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { showInsufficientM1UToast } from '@/utils/m1uHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
+import '@/styles/buzz/BuzzTronDisc.css';
 
 interface BuzzMapButtonSecureProps {
   onBuzzPress: () => void;
@@ -91,7 +92,16 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
 
   // Get current geolocation
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    // Fallback if browser doesn't support geolocation (rare edge case)
+    if (!navigator.geolocation) {
+      console.warn('[BuzzMap] Geolocation not supported, using fallback');
+      if (mapCenter) {
+        setCurrentLocation(mapCenter);
+      } else {
+        setCurrentLocation([41.9028, 12.4964]); // Rome fallback
+      }
+      return;
+    }
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
@@ -329,9 +339,16 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
     }
   };
 
+  // Format price for display
+  const priceDisplay = serverPricing 
+    ? `${serverPricing.radius_km}km · ${serverPricing.m1u} M1U` 
+    : 'Loading...';
+
+  const isDisabled = !isAuthenticated || isProcessing || pricingLoading;
+
   return (
     <>
-      {/* M1SSION™ BUZZ MAP Button - Centered Bottom, +10% Size, Pulsating Animation */}
+      {/* M1SSION™ BUZZ MAP Button - TronDisc RED variant */}
       <motion.div 
         className="fixed left-1/2 transform -translate-x-1/2 z-50"
         style={{ 
@@ -341,64 +358,65 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
       >
         <motion.button
           data-onboarding="buzz-map-button"
-          className="relative rounded-full transition-all duration-300 bg-gradient-to-br from-purple-500 to-red-500 hover:scale-110 active:scale-95"
+          whileTap={{ scale: isAuthenticated ? 0.97 : 1 }}
+          disabled={isDisabled}
           onClick={handleBuzzMapPress}
-          disabled={!isAuthenticated || isProcessing || pricingLoading}
-          style={{
-            width: '96px',
-            height: '96px',
-            border: '2px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: `
-              inset 0 -8px 20px rgba(0, 0, 0, 0.4),
-              inset 0 8px 20px rgba(255, 255, 255, 0.1),
-              inset -8px 0 20px rgba(147, 51, 234, 0.3),
-              inset 8px 0 20px rgba(239, 68, 68, 0.3),
-              0 0 40px rgba(147, 51, 234, 0.4),
-              0 0 20px rgba(239, 68, 68, 0.3),
-              0 15px 40px rgba(0, 0, 0, 0.6),
-              0 8px 20px rgba(0, 0, 0, 0.4)
-            `,
-          }}
-          whileTap={{ 
-            scale: isAuthenticated ? 0.9 : 1,
-          }}
-          whileHover={{
-            boxShadow: `
-              inset 0 -10px 25px rgba(0, 0, 0, 0.5),
-              inset 0 10px 25px rgba(255, 255, 255, 0.15),
-              inset -10px 0 25px rgba(147, 51, 234, 0.4),
-              inset 10px 0 25px rgba(239, 68, 68, 0.4),
-              0 0 60px rgba(147, 51, 234, 0.6),
-              0 0 30px rgba(239, 68, 68, 0.5),
-              0 20px 50px rgba(0, 0, 0, 0.7),
-              0 10px 25px rgba(0, 0, 0, 0.5)
-            `,
-          }}
-          aria-label="BUZZ MAP"
-          animate={{
-            scale: [1, 1.06, 1],
-          }}
-          transition={{
-            scale: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut"
-            },
-          }}
+          className="relative border-0 bg-transparent p-0 z-20"
+          style={{ cursor: isDisabled ? 'not-allowed' : 'pointer' }}
         >
-          <div className="absolute top-0 left-0 w-full h-full rounded-full flex flex-col items-center justify-center">
-            {isProcessing || pricingLoading ? (
-              <Lock className="text-white animate-pulse" size={28} />
-            ) : (
-              <>
-                <span className="text-sm text-white font-bold leading-none">
-                  BUZZ MAP
-                </span>
-                <span className="text-xs text-white/90 leading-none mt-1">
-                  {serverPricing ? `${serverPricing.radius_km}km · ${serverPricing.m1u} M1U` : 'Loading...'}
-                </span>
-              </>
-            )}
+          {/* TronDisc RED variant - same as BuzzButton but RED */}
+          <div className={`tron-disc tron-disc-red ${isDisabled ? 'opacity-50' : ''}`}>
+            {/* Rotating elements wrapper */}
+            <div className="tron-disc-rotating">
+              <div className={`tron-led-ring ${isProcessing ? 'loading' : ''}`} />
+              <div className="tron-disc-dots" />
+              <div className="tron-disc-dots-sides" />
+            </div>
+            
+            {/* Central content - STABLE */}
+            <div className="tron-disc-content">
+              {isProcessing || pricingLoading ? (
+                <div className="flex flex-col items-center space-y-1">
+                  <div className="tron-loading-spinner" style={{ inset: '30%' }} />
+                  <span className="font-semibold text-white/80" style={{ 
+                    fontFamily: 'Orbitron, sans-serif',
+                    fontSize: 'clamp(8px, 2vw, 10px)',
+                    letterSpacing: '0.05em'
+                  }}>
+                    PROCESSING
+                  </span>
+                </div>
+              ) : !isAuthenticated ? (
+                <div className="flex flex-col items-center space-y-1">
+                  <Lock className="w-6 h-6 text-white/60" />
+                  <span className="font-semibold text-white/60" style={{ 
+                    fontFamily: 'Orbitron, sans-serif',
+                    fontSize: 'clamp(8px, 2vw, 10px)',
+                    letterSpacing: '0.05em'
+                  }}>
+                    LOGIN
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <span className="font-bold text-white" style={{ 
+                    fontFamily: 'Orbitron, sans-serif',
+                    fontSize: 'clamp(12px, 3vw, 16px)',
+                    letterSpacing: '0.05em',
+                    textShadow: '0 0 10px rgba(255, 51, 51, 0.8), 0 0 20px rgba(255, 51, 51, 0.4)'
+                  }}>
+                    BUZZ MAP
+                  </span>
+                  <span className="text-white/90 mt-0.5" style={{ 
+                    fontFamily: 'Orbitron, sans-serif',
+                    fontSize: 'clamp(8px, 2vw, 11px)',
+                    letterSpacing: '0.03em'
+                  }}>
+                    {priceDisplay}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </motion.button>
       </motion.div>

@@ -38,8 +38,7 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
       isEmailVerified,
       userRole,
       isRoleLoading,
-      userId: currentUser?.id,
-      email: currentUser?.email,
+      hasUser: !!currentUser?.id,
       allowedRoles,
       bypassCheck,
       isDeveloper,
@@ -49,7 +48,7 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
   
   // Special case for admin routes - only allow developers and admins
   if (isAdminRoute && !isDeveloper && !isAdmin && !isLoading && !isRoleLoading) {
-    console.log("⛔ Access denied to admin route for user:", getCurrentUser()?.email);
+    console.log("⛔ Access denied to admin route");
     toast.error("Accesso riservato agli amministratori");
     navigate("/login");
     return null;
@@ -72,7 +71,7 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
   
   // If user is not authenticated, redirect to login
   if (!isAuthenticated) {
-    console.log("⚠️ User not authenticated, redirecting to:", redirectTo);
+    console.log("⚠️ User not authenticated, redirecting");
     navigate(redirectTo);
     return null;
   }
@@ -86,7 +85,7 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
   
   // Special access for developers and admins
   if (isDeveloper || isAdmin) {
-    console.log("✅ Developer/Admin access granted for:", currentUser?.email);
+    console.log("✅ Developer/Admin access granted");
     return <>{children}</>;
   }
   
@@ -108,7 +107,7 @@ export const RoleBasedProtectedRoute: React.FC<RoleBasedProtectedRouteProps> = (
   }
   
   // User is authenticated, email is verified, and has the required role
-  console.log("✅ Accesso confermato per:", currentUser?.email);
+  console.log("✅ Access granted");
   return <>{children}</>;
 };
 

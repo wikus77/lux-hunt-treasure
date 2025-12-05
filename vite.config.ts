@@ -22,7 +22,8 @@ export default defineConfig(({ mode }) => ({
   esbuild: {
     target: 'es2022', // Native class fields without helpers
     logOverride: { 'this-is-undefined-in-esm': 'silent' },
-    drop: mode === 'production' ? ['debugger'] : [],
+    // Drop debugger AND console.log in production for smaller bundle
+    drop: mode === 'production' ? ['debugger', 'console'] : [],
   },
   plugins: [
     react(),

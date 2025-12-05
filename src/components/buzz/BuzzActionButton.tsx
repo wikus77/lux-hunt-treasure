@@ -249,38 +249,25 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         timestamp: new Date().toISOString()
       });
 
-      showM1UDebitSuccessToast(costM1U, newBalance);
+      // 🔇 MUTED: Toast M1U debit - solo indizio visibile per ora
+      // showM1UDebitSuccessToast(costM1U, newBalance);
       
-      // Refresh M1U balance to show updated value
-      await refetchM1U();
-
-      console.log('🎯 M1SSION™ M1U BUZZ: Proceeding with BUZZ generation...');
-      
-      // Execute BUZZ action FIRST
+      // ✅ FLUSSO COMPLETO RIPARATO
       await handleBuzz();
       
-      // Log counter state before update
-      console.log('🔄 BEFORE UPDATE COUNTER:', { 
-        currentState: dailyBuzzCounter,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Only increment counter if BUZZ was successful
       const newCount = await updateDailyBuzzCounter();
+      console.log('📊 Daily counter updated:', newCount);
       
-      console.log('✅ AFTER UPDATE COUNTER:', { 
-        newState: newCount,
-        timestamp: new Date().toISOString()
-      });
+      await refetchM1U();
       
       onSuccess();
-
-      console.log('🎉 M1SSION™ M1U BUZZ: Complete flow successful!');
-
-      // 🔥 FIX: Dispatch event to trigger M1U refresh in all pills
+      
+      // ✅ Evento per animazione slot machine nel pill M1U
       window.dispatchEvent(new CustomEvent('buzzClueCreated', {
         detail: { costM1U, newBalance: updatedProfile.m1_units }
       }));
+      
+      console.log('🎉 M1SSION™ BUZZ: Complete!');
 
     } catch (error: any) {
       console.error('❌ M1SSION™ M1U BUZZ: Exception during payment', error);

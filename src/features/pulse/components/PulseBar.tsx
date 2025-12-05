@@ -1,182 +1,258 @@
 /**
- * THE PULSE™ — Living Energy Bar (ORIGINALE)
- * Barra viva con gradient animato cyan/magenta — SENZA CONTAINER
+ * THE PULSE™ — Cyberpunk Energy Bar (Faithful Recreation)
+ * Design identico al riferimento sci-fi
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import { usePulseRealtime } from '../hooks/usePulseRealtime';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { PULSE_ENABLED } from '@/config/featureFlags';
+import { Gamepad2 } from 'lucide-react';
+import { PulseBreaker } from '@/features/pulse-breaker';
 
 interface PulseBarProps {
   onTap?: () => void;
   variant?: 'inline' | 'fixed' | 'floating';
 }
 
-export const PulseBar = ({ onTap, variant = 'inline' }: PulseBarProps) => {
-  const { pulseState, lastUpdate } = usePulseRealtime();
-  const [showSurge, setShowSurge] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState(false);
+export const PulseBar = ({ onTap }: PulseBarProps) => {
+  const { pulseState, refetch } = usePulseRealtime();
+  const [displayValue, setDisplayValue] = useState(0);
+  const [isGameOpen, setIsGameOpen] = useState(false);
 
   const value = pulseState?.value ?? 0;
-  
-  // Map value to living organism parameters
-  const flowSpeed = value < 25 ? '6s' : value < 50 ? '4s' : value < 75 ? '3s' : '2.5s';
-  const brightness = value < 25 ? 0.7 : value < 50 ? 0.85 : value < 75 ? 1 : 1.1;
-  const pulseScale = value < 25 ? 1 : value < 50 ? 1.01 : value < 75 ? 1.02 : 1.03;
-  const outlineIntensity = value < 25 ? 0.7 : value < 50 ? 0.9 : value < 75 ? 1.1 : 1.3;
-  const breathSpeed = value < 25 ? '2.5s' : value < 50 ? '2s' : value < 75 ? '1.6s' : '1.2s';
-  
-  // Check accessibility preference
+
+  // Refetch on contribution
   useEffect(() => {
-    const prefersReducedMotion = localStorage.getItem('pulse_reduce_motion') === 'true';
-    setReduceMotion(prefersReducedMotion);
-  }, []);
-  
-  // Threshold surge effect
+    const handleContribution = (e: CustomEvent) => {
+      if (e.detail?.accepted) {
+        refetch();
+        setTimeout(() => refetch(), 500);
+        setTimeout(() => refetch(), 1500);
+      }
+    };
+    window.addEventListener('pulse:contributed', handleContribution as EventListener);
+    return () => window.removeEventListener('pulse:contributed', handleContribution as EventListener);
+  }, [refetch]);
+
+  // Smooth counter
   useEffect(() => {
-    if (lastUpdate?.threshold && !reduceMotion) {
-      setShowSurge(true);
-      const timer = setTimeout(() => setShowSurge(false), 900);
+    const target = Math.round(value);
+    if (displayValue !== target) {
+      const timer = setTimeout(() => {
+        setDisplayValue(prev => prev < target ? prev + 1 : prev - 1);
+      }, 20);
       return () => clearTimeout(timer);
     }
-  }, [lastUpdate?.threshold, reduceMotion]);
-  
-  // Random energy spikes every 20-40s
-  useEffect(() => {
-    if (reduceMotion) return;
-    
-    const triggerSpike = () => {
-      const root = document.documentElement;
-      root.style.setProperty('--flow-speed', '1.2s');
-      root.style.setProperty('--pulse-brightness', '1.3');
-      
-      setTimeout(() => {
-        root.style.setProperty('--flow-speed', flowSpeed);
-        root.style.setProperty('--pulse-brightness', String(brightness));
-      }, 1500);
-    };
-    
-    const interval = setInterval(triggerSpike, Math.random() * 20000 + 20000);
-    return () => clearInterval(interval);
-  }, [flowSpeed, brightness, reduceMotion]);
+  }, [value, displayValue]);
 
   if (!PULSE_ENABLED) return null;
 
+  const totalSegments = 24;
+  const filledSegments = Math.floor((value / 100) * totalSegments);
+  const cyan = '#00e7ff';
+
   return (
     <motion.div
-      className="relative w-full"
+      className="relative w-full flex items-center gap-2"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
       onClick={onTap}
       style={{ cursor: onTap ? 'pointer' : 'default' }}
     >
-      {/* Energy Bar — Living Organism — NO CONTAINER */}
-      <motion.div 
-        className="relative w-full h-[12px] rounded-full overflow-hidden"
-        style={{
-          boxShadow: '0 0 20px rgba(0,231,255,0.5), 0 0 40px rgba(255,77,240,0.3)',
-        }}
-        animate={showSurge ? {
-          scale: [1, 1.03, 1],
-          boxShadow: [
-            '0 0 20px rgba(0,231,255,0.5)',
-            '0 0 50px rgba(255,77,240,0.9)',
-            '0 0 20px rgba(0,231,255,0.5)'
-          ]
-        } : {}}
-        transition={{ duration: 0.9, ease: 'easeInOut' }}
-      >
-        {/* ENERGY FLOW — Breathing Gradient */}
-        <motion.div 
-          className="absolute inset-0"
-          style={{ 
-            background: 'linear-gradient(270deg, #ff4df0, #00eaff, #e0ffff, #00eaff, #ff4df0)',
-            backgroundSize: '400% 400%',
-            filter: `brightness(${brightness})`,
-          }}
-          animate={reduceMotion ? {} : {
-            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-          }}
-          transition={{
-            duration: parseFloat(flowSpeed),
-            repeat: Infinity,
-            ease: 'linear',
-          }}
-        />
+      {/* === CIRCULAR GAUGE (Left) === */}
+      <div className="relative flex-shrink-0" style={{ width: 56, height: 56 }}>
+        {/* Outer double ring */}
+        <svg width="56" height="56" viewBox="0 0 56 56">
+          {/* Outermost ring */}
+          <circle cx="28" cy="28" r="27" fill="none" stroke={cyan} strokeWidth="1" opacity="0.4" />
+          {/* Second ring */}
+          <circle cx="28" cy="28" r="24" fill="none" stroke={cyan} strokeWidth="1" opacity="0.6" />
+          {/* Main progress ring background */}
+          <circle cx="28" cy="28" r="20" fill="none" stroke="rgba(0,231,255,0.15)" strokeWidth="3" />
+          {/* Progress arc */}
+          <motion.circle
+            cx="28" cy="28" r="20"
+            fill="none"
+            stroke={cyan}
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray={2 * Math.PI * 20}
+            strokeDashoffset={2 * Math.PI * 20 * (1 - value / 100)}
+            transform="rotate(-90 28 28)"
+            style={{ filter: `drop-shadow(0 0 4px ${cyan})` }}
+            transition={{ duration: 0.5 }}
+          />
+          {/* Inner ring */}
+          <circle cx="28" cy="28" r="16" fill="none" stroke={cyan} strokeWidth="1" opacity="0.3" />
+        </svg>
         
-        {/* GLOW / BREATH — Pulsing Life */}
-        <motion.div 
-          className="absolute inset-0"
-          style={{ 
-            background: 'radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, transparent 70%)',
-          }}
-          animate={reduceMotion ? {} : {
-            scale: [1, pulseScale, 1],
-            opacity: [0.5, 0.8, 0.5],
-          }}
-          transition={{
-            duration: parseFloat(breathSpeed),
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        />
-
-        {/* OUTLINE ENERGY — Living Border Glow */}
-        <motion.div 
-          className="absolute inset-0 rounded-full pointer-events-none"
-          style={{ 
-            border: '1px solid rgba(255,255,255,0.4)',
-            boxShadow: `inset 0 0 10px rgba(0,200,255,${0.3 * outlineIntensity})`,
-          }}
-          animate={reduceMotion ? {} : {
-            boxShadow: [
-              `inset 0 0 10px rgba(0,200,255,${0.3 * outlineIntensity})`,
-              `inset 0 0 15px rgba(255,77,240,${0.4 * outlineIntensity})`,
-              `inset 0 0 10px rgba(0,200,255,${0.3 * outlineIntensity})`,
-            ],
-          }}
-          transition={{
-            duration: parseFloat(breathSpeed),
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        />
-
-        {/* Percentage — Clean & Glowing */}
-        <div className="absolute inset-0 flex items-center justify-end pr-3">
-          <motion.span 
-            className="text-[10px] font-mono font-bold text-white tracking-wider tabular-nums"
+        {/* Percentage text */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span 
+            className="font-bold font-mono text-sm"
             style={{ 
-              textShadow: '0 0 8px rgba(0,231,255,0.9), 0 0 12px rgba(255,77,240,0.6)',
-              filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.8))',
+              color: cyan,
+              textShadow: `0 0 10px ${cyan}, 0 0 20px ${cyan}`,
+              letterSpacing: '-0.5px'
             }}
-            key={value}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
           >
-            {Math.round(value)}%
+            {displayValue}%
+          </span>
+        </div>
+
+        {/* Rotating dot */}
+        <motion.div
+          className="absolute inset-0"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+        >
+          <div 
+            className="absolute w-2 h-2 rounded-full"
+            style={{
+              background: cyan,
+              boxShadow: `0 0 6px ${cyan}, 0 0 12px ${cyan}`,
+              top: 0,
+              left: '50%',
+              transform: 'translateX(-50%)',
+            }}
+          />
+        </motion.div>
+      </div>
+
+      {/* === SEGMENTED BAR (Right) === */}
+      <div className="flex-1 relative">
+        {/* Label */}
+        <div className="flex items-center gap-1 mb-0.5">
+          <span 
+            className="text-[9px] font-bold tracking-[0.15em]"
+            style={{ color: cyan, textShadow: `0 0 6px ${cyan}` }}
+          >
+            PULSE
+          </span>
+          <motion.span
+            style={{ color: cyan }}
+            className="text-[8px]"
+            animate={{ opacity: [1, 0.3, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            ●
           </motion.span>
         </div>
-        
-        {/* Threshold Surge Flash */}
-        <AnimatePresence>
-          {showSurge && !reduceMotion && (
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 0.8, 0] }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.9 }}
-            >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.7)_0%,transparent_60%)]" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+
+        {/* Bar container - trapezoid shape */}
+        <div 
+          className="relative h-[16px]"
+          style={{
+            background: 'rgba(0,20,30,0.9)',
+            clipPath: 'polygon(0 0, 100% 0, 96% 100%, 0 100%)',
+            border: `1px solid ${cyan}33`,
+          }}
+        >
+          {/* Segments container */}
+          <div className="absolute inset-[2px] flex gap-[2px]" style={{ clipPath: 'polygon(0 0, 100% 0, 97% 100%, 0 100%)' }}>
+            {[...Array(totalSegments)].map((_, i) => {
+              const isFilled = i < filledSegments;
+              return (
+                <motion.div
+                  key={i}
+                  className="flex-1 relative"
+                  style={{
+                    background: isFilled 
+                      ? `linear-gradient(180deg, ${cyan} 0%, ${cyan}99 50%, ${cyan}66 100%)`
+                      : 'rgba(0,231,255,0.08)',
+                    transform: 'skewX(-20deg)',
+                    transformOrigin: 'bottom',
+                    boxShadow: isFilled ? `0 0 4px ${cyan}` : 'none',
+                  }}
+                  initial={false}
+                  animate={{ 
+                    opacity: isFilled ? 1 : 0.4,
+                  }}
+                  transition={{ duration: 0.2, delay: i * 0.01 }}
+                >
+                  {/* Shine effect */}
+                  {isFilled && (
+                    <motion.div
+                      className="absolute inset-0"
+                      style={{
+                        background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%)',
+                      }}
+                      animate={{ opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.05 }}
+                    />
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Scanning line */}
+          <motion.div
+            className="absolute top-0 bottom-0 w-8 pointer-events-none"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${cyan}44, transparent)`,
+            }}
+            animate={{ left: ['-10%', '110%'] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          />
+
+          {/* Top edge highlight */}
+          <div 
+            className="absolute top-0 left-0 right-0 h-[1px]"
+            style={{ background: `linear-gradient(90deg, ${cyan}66, ${cyan}22)` }}
+          />
+        </div>
+
+        {/* Right decorative bracket */}
+        <div 
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1"
+          style={{ 
+            width: 6, 
+            height: 20,
+            borderRight: `2px solid ${cyan}`,
+            borderTop: `2px solid ${cyan}`,
+            borderBottom: `2px solid ${cyan}`,
+            opacity: 0.5,
+          }}
+        />
+      </div>
+
+      {/* PLAY Button */}
+      <motion.button
+        className="flex-shrink-0 flex items-center justify-center"
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, rgba(0, 231, 255, 0.2) 0%, rgba(0, 100, 150, 0.3) 100%)',
+          border: `2px solid ${cyan}`,
+          boxShadow: `0 0 12px rgba(0, 231, 255, 0.4), inset 0 0 8px rgba(0, 231, 255, 0.1)`,
+          cursor: 'pointer',
+        }}
+        whileHover={{ scale: 1.1, boxShadow: `0 0 20px rgba(0, 231, 255, 0.6)` }}
+        whileTap={{ scale: 0.95 }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsGameOpen(true);
+        }}
+        title="PULSE BREAKER"
+      >
+        <Gamepad2 
+          size={18} 
+          style={{ 
+            color: cyan,
+            filter: `drop-shadow(0 0 4px ${cyan})`,
+          }} 
+        />
+      </motion.button>
+
+      {/* Game Modal */}
+      <PulseBreaker 
+        isOpen={isGameOpen} 
+        onClose={() => setIsGameOpen(false)} 
+      />
     </motion.div>
   );
 };

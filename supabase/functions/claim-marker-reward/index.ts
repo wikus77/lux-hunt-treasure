@@ -1,6 +1,7 @@
 // © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
+import { withCors } from "../_shared/cors.ts";
 
 type Json = Record<string, any>;
 
@@ -8,15 +9,12 @@ const url = Deno.env.get("SUPABASE_URL")!;
 const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
 const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-serve(async (req) => {
+serve(withCors(async (req) => {
   try {
-    if (req.method === "OPTIONS") {
-      return new Response("ok", { headers: cors() });
-    }
 
     const body = await req.json().catch(() => ({}));
     const markerId = String((body?.markerId || "")).trim();
-    if (!markerId) return json({ status: "error", error: "missing_marker_id" }, 400);
+    if (!markerId) return jsonResponse({ status: "error", error: "missing_marker_id" }, 400);
 
     // Client with JWT for RLS compliance
     const userClient = createClient(url, anon, {
@@ -29,7 +27,7 @@ serve(async (req) => {
     // Get current user
     const { data: auth } = await userClient.auth.getUser();
     const user_id = auth?.user?.id;
-    if (!user_id) return json({ ok: false, code: "UNAUTHORIZED" }, 401);
+    if (!user_id) return jsonResponse({ ok: false, code: "UNAUTHORIZED" }, 401);
 
     console.log(`M1QR-TRACE: claim-marker-reward start - user:${user_id} marker:${markerId}`);
 
@@ -43,7 +41,7 @@ serve(async (req) => {
 
     if (existingClaim) {
       console.log(`M1QR-TRACE: already claimed - user:${user_id} marker:${markerId}`);
-      return json({ ok: false, code: "ALREADY_CLAIMED" }, 200);
+      return jsonResponse({ ok: false, code: "ALREADY_CLAIMED" }, 200);
     }
 
     // Get all rewards for this marker
@@ -54,12 +52,12 @@ serve(async (req) => {
 
     if (rewardsError) {
       console.error(`M1QR-TRACE: rewards fetch error:`, rewardsError);
-      return json({ status: "error", error: "db_error", detail: rewardsError.message }, 500);
+      return jsonResponse({ status: "error", error: "db_error", detail: rewardsError.message }, 500);
     }
 
     if (!rewards || rewards.length === 0) {
       console.log(`M1QR-TRACE: no rewards found - marker:${markerId}`);
-      return json({ ok: false, code: "NO_REWARD" }, 404);
+      return jsonResponse({ ok: false, code: "NO_REWARD" }, 404);
     }
 
     // Start transaction - create claim first
@@ -69,7 +67,7 @@ serve(async (req) => {
 
     if (claimError) {
       console.error(`M1QR-TRACE: claim creation error:`, claimError);
-      return json({ status: "error", error: "claim_failed", detail: claimError.message }, 500);
+      return jsonResponse({ status: "error", error: "claim_failed", detail: claimError.message }, 500);
     }
 
     // Process each reward
@@ -603,7 +601,7 @@ serve(async (req) => {
 
     console.log(`M1QR-TRACE: ✅ redirectOK - reward chain completed for marker ${markerId}`);
 
-    return json({
+    return jsonResponse({
       ok: true,
       nextRoute: nextRoute || '/profile',
       summary
@@ -611,21 +609,14 @@ serve(async (req) => {
 
   } catch (e) {
     console.error(`M1QR-TRACE: claim-marker-reward error:`, e);
-    return json({ status: "error", error: "internal_error", detail: String(e?.message ?? e) }, 500);
+    return jsonResponse({ status: "error", error: "internal_error", detail: String(e?.message ?? e) }, 500);
   }
-}, { onError: (e) => console.error(e) });
+}));
 
-function cors() {
-  return {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-  };
-}
-
-function json(payload: Json, status = 200) {
+// Helper function for JSON responses (CORS handled by withCors wrapper)
+function jsonResponse(payload: Json, status = 200) {
   return new Response(JSON.stringify(payload), { 
     status, 
-    headers: { "content-type": "application/json", ...cors() }
+    headers: { "content-type": "application/json" }
   });
 }

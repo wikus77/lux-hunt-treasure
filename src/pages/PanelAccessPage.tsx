@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin, QrCode, Send, Map, Users, Gift } from 'lucide-react';
+import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin, QrCode, Send, Map, Users, Gift, Rocket } from 'lucide-react';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import { useProfileImage } from '@/hooks/useProfileImage';
@@ -12,9 +12,12 @@ import AIContentGenerator from '@/components/panel/AIContentGenerator';
 import MissionControlPanel from '@/components/panel/MissionControlPanel';
 import { MissionResetSection } from '@/components/panel/MissionResetSection';
 import { MissionConfigSection } from '@/components/panel/MissionConfigSection';
+import MissionCommandCenter from '@/components/panel/MissionCommandCenter';
 import { usePanelAccessProtection } from '@/hooks/usePanelAccessProtection';
 import { Spinner } from '@/components/ui/spinner';
 import { QRControlPanel } from '@/components/admin/QRControlPanel';
+import { broadcastGlobalGlitch } from '@/hooks/useGlobalGlitch';
+import { toast } from 'sonner';
 // Removed obsolete debug panels - now using unified Push Center
 // BulkMarkerDropComponent removed - replaced by MarkerRewardManager
 import MarkerRewardManager from '@/components/admin/MarkerRewardManager';
@@ -27,7 +30,7 @@ import PushControlPanelPage from '@/pages/panel/PushControlPanelPage';
 import PushAutoPreflightPage from '@/pages/panel/PushAutoPreflightPage';
 import { PUSH_PREFLIGHT_ENABLED } from '@/config/featureFlags';
 
-type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'marker-rewards' | 'push-center' | 'push-control' | 'push-sender' | 'push-preflight';
+type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'mission-command-center' | 'qr-control' | 'marker-rewards' | 'push-center' | 'push-control' | 'push-sender' | 'push-preflight';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -187,6 +190,27 @@ const PanelAccessPage = () => {
             </div>
             <MissionConfigSection />
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 🚀 MISSION COMMAND CENTER - Pannello unificato
+  if (currentView === 'mission-command-center' && hasAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <Helmet>
+          <title>M1SSION PANEL™ - Mission Command Center</title>
+        </Helmet>
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <MissionCommandCenter onBack={() => setCurrentView('home')} />
         </div>
       </div>
     );
@@ -420,6 +444,25 @@ const PanelAccessPage = () => {
               </div>
             </div>
 
+            {/* 🚀 MISSION COMMAND CENTER - Bottone Principale */}
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setCurrentView('mission-command-center')}
+              className="glass-card p-6 border-2 border-[#7209b7]/50 cursor-pointer group bg-gradient-to-r from-[#7209b7]/20 to-[#4361ee]/20 mb-6"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-[#7209b7] to-[#4361ee] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Rocket className="w-8 h-8 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-xl text-white">🚀 Mission Command Center</h3>
+                  <p className="text-gray-400">Pannello unificato: Configura, Genera Indizi, Lancia Missione</p>
+                </div>
+                <div className="text-[#7209b7] text-2xl">→</div>
+              </div>
+            </motion.div>
+
             {/* Push Center Card - Quick Access */}
             <div className="mb-6">
               <PushCenter />
@@ -618,6 +661,29 @@ const PanelAccessPage = () => {
                     <div>
                       <h3 className="font-semibold text-white">📤 Push Sender</h3>
                       <p className="text-gray-400 text-sm">Invio rapido Broadcast/Targeted/Self</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ⚡ GLITCH GLOBALE - TV Shutdown Effect */}
+              {isAdmin && (
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    broadcastGlobalGlitch();
+                    toast.success('⚡ Glitch inviato a tutti gli utenti!');
+                  }}
+                  className="glass-card p-4 border border-purple-500/50 cursor-pointer group bg-gradient-to-r from-purple-900/30 to-pink-900/30"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center group-hover:scale-110 transition-transform animate-pulse">
+                      <Zap className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">⚡ GLITCH GLOBALE</h3>
+                      <p className="text-gray-400 text-sm">Attiva TV shutdown su TUTTI gli utenti in tempo reale</p>
                     </div>
                   </div>
                 </motion.div>

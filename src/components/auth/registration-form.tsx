@@ -24,7 +24,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
 
   const handleSubmit = (e: React.FormEvent) => {
     console.log('🔍 SUBMIT CLICKED - NO CAPTCHA REQUIRED');
-    console.log('📝 Form data:', { email: formData.email, missionPreference });
+    console.log('📝 Form data submitted');
     
     // Submit WITHOUT any captcha token - completely removed
     originalHandleSubmit(e, 'BYPASS_COMPLETELY_DISABLED', missionPreference);

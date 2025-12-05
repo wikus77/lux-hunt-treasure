@@ -172,15 +172,7 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
       .limit(500);
     
     if (locError) {
-      // View may not exist - guide user to run SQL setup
-      if (locError.code === '42P01' || locError.code === 'PGRST204' || locError.message?.includes('does not exist')) {
-        console.warn('⚠️ [LiveAgents] View v_online_agents not found. Please run SQL setup:', {
-          file: 'SQL_SETUP_MARKER_GEOLOCATION.sql',
-          hint: 'Execute in Supabase Dashboard > SQL Editor'
-        });
-        return [];
-      }
-      console.debug('[LiveAgents] Query error:', locError.code, locError.message);
+      // Silently handle view errors - return empty array
       return [];
     }
     

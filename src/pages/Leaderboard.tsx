@@ -13,7 +13,7 @@ import { LeaderboardProgress } from '@/components/leaderboard/LeaderboardProgres
 import { LeaderboardTabs } from '@/components/leaderboard/LeaderboardTabs';
 import { useLeaderboardData } from '@/hooks/useLeaderboardData';
 import { useIsMobile } from '@/hooks/use-mobile';
-import BottomNavigation from '@/components/layout/BottomNavigation';
+// BottomNavigation gestita da GlobalLayout
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 
 const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
@@ -148,16 +148,12 @@ const Leaderboard = () => {
         <div className="container mx-auto">
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Titolo sezione */}
           <motion.div
-            className="m1ssion-glass-card p-6 mb-6 mx-3 relative"
+            className="m1-relief p-6 mb-6 mx-3 relative"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
             style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              borderRadius: '24px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+              borderRadius: '24px'
             }}
           >
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] via-[#F059FF] to-[#FACC15] opacity-90" />
@@ -179,17 +175,12 @@ const Leaderboard = () => {
           
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Header filtri */}
           <motion.div
-            className="glass-card p-4 mb-6 mx-3"
+            className="m1-relief-sm p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '16px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+              borderRadius: '16px'
             }}
           >
             <LeaderboardHeader 
@@ -200,17 +191,12 @@ const Leaderboard = () => {
 
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Ricerca */}
           <motion.div
-            className="glass-card p-4 mb-6 mx-3"
+            className="m1-relief-sm p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
             style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '16px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+              borderRadius: '16px'
             }}
           >
             <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
@@ -218,16 +204,12 @@ const Leaderboard = () => {
 
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Top 3 Podio */}
           <motion.div
-            className="m1ssion-glass-card p-6 mb-6 mx-3 relative"
+            className="m1-relief p-6 mb-6 mx-3 relative"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              borderRadius: '24px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05), 0 0 24px rgba(0, 229, 255, 0.2)'
+              borderRadius: '24px'
             }}
           >
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#F059FF] opacity-90" />
@@ -236,17 +218,12 @@ const Leaderboard = () => {
 
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Lista principale */}
           <motion.div
-            className="glass-card p-4 mb-6 mx-3"
+            className="m1-relief-sm p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
             style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '16px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+              borderRadius: '16px'
             }}
           >
             <LeaderboardTabs 
@@ -263,17 +240,12 @@ const Leaderboard = () => {
 
           {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Progress personale */}
           <motion.div
-            className="glass-card p-4 mb-6 mx-3"
+            className="m1-relief-sm p-4 mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
             style={{
-              background: 'rgba(0, 0, 0, 0.05)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '16px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+              borderRadius: '16px'
             }}
           >
             <LeaderboardProgress currentPosition={42} totalPlayers={100} />
@@ -287,26 +259,7 @@ const Leaderboard = () => {
         player={selectedPlayer}
       />
       
-      {/* Bottom Navigation - Uniform positioning like Home */}
-      <div 
-        id="mission-bottom-nav-container"
-        style={{ 
-          position: 'fixed', 
-          bottom: 0, 
-          left: 0, 
-          right: 0, 
-          width: '100vw',
-          zIndex: 10000,
-          isolation: 'isolate',
-          transform: 'translateZ(0)',
-          willChange: 'transform',
-          display: 'block',
-          visibility: 'visible',
-          opacity: 1
-        } as React.CSSProperties}
-      >
-        <BottomNavigation />
-      </div>
+      {/* BottomNavigation gestita da GlobalLayout */}
     </motion.div>
   );
 };

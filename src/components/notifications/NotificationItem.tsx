@@ -49,16 +49,9 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       whileHover={{ scale: 1.02, boxShadow: '0 15px 50px rgba(0, 229, 255, 0.25)' }}
       whileTap={{ scale: 0.98 }}
       onClick={handleCardClick}
-      className="m1ssion-glass-card cursor-pointer transition-all duration-300 relative overflow-hidden"
+      className="m1-relief-sm cursor-pointer transition-all duration-300 relative overflow-hidden"
       style={{
-        background: notification.read 
-          ? 'rgba(0, 0, 0, 0.05)'
-          : 'rgba(0, 0, 0, 0.05)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)',
-        borderRadius: '24px',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+        borderRadius: '24px'
       }}
     >
       {/* Animated glow strip like header */}

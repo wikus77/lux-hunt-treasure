@@ -404,8 +404,17 @@ serve(withCors(async (req: Request): Promise<Response> => {
       console.log('✅ [HANDLE-BUZZ-PRESS] Notification created successfully');
     }
     
-    // 🔥 Save clue to user_clues table (only if it's a real clue, not fallback)
-    if (clueId && !clueId.startsWith('fallback_') && !clueId.startsWith('error_')) {
+    // 🔥 Save clue to user_clues table (only if it's a real clue, not fallback/error/special)
+    const isRealClue = clueId && 
+      !clueId.startsWith('fallback_') && 
+      !clueId.startsWith('error_') &&
+      !clueId.startsWith('week_complete_') &&
+      !clueId.startsWith('no_clues_') &&
+      !clueId.startsWith('no_mission_');
+    
+    console.log('🔍 [HANDLE-BUZZ-PRESS] Checking if clue should be saved:', { clueId, isRealClue });
+    
+    if (isRealClue) {
       const { error: saveClueError } = await supabase
         .from('user_clues')
         .upsert({
@@ -443,7 +452,7 @@ serve(withCors(async (req: Request): Promise<Response> => {
       allowedOrigin: origin,
       userId: user.id.substring(0, 8) + '...',
       flow: 'BUZZ_CLUE',
-      buzzCount,
+      buzzCount: newCount,
       clueLength: clueText.length
     } : undefined;
 

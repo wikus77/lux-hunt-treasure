@@ -44,15 +44,29 @@ export const usePulseRealtime = (): UsePulseRealtimeReturn => {
       setIsLoading(true);
       setError(null);
 
+      console.log('[PULSE] 📡 Fetching state from RPC...');
       const { data, error: rpcError } = await supabase.rpc('rpc_pulse_state_read');
 
-      if (rpcError) throw rpcError;
+      if (rpcError) {
+        console.error('[PULSE] ❌ RPC Error:', rpcError);
+        throw rpcError;
+      }
+
+      console.log('[PULSE] 📦 Raw RPC response:', data);
 
       if (data) {
         const parsed = typeof data === 'string' ? JSON.parse(data) : data;
-        setPulseState(parsed);
+        // 🔥 FIX: Map 'current_value' from RPC to 'value' expected by interface
+        const mappedState: PulseState = {
+          value: parsed.current_value ?? parsed.value ?? 0,
+          last_threshold: parsed.last_threshold ?? 0,
+          updated_at: parsed.updated_at ?? new Date().toISOString()
+        };
+        console.log('[PULSE] ✅ State loaded:', mappedState);
+        setPulseState(mappedState);
       }
     } catch (err) {
+      console.error('[PULSE] ❌ Fetch error:', err);
       setError(err as Error);
     } finally {
       setIsLoading(false);
@@ -74,11 +88,20 @@ export const usePulseRealtime = (): UsePulseRealtimeReturn => {
           table: 'pulse_state',
         },
         (payload) => {
-          const newRow = payload.new as PulseState;
-          setPulseState(newRow);
+          console.log('[PULSE] Realtime update received:', payload.new);
+          const newRow = payload.new as any;
+          // Map database columns to interface
+          const mappedState: PulseState = {
+            value: newRow.value ?? 0,
+            last_threshold: newRow.last_threshold ?? 0,
+            updated_at: newRow.updated_at ?? new Date().toISOString()
+          };
+          console.log('[PULSE] State updated via realtime:', mappedState);
+          setPulseState(mappedState);
         }
       )
       .subscribe((status) => {
+        console.log('[PULSE] Realtime subscription status:', status);
         if (status === 'SUBSCRIBED') {
           emitSubscribed('pulse_state_changes');
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {

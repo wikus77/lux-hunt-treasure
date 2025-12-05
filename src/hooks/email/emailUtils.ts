@@ -5,7 +5,7 @@ import { toast } from 'sonner';
  * Handle email sending success
  */
 export const handleEmailSuccess = (email: string) => {
-  console.log("Email sent successfully to:", email);
+  console.log("✅ Email sent successfully");
   toast.success("Email inviata con successo", {
     description: `L'email è stata inviata a ${email}`
   });
@@ -25,5 +25,5 @@ export const handleEmailError = (error: any) => {
  * Log email sending attempt
  */
 export const logEmailAttempt = (type: string, email: string) => {
-  console.log(`Attempting to send ${type} email to ${email}`);
+  console.log(`📧 Attempting to send ${type} email`);
 };

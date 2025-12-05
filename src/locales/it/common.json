@@ -23,5 +23,29 @@
   "send_enter": "Press Enter to send • Shortcut: A to open/close",
   "clues_analyzed": "indizi analizzati",
   "norah_ai_assistant": "NORAH AI Assistant",
-  "assistant_description": "Il tuo compagno intelligente per navigare M1SSION™. Fai domande, ottieni intuizioni strategiche e sblocca i segreti della caccia."
+  "assistant_description": "Il tuo compagno intelligente per navigare M1SSION™. Fai domande, ottieni intuizioni strategiche e sblocca i segreti della caccia.",
+
+  "cookie_banner_title": "Cookie & Privacy",
+  "cookie_banner_description": "Utilizziamo cookie tecnici necessari per il funzionamento dell'app e, con il tuo consenso, cookie di analisi e marketing per migliorare l'esperienza. Puoi modificare le tue preferenze in qualsiasi momento.",
+  "cookie_accept_all": "Accetta tutto",
+  "cookie_reject_all": "Rifiuta",
+  "cookie_manage_preferences": "Gestisci preferenze",
+
+  "cookie_preferences_title": "Gestisci preferenze cookie",
+  "cookie_preferences_description": "Personalizza le tue preferenze sui cookie. I cookie necessari sono sempre attivi.",
+  "cookie_save_preferences": "Salva preferenze",
+  "cookie_cancel": "Annulla",
+
+  "cookie_necessary_title": "Cookie necessari",
+  "cookie_necessary_description": "Essenziali per il funzionamento dell'app: autenticazione, sessioni, sicurezza e pagamenti. Sempre attivi.",
+  "cookie_necessary_always_active": "Sempre attivi",
+
+  "cookie_analytics_title": "Cookie di analisi",
+  "cookie_analytics_description": "Ci aiutano a comprendere l'interazione degli utenti con l'app per migliorare funzionalità e performance.",
+
+  "cookie_marketing_title": "Cookie di marketing",
+  "cookie_marketing_description": "Utilizzati per mostrare annunci personalizzati e misurare l'efficacia delle campagne pubblicitarie.",
+
+  "cookie_personalization_title": "Cookie di personalizzazione",
+  "cookie_personalization_description": "Memorizzano preferenze come lingua, tema, layout e impostazioni dell'interfaccia per personalizzare la tua esperienza."
 }

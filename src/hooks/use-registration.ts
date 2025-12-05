@@ -43,7 +43,7 @@ export const useRegistration = () => {
     e.preventDefault();
 
     console.log('🚀 STARTING M1SSION REGISTRATION WITH ACCESS CONTROL');
-    console.log('📧 Email:', formData.email);
+    console.log('📧 Registration submitted');
     console.log('🔐 Password length:', formData.password.length);
     console.log('🎯 Mission preference:', missionPreference);
 

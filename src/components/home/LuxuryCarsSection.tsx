@@ -19,13 +19,9 @@ const LuxuryCarsSection = () => {
         <span>Auto di Lusso</span> in Palio
       </motion.h2>
       <div 
-        className="rounded-m1 overflow-hidden p-2 relative"
+        className="m1-relief rounded-m1 overflow-hidden p-2 relative"
         style={{
-          background: 'rgba(0, 0, 0, 0.6)',
-          backdropFilter: 'blur(40px)',
-          WebkitBackdropFilter: 'blur(40px)',
-          borderRadius: '24px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05), 0 0 24px rgba(0, 229, 255, 0.15)'
+          borderRadius: '24px'
         }}
       >
         {/* Animated glow strip like header */}

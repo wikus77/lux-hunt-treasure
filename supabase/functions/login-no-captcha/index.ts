@@ -1,87 +1,52 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Login No Captcha - Developer/Testing bypass with secure logging
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
+import { withCors } from "../_shared/cors.ts";
+import { createSecureLogger, maskValue } from "../_shared/secureLog.ts";
+import { checkRateLimit, rateLimitResponse, RATE_LIMIT_PRESETS } from "../_shared/rateLimit.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
+const log = createSecureLogger('LOGIN-NO-CAPTCHA');
 
-serve(async (req) => {
-  console.log("🧪 STEP 1 - Starting login-no-captcha function...");
-  console.log("🧪 Request method:", req.method);
-  console.log("🧪 Request headers:", Object.fromEntries(req.headers.entries()));
+serve(withCors(async (req) => {
+  log.info("Function started", { method: req.method });
   
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    console.log("🧪 Handling OPTIONS request");
-    return new Response("OK", {
-      headers: corsHeaders
-    });
+  // 🔒 Rate limiting: 5 attempts per minute (very strict for login)
+  const rateLimitResult = await checkRateLimit('login-no-captcha', req, RATE_LIMIT_PRESETS.VERY_STRICT);
+  if (!rateLimitResult.allowed) {
+    log.warn("Rate limit exceeded");
+    return rateLimitResponse(rateLimitResult);
   }
-
+  
   try {
     // Parse request body with validation
     let requestBody;
     try {
       requestBody = await req.json();
-      console.log("🧪 STEP 2 - Request body parsed:", requestBody);
+      log.info("Request body parsed", { hasEmail: !!requestBody?.email });
     } catch (parseError) {
-      console.error("❌ Failed to parse request body:", parseError);
-      return new Response(
-        JSON.stringify({ success: false, error: "Invalid JSON in request body" }),
-        { 
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
+      log.error("Failed to parse request body");
+      return jsonResponse({ success: false, error: "Invalid JSON in request body" }, 400);
     }
 
     const { email } = requestBody;
     
     if (!email) {
-      console.error("❌ Email not provided in request");
-      return new Response(
-        JSON.stringify({ success: false, error: "Email is required" }),
-        { 
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
+      log.error("Email not provided in request");
+      return jsonResponse({ success: false, error: "Email is required" }, 400);
     }
     
-    console.log("🧪 STEP 3 - Email received:", email);
+    // Log masked email for debugging
+    log.info("Processing login request", { email: maskValue(email, 'email') });
 
-    // Create Supabase client with enhanced environment checks
+    // Create Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "http://localhost:54321";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
-    console.log("🧪 STEP 4 - Environment check:", {
-      supabaseUrl,
-      hasServiceKey: !!serviceRoleKey,
-      serviceKeyLength: serviceRoleKey?.length || 0,
-      serviceKeyStart: serviceRoleKey?.substring(0, 10) + "..." || "N/A"
-    });
-
     if (!serviceRoleKey) {
-      console.error("❌ SUPABASE_SERVICE_ROLE_KEY not found in environment");
-      return new Response(
-        JSON.stringify({ success: false, error: "Service key not configured" }),
-        { 
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
+      log.error("Service role key not configured");
+      return jsonResponse({ success: false, error: "Service key not configured" }, 500);
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -90,174 +55,79 @@ serve(async (req) => {
         persistSession: false
       }
     });
-    console.log("🧪 STEP 5 - Supabase client created successfully");
+    
+    log.info("Supabase client created");
 
-    // CRITICAL FIX: Use correct parameter name 'email_param' instead of 'email_input'
-    console.log("🧪 STEP 6 - Calling RPC get_user_by_email with email_param:", email);
+    // Call RPC to find user
     const { data: userList, error: fetchError } = await supabase.rpc("get_user_by_email", {
-      email_param: email,  // FIXED: Changed from email_input to email_param
-    });
-
-    console.log("🧪 STEP 7 - RPC Response:", {
-      hasData: !!userList,
-      dataLength: userList?.length || 0,
-      hasError: !!fetchError,
-      error: fetchError,
-      userData: userList?.[0] ? {
-        id: userList[0].id,
-        email: userList[0].email,
-        hasId: !!userList[0].id
-      } : null
+      email_param: email,
     });
 
     if (fetchError) {
-      console.error("❌ RPC call failed with error:", fetchError);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Database query failed", 
-          details: {
-            message: fetchError.message,
-            code: fetchError.code,
-            hint: fetchError.hint
-          }
-        }),
-        { 
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
+      log.error("RPC call failed", { code: fetchError.code });
+      return jsonResponse({ 
+        success: false, 
+        error: "Database query failed", 
+        details: { message: fetchError.message, code: fetchError.code }
+      }, 500);
     }
 
     if (!userList || userList.length === 0) {
-      console.error("❌ No user found for email:", email);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Developer user not found",
-          details: { searchedEmail: email }
-        }),
-        { 
-          status: 404,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
+      log.error("No user found", { email: maskValue(email, 'email') });
+      return jsonResponse({ 
+        success: false, 
+        error: "Developer user not found"
+      }, 404);
     }
 
     const user = userList[0];
-    console.log("🧪 STEP 8 - User found:", {
-      userId: user.id,
-      userEmail: user.email,
-      userExists: !!user
-    });
+    log.info("User found", { userId: maskValue(user.id, 'uuid') });
 
-    // Create admin session with enhanced logging
-    console.log("🧪 STEP 9 - Creating admin session for user:", user.id);
+    // Create admin session
     const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
       user_id: user.id,
     });
 
-    console.log("🧪 STEP 10 - Session creation result:", {
-      hasSessionData: !!sessionData,
-      hasSession: !!sessionData?.session,
-      hasUser: !!sessionData?.user,
-      hasAccessToken: !!sessionData?.session?.access_token,
-      hasRefreshToken: !!sessionData?.session?.refresh_token,
-      sessionError: sessionError,
-      accessTokenLength: sessionData?.session?.access_token?.length || 0,
-      refreshTokenLength: sessionData?.session?.refresh_token?.length || 0
-    });
-
     if (sessionError) {
-      console.error("❌ Session creation failed with error:", sessionError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Session creation failed",
-          details: {
-            message: sessionError.message,
-            status: sessionError.status
-          }
-        }),
-        { 
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
+      log.error("Session creation failed", { status: sessionError.status });
+      return jsonResponse({
+        success: false,
+        error: "Session creation failed",
+        details: { message: sessionError.message }
+      }, 500);
     }
 
     if (!sessionData || !sessionData.session) {
-      console.error("❌ No session data returned from createSession");
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "No session created",
-          details: "Session data is null or undefined"
-        }),
-        { 
-          status: 500,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
+      log.error("No session data returned");
+      return jsonResponse({
+        success: false,
+        error: "No session created"
+      }, 500);
     }
 
-    console.log("✅ STEP 11 - Login successful, returning tokens");
-    const response = {
+    log.success("Login successful", { userId: maskValue(user.id, 'uuid') });
+    
+    return jsonResponse({
       success: true,
       access_token: sessionData.session.access_token,
       refresh_token: sessionData.session.refresh_token,
       user: sessionData.user,
       session: sessionData.session
-    };
+    }, 200);
 
-    console.log("🧪 STEP 12 - Final response prepared:", {
-      success: response.success,
-      hasAccessToken: !!response.access_token,
-      hasRefreshToken: !!response.refresh_token,
-      hasUser: !!response.user,
-      userEmail: response.user?.email
-    });
-
-    return new Response(
-      JSON.stringify(response),
-      { 
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders
-        }
-      }
-    );
-
-  } catch (err) {
-    console.error("❌ Unexpected error in login-no-captcha:", err);
-    console.error("❌ Error stack:", err.stack);
-    return new Response(JSON.stringify({ 
+  } catch (err: any) {
+    log.error("Unexpected error", { name: err?.name });
+    return jsonResponse({ 
       success: false, 
-      error: "Unhandled exception", 
-      details: {
-        message: err.message || err,
-        name: err.name,
-        stack: err.stack
-      }
-    }), {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders
-      }
-    });
+      error: "Unhandled exception"
+    }, 500);
   }
-});
+}));
+
+// Helper function for JSON responses (CORS handled by withCors wrapper)
+function jsonResponse(payload: unknown, status = 200) {
+  return new Response(JSON.stringify(payload), { 
+    status, 
+    headers: { "Content-Type": "application/json" }
+  });
+}
