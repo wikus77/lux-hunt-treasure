@@ -21,7 +21,7 @@ export default function TestAdminUI() {
     setVerifying(true);
     try {
       const user = getCurrentUser();
-      console.log("🔍 Verifica profilo per:", user?.email);
+      console.log("🔍 Verifica profilo admin");
       
       // Controlla se esiste un profilo per l'utente corrente
       const { data: profile, error } = await supabase

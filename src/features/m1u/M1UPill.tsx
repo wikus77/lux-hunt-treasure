@@ -189,7 +189,24 @@ const M1UPill: React.FC<M1UPillProps> = ({
 
   return (
     <>
-      <div className={`flex items-center gap-3 relative ${className}`}>
+      <div className={`flex items-center gap-2 relative ${className}`}>
+        {/* Plus Orb - NOW FIRST (LEFT) */}
+        {showPlusButton && (
+          <motion.button
+            className="pill-orb"
+            aria-label="Add M1U"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => {
+              handleOpenRecharge();
+            }}
+          >
+            <Plus className="w-4 h-4 text-cyan-100" />
+            <span className="dot" />
+          </motion.button>
+        )}
+
+        {/* M1U Pill - NOW SECOND (RIGHT) */}
         <motion.div
           className="m1u-pill-main flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer"
           style={{
@@ -288,22 +305,6 @@ const M1UPill: React.FC<M1UPillProps> = ({
             />
           )}
         </motion.div>
-
-        {/* Plus Orb */}
-        {showPlusButton && (
-          <motion.button
-            className="pill-orb"
-            aria-label="Add M1U"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => {
-              handleOpenRecharge();
-            }}
-          >
-            <Plus className="w-4 h-4 text-cyan-100" />
-            <span className="dot" />
-          </motion.button>
-        )}
       </div>
 
       {/* M1U Shop Modal */}

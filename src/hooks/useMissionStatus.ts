@@ -55,33 +55,55 @@ export const useMissionStatus = () => {
       const missionId = activeMissionData?.id || "M001";
       const missionTitle = activeMissionData?.title || "M1SSION ONE";
 
-      // 🔥 CRITICAL FIX: Get REAL clues count from user_clues table WITH RETRY
-      let realCluesCount = 0;
-      let retryCount = 0;
-      const maxRetries = 3;
-      
-      while (retryCount < maxRetries) {
-        const { count, error: cluesError } = await supabase
-          .from('user_clues')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
+      // 🔥 CRITICAL FIX: Get REAL clues count from MULTIPLE sources
+      // Source 1: user_clues table (official clues)
+      const { count: userCluesCount, error: cluesError } = await supabase
+        .from('user_clues')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
 
-        if (cluesError) {
-          console.error(`❌ Error loading user clues count (attempt ${retryCount + 1}):`, cluesError);
-          retryCount++;
-          if (retryCount >= maxRetries) {
-            setError('Errore nel caricamento indizi');
-            return;
-          }
-          await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
-          continue;
-        }
-
-        realCluesCount = count || 0;
-        break;
+      if (cluesError) {
+        console.error('❌ Error loading user_clues count:', cluesError);
       }
 
-      const actualProgress = Math.round((realCluesCount / 200) * 100);
+      // Source 2: user_notifications with type='buzz' (BUZZ clues)
+      const { count: buzzNotificationsCount, error: notifError } = await supabase
+        .from('user_notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('type', 'buzz');
+
+      if (notifError) {
+        console.error('❌ Error loading buzz notifications count:', notifError);
+      }
+
+      // Source 3: buzz_map_actions (BUZZ MAP clues - count by clue_count)
+      const { data: buzzMapActions, error: buzzMapError } = await supabase
+        .from('buzz_map_actions')
+        .select('clue_count')
+        .eq('user_id', user.id);
+
+      if (buzzMapError) {
+        console.error('❌ Error loading buzz_map_actions:', buzzMapError);
+      }
+
+      const buzzMapCluesCount = buzzMapActions?.reduce((sum, a) => sum + (a.clue_count || 0), 0) || 0;
+
+      // 🎯 USE THE HIGHEST COUNT as the real count (to avoid undercounting)
+      const realCluesCount = Math.max(
+        userCluesCount || 0,
+        buzzNotificationsCount || 0,
+        buzzMapCluesCount
+      );
+
+      console.log('📊 [useMissionStatus] CLUE COUNTS FROM ALL SOURCES:', {
+        user_clues: userCluesCount || 0,
+        buzz_notifications: buzzNotificationsCount || 0,
+        buzz_map_actions: buzzMapCluesCount,
+        USING_MAX: realCluesCount
+      });
+
+      const actualProgress = Math.round((realCluesCount / 250) * 100);
 
       console.log('🔥 REAL CLUES COUNT FROM DATABASE:', {
         realCluesCount: realCluesCount,
@@ -152,7 +174,7 @@ export const useMissionStatus = () => {
           daysRemaining: daysRemaining,
           totalDays: 30,
           cluesFound: realCluesCount,
-          totalClues: 200,
+          totalClues: 250,
           progressPercent: actualProgress
         });
       } else {
@@ -185,7 +207,7 @@ export const useMissionStatus = () => {
           daysRemaining: daysRemaining,
           totalDays: 30,
           cluesFound: realCluesCount,
-          totalClues: 200,
+          totalClues: 250,
           progressPercent: actualProgress
         });
       }
@@ -204,9 +226,9 @@ export const useMissionStatus = () => {
 
     loadMissionStatus();
 
-    // Set up real-time subscription for CLUES changes
+    // Set up real-time subscription for ALL clue-related tables
     const subscription = supabase
-      .channel('user_clues_mission_updates')
+      .channel('mission_status_realtime')
       .on(
         'postgres_changes',
         {
@@ -216,7 +238,36 @@ export const useMissionStatus = () => {
           filter: `user_id=eq.${user.id}`
         },
         () => {
-          console.log('🔄 User clues changed, reloading mission status...');
+          console.log('🔄 user_clues changed, reloading mission status...');
+          loadMissionStatus();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          // Only reload for buzz notifications
+          if ((payload.new as any)?.type === 'buzz' || (payload.old as any)?.type === 'buzz') {
+            console.log('🔄 BUZZ notification changed, reloading mission status...');
+            loadMissionStatus();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'buzz_map_actions',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('🔄 buzz_map_actions changed, reloading mission status...');
           loadMissionStatus();
         }
       )

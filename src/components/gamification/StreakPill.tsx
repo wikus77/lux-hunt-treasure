@@ -29,25 +29,55 @@ const StreakPill: React.FC<StreakPillProps> = ({ className = '', showLabel = tru
     if (user) loadStreakData();
   }, [user]);
 
-  const loadStreakData = async () => {
+  const loadStreakData = async (retryCount = 0) => {
     if (!user) return;
     setIsLoading(true);
+    setError(false); // Reset error state before attempting
+    
     try {
-      const { data } = await supabase
+      const { data, error: queryError } = await supabase
         .from('profiles')
         .select('current_streak_days, last_check_in_date')
         .eq('id', user.id)
         .single();
 
+      if (queryError) {
+        throw queryError;
+      }
+
       if (data) {
         setStreak(data.current_streak_days || 0);
         const today = new Date().toISOString().split('T')[0];
         setCanCheckIn(data.last_check_in_date !== today);
+        console.log('[StreakPill] Data loaded successfully:', { 
+          streak: data.current_streak_days, 
+          canCheckIn: data.last_check_in_date !== today 
+        });
+      } else {
+        // No data found - use defaults
+        console.warn('[StreakPill] No profile data found, using defaults');
+        setStreak(0);
+        setCanCheckIn(true);
       }
     } catch (err) {
+      console.error('[StreakPill] Error loading streak data:', err);
+      
+      // Retry logic - up to 3 attempts with exponential backoff
+      if (retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        console.log(`[StreakPill] Retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
+        setTimeout(() => loadStreakData(retryCount + 1), delay);
+        return; // Don't set error yet, still retrying
+      }
+      
+      // All retries failed - set error but also provide defaults
       setError(true);
+      setStreak(0); // Default to 0 so UI still shows something
+      setCanCheckIn(true); // Assume they can check in
     } finally {
-      setIsLoading(false);
+      if (retryCount >= 3 || !error) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -126,17 +156,7 @@ const StreakPill: React.FC<StreakPillProps> = ({ className = '', showLabel = tru
             />
           )}
         </motion.div>
-
-        <motion.button
-          className="pill-orb"
-          style={{ background: `linear-gradient(135deg, ${fireColor.from}40, ${fireColor.to}40)` }}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={() => setShowModal(true)}
-        >
-          <Flame className="w-4 h-4" style={{ color: fireColor.from }} />
-          <span className="dot" style={{ background: fireColor.from }} />
-        </motion.button>
+        {/* Pill-orb rotondo RIMOSSO - solo pill STREAK rimane */}
       </div>
 
       <StreakModal 

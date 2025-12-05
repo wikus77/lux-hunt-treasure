@@ -45,14 +45,9 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent 
-          className="sm:max-w-3xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-6"
+          className="m1-relief sm:max-w-3xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-6"
           style={{
-            background: 'rgba(0, 0, 0, 0.05)',
-            backdropFilter: 'blur(40px)',
-            WebkitBackdropFilter: 'blur(40px)',
-            borderRadius: '24px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            borderRadius: '24px'
           }}
         >
           <DialogHeader>
@@ -71,14 +66,7 @@ const PrizeDetailsModal = ({ isOpen, onClose }: PrizeDetailsModalProps) => {
               return (
                 <div 
                   key={index} 
-                  className="p-4 rounded-xl hover:scale-[1.02] transition-all duration-300"
-                  style={{
-                    background: 'rgba(0, 0, 0, 0.05)',
-                    backdropFilter: 'blur(40px)',
-                    WebkitBackdropFilter: 'blur(40px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-                  }}
+                  className="m1-relief-sm p-4 rounded-xl hover:scale-[1.02] transition-all duration-300"
                 >
                   <div 
                     className="h-48 overflow-hidden rounded-xl mb-4 cursor-pointer"

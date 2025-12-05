@@ -1,17 +1,26 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// MissionBadgeInjector - Renders START M1SSION or ON M1SSION badge ONLY on /home page
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
+import { useLocation } from 'wouter';
 import { useActiveMissionEnrollment } from '@/hooks/useActiveMissionEnrollment';
 import { StartMissionButton } from './StartMissionButton';
 
+// Routes where the badge should appear
+const ALLOWED_ROUTES = ['/home', '/'];
+
 export const MissionBadgeInjector = () => {
+  const [location] = useLocation();
   const { isEnrolled, isLoading } = useActiveMissionEnrollment();
   const [portalReady, setPortalReady] = useState(false);
   const [enrolledOverride, setEnrolledOverride] = useState(false);
 
-  // Sync enrollment override from localStorage on mount (persist after navigation)
+  // 🛡️ GUARD: Only render on allowed routes (Home page)
+  const isOnHomePage = ALLOWED_ROUTES.includes(location) || location === '/home';
+
+  // Sync enrollment override from localStorage on mount
   useEffect(() => {
     try {
       const persisted = localStorage.getItem('m1_mission_enrolled') === '1';
@@ -19,22 +28,57 @@ export const MissionBadgeInjector = () => {
     } catch (_) {}
   }, []);
 
+  // Reset portal when leaving home page
   useEffect(() => {
-    if (isLoading) return;
+    if (!isOnHomePage) {
+      setPortalReady(false);
+    }
+  }, [isOnHomePage]);
+
+  useEffect(() => {
+    // 🛡️ Don't inject badge on non-home pages
+    if (!isOnHomePage || isLoading) return;
 
     let retryCount = 0;
-    const maxRetries = 200;
+    const maxRetries = 100; // Reduced from 200
     const retryDelay = 100;
     let headerObserver: MutationObserver | null = null;
     let globalObserver: MutationObserver | null = null;
     let badgeNodeRef: HTMLElement | null = null;
 
     const getHeaderContext = () => {
+      // 🛡️ First check if we're still on home page
+      if (!ALLOWED_ROUTES.includes(window.location.pathname) && window.location.pathname !== '/home') {
+        return { headerH1: null, headerWrapper: null, subtitle: null };
+      }
+
+      // Look for the specific home page title
       let headerH1 = document.getElementById('m1-home-title') as HTMLElement | null;
+      
       if (!headerH1) {
-        headerH1 = document.querySelector('h1[aria-label*="Centro di Comando Agente"]') as HTMLElement | null
-          || document.querySelector('h1[aria-label*="M1SSION"]') as HTMLElement | null
-          || Array.from(document.querySelectorAll('h1')).find(h => h.textContent?.includes('M1SSION')) as HTMLElement | null;
+        // Look specifically for the home page header with "Centro di Comando"
+        headerH1 = document.querySelector('h1[aria-label*="Centro di Comando Agente"]') as HTMLElement | null;
+        
+        // Fallback: find h1 in the home page content area (not in login/other pages)
+        if (!headerH1) {
+          const homeContent = document.querySelector('[data-page="home"]') || 
+                             document.querySelector('.command-center-home');
+          if (homeContent) {
+            headerH1 = homeContent.querySelector('h1') as HTMLElement | null;
+          }
+        }
+        
+        // Final fallback: only match h1 that's in the main content area with "Centro di Comando" subtitle nearby
+        if (!headerH1) {
+          const allH1s = Array.from(document.querySelectorAll('h1'));
+          headerH1 = allH1s.find(h => {
+            const parent = h.closest('div');
+            return parent && 
+                   h.textContent?.includes('M1SSION') && 
+                   parent.textContent?.includes('Centro di Comando Agente');
+          }) as HTMLElement | null;
+        }
+        
         if (headerH1) {
           headerH1.id = 'm1-home-title';
           headerH1.setAttribute('data-m1-anchor', 'home-title');
@@ -49,6 +93,11 @@ export const MissionBadgeInjector = () => {
     };
 
     const ensureBadgePosition = () => {
+      // 🛡️ Double check we're on home page
+      if (!ALLOWED_ROUTES.includes(window.location.pathname) && window.location.pathname !== '/home') {
+        return false;
+      }
+
       const { headerH1, headerWrapper, subtitle } = getHeaderContext();
       if (!headerH1 || !headerWrapper) return false;
 
@@ -81,21 +130,30 @@ export const MissionBadgeInjector = () => {
     };
 
     const findAndInject = () => {
+      // 🛡️ Check route before each attempt
+      if (!ALLOWED_ROUTES.includes(window.location.pathname) && window.location.pathname !== '/home') {
+        return;
+      }
+
       if (ensureBadgePosition()) {
         // Observe header wrapper for structural changes
         const { headerWrapper } = getHeaderContext();
         if (headerWrapper && !headerObserver) {
           headerObserver = new MutationObserver(() => {
-            requestAnimationFrame(() => ensureBadgePosition());
+            if (ALLOWED_ROUTES.includes(window.location.pathname) || window.location.pathname === '/home') {
+              requestAnimationFrame(() => ensureBadgePosition());
+            }
           });
           headerObserver.observe(headerWrapper, { childList: true, subtree: false });
         }
         
-        // Global guard: if badge moves or disconnects, reattach
+        // Global guard: if badge moves or disconnects, reattach (only on home)
         if (!globalObserver) {
           globalObserver = new MutationObserver(() => {
             if (badgeNodeRef && !document.body.contains(badgeNodeRef)) {
-              requestAnimationFrame(() => ensureBadgePosition());
+              if (ALLOWED_ROUTES.includes(window.location.pathname) || window.location.pathname === '/home') {
+                requestAnimationFrame(() => ensureBadgePosition());
+              }
             }
           });
           globalObserver.observe(document.body, { childList: true, subtree: true });
@@ -106,33 +164,51 @@ export const MissionBadgeInjector = () => {
       if (retryCount < maxRetries) {
         retryCount++;
         setTimeout(findAndInject, retryDelay);
-      } else {
-        console.warn('[MissionBadgeInjector] Header not found after max retries');
       }
     };
 
+    // Start injection
     findAndInject();
 
     const onRouteChange = () => {
-      requestAnimationFrame(() => {
+      // 🛡️ Only process if navigating to/from home
+      const isHome = ALLOWED_ROUTES.includes(window.location.pathname) || window.location.pathname === '/home';
+      if (isHome) {
+        requestAnimationFrame(() => {
+          setPortalReady(false);
+          badgeNodeRef = null;
+          setTimeout(findAndInject, 50);
+        });
+      } else {
         setPortalReady(false);
         badgeNodeRef = null;
-        setTimeout(findAndInject, 50);
-      });
+      }
     };
 
-    const onPageShow = () => requestAnimationFrame(findAndInject);
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') {
+    const onPageShow = () => {
+      if (ALLOWED_ROUTES.includes(window.location.pathname) || window.location.pathname === '/home') {
         requestAnimationFrame(findAndInject);
       }
     };
-    const onFocus = () => requestAnimationFrame(findAndInject);
+    
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        if (ALLOWED_ROUTES.includes(window.location.pathname) || window.location.pathname === '/home') {
+          requestAnimationFrame(findAndInject);
+        }
+      }
+    };
+    
+    const onFocus = () => {
+      if (ALLOWED_ROUTES.includes(window.location.pathname) || window.location.pathname === '/home') {
+        requestAnimationFrame(findAndInject);
+      }
+    };
 
-    // Lightweight watchdog: periodically ensure badge is attached on /home
+    // Lightweight watchdog: periodically ensure badge is attached on /home only
     const homeCheckInterval = window.setInterval(() => {
       try {
-        if (window.location.pathname === '/home') {
+        if (ALLOWED_ROUTES.includes(window.location.pathname) || window.location.pathname === '/home') {
           ensureBadgePosition();
         }
       } catch {}
@@ -153,19 +229,24 @@ export const MissionBadgeInjector = () => {
       window.clearInterval(homeCheckInterval);
       badgeNodeRef = null;
     };
-  }, [isLoading]);
+  }, [isLoading, isOnHomePage]);
 
-  // Aggiorna immediatamente il badge quando l'utente viene iscritto
+  // Listen for enrollment event
   useEffect(() => {
     const onEnrolled = () => {
       console.log('✅ [MissionBadgeInjector] mission:enrolled event received');
       setEnrolledOverride(true);
-      setPortalReady(true);
+      // Only set portal ready if on home page
+      if (ALLOWED_ROUTES.includes(window.location.pathname) || window.location.pathname === '/home') {
+        setPortalReady(true);
+      }
     };
     window.addEventListener('mission:enrolled', onEnrolled);
     return () => window.removeEventListener('mission:enrolled', onEnrolled);
   }, []);
 
+  // 🛡️ Don't render anything if not on home page
+  if (!isOnHomePage) return null;
   if (isLoading || !portalReady) return null;
 
   const portalTarget = document.getElementById('mission-status-badge-portal');

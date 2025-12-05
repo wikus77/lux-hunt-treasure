@@ -2,11 +2,12 @@
 import React, { useState } from "react";
 import { Mission } from "@/data/commandCenterData";
 import { motion } from "framer-motion";
-import { Map, AlertTriangle, Clock, Target, Tag, Settings } from "lucide-react";
+import { Map, AlertTriangle, Clock, Target, Tag, Settings, Zap } from "lucide-react";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { NotifierDebugPanel } from "@/components/mission/NotifierDebugPanel";
 import { RecentSuggestionsTab } from "@/components/mission/RecentSuggestionsTab";
+import { broadcastGlobalGlitch } from "@/hooks/useGlobalGlitch";
 
 interface MissionPanelProps {
   mission: Mission;
@@ -51,13 +52,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      className="m1-relief"
       style={{
-        background: 'rgba(0, 0, 0, 0.05)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)',
-        borderRadius: '24px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)',
-        border: '0'
+        borderRadius: '24px'
       }}
     >
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#F059FF] opacity-90" />
@@ -189,6 +186,19 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
               >
                 <AlertTriangle className="mr-2 h-4 w-4" />
                 Push Test
+              </motion.button>
+            )}
+            
+            {/* ⚡ GLOBAL GLITCH BROADCAST - Solo per Admin */}
+            {isAdmin && (
+              <motion.button
+                className="bg-gradient-to-r from-purple-600/30 to-pink-600/30 hover:from-purple-500/50 hover:to-pink-500/50 text-purple-300 px-4 py-2 rounded-lg text-sm flex items-center border border-purple-500/30"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => broadcastGlobalGlitch()}
+              >
+                <Zap className="mr-2 h-4 w-4" />
+                GLITCH GLOBALE
               </motion.button>
             )}
           </div>

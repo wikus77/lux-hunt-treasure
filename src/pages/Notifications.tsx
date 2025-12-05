@@ -8,8 +8,7 @@ import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useNotificationsDynamicIsland } from '@/hooks/useNotificationsDynamicIsland';
 import { useNotificationsAutoReload } from '@/hooks/useNotificationsAutoReload';
-import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import BottomNavigation from "@/components/layout/BottomNavigation";
+// Header e BottomNav gestiti da GlobalLayout
 import { NotificationsHeader } from '@/components/notifications/NotificationsHeader';
 import { NotificationsList } from '@/components/notifications/NotificationsList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,6 +24,7 @@ const Notifications = () => {
   const { notifications, markAsRead, deleteNotification, markAllAsRead, reloadNotifications } = useNotifications();
   const { playSound } = useBuzzSound();
   const { triggerHaptic } = usePWAHardwareStub();
+  
   
   // Chat state
   const [activeTab, setActiveTab] = useState<'notifications' | 'messages'>('notifications');
@@ -96,79 +96,32 @@ const Notifications = () => {
   // Count unread notifications
   const unreadNotificationsCount = notifications.filter(n => !n.isRead).length;
 
-  // If viewing a chat conversation
+  // If viewing a chat conversation - NO header/nav, GlobalLayout li gestisce
   if (selectedConversation) {
     return (
-      <div 
-        className="w-full m1-app-bg"
-        style={{ 
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          overflow: 'hidden',
-        }}
-      >
-        <div className="m1-grain" />
-        <UnifiedHeader />
-        
+      <div className="w-full">
         <ChatView
           conversationId={selectedConversation.id}
           recipientName={selectedConversation.name}
           recipientAvatar={selectedConversation.avatar}
           onBack={() => setSelectedConversation(null)}
         />
-        
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10000 }}>
-          <BottomNavigation />
-        </div>
       </div>
     );
   }
 
-  // Main notifications/messages page - COMPLETELY STATIC
+  // Main notifications/messages page - GlobalLayout gestisce Header e BottomNav
   return (
-    <div 
-      className="w-full m1-app-bg"
-      style={{ 
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      <div className="m1-grain" />
-      
-      {/* Header - Fixed */}
-      <UnifiedHeader />
-      
-      {/* Content Area - Takes remaining space */}
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 10px)',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
-          paddingLeft: '12px',
-          paddingRight: '12px',
-        }}
-      >
-        <div className="w-full max-w-3xl mx-auto flex flex-col h-full overflow-hidden">
+    <div className="w-full px-3">
+        <div className="w-full max-w-3xl mx-auto">
           {/* Tabs */}
           <Tabs 
             value={activeTab} 
             onValueChange={(v) => setActiveTab(v as 'notifications' | 'messages')}
-            className="flex flex-col h-full overflow-hidden"
+            className="w-full"
           >
-            {/* Tab Buttons - Fixed */}
-            <TabsList className="grid w-full grid-cols-2 mb-4 bg-gray-900/50 border border-cyan-500/20 rounded-xl p-1 flex-shrink-0">
+            {/* Tab Buttons */}
+            <TabsList className="grid w-full grid-cols-2 mb-4 bg-gray-900/50 border border-cyan-500/20 rounded-xl p-1">
               <TabsTrigger 
                 value="notifications"
                 className="relative flex items-center justify-center gap-2 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 rounded-lg py-3 transition-all"
@@ -195,12 +148,8 @@ const Notifications = () => {
               </TabsTrigger>
             </TabsList>
 
-            {/* Tab Content - Scrollable */}
-            <TabsContent 
-              value="notifications" 
-              className="flex-1 overflow-y-auto mt-0"
-              style={{ minHeight: 0 }}
-            >
+            {/* Tab Content */}
+            <TabsContent value="notifications" className="mt-0">
               <NotificationsHeader
                 filter={filter}
                 onFilterChange={setFilter}
@@ -217,11 +166,7 @@ const Notifications = () => {
               />
             </TabsContent>
 
-            <TabsContent 
-              value="messages" 
-              className="flex-1 overflow-y-auto mt-0"
-              style={{ minHeight: 0 }}
-            >
+            <TabsContent value="messages" className="mt-0">
               <ChatList
                 onSelectConversation={handleSelectConversation}
                 onNewChat={() => setShowNewChatModal(true)}
@@ -230,34 +175,20 @@ const Notifications = () => {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
-      
-      {/* Bottom Navigation - Fixed */}
-      <div 
-        style={{ 
-          position: 'fixed', 
-          bottom: 0, 
-          left: 0, 
-          right: 0, 
-          zIndex: 10000,
-        }}
-      >
-        <BottomNavigation />
-      </div>
 
-      {/* Modals */}
-      <NewChatModal
-        isOpen={showNewChatModal}
-        onClose={() => setShowNewChatModal(false)}
-        onChatCreated={handleChatCreated}
-      />
+        {/* Modals */}
+        <NewChatModal
+          isOpen={showNewChatModal}
+          onClose={() => setShowNewChatModal(false)}
+          onChatCreated={handleChatCreated}
+        />
 
-      <NewGroupModal
-        isOpen={showNewGroupModal}
-        onClose={() => setShowNewGroupModal(false)}
-        onGroupCreated={handleGroupCreated}
-      />
-    </div>
+        <NewGroupModal
+          isOpen={showNewGroupModal}
+          onClose={() => setShowNewGroupModal(false)}
+          onGroupCreated={handleGroupCreated}
+        />
+      </div>
   );
 };
 

@@ -13,7 +13,7 @@ import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { createVortexSound } from '@/utils/audioSynthesis';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
-import BottomNavigation from '@/components/layout/BottomNavigation';
+// BottomNavigation gestita da GlobalLayout
 import M1UPill from '@/features/m1u/M1UPill';
 import { useDebugFlag } from '@/debug/useDebugFlag';
 import { DebugBuzzPanel } from '@/debug/DebugBuzzPanel';
@@ -47,6 +47,18 @@ export const BuzzPage: React.FC = () => {
     }, 3000);
     return () => clearTimeout(timeout);
   }, [loading, authLoading]);
+
+  // 🔍 DEBUG: Track any page reload/navigation attempts
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      console.error('🚨 PAGE RELOAD DETECTED! Stack:', new Error().stack);
+      // Log to help identify what triggered the reload
+      console.error('🚨 Window location:', window.location.href);
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   // Start procedural vortex sound ONLY when on /buzz page
   useEffect(() => {
@@ -86,15 +98,10 @@ export const BuzzPage: React.FC = () => {
   }, []);
 
   const handleBuzzSuccess = async () => {
-    console.log('🎉 BUZZ SUCCESS - Reloading all stats...');
-    
-    // ✅ Force reload counter
-    await loadDailyBuzzCounter();
-    
-    // ✅ Force reload stats
-    await loadBuzzStats();
-    
-    console.log('✅ All stats reloaded after BUZZ');
+    console.log('🎉 BUZZ SUCCESS - Stats will update via realtime subscriptions');
+    // 🔥 FIX: NON chiamare loadDailyBuzzCounter/loadBuzzStats qui!
+    // Causavano reload della pagina. I dati si aggiornano automaticamente
+    // tramite le realtime subscriptions di Supabase.
   };
 
   // Show loading only if loading AND not forced AND auth not loading
@@ -191,14 +198,9 @@ export const BuzzPage: React.FC = () => {
 
             {/* Container con descrizione - Sistema 200 indizi - RESET COMPLETO 17/07/2025 */}
             <div 
-              className="p-4 sm:p-6 mb-6 max-w-3xl w-full mx-4 relative overflow-hidden"
+              className="m1-relief p-4 sm:p-6 mb-6 max-w-3xl w-full mx-4 relative overflow-hidden"
               style={{
-                background: 'rgba(0, 0, 0, 0.05)',
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)',
-                borderRadius: '24px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+                borderRadius: '24px'
               }}
             >
               {/* Animated glow strip like header */}
@@ -222,11 +224,23 @@ export const BuzzPage: React.FC = () => {
               <div className="text-center space-y-4">
                 {/* Descrizione BUZZ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025 */}
                 <div className="text-white/80 space-y-2">
-                  <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi. Ogni Buzz ti aiuta a trovare indizi nascosti per raggiungere l'obiettivo di 200 indizi totali.</p>
+                  <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi. Ogni Buzz ti aiuta a trovare indizi nascosti per raggiungere l'obiettivo di 250 indizi totali.</p>
                   <p className="font-semibold">BUZZ oggi: {dailyBuzzCounter} (prezzo progressivo)</p>
-                  <p className="font-semibold">BUZZ totali: {stats?.total_count || 0}/200 (target finale)</p>
+                  <p className="font-semibold">BUZZ totali: {stats?.total_count || 0}/250 (target finale)</p>
                   <p className="text-[#00ffff]">Prossimo: {currentPriceDisplay}</p>
-                  <p className="text-xs text-white/60">💎 Ogni BUZZ consuma M1U dal tuo saldo</p>
+                  <p className="text-xs text-white/60 flex items-center gap-1">
+                    <span 
+                      className="inline-flex w-4 h-4 rounded-full items-center justify-center text-[8px] font-bold"
+                      style={{
+                        background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                        color: '#1a1a1a',
+                        boxShadow: '0 0 6px rgba(255, 215, 0, 0.6)',
+                      }}
+                    >
+                      M1
+                    </span>
+                    Ogni BUZZ consuma M1U dal tuo saldo
+                  </p>
                 </div>
               </div>
             </div>
@@ -251,25 +265,7 @@ export const BuzzPage: React.FC = () => {
       />
       
       {/* Bottom Navigation - Uniform positioning like Home */}
-      <div 
-        id="mission-bottom-nav-container"
-        style={{
-          position: 'fixed', 
-          bottom: 0, 
-          left: 0, 
-          right: 0, 
-          width: '100vw',
-          zIndex: 10000,
-          isolation: 'isolate',
-          transform: 'translateZ(0)',
-          willChange: 'transform',
-          display: 'block',
-          visibility: 'visible',
-          opacity: 1
-        } as React.CSSProperties}
-      >
-        <BottomNavigation />
-      </div>
+      {/* BottomNavigation gestita da GlobalLayout */}
 
       {/* Debug Panel (only if enabled) */}
       {debugEnabled && <DebugBuzzPanel />}

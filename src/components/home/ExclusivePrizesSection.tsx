@@ -32,14 +32,9 @@ const ExclusivePrizesSection = () => {
         className="max-w-4xl mx-auto"
       >
         <div 
-          className="m1ssion-glass-card p-4 sm:p-6 overflow-hidden relative m1-border-glow m1-card-compact"
+          className="m1-relief p-4 sm:p-6 overflow-hidden relative m1-border-glow m1-card-compact"
           style={{
-            background: 'rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(40px)',
-            WebkitBackdropFilter: 'blur(40px)',
-            borderRadius: '20px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(0, 209, 255, 0.3)'
+            borderRadius: '20px'
           }}
         >
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] via-[#F059FF] to-[#FACC15] opacity-90" />

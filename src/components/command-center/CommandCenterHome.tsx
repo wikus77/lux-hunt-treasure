@@ -77,10 +77,10 @@ export default function CommandCenterHome() {
   } : {
     id: "M001",
     title: "M1SSION ONE",
-    totalClues: 200,
+    totalClues: 250, // 🔥 FIX: 250 indizi totali
     foundClues: 0,
     timeLimit: "48:00:00",
-    startTime: "2025-07-17T00:00:00.000Z",
+    startTime: "2025-11-26T00:00:00.000Z", // 🔥 FIX: Data corretta
     remainingDays: 30,
     totalDays: 30,
     dailyLimit: 50

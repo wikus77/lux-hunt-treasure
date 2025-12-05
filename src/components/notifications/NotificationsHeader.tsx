@@ -18,14 +18,7 @@ export const NotificationsHeader: React.FC<NotificationsHeaderProps> = ({
 }) => {
   return (
     <div 
-      className="p-4 sm:p-6 mb-6 relative overflow-hidden rounded-[24px]"
-      style={{
-        background: 'rgba(0, 0, 0, 0.05)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-      }}
+      className="m1-relief p-4 sm:p-6 mb-6 relative overflow-hidden rounded-[24px]"
     >
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">

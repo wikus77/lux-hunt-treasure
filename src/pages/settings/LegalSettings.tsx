@@ -60,6 +60,12 @@ const LegalSettings: React.FC = () => {
       icon: FileText
     },
     {
+      title: 'Game Policies',
+      description: 'Disclaimers, virtual currencies, anti-gambling policy',
+      url: '/policies',
+      icon: Shield
+    },
+    {
       title: 'SafeCreative',
       description: 'Certificazione di proprietà intellettuale',
       url: '/safecreative',

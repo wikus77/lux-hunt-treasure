@@ -130,7 +130,7 @@ export const useAuthSessionManager = (): SessionManagerResult => {
           }
         };
         
-        console.log('✅ ENHANCED MANUAL SESSION CONSTRUCTED for:', manualSession.user.email);
+        console.log('✅ ENHANCED MANUAL SESSION CONSTRUCTED');
         
         setSession(manualSession);
         setUser(manualSession.user);
@@ -195,7 +195,7 @@ export const useAuthSessionManager = (): SessionManagerResult => {
         });
         
         if (!error && session && session.user) {
-          console.log('✅ ACTIVE SUPABASE SESSION FOUND:', session.user.email);
+          console.log('✅ ACTIVE SUPABASE SESSION FOUND');
           setSession(session);
           setUser(session.user);
           setIsLoading(false);

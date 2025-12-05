@@ -15,6 +15,11 @@ const ALLOWED_ORIGINS = [
   /\.lovableproject\.com$/i,
   /\.lovable\.app$/i,
   /\.lovable\.dev$/i,
+  // M1SSION Custom Domains
+  /^m1ssion\.eu$/i,
+  /\.m1ssion\.eu$/i,
+  /^m1ssion\.app$/i,
+  /\.m1ssion\.app$/i,
   // Local/dev
   /^localhost$/i,
   /^127\.0\.0\.1$/i
@@ -136,6 +141,8 @@ export function corsHeaders(origin: string | null) {
     /^https:\/\/.*\.lovable\.app$/,
     /^https:\/\/.*\.lovableproject\.com$/,
     /^https:\/\/m1ssion\.app$/,
+    /^https:\/\/m1ssion\.eu$/,
+    /^https:\/\/.*\.m1ssion\.eu$/,
     /^https:\/\/.*\.vercel\.app$/,
     /^http:\/\/localhost:\d+$/
   ];

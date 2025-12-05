@@ -1,0 +1,4 @@
+# Disable JWT verification - uses internal user_id validation
+[function]
+verify_jwt = false
+

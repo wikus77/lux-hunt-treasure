@@ -48,6 +48,20 @@ export async function buildEnhancedContext(
       result: shot.result
     }));
 
+    // Check if user has generated a map area
+    let mapGenerated = false;
+    try {
+      const { data: missionStatus } = await supabase
+        .from('user_mission_status')
+        .select('map_area_generated')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      mapGenerated = missionStatus?.map_area_generated || false;
+    } catch (err) {
+      // Table might not exist or user not found, default to false
+    }
+
     // Build enhanced context
     const context: EnhancedContext = {
       userId,
@@ -55,7 +69,7 @@ export async function buildEnhancedContext(
       tier: userState?.tier || 'free',
       cluesFound: userState?.cluesFound || 0,
       buzzCount: userState?.buzzAvailable || 0,
-      mapGenerated: false, // TODO: query from user state
+      mapGenerated,
       locale: options?.locale || 'it',
       route: options?.route,
       device: options?.device,

@@ -5,7 +5,7 @@ import { SafeAreaWrapper } from "./SafeAreaWrapper";
 import UnifiedHeader from "./UnifiedHeader";
 import BottomNavigation from "./BottomNavigation";
 import { detectPWAEnvironment } from "@/utils/pwaStubs";
-import CookieBanner from "@/components/legal/CookieBanner";
+// CookieBanner RIMOSSO - gestito centralmente da CookieConsentManager in App.tsx
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
@@ -35,13 +35,19 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
     '/games'
   ];
   
+  // Routes that manage their own layout completely (no header/nav from GlobalLayout)
+  // NOTA: Rimosso /notifications per uniformare la bottom nav
+  const selfManagedRoutes: string[] = [];
+  
   const shouldHideNavigation = hideNavigationRoutes.includes(location);
   const isFullScreen = fullScreenRoutes.includes(location);
+  const isSelfManaged = selfManagedRoutes.includes(location);
   
   console.log('🏗️ GlobalLayout:', {
     path: location,
     shouldHideNavigation,
     isFullScreen,
+    isSelfManaged,
     isCapacitor
   });
 
@@ -52,6 +58,11 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
         {children}
       </SafeAreaWrapper>
     );
+  }
+
+  // Self-managed pages (notifications) - they handle their own header/nav
+  if (isSelfManaged) {
+    return <>{children}</>;
   }
 
   // Full screen pages (map, buzz, games) - no header padding
@@ -94,9 +105,6 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
         
         {/* Bottom Navigation */}
         <BottomNavigation />
-        
-        {/* Cookie Banner */}
-        <CookieBanner />
       </div>
     </SafeAreaWrapper>
   );

@@ -18,7 +18,7 @@ export const registerAgent = async (data: AgentRegistrationData): Promise<{succe
     // Generate a unique referral code for the agent
     const referralCode = generateReferralCode(name);
     
-    console.log(`Registering new agent: ${name} (${email}) with referral code: ${referralCode}`);
+    console.log('📝 Registering new agent');
     
     // Get the current authenticated user if available
     const { data: { user } } = await supabase.auth.getUser();
@@ -125,7 +125,7 @@ export const sendAgentConfirmationEmail = async (
   referralCode: string
 ): Promise<boolean> => {
   try {
-    console.log(`Sending agent confirmation email to ${email} with code ${referralCode}`);
+    console.log('📧 Sending agent confirmation email');
     console.log(`Using sender: noreply@m1ssion.com and template ID: 6974914`);
     
     // EXCLUSIVE: Direct call to the send-agent-confirmation edge function
@@ -171,7 +171,7 @@ export const testSendAgentConfirmation = async (
 ): Promise<boolean> => {
   try {
     const testReferralCode = "TEST" + Math.floor(Math.random() * 10000);
-    console.log(`[TEST] Sending test agent email to ${email} with code ${testReferralCode}`);
+    console.log('🧪 [TEST] Sending test agent email');
     console.log(`[TEST] Using template ID 6974914 and sender noreply@m1ssion.com`);
     
     const result = await sendAgentConfirmationEmail(name, email, testReferralCode);

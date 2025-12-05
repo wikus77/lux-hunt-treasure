@@ -70,11 +70,11 @@ export const useLogin = () => {
     const { email, password } = formData;
 
     try {
-      console.log(`Login attempt for email: ${email}`);
+      console.log('🔐 Login attempt started');
       
       // Special handling for development paths
       if (isDevPath) {
-        console.log('Development path detected, bypassing Turnstile verification for login');
+        console.log('Development path detected, bypassing Turnstile');
         turnstileToken = 'BYPASS_FOR_DEVELOPMENT';
       }
       
@@ -85,13 +85,11 @@ export const useLogin = () => {
         });
         
         if (!verifyResponse.data?.success) {
-          console.warn('Security verification warning, but allowing login to proceed:', verifyResponse.error);
-          // Continue anyway to prevent blocking login functionality
+          console.warn('Security verification warning, proceeding with login');
         }
       }
       
-      // Now proceed with standard login - CORRECTED: using 2 arguments as expected
-      console.log(`Proceeding with standard login for: ${email}`);
+      console.log('🔄 Proceeding with standard login');
       
       const result = await login(email, password);
       
@@ -116,17 +114,14 @@ export const useLogin = () => {
         duration: 2000
       });
 
-      // NOTE: REDIRECT DISABLED IN use-login - handled by StandardLoginForm  
       console.log('🚀 [use-login] LOGIN SUCCESS - redirect delegated to StandardLoginForm');
-      // sessionStorage and navigate calls removed to avoid conflicts
       
       // Dispatch auth success event
       const event = new CustomEvent('auth-success');
       window.dispatchEvent(event);
       
     } catch (error: any) {
-      console.error('Errore login:', error);
-      // Form error is already set for specific cases above
+      console.error('❌ Login error');
       if (!formError) {
         setFormError(error.message || 'Errore imprevisto durante il login.');
       }

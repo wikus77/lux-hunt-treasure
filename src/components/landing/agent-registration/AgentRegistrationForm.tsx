@@ -63,7 +63,7 @@ const AgentRegistrationForm: React.FC<AgentRegistrationFormProps> = ({
     console.log("Starting agent registration submission");
     
     try {
-      console.log("Submitting agent registration form:", { name, email });
+      console.log("📝 Submitting agent registration form");
       
       const result = await registerAgent({
         name,

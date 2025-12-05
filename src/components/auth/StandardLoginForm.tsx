@@ -46,29 +46,27 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
     setIsLoading(true);
     
     try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔐 SECURE LOGIN ATTEMPT for:', cleanEmail);
-      }
+      console.log('🔐 SECURE LOGIN ATTEMPT');
       
       // Use DIRECT AuthContext login method with cleaned inputs
       const result = await login(cleanEmail, cleanPassword);
 
       if (!result.success) {
-        console.error('❌ LOGIN ERROR via DIRECT AuthContext:', result.error);
+        console.error('❌ LOGIN ERROR');
         toast.error('Errore di login', {
           description: result.error?.message || 'Credenziali non valide'
         });
         return;
       }
 
-      console.log('✅ LOGIN SUCCESS via DIRECT AuthContext - Emitting auth-success event');
+      console.log('✅ LOGIN SUCCESS - Emitting auth-success event');
       toast.success('Login effettuato con successo', {
         description: 'Benvenuto in M1SSION™!'
       });
       
       // Emit custom auth success event for PWA compatibility
       window.dispatchEvent(new CustomEvent('auth-success', { 
-        detail: { email, timestamp: Date.now() } 
+        detail: { timestamp: Date.now() } 
       }));
       
       // POST-LOGIN REDIRECT: Handle redirect params and localStorage
@@ -84,7 +82,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
       
       // If no specific redirect, go to mission-intro, otherwise use the target
       const finalTarget = target || '/mission-intro';
-      console.log('🚀 [StandardLoginForm] REDIRECTING TO:', finalTarget);
+      console.log('🚀 [StandardLoginForm] REDIRECTING');
       
       // Clear intro flag only if going to mission-intro
       if (!target) {
@@ -96,16 +94,16 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
       // PWA iOS Safari fallback
       if (window.matchMedia('(display-mode: standalone)').matches || 
           (window.navigator as any).standalone === true) {
-        console.log('📱 PWA DETECTED - Setting up fallback redirect to:', finalTarget);
+        console.log('📱 PWA DETECTED - Setting up fallback redirect');
         setTimeout(() => {
           if (window.location.pathname === '/login') {
-            console.log('🔄 PRIMARY REDIRECT FAILED - Using window.location.href to:', finalTarget);
+            console.log('🔄 PRIMARY REDIRECT FAILED - Using window.location.href');
             window.location.href = finalTarget;
           }
         }, 800);
       }
     } catch (error: any) {
-      console.error('💥 LOGIN EXCEPTION:', error);
+      console.error('💥 LOGIN EXCEPTION');
       toast.error('Errore di sistema', {
         description: error.message || 'Si è verificato un errore imprevisto'
       });

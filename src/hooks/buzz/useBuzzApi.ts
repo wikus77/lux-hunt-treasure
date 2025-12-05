@@ -225,41 +225,14 @@ export function useBuzzApi() {
       if (data?.success) {
         console.log(`✅ ${functionName} success:`, data);
         
-        // Gestione biforcata basata su mode
-        if (data.mode === 'buzz') {
-          // BUZZ normale: mostra indizio
-          if (data.clue?.text) {
-            toast.success(data.clue.text, {
-              duration: 5000,
-              position: 'top-center',
-              style: { 
-                zIndex: 9999,
-                background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
-                color: 'white',
-                fontWeight: 'bold'
-              }
-            });
-          } else {
-            toast.success('Indizio ricevuto!');
-          }
-        } else if (data.mode === 'map') {
-          // BUZZ MAP: valida area
-          if (data.area) {
-            console.log('🗺️ Area generata:', data.area);
-            toast.success('Area di ricerca creata!', {
-              duration: 4000,
-              style: {
-                background: 'linear-gradient(135deg, #9333EA 0%, #EF4444 100%)',
-                color: 'white',
-                fontWeight: 'bold'
-              }
-            });
-          } else {
-            toast.error('Area non generata, riprova tra poco.');
+        // 🔥 FIX: NO TOAST HERE - Toast is handled by useBuzzHandler to avoid duplicates
+        // Only validate MAP mode response
+        if (data.mode === 'map') {
+          if (!data.area) {
+            console.error('❌ MAP mode but no area returned');
             return { success: false, error: true, errorMessage: 'Area non generata' };
           }
-        } else {
-          toast.success('BUZZ processed successfully');
+          console.log('🗺️ Area generata:', data.area);
         }
 
         return { 

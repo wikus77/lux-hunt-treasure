@@ -1,11 +1,13 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Lock, BarChart3, Megaphone, Settings } from 'lucide-react';
 import type { ConsentPreferences } from './types';
 import { DEFAULT_PREFERENCES } from './types';
 
@@ -23,6 +25,7 @@ interface PreferencesModalProps {
  * - Individual category toggles
  * - Necessary cookies always enabled (informational)
  * - Accessible, keyboard-navigable
+ * - Localized IT/EN via i18next
  * - z-index above DNA content but below Evolution Scene
  */
 export const PreferencesModal: React.FC<PreferencesModalProps> = ({
@@ -31,6 +34,7 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({
   onSave,
   initialPreferences = DEFAULT_PREFERENCES,
 }) => {
+  const { t } = useTranslation();
   const [preferences, setPreferences] = useState<ConsentPreferences>(initialPreferences);
 
   const handleSave = () => {
@@ -60,9 +64,9 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({
       >
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
         <DialogHeader>
-          <DialogTitle>Gestisci preferenze cookie</DialogTitle>
+          <DialogTitle>{t('cookie_preferences_title')}</DialogTitle>
           <DialogDescription>
-            Personalizza le tue preferenze sui cookie. I cookie necessari sono sempre attivi.
+            {t('cookie_preferences_description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -71,20 +75,25 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 space-y-1">
-                <Label htmlFor="necessary" className="text-base font-semibold">
-                  Cookie necessari
+                <Label htmlFor="necessary" className="text-base font-semibold flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-green-400" />
+                  {t('cookie_necessary_title')}
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Essenziali per il funzionamento del sito (autenticazione, sessioni, sicurezza). 
-                  Sempre attivi.
+                  {t('cookie_necessary_description')}
                 </p>
               </div>
-              <Switch
-                id="necessary"
-                checked={preferences.necessary}
-                disabled
-                aria-label="Cookie necessari sempre attivi"
-              />
+              <div className="flex flex-col items-end gap-1">
+                <Switch
+                  id="necessary"
+                  checked={preferences.necessary}
+                  disabled
+                  aria-label={t('cookie_necessary_always_active')}
+                />
+                <span className="text-xs text-green-400 font-medium">
+                  {t('cookie_necessary_always_active')}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -94,19 +103,19 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 space-y-1">
-                <Label htmlFor="analytics" className="text-base font-semibold">
-                  Cookie di analisi
+                <Label htmlFor="analytics" className="text-base font-semibold flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-purple-400" />
+                  {t('cookie_analytics_title')}
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Aiutano a capire come i visitatori interagiscono con il sito, raccogliendo informazioni 
-                  anonime su pagine visitate e performance.
+                  {t('cookie_analytics_description')}
                 </p>
               </div>
               <Switch
                 id="analytics"
                 checked={preferences.analytics}
                 onCheckedChange={() => togglePreference('analytics')}
-                aria-label="Attiva o disattiva cookie di analisi"
+                aria-label={t('cookie_analytics_title')}
               />
             </div>
           </div>
@@ -117,18 +126,19 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 space-y-1">
-                <Label htmlFor="marketing" className="text-base font-semibold">
-                  Cookie di marketing
+                <Label htmlFor="marketing" className="text-base font-semibold flex items-center gap-2">
+                  <Megaphone className="w-4 h-4 text-orange-400" />
+                  {t('cookie_marketing_title')}
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Utilizzati per mostrare pubblicità personalizzate e misurare l'efficacia delle campagne.
+                  {t('cookie_marketing_description')}
                 </p>
               </div>
               <Switch
                 id="marketing"
                 checked={preferences.marketing}
                 onCheckedChange={() => togglePreference('marketing')}
-                aria-label="Attiva o disattiva cookie di marketing"
+                aria-label={t('cookie_marketing_title')}
               />
             </div>
           </div>
@@ -139,18 +149,19 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 space-y-1">
-                <Label htmlFor="personalization" className="text-base font-semibold">
-                  Cookie di personalizzazione
+                <Label htmlFor="personalization" className="text-base font-semibold flex items-center gap-2">
+                  <Settings className="w-4 h-4 text-blue-400" />
+                  {t('cookie_personalization_title')}
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Memorizzano preferenze come lingua, layout e altre impostazioni per migliorare l'esperienza.
+                  {t('cookie_personalization_description')}
                 </p>
               </div>
               <Switch
                 id="personalization"
                 checked={preferences.personalization}
                 onCheckedChange={() => togglePreference('personalization')}
-                aria-label="Attiva o disattiva cookie di personalizzazione"
+                aria-label={t('cookie_personalization_title')}
               />
             </div>
           </div>
@@ -162,14 +173,14 @@ export const PreferencesModal: React.FC<PreferencesModalProps> = ({
             onClick={handleSave}
             className="flex-1 min-h-[44px]"
           >
-            Salva preferenze
+            {t('cookie_save_preferences')}
           </Button>
           <Button
             onClick={onClose}
             variant="outline"
             className="flex-1 min-h-[44px]"
           >
-            Annulla
+            {t('cookie_cancel')}
           </Button>
         </div>
       </DialogContent>

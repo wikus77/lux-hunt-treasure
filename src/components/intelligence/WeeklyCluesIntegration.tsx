@@ -29,10 +29,43 @@ const WeeklyCluesIntegration: React.FC = () => {
     determineCurrentWeek();
   }, []);
 
-  const determineCurrentWeek = () => {
-    // TODO: Get from mission start date
-    const mockWeek = Math.max(1, Math.min(4, Math.floor(Math.random() * 4) + 1));
-    setCurrentWeek(mockWeek);
+  const determineCurrentWeek = async () => {
+    try {
+      // Get user's mission start date from database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setCurrentWeek(1);
+        return;
+      }
+
+      const { data: missionStatus, error } = await supabase
+        .from('user_mission_status')
+        .select('mission_started_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error || !missionStatus?.mission_started_at) {
+        // No mission data - default to week 1
+        console.log('[WeeklyClues] No mission start date found, defaulting to week 1');
+        setCurrentWeek(1);
+        return;
+      }
+
+      // Calculate current week based on mission start date
+      const missionStart = new Date(missionStatus.mission_started_at);
+      const now = new Date();
+      const daysPassed = Math.floor((now.getTime() - missionStart.getTime()) / (1000 * 60 * 60 * 24));
+      const weekNumber = Math.floor(daysPassed / 7) + 1;
+      
+      // Clamp to weeks 1-4 (mission is 4 weeks)
+      const clampedWeek = Math.max(1, Math.min(4, weekNumber));
+      
+      console.log('[WeeklyClues] Calculated week:', { missionStart, daysPassed, weekNumber: clampedWeek });
+      setCurrentWeek(clampedWeek);
+    } catch (err) {
+      console.error('[WeeklyClues] Error determining week:', err);
+      setCurrentWeek(1); // Safe fallback
+    }
   };
 
   const loadWeeklyClues = async () => {

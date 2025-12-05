@@ -30,6 +30,7 @@ interface AionStatus {
 interface IntelChatPanelProps {
   aionEntityRef?: RefObject<AionEntityHandle>;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 // Error messages mapping (lore-friendly)
@@ -40,7 +41,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   'INTERNAL_ERROR': '⚠️ Interferenza nel canale. Riprova tra qualche secondo.',
 };
 
-const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, className = '' }) => {
+const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, className = '', style }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'system-1',
@@ -59,7 +60,21 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionIdRef = useRef<string>(`session_${Date.now()}`);
   
-  const { speak, stop: stopTTS, isSpeaking } = useTTS();
+  const { speak, stop: stopTTS, isSpeaking, unlockAudio } = useTTS();
+
+  // 🍎 iOS: Unlock audio on first user interaction with chat
+  useEffect(() => {
+    const unlockOnInteraction = () => {
+      unlockAudio();
+    };
+    // Listen for any interaction in the chat panel
+    document.addEventListener('touchstart', unlockOnInteraction, { once: true, passive: true });
+    document.addEventListener('click', unlockOnInteraction, { once: true, passive: true });
+    return () => {
+      document.removeEventListener('touchstart', unlockOnInteraction);
+      document.removeEventListener('click', unlockOnInteraction);
+    };
+  }, [unlockAudio]);
 
   // Fetch AION status on mount
   useEffect(() => {
@@ -125,6 +140,9 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   // Send message to AION
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
+
+    // 🍎 iOS: Force unlock audio when user sends message (user gesture context)
+    unlockAudio();
 
     const userMessage: Message = {
       id: `user_${Date.now()}`,
@@ -297,6 +315,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         background: 'rgba(7, 8, 24, 0.6)',
         backdropFilter: 'blur(12px)',
         border: '1px solid rgba(0, 212, 255, 0.2)',
+        ...style
       }}
     >
       {/* Header */}

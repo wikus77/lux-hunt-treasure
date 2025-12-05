@@ -25,13 +25,12 @@ const CookieBanner = () => {
   });
 
   useEffect(() => {
-    // Check if user has already made a choice - unified storage key
+    // Check if user has already made a choice - GDPR compliant: show only ONCE
     const cookieConsent = localStorage.getItem('cookie_consent') || localStorage.getItem('m1ssion-cookie-consent');
-    const today = new Date().toISOString().split('T')[0];
-    const lastShown = localStorage.getItem('cookie_banner_last_shown');
     
-    // Only show if no consent exists AND not shown today
-    if (!cookieConsent || lastShown !== today) {
+    // Only show if NO consent exists (user never made a choice)
+    // Once user accepts/rejects, never show again - GDPR compliant
+    if (!cookieConsent) {
       // Show banner after a short delay for better UX
       const timer = setTimeout(() => setIsVisible(true), 1000);
       return () => clearTimeout(timer);

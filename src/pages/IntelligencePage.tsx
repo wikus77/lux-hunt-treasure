@@ -2,8 +2,6 @@
 // M1SSION Intelligence Page - AION Entity + Chat Panel
 
 import React, { useRef, Suspense, lazy } from 'react';
-import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
-import BottomNavigation from '@/components/layout/BottomNavigation';
 import AionEntity, { AionEntityHandle } from '@/components/aion/AionEntity';
 import IntelChatPanel from '@/pages/intel/IntelChatPanel';
 
@@ -14,21 +12,26 @@ const IntelligencePage: React.FC = () => {
   const aionRef = useRef<AionEntityHandle>(null);
 
   return (
-    <SafeAreaWrapper className="relative isolate min-h-screen flex flex-col bg-[#070818]">
-      {/* Background gradient */}
+    <div 
+      style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 85px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 95px)',
+        paddingLeft: '16px',
+        paddingRight: '16px'
+      }}
+    >
+      {/* M1U Pill - Below header */}
       <div 
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse at center top, rgba(0, 212, 255, 0.1) 0%, transparent 50%)',
-        }}
-      />
-      
-      {/* M1U Pill - Fixed top left (same position as Home) */}
-      <div 
-        className="fixed top-4 left-4 z-50 flex flex-col items-start gap-2" 
+        data-onboarding="m1u-pill"
         style={{ 
-          marginTop: 'env(safe-area-inset-top, 0px)',
-          paddingLeft: 'max(0rem, env(safe-area-inset-left, 0px))'
+          pointerEvents: 'auto',
+          marginBottom: '8px',
+          flexShrink: 0
         }}
       >
         <Suspense fallback={<div className="w-28 h-10 bg-gray-800/50 rounded-full animate-pulse" />}>
@@ -36,12 +39,18 @@ const IntelligencePage: React.FC = () => {
         </Suspense>
       </div>
 
-      {/* AION Entity */}
+      {/* AION Entity - Fixed height */}
       <div 
-        className="relative z-10"
-        style={{
-          height: 'clamp(280px, 35vh, 420px)',
-          marginTop: 'clamp(100px, 12vh, 140px)',
+        style={{ 
+          height: '25%',
+          minHeight: '120px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          position: 'relative',
+          zIndex: 1
         }}
       >
         <AionEntity 
@@ -50,39 +59,44 @@ const IntelligencePage: React.FC = () => {
           idleSpeed={0.7}
           className="mx-auto"
         />
-        
-        {/* AION Label */}
-        <div className="absolute bottom-4 left-0 right-0 text-center">
-          <h2 className="text-2xl font-bold tracking-wider">
-            <span className="text-cyan-400">AI</span>
-            <span className="text-white">ON</span>
-          </h2>
-          <p className="text-xs text-gray-500 mt-1 tracking-wide">Adaptive Intelligence ON</p>
-        </div>
+      </div>
+      
+      {/* AION Label - Above animation with z-index */}
+      <div 
+        className="text-center"
+        style={{ 
+          flexShrink: 0,
+          marginBottom: '20px',
+          position: 'relative',
+          zIndex: 10
+        }}
+      >
+        <h2 className="text-2xl font-bold tracking-wider">
+          <span className="text-cyan-400">AI</span>
+          <span className="text-white">ON</span>
+        </h2>
+        <p className="text-xs text-gray-500 tracking-wide">Adaptive Intelligence ON</p>
       </div>
 
-      {/* Chat Panel */}
+      {/* Chat Panel - Takes remaining space */}
       <div 
-        className="relative z-10 flex-1 px-4 mt-8 pb-24"
         data-onboarding="ai-chat"
-        style={{ maxWidth: '48rem', margin: '2rem auto 0', width: '100%' }}
+        style={{ 
+          flex: 1,
+          minHeight: '220px',
+          maxWidth: '100%', 
+          width: '100%', 
+          display: 'flex',
+          flexDirection: 'column'
+        }}
       >
         <IntelChatPanel 
           aionEntityRef={aionRef}
-          className="h-full"
+          className="flex-1"
+          style={{ minHeight: 0 }}
         />
       </div>
-
-      {/* Bottom Navigation */}
-      <div 
-        className="fixed bottom-0 left-0 right-0 z-50"
-        style={{ 
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)'
-        }}
-      >
-        <BottomNavigation />
-      </div>
-    </SafeAreaWrapper>
+    </div>
   );
 };
 

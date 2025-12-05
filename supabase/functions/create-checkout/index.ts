@@ -1,25 +1,26 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Stripe Checkout Edge Function - Sistema Abbonamenti M1SSION™
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { withCors } from "../_shared/cors.ts";
+import { maskValue } from "../_shared/secureLog.ts";
 
 const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[M1SSION-CHECKOUT] ${step}${detailsStr}`);
+  // Mask sensitive fields before logging
+  if (details) {
+    const masked = { ...details };
+    if (masked.email) masked.email = maskValue(masked.email, 'email');
+    if (masked.userId) masked.userId = maskValue(masked.userId, 'uuid');
+    if (masked.user?.email) masked.user.email = maskValue(masked.user.email, 'email');
+    console.log(`[M1SSION-CHECKOUT] ${step} - ${JSON.stringify(masked)}`);
+  } else {
+    console.log(`[M1SSION-CHECKOUT] ${step}`);
+  }
 };
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+serve(withCors(async (req) => {
   try {
     logStep("🚀 M1SSION™ Checkout Started", { 
       method: req.method, 
@@ -102,8 +103,8 @@ serve(async (req) => {
         plan: body?.plan
       });
     } catch (parseError) {
-      logStep("❌ M1SSION™ CRITICAL - Body parse error", { error: parseError.message });
-      throw new Error(`Errore parsing body: ${parseError.message}`);
+      logStep("❌ M1SSION™ CRITICAL - Body parse error", { error: (parseError as Error).message });
+      throw new Error(`Errore parsing body: ${(parseError as Error).message}`);
     }
     
     const { plan } = body;
@@ -188,7 +189,7 @@ serve(async (req) => {
                   description: `Piano ${plan} - Accesso premium M1SSION™`
                 },
                 unit_amount: tierConfig.price,
-                recurring: { interval: "month" },
+                recurring: { interval: "month" as const },
               },
               quantity: 1,
             },
@@ -244,7 +245,7 @@ serve(async (req) => {
               }
             } catch (refreshError) {
               logStep("❌ M1SSION™ Session re-fetch failed", { 
-                error: refreshError.message,
+                error: (refreshError as Error).message,
                 sessionId: session?.id 
               });
             }
@@ -282,15 +283,15 @@ serve(async (req) => {
         
       } catch (stripeError) {
         logStep("❌ M1SSION™ Stripe session creation failed", { 
-          error: stripeError.message,
-          code: stripeError.code,
-          type: stripeError.type,
+          error: (stripeError as Error).message,
+          code: (stripeError as any).code,
+          type: (stripeError as any).type,
           attempt: sessionCreationAttempts,
           willRetry: sessionCreationAttempts < maxAttempts
         });
         
         if (sessionCreationAttempts >= maxAttempts) {
-          throw new Error(`Errore Stripe dopo ${maxAttempts} tentativi: ${stripeError.message}`);
+          throw new Error(`Errore Stripe dopo ${maxAttempts} tentativi: ${(stripeError as Error).message}`);
         }
         
         // Retry con delay progressivo
@@ -304,7 +305,7 @@ serve(async (req) => {
         .from('checkout_sessions')
         .insert({
           user_id: user.id,
-          session_id: session.id,
+          session_id: session!.id,
           tier: plan,
           status: 'pending',
           stripe_customer_id: customerId,
@@ -315,25 +316,25 @@ serve(async (req) => {
       if (sessionError) {
         logStep("⚠️ Warning: Failed to log session", { error: sessionError });
       } else {
-        logStep("✅ Session logged in database", { sessionId: session.id });
+        logStep("✅ Session logged in database", { sessionId: session!.id });
       }
     } catch (dbError) {
-      logStep("⚠️ Warning: Database logging failed", { error: dbError.message });
+      logStep("⚠️ Warning: Database logging failed", { error: (dbError as Error).message });
     }
 
     const responseData = { 
-      url: session.url,
-      session_id: session.id 
+      url: session!.url,
+      session_id: session!.id 
     };
     
     logStep("✅ Sessione Stripe creata", { 
-      sessionId: session.id, 
-      url: session.url,
+      sessionId: session!.id, 
+      url: session!.url,
       responseData 
     });
 
     return new Response(JSON.stringify(responseData), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       status: 200,
     });
 
@@ -352,10 +353,10 @@ serve(async (req) => {
       timestamp: new Date().toISOString(),
       stack: errorStack
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       status: 500,
     });
   }
-});
+}));
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

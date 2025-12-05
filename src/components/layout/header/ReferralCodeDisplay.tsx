@@ -24,26 +24,9 @@ const ReferralCodeDisplay: React.FC = () => {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex items-center space-x-2"
+      className="flex items-center"
     >
-      {/* Pallino azzurro lampeggiante neon */}
-      <motion.div
-        className="w-2 h-2 bg-[#00D1FF] rounded-full"
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [1, 0.7, 1],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-        style={{
-          boxShadow: "0 0 8px rgba(0, 209, 255, 0.6), 0 0 16px rgba(0, 209, 255, 0.4)"
-        }}
-      />
-      
-      {/* Agent Code - 🚀 NATIVE: Font più grande e visibile */}
+      {/* Agent Code - 🚀 NATIVE: Font più grande e visibile - Pallino RIMOSSO */}
       <span 
         className="text-[15px] font-orbitron font-bold text-[#00D1FF] agent-code-badge tracking-wider"
         style={{

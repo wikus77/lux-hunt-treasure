@@ -64,11 +64,25 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
         <div 
           className="w-full relative overflow-hidden rounded-[24px]"
           style={{
-            background: 'rgba(0, 0, 0, 0.05)',
+            background: 'linear-gradient(160deg, rgba(15, 25, 45, 0.95) 0%, rgba(5, 10, 25, 0.98) 50%, rgba(10, 20, 40, 0.95) 100%)',
             backdropFilter: 'blur(40px)',
             WebkitBackdropFilter: 'blur(40px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
+            border: '2px solid rgba(0, 209, 255, 0.4)',
+            borderTop: '2px solid rgba(0, 209, 255, 0.6)',
+            borderBottom: '2px solid rgba(0, 150, 200, 0.3)',
+            boxShadow: `
+              0 25px 80px rgba(0, 0, 0, 0.7),
+              0 15px 40px rgba(0, 0, 0, 0.5),
+              0 5px 20px rgba(0, 0, 0, 0.4),
+              inset 0 2px 4px rgba(255, 255, 255, 0.15),
+              inset 0 -2px 4px rgba(0, 0, 0, 0.4),
+              0 0 30px rgba(0, 209, 255, 0.25),
+              0 0 60px rgba(0, 209, 255, 0.15),
+              0 -5px 30px rgba(0, 209, 255, 0.1)
+            `,
+            transform: 'translateY(-4px) translateZ(20px)',
+            transformStyle: 'preserve-3d',
+            perspective: '1000px'
           }}
         >
           {/* Animated glow strip like header */}

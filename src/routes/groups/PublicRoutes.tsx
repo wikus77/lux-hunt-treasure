@@ -14,6 +14,7 @@ import Terms from "../../pages/Terms";
 import PrivacyPolicy from "../../pages/PrivacyPolicy";
 import CookiePolicy from "../../pages/CookiePolicy";
 import HowItWorks from "../../pages/HowItWorks";
+import Policies from "../../pages/legal/Policies";
 import AccessDenied from "../../pages/AccessDenied";
 import { EmailVerificationPage } from "../../components/auth/EmailVerificationHandler";
 
@@ -38,6 +39,8 @@ const PublicRoutes = () => {
       <Route path="/privacy-policy" element={<PublicLayout showBottomNav={showBottomNav}><PrivacyPolicy /></PublicLayout>} /> {/* Alternative path */}
       <Route path="/cookie-policy" element={<PublicLayout showBottomNav={showBottomNav}><CookiePolicy /></PublicLayout>} />
       <Route path="/how-it-works" element={<PublicLayout showBottomNav={showBottomNav}><HowItWorks /></PublicLayout>} />
+      <Route path="/policies" element={<PublicLayout showBottomNav={showBottomNav}><Policies /></PublicLayout>} />
+      <Route path="/game-policies" element={<PublicLayout showBottomNav={showBottomNav}><Policies /></PublicLayout>} />
       <Route path="/access-denied" element={<PublicLayout showBottomNav={showBottomNav}><AccessDenied /></PublicLayout>} />
     </Routes>
   );

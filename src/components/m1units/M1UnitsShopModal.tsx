@@ -115,13 +115,31 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
   const handlePaymentSuccess = () => {
     console.log('[M1U SHOP] Payment successful for:', selectedPack?.code);
     setShowPaymentModal(false);
+    
+    // 🎰 Emit event to trigger M1UPill slot machine animation and refetch
+    if (selectedPack) {
+      console.log('[M1U SHOP] Emitting m1u-credited event with amount:', selectedPack.m1u_total);
+      window.dispatchEvent(new CustomEvent('m1u-credited', {
+        detail: { 
+          amount: selectedPack.m1u_total,
+          packCode: selectedPack.code,
+          packName: selectedPack.name
+        }
+      }));
+      
+      // Also emit balance-changed for any other listeners
+      window.dispatchEvent(new CustomEvent('m1u-balance-changed', {
+        detail: { 
+          type: 'purchase',
+          amount: selectedPack.m1u_total 
+        }
+      }));
+    }
+    
     setSelectedPack(null);
     onClose();
     
-    // TODO: Refresh M1U balance from backend
-    toast.success('M1U acquistati con successo!', {
-      description: `${selectedPack?.m1u_total} M1U sono stati aggiunti al tuo account`
-    });
+    // Toast is now handled by M1UPill's m1u-credited listener with slot machine animation
   };
 
   const handlePaymentCancel = () => {

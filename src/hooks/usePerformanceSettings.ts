@@ -37,16 +37,16 @@ export function usePerformanceSettings(): PerformanceSettings {
 
         if (isAuthenticated && user?.id) {
           // Try loading from user_settings table (with type casting)
-          // Use maybeSingle() to avoid 406 errors when table doesn't exist or no row
+          // Use maybeSingle() to avoid errors when table doesn't exist or no row
           const { data, error } = await supabase
             .from('user_settings' as any)
             .select('preferences')
             .eq('user_id', user.id)
             .maybeSingle();
 
-          // Silently handle 406 errors (table may not exist)
-          if (error && (error.code === '406' || error.code === 'PGRST116' || error.code === '42P01')) {
-            console.debug('[PerformanceSettings] user_settings table not available, using localStorage');
+          // Silently handle all errors - fallback to localStorage
+          if (error) {
+            // No console output - localStorage fallback is fine
             return;
           }
 

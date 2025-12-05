@@ -82,7 +82,7 @@ export const useGoogleAuth = () => {
       }
 
       if (session?.user) {
-        console.log('✅ Google auth successful:', session.user.email);
+        console.log('✅ Google auth successful');
         
         // Check if user profile exists, create if needed
         const { data: existingProfile } = await supabase

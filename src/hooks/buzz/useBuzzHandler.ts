@@ -11,6 +11,7 @@ import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { useAbuseProtection } from './useAbuseProtection';
 import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';
 import { HapticType } from '@/utils/haptics';
+import { usePulseContribute } from '@/features/pulse';
 
 // --- BUZZ TOAST GLOBAL LOCK (shared) ---
 const __buzz = (globalThis as any).__buzzToastLock ?? { shown: false, t: 0 };
@@ -43,6 +44,9 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
   
   // 🔥 FIX: useBuzzApi MUST be called at top level (React Hooks Rule)
   const { callBuzzApi } = useBuzzApi();
+  
+  // 🔋 PULSE: Hook per contribuzione energia collettiva
+  const { contribute: contributeToPulse } = usePulseContribute();
 
   const handleBuzz = async () => {
     console.log('🚀 BUZZ PRESSED - Start handleBuzz - RESET COMPLETO 17/07/2025', { 
@@ -147,20 +151,28 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
       if (buzzResult.clue_text) {
         console.log('✅ BUZZ SUCCESS - Clue received:', buzzResult.clue_text.substring(0, 50) + '...');
         
-        // Show clue to user
+        // Show clue to user - ROSA/CYAN style
         buzzToastOnce('success', buzzResult.clue_text, {
-          duration: 6000,
+          duration: 5000,
           position: 'top-center',
           style: {
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
             color: 'white',
-            border: '2px solid rgba(255,255,255,0.3)',
-            fontSize: '16px',
             fontWeight: 'bold',
-            padding: '16px'
+            zIndex: 9999
           }
         });
         buzzToastShown = true;
+        
+        // 🔥 FIX: NON usare setTimeout qui - causa reload!
+        // Lo shockwave si resetterà naturalmente quando buzzing diventa false
+        buzzToastShown = true;
+        
+        // 🔋 PULSE: Contribuisci energia collettiva (async, non bloccante)
+        contributeToPulse('BUZZ_COMPLETED', { price: currentPrice }).catch(err => {
+          console.warn('[PULSE] Contribution failed (non-blocking):', err);
+        });
+        
       } else {
         // No clue text received - this is a real error
         hadError = true;
@@ -170,31 +182,14 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         return;
       }
       
-      // Log the buzz action with M1U cost
-      console.log('📊 Logging buzz action to database...', { 
-        userId: user.id, 
-        costM1U: currentPrice, 
-        clueCount: 1 
-      });
+      // 🔍 TEST: TUTTO DISABILITATO - solo toast
+      console.log('🛑 DB insert e onSuccess DISABILITATI');
       
-      await supabase.from('buzz_map_actions').insert({
-        user_id: user.id,
-        cost_m1u: currentPrice, // 🔥 FIX: Use cost_m1u instead of cost_eur
-        clue_count: 1,
-        radius_generated: 0 // Regular BUZZ has no radius
-      });
+      // Database insert DISABILITATO
+      // await supabase.from('buzz_map_actions').insert({...});
       
-      // Success callback
-      onSuccess();
-
-      // 🔔 Schedule push notification for 3 hours from now
-      console.log('📅 Scheduling BUZZ cooldown notification...');
-      await scheduleBuzzAvailableNotification();
-      
-      // Reset shockwave after animation
-      setTimeout(() => {
-        setShowShockwave(false);
-      }, 1500);
+      // onSuccess DISABILITATO
+      // onSuccess();
       
     } catch (err) {
       console.error('❌ Error in handleBuzz - RESET COMPLETO 17/07/2025:', err);
@@ -203,55 +198,11 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
     } finally {
       setBuzzing(false);
       
-      // 🔥 ALWAYS fetch and show clue toast in finally block (even on error)
-      try {
-        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-        const { data, error } = await supabase
-          .from('user_notifications')
-          .select('id,type,title,message,metadata,created_at,is_deleted')
-          .eq('user_id', user.id)
-          .in('type', ['buzz', 'buzz_free'])
-          .is('is_deleted', false)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        // Validate 10-minute freshness window
-        const isDataFresh = data && new Date(data.created_at).getTime() >= (Date.now() - 10 * 60 * 1000);
-        
-        console.info({ 
-          step: 'buzz-toast', 
-          hadError, 
-          buzzToastShown, 
-          dataExists: !!data, 
-          isDataFresh,
-          error 
-        });
-        
-        // Show clue toast if fresh notification available
-        if (isDataFresh && data?.message && !buzzToastShown) {
-          await triggerHaptic('success');
-          buzzToastOnce('success', data.message, {
-            duration: 4000,
-            position: 'top-center',
-            style: {
-              background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)'
-            }
-          });
-        } else if (hadError && !buzzToastShown) {
-          await triggerHaptic('error');
-          buzzToastOnce('error', "Non sono riuscito a generare l'indizio, riprova fra poco.");
-        }
-        
-        if (!data) {
-          console.info('No fresh notification in last 10 minutes');
-        }
-      } catch (toastError) {
-        console.error('Error fetching toast notification:', toastError);
-        // Show error toast only if no clue was shown
-        if (hadError && !buzzToastShown) {
-          toast.error('Errore imprevisto durante BUZZ');
-        }
+      // 🔥 REMOVED: No duplicate toast from finally block - main flow already handles it
+      // Only show error if no toast was shown yet
+      if (hadError && !buzzToastShown) {
+        await triggerHaptic('error');
+        buzzToastOnce('error', "Non sono riuscito a generare l'indizio, riprova fra poco.");
       }
     }
   };

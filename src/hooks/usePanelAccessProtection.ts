@@ -105,7 +105,7 @@ export const usePanelAccessProtection = () => {
 
       // 2. Controllo email esatto
       if (user.email !== AUTHORIZED_EMAIL) {
-        console.error('🚨 PANEL ACCESS DENIED - Wrong email:', {
+        console.error('🚨 PANEL ACCESS DENIED - Unauthorized user:', {
           actualEmail: user.email,
           expectedEmail: AUTHORIZED_EMAIL,
           match: user.email === AUTHORIZED_EMAIL

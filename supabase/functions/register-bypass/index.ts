@@ -1,24 +1,29 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Register Bypass - Developer/Testing bypass with secure logging
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8';
+import { withCors } from "../_shared/cors.ts";
+import { createSecureLogger, maskValue } from "../_shared/secureLog.ts";
+import { checkRateLimit, rateLimitResponse, RATE_LIMIT_PRESETS } from "../_shared/rateLimit.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const log = createSecureLogger('REGISTER-BYPASS');
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+serve(withCors(async (req) => {
+  // 🔒 Rate limiting: 5 attempts per minute (strict for registration)
+  const rateLimitResult = await checkRateLimit('register-bypass', req, RATE_LIMIT_PRESETS.STRICT);
+  if (!rateLimitResult.allowed) {
+    log.warn("Rate limit exceeded");
+    return rateLimitResponse(rateLimitResult);
   }
-
+  
   try {
     const body = await req.json();
     const { email, password, fullName, missionPreference, action } = body;
 
-    console.log('🔓 REGISTER BYPASS REQUEST:', { email, action: action || 'register' });
+    log.info("Request received", { action: action || 'register', hasEmail: !!email });
 
-    // Create admin client with maximum bypass headers
+    // Create admin client with bypass headers
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -29,50 +34,39 @@ serve(async (req) => {
         },
         global: {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': 'keep-alive',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'cross-site',
             'cf-bypass-bot-check': 'true',
             'cf-worker': 'true',
-            'x-real-ip': '127.0.0.1',
-            'x-forwarded-for': '127.0.0.1'
+            'x-real-ip': '127.0.0.1'
           }
         }
       }
     );
 
     const origin = req.headers.get('origin') || 'https://2716f91b-957c-47ba-91e0-6f572f3ce00d.lovableproject.com';
-    console.log('🌐 DETECTED ORIGIN:', origin);
 
-    // LOGIN MODE - Risolve invalid_credentials e bypass Cloudflare
+    // LOGIN MODE
     if (action === 'login') {
-      console.log('🔐 LOGIN BYPASS for:', email);
+      log.info("Processing login bypass", { email: maskValue(email, 'email') });
       
       try {
-        // Step 1: Get or create user
+        // Get or create user
         const { data: users, error: getUserError } = await supabaseAdmin.auth.admin.listUsers();
         if (getUserError) {
-          console.error('❌ Error listing users:', getUserError);
-          return new Response(
-            JSON.stringify({ 
-              success: false, 
-              error: 'Cannot verify user existence',
-              code: 'USER_VERIFICATION_FAILED'
-            }),
-            { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-          );
+          log.error("Error listing users");
+          return jsonResponse({ 
+            success: false, 
+            error: 'Cannot verify user existence',
+            code: 'USER_VERIFICATION_FAILED'
+          }, 400);
         }
 
         let existingUser = users.users.find(user => user.email === email);
         
-        // Se l'utente non esiste, crealo con password
+        // Create user if doesn't exist
         if (!existingUser) {
-          console.log('🔄 Creating user with password...');
+          log.info("Creating new user");
           const { data: createData, error: createError } = await supabaseAdmin.auth.admin.createUser({
             email,
             password,
@@ -84,43 +78,38 @@ serve(async (req) => {
           });
 
           if (createError) {
-            console.error('❌ User creation failed:', createError);
-            return new Response(
-              JSON.stringify({ 
-                success: false, 
-                error: createError.message,
-                code: 'USER_CREATE_FAILED'
-              }),
-              { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-            );
+            log.error("User creation failed");
+            return jsonResponse({ 
+              success: false, 
+              error: createError.message,
+              code: 'USER_CREATE_FAILED'
+            }, 400);
           }
           
           existingUser = createData.user;
-          console.log('✅ User created successfully:', existingUser?.email);
+          log.success("User created", { userId: maskValue(existingUser?.id || '', 'uuid') });
         } else {
-          // Se l'utente esiste ma non ha password, aggiornala
-          console.log('🔄 Updating user password...');
+          // Update password if user exists
+          log.info("Updating user password");
           const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
             existingUser.id,
             { password }
           );
           
           if (updateError) {
-            console.log('⚠️ Password update failed, continuing with session creation');
+            log.warn("Password update failed, continuing");
           } else {
-            console.log('✅ Password updated successfully');
+            log.success("Password updated");
           }
         }
 
-        // Step 2: Force session creation with multiple strategies
-        console.log('✅ User verified, creating BYPASS SESSION...');
+        // Create bypass session
+        log.info("Creating bypass session");
 
-        // Strategy A: Try direct token generation (bypasses Cloudflare completely)
         try {
           const now = Math.floor(Date.now() / 1000);
-          const expiresAt = now + 3600; // 1 hour
+          const expiresAt = now + 3600;
           
-          // Create a valid JWT token manually
           const jwtPayload = {
             aud: 'authenticated',
             exp: expiresAt,
@@ -137,7 +126,6 @@ serve(async (req) => {
             session_id: `bypass_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
           };
 
-          // Create tokens that work with Supabase
           const accessToken = `sb-access-token.${btoa(JSON.stringify(jwtPayload))}.signature_${Date.now()}`;
           const refreshToken = `sb-refresh-token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -150,110 +138,77 @@ serve(async (req) => {
             user: existingUser
           };
 
-          console.log('✅ BYPASS SESSION CREATED SUCCESSFULLY');
+          log.success("Bypass session created", { userId: maskValue(existingUser.id, 'uuid') });
 
-          return new Response(
-            JSON.stringify({ 
-              success: true, 
-              user: existingUser,
-              session: finalSession,
-              redirect_url: `${origin}/home`,
-              message: 'LOGIN BYPASS successful - credentials fixed and session created',
-              bypassMethod: 'direct_token_creation',
-              debug: {
-                origin: origin,
-                sessionMethod: 'direct_bypass',
-                userFound: true,
-                passwordUpdated: true,
-                cloudflareBypass: true,
-                tokensValid: true,
-                timestamp: new Date().toISOString()
-              }
-            }),
-            { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-          );
+          return jsonResponse({ 
+            success: true, 
+            user: existingUser,
+            session: finalSession,
+            redirect_url: `${origin}/home`,
+            message: 'LOGIN BYPASS successful',
+            bypassMethod: 'direct_token_creation'
+          }, 200);
 
         } catch (directError) {
-          console.error('❌ Direct session creation failed:', directError);
+          log.error("Direct session creation failed");
           
-          // Strategy B: Try magic link with enhanced bypass
+          // Fallback: Try magic link
           try {
-            console.log('🔄 Attempting magic link with maximum bypass headers...');
+            log.info("Attempting magic link fallback");
             
             const { data: magicData, error: magicError } = await supabaseAdmin.auth.admin.generateLink({
               type: 'magiclink',
               email: email,
-              options: {
-                redirectTo: `${origin}/home`
-              }
+              options: { redirectTo: `${origin}/home` }
             });
 
             if (!magicError && magicData && magicData.properties?.action_link) {
-              console.log('✅ Magic link generated successfully');
+              log.success("Magic link generated");
               
-              return new Response(
-                JSON.stringify({ 
-                  success: true, 
-                  user: existingUser,
-                  magicLink: magicData.properties.action_link,
-                  redirect_url: magicData.properties.action_link,
-                  message: 'Magic link generated - Cloudflare bypass successful',
-                  bypassMethod: 'magic_link_enhanced'
-                }),
-                { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-              );
+              return jsonResponse({ 
+                success: true, 
+                user: existingUser,
+                magicLink: magicData.properties.action_link,
+                redirect_url: magicData.properties.action_link,
+                message: 'Magic link generated',
+                bypassMethod: 'magic_link_enhanced'
+              }, 200);
             } else {
-              throw new Error(`Magic link failed: ${magicError?.message}`);
+              throw new Error('Magic link failed');
             }
           } catch (magicError) {
-            console.error('❌ Magic link generation failed:', magicError);
+            log.error("Magic link generation failed");
             throw new Error('All login strategies failed');
           }
         }
 
-      } catch (ultimateError) {
-        console.error('❌ ULTIMATE LOGIN BYPASS FAILED:', ultimateError);
+      } catch (ultimateError: any) {
+        log.error("Ultimate login bypass failed");
         
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'Ultimate login bypass system failure',
-            code: 'ULTIMATE_BYPASS_FAILURE',
-            details: ultimateError.message,
-            debug: {
-              cloudflareBypass: true,
-              credentialsFixed: true,
-              multipleStrategiesAttempted: true,
-              timestamp: new Date().toISOString()
-            }
-          }),
-          { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-        );
+        return jsonResponse({ 
+          success: false, 
+          error: 'Ultimate login bypass system failure',
+          code: 'ULTIMATE_BYPASS_FAILURE'
+        }, 500);
       }
     }
 
     // REGISTRATION MODE
-    console.log('📝 REGISTRATION BYPASS for:', email);
+    log.info("Processing registration", { email: maskValue(email, 'email') });
 
     // Check if user already exists
     const { data: existingUsers, error: checkError } = await supabaseAdmin.auth.admin.listUsers();
     if (!checkError) {
       const userExists = existingUsers.users.find(user => user.email === email);
       if (userExists) {
-        console.log('ℹ️ User already exists, redirecting to login');
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            user: userExists,
-            message: 'User already registered - please login',
-            requireLogin: true,
-            redirect_url: `${origin}/login`
-          }),
-          { 
-            status: 200,
-            headers: { 'Content-Type': 'application/json', ...corsHeaders }
-          }
-        );
+        log.info("User already exists, redirecting to login");
+        return jsonResponse({ 
+          success: true, 
+          user: userExists,
+          message: 'User already registered - please login',
+          requireLogin: true,
+          redirect_url: `${origin}/login`
+        }, 200);
       }
     }
 
@@ -269,49 +224,39 @@ serve(async (req) => {
     });
 
     if (createError) {
-      console.error('❌ User creation failed:', createError);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: createError.message,
-          code: 'CREATE_FAILED'
-        }),
-        { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders }
-        }
-      );
+      log.error("User creation failed");
+      return jsonResponse({ 
+        success: false, 
+        error: createError.message,
+        code: 'CREATE_FAILED'
+      }, 400);
     }
 
-    console.log('✅ User created successfully:', user.user?.email);
+    log.success("User created successfully", { userId: maskValue(user.user?.id || '', 'uuid') });
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        user: user.user,
-        message: 'Registration completed successfully',
-        requireLogin: false,
-        redirect_url: `${origin}/login`
-      }),
-      { 
-        status: 200,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders }
-      }
-    );
+    return jsonResponse({ 
+      success: true, 
+      user: user.user,
+      message: 'Registration completed successfully',
+      requireLogin: false,
+      redirect_url: `${origin}/login`
+    }, 200);
 
   } catch (error: any) {
-    console.error('💥 BYPASS EXCEPTION:', error);
+    log.error("Bypass exception");
     
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message || 'Internal server error',
-        code: 'INTERNAL_ERROR',
-        debug: {
-          timestamp: new Date().toISOString()
-        }
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-    );
+    return jsonResponse({ 
+      success: false, 
+      error: error.message || 'Internal server error',
+      code: 'INTERNAL_ERROR'
+    }, 500);
   }
-});
+}));
+
+// Helper function for JSON responses (CORS handled by withCors wrapper)
+function jsonResponse(payload: unknown, status = 200) {
+  return new Response(JSON.stringify(payload), { 
+    status, 
+    headers: { 'Content-Type': 'application/json' }
+  });
+}

@@ -29,14 +29,7 @@ const NotificationCategory: React.FC<NotificationCategoryProps> = ({
 
   return (
     <motion.div
-      className="rounded-[24px] transition-all duration-300 hover:shadow-lg mb-4 relative overflow-hidden"
-      style={{
-        background: 'rgba(0, 0, 0, 0.05)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-      }}
+      className="m1-relief rounded-[24px] transition-all duration-300 hover:shadow-lg mb-4 relative overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}

@@ -78,16 +78,14 @@ const BottomNavigationComponent = () => {
         zIndex: 10000,
         display: "flex",
         justifyContent: "center",
-        paddingBottom: isPWA ? "calc(env(safe-area-inset-bottom) + 8px)" : "16px",
+        // Bottom nav al massimo in basso - padding minimo
+        paddingBottom: isPWA ? "env(safe-area-inset-bottom, 0px)" : "0px",
         paddingLeft: "16px",
         paddingRight: "16px",
         pointerEvents: "none",
       }}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+      <div
         style={{
           display: "flex",
           alignItems: "center",
@@ -123,6 +121,26 @@ const BottomNavigationComponent = () => {
               whileTap={{ scale: 0.9 }}
               whileHover={{ scale: 1.05 }}
             >
+              {/* CERCHIO SEMI-TRASPARENTE dietro icona attiva (stile Revolut) */}
+              <AnimatePresence>
+                {isActive && (
+                  <motion.div
+                    style={{
+                      position: "absolute",
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "50%",
+                      background: "rgba(0, 0, 0, 0.4)",
+                      zIndex: 0,
+                    }}
+                    initial={{ opacity: 0, scale: 0.6 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.6 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  />
+                )}
+              </AnimatePresence>
+
               {/* Active indicator - line above icon with NEON GLOW */}
               <AnimatePresence>
                 {isActive && (
@@ -135,6 +153,7 @@ const BottomNavigationComponent = () => {
                       backgroundColor: "#00D1FF",
                       borderRadius: "2px",
                       boxShadow: "0 0 8px #00D1FF, 0 0 16px #00D1FF, 0 0 24px rgba(0, 209, 255, 0.6)",
+                      zIndex: 2,
                     }}
                     initial={{ opacity: 0, scaleX: 0 }}
                     animate={{ 
@@ -157,7 +176,7 @@ const BottomNavigationComponent = () => {
 
               {/* Icon with NEON GLOW when active */}
               <motion.div 
-                className="relative"
+                className="relative z-[1]"
                 animate={isActive ? {
                   filter: [
                     "drop-shadow(0 0 4px rgba(0, 209, 255, 0.6))",
@@ -186,7 +205,7 @@ const BottomNavigationComponent = () => {
             </motion.button>
           );
         })}
-      </motion.div>
+      </div>
     </div>
   );
 };

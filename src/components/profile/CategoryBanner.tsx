@@ -22,7 +22,7 @@ const CategoryBanner = ({
       style={{ transitionProperty: "transform, opacity" }}
     >
       <div
-        className={`m1ssion-glass-card rounded-b-[24px] px-8 py-6 max-w-md w-full flex flex-col items-center ${style.textColor} pointer-events-auto animate-fade-in`}
+        className={`m1-relief rounded-b-[24px] px-8 py-6 max-w-md w-full flex flex-col items-center ${style.textColor} pointer-events-auto animate-fade-in`}
       >
         <div className="flex items-center gap-2 text-xl mb-2 font-orbitron font-bold uppercase neon-text-cyan">
           {category}

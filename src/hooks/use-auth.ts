@@ -3,27 +3,33 @@ import React from 'react';
 import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
 
+// Mask email for secure logging (show first 2 chars + domain)
+const maskEmail = (email: string): string => {
+  if (!email || !email.includes('@')) return '***';
+  const [local, domain] = email.split('@');
+  return `${local.substring(0, 2)}***@${domain}`;
+};
+
 export const useAuth = () => {
   const sessionManager = useAuthSessionManager();
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: any; session?: any }> => {
-    console.log('🔐 STANDARD LOGIN STARTING for:', email);
+    console.log('🔐 LOGIN STARTING');
     
     try {
-      // Standard Supabase login
-      console.log('🔄 Attempting standard Supabase login...');
+      console.log('🔄 Attempting Supabase login...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error('❌ LOGIN FAILED:', error.message);
+        console.error('❌ LOGIN FAILED');
         return { success: false, error };
       }
 
       if (data.session) {
-        console.log('✅ LOGIN SUCCESS - session created');
+        console.log('✅ LOGIN SUCCESS');
         await sessionManager.forceSessionFromTokens(
           data.session.access_token,
           data.session.refresh_token
@@ -31,17 +37,17 @@ export const useAuth = () => {
         return { success: true, session: data.session };
       }
 
-      console.error('❌ LOGIN FAILED - no session created');
+      console.error('❌ LOGIN FAILED - no session');
       return { success: false, error: { message: 'No session created' } };
 
     } catch (error: any) {
-      console.error('💥 LOGIN EXCEPTION:', error);
+      console.error('💥 LOGIN EXCEPTION');
       return { success: false, error };
     }
   };
 
   const register = async (email: string, password: string): Promise<{ success: boolean; error?: any; data?: any }> => {
-    console.log('📝 REGISTRATION STARTING for:', email);
+    console.log('📝 REGISTRATION STARTING');
     
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -53,7 +59,7 @@ export const useAuth = () => {
       });
 
       if (error) {
-        console.error('❌ REGISTRATION FAILED:', error.message);
+        console.error('❌ REGISTRATION FAILED');
         return { success: false, error };
       }
 
@@ -61,13 +67,13 @@ export const useAuth = () => {
       return { success: true, data };
 
     } catch (error: any) {
-      console.error('💥 REGISTRATION EXCEPTION:', error);
+      console.error('💥 REGISTRATION EXCEPTION');
       return { success: false, error };
     }
   };
 
   const logout = async (): Promise<void> => {
-    console.log('🚪 LOGOUT STARTING - RESET COMPLETO 17/07/2025');
+    console.log('🚪 LOGOUT STARTING');
     
     // 🧹 LOGOUT CACHE CLEANUP - Clear storage but preserve daily quiz skip key
     const quizSkipKey = 'm1_quiz_last_skip';
@@ -83,10 +89,8 @@ export const useAuth = () => {
     
     // Reset any existing state stores
     try {
-      // Dynamically reset any map store if it exists 
       const mapStoreModule = await import("@/stores/mapStore").catch(() => null);
       if (mapStoreModule?.useMapStore) {
-        // Get the store instance and reset it
         const store = mapStoreModule.useMapStore.getState();
         store.resetMapState?.();
       }
@@ -96,11 +100,11 @@ export const useAuth = () => {
     
     await supabase.auth.signOut();
     await sessionManager.clearSession();
-    console.log('✅ LOGOUT COMPLETED WITH CACHE RESET');
+    console.log('✅ LOGOUT COMPLETED');
   };
 
   const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
-    console.log('🔄 PASSWORD RESET for:', email);
+    console.log('🔄 PASSWORD RESET REQUEST');
     
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -108,7 +112,7 @@ export const useAuth = () => {
       });
 
       if (error) {
-        console.error('❌ PASSWORD RESET FAILED:', error.message);
+        console.error('❌ PASSWORD RESET FAILED');
         return { success: false, error: error.message };
       }
 
@@ -116,13 +120,13 @@ export const useAuth = () => {
       return { success: true };
 
     } catch (error: any) {
-      console.error('💥 PASSWORD RESET EXCEPTION:', error);
+      console.error('💥 PASSWORD RESET EXCEPTION');
       return { success: false, error: error.message };
     }
   };
 
   const resendVerificationEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
-    console.log('📧 RESEND VERIFICATION for:', email);
+    console.log('📧 RESEND VERIFICATION REQUEST');
     
     try {
       const { error } = await supabase.auth.resend({
@@ -134,7 +138,7 @@ export const useAuth = () => {
       });
 
       if (error) {
-        console.error('❌ RESEND VERIFICATION FAILED:', error.message);
+        console.error('❌ RESEND VERIFICATION FAILED');
         return { success: false, error: error.message };
       }
 
@@ -142,14 +146,13 @@ export const useAuth = () => {
       return { success: true };
 
     } catch (error: any) {
-      console.error('💥 RESEND VERIFICATION EXCEPTION:', error);
+      console.error('💥 RESEND VERIFICATION EXCEPTION');
       return { success: false, error: error.message };
     }
   };
 
   const updateProfile = async (data: any): Promise<void> => {
-    console.log('📝 UPDATE PROFILE:', data);
-    // Implementazione updateProfile se necessaria
+    console.log('📝 UPDATE PROFILE');
   };
 
   return {

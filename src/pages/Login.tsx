@@ -67,22 +67,16 @@ const Login = () => {
   //   };
   // }, []);
 
+  // 🚀 NATIVE APP FEEL: Show splash on EVERY app launch, even for authenticated users
+  // The splash animation completes FIRST, then redirect happens
   useEffect(() => {
-    if (isAuthenticated && !isLoading && !redirectAttemptedRef.current) {
-      console.log('🔄 LOGIN PAGE: User already authenticated, initiating redirect (POST_LOGIN_REDIRECT)');
+    if (isAuthenticated && !isLoading && !redirectAttemptedRef.current && !showSplash) {
+      // Only redirect AFTER splash animation completes
+      console.log('🔄 LOGIN PAGE: User authenticated + splash complete, initiating redirect');
       redirectAttemptedRef.current = true;
-      setShowSplash(false); // Skip splash for authenticated users
       postLoginRedirectFixed(navigate);
     }
-  }, [isAuthenticated, isLoading]);
-
-  // Skip splash if coming from another page (not fresh load)
-  useEffect(() => {
-    const hasSeenSplash = sessionStorage.getItem('m1_splash_shown');
-    if (hasSeenSplash) {
-      setShowSplash(false);
-    }
-  }, []);
+  }, [isAuthenticated, isLoading, showSplash]);
 
   // ⏱️ FALLBACK TIMER - PWA iOS Safari Emergency Exit
   useEffect(() => {
@@ -118,10 +112,12 @@ const Login = () => {
     }
   }, [navigate]);
 
-  // Handle splash completion
+  // Handle splash completion - NO session storage, splash shows on every app open
   const handleSplashComplete = () => {
     setShowSplash(false);
-    sessionStorage.setItem('m1_splash_shown', 'true');
+    // Note: We intentionally don't save to sessionStorage anymore
+    // This creates a native app feel - splash appears each time you OPEN the app
+    // But won't appear during internal navigation (state is managed by React)
   };
 
   return (
@@ -146,21 +142,17 @@ const Login = () => {
           <div className="flex justify-center mb-4">
             <AnimatedLogo />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-1 neon-text-cyan">M1SSION™</h2>
+          <h2 className="text-2xl font-bold mb-1">
+            <span className="text-[#00E5FF] drop-shadow-[0_0_10px_rgba(0,229,255,0.8)]">M1</span>
+            <span className="text-white">SSION™</span>
+          </h2>
           <p className="text-gray-400">
             Accedi per iniziare la tua missione
           </p>
         </div>
 
         <div 
-          className="m1ssion-glass-card p-6 rounded-xl relative"
-          style={{
-            background: 'rgba(0, 0, 0, 0.05)',
-            backdropFilter: 'blur(40px)',
-            WebkitBackdropFilter: 'blur(40px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(255, 255, 255, 0.05)'
-          }}
+          className="m1-relief p-6 rounded-xl relative"
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
           <StandardLoginForm verificationStatus={verificationStatus} />

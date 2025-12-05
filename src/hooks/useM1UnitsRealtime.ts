@@ -27,15 +27,52 @@ interface UseM1UnitsRealtimeReturn {
   refetch: () => Promise<void>;
 }
 
+// Cache key for instant display
+const M1U_CACHE_KEY = 'm1ssion_m1u_cache';
+
 export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealtimeReturn => {
-  const [unitsData, setUnitsData] = useState<M1UnitsData | null>(null);
+  // Load cached value for instant display
+  const getCachedBalance = (): number => {
+    try {
+      const cached = localStorage.getItem(M1U_CACHE_KEY);
+      if (cached) {
+        const { balance, userId: cachedUserId } = JSON.parse(cached);
+        if (cachedUserId === userId) return balance;
+      }
+    } catch {}
+    return 0;
+  };
+
+  const [unitsData, setUnitsData] = useState<M1UnitsData | null>(() => {
+    // Initialize with cached value for instant display
+    const cachedBalance = getCachedBalance();
+    if (userId && cachedBalance > 0) {
+      return {
+        user_id: userId,
+        balance: cachedBalance,
+        total_earned: 0,
+        total_spent: 0,
+        updated_at: new Date().toISOString(),
+      };
+    }
+    return null;
+  });
   const [connectionState, setConnectionState] = useState<M1UnitsConnectionState>('INIT');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [heartbeatTimer, setHeartbeatTimer] = useState<NodeJS.Timeout | null>(null);
 
+  // Cache balance for instant display on next load
+  const cacheBalance = useCallback((balance: number) => {
+    if (userId) {
+      try {
+        localStorage.setItem(M1U_CACHE_KEY, JSON.stringify({ balance, userId, timestamp: Date.now() }));
+      } catch {}
+    }
+  }, [userId]);
+
   // Fetch initial M1 Units data from profiles table
-  const fetchUnits = useCallback(async () => {
+  const fetchUnits = useCallback(async (retryCount = 0) => {
     if (!userId) {
       setIsLoading(false);
       return;
@@ -53,29 +90,34 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
         .single();
 
       if (fetchError) {
-        throw new Error(fetchError.message || 'Failed to fetch M1U from profiles');
+        // Retry up to 2 times with delay
+        if (retryCount < 2) {
+          setTimeout(() => fetchUnits(retryCount + 1), 500 * (retryCount + 1));
+          return;
+        }
+        throw new Error(fetchError.message || 'Failed to fetch M1U');
       }
 
       if (profile) {
+        const balance = profile.m1_units || 0;
         setUnitsData({
           user_id: profile.id,
-          balance: profile.m1_units || 0,
-          total_earned: 0, // Not tracked in profiles
-          total_spent: 0,  // Not tracked in profiles
+          balance,
+          total_earned: 0,
+          total_spent: 0,
           updated_at: profile.updated_at || new Date().toISOString(),
         });
+        // Cache for instant display next time
+        cacheBalance(balance);
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMsg);
       setConnectionState('ERROR');
-      if (import.meta.env.DEV) {
-        console.warn('[M1U] Fetch error:', errorMsg);
-      }
     } finally {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, [userId, cacheBalance]);
 
   // Ping function (triggers realtime update for smoke test)
   const ping = useCallback(async () => {
@@ -107,10 +149,23 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
     }
   }, [userId]);
 
+  // Listen for custom M1U update events (from purchases, etc.)
+  useEffect(() => {
+    const handleM1UUpdate = () => {
+      fetchUnits();
+    };
+
+    window.addEventListener('m1u-balance-updated', handleM1UUpdate);
+    return () => {
+      window.removeEventListener('m1u-balance-updated', handleM1UUpdate);
+    };
+  }, [fetchUnits]);
+
   // Subscribe to realtime updates
   useEffect(() => {
     if (!userId) return;
 
+    // Fetch immediately
     fetchUnits();
     setConnectionState('CONNECTING');
 

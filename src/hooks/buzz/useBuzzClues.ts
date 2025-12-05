@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { loadUnlockedCluesCount, loadUsedVagueClues, saveUnlockedCluesCount, saveUsedVagueClues } from "@/utils/buzzClueStorage";
 import { processClueIncrement } from "@/utils/buzzClueOperations";
 
-export const MAX_BUZZ_CLUES = 10;
+// Import from constants for consistency
+import { MAX_BUZZ_CLUES } from "@/utils/buzzConstants";
 
 export function useBuzzClues() {
   const [unlockedClues, setUnlockedClues] = useState<number>(0);

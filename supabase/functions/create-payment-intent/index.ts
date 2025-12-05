@@ -4,30 +4,20 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { getStripeModeFromKey } from "../_shared/stripeConfig.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { withCors } from "../_shared/cors.ts";
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.info(`🔧 [CREATE-PAYMENT-INTENT] ${step}${detailsStr}`);
 };
 
-serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+serve(withCors(async (req) => {
   if (req.method !== "POST") {
     return new Response(
       JSON.stringify({ success: false, error: "Method Not Allowed" }), 
       { 
         status: 405, 
-        headers: { "content-type": "application/json", ...corsHeaders }
+        headers: { "content-type": "application/json" }
       }
     );
   }
@@ -43,7 +33,7 @@ serve(async (req) => {
       }), 
       { 
         status: 400, 
-        headers: { "content-type": "application/json", ...corsHeaders }
+        headers: { "content-type": "application/json" }
       }
     );
   }
@@ -90,7 +80,7 @@ serve(async (req) => {
       if (payload.iss === "supabase" && payload.role === "service_role" && body._adminSmoke === true) {
         logStep("Service role authentication with admin smoke test");
         userId = 'admin-smoke';
-        email = body.email || 'wikus77@hotmail.it'; // Use email from body, default to wikus77@hotmail.it
+        email = body.email || 'wikus77@hotmail.it';
         authType = 'service-role';
       } else {
         // Regular user authentication
@@ -140,7 +130,7 @@ serve(async (req) => {
         }), 
         { 
           status: 409, 
-          headers: { "content-type": "application/json", ...corsHeaders }
+          headers: { "content-type": "application/json" }
         }
       );
     }
@@ -228,7 +218,7 @@ serve(async (req) => {
       success: true,
       payment_intent_id: paymentIntent.id,
       client_secret: paymentIntent.client_secret,
-      clientSecret: paymentIntent.client_secret, // For compatibility
+      clientSecret: paymentIntent.client_secret,
       mode: serverMode,
       status: paymentIntent.status,
       amount: amount,
@@ -244,7 +234,7 @@ serve(async (req) => {
     });
     
     return new Response(JSON.stringify(response), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       status: 200,
     });
 
@@ -270,8 +260,8 @@ serve(async (req) => {
     };
     
     return new Response(JSON.stringify(errorResponse), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       status: 500,
     });
   }
-});
+}));

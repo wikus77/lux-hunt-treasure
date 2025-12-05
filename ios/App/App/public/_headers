@@ -1,23 +1,68 @@
 # © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-# Cloudflare Pages Headers - NO CSP for testing
+# Cloudflare Pages Security Headers
 
 /*
+  # 🔒 HSTS - Force HTTPS for 1 year, include subdomains
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  
+  # 🔒 Prevent MIME type sniffing
   X-Content-Type-Options: nosniff
+  
+  # 🔒 Clickjacking protection
   X-Frame-Options: SAMEORIGIN
+  
+  # 🔒 XSS protection (legacy browsers)
+  X-XSS-Protection: 1; mode=block
+  
+  # 🔒 Referrer policy
   Referrer-Policy: strict-origin-when-cross-origin
+  
+  # 🔒 Permissions Policy (restrict browser features)
+  Permissions-Policy: geolocation=(self), camera=(self), microphone=(), payment=(), usb=()
+  
+  # 🔒 Content Security Policy (prevent XSS, injection attacks)
+  # Note: Supabase, Stripe, Google Maps, Firebase, Analytics allowed
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co https://*.stripe.com https://js.stripe.com https://*.googleapis.com https://*.gstatic.com https://maps.googleapis.com https://*.google.com https://*.googletagmanager.com https://*.google-analytics.com https://*.firebaseio.com https://*.firebase.com https://*.onesignal.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https://*.googleapis.com https://*.gstatic.com https://*.google.com https://*.googleusercontent.com https://*.stripe.com https://maps.googleapis.com https://*.openstreetmap.org; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.stripe.com https://api.stripe.com https://*.googleapis.com https://*.gstatic.com https://maps.googleapis.com https://*.google.com https://*.google-analytics.com https://*.analytics.google.com https://*.firebaseio.com https://*.firebase.com wss://*.firebaseio.com https://*.onesignal.com https://onesignal.com https://*.elevenlabs.io https://api.elevenlabs.io; frame-src 'self' https://*.stripe.com https://js.stripe.com https://*.google.com https://maps.google.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: https://*.supabase.co https://*.elevenlabs.io; object-src 'none'; base-uri 'self'; form-action 'self' https://*.stripe.com;
 
+# Service Worker - no cache, allow full scope
 /sw.js
   Cache-Control: no-store
   Service-Worker-Allowed: /
 
+# VAPID key - no cache for updates
 /vapid-public.txt
   Cache-Control: no-store
 
+# Manifest - no cache for updates  
 /manifest.webmanifest
   Cache-Control: no-store
+  Content-Type: application/manifest+json
 
+# Build ID for cache busting
 /BUILD_ID.txt
   Cache-Control: no-store
 
+# Offline fallback - no cache
 /offline.html
   Cache-Control: no-store
+
+# Firebase config - no cache
+/firebase-config.json
+  Cache-Control: no-store
+
+# Static assets - long cache (1 year)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Images - medium cache (1 week)
+/*.png
+  Cache-Control: public, max-age=604800
+
+/*.jpg
+  Cache-Control: public, max-age=604800
+
+/*.svg
+  Cache-Control: public, max-age=604800
+
+/*.webp
+  Cache-Control: public, max-age=604800

@@ -158,16 +158,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Don't auto-redirect admin - let normal routing take over
           }
           
+          // 🔇 DISABLED: Was causing unwanted reloads after BUZZ (profile update triggered auth event)
           // PWA iOS: Force reload once after login to stabilize - MEMORY LEAK FIX
-          if ((window as any).Capacitor || navigator.userAgent.includes('Safari')) {
-            log("🔄 PWA iOS: Post-login cache refresh");
-            timeoutId = setTimeout(() => {
-              if (!sessionStorage.getItem('auth_reload_done')) {
-                sessionStorage.setItem('auth_reload_done', 'true');
-                window.location.reload();
-              }
-            }, 1000);
-          }
+          // if ((window as any).Capacitor || navigator.userAgent.includes('Safari')) {
+          //   log("🔄 PWA iOS: Post-login cache refresh");
+          //   timeoutId = setTimeout(() => {
+          //     if (!sessionStorage.getItem('auth_reload_done')) {
+          //       sessionStorage.setItem('auth_reload_done', 'true');
+          //       window.location.reload();
+          //     }
+          //   }, 1000);
+          // }
         } else if (event === 'SIGNED_OUT') {
           log("Utente disconnesso");
           setUserRoles([]);

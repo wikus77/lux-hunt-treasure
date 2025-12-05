@@ -67,8 +67,17 @@ const CheckoutForm: React.FC<{
           
           // Handle specific error codes
           if (error.code === 'not_authenticated' || error.message?.includes('401')) {
-            toast.error('Devi accedere per usare questa funzione.');
-            // TODO: Open login modal
+            toast.error('Devi accedere per effettuare pagamenti. Reindirizzamento al login...');
+            // Save current URL for post-login redirect
+            try {
+              localStorage.setItem('post_login_redirect', window.location.pathname);
+            } catch (e) {
+              console.warn('Could not save redirect URL');
+            }
+            // Redirect to login after a short delay
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 1500);
             return;
           } else if (error.code === 'card_declined') {
             toast.error(`Carta rifiutata: ${error.message}`);
@@ -233,7 +242,28 @@ const StripeInAppCheckout: React.FC<StripeInAppCheckoutProps> = ({
   onCancel 
 }) => {
   const [useSavedCard, setUseSavedCard] = useState(false);
-  const { user } = useAuthContext();
+  const { user, isLoading: authLoading } = useAuthContext();
+
+  // Preventive login check - redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      console.warn('⚠️ M1SSION™ User not authenticated - redirecting to login');
+      toast.error('Devi accedere per effettuare pagamenti. Reindirizzamento al login...');
+      
+      // Save current URL for post-login redirect
+      try {
+        localStorage.setItem('post_login_redirect', window.location.pathname);
+      } catch (e) {
+        console.warn('Could not save redirect URL');
+      }
+      
+      // Close modal and redirect
+      setTimeout(() => {
+        onCancel();
+        window.location.href = '/login';
+      }, 1500);
+    }
+  }, [user, authLoading, onCancel]);
 
   // Check for saved default payment method on mount
   useEffect(() => {

@@ -1,0 +1,67 @@
+/* Final Shoot Pill - IDENTICAL to other pills with 1 cyan orbiting dot
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */
+
+/* Final Shoot uses the SAME pill-orb style as others */
+/* Only override: custom cyan neon color for the dot */
+
+.final-shoot-pill .dot {
+  background: #00ffff !important;
+  box-shadow: 0 0 8px #00ffff, 0 0 16px #00ffff !important;
+}
+
+/* State-specific styling */
+
+/* Active state - red pulsing glow on pill */
+.final-shoot-pill--active {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35),
+    0 0 24px rgba(255, 68, 68, 0.5) inset !important;
+  border-color: rgba(255, 68, 68, 0.5) !important;
+  animation: activePulse 1s ease-in-out infinite;
+}
+
+.final-shoot-pill--active .dot {
+  background: #ff4444 !important;
+  box-shadow: 0 0 8px #ff4444, 0 0 16px #ff4444 !important;
+}
+
+@keyframes activePulse {
+  0%, 100% {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35),
+      0 0 24px rgba(255, 68, 68, 0.4) inset;
+  }
+  50% {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35),
+      0 0 40px rgba(255, 68, 68, 0.7) inset;
+  }
+}
+
+/* Won state - gold theme */
+.final-shoot-pill--won {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35),
+    0 0 24px rgba(255, 215, 0, 0.5) inset !important;
+  border-color: rgba(255, 215, 0, 0.5) !important;
+}
+
+.final-shoot-pill--won .dot {
+  background: #ffd700 !important;
+  box-shadow: 0 0 8px #ffd700, 0 0 16px #ffd700 !important;
+}
+
+/* Exhausted state - dim */
+.final-shoot-pill--exhausted {
+  opacity: 0.6;
+}
+
+.final-shoot-pill--exhausted .dot {
+  background: #666 !important;
+  box-shadow: 0 0 4px #666 !important;
+}
+
+/* Locked state - gray dot */
+.final-shoot-pill--locked .dot {
+  background: #9ca3af !important;
+  box-shadow: 0 0 6px #9ca3af !important;
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

@@ -12,13 +12,9 @@ export const useBuzzCounter = (userId: string | undefined) => {
 
   // Load daily BUZZ counter for pricing calculation
   const loadDailyBuzzCounter = useCallback(async () => {
-    if (!userId) {
-      console.log('🔍 BUZZ COUNTER DEBUG: No userId, skipping load');
-      return;
-    }
+    if (!userId) return;
 
     const todayDate = new Date().toISOString().split('T')[0];
-    console.log('🔍 BUZZ COUNTER DEBUG: Loading counter', { userId, todayDate });
 
     try {
       const { data, error } = await supabase
@@ -28,22 +24,17 @@ export const useBuzzCounter = (userId: string | undefined) => {
         .eq('date', todayDate)
         .maybeSingle();
 
-      console.log('🔍 BUZZ COUNTER DEBUG: Query result', { data, error });
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('❌ BUZZ COUNTER ERROR: Failed to load', error);
+      // Silently handle expected errors (no rows, table issues)
+      if (error && !['PGRST116', '42P01', '400'].includes(error.code)) {
+        console.warn('[BuzzCounter] Query error:', error.code);
         return;
       }
 
       const buzzCount = data?.buzz_count || 0;
       setDailyBuzzCounter(buzzCount);
-      console.log('✅ BUZZ COUNTER: Loaded successfully', { 
-        buzzCount, 
-        nextClickPrice: calculateBuzzPrice(buzzCount),
-        nextClickCostM1U: calculateBuzzCostM1U(buzzCount)
-      });
     } catch (err) {
-      console.error('❌ BUZZ COUNTER EXCEPTION:', err);
+      // Silent fallback - use 0
+      setDailyBuzzCounter(0);
     }
   }, [userId]);
 
@@ -52,13 +43,6 @@ export const useBuzzCounter = (userId: string | undefined) => {
     if (!userId) return 0;
 
     const newBuzzCounter = dailyBuzzCounter + 1;
-    
-    console.log('🔄 BUZZ COUNTER: Updating counter', { 
-      oldCount: dailyBuzzCounter, 
-      newCount: newBuzzCounter,
-      nextPrice: calculateBuzzPrice(newBuzzCounter),
-      nextCostM1U: calculateBuzzCostM1U(newBuzzCounter)
-    });
     
     try {
       await supabase
@@ -69,16 +53,14 @@ export const useBuzzCounter = (userId: string | undefined) => {
           buzz_count: newBuzzCounter
         }, { onConflict: 'user_id,date' });
       
-      // ✅ UPDATE STATE IMMEDIATELY
+      // Update state immediately
       setDailyBuzzCounter(newBuzzCounter);
-      console.log('✅ BUZZ COUNTER: Updated successfully', { newBuzzCounter });
       
-      // ✅ FORCE RELOAD from DB to ensure sync
+      // Force reload from DB to ensure sync
       setTimeout(() => loadDailyBuzzCounter(), 100);
       
       return newBuzzCounter;
     } catch (err) {
-      console.error('❌ BUZZ COUNTER: Update failed', err);
       return dailyBuzzCounter;
     }
   }, [userId, dailyBuzzCounter, loadDailyBuzzCounter]);
@@ -105,21 +87,12 @@ export const useBuzzCounter = (userId: string | undefined) => {
     return getBuzzDisplayCostM1U(dailyBuzzCounter);
   }, [dailyBuzzCounter]);
 
-  // Reload counter when userId changes or dailyBuzzCounter updates
+  // Reload counter when userId changes
   useEffect(() => {
     if (userId) {
       loadDailyBuzzCounter();
     }
   }, [userId, loadDailyBuzzCounter]);
-
-  // Log current pricing for debugging
-  useEffect(() => {
-    console.log('📊 BUZZ COUNTER STATE UPDATE:', {
-      dailyBuzzCounter,
-      nextClickCostM1U: calculateBuzzCostM1U(dailyBuzzCounter),
-      timestamp: new Date().toISOString()
-    });
-  }, [dailyBuzzCounter]);
 
   return {
     dailyBuzzCounter,

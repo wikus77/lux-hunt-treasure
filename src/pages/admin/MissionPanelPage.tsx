@@ -10,11 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Trash2, Plus, Map, AlertTriangle, Wrench, Send, Gift } from 'lucide-react';
+import { Trash2, Plus, Map, AlertTriangle, Wrench, Send, Gift, Zap } from 'lucide-react';
 import MarkerRewardManager from '@/components/admin/MarkerRewardManager';
 import { Badge } from '@/components/ui/badge';
 import { useLocation } from 'wouter';
 import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
+import { broadcastGlobalGlitch } from '@/hooks/useGlobalGlitch';
 
 
 interface Distribution {
@@ -313,6 +314,31 @@ const MissionPanelPage: React.FC = () => {
                     className="w-full"
                   >
                     Apri Push Console
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* ⚡ GLITCH GLOBALE - TV Shutdown Effect */}
+              <Card className="border-purple-500/20 hover:border-purple-500/40 transition-colors bg-gradient-to-br from-purple-900/20 to-pink-900/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-purple-400" />
+                    ⚡ GLITCH GLOBALE
+                  </CardTitle>
+                  <CardDescription>
+                    Attiva un effetto TV shutdown su TUTTI gli utenti con l'app aperta in tempo reale
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => {
+                      broadcastGlobalGlitch();
+                      toast.success('⚡ Glitch inviato a tutti gli utenti!');
+                    }}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    ATTIVA GLITCH GLOBALE
                   </Button>
                 </CardContent>
               </Card>

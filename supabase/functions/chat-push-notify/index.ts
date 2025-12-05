@@ -120,13 +120,33 @@ serve(async (req) => {
 
     for (const s of subs || []) {
       try {
-        // s.keys è JSONB: { p256dh, auth }
-        await webpush.sendNotification(s, payload);
+        // Costruisci oggetto subscription corretto per webpush
+        const subscription = {
+          endpoint: s.endpoint,
+          keys: {
+            p256dh: s.keys?.p256dh || s.keys?.['p256dh'],
+            auth: s.keys?.auth || s.keys?.['auth']
+          }
+        };
+        
+        if (!subscription.endpoint || !subscription.keys.p256dh || !subscription.keys.auth) {
+          console.warn("[CHAT-PUSH] ⚠️ Invalid subscription for:", s.user_id);
+          continue;
+        }
+        
+        await webpush.sendNotification(subscription, payload);
         sent++;
         console.log("[CHAT-PUSH] ✅ Sent to:", s.user_id);
       } catch (e: any) {
         failed++;
         console.error("[CHAT-PUSH] ❌ Error:", e?.statusCode || e?.message || e);
+        // Cleanup expired subscriptions (410 = expired)
+        if (e?.statusCode === 410) {
+          await supabase
+            .from("webpush_subscriptions")
+            .update({ is_active: false })
+            .eq("endpoint", s.endpoint);
+        }
       }
     }
 

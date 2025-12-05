@@ -42,27 +42,10 @@ const CookieBanner: React.FC = () => {
 
   const checkCookieConsent = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      // GDPR COMPLIANT: Show banner only ONCE - never again after user makes a choice
       
       if (user) {
-        // For authenticated users, check database
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('last_cookie_banner_shown')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError && profileError.code !== 'PGRST116') {
-          console.error('Error loading profile data:', profileError);
-        }
-
-        // Check if banner was already shown today
-        if (profileData?.last_cookie_banner_shown === today) {
-          console.log('🍪 Cookie banner already shown today, skipping');
-          return;
-        }
-
-        // Check if user has preferences set
+        // For authenticated users, check if they have EVER set preferences
         const { data: cookieData, error: cookieError } = await supabase
           .from('user_cookie_preferences')
           .select('*')
@@ -74,28 +57,30 @@ const CookieBanner: React.FC = () => {
         }
 
         if (cookieData) {
+          // User has already set preferences - NEVER show banner again
           setPreferences({
             essential: cookieData.essential_cookies,
             analytics: cookieData.analytics_cookies,
             marketing: cookieData.marketing_cookies,
             preferences: cookieData.preferences_cookies
           });
-          return; // User has already set preferences
+          console.log('🍪 Cookie preferences already set, never showing banner again');
+          return;
         }
       } else {
-        // For anonymous users, check localStorage with daily tracking
+        // For anonymous users, check localStorage - show ONLY if never consented
         const savedConsent = localStorage.getItem('cookie_consent');
-        const lastShown = localStorage.getItem('cookie_banner_last_shown');
         
-        if (lastShown === today && savedConsent) {
-          console.log('🍪 Cookie banner already shown today (anonymous), skipping');
+        if (savedConsent) {
+          // User has already made a choice - NEVER show banner again
+          console.log('🍪 Cookie consent already given (anonymous), never showing banner again');
           setPreferences(JSON.parse(savedConsent));
           return;
         }
       }
 
-      // Show banner if no consent found or not shown today
-      console.log('🍪 Showing cookie banner for first time today');
+      // Show banner only if user has NEVER made a choice
+      console.log('🍪 First time user - showing cookie banner');
       setShowBanner(true);
     } catch (error) {
       console.error('Error checking cookie consent:', error);
@@ -162,10 +147,8 @@ const CookieBanner: React.FC = () => {
 
   const saveCookiePreferences = async (prefs: CookiePreferences) => {
     try {
-      const today = new Date().toISOString().split('T')[0];
-      
       if (user) {
-        // Save to database for authenticated users
+        // Save to database for authenticated users - PERMANENT
         const { error } = await supabase
           .from('user_cookie_preferences')
           .upsert({
@@ -184,18 +167,11 @@ const CookieBanner: React.FC = () => {
           cookie_consent: true
         }, { onConflict: 'user_id' });
 
-        // Update last_cookie_banner_shown in profiles
-        await supabase
-          .from('profiles')
-          .update({ last_cookie_banner_shown: today })
-          .eq('id', user.id);
-
-        console.log('🍪 Cookie preferences saved and banner timestamp updated');
+        console.log('🍪 Cookie preferences saved permanently - banner will never show again');
       } else {
-        // Save to localStorage for anonymous users
+        // Save to localStorage for anonymous users - PERMANENT
         localStorage.setItem('cookie_consent', JSON.stringify(prefs));
-        localStorage.setItem('cookie_banner_last_shown', today);
-        console.log('🍪 Cookie preferences saved to localStorage with daily tracking');
+        console.log('🍪 Cookie preferences saved to localStorage permanently');
       }
 
       setPreferences(prefs);

@@ -62,7 +62,7 @@ export const useDeveloperSetup = () => {
           console.error('❌ Registration failed:', error);
         }
       } else if (data.user) {
-        console.log('✅ Developer user created:', data.user.email);
+        console.log('✅ Developer user created');
         await ensureDeveloperRole(data.user.id);
       }
     } catch (error: any) {
