@@ -6,6 +6,7 @@ import { Edit, Save } from "lucide-react";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuthContext } from "@/contexts/auth";
+import { getAdminCode } from "@/config/adminConfig";
 
 interface ProfileHeaderProps {
   agentCode: string;
@@ -26,14 +27,9 @@ const ProfileHeader = ({
   const isMobile = useIsMobile();
   const { user } = useAuthContext();
   
-  // Special admin constants
-  const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
-  const SPECIAL_ADMIN_CODE = 'AG-X0197';
-  
-  // Determine if this is the admin user and use special code if needed
-  const displayCode = user?.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase() 
-    ? SPECIAL_ADMIN_CODE 
-    : agentCode;
+  // Use centralized admin config for special code
+  const adminCode = getAdminCode(user?.email);
+  const displayCode = adminCode || agentCode;
 
   useEffect(() => {
     // Typewriter effect for agent dossier - increased to 2 seconds

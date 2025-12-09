@@ -27,9 +27,12 @@ export function getSupabaseUrl(): string {
 
 /**
  * Get Supabase anon key
+ * Uses environment variable first, then client, then fallback
  */
 export function getSupabaseAnonKey(): string {
-  return (supabase as any).supabaseKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+  return import.meta.env.VITE_SUPABASE_ANON_KEY || 
+         (supabase as any).supabaseKey || 
+         '';
 }
 
 /**

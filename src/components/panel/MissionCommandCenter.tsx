@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Spinner } from '@/components/ui/spinner';
+import { logMissionConfigChange } from '@/utils/auditLog';
 
 // ============================================
 // TYPES
@@ -266,6 +267,15 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
       if (error) throw error;
 
       setConfig(prev => ({ ...prev, id: data.id }));
+      
+      // 🔐 Audit log for mission config change
+      await logMissionConfigChange(
+        session.user.id,
+        'mission_config_update',
+        config.id || 'new',
+        data.id
+      );
+      
       toast.success('✅ Configurazione salvata!');
     } catch (err: any) {
       console.error('Save error:', err);
@@ -288,9 +298,45 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
 
     setIsGeneratingClues(true);
     try {
+      // 🔧 FIX: Se non abbiamo un ID, prima salviamo la missione
+      let missionId = config.linked_mission_id || config.id;
+      
+      if (!missionId) {
+        console.log('⚠️ [MCC] No mission ID, saving first...');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Sessione non trovata');
+
+        // Deactivate current active
+        await supabase
+          .from('current_mission_data')
+          .update({ is_active: false })
+          .eq('is_active', true);
+
+        // Insert mission config
+        const payload = {
+          ...config,
+          is_active: true,
+          created_by: session.user.id,
+        };
+        delete (payload as any).id;
+        delete (payload as any).created_at;
+
+        const { data: savedMission, error: saveError } = await supabase
+          .from('current_mission_data')
+          .insert(payload)
+          .select()
+          .single();
+
+        if (saveError) throw saveError;
+        
+        missionId = savedMission.id;
+        setConfig(prev => ({ ...prev, id: savedMission.id }));
+        console.log('✅ [MCC] Mission saved with ID:', missionId);
+      }
+
       // Pass ALL prize details for intelligent clue generation
-      const payload = {
-        prize_id: config.linked_mission_id || config.id,
+      const cluePayload = {
+        prize_id: missionId,
         // Location
         city: config.city,
         country: config.country,
@@ -313,13 +359,18 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
         lng: config.prize_lng,
       };
 
-      console.log('🎯 Generating clues with payload:', payload);
+      console.log('🎯 Generating clues with payload:', cluePayload);
 
       const { data, error } = await supabase.functions.invoke('generate-mission-clues', {
-        body: payload,
+        body: cluePayload,
       });
 
-      if (error) throw error;
+      console.log('🔍 [MCC] Response:', { data, error });
+
+      if (error) {
+        console.error('❌ [MCC] Edge function error:', error);
+        throw new Error(`Edge Function error: ${error.message || JSON.stringify(error)}`);
+      }
 
       if (data?.success) {
         setConfig(prev => ({
@@ -371,70 +422,79 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
     }
 
     const confirmed = window.confirm(
-      '🚀 LANCIA MISSIONE?\n\n' +
-      'Questa azione:\n' +
-      '• Attiverà la missione per tutti gli utenti\n' +
-      '• Invierà una notifica push a tutti\n' +
-      '• Aggiornerà Home, Buzz Map, AION, Leaderboard\n\n' +
-      'Sei sicuro di voler procedere?'
+      '🚀 LANCIA NUOVA MISSIONE?\n\n' +
+      '⚠️ ATTENZIONE: Questa azione:\n' +
+      '• RESETTERÀ i progressi di TUTTI gli utenti\n' +
+      '• Azzererà indizi trovati, BUZZ, BUZZ MAP, timer\n' +
+      '• Attiverà questa missione per tutti\n' +
+      '• Invierà una notifica push a tutti\n\n' +
+      'I dati della missione precedente verranno archiviati.\n\n' +
+      'Sei SICURO di voler procedere?'
     );
 
     if (!confirmed) return;
+
+    // Double confirmation for safety
+    const doubleConfirm = window.confirm(
+      '⚠️ CONFERMA FINALE ⚠️\n\n' +
+      `Stai per lanciare: "${config.mission_name}"\n\n` +
+      'TUTTI i progressi degli utenti verranno AZZERATI.\n' +
+      'Questa azione NON può essere annullata.\n\n' +
+      'Confermi?'
+    );
+
+    if (!doubleConfirm) return;
 
     setIsLaunching(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Sessione non trovata');
 
-      // 1. Save config as active
+      // 1. Save config first
       await handleSave();
 
-      // 2. Update mission status to active
+      // 2. Call the new Edge Function that handles EVERYTHING
+      console.log('🚀 [MCC] Calling launch-new-mission Edge Function...');
+      
+      const { data, error } = await supabase.functions.invoke('launch-new-mission', {
+        body: {
+          mission_id: config.linked_mission_id || config.id,
+          mission_name: config.mission_name,
+          send_push: true,
+        },
+      });
+
+      if (error) {
+        console.error('❌ [MCC] Launch error:', error);
+        throw new Error(error.message || 'Errore nel lancio della missione');
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Errore sconosciuto nel lancio');
+      }
+
+      console.log('✅ [MCC] Launch successful:', data);
+
+      // 3. Update local state
       setConfig(prev => ({
         ...prev,
         mission_status: 'active',
         mission_started_at: new Date().toISOString(),
       }));
 
-      // Update in DB
-      await supabase
-        .from('current_mission_data')
-        .update({
-          mission_status: 'active',
-          mission_started_at: new Date().toISOString(),
-        })
-        .eq('is_active', true);
-
-      // 3. If linked to missions table, update that too
-      if (config.linked_mission_id) {
-        await supabase
-          .from('missions')
-          .update({
-            status: 'active',
-            start_date: new Date().toISOString(),
-          })
-          .eq('id', config.linked_mission_id);
-      }
-
-      // 4. Send push notification to all users
-      try {
-        await supabase.functions.invoke('webpush-send', {
-          body: {
-            broadcast: true,
-            title: '🚀 NUOVA M1SSION ATTIVA!',
-            body: `${config.mission_name} - La caccia al tesoro inizia ORA!`,
-            url: '/home',
-          },
-        });
-        console.log('✅ Push notification sent');
-      } catch (pushErr) {
-        console.error('Push notification error:', pushErr);
-        // Non-blocking error
-      }
-
       toast.success('🚀 MISSIONE LANCIATA!', {
-        description: 'Tutti gli utenti sono stati notificati.',
+        description: `${data.reset_result?.users_reset || 'Tutti'} utenti resettati. Notifica inviata.`,
       });
+
+      // 🔥 FIX: Dispatch event to notify all components (BUZZ MAP, Home, etc.)
+      console.log('📢 [MCC] Dispatching missionLaunched event...');
+      window.dispatchEvent(new CustomEvent('missionLaunched', {
+        detail: {
+          mission_id: config.linked_mission_id || config.id,
+          mission_name: config.mission_name,
+          reset_result: data.reset_result,
+        }
+      }));
 
     } catch (err: any) {
       console.error('Launch error:', err);

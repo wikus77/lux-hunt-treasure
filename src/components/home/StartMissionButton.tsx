@@ -1,20 +1,22 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Bottone per iscriversi alla Missione del Mese
+// V2: Usa store globale per Mission Start Sequence (risolve problema portal)
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useLocation } from 'wouter';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
-import { Rocket } from 'lucide-react';
 import { useActiveMissionEnrollment } from '@/hooks/useActiveMissionEnrollment';
+import { useEntityOverlayStore } from '@/stores/entityOverlayStore';
 
 export const StartMissionButton: React.FC = () => {
   const { user } = useAuthContext();
-  const [, setLocation] = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const { isEnrolled, isLoading: enrollmentLoading } = useActiveMissionEnrollment();
+  
+  // 🆕 Usa store globale per la sequenza (renderizzata in App.tsx, NON nel portal)
+  const triggerMissionIntro = useEntityOverlayStore((s) => s.triggerMissionIntro);
 
   // Hide button if user is already enrolled
   if (enrollmentLoading || isEnrolled) return null;
@@ -89,18 +91,23 @@ export const StartMissionButton: React.FC = () => {
 
       console.log('✅ [START-MISSION] Enrollment success:', result.mission_id);
 
-      // Notifica immediata agli observer per aggiornare il badge
-      window.dispatchEvent(new CustomEvent('mission:enrolled', { detail: { missionId: result.mission_id } }));
+      // 🆕 CRITICAL FIX V2: Usa store globale per la sequenza (fuori dal portal!)
+      // Questo risolve il problema del portal che bloccava il rendering fullscreen
+      console.log('🎬 [START-MISSION] Triggering Mission Start Sequence via store...');
+      triggerMissionIntro(result.mission_id);
+
+      // Salva in localStorage per persistence (silenzioso)
       try { localStorage.setItem('m1_mission_enrolled', '1'); } catch (_) {}
 
-      // Step 3: Successo! Mostra toast e naviga alla mappa
+      // Toast di conferma
       toast.success('Sei dentro! Missione del mese attivata.', {
         description: 'Preparati per l\'avventura! 🎯',
       });
 
+      // Notifica enrollment DOPO aver triggerato la sequenza
       setTimeout(() => {
-        setLocation('/map-3d-tiler');
-      }, 800);
+        window.dispatchEvent(new CustomEvent('mission:enrolled', { detail: { missionId: result.mission_id } }));
+      }, 100);
     } catch (err) {
       console.error('❌ [START-MISSION] Unexpected error:', err);
       toast.error('Ops, riprova tra poco.', {

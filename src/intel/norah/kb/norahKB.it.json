@@ -213,18 +213,18 @@
       ]
     },
     "subscriptions": {
-      "q": ["abbonamenti", "piani", "subscription", "quanto costa", "prezzi", "abbonamento"],
+      "q": ["abbonamenti", "piani", "subscription", "quanto costa", "prezzi", "abbonamento", "tier", "free", "silver", "gold", "black", "titanium"],
       "a": [
-        "M1SSION ha 4 piani: Base (gratuito), Silver, Gold, Black, Titanium. Più alto il piano, più BUZZ, più vantaggi.",
-        "Piano Base: BUZZ limitati, Final Shot standard. Piani premium: più BUZZ, accesso anticipato missioni, BUZZ Map avanzata.",
-        "Silver, Gold, Black, Titanium: ogni piano aumenta BUZZ disponibili, riduce cooldown, sblocca funzioni extra.",
-        "Abbonamenti danno: più BUZZ, accesso anticipato missioni, BUZZ Map più precisa, supporto prioritario.",
-        "Piano gratuito: sufficiente per giocare. Premium: vantaggi competitivi (più dati, meno attese, tool avanzati).",
-        "Costi: vedi sezione Subscription nell'app. Ogni piano ha benefit diversi: più BUZZ, più velocità, più strumenti.",
-        "Premium vale se: giochi intenso, vuoi vincere spesso, hai bisogno di più BUZZ. Altrimenti, Base va bene.",
-        "Differenze piani: Base = BUZZ limitati, Premium = BUZZ illimitati (o quasi), tool avanzati, accesso anticipato.",
-        "Abbonamenti sbloccano: più BUZZ al giorno, BUZZ Map più precisa, accesso early a nuove missioni.",
-        "Scegli piano in base a: quanti BUZZ fai al giorno, quanto sei competitivo, se vuoi vantaggi extra."
+        "M1SSION ha 5 piani: Free (gratuito), Silver (3,99€/mese), Gold (6,99€/mese), Black (9,99€/mese), Titanium (29,99€/mese). Ogni piano aumenta BUZZ, indizi e vantaggi.",
+        "Piano Free: 1 BUZZ gratuito/settimana, 1 indizio/settimana, BUZZ MAP solo a pagamento, cooldown 24h.",
+        "Piano Silver (3,99€/mese): 3 BUZZ/settimana, 3 indizi/settimana (livelli 1-2), cooldown BUZZ MAP 12h.",
+        "Piano Gold (6,99€/mese): 4 BUZZ/settimana, 5 indizi/settimana (livelli 1-3), cooldown BUZZ MAP 8h.",
+        "Piano Black (9,99€/mese): 5 BUZZ/settimana, 7 indizi/settimana (livelli 1-4), 1 BUZZ MAP gratuito/mese, cooldown 4h.",
+        "Piano Titanium (29,99€/mese): 7 BUZZ/settimana, 7 indizi/settimana (tutti livelli 1-5), 2 BUZZ MAP/mese, nessun cooldown.",
+        "Ogni piano superiore riduce il cooldown BUZZ MAP e aumenta BUZZ gratuiti settimanali.",
+        "Indizi per livello: Free=1, Silver=2, Gold=3, Black=4, Titanium=5. Più alto il tier, più profondi gli indizi.",
+        "BUZZ MAP inclusi: solo Black (1/mese) e Titanium (2/mese). Altri tier devono pagare.",
+        "Priorità BUZZ: prima usi i BUZZ gratuiti del tier, poi i premi, poi paghi con M1U (valuta virtuale)."
       ]
     },
     "support": {

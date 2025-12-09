@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ - BUZZ Action Button with M1U Payment System
+// PRIORITÀ BUZZ: 1) tierFreeBuzz (settimanali per tier) → 2) buzz_grants (premi) → 3) pricing M1U
 import React, { useEffect, useRef } from 'react';
 
 // --- BUZZ TOAST GLOBAL LOCK (shared) ---
@@ -11,12 +12,16 @@ import { ShockwaveAnimation } from './ShockwaveAnimation';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useBuzzGrants } from '@/hooks/useBuzzGrants';
+import { useTierFreeBuzz } from '@/hooks/useTierFreeBuzz'; // 🆕 BUZZ gratuiti settimanali per tier
+import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION Cashback Vault™
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { toast } from 'sonner';
 import { showInsufficientM1UToast, showM1UDebitSuccessToast } from '@/utils/m1uHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+// 🌑 Shadow Protocol v3 - Contextual trigger
+import { notifyShadowContext } from '@/stores/entityOverlayStore';
 
 interface BuzzActionButtonProps {
   isBlocked: boolean;
@@ -30,7 +35,22 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   isWalkthroughMode = false
 }) => {
   const { user } = useUnifiedAuth();
-  const { hasFreeBuzz, consumeFreeBuzz, totalRemaining, dailyUsed } = useBuzzGrants();
+  
+  // 🆕 PRIORITÀ 1: BUZZ gratuiti settimanali per tier abbonamento
+  const { 
+    hasFreeBuzz: hasTierFreeBuzz, 
+    consumeFreeBuzz: consumeTierFreeBuzz,
+    freeBuzzRemaining: tierFreeBuzzRemaining,
+    userTier,
+    weeklyLimit: tierWeeklyLimit
+  } = useTierFreeBuzz();
+  
+  // PRIORITÀ 2: BUZZ da premi (marker, XP, etc.)
+  const { hasFreeBuzz: hasGrantFreeBuzz, consumeFreeBuzz: consumeGrantFreeBuzz, totalRemaining: grantRemaining, dailyUsed } = useBuzzGrants();
+  
+  // 🆕 M1SSION Cashback Vault™
+  const { accrueFromBuzz } = useCashbackWallet();
+  
   const { playSound } = useSoundEffects();
   const { unitsData, refetch: refetchM1U } = useM1UnitsRealtime(user?.id);
   
@@ -42,26 +62,37 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     updateDailyBuzzCounter
   } = useBuzzCounter(user?.id);
   
-  // 🔥 FIX: Show "GRATIS" if free buzz available, otherwise show M1U cost
-  const currentCostM1U = hasFreeBuzz ? 0 : getCurrentBuzzCostM1U();
-  const currentPriceDisplay = hasFreeBuzz ? 'GRATIS' : getCurrentBuzzDisplayCostM1U();
+  // 🔥 PRIORITÀ COMBINATA: tier gratuiti → grants → pricing
+  // Se ha BUZZ gratuiti da tier O da grants → mostra "GRATIS"
+  const hasAnyFreeBuzz = hasTierFreeBuzz || hasGrantFreeBuzz;
+  const currentCostM1U = hasAnyFreeBuzz ? 0 : getCurrentBuzzCostM1U();
+  const currentPriceDisplay = hasAnyFreeBuzz ? 'GRATIS' : getCurrentBuzzDisplayCostM1U();
   
   // Log price updates for debugging
   React.useEffect(() => {
     console.log('💰 BUZZ BUTTON PRICE UPDATE:', {
       dailyBuzzCounter,
-      hasFreeBuzz,
+      // 🆕 Tier Free BUZZ info
+      userTier,
+      hasTierFreeBuzz,
+      tierFreeBuzzRemaining,
+      tierWeeklyLimit,
+      // Grant Free BUZZ info
+      hasGrantFreeBuzz,
+      grantRemaining,
+      // Combined
+      hasAnyFreeBuzz,
       currentCostM1U,
       currentPriceDisplay,
       timestamp: new Date().toISOString()
     });
-  }, [dailyBuzzCounter, hasFreeBuzz, currentCostM1U, currentPriceDisplay]);
+  }, [dailyBuzzCounter, userTier, hasTierFreeBuzz, tierFreeBuzzRemaining, tierWeeklyLimit, hasGrantFreeBuzz, grantRemaining, hasAnyFreeBuzz, currentCostM1U, currentPriceDisplay]);
   
   // 🔥 FIX: Pass actual M1U cost to useBuzzHandler to avoid price check blocking
   const { buzzing, showShockwave, handleBuzz } = useBuzzHandler({
     currentPrice: currentCostM1U, // Use actual M1U cost for validation
     onSuccess,
-    hasFreeBuzz
+    hasFreeBuzz: hasAnyFreeBuzz // Combined free buzz check
   });
 
   // © 2025 Joseph MULÉ – M1SSION™ – Progressive BUZZ Pricing Handler
@@ -166,29 +197,60 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       return;
     }
 
-    // Check if free buzz is available first
-    if (hasFreeBuzz) {
-      console.log('🎁 M1SSION™ FREE BUZZ: Using free grant', { remaining: totalRemaining });
-      const consumed = await consumeFreeBuzz();
+    // =========================================================================
+    // 🆕 PRIORITÀ 1: BUZZ gratuiti settimanali per tier abbonamento
+    // =========================================================================
+    if (hasTierFreeBuzz) {
+      console.log('🎟️ M1SSION™ TIER FREE BUZZ: Using tier weekly allowance', { 
+        tier: userTier,
+        remaining: tierFreeBuzzRemaining,
+        weeklyLimit: tierWeeklyLimit 
+      });
+      const consumed = await consumeTierFreeBuzz();
       if (consumed) {
-        // Execute buzz action FIRST
         await handleBuzz();
-        
-        // Only increment counter if BUZZ was successful
         await updateDailyBuzzCounter();
         onSuccess();
+        // 🔥 Evento per sincronizzare il contatore nella BuzzPage
+        window.dispatchEvent(new CustomEvent('buzzCompleted'));
+        // 🌑 Shadow Protocol v3 - Trigger contestuale BUZZ
+        notifyShadowContext('buzz');
         if (!__buzz.shown) {
-          toast.success('BUZZ gratuito utilizzato!');
+          toast.success(`BUZZ gratuito! (${tierFreeBuzzRemaining - 1}/${tierWeeklyLimit} rimasti)`);
+        }
+        return;
+      }
+      // Se fallisce, continua con grants o pricing
+    }
+
+    // =========================================================================
+    // PRIORITÀ 2: BUZZ da premi (marker, XP, etc.)
+    // =========================================================================
+    if (hasGrantFreeBuzz) {
+      console.log('🎁 M1SSION™ GRANT FREE BUZZ: Using reward grant', { remaining: grantRemaining });
+      const consumed = await consumeGrantFreeBuzz();
+      if (consumed) {
+        await handleBuzz();
+        await updateDailyBuzzCounter();
+        onSuccess();
+        // 🔥 Evento per sincronizzare il contatore nella BuzzPage
+        window.dispatchEvent(new CustomEvent('buzzCompleted'));
+        // 🌑 Shadow Protocol v3 - Trigger contestuale BUZZ
+        notifyShadowContext('buzz');
+        if (!__buzz.shown) {
+          toast.success('BUZZ gratuito (premio) utilizzato!');
         }
         return;
       } else {
-        console.error('🔴 M1SSION™ FREE BUZZ: Failed to consume grant');
+        console.error('🔴 M1SSION™ GRANT FREE BUZZ: Failed to consume grant');
         toast.error('Errore nell\'uso del BUZZ gratuito');
         return;
       }
     }
 
-    // Paid BUZZ with M1U system
+    // =========================================================================
+    // PRIORITÀ 3: Pricing progressivo M1U
+    // =========================================================================
     const costM1U = getCurrentBuzzCostM1U();
     const currentBalance = unitsData?.balance || 0;
     
@@ -198,7 +260,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       costM1U,
       currentBalance,
       userId: user.id,
-      hasFreeBuzz,
+      hasTierFreeBuzz,
+      hasGrantFreeBuzz,
       timestamp: new Date().toISOString()
     });
 
@@ -266,6 +329,15 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       window.dispatchEvent(new CustomEvent('buzzClueCreated', {
         detail: { costM1U, newBalance: updatedProfile.m1_units }
       }));
+      
+      // 🔥 Evento per sincronizzare il contatore nella BuzzPage
+      window.dispatchEvent(new CustomEvent('buzzCompleted'));
+      // 🌑 Shadow Protocol v3 - Trigger contestuale BUZZ
+      notifyShadowContext('buzz');
+      
+      // 🆕 M1SSION Cashback Vault™ - Accumula cashback (1 M1U = €0.10)
+      const costEur = costM1U / 10;
+      await accrueFromBuzz({ costEur, tier: userTier });
       
       console.log('🎉 M1SSION™ BUZZ: Complete!');
 

@@ -43,13 +43,16 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   const isFullScreen = fullScreenRoutes.includes(location);
   const isSelfManaged = selfManagedRoutes.includes(location);
   
-  console.log('🏗️ GlobalLayout:', {
-    path: location,
-    shouldHideNavigation,
-    isFullScreen,
-    isSelfManaged,
-    isCapacitor
-  });
+  // Debug logs only in development
+  if (import.meta.env.DEV) {
+    console.log('🏗️ GlobalLayout:', {
+      path: location,
+      shouldHideNavigation,
+      isFullScreen,
+      isSelfManaged,
+      isCapacitor
+    });
+  }
 
   // Landing and auth pages - minimal layout
   if (shouldHideNavigation) {
@@ -70,15 +73,15 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
     return (
       <SafeAreaWrapper className="min-h-screen">
         <div className="relative min-h-screen">
-          {/* Header */}
+          {/* Header - always visible */}
           <UnifiedHeader />
           
-          {/* Main content without padding */}
-          <main className="relative z-10">
+          {/* Main content - INSTANT RENDER */}
+          <main key={location} className="relative z-10 global-layout-content">
             {children}
           </main>
           
-          {/* Bottom Navigation */}
+          {/* Bottom Navigation - always visible */}
           <BottomNavigation />
         </div>
       </SafeAreaWrapper>
@@ -89,21 +92,22 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   return (
     <SafeAreaWrapper className="min-h-screen">
       <div className="relative min-h-screen">
-        {/* Header */}
+        {/* Header - always visible, no transition */}
         <UnifiedHeader />
         
-        {/* Main content with header padding - REDUCED for tighter layout */}
+        {/* Main content with header padding - INSTANT RENDER */}
         <main 
-          className="relative z-10 pt-[80px] pb-20"
+          key={location} // Force remount on route change for clean transition
+          className="relative z-10 pt-[80px] pb-20 global-layout-content"
           style={{
-            minHeight: 'calc(100vh - 80px - 80px)', // Account for header and bottom nav
+            minHeight: 'calc(100vh - 80px - 80px)',
             paddingTop: isCapacitor ? 'calc(80px + env(safe-area-inset-top, 0px))' : '80px'
           }}
         >
           {children}
         </main>
         
-        {/* Bottom Navigation */}
+        {/* Bottom Navigation - always visible, no transition */}
         <BottomNavigation />
       </div>
     </SafeAreaWrapper>

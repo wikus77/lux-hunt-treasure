@@ -80,6 +80,28 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     loadSearchAreas();
   }, []);
 
+  // 🔥 V2: Listen for mission reset to clear all areas
+  useEffect(() => {
+    const handleMissionReset = () => {
+      console.log('🚀 useSearchAreasLogic: Mission reset - clearing all areas');
+      setSearchAreas([]);
+      setStorageAreas([]);
+      setActiveSearchArea(null);
+      setSearchAreasThisWeek(0);
+      try { localStorage.removeItem('map-search-areas'); } catch {}
+    };
+
+    window.addEventListener('missionLaunched', handleMissionReset);
+    window.addEventListener('missionReset', handleMissionReset);
+    window.addEventListener('mission:reset', handleMissionReset);
+    
+    return () => {
+      window.removeEventListener('missionLaunched', handleMissionReset);
+      window.removeEventListener('missionReset', handleMissionReset);
+      window.removeEventListener('mission:reset', handleMissionReset);
+    };
+  }, [setStorageAreas]);
+
   // Calculate radius based on number of areas created this week
   const calculateRadius = () => {
     // Base radius: 100km = 100,000m

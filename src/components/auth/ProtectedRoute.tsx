@@ -1,9 +1,10 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// ProtectedRoute - OPTIMIZED for instant page transitions
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
-import { Spinner } from '@/components/ui/spinner';
 
 interface ProtectedRouteProps {
   redirectTo?: string;
@@ -11,57 +12,94 @@ interface ProtectedRouteProps {
   children?: React.ReactNode;
 }
 
+// Cache auth state to prevent re-checks on every route change
+const AUTH_CACHE_KEY = 'm1ssion_auth_verified';
+
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   redirectTo = '/login',
   requireEmailVerification = true,
   children
 }) => {
-  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole } = useUnifiedAuth();
+  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, hasRole } = useUnifiedAuth();
   const [location] = useLocation();
   const { navigate } = useWouterNavigation();
+  const hasChecked = useRef(false);
   
+  // Check if we have a cached auth state (instant check)
+  const hasCachedAuth = (): boolean => {
+    try {
+      const cached = sessionStorage.getItem(AUTH_CACHE_KEY);
+      if (cached) {
+        const { verified, timestamp } = JSON.parse(cached);
+        // Cache valid for 5 minutes
+        if (verified && (Date.now() - timestamp) < 5 * 60 * 1000) {
+          return true;
+        }
+      }
+    } catch {}
+    return false;
+  };
+
+  // Update cache when auth is verified
   useEffect(() => {
-    console.log("🛡️ PROTECTED ROUTE CHECK:", {
-      path: location,
-      isAuthenticated,
-      isLoading,
-      isEmailVerified,
-      hasUser: !!getCurrentUser()?.id,
-      userRole,
-      isDeveloper: hasRole('developer')
-    });
-  }, [location, isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole]);
+    if (isAuthenticated && !isLoading) {
+      try {
+        sessionStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({
+          verified: true,
+          timestamp: Date.now()
+        }));
+      } catch {}
+    }
+  }, [isAuthenticated, isLoading]);
+
+  // Clear cache on logout
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading && hasChecked.current) {
+      sessionStorage.removeItem(AUTH_CACHE_KEY);
+    }
+  }, [isAuthenticated, isLoading]);
   
-  // Show loading during authentication check
+  // Debug only in development
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("🛡️ PROTECTED ROUTE:", { path: location, isAuthenticated, isLoading });
+    }
+  }, [location, isAuthenticated, isLoading]);
+  
+  // 🚀 INSTANT RENDER: If we have cached auth, render immediately
+  if (hasCachedAuth() && !hasChecked.current) {
+    hasChecked.current = true;
+    return <>{children}</>;
+  }
+  
+  // First load: Wait for auth check (but don't show spinner if cached)
   if (isLoading) {
-    console.log("⏳ AUTHENTICATION LOADING...");
+    // If we have cached auth, render children while loading completes
+    if (hasCachedAuth()) {
+      return <>{children}</>;
+    }
+    // Only show minimal loading indicator on first load
     return (
-      <div className="flex justify-center items-center min-h-screen bg-black">
-        <Spinner className="h-8 w-8 text-white" />
-      </div>
+      <div className="min-h-screen bg-transparent" />
     );
   }
   
+  hasChecked.current = true;
+  
   // Check authentication
   if (!isAuthenticated) {
-    console.log("❌ AUTH CHECK FAILED - User not authenticated");
     navigate(redirectTo);
     return null;
   }
   
-  console.log("✅ AUTH CHECK PASSED");
-  
   // Developer users bypass email verification
-  const currentUser = getCurrentUser();
   const isDeveloper = hasRole('developer');
   
   if (requireEmailVerification && !isEmailVerified && !isDeveloper) {
-    console.log("📧 EMAIL VERIFICATION REQUIRED - redirecting");
     navigate("/login?verification=pending");
     return null;
   }
   
-  console.log("🎯 PROTECTED ROUTE SUCCESS");
   return <>{children}</>;
 };
 

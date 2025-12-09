@@ -127,6 +127,104 @@ serve(withCors(async (req: Request): Promise<Response> => {
     
     console.log('🗺️ [HANDLE-BUZZ-MAP] Processing BUZZ MAP generation (SERVER-AUTHORITATIVE)');
     
+    // 🔥 FIX: Get prize location from current_mission_data to center area around prize
+    // This ensures the generated area ALWAYS includes the prize location
+    let finalCoordinates = { ...coordinates }; // Default: user coordinates as fallback
+    
+    try {
+      console.log('🔍 [HANDLE-BUZZ-MAP] Fetching prize location from current_mission_data...');
+      
+      // First, try to get ANY active mission to debug
+      const { data: debugData, error: debugError } = await supabase
+        .from('current_mission_data')
+        .select('id, mission_name, city, country, prize_lat, prize_lng, is_active')
+        .order('created_at', { ascending: false })
+        .limit(3);
+      
+      console.log('🔍 [HANDLE-BUZZ-MAP] DEBUG - All recent missions:', {
+        count: debugData?.length || 0,
+        missions: debugData?.map(m => ({ 
+          id: m.id?.substring(0, 8), 
+          name: m.mission_name,
+          city: m.city,
+          is_active: m.is_active,
+          prize_lat: m.prize_lat,
+          prize_lng: m.prize_lng
+        })),
+        error: debugError?.message
+      });
+      
+      // Now get the active mission - try both boolean and string
+      let missionData = null;
+      let missionError = null;
+      
+      // Try boolean first
+      const result1 = await supabase
+        .from('current_mission_data')
+        .select('prize_lat, prize_lng, city, country, is_active')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      console.log('🔍 [HANDLE-BUZZ-MAP] Query with is_active=true (boolean):', {
+        found: !!result1.data,
+        data: result1.data,
+        error: result1.error?.message
+      });
+      
+      if (result1.data) {
+        missionData = result1.data;
+        missionError = result1.error;
+      } else {
+        // Try string 'true'
+        const result2 = await supabase
+          .from('current_mission_data')
+          .select('prize_lat, prize_lng, city, country, is_active')
+          .eq('is_active', 'true')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        console.log('🔍 [HANDLE-BUZZ-MAP] Query with is_active="true" (string):', {
+          found: !!result2.data,
+          data: result2.data,
+          error: result2.error?.message
+        });
+        
+        missionData = result2.data;
+        missionError = result2.error;
+      }
+
+      if (!missionError && missionData?.prize_lat && missionData?.prize_lng) {
+        // 🎯 Use prize coordinates with RANDOM OFFSET to not reveal exact location
+        // Offset range: ±5km to ±20km (converted to degrees, ~0.045° to ~0.18° at equator)
+        const offsetRange = 0.05 + Math.random() * 0.13; // Random between 0.05 and 0.18 degrees
+        const offsetLat = (Math.random() - 0.5) * 2 * offsetRange;
+        const offsetLng = (Math.random() - 0.5) * 2 * offsetRange;
+        
+        finalCoordinates = {
+          lat: missionData.prize_lat + offsetLat,
+          lng: missionData.prize_lng + offsetLng
+        };
+        
+        console.log('🎯 [HANDLE-BUZZ-MAP] Using PRIZE location (with offset):', {
+          prizeCity: missionData.city,
+          prizeCountry: missionData.country,
+          originalPrizeLat: missionData.prize_lat,
+          originalPrizeLng: missionData.prize_lng,
+          offsetLat: offsetLat.toFixed(4),
+          offsetLng: offsetLng.toFixed(4),
+          finalLat: finalCoordinates.lat.toFixed(4),
+          finalLng: finalCoordinates.lng.toFixed(4)
+        });
+      } else {
+        console.warn('⚠️ [HANDLE-BUZZ-MAP] No active mission prize location found, using user coordinates as fallback');
+      }
+    } catch (prizeError) {
+      console.warn('⚠️ [HANDLE-BUZZ-MAP] Error fetching prize location (using user coords):', prizeError);
+    }
+    
     // 🔥 SERVER-AUTHORITATIVE: Use RPC to get next level
     dlog('[DBG] Calling RPC m1_get_next_buzz_level...');
     const { data: nextLevel, error: levelError } = await supabase
@@ -157,8 +255,8 @@ serve(withCors(async (req: Request): Promise<Response> => {
     const { data: spendResult, error: spendError } = await supabase.rpc('buzz_map_spend_m1u', {
       p_user_id: user.id,
       p_cost_m1u: costM1U,
-      p_latitude: coordinates.lat,
-      p_longitude: coordinates.lng,
+      p_latitude: finalCoordinates.lat,  // 🎯 Use prize-centered coordinates
+      p_longitude: finalCoordinates.lng, // 🎯 Use prize-centered coordinates
       p_radius_km: radius_km
     });
     
@@ -178,15 +276,67 @@ serve(withCors(async (req: Request): Promise<Response> => {
       newBalance: spendResult.new_balance
     });
     
+    // 💰 CASHBACK VAULT™ WIRING - Accumula cashback dopo pagamento riuscito
+    // Solo se costM1U > 0 (pagamento effettivo, non gratuito)
+    if (costM1U > 0) {
+      try {
+        // 1. Ottieni il tier dell'utente
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', user.id)
+          .single();
+        
+        const userTier = profile?.subscription_tier || 'Base';
+        
+        // 2. Calcola cashback in base al tier
+        const CASHBACK_RATES: Record<string, number> = {
+          'Base': 0.005,      // 0.5%
+          'Silver': 0.01,     // 1%
+          'Gold': 0.02,       // 2%
+          'Black': 0.03,      // 3%
+          'Titanium': 0.05,   // 5%
+        };
+        
+        const rate = CASHBACK_RATES[userTier] || CASHBACK_RATES['Base'];
+        const costEur = costM1U / 10; // 1 M1U = €0.10
+        // 🔥 FIX: Garantisce almeno 1 M1U di cashback per ogni transazione
+        const rawCashback = costEur * rate * 10;
+        const cashbackM1U = Math.max(1, Math.ceil(rawCashback));
+        
+        if (cashbackM1U > 0) {
+          console.log('💰 [HANDLE-BUZZ-MAP] Accruing cashback:', { userTier, costEur, rate, cashbackM1U });
+          
+          // 3. Chiama RPC accrue_cashback
+          const { error: cashbackError } = await supabase.rpc('accrue_cashback', {
+            p_user_id: user.id,
+            p_source_type: 'buzz_map',
+            p_source_cost_eur: costEur,
+            p_cashback_m1u: cashbackM1U,
+            p_tier_at_time: userTier
+          });
+          
+          if (cashbackError) {
+            console.error('⚠️ [HANDLE-BUZZ-MAP] Cashback accrual error (non-blocking):', cashbackError);
+          } else {
+            console.log('✅ [HANDLE-BUZZ-MAP] Cashback accrued:', cashbackM1U, 'M1U');
+          }
+        }
+      } catch (cashbackErr) {
+        console.error('⚠️ [HANDLE-BUZZ-MAP] Cashback error (non-blocking):', cashbackErr);
+      }
+    }
+    
     // Create the map area with weekly counter (using RPC values)
+    // 🎯 Area is now centered around PRIZE location (with offset) instead of user location
     const { data: mapArea, error: mapError } = await supabase
       .from('user_map_areas')
       .insert({
         user_id: user.id,
-        lat: coordinates.lat,
-        lng: coordinates.lng,
-        center_lat: coordinates.lat,
-        center_lng: coordinates.lng,
+        lat: finalCoordinates.lat,        // 🎯 Prize-centered
+        lng: finalCoordinates.lng,        // 🎯 Prize-centered
+        center_lat: finalCoordinates.lat, // 🎯 Prize-centered
+        center_lng: finalCoordinates.lng, // 🎯 Prize-centered
         radius_km: radius_km,
         source: 'buzz_map',
         level: level,
@@ -228,8 +378,8 @@ serve(withCors(async (req: Request): Promise<Response> => {
       mode: 'map',
       area: {
         id: mapArea.id,
-        center_lat: coordinates.lat,
-        center_lng: coordinates.lng,
+        center_lat: finalCoordinates.lat, // 🎯 Prize-centered
+        center_lng: finalCoordinates.lng, // 🎯 Prize-centered
         radius_km: radius_km,
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       },

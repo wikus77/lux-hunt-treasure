@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // MissionBadgeInjector - Renders START M1SSION or ON M1SSION badge ONLY on /home page
+// V2 FIX: DB-first, localStorage NON fa più override
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -13,20 +14,15 @@ const ALLOWED_ROUTES = ['/home', '/'];
 
 export const MissionBadgeInjector = () => {
   const [location] = useLocation();
+  // 🔥 FIX: Usa SOLO isEnrolled dal hook (che ora è DB-first)
   const { isEnrolled, isLoading } = useActiveMissionEnrollment();
   const [portalReady, setPortalReady] = useState(false);
-  const [enrolledOverride, setEnrolledOverride] = useState(false);
 
   // 🛡️ GUARD: Only render on allowed routes (Home page)
   const isOnHomePage = ALLOWED_ROUTES.includes(location) || location === '/home';
 
-  // Sync enrollment override from localStorage on mount
-  useEffect(() => {
-    try {
-      const persisted = localStorage.getItem('m1_mission_enrolled') === '1';
-      if (persisted) setEnrolledOverride(true);
-    } catch (_) {}
-  }, []);
+  // 🔥 FIX RIMOSSO: Non leggere più localStorage come override!
+  // Il hook useActiveMissionEnrollment ora gestisce tutto correttamente
 
   // Reset portal when leaving home page
   useEffect(() => {
@@ -235,14 +231,31 @@ export const MissionBadgeInjector = () => {
   useEffect(() => {
     const onEnrolled = () => {
       console.log('✅ [MissionBadgeInjector] mission:enrolled event received');
-      setEnrolledOverride(true);
-      // Only set portal ready if on home page
+      // 🔥 FIX: Non serve più setEnrolledOverride - il hook gestisce tutto
+      // Solo aggiorna il portal se siamo sulla home
       if (ALLOWED_ROUTES.includes(window.location.pathname) || window.location.pathname === '/home') {
         setPortalReady(true);
       }
     };
+    
+    // 🔥 FIX: Listen for mission reset to force UI update
+    const onMissionReset = () => {
+      console.log('🔄 [MissionBadgeInjector] mission:reset/missionLaunched event received');
+      // Il hook si occupa di pulire la cache e resettare isEnrolled
+      setPortalReady(true); // Forza re-render
+    };
+    
     window.addEventListener('mission:enrolled', onEnrolled);
-    return () => window.removeEventListener('mission:enrolled', onEnrolled);
+    window.addEventListener('missionLaunched', onMissionReset);
+    window.addEventListener('mission:reset', onMissionReset);
+    window.addEventListener('missionReset', onMissionReset); // 🔥 FIX: Anche senza i due punti
+    
+    return () => {
+      window.removeEventListener('mission:enrolled', onEnrolled);
+      window.removeEventListener('missionLaunched', onMissionReset);
+      window.removeEventListener('mission:reset', onMissionReset);
+      window.removeEventListener('missionReset', onMissionReset);
+    };
   }, []);
 
   // 🛡️ Don't render anything if not on home page
@@ -252,10 +265,11 @@ export const MissionBadgeInjector = () => {
   const portalTarget = document.getElementById('mission-status-badge-portal');
   if (!portalTarget) return null;
 
+  // 🔥 FIX: Usa SOLO isEnrolled dal hook (DB-first)
   // Se iscritto: mostra "ON M1SSION" con gradiente verde-viola
   // Se NON iscritto: mostra "START M1SSION" (StartMissionButton)
   return createPortal(
-    (isEnrolled || enrolledOverride) ? (
+    isEnrolled ? (
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}

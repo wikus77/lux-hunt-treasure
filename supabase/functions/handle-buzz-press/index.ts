@@ -149,6 +149,57 @@ serve(withCors(async (req: Request): Promise<Response> => {
         newBalance: spendResult.new_balance
       });
       
+      // 💰 CASHBACK VAULT™ WIRING - Accumula cashback dopo pagamento riuscito
+      // Solo se costM1U > 0 (pagamento effettivo, non gratuito)
+      if (costM1U > 0) {
+        try {
+          // 1. Ottieni il tier dell'utente
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('subscription_tier')
+            .eq('id', user.id)
+            .single();
+          
+          const userTier = profile?.subscription_tier || 'Base';
+          
+          // 2. Calcola cashback in base al tier
+          const CASHBACK_RATES: Record<string, number> = {
+            'Base': 0.005,      // 0.5%
+            'Silver': 0.01,     // 1%
+            'Gold': 0.02,       // 2%
+            'Black': 0.03,      // 3%
+            'Titanium': 0.05,   // 5%
+          };
+          
+          const rate = CASHBACK_RATES[userTier] || CASHBACK_RATES['Base'];
+          const costEur = costM1U / 10; // 1 M1U = €0.10
+          // 🔥 FIX: Garantisce almeno 1 M1U di cashback per ogni transazione
+          const rawCashback = costEur * rate * 10;
+          const cashbackM1U = Math.max(1, Math.ceil(rawCashback));
+          
+          if (cashbackM1U > 0) {
+            console.log('💰 [HANDLE-BUZZ-PRESS] Accruing cashback:', { userTier, costEur, rate, cashbackM1U });
+            
+            // 3. Chiama RPC accrue_cashback
+            const { error: cashbackError } = await supabase.rpc('accrue_cashback', {
+              p_user_id: user.id,
+              p_source_type: 'buzz_map',
+              p_source_cost_eur: costEur,
+              p_cashback_m1u: cashbackM1U,
+              p_tier_at_time: userTier
+            });
+            
+            if (cashbackError) {
+              console.error('⚠️ [HANDLE-BUZZ-PRESS] Cashback accrual error (non-blocking):', cashbackError);
+            } else {
+              console.log('✅ [HANDLE-BUZZ-PRESS] Cashback accrued:', cashbackM1U, 'M1U');
+            }
+          }
+        } catch (cashbackErr) {
+          console.error('⚠️ [HANDLE-BUZZ-PRESS] Cashback error (non-blocking):', cashbackErr);
+        }
+      }
+      
       // Create the map area with weekly counter (using RPC values)
       const { data: mapArea, error: mapError } = await supabase
         .from('user_map_areas')

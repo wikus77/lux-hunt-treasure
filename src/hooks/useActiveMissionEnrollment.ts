@@ -1,13 +1,23 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Hook per verificare se l'utente è iscritto alla missione attiva
+// V2 FIX: DB-first, localStorage NON fa più override
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 
 // Cache key for localStorage
 const ENROLLMENT_CACHE_KEY = 'm1_mission_enrolled';
 const ENROLLMENT_MISSION_KEY = 'm1_enrolled_mission_id';
+
+// Helper per pulire TUTTA la cache enrollment
+const clearEnrollmentCache = () => {
+  try {
+    localStorage.removeItem(ENROLLMENT_CACHE_KEY);
+    localStorage.removeItem(ENROLLMENT_MISSION_KEY);
+    console.log('🧹 [useActiveMissionEnrollment] Cache cleared');
+  } catch (_) {}
+};
 
 interface EnrollmentState {
   isEnrolled: boolean;
@@ -20,22 +30,16 @@ interface EnrollmentState {
 export const useActiveMissionEnrollment = () => {
   const { user } = useAuth();
   const [state, setState] = useState<EnrollmentState>({
-    isEnrolled: false,
+    isEnrolled: false, // 🔥 FIX: Parte da FALSE, NON da cache
     isLoading: true,
     missionId: null,
     enrolledAt: null,
     error: null,
   });
+  const hasCheckedDb = useRef(false);
 
-  // Check localStorage cache first for instant UI
-  useEffect(() => {
-    try {
-      const cached = localStorage.getItem(ENROLLMENT_CACHE_KEY);
-      if (cached === '1') {
-        setState(prev => ({ ...prev, isEnrolled: true }));
-      }
-    } catch (_) {}
-  }, []);
+  // 🔥 FIX: NON leggere più la cache all'avvio!
+  // Il DB è la source of truth. La cache serve solo per persistence offline.
 
   // Main enrollment check function
   const checkEnrollment = useCallback(async () => {
@@ -47,37 +51,62 @@ export const useActiveMissionEnrollment = () => {
         enrolledAt: null,
         error: null,
       });
+      clearEnrollmentCache(); // Pulisci cache se non c'è utente
       return;
     }
 
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
-      // Step 1: Get current active mission
-      const { data: activeMission, error: missionError } = await supabase
-        .from('missions')
-        .select('id, title, status')
-        .eq('status', 'active')
-        .order('start_date', { ascending: false })
+      // Step 1: 🔥 FIX: Get current active mission from CURRENT_MISSION_DATA first
+      // (dove l'admin crea le missioni), poi fallback su missions
+      let activeMission: { id: string; title: string; status: string } | null = null;
+
+      // Try current_mission_data first (where admin creates missions)
+      const { data: cmdMission, error: cmdError } = await supabase
+        .from('current_mission_data')
+        .select('id, mission_name, mission_status')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (missionError) {
-        console.error('❌ [useActiveMissionEnrollment] Error fetching active mission:', missionError);
-        // Don't fail completely - check localStorage fallback
-        const cached = localStorage.getItem(ENROLLMENT_CACHE_KEY) === '1';
-        setState({
-          isEnrolled: cached,
-          isLoading: false,
-          missionId: null,
-          enrolledAt: null,
-          error: 'Errore nel caricamento missione',
-        });
-        return;
+      if (!cmdError && cmdMission) {
+        activeMission = {
+          id: cmdMission.id,
+          title: cmdMission.mission_name,
+          status: cmdMission.mission_status,
+        };
+        console.log('📍 [useActiveMissionEnrollment] Found mission in current_mission_data:', cmdMission.mission_name);
+      } else {
+        // Fallback to missions table
+        const { data: missionData, error: missionError } = await supabase
+          .from('missions')
+          .select('id, title, status')
+          .eq('status', 'active')
+          .order('start_date', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (missionError) {
+          console.error('❌ [useActiveMissionEnrollment] Error fetching active mission:', missionError);
+          // 🔥 FIX: Se errore DB, NON usare cache - segnala errore
+          setState({
+            isEnrolled: false,
+            isLoading: false,
+            missionId: null,
+            enrolledAt: null,
+            error: 'Errore nel caricamento missione',
+          });
+          return;
+        }
+
+        activeMission = missionData;
       }
 
       if (!activeMission) {
         // No active mission exists
+        console.log('⚠️ [useActiveMissionEnrollment] No active mission found');
         setState({
           isEnrolled: false,
           isLoading: false,
@@ -85,25 +114,25 @@ export const useActiveMissionEnrollment = () => {
           enrolledAt: null,
           error: null,
         });
-        // Clear cache since no mission
-        try { localStorage.removeItem(ENROLLMENT_CACHE_KEY); } catch (_) {}
+        clearEnrollmentCache(); // 🔥 FIX: Pulisci cache!
         return;
       }
 
       // Step 2: Check if user is enrolled in this mission
+      // 🔥 FIX: La tabella potrebbe avere schema diverso (vecchio vs nuovo)
+      // Usiamo '*' per essere compatibili con entrambi gli schemi
       const { data: enrollment, error: enrollError } = await supabase
         .from('mission_enrollments')
-        .select('id, mission_id, created_at, state')
+        .select('*')
         .eq('user_id', user.id)
         .eq('mission_id', activeMission.id)
         .maybeSingle();
 
       if (enrollError) {
         console.error('❌ [useActiveMissionEnrollment] Error checking enrollment:', enrollError);
-        // Fallback to localStorage
-        const cached = localStorage.getItem(ENROLLMENT_CACHE_KEY) === '1';
+        // 🔥 FIX: Se errore DB, NON usare cache - mostra stato neutro
         setState({
-          isEnrolled: cached,
+          isEnrolled: false,
           isLoading: false,
           missionId: activeMission.id,
           enrolledAt: null,
@@ -112,29 +141,37 @@ export const useActiveMissionEnrollment = () => {
         return;
       }
 
-      const isEnrolled = !!enrollment && enrollment.state !== 'cancelled';
+      // 🔥 FIX: Check enrollment senza dipendere da campi specifici
+      // La tabella potrebbe avere 'state' (nuovo schema) o no (vecchio schema)
+      const enrollmentState = enrollment?.state;
+      const isEnrolled = !!enrollment && enrollmentState !== 'cancelled';
 
-      // Update localStorage cache
-      try {
-        if (isEnrolled) {
+      // 🔥 FIX: Aggiorna localStorage SOLO se il DB conferma l'enrollment
+      if (isEnrolled) {
+        try {
           localStorage.setItem(ENROLLMENT_CACHE_KEY, '1');
           localStorage.setItem(ENROLLMENT_MISSION_KEY, activeMission.id);
-        } else {
-          localStorage.removeItem(ENROLLMENT_CACHE_KEY);
-          localStorage.removeItem(ENROLLMENT_MISSION_KEY);
-        }
-      } catch (_) {}
+        } catch (_) {}
+      } else {
+        // 🔥 CRITICAL: Se DB dice NO, PULISCI la cache!
+        clearEnrollmentCache();
+      }
+
+      // 🔥 FIX: La data potrebbe essere 'created_at' (nuovo) o 'joined_at' (vecchio)
+      const enrolledAt = enrollment?.created_at || enrollment?.joined_at || null;
 
       setState({
         isEnrolled,
         isLoading: false,
         missionId: activeMission.id,
-        enrolledAt: enrollment?.created_at || null,
+        enrolledAt,
         error: null,
       });
 
+      hasCheckedDb.current = true;
+
       console.log('✅ [useActiveMissionEnrollment] Status:', {
-        userId: user.id,
+        userId: user.id.slice(-8),
         missionId: activeMission.id,
         missionTitle: activeMission.title,
         isEnrolled,
@@ -143,10 +180,9 @@ export const useActiveMissionEnrollment = () => {
 
     } catch (err) {
       console.error('❌ [useActiveMissionEnrollment] Unexpected error:', err);
-      // Fallback to localStorage
-      const cached = localStorage.getItem(ENROLLMENT_CACHE_KEY) === '1';
+      // 🔥 FIX: Non usare fallback a localStorage in caso di errore!
       setState({
-        isEnrolled: cached,
+        isEnrolled: false,
         isLoading: false,
         missionId: null,
         enrolledAt: null,
@@ -201,8 +237,48 @@ export const useActiveMissionEnrollment = () => {
       setTimeout(checkEnrollment, 500);
     };
 
+    // 🔥 FIX: Listen for missionLaunched event (from admin panel)
+    // Quando una nuova missione viene lanciata, TUTTI gli utenti devono essere resettati
+    const handleMissionLaunched = () => {
+      console.log('🚀 [useActiveMissionEnrollment] missionLaunched event received - RESETTING STATE');
+      // 1. Pulisci cache localStorage
+      clearEnrollmentCache();
+      // 2. Reset state immediato
+      setState({
+        isEnrolled: false,
+        isLoading: true,
+        missionId: null,
+        enrolledAt: null,
+        error: null,
+      });
+      // 3. Ri-verifica dal DB
+      setTimeout(checkEnrollment, 300);
+    };
+
+    // 🔥 FIX: Listen for mission:reset event (for manual reset)
+    const handleMissionReset = () => {
+      console.log('🔄 [useActiveMissionEnrollment] mission:reset event received - CLEARING STATE');
+      clearEnrollmentCache();
+      setState({
+        isEnrolled: false,
+        isLoading: false,
+        missionId: null,
+        enrolledAt: null,
+        error: null,
+      });
+    };
+
     window.addEventListener('mission:enrolled', handleEnrolled as EventListener);
-    return () => window.removeEventListener('mission:enrolled', handleEnrolled as EventListener);
+    window.addEventListener('missionLaunched', handleMissionLaunched);
+    window.addEventListener('mission:reset', handleMissionReset);
+    window.addEventListener('missionReset', handleMissionReset); // 🔥 FIX: Anche senza i due punti
+    
+    return () => {
+      window.removeEventListener('mission:enrolled', handleEnrolled as EventListener);
+      window.removeEventListener('missionLaunched', handleMissionLaunched);
+      window.removeEventListener('mission:reset', handleMissionReset);
+      window.removeEventListener('missionReset', handleMissionReset);
+    };
   }, [checkEnrollment]);
 
   return {
@@ -212,6 +288,7 @@ export const useActiveMissionEnrollment = () => {
     enrolledAt: state.enrolledAt,
     error: state.error,
     refresh: checkEnrollment,
+    clearCache: clearEnrollmentCache, // 🔥 Esponi per uso esterno
   };
 };
 

@@ -25,16 +25,22 @@ export const useMarkerRewards = (markerId: string | null) => {
       setError(null);
 
       try {
+        console.log('🎁 [useMarkerRewards] Fetching rewards for marker:', markerId);
+        
         const { data, error } = await supabase
           .from('marker_rewards')
           .select('reward_type, payload, description')
           .eq('marker_id', markerId);
 
-        if (error) throw error;
+        if (error) {
+          console.error('🎁 [useMarkerRewards] Query error:', error);
+          throw error;
+        }
 
-        setRewards(data || []);
+        console.log('🎁 [useMarkerRewards] Rewards fetched:', data?.length || 0);
+        setRewards(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error('Error fetching marker rewards:', err);
+        console.error('🎁 [useMarkerRewards] Error fetching marker rewards:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
         setRewards([]);
       } finally {
@@ -45,5 +51,6 @@ export const useMarkerRewards = (markerId: string | null) => {
     fetchRewards();
   }, [markerId]);
 
-  return { rewards, isLoading, error };
+  // 🛡️ Sempre restituisci un array (anche se rewards è undefined per qualche motivo)
+  return { rewards: Array.isArray(rewards) ? rewards : [], isLoading, error };
 };

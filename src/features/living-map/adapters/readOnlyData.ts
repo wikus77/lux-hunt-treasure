@@ -157,7 +157,7 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
     });
   }
   
-  // 🔄 REAL DATA MODE: Query DB only (no fallback to mock)
+  // 🔄 REAL DATA MODE: Query user_locations directly (no view dependency)
   try {
     const { supabase } = await import('@/integrations/supabase/client');
     
@@ -165,19 +165,23 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
     const { data: { session } } = await supabase.auth.getSession();
     console.debug('[LiveAgents] mode=REAL, auth=', !!session);
     
-    // Query v_online_agents view
+    // 🚀 FIX: Query user_locations table directly
+    // Column is 'updated_at' NOT 'last_seen'
     const { data: locations, error: locError } = await (supabase as any)
-      .from('v_online_agents')
-      .select('user_id, lat, lng, accuracy, status, last_seen')
-      .limit(500);
+      .from('user_locations')
+      .select('user_id, lat, lng, accuracy, status, updated_at')
+      .not('lat', 'is', null)
+      .not('lng', 'is', null)
+      .order('updated_at', { ascending: false })
+      .limit(100);
     
     if (locError) {
-      // Silently handle view errors - return empty array
+      console.debug('[LiveAgents] Query error:', locError.message);
       return [];
     }
     
     if (!locations || locations.length === 0) {
-      console.debug('[LiveAgents] Data source: DB (empty - no online agents in last 5min)');
+      console.debug('[LiveAgents] Data source: DB (no users with positions)');
       return [];
     }
     
@@ -199,21 +203,26 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
       ]) || []
     );
     
+    // 🎯 Determine online status based on updated_at (15 minutes = online, else offline)
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    
     const agents = locations.map((row: any) => {
       const profile = profileMap.get(row.user_id);
+      const isRecent = row.updated_at && row.updated_at > fifteenMinutesAgo;
+      
       return {
         id: row.user_id,
         lat: row.lat,
         lng: row.lng,
-        username: profile?.full_name || 'Agent',
-        status: row.status,
-        lastSeen: row.last_seen,
+        username: profile?.full_name || profile?.agent_code || 'Agent',
+        status: isRecent ? 'online' : 'offline',
+        lastSeen: row.updated_at,
         agent_code: profile?.agent_code,
         rank_id: profile?.rank_id
       };
     });
     
-    console.debug('[LiveAgents] Data source: DB', { count: agents.length });
+    console.debug('[LiveAgents] Data source: DB', { count: agents.length, online: agents.filter(a => a.status === 'online').length });
     return agents;
   } catch (e: any) {
     console.debug('[LiveAgents] Exception in REAL mode:', e.message);
@@ -279,18 +288,18 @@ export function onAgentsChanged(callback: (agents: AgentDTO[]) => void): () => v
     return () => clearInterval(interval);
   }
   
-  // Real Realtime subscription - setup async but return sync cleanup
+  // 🚀 FIX: Subscribe to user_locations table (not agent_locations view)
   let channelCleanup: (() => void) | null = null;
   
   (async () => {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       const channel = (supabase as any)
-        .channel('agent-locations-live')
+        .channel('user-locations-live')
         .on('postgres_changes', { 
           event: '*', 
           schema: 'public', 
-          table: 'agent_locations' 
+          table: 'user_locations' 
         }, async () => {
           const agents = await getLiveAgents();
           callback(agents);

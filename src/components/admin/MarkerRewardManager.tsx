@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { logAuditEvent } from '@/utils/auditLog';
 import { 
   MapPin, Trash2, Gift, Coins, Search, 
   Zap, Trophy, MessageSquare, RefreshCw, Target, Loader2
@@ -197,6 +198,18 @@ const MarkerRewardManager: React.FC = () => {
 
       if (rewardError) throw rewardError;
 
+      // 🔐 Audit log for marker creation
+      await logAuditEvent({
+        event_type: 'MARKER_CREATED',
+        severity: 'warning',
+        details: { 
+          marker_id: marker.id, 
+          reward_type: selectedRewardType,
+          lat: latNum.toFixed(4),
+          lng: lngNum.toFixed(4)
+        },
+      });
+
       toast.success('✅ Marker creato!');
       setMarkerTitle('');
       loadMarkers();
@@ -257,6 +270,14 @@ const MarkerRewardManager: React.FC = () => {
 
       // SUCCESS - Reload from server to confirm
       console.log('✅ SUCCESS! Reloading from server...');
+      
+      // 🔐 Audit log for marker deletion
+      await logAuditEvent({
+        event_type: 'MARKER_DELETED',
+        severity: 'warning',
+        details: { marker_id: markerId },
+      });
+      
       toast.success('✅ Eliminato! Ricarico lista...');
       setDeletingIds(prev => { const n = new Set(prev); n.delete(markerId); return n; });
       
@@ -272,24 +293,49 @@ const MarkerRewardManager: React.FC = () => {
     }
   };
 
-  // Bulk create
+  // Bulk create - uses secure Edge Function with required headers
   const handleBulkCreate = async () => {
     setIsLoading(true);
     try {
+      // Generate a simple hash for security header (SHA-256 of timestamp + random)
+      const hashInput = `${Date.now()}-${Math.random().toString(36)}`;
+      const encoder = new TextEncoder();
+      const data_bytes = encoder.encode(hashInput);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data_bytes);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const codeHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
       const { data, error } = await supabase.functions.invoke('create-random-markers', {
         body: {
           distributions: [{
             type: bulkRewardType,
             count: bulkCount,
             payload: bulkRewardType === 'M1U' ? { amount: bulkM1uAmount } : {}
-          }]
+          }],
+          // WORLDWIDE bbox - markers sparsi in tutto il mondo
+          bbox: {
+            minLat: -60,  // Esclude Antartide
+            maxLat: 70,   // Esclude zone artiche estreme
+            minLng: -180,
+            maxLng: 180
+          }
+        },
+        headers: {
+          'X-M1-Dropper-Version': 'v1',
+          'X-M1-Code-Hash': codeHash
         }
       });
 
       if (error) throw error;
-      toast.success(`✅ ${data?.created || bulkCount} marker creati!`);
+      
+      if (data?.partial_failures) {
+        toast.warning(`⚠️ ${data.created} marker creati, ${data.partial_failures} falliti`);
+      } else {
+        toast.success(`✅ ${data?.created || bulkCount} marker creati!`);
+      }
       loadMarkers();
     } catch (error: any) {
+      console.error('Bulk create error:', error);
       toast.error(`Errore: ${error.message}`);
     } finally {
       setIsLoading(false);

@@ -4,8 +4,10 @@
  */
 
 export { PulseBreaker } from './components/PulseBreaker';
+export { PulseBreakerPill } from './components/PulseBreakerPill';
 export { usePulseBreaker } from './hooks/usePulseBreaker';
 export type { GameStatus, BetCurrency, GameState } from './hooks/usePulseBreaker';
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
 

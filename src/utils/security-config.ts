@@ -20,8 +20,9 @@ export const SECURITY_CONFIG = {
   REGISTER_RATE_WINDOW_MINUTES: 60,
   
   // Session security
-  SESSION_TIMEOUT_MINUTES: 30,
-  AUTO_LOGOUT_ON_INACTIVITY: true,
+  // DISABLED: L'utente resta loggato finché non fa logout manuale
+  SESSION_TIMEOUT_MINUTES: 0, // Disabled
+  AUTO_LOGOUT_ON_INACTIVITY: false, // Solo logout manuale
 } as const;
 
 /**

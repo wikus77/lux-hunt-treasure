@@ -17,8 +17,10 @@ import { useDeepLinkQR } from "@/hooks/useDeepLinkQR";
 import M1UPill from "@/features/m1u/M1UPill";
 import { PageSkeleton } from "@/components/ui/skeleton-loader";
 import { AgentEnergyPill } from "@/features/pulse";
+import { PulseBreakerPill } from "@/features/pulse-breaker";
 import { PULSE_ENABLED } from "@/config/featureFlags";
 import StreakPill from "@/components/gamification/StreakPill";
+import CashbackVaultPill from "@/components/home/CashbackVaultPill";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -210,10 +212,22 @@ const { isConnected } = useRealTimeNotifications();
                   <StreakPill showLabel />
                 </motion.div>
                 
-                {/* Agent Energy Pill (PE/Rank Progress) - Floating below Streak */}
+                {/* M1SSION Cashback Vault™ Pill - SPOSTATO A DESTRA, sotto header (stessa altezza M1U) */}
+                <motion.div
+                  data-onboarding="cashback-pill"
+                  className="fixed z-[70] top-36 right-4 md:top-40 md:right-8"
+                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.12 }}
+                  style={{ pointerEvents: 'auto' }}
+                >
+                  <CashbackVaultPill />
+                </motion.div>
+                
+                {/* Agent Energy Pill (PE/Rank Progress) - SPOSTATO A DESTRA, sotto Cashback (+15%) */}
                 {PULSE_ENABLED && (
                   <motion.div
-                    className="fixed z-[70] top-60 left-4 md:top-64 md:left-8"
+                    className="fixed z-[70] top-[13.5rem] right-4 md:top-64 md:right-8"
                     initial={{ opacity: 0, scale: 0.9, y: -10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.15 }}
@@ -222,14 +236,36 @@ const { isConnected } = useRealTimeNotifications();
                     <AgentEnergyPill />
                   </motion.div>
                 )}
+                
+                {/* Pulse Breaker Pill - SOTTO Agent Energy (stesso stile, +15%) */}
+                {PULSE_ENABLED && (
+                  <motion.div
+                    className="fixed z-[70] top-[16.5rem] right-4 md:top-80 md:right-8"
+                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.18 }}
+                    style={{ pointerEvents: 'auto' }}
+                  >
+                    <PulseBreakerPill />
+                  </motion.div>
+                )}
 
                 {/* 🚀 NATIVE: Layout responsive per titolo */}
                 <motion.div
-                  className="relative my-4 sm:my-6 pt-16"
+                  className="relative my-4 sm:my-6 pt-16 text-center"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
+                  data-page="home"
                 >
+                  {/* 🎯 H1 TITLE - HIDDEN but required for MissionBadgeInjector to anchor the badge */}
+                  <h1 
+                    id="m1-home-title"
+                    aria-label="Centro di Comando Agente M1SSION"
+                    className="sr-only"
+                  >
+                    M1SSION Centro di Comando
+                  </h1>
 
                   {/* ON M1SSION Badge Portal - Fixed slot for MissionBadgeInjector */}
                   <div 

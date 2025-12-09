@@ -192,11 +192,11 @@ const LegalSettings: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <p className="text-white/70 text-sm">Versione</p>
-                <p className="text-white font-medium">1.0.0</p>
+                <p className="text-white font-medium">2.1.0</p>
               </div>
               <div className="space-y-1">
                 <p className="text-white/70 text-sm">Build</p>
-                <p className="text-white font-medium">2025.01.12</p>
+                <p className="text-white font-medium">2025.12.05</p>
               </div>
               <div className="space-y-1">
                 <p className="text-white/70 text-sm">Sviluppatore</p>
@@ -223,7 +223,7 @@ const LegalSettings: React.FC = () => {
                 Hai domande o hai bisogno di assistenza?
               </p>
               <Button
-                onClick={() => openExternalLink('mailto:support@m1ssion.app')}
+                onClick={() => openExternalLink('mailto:contact@m1ssion.com')}
                 variant="outline"
                 className="border-[#00D1FF]/50 text-[#00D1FF] hover:bg-[#00D1FF]/10"
               >

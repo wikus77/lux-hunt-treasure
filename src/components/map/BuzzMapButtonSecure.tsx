@@ -9,6 +9,8 @@ import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { showInsufficientM1UToast } from '@/utils/m1uHelpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
+import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION Cashback Vault™
+import { notifyShadowContext } from '@/stores/entityOverlayStore'; // 🌑 Shadow Protocol v3
 import '@/styles/buzz/BuzzTronDisc.css';
 
 interface BuzzMapButtonSecureProps {
@@ -24,6 +26,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
 }) => {
   const { isAuthenticated, user } = useAuthContext();
   const { callBuzzApi } = useBuzzApi();
+  const { accrueFromBuzzMap } = useCashbackWallet(); // 🆕 M1SSION Cashback Vault™
   
   // 🔥 SERVER-AUTHORITATIVE: Get pricing from RPC, not client calculation
   const [serverPricing, setServerPricing] = useState<{
@@ -267,6 +270,17 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         }
       );
 
+      // 🆕 M1SSION Cashback Vault™ - Accumula cashback (1 M1U = €0.10)
+      // 🔒 WRAPPED IN TRY-CATCH: Non-critical, area già creata con successo
+      try {
+        const costEur = costM1U / 10;
+        await accrueFromBuzzMap({ costEur });
+        console.log('✅ Cashback accrued successfully');
+      } catch (cashbackErr) {
+        console.warn('⚠️ Cashback accrual failed (non-critical):', cashbackErr);
+        // Non bloccare - l'area è già stata creata con successo
+      }
+
       // 🔥 FIX: Update agent location immediately after BUZZ (geolocation sync)
       try {
         console.log('📍 Updating agent location after BUZZ...', { lat: coordinates[0], lng: coordinates[1] });
@@ -324,6 +338,8 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
           areaId: edgeResult.area_id
         }
       }));
+      // 🌑 Shadow Protocol v3 - Trigger contestuale MAP
+      notifyShadowContext('map');
 
       console.log('✅ BUZZ MAP sequence complete (800ms → areasReloaded → pricing)');
 

@@ -97,7 +97,7 @@ export default function SendTab() {
       };
 
       const SB_URL = `https://${getProjectRef()}.supabase.co`;
-      const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+      const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
       let endpoint = '';
       let requestBody: any = { payload };

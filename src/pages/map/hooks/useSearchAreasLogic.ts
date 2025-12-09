@@ -75,6 +75,34 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     forceReloadAreas();
   }, []); // Remove storageAreas dependency to avoid loops
 
+  // 🔥 V2: Listen for mission reset to clear all areas
+  useEffect(() => {
+    const handleMissionReset = () => {
+      console.log('🚀 useSearchAreasLogic: Mission reset event received, clearing all areas...');
+      setSearchAreas([]);
+      setStorageAreas([]);
+      setActiveSearchArea(null);
+      setSearchAreasThisWeek(0);
+      // Clear localStorage explicitly
+      try {
+        localStorage.removeItem('map-search-areas');
+        console.log('🗑️ useSearchAreasLogic: Cleared localStorage map-search-areas');
+      } catch (e) {
+        console.warn('⚠️ useSearchAreasLogic: Failed to clear localStorage:', e);
+      }
+    };
+
+    window.addEventListener('missionLaunched', handleMissionReset);
+    window.addEventListener('missionReset', handleMissionReset);
+    window.addEventListener('mission:reset', handleMissionReset);
+    
+    return () => {
+      window.removeEventListener('missionLaunched', handleMissionReset);
+      window.removeEventListener('missionReset', handleMissionReset);
+      window.removeEventListener('mission:reset', handleMissionReset);
+    };
+  }, [setStorageAreas]);
+
   // Sync areas with localStorage only when areas change from user actions
   useEffect(() => {
     if (!isLoading && searchAreas.length >= 0) {

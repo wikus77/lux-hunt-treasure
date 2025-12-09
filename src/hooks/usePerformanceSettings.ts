@@ -35,32 +35,9 @@ export function usePerformanceSettings(): PerformanceSettings {
           setBattleFxModeState(savedModeLocal);
         }
 
-        if (isAuthenticated && user?.id) {
-          // Try loading from user_settings table (with type casting)
-          // Use maybeSingle() to avoid errors when table doesn't exist or no row
-          const { data, error } = await supabase
-            .from('user_settings' as any)
-            .select('preferences')
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-          // Silently handle all errors - fallback to localStorage
-          if (error) {
-            // No console output - localStorage fallback is fine
-            return;
-          }
-
-          if (!error && data) {
-            const settingsData = data as any;
-            const prefs = settingsData?.preferences as any;
-            const savedMode = prefs?.battle?.fxMode as BattleFxPerformanceMode | undefined;
-            
-            if (savedMode === 'high' || savedMode === 'low') {
-              setBattleFxModeState(savedMode);
-              console.log('[PerformanceSettings] Loaded from DB:', savedMode);
-            }
-          }
-        }
+        // NOTE: user_settings table may not have 'preferences' column
+        // Use localStorage as primary storage until DB schema is updated
+        // This avoids 400 errors on non-existent columns
       } catch (e) {
         console.debug('[PerformanceSettings] Load error (non-critical):', e);
       } finally {
@@ -97,50 +74,16 @@ export function usePerformanceSettings(): PerformanceSettings {
     };
   }, [isAuthenticated, user?.id]);
 
-  // Save settings
+  // Save settings - localStorage only (DB schema pending update)
   const setBattleFxMode = useCallback(async (mode: BattleFxPerformanceMode) => {
     try {
       setBattleFxModeState(mode);
-
-      if (isAuthenticated && user?.id) {
-        // Save to user_settings table (with type casting)
-        const { data: existing } = await supabase
-          .from('user_settings' as any)
-          .select('preferences')
-          .eq('user_id', user.id)
-          .single();
-
-        const existingData = existing as any;
-        const currentPrefs = (existingData?.preferences as any) || {};
-        const updatedPrefs = {
-          ...currentPrefs,
-          battle: {
-            ...(currentPrefs.battle || {}),
-            fxMode: mode
-          }
-        };
-
-        const { error } = await supabase
-          .from('user_settings' as any)
-          .upsert({
-            user_id: user.id,
-            preferences: updatedPrefs
-          } as any);
-
-        if (error) throw error;
-
-        console.log('[PerformanceSettings] Saved to DB:', mode);
-      } else {
-        // Fallback to localStorage
-        localStorage.setItem(STORAGE_KEY, mode);
-        console.log('[PerformanceSettings] Saved to localStorage:', mode);
-      }
+      localStorage.setItem(STORAGE_KEY, mode);
+      console.log('[PerformanceSettings] Saved to localStorage:', mode);
     } catch (e) {
       console.error('[PerformanceSettings] Save error:', e);
-      // Still update local state even if save fails
-      localStorage.setItem(STORAGE_KEY, mode);
     }
-  }, [isAuthenticated, user?.id]);
+  }, []);
 
   return {
     battleFxMode,

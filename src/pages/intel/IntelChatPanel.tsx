@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, MicOff, RotateCw, MoreHorizontal, Loader2, Brain, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTTS } from '@/components/intel/hooks/useTTS';
+import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION Cashback Vault™
 import type { AionEntityHandle, Viseme } from '@/components/aion/AionEntity';
 
 interface Message {
@@ -61,6 +62,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   const sessionIdRef = useRef<string>(`session_${Date.now()}`);
   
   const { speak, stop: stopTTS, isSpeaking, unlockAudio } = useTTS();
+  const { accrueFromAion } = useCashbackWallet(); // 🆕 M1SSION Cashback Vault™
 
   // 🍎 iOS: Unlock audio on first user interaction with chat
   useEffect(() => {
@@ -239,6 +241,10 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
           window.dispatchEvent(new CustomEvent('m1u-spent', { 
             detail: { amount: data.access.m1u_spent } 
           }));
+          
+          // 🆕 M1SSION Cashback Vault™ - Accumula cashback (1 M1U = €0.10)
+          const costEur = data.access.m1u_spent / 10;
+          accrueFromAion({ costEur });
         }
       }
 

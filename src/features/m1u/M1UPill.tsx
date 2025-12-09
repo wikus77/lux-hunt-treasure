@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
-import { supabase } from '@/integrations/supabase/client';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { M1UnitsShopModal } from '@/components/m1units/M1UnitsShopModal';
 import '@/features/m1u/m1u-ui.css';
 
@@ -24,28 +24,32 @@ const M1UPill: React.FC<M1UPillProps> = ({
   showLabel = true,
   showPlusButton = true,
 }) => {
-  const [userId, setUserId] = useState<string | undefined>(undefined);
+  // ⚡ FIX: Usa useUnifiedAuth per avere userId SUBITO (no chiamata di rete extra)
+  const { user } = useUnifiedAuth();
+  const userId = user?.id;
+  
   const [pulseAnimation, setPulseAnimation] = useState(false);
   const [prevBalance, setPrevBalance] = useState<number | null>(null);
   const [showShopModal, setShowShopModal] = useState(false);
   
-  // 🎰 SLOT MACHINE ANIMATION STATE
-  const [displayedBalance, setDisplayedBalance] = useState<number>(0);
+  const { unitsData, isLoading, error, refetch } = useM1UnitsRealtime(userId);
+  
+  // 🚀 Get cached M1U for instant display
+  const getCachedM1U = (): number => {
+    try {
+      const cached = localStorage.getItem('m1ssion_m1u_cache');
+      if (cached) {
+        const { balance, userId: cachedUserId } = JSON.parse(cached);
+        if (cachedUserId === userId) return balance;
+      }
+    } catch {}
+    return unitsData?.balance || 0;
+  };
+  
+  // 🎰 SLOT MACHINE ANIMATION STATE - Initialize with cached value!
+  const [displayedBalance, setDisplayedBalance] = useState<number>(() => getCachedM1U());
   const [isAnimating, setIsAnimating] = useState(false);
   const animationRef = React.useRef<number | null>(null);
-
-  // Get current user ID
-  useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data.user) {
-        setUserId(data.user.id);
-      }
-    };
-    getUser();
-  }, []);
-
-  const { unitsData, isLoading, error, refetch } = useM1UnitsRealtime(userId);
 
   // 🎰 SLOT MACHINE ANIMATION - Animates numbers rolling up like a jackpot
   const animateBalance = (startValue: number, endValue: number, duration: number = 2000) => {
@@ -239,7 +243,8 @@ const M1UPill: React.FC<M1UPillProps> = ({
 
           {/* Stato dinamico */}
           <AnimatePresence mode="wait">
-            {isLoading ? (
+            {/* 🚀 FIX: Show cached balance immediately instead of loading dots */}
+            {isLoading && displayedBalance === 0 ? (
               <motion.div
                 key="loading"
                 className="animate-pulse text-sm font-orbitron text-white opacity-60"

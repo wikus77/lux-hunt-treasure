@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { withCors } from "../_shared/cors.ts";
+import { applyRateLimit } from "../_shared/rateLimit.ts";
 
 type Json = Record<string, any>;
 
@@ -29,7 +30,11 @@ serve(withCors(async (req) => {
     const user_id = auth?.user?.id;
     if (!user_id) return jsonResponse({ ok: false, code: "UNAUTHORIZED" }, 401);
 
-    console.log(`M1QR-TRACE: claim-marker-reward start - user:${user_id} marker:${markerId}`);
+    // 🔐 Rate limiting check
+    const rateLimited = await applyRateLimit(req, 'claim-marker-reward', user_id);
+    if (rateLimited) return rateLimited;
+
+    console.log(`M1QR-TRACE: claim-marker-reward start - user:...${user_id.slice(-8)} marker:${markerId}`);
 
     // Check if already claimed
     const { data: existingClaim } = await userClient
@@ -40,7 +45,7 @@ serve(withCors(async (req) => {
       .maybeSingle();
 
     if (existingClaim) {
-      console.log(`M1QR-TRACE: already claimed - user:${user_id} marker:${markerId}`);
+      console.log(`M1QR-TRACE: already claimed - user:...${user_id.slice(-8)} marker:${markerId}`);
       return jsonResponse({ ok: false, code: "ALREADY_CLAIMED" }, 200);
     }
 
@@ -54,6 +59,9 @@ serve(withCors(async (req) => {
       console.error(`M1QR-TRACE: rewards fetch error:`, rewardsError);
       return jsonResponse({ status: "error", error: "db_error", detail: rewardsError.message }, 500);
     }
+
+    // 🔍 DEBUG: Log raw rewards data to see exactly what's in DB
+    console.log(`M1QR-TRACE: RAW REWARDS from DB:`, JSON.stringify(rewards));
 
     if (!rewards || rewards.length === 0) {
       console.log(`M1QR-TRACE: no rewards found - marker:${markerId}`);
@@ -70,15 +78,44 @@ serve(withCors(async (req) => {
       return jsonResponse({ status: "error", error: "claim_failed", detail: claimError.message }, 500);
     }
 
+    // 🚀 PUSH NOTIFICATION IMMEDIATA (in parallelo, non blocca)
+    const sendPushAsync = async () => {
+      try {
+        // WebPush diretto - più veloce
+        const pushRes = await fetch(`${url}/functions/v1/webpush-targeted-send`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': Deno.env.get('PUSH_ADMIN_TOKEN') || service,
+          },
+          body: JSON.stringify({
+            user_ids: [user_id],
+            payload: {
+              title: '🎁 Premio Trovato!',
+              body: 'Hai trovato un marker reward su M1SSION™!',
+              url: '/profile'
+            }
+          }),
+        });
+        console.log(`M1QR-TRACE: Push sent - status:${pushRes.status}`);
+      } catch (e) {
+        console.warn(`M1QR-TRACE: Push async error:`, e);
+      }
+    };
+    
+    // Avvia push in background (non aspettare)
+    sendPushAsync();
+
     // Process each reward
     const summary: Array<{type: string, info: any}> = [];
     let nextRoute: string | null = null;
 
     for (const reward of rewards) {
       const { reward_type, payload, description } = reward;
-      const rewardTypeLower = (reward_type || '').toLowerCase(); // 🔥 FIX: case-insensitive
+      // 🔥 FIX: trim + lowercase per gestire spazi, newline, e case
+      const rewardTypeLower = (reward_type || '').toString().trim().toLowerCase();
       
-      console.log(`M1QR-TRACE: Processing reward type: "${reward_type}" -> "${rewardTypeLower}", payload:`, payload);
+      console.log(`M1QR-TRACE: Processing reward type: "${reward_type}" -> "${rewardTypeLower}", payload:`, JSON.stringify(payload));
       
       try {
         switch (rewardTypeLower) {
@@ -282,48 +319,57 @@ serve(withCors(async (req) => {
             break;
           }
 
-          // 🔥 NEW: M1U Credits reward (10-1000 M1U)
+          // 🔥 M1U Credits - USA RPC admin_credit_m1u (bypassa trigger sicurezza)
           case 'm1u': {
-            const m1uAmount = Math.min(1000, Math.max(10, payload.amount || 50));
-            
-            // Update user's M1U balance directly
-            const { data: currentProfile, error: profileError } = await admin
-              .from("profiles")
-              .select("m1_units")
-              .eq("id", user_id)
-              .single();
-            
-            if (profileError) throw profileError;
-            
-            const currentM1U = currentProfile?.m1_units || 0;
-            const newM1U = currentM1U + m1uAmount;
-            
-            const { error: m1uError } = await admin
-              .from("profiles")
-              .update({ m1_units: newM1U })
-              .eq("id", user_id);
-            
-            if (m1uError) throw m1uError;
-            
-            // Create notification for M1U reward
-            const { error: m1uNotificationError } = await admin
-              .from("user_notifications")
-              .insert([{
-                user_id,
-                notification_type: 'reward',
-                title: '💰 M1U Ricevuti!',
-                message: `Hai ricevuto ${m1uAmount} M1U! Il tuo saldo è ora ${newM1U} M1U`,
-                metadata: { source: `marker:${markerId}`, reward_type: 'm1u', amount: m1uAmount, new_balance: newM1U }
-              }]);
-            
-            if (m1uNotificationError) {
-              console.error(`M1QR-TRACE: notification creation error for M1U:`, m1uNotificationError);
-            } else {
-              console.log(`M1QR-TRACE: M1U notification created successfully - ${m1uAmount} M1U`);
+            // 🛡️ SAFE: Se payload è stringa (JSON non parsato), parsalo
+            let safePayload = payload;
+            if (typeof payload === 'string') {
+              try {
+                safePayload = JSON.parse(payload);
+              } catch {
+                safePayload = {};
+              }
             }
             
-            // Dispatch event for UI refresh
-            summary.push({ type: 'm1u', info: { amount: m1uAmount, new_balance: newM1U } });
+            const m1uAmount = Math.max(1, Number(safePayload?.amount) || Number(safePayload?.m1u) || 50);
+            console.log(`M1QR-TRACE: 💰 M1U START - amount:${m1uAmount}, user:...${user_id.slice(-8)}`);
+            
+            // 🔥 USA RPC admin_credit_m1u (bypassa trigger sicurezza)
+            const { data: rpcResult, error: rpcError } = await admin.rpc('admin_credit_m1u', {
+              p_user_id: user_id,
+              p_amount: m1uAmount,
+              p_reason: `marker_reward:${markerId}`
+            });
+            
+            console.log(`M1QR-TRACE: 💰 RPC RESULT:`, JSON.stringify(rpcResult), `error:`, rpcError);
+            
+            if (rpcError) {
+              console.error(`M1QR-TRACE: ❌ RPC ERROR:`, rpcError);
+              summary.push({ type: 'm1u', info: { error: 'rpc_failed', detail: rpcError.message } });
+              break;
+            }
+            
+            if (!rpcResult?.success) {
+              console.error(`M1QR-TRACE: ❌ RPC FAILED:`, rpcResult?.error);
+              summary.push({ type: 'm1u', info: { error: rpcResult?.error || 'rpc_failed' } });
+              break;
+            }
+            
+            const oldBalance = rpcResult.old_balance;
+            const newBalance = rpcResult.new_balance;
+            
+            console.log(`M1QR-TRACE: ✅ M1U SUCCESS - ${oldBalance} → ${newBalance} (+${m1uAmount})`);
+            summary.push({ type: 'm1u', info: { amount: m1uAmount, old_balance: oldBalance, new_balance: newBalance } });
+            
+            // Notifica in-app
+            await admin.from("user_notifications").insert([{
+              user_id,
+              notification_type: 'reward',
+              title: '💰 M1U Ricevuti!',
+              message: `+${m1uAmount} M1U accreditati! Nuovo saldo: ${newBalance}`,
+              metadata: { reward_type: 'm1u', amount: m1uAmount, new_balance: newBalance }
+            }]).catch(e => console.warn('M1QR-TRACE: notif error:', e));
+            
             if (!nextRoute) nextRoute = '/profile';
             break;
           }
@@ -464,142 +510,8 @@ serve(withCors(async (req) => {
       }
     }
 
-    // 🔔 CRITICAL: Send push notification via FCM/WebPush for marker discovery
-    try {
-      console.log(`M1QR-TRACE: rewardClaimStarted - user:${user_id} marker:${markerId}`);
-      
-      // Log the reward process start
-      await admin
-        .from('admin_logs')
-        .insert({
-          event_type: 'marker_reward_claim_started',
-          user_id,
-          note: `Marker ${markerId} reward claim started`,
-          context: `rewards:${rewards.map(r => r.reward_type).join(',')}`
-        });
-
-      console.log(`M1QR-TRACE: rewardInsertOK - sending push notification via FCM...`);
-      
-      // Try FCM first
-      let pushSent = false;
-      let pushResult: any = null;
-      
-      // Get FCM tokens for user
-      const { data: fcmTokens } = await admin
-        .from('fcm_subscriptions')
-        .select('token')
-        .eq('user_id', user_id)
-        .eq('is_active', true);
-
-      if (fcmTokens && fcmTokens.length > 0) {
-        const fcmResponse = await fetch(`${url}/functions/v1/fcm-send`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${service}`,
-          },
-          body: JSON.stringify({
-            tokens: fcmTokens.map(t => t.token),
-            title: '🛡️ Premio Trovato!',
-            body: 'Hai conquistato un premio segreto su M1SSION™',
-            data: {
-              marker_id: markerId,
-              reward_types: rewards.map(r => r.reward_type).join(','),
-              source: 'marker_discovery',
-              url: '/profile'
-            }
-          }),
-        });
-
-        pushResult = await fcmResponse.json();
-        if (fcmResponse.ok && pushResult.sent > 0) {
-          pushSent = true;
-          console.log(`M1QR-TRACE: ✅ pushSent - FCM success:`, pushResult);
-        }
-      }
-
-      // Fallback to WebPush if FCM didn't work
-      if (!pushSent) {
-        const webpushResponse = await fetch(`${url}/functions/v1/webpush-targeted-send`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-admin-token': Deno.env.get('PUSH_ADMIN_TOKEN') || service,
-          },
-          body: JSON.stringify({
-            user_ids: [user_id],
-            payload: {
-              title: '🛡️ Premio Trovato!',
-              body: 'Hai conquistato un premio segreto su M1SSION™',
-              url: '/profile',
-              extra: {
-                marker_id: markerId,
-                reward_types: rewards.map(r => r.reward_type).join(','),
-                source: 'marker_discovery'
-              }
-            }
-          }),
-        });
-
-        pushResult = await webpushResponse.json();
-        if (webpushResponse.ok && pushResult.sent > 0) {
-          pushSent = true;
-          console.log(`M1QR-TRACE: ✅ pushSent - WebPush success:`, pushResult);
-        }
-      }
-      
-      if (pushSent) {
-        // Log successful push
-        await admin
-          .from('admin_logs')
-          .insert({
-            event_type: 'marker_reward_push_sent',
-            user_id,
-            note: `Push sent successfully for marker ${markerId}`,
-            context: `sent:${pushResult?.sent || 0}`
-          });
-      } else {
-        console.warn(`M1QR-TRACE: ⚠️ Push notification not sent (no tokens or failed)`);
-        
-        // Log push skip (not a failure, just no tokens)
-        await admin
-          .from('admin_logs')
-          .insert({
-            event_type: 'marker_reward_push_skipped',
-            user_id,
-            note: `No push tokens available for marker ${markerId}`,
-            context: 'no_tokens_or_failed'
-          });
-      }
-    } catch (pushError) {
-      console.error(`M1QR-TRACE: ❌ Push notification error:`, pushError);
-      
-      // Log push error
-      await admin
-        .from('admin_logs')
-        .insert({
-          event_type: 'marker_reward_push_error',
-          user_id,
-          note: `Push error for marker ${markerId}: ${String(pushError)}`,
-          context: 'push_notification_exception'
-        });
-      
-      // Non blocchiamo il flusso principale se il push fallisce
-    }
-
-    console.log(`M1QR-TRACE: claim success - user:${user_id} marker:${markerId} rewards:${rewards.map(r => r.reward_type).join(',')}`);
-
-    // Log successful completion with redirect
-    await admin
-      .from('admin_logs')
-      .insert({
-        event_type: 'marker_reward_redirectOK',
-        user_id,
-        note: `Marker ${markerId} reward chain completed successfully - redirecting to ${nextRoute || '/profile'}`,
-        context: `summary:${JSON.stringify(summary)}`
-      });
-
-    console.log(`M1QR-TRACE: ✅ redirectOK - reward chain completed for marker ${markerId}`);
+    // Push già inviata all'inizio in parallelo - qui solo log finale
+    console.log(`M1QR-TRACE: ✅ CLAIM COMPLETE - user:...${user_id.slice(-8)} marker:${markerId} rewards:${summary.length}`);
 
     return jsonResponse({
       ok: true,

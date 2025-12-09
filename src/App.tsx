@@ -52,6 +52,12 @@ import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import PullToRefreshIndicator from "./components/pwa/PullToRefreshIndicator";
 import M1LogoSplash from "./components/intro/M1LogoSplash";
 import { useGlobalGlitchListener } from "./hooks/useGlobalGlitch";
+// 🌑 M1SSION™ SHADOW PROTOCOL™
+import { EntityOverlay } from "./components/overlay/EntityOverlay";
+import { ShadowProtocolEngine } from "./components/overlay/ShadowProtocolEngine";
+import { ShadowBehaviorsLayer } from "./components/overlay/ShadowBehaviorsLayer";
+// 🎬 Mission Start Sequence (fullscreen, fuori dal portal)
+import { MissionIntroOverlay } from "./components/overlay/MissionIntroOverlay";
 
 function App() {
   // 🚀 NATIVE APP FEEL: Show splash on EVERY app launch (but only once per session)
@@ -214,6 +220,12 @@ function App() {
                     {/* 🎁 PULSE: Notifiche ricompense soglie */}
                     <PulseRewardNotification />
                     <Toaster />
+                    {/* 🌑 SHADOW PROTOCOL™ - Engine + Overlay + Behaviors (dentro AuthProvider) */}
+                    <ShadowProtocolEngine />
+                    <EntityOverlay />
+                    <ShadowBehaviorsLayer />
+                    {/* 🎬 Mission Start Sequence (fullscreen, fuori dal portal) */}
+                    <MissionIntroOverlay />
                     <BadgeAuditReport />
                     <M1UnitsDebugPanel />
                   </InterestSignalsProvider>

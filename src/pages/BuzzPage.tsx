@@ -98,33 +98,30 @@ export const BuzzPage: React.FC = () => {
   }, []);
 
   const handleBuzzSuccess = async () => {
-    console.log('🎉 BUZZ SUCCESS - Stats will update via realtime subscriptions');
-    // 🔥 FIX: NON chiamare loadDailyBuzzCounter/loadBuzzStats qui!
-    // Causavano reload della pagina. I dati si aggiornano automaticamente
-    // tramite le realtime subscriptions di Supabase.
+    console.log('🎉 BUZZ SUCCESS - Refreshing counters');
+    // 🔥 FIX: Refresh counters after successful BUZZ without page reload
+    loadDailyBuzzCounter();
+    loadBuzzStats();
   };
 
-  // Show loading only if loading AND not forced AND auth not loading
-  const showLoading = (loading || authLoading) && !forceShow;
-  
-  if (showLoading) {
-    return (
-      <div className="min-h-screen w-full fixed inset-0 flex items-center justify-center bg-background">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-8 h-8 border-2 border-[#F059FF] border-t-transparent rounded-full"
-        />
-      </div>
-    );
-  }
+  // 🔥 FIX: Listen for BUZZ events to sync counter in real-time
+  useEffect(() => {
+    const handleBuzzCompleted = () => {
+      console.log('📊 BuzzPage: buzzCompleted event received, refreshing counters');
+      loadDailyBuzzCounter();
+      loadBuzzStats();
+    };
+
+    window.addEventListener('buzzCompleted', handleBuzzCompleted);
+    return () => window.removeEventListener('buzzCompleted', handleBuzzCompleted);
+  }, [loadDailyBuzzCounter, loadBuzzStats]);
+
+  // 🚀 INSTANT RENDER: Never block the page with loading spinner
+  // Data will load in background and update via realtime subscriptions
 
   return (
-    <motion.div 
+    <div 
       className="bg-[#070818] w-full"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
       style={{ 
         height: '100dvh',
         overflow: 'hidden',
@@ -140,12 +137,9 @@ export const BuzzPage: React.FC = () => {
       
       <UnifiedHeader />
       
-      {/* Decorative gradient effect at top like Home */}
-      <motion.div
+      {/* Decorative gradient effect at top - INSTANT (no delay) */}
+      <div
         className="fixed top-24 left-0 right-0 h-32 pointer-events-none z-[9]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.8 }}
         style={{
           background: `
             radial-gradient(ellipse at 50% 0%, rgba(0, 209, 255, 0.18), transparent 70%),
@@ -248,12 +242,9 @@ export const BuzzPage: React.FC = () => {
         </div>
       </main>
       
-      {/* Decorative gradient effect at bottom like Home */}
-      <motion.div
+      {/* Decorative gradient effect at bottom - INSTANT (no delay) */}
+      <div
         className="fixed bottom-24 left-0 right-0 h-32 pointer-events-none z-[9]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.8 }}
         style={{
           background: `
             radial-gradient(ellipse at 50% 100%, rgba(0, 209, 255, 0.18), transparent 70%),
@@ -264,12 +255,11 @@ export const BuzzPage: React.FC = () => {
         }}
       />
       
-      {/* Bottom Navigation - Uniform positioning like Home */}
-      {/* BottomNavigation gestita da GlobalLayout */}
+      {/* Bottom Navigation - gestita da GlobalLayout */}
 
       {/* Debug Panel (only if enabled) */}
       {debugEnabled && <DebugBuzzPanel />}
-    </motion.div>
+    </div>
   );
 };
 

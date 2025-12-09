@@ -20,7 +20,7 @@ interface RewardsLayer3DProps {
   isAdmin?: boolean; // Admin vede SEMPRE tutti i marker
 }
 
-// 🎯 ZOOM MINIMO per vedere i marker reward (utente deve essere molto vicino)
+// 🎯 ZOOM MINIMO per vedere i marker reward (zoom 17 = molto vicino)
 const MIN_ZOOM_FOR_REWARDS = 17;
 
 const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers = [], userPosition, isAdmin = false }) => {
@@ -89,23 +89,40 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
                 style={{
                   left: `${pos.x}px`,
                   top: `${pos.y}px`,
-                  transform: 'translate(-50%, -50%)'
+                  transform: 'translate(-50%, -50%)',
+                  // 🎯 AREA CLICCABILE GRANDE per mobile (44x44 minimo per touch)
+                  width: '48px',
+                  height: '48px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  touchAction: 'manipulation'
                 }}
-                onClick={() => setSelectedMarker(marker.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log('🎯 Marker reward clicked:', marker.id, marker.title);
+                  setSelectedMarker(marker.id);
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  console.log('🎯 Marker reward touched:', marker.id, marker.title);
+                  setSelectedMarker(marker.id);
+                }}
               >
                 <div
                   className="m1-reward-marker"
                   style={{
-                    width: marker.claimed ? 12 : 10,
-                    height: marker.claimed ? 12 : 10,
+                    // 🎯 Marker PIÙ GRANDE e visibile
+                    width: marker.claimed ? 20 : 24,
+                    height: marker.claimed ? 20 : 24,
                     borderRadius: '50%',
                     // 🎯 VERDE = non riscattato, VIOLA = riscattato
                     background: marker.claimed ? '#8B5CF6' : '#10b981',
-                    border: '2px solid rgba(255, 255, 255, 0.6)',
+                    border: '3px solid rgba(255, 255, 255, 0.9)',
                     boxShadow: marker.claimed 
-                      ? '0 0 8px 2px rgba(139, 92, 246, 0.8), 0 0 16px 4px rgba(139, 92, 246, 0.4)'
-                      : '0 0 8px 2px rgba(16, 185, 129, 0.8), 0 0 16px 4px rgba(16, 185, 129, 0.4)',
-                    animation: marker.claimed ? 'none' : 'rewardPulse 2s ease-in-out infinite'
+                      ? '0 0 12px 4px rgba(139, 92, 246, 0.9), 0 0 24px 8px rgba(139, 92, 246, 0.5)'
+                      : '0 0 12px 4px rgba(16, 185, 129, 0.9), 0 0 24px 8px rgba(16, 185, 129, 0.5)',
+                    animation: marker.claimed ? 'none' : 'rewardPulse 1.5s ease-in-out infinite'
                   }}
                   title={marker.claimed ? `${marker.title || 'Reward'} (Riscattato)` : marker.title || 'Reward'}
                 />
@@ -114,12 +131,13 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
           })}
       </div>
 
-      {selectedMarker && rewards.length > 0 && (
+      {/* 🎯 Modal SEMPRE visibile quando marker selezionato (anche se rewards vuoto) */}
+      {selectedMarker && (
         <ClaimRewardModal
           isOpen={true}
           onClose={() => setSelectedMarker(null)}
           markerId={selectedMarker}
-          rewards={rewards}
+          rewards={rewards || []} // 🛡️ Guardia: sempre array
         />
       )}
     </>
