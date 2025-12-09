@@ -715,6 +715,7 @@ export const selectIsMapGlitchActive = (state: EntityOverlayState) => state.isMa
  * 
  * 🆕 v4: 'reward' trigger aumenta threat di +1
  * 🆕 v6: Context-aware glitch reactions based on threat level
+ * 🆕 v7: Emits unified event for ShadowBehaviorsLayer to add v6 effects
  */
 export const notifyShadowContext = async (trigger: ShadowContextTrigger): Promise<void> => {
   const store = useEntityOverlayStore.getState();
@@ -723,16 +724,21 @@ export const notifyShadowContext = async (trigger: ShadowContextTrigger): Promis
   
   store.setContextTrigger(trigger);
   
+  // 🆕 v7: Emit unified context event for behavior layer
+  window.dispatchEvent(new CustomEvent('shadow:contextTrigger', { 
+    detail: { context: trigger, threatLevel, threatCategory } 
+  }));
+  
   // 🆕 v6: Import ShadowGlitchEngine dynamically to avoid circular deps
   const { ShadowGlitchEngine } = await import('@/engine/shadowGlitchEngine');
   
-  // 🆕 v6: Context-aware reactions
+  // 🆕 v7: Unified context-aware reactions
   switch (trigger) {
     case 'buzz':
       // Increase heat on BUZZ
       ShadowGlitchEngine.increaseHeat(10);
       
-      // If threat HIGH, trigger map glitch after BUZZ
+      // If threat HIGH, trigger page glitch after BUZZ
       if (threatCategory === 'HIGH') {
         setTimeout(() => {
           ShadowGlitchEngine.triggerRandomPageGlitch(0.5);
@@ -744,10 +750,10 @@ export const notifyShadowContext = async (trigger: ShadowContextTrigger): Promis
       // 🆕 v4: Aumenta threat di +1
       store.increaseThreat(1);
       if (SHADOW_DEBUG) {
-        console.log('[SHADOW PROTOCOL v6] ⚠️ Reward claimed - threat increased by 1');
+        console.log('[SHADOW v7] ⚠️ Reward claimed - threat increased by 1');
       }
       
-      // 🆕 v6: SHADOW takeover sequence for reward claims at HIGH threat
+      // 🆕 v7: SHADOW takeover sequence for reward claims at HIGH threat
       if (threatCategory === 'HIGH') {
         setTimeout(async () => {
           await ShadowGlitchEngine.triggerShadowTakeover();
@@ -766,7 +772,7 @@ export const notifyShadowContext = async (trigger: ShadowContextTrigger): Promis
       break;
       
     case 'map':
-      // Map trigger already handled by useMapGlitchEffect
+      // Map trigger - heat increase (periodic glitches handled by useMapGlitchEffect)
       ShadowGlitchEngine.increaseHeat(3);
       break;
   }
@@ -777,6 +783,27 @@ function getThreatLevelCategoryFromLevel(level: number): 'LOW' | 'MEDIUM' | 'HIG
   if (level <= 1) return 'LOW';
   if (level <= 3) return 'MEDIUM';
   return 'HIGH';
+}
+
+// ============================================================================
+// 🆕 v7: HEAT → THREAT SYNC LISTENER
+// Listens for heat threshold events and updates threat level
+// ============================================================================
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('shadow:heatThreatSync', ((e: CustomEvent<{ delta: number; currentHeat: number }>) => {
+    const { delta, currentHeat } = e.detail;
+    const store = useEntityOverlayStore.getState();
+    
+    if (SHADOW_DEBUG) {
+      console.log(`[SHADOW v7] 📡 Heat→Threat sync received: +${delta} (heat: ${currentHeat})`);
+    }
+    
+    // Only increase if not at max
+    if (store.shadowThreatLevel < 5) {
+      store.increaseThreat(delta);
+    }
+  }) as EventListener);
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

@@ -243,3 +243,4 @@ CREATE POLICY "Service role full access log" ON smart_push_log
 
 
 
+

@@ -18,3 +18,4 @@ CREATE INDEX IF NOT EXISTS idx_profiles_language ON profiles(preferred_language)
 
 
 
+

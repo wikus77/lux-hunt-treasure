@@ -55,3 +55,4 @@ GRANT EXECUTE ON FUNCTION cleanup_rate_limit_log() TO service_role;
 COMMENT ON TABLE rate_limit_log IS 'Stores rate limiting data for distributed Edge Functions - auto-cleaned every 24h';
 
 
+

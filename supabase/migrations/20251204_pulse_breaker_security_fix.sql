@@ -114,3 +114,4 @@ GRANT SELECT ON public.pulse_breaker_suspicious_activity TO service_role;
 -- © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 
+

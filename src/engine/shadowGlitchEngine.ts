@@ -345,12 +345,14 @@ export const ShadowGlitchEngine = {
 
   /**
    * Increase heat meter (spam detection)
+   * 🆕 v7: Now syncs to threat level at thresholds
    */
   increaseHeat(amount: number): void {
+    const previousHeat = engineState.heatMeter;
     engineState.heatMeter = Math.min(100, engineState.heatMeter + amount);
     
     if (SHADOW_DEBUG && amount > 0) {
-      console.log(`[SHADOW GLITCH ENGINE] 🔥 Heat: ${engineState.heatMeter.toFixed(1)}`);
+      console.log(`[SHADOW v7] 🔥 Heat: ${previousHeat.toFixed(1)} → ${engineState.heatMeter.toFixed(1)} (+${amount})`);
     }
 
     // Trigger effects based on heat level
@@ -358,6 +360,14 @@ export const ShadowGlitchEngine = {
       ShadowGlitchEngine.triggerRandomPageGlitch(0.9);
     } else if (engineState.heatMeter >= 50) {
       ShadowGlitchEngine.triggerRandomPageGlitch(0.5);
+    }
+
+    // 🆕 v7: Sync to threat level when crossing thresholds
+    const crossedThreshold70 = previousHeat < 70 && engineState.heatMeter >= 70;
+    const crossedThreshold90 = previousHeat < 90 && engineState.heatMeter >= 90;
+    
+    if (crossedThreshold70 || crossedThreshold90) {
+      this.syncToThreatLevel();
     }
   },
 
@@ -645,6 +655,24 @@ export const ShadowGlitchEngine = {
       
       if (SHADOW_DEBUG) {
         console.log(`[SHADOW v7] 🔄 Heat synced from threat: ${engineState.heatMeter.toFixed(1)}`);
+      }
+    }
+  },
+
+  /**
+   * 🆕 v7: syncToThreatLevel - Push heat changes back to threat level store
+   * Called when heat reaches certain thresholds
+   */
+  syncToThreatLevel(): void {
+    const delta = this.getRecommendedThreatDelta();
+    if (delta > 0) {
+      // Dispatch event for store to pick up
+      window.dispatchEvent(new CustomEvent('shadow:heatThreatSync', { 
+        detail: { delta, currentHeat: engineState.heatMeter } 
+      }));
+      
+      if (SHADOW_DEBUG) {
+        console.log(`[SHADOW v7] 🔥 Heat→Threat sync requested: +${delta} (heat: ${engineState.heatMeter.toFixed(1)})`);
       }
     }
   },

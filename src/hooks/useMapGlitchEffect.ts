@@ -1,199 +1,213 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// M1SSION™ SHADOW PROTOCOL™ v6 - Map Glitch Effect Hook
-// Gestisce effetti glitch periodici sulla mappa
-// v6: Integrazione con ShadowGlitchEngine, più effetti, messaggi post-glitch
+// M1SSION™ SHADOW PROTOCOL™ v7 - Map Glitch Effect Hook
+// Orchestrates map distortions + contextual SHADOW messages
 
 import { useEffect, useRef, useCallback } from 'react';
-import { 
-  SHADOW_MAP_GLITCH_ENABLED,
-  SHADOW_GLITCH_TIMING,
-  getThreatLevelCategory,
-  SHADOW_MESSAGE_TEMPLATES,
-} from '@/config/shadowProtocolConfig';
+import { useLocation } from 'wouter';
+import { ShadowGlitchEngine } from '@/engine/shadowGlitchEngine';
 import { 
   useEntityOverlayStore, 
   SHADOW_DEBUG,
   selectShadowThreatLevel,
-  selectIsMapGlitchActive,
 } from '@/stores/entityOverlayStore';
-import { ShadowGlitchEngine } from '@/engine/shadowGlitchEngine';
+import { 
+  getThreatLevelCategory,
+  SHADOW_GLITCH_TIMING,
+} from '@/config/shadowProtocolConfig';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const MAP_GLITCH_GUARDRAILS = {
+  MIN_INTERVAL_MS: 45_000,           // Minimum 45s between glitches
+  MAX_INTERVAL_MS: 120_000,          // Maximum 2min between glitches
+  MESSAGE_AFTER_GLITCH_CHANCE: 0.2,  // 20% chance to show message after glitch
+  MICRO_CTA_CHANCE: 0.15,            // 15% chance to show micro CTA (1 in ~7)
+  GLITCH_DURING_BUZZ_COOLDOWN_MS: 5000, // No glitch for 5s after BUZZ action
+};
+
+// ============================================================================
+// HOOK
+// ============================================================================
 
 /**
- * useMapGlitchEffect - Hook per gestire glitch periodici sulla mappa
+ * useMapGlitchEffect - Orchestrates map glitch effects with SHADOW messages
  * 
- * Comportamento:
- * - Attiva glitch random ogni X minuti (configurabile)
- * - Frequenza e intensità basate su threat level
- * - Rispetta prefers-reduced-motion
- * - Non blocca interazioni (zoom/pan/tasto BUZZ MAP)
- * 
- * @param containerRef - Ref al container della mappa per applicare classi CSS
- * @returns { isGlitching, triggerGlitch } - Stato e trigger manuale
+ * Features:
+ * - Periodic map distortions based on threat level
+ * - Post-glitch SHADOW message (20% chance)
+ * - Micro CTA after some glitches (15% chance)
+ * - Respects BUZZ action cooldowns
+ * - Guardrails: max 1 glitch per 45-120s
  */
-export function useMapGlitchEffect(containerRef: React.RefObject<HTMLElement>) {
-  const timerRef = useRef<number | null>(null);
-  const glitchTimeoutRef = useRef<number | null>(null);
-  const mountedRef = useRef(true);
-  const prefersReducedMotion = useRef(false);
-
-  // Store state
+export function useMapGlitchEffect() {
+  const [location] = useLocation();
   const threatLevel = useEntityOverlayStore(selectShadowThreatLevel);
-  const isMapGlitchActive = useEntityOverlayStore(selectIsMapGlitchActive);
-  const triggerMapGlitch = useEntityOverlayStore((s) => s.triggerMapGlitch);
-  const endMapGlitch = useEntityOverlayStore((s) => s.endMapGlitch);
+  const isOverlayVisible = useEntityOverlayStore((s) => s.isVisible);
+  
+  const intervalRef = useRef<number | null>(null);
+  const lastGlitchTimeRef = useRef<number>(0);
+  const lastBuzzTimeRef = useRef<number>(0);
+  const mountedRef = useRef(true);
+  const glitchCountRef = useRef<number>(0);
 
-  // Check prefers-reduced-motion
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    prefersReducedMotion.current = mediaQuery.matches;
-    
-    const handler = (e: MediaQueryListEvent) => {
-      prefersReducedMotion.current = e.matches;
-    };
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
+  // Only active on map page
+  const isMapPage = location === '/map-3d-tiler';
 
-  // Calculate next glitch delay based on threat level
-  const calculateNextDelay = useCallback(() => {
-    const { MAP_GLITCH_MIN_INTERVAL_MS, MAP_GLITCH_MAX_INTERVAL_MS, THREAT_GLITCH_MULTIPLIER } = SHADOW_GLITCH_TIMING;
-    const category = getThreatLevelCategory(threatLevel);
-    const multiplier = THREAT_GLITCH_MULTIPLIER[category];
+  // Calculate interval based on threat level
+  const getGlitchInterval = useCallback(() => {
+    const threatCategory = getThreatLevelCategory(threatLevel);
+    const { MIN_INTERVAL_MS, MAX_INTERVAL_MS } = MAP_GLITCH_GUARDRAILS;
     
-    const baseDelay = MAP_GLITCH_MIN_INTERVAL_MS + 
-      Math.random() * (MAP_GLITCH_MAX_INTERVAL_MS - MAP_GLITCH_MIN_INTERVAL_MS);
+    // Threat level modulates frequency
+    const multiplier = SHADOW_GLITCH_TIMING.THREAT_GLITCH_MULTIPLIER[threatCategory];
+    const baseInterval = (MIN_INTERVAL_MS + MAX_INTERVAL_MS) / 2;
     
-    return Math.round(baseDelay * multiplier);
+    // Add randomness (±20%)
+    const randomFactor = 0.8 + Math.random() * 0.4;
+    
+    return Math.round(baseInterval * multiplier * randomFactor);
   }, [threatLevel]);
 
-  // Execute glitch effect (v6: enhanced with ShadowGlitchEngine)
-  const executeGlitch = useCallback(() => {
+  // Trigger map glitch sequence
+  const triggerMapGlitchSequence = useCallback(async () => {
     if (!mountedRef.current) return;
-    if (prefersReducedMotion.current) return;
-    if (!SHADOW_MAP_GLITCH_ENABLED) return;
-
-    // Get intensity based on threat level
-    const category = getThreatLevelCategory(threatLevel);
-    const intensity = SHADOW_GLITCH_TIMING.THREAT_GLITCH_INTENSITY[category];
-
-    if (SHADOW_DEBUG) {
-      console.log('[SHADOW PROTOCOL v6] 🗺️ Map glitch executing, intensity:', intensity, 'threat:', category);
-    }
-
-    // Apply glitch class to container
-    if (containerRef.current) {
-      containerRef.current.classList.add('shadow-map-glitch-active');
-      containerRef.current.style.setProperty('--map-glitch-intensity', String(intensity));
-    }
-
-    // Trigger store state
-    triggerMapGlitch();
-
-    // 🆕 v6: Use ShadowGlitchEngine for enhanced effects
-    if (intensity >= 0.6) {
-      ShadowGlitchEngine.triggerMapDistortion('#ml-sandbox');
-    }
-
-    // 🆕 v6: Increase heat meter
-    ShadowGlitchEngine.increaseHeat(5);
-
-    // End glitch after duration
-    glitchTimeoutRef.current = window.setTimeout(() => {
-      if (containerRef.current) {
-        containerRef.current.classList.remove('shadow-map-glitch-active');
-        containerRef.current.style.removeProperty('--map-glitch-intensity');
-      }
-      endMapGlitch();
-
-      // 🆕 v7: After high-intensity glitch, trigger contextual message via engine
-      if (intensity >= 0.6 && Math.random() < 0.4) {
-        // Use v4 template system for contextual message
-        ShadowGlitchEngine.triggerPostGlitchMessage('map');
-        
-        // Also show whisper for immediate feedback
-        if (intensity >= 0.8) {
-          const whispers = [
-            'Your map is not yours.',
-            'We see what you see.',
-            'The terrain shifts.',
-            'Coordinates logged.',
-          ];
-          ShadowGlitchEngine.triggerWhisper(whispers[Math.floor(Math.random() * whispers.length)]);
-        }
-      }
-
-      // 🆕 v7: Occasionally show micro-CTA to Intelligence
-      if (intensity >= 0.5 && Math.random() < 0.15) {
-        setTimeout(() => {
-          ShadowGlitchEngine.triggerMicroCta('/intelligence', 'CHECK INTEL');
-        }, 1500);
-      }
-    }, SHADOW_GLITCH_TIMING.MAP_GLITCH_DURATION_MS);
-  }, [containerRef, threatLevel, triggerMapGlitch, endMapGlitch]);
-
-  // Schedule next glitch
-  const scheduleNextGlitch = useCallback(() => {
-    if (!mountedRef.current) return;
-    if (!SHADOW_MAP_GLITCH_ENABLED) return;
-
-    if (timerRef.current !== null) {
-      window.clearTimeout(timerRef.current);
-    }
-
-    const delay = calculateNextDelay();
+    if (!isMapPage) return;
+    if (isOverlayVisible) return; // Don't glitch during overlay
     
-    if (SHADOW_DEBUG) {
-      console.log('[SHADOW PROTOCOL v5] 🗺️ Next map glitch in', Math.round(delay / 1000), 'seconds');
-    }
-
-    timerRef.current = window.setTimeout(() => {
-      executeGlitch();
-      scheduleNextGlitch();
-    }, delay);
-  }, [calculateNextDelay, executeGlitch]);
-
-  // Start glitch timer on mount
-  useEffect(() => {
-    mountedRef.current = true;
-
-    if (!SHADOW_MAP_GLITCH_ENABLED) {
+    const now = Date.now();
+    
+    // Check buzz cooldown
+    if (now - lastBuzzTimeRef.current < MAP_GLITCH_GUARDRAILS.GLITCH_DURING_BUZZ_COOLDOWN_MS) {
       if (SHADOW_DEBUG) {
-        console.log('[SHADOW PROTOCOL v5] 🗺️ Map glitch disabled by config');
+        console.log('[SHADOW v7] 🗺️ Map glitch skipped: BUZZ cooldown active');
+      }
+      return;
+    }
+    
+    // Check minimum interval
+    if (now - lastGlitchTimeRef.current < MAP_GLITCH_GUARDRAILS.MIN_INTERVAL_MS) {
+      if (SHADOW_DEBUG) {
+        console.log('[SHADOW v7] 🗺️ Map glitch skipped: too soon since last glitch');
       }
       return;
     }
 
-    // Start scheduling after initial delay
-    const initialDelay = SHADOW_GLITCH_TIMING.MAP_GLITCH_MIN_INTERVAL_MS / 2;
-    timerRef.current = window.setTimeout(() => {
-      scheduleNextGlitch();
-    }, initialDelay);
+    lastGlitchTimeRef.current = now;
+    glitchCountRef.current++;
+
+    if (SHADOW_DEBUG) {
+      console.log(`[SHADOW v7] 🗺️ Map glitch sequence #${glitchCountRef.current} started`);
+    }
+
+    // Step 1: Trigger map distortion (200-600ms)
+    ShadowGlitchEngine.triggerMapDistortion('#ml-sandbox');
+    
+    // Step 2: After glitch, maybe show SHADOW message
+    const shouldShowMessage = Math.random() < MAP_GLITCH_GUARDRAILS.MESSAGE_AFTER_GLITCH_CHANCE;
+    
+    if (shouldShowMessage) {
+      // Wait for glitch to complete, then request message
+      setTimeout(() => {
+        if (!mountedRef.current) return;
+        
+        if (SHADOW_DEBUG) {
+          console.log('[SHADOW v7] 🗺️ Requesting post-glitch SHADOW message');
+        }
+        
+        ShadowGlitchEngine.triggerPostGlitchMessage('map');
+      }, 600); // After glitch animation
+    }
+    
+    // Step 3: Maybe show micro CTA (only if no message, every ~7 glitches)
+    const shouldShowMicroCta = !shouldShowMessage && 
+      Math.random() < MAP_GLITCH_GUARDRAILS.MICRO_CTA_CHANCE;
+    
+    if (shouldShowMicroCta) {
+      setTimeout(() => {
+        if (!mountedRef.current) return;
+        
+        // Pick a relevant CTA
+        const ctas = [
+          { route: '/intelligence', label: 'CHECK INTEL' },
+          { route: '/leaderboard', label: 'VIEW RANKS' },
+        ];
+        const cta = ctas[Math.floor(Math.random() * ctas.length)];
+        
+        if (SHADOW_DEBUG) {
+          console.log(`[SHADOW v7] 🗺️ Showing micro CTA: ${cta.label}`);
+        }
+        
+        ShadowGlitchEngine.triggerMicroCta(cta.route, cta.label);
+      }, 800);
+    }
+  }, [isMapPage, isOverlayVisible]);
+
+  // Listen for BUZZ events to set cooldown
+  useEffect(() => {
+    const handleBuzz = () => {
+      lastBuzzTimeRef.current = Date.now();
+      if (SHADOW_DEBUG) {
+        console.log('[SHADOW v7] 🗺️ BUZZ detected - glitch cooldown activated');
+      }
+    };
+
+    window.addEventListener('buzzCompleted', handleBuzz);
+    window.addEventListener('buzzAreaCreated', handleBuzz);
+    
+    return () => {
+      window.removeEventListener('buzzCompleted', handleBuzz);
+      window.removeEventListener('buzzAreaCreated', handleBuzz);
+    };
+  }, []);
+
+  // Main effect: periodic map glitches
+  useEffect(() => {
+    mountedRef.current = true;
+
+    if (!isMapPage) {
+      // Clear interval when leaving map
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
+    // Check prefers-reduced-motion
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (SHADOW_DEBUG) {
+        console.log('[SHADOW v7] 🗺️ Map glitches disabled: reduced motion preference');
+      }
+      return;
+    }
+
+    const interval = getGlitchInterval();
+    
+    if (SHADOW_DEBUG) {
+      console.log(`[SHADOW v7] 🗺️ Map glitch scheduler started: interval=${Math.round(interval/1000)}s, threat=${threatLevel}`);
+    }
+
+    // Schedule periodic glitches
+    intervalRef.current = window.setInterval(() => {
+      triggerMapGlitchSequence();
+    }, interval);
 
     return () => {
       mountedRef.current = false;
-      if (timerRef.current !== null) {
-        window.clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-      if (glitchTimeoutRef.current !== null) {
-        window.clearTimeout(glitchTimeoutRef.current);
-        glitchTimeoutRef.current = null;
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
-  }, [scheduleNextGlitch]);
+  }, [isMapPage, getGlitchInterval, triggerMapGlitchSequence, threatLevel]);
 
-  // Manual trigger function
-  const triggerGlitch = useCallback(() => {
-    if (prefersReducedMotion.current) return;
-    executeGlitch();
-  }, [executeGlitch]);
-
+  // Return functions for manual triggering if needed
   return {
-    isGlitching: isMapGlitchActive,
-    triggerGlitch,
+    triggerMapGlitch: triggerMapGlitchSequence,
+    glitchCount: glitchCountRef.current,
   };
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-

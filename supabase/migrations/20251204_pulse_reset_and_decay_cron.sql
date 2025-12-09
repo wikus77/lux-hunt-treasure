@@ -70,3 +70,4 @@ FROM cron.job
 WHERE jobname LIKE 'pulse%';
 
 
+

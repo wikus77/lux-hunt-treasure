@@ -165,3 +165,4 @@ END $$;
 -- ============================================
 COMMENT ON SCHEMA public IS 'FIX: Tutte le FK che puntano ad auth.users ora hanno ON DELETE CASCADE o SET NULL per permettere la cancellazione degli utenti. © 2025 M1SSION™';
 
+

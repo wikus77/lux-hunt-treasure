@@ -42,3 +42,4 @@ COMMENT ON COLUMN public.prize_clues.clue_type IS 'Tipo: real, decoy';
 
 -- © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
+
