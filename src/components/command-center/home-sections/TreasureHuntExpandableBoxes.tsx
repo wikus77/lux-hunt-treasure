@@ -53,8 +53,8 @@ export function TreasureHuntExpandableBoxes({
         <h2 className="text-lg md:text-xl font-orbitron font-bold">
           <span className="text-[#00D1FF]" style={{ 
             textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-          }}>CACCIA</span>
-          <span className="text-white"> AL TESORO URBANO</span>
+          }}>PROTOCOLLO</span>
+          <span className="text-white"> DI RILEVAMENTO</span>
         </h2>
       </div>
 

@@ -52,8 +52,8 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
       {/* Header Section */}
       <div className="mb-4">
         <h2 className="text-xl font-orbitron font-bold mb-2">
-          <span className="text-[#00D1FF]">CACCIA</span>
-          <span className="text-white"> AL TESORO URBANO</span>
+          <span className="text-[#00D1FF]">PROTOCOLLO</span>
+          <span className="text-white"> DI RILEVAMENTO</span>
         </h2>
         <h3 className="text-xl font-orbitron font-bold">
           <span className="text-[#00D1FF]">MISSIONE ID:</span>
