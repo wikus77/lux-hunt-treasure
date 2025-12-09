@@ -174,3 +174,4 @@ REVOKE ALL ON public.balance_audit_log FROM authenticated, anon;
 
 -- © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
+

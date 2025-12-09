@@ -18,10 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { invokeEdge } from '@/utils/edge-invoke';
 import { EmpEffectController } from '@/utils/empEffectController';
 
-const ADMIN_EMAILS = [
-  'joseph@m1ssion.io',
-  'wikus77@hotmail.it'
-];
+import { isAdminEmail } from '@/config/adminConfig';
 
 export default function PulseLab() {
   const { toast } = useToast();
@@ -49,7 +46,7 @@ export default function PulseLab() {
         }
 
         // Check if user email is in admin whitelist
-        const isAdmin = ADMIN_EMAILS.includes(user.email || '');
+        const isAdmin = isAdminEmail(user.email);
         
         if (!isAdmin) {
           setAuthStatus('denied');

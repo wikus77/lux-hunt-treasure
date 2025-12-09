@@ -249,35 +249,26 @@ export const sanitizeAndValidateInput = (input: string, type: 'email' | 'text' |
 };
 
 // Session security enhancement
+// DISABLED AUTO-LOGOUT: L'utente resta loggato finché non fa logout manuale
 export const enhanceSessionSecurity = (): void => {
-  // Auto logout on inactivity
-  let inactivityTimer: NodeJS.Timeout;
+  // AUTO-LOGOUT DISABLED - Solo logout manuale dall'utente
+  // Il timer di inattività è stato rimosso per garantire che le push notifications
+  // funzionino sempre e l'utente non venga disconnesso automaticamente.
   
-  const resetInactivityTimer = () => {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(async () => {
-      securityAlert('AUTO_LOGOUT_INACTIVITY', { timestamp: new Date().toISOString() });
-      await supabase.auth.signOut();
-    }, 30 * 60 * 1000); // 30 minutes
-  };
-
-  // Track user activity
-  ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
-    document.addEventListener(event, resetInactivityTimer, true);
-  });
-
-  // Start timer
-  resetInactivityTimer();
-
-  // Cleanup expired sessions on startup
+  // Cleanup expired sessions on startup (manteniamo solo questa funzionalità)
   const cleanupExpiredSessions = () => {
     const keys = Object.keys(localStorage);
     keys.forEach(key => {
       if (key.includes('supabase') || key.includes('auth')) {
         try {
           const data = JSON.parse(localStorage.getItem(key) || '{}');
-          if (data.expires_at && new Date(data.expires_at * 1000) < new Date()) {
-            localStorage.removeItem(key);
+          // Rimuovi solo sessioni scadute da più di 30 giorni (non quelle recenti)
+          if (data.expires_at) {
+            const expiryDate = new Date(data.expires_at * 1000);
+            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            if (expiryDate < thirtyDaysAgo) {
+              localStorage.removeItem(key);
+            }
           }
         } catch (error) {
           // Remove corrupted data

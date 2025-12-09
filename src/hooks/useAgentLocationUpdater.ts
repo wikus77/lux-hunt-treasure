@@ -135,20 +135,25 @@ export function useAgentLocationUpdater(position?: Position, enabled?: boolean) 
   }, [user?.id, position, enabled]);
 
   // Cleanup: Set status to offline on unmount
+  // NOTE: agent_locations is a VIEW, must update user_locations table instead
   useEffect(() => {
     if (!user?.id) return;
 
     return () => {
       (async () => {
         try {
-          await (supabase as any)
-            .from('agent_locations')
-            .update({ status: 'offline', last_seen: new Date().toISOString() })
-            .eq('user_id', user.id);
+          // Use RPC for consistent updates (handles table directly)
+          await (supabase as any).rpc('set_my_agent_location', {
+            p_lat: lastPositionRef.current?.lat || 0,
+            p_lng: lastPositionRef.current?.lng || 0,
+            p_accuracy: null,
+            p_status: 'offline'
+          });
           
-          console.debug('[AgentLocation] Set status to offline');
+          console.debug('[AgentLocation] Set status to offline via RPC');
         } catch (e) {
-          console.warn('[AgentLocation] Offline update failed:', e);
+          // Silent fail - user is leaving anyway
+          console.debug('[AgentLocation] Offline update skipped:', e);
         }
       })();
     };

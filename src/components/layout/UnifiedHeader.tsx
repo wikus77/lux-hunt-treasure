@@ -40,12 +40,13 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   onClickMail,
   disableScrollHide = false
 }) => {
-  console.log("✅ M1SSION™ UnifiedHeader component rendering");
+  // Debug logs only in development
+  if (import.meta.env.DEV) console.log("✅ M1SSION™ UnifiedHeader component rendering");
   
   // 🛡️ SINGLE-MOUNT GUARD: Prevent duplicate header instances
   const mountedRef = useRef(false);
   useEffect(() => {
-    if (mountedRef.current) {
+    if (mountedRef.current && import.meta.env.DEV) {
       console.warn('⚠️ UnifiedHeader: Multiple mounts detected, cleaning up duplicates');
     }
     mountedRef.current = true;

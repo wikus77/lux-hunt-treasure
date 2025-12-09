@@ -240,3 +240,4 @@ COMMENT ON COLUMN public.current_mission_data.prize_lng IS 'Longitudine esatta d
 COMMENT ON FUNCTION public.execute_final_shoot IS 'Esegue un tentativo Final Shoot con tolleranza 19 metri';
 
 
+

@@ -199,6 +199,41 @@ export const useBuzzMapLogic = () => {
     await fetchCurrentWeekAreas(); // ✅ FIX: Await completion before dispatching events
   };
 
+  // 🔥 FIX V2: Listen for mission events to clear areas AND localStorage
+  useEffect(() => {
+    const handleMissionReset = () => {
+      console.log('🚀 useBuzzMapLogic: Mission reset event received, clearing ALL areas...');
+      
+      // 1. Clear state immediately
+      setCurrentWeekAreas([]);
+      
+      // 2. 🔥 CRITICAL: Clear localStorage entries that might persist old areas
+      try {
+        localStorage.removeItem('map-search-areas');
+        localStorage.removeItem('map-markers');
+        localStorage.removeItem('dev-map-points');
+        localStorage.removeItem('buzz_map_5km_warning_shown');
+        console.log('🗑️ useBuzzMapLogic: Cleared localStorage map-related entries');
+      } catch (e) {
+        console.warn('⚠️ useBuzzMapLogic: Failed to clear localStorage:', e);
+      }
+      
+      // 3. Reload from DB after delay
+      setTimeout(() => fetchCurrentWeekAreas(), 500);
+    };
+
+    // Listen to ALL possible mission reset events
+    window.addEventListener('missionLaunched', handleMissionReset);
+    window.addEventListener('missionReset', handleMissionReset);
+    window.addEventListener('mission:reset', handleMissionReset);
+    
+    return () => {
+      window.removeEventListener('missionLaunched', handleMissionReset);
+      window.removeEventListener('missionReset', handleMissionReset);
+      window.removeEventListener('mission:reset', handleMissionReset);
+    };
+  }, []);
+
   // CRITICAL: Auto-fetch on user change but respect payment requirements AND active prizes
   useEffect(() => {
     fetchCurrentWeekAreas();

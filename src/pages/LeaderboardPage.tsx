@@ -39,6 +39,7 @@ import {
 } from '@/components/ui/select';
 import { useRealtimeLeaderboard, LeaderboardScope } from '@/hooks/useRealtimeLeaderboard';
 import { hapticLight } from '@/utils/haptics';
+import { notifyShadowContext } from '@/stores/entityOverlayStore'; // 🌑 Shadow Protocol v3
 
 export const LeaderboardPage: React.FC = () => {
   const [scope, setScope] = useState<LeaderboardScope>('global');
@@ -60,6 +61,11 @@ export const LeaderboardPage: React.FC = () => {
     limit: 50,
     enableNotifications: true
   });
+
+  // 🌑 Shadow Protocol v3 - Trigger contestuale LEADERBOARD al mount
+  useEffect(() => {
+    notifyShadowContext('leaderboard');
+  }, []);
 
   // Load filter options when scope changes
   useEffect(() => {

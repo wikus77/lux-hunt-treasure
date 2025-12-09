@@ -58,6 +58,7 @@ import { FinalShootPill, FinalShootOverlay, FinalShootProvider } from '@/compone
 import '@/features/m1u/m1u-ui.css'; // For pill-orb style
 import { useDebugFlag } from '@/debug/useDebugFlag';
 import { DebugMapPanel } from '@/debug/DebugMapPanel';
+import { useMapGlitchEffect } from '@/hooks/useMapGlitchEffect';
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
 const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
@@ -76,6 +77,9 @@ export default function MapTiler3D() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MLMap | null>(null);
   const debugEnabled = useDebugFlag();
+
+  // 🆕 v5: Shadow Protocol Map Glitch Effect
+  useMapGlitchEffect(containerRef);
   const [diag, setDiag] = useState<DiagState>({ 
     keyMode: '?', 
     tiles: '?', 
@@ -85,52 +89,18 @@ export default function MapTiler3D() {
     error: null
   });
 
-  // 🔥 AGGRESSIVE CACHE BUSTING: Force fresh bundle with MapTiler secrets
+  // 🚫 REMOVED AGGRESSIVE CACHE BUSTING - Was causing page reload and slow loading!
+  // The map now loads instantly without forcing cache clear and reload.
+  // MapTiler secrets are loaded from environment at build time.
+  
+  // Expose runtime ENV for debugging (only in dev mode)
   useEffect(() => {
-    const CACHE_CLEARED_FLAG = 'M1_MAP3D_CACHE_V2';
-    const isCacheCleared = sessionStorage.getItem(CACHE_CLEARED_FLAG);
-    
-    // Aggressive cache clear on first mount of this session
-    if (!isCacheCleared) {
-      console.warn('🔥 [Map3D] Aggressive cache clear starting...');
-      
-      (async () => {
-        try {
-          // 1. Unregister ALL Service Workers
-          const regs = await navigator.serviceWorker.getRegistrations();
-          console.log(`🔥 [Map3D] Unregistering ${regs.length} Service Workers...`);
-          await Promise.all(regs.map(r => r.unregister()));
-          
-          // 2. Delete ALL browser caches
-          const keys = await caches.keys();
-          console.log(`🔥 [Map3D] Deleting ${keys.length} cache keys...`);
-          await Promise.all(keys.map(k => caches.delete(k)));
-          
-          // 3. Mark as cleared for this session
-          sessionStorage.setItem(CACHE_CLEARED_FLAG, 'true');
-          
-          console.log('✅ [Map3D] ✅ Cache cleared aggressively (forced fresh bundle)');
-          
-          // 4. Force reload ONCE to get fresh bundle with updated ENV
-          console.warn('🔥 [Map3D] Reloading page to load fresh bundle...');
-          setTimeout(() => location.reload(), 500);
-        } catch (e) {
-          console.warn('[Map3D] ⚠️ Cache clear failed (non-critical):', e);
-          sessionStorage.setItem(CACHE_CLEARED_FLAG, 'true'); // Don't retry on error
-        }
-      })();
-    }
-    
-    // Expose runtime ENV for debugging
-    if (typeof window !== 'undefined' && !(window as any).__M1_ENV__) {
+    if (import.meta.env.DEV && typeof window !== 'undefined' && !(window as any).__M1_ENV__) {
       (window as any).__M1_ENV__ = {
         LIVING_MOCK: import.meta.env.VITE_LIVING_MAP_USE_MOCK === 'true',
         MAP3D_MOCKS: import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true',
-        MODE: import.meta.env.MODE,
-        MAPTILER_DEV: import.meta.env.VITE_MAPTILER_KEY_DEV ? '✅' : '❌',
-        MAPTILER_PROD: import.meta.env.VITE_MAPTILER_KEY_PROD ? '✅' : '❌'
+        MODE: import.meta.env.MODE
       };
-      console.debug('[Map3D] ENV exposed for debugging:', (window as any).__M1_ENV__);
     }
   }, []);
   

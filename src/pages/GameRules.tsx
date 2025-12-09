@@ -126,7 +126,7 @@ const GameRules: React.FC = () => {
                       </div>
                       <div className="flex items-center">
                         <Mail className="w-4 h-4 mr-2" />
-                        Contatti: legal@m1ssion.com
+                        Contatti: contact@m1ssion.com
                       </div>
                     </div>
                   </div>

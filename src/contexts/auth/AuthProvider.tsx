@@ -11,10 +11,12 @@
 import React, { useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { getAuthTokenKey } from '@/lib/supabase/clientUtils';
+// getAuthTokenKey removed - no longer clearing auth cache automatically
 import AuthContext from './AuthContext';
 import { AuthContextType } from './types';
 import { authHealthLogger } from '@/utils/AuthHealthCheckLog';
+import { logAuditEvent } from '@/utils/auditLog';
+import { isAdminEmail } from '@/config/adminConfig';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -30,13 +32,50 @@ const log = (message: string, data?: any) => {
   }
 };
 
+// Cache key for instant auth state
+const AUTH_SESSION_CACHE = 'm1ssion_session_cache';
+
+// Get cached session for instant display
+const getCachedSession = (): { user: User | null; session: Session | null } => {
+  try {
+    const cached = localStorage.getItem(AUTH_SESSION_CACHE);
+    if (cached) {
+      const { user, session, timestamp } = JSON.parse(cached);
+      // Cache valid for 1 hour
+      if (user && session && (Date.now() - timestamp) < 60 * 60 * 1000) {
+        return { user, session };
+      }
+    }
+  } catch {}
+  return { user: null, session: null };
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  // 🚀 INSTANT INIT: Use cached session immediately
+  const cachedAuth = getCachedSession();
+  
   // UNIFIED STATE - Unico stato per tutta l'app
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(cachedAuth.user);
+  const [session, setSession] = useState<Session | null>(cachedAuth.session);
+  // 🚀 Start as NOT loading if we have cached auth
+  const [isLoading, setIsLoading] = useState<boolean>(!cachedAuth.user);
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isRoleLoading, setIsRoleLoading] = useState<boolean>(true);
+  
+  // Cache session for instant load next time
+  const cacheSession = (user: User | null, session: Session | null) => {
+    try {
+      if (user && session) {
+        localStorage.setItem(AUTH_SESSION_CACHE, JSON.stringify({
+          user,
+          session,
+          timestamp: Date.now()
+        }));
+      } else {
+        localStorage.removeItem(AUTH_SESSION_CACHE);
+      }
+    } catch {}
+  };
 
   // INIZIALIZZAZIONE SESSIONE - PWA Safari iOS Optimized with Cache Clear + AbortController
   useEffect(() => {
@@ -48,35 +87,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       log("Inizializzazione sistema unified auth");
       authHealthLogger.log('AuthProvider_Init', true, { timestamp: new Date().toISOString() });
       
-      // CRITICAL PWA iOS FIX: Clear stale cache before auth check
-      if ('serviceWorker' in navigator && (window.location.hostname === 'localhost' || window.location.protocol === 'https:')) {
-        try {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          for (let registration of registrations) {
-            await registration.unregister();
-          }
-          log("🔄 PWA iOS: Service workers cleared");
-          authHealthLogger.log('ServiceWorker_Cleared', true, { count: registrations.length });
-        } catch (e) {
-          log("PWA cache clear failed", e);
-          authHealthLogger.log('ServiceWorker_Clear_Failed', false, {}, e.message);
-        }
-      }
+      // 🚫 REMOVED: Unregistering service workers on every init was causing issues
+      // with push notifications and PWA functionality.
+      // The service worker should remain active for proper PWA operation.
       
-      // Clear localStorage auth cache every hour to prevent stale sessions
-      const clearAuthCacheIfNeeded = () => {
-        const lastClear = localStorage.getItem('auth_cache_clear');
-        const now = Date.now();
-        const oneHour = 60 * 60 * 1000;
-        
-        if (!lastClear || (now - parseInt(lastClear)) > oneHour) {
-          log("🧹 PWA: Clearing stale auth cache");
-          localStorage.removeItem(getAuthTokenKey());
-          localStorage.setItem('auth_cache_clear', now.toString());
-        }
-      };
-      
-      clearAuthCacheIfNeeded();
+      // 🚫 REMOVED: This was causing users to be logged out every hour!
+      // The auth token should NEVER be cleared automatically.
+      // Supabase handles token refresh via autoRefreshToken: true in client config.
+      // Only manual logout should clear the auth token.
       
       // STEP 1: Verifica sessione corrente con retry
       let session = null;
@@ -115,8 +133,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         log("Sessione trovata", session.user.email);
         setSession(session);
         setUser(session.user);
+        // 🚀 Cache for instant load next time
+        cacheSession(session.user, session);
       } else {
         log("Nessuna sessione attiva");
+        cacheSession(null, null);
       }
     } catch (error) {
       log("Errore init auth", error);
@@ -149,12 +170,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSession(prevSession => newSession);
         setUser(prevUser => newSession?.user ?? null);
         
+        // 🚀 Update cache for instant load
+        cacheSession(newSession?.user ?? null, newSession);
+        
         if (event === 'SIGNED_IN' && newSession) {
           log("Utente autenticato", newSession.user.email);
           
+          // 🔐 Audit log for login
+          logAuditEvent({
+            event_type: 'LOGIN_SUCCESS',
+            user_id: newSession.user.id,
+            user_email: newSession.user.email,
+            severity: 'info',
+          });
+          
           // 🚨 ADMIN NO AUTO-REDIRECT - Let routing handle it
-          if (newSession.user.email === 'wikus77@hotmail.it') {
+          if (isAdminEmail(newSession.user.email)) {
             log("🚀 ADMIN DETECTED - No auto redirect, let routing handle");
+            
+            // 🔐 Audit log for admin access
+            logAuditEvent({
+              event_type: 'ADMIN_ACCESS',
+              user_id: newSession.user.id,
+              user_email: newSession.user.email,
+              severity: 'warning',
+              details: { action: 'login' },
+            });
             // Don't auto-redirect admin - let normal routing take over
           }
           
@@ -171,6 +212,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // }
         } else if (event === 'SIGNED_OUT') {
           log("Utente disconnesso");
+          
+          // 🔐 Audit log for logout
+          logAuditEvent({
+            event_type: 'LOGOUT',
+            severity: 'info',
+          });
+          
           setUserRoles([]);
           setIsRoleLoading(false);
           sessionStorage.removeItem('auth_reload_done');
@@ -404,6 +452,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(null);
       setUserRoles([]);
       setIsRoleLoading(false);
+      
+      // 🚀 Clear auth cache
+      cacheSession(null, null);
       
       // Clear mission intro session to force replay on next login
       sessionStorage.removeItem('hasSeenPostLoginIntro');

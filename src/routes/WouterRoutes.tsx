@@ -12,7 +12,11 @@ const MarkersHealthcheck = React.lazy(() => import('../pages/dev/MarkersHealthch
 // Database-based plan choice tracking instead of localStorage
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/WouterProtectedRoute";
+import AdminProtectedRoute from "@/components/auth/AdminProtectedRoute";
 import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
+
+// © 2025 M1SSION™ – Dev-only routes flag
+const IS_DEV = import.meta.env.DEV;
 import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useQueryQRRedirect } from "@/hooks/useQueryQRRedirect";
@@ -62,34 +66,34 @@ import PrivacyPermissionsSettings from "@/pages/settings/PrivacyPermissionsSetti
 import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
-import SendNotificationPage from "@/pages/admin/SendNotificationPage";
-import MissionPanelPage from "@/pages/admin/MissionPanelPage";
-import PulseLab from "@/pages/admin/PulseLab";
-import PushTestPage from "@/pages/PushTestPage";
-import AdminPushConsolePage from "@/pages/push/AdminPushConsolePage";
-import PushSenderPanel from "@/pages/panel/PushSenderPanel";
-import NotificationDebug from "@/pages/NotificationDebug";
-import PanelAccessPage from "@/pages/PanelAccessPage";
-import PushDiagnosi from "@/pages/PushDiagnosi";
-import PanelUsersPage from "@/pages/PanelUsersPage";
-import BulkMarkerDropPage from "@/pages/panel/BulkMarkerDropPage";
-import MarkerRewardsPage from "@/pages/panel/MarkerRewardsPage";
-import NorahAdmin from "@/pages/panel/NorahAdmin";
-import DiagSupabase from "@/pages/DiagSupabase";
-import SupabaseConnectionTest from "@/pages/SupabaseConnectionTest";
-import PushTest from "@/pages/debug/PushTest";
+// © 2025 M1SSION™ – Lazy-loaded Admin/Panel pages for bundle optimization
+const SendNotificationPage = React.lazy(() => import("@/pages/admin/SendNotificationPage"));
+const MissionPanelPage = React.lazy(() => import("@/pages/admin/MissionPanelPage"));
+const PulseLab = React.lazy(() => import("@/pages/admin/PulseLab"));
+const PushTestPage = React.lazy(() => import("@/pages/PushTestPage"));
+const AdminPushConsolePage = React.lazy(() => import("@/pages/push/AdminPushConsolePage"));
+const PushSenderPanel = React.lazy(() => import("@/pages/panel/PushSenderPanel"));
+const NotificationDebug = React.lazy(() => import("@/pages/NotificationDebug"));
+const PanelAccessPage = React.lazy(() => import("@/pages/PanelAccessPage"));
+const PushDiagnosi = React.lazy(() => import("@/pages/PushDiagnosi"));
+const PanelUsersPage = React.lazy(() => import("@/pages/PanelUsersPage"));
+const BulkMarkerDropPage = React.lazy(() => import("@/pages/panel/BulkMarkerDropPage"));
+const MarkerRewardsPage = React.lazy(() => import("@/pages/panel/MarkerRewardsPage"));
+const NorahAdmin = React.lazy(() => import("@/pages/panel/NorahAdmin"));
+const DiagSupabase = React.lazy(() => import("@/pages/DiagSupabase"));
+const SupabaseConnectionTest = React.lazy(() => import("@/pages/SupabaseConnectionTest"));
+const PushTest = React.lazy(() => import("@/pages/debug/PushTest"));
 import DNAPage from "@/pages/DNAPage";
-import PushDiagnostic from "@/pages/debug/PushDiagnostic";
-import M1ssionPushTest from "@/pages/M1ssionPushTest";
-import { M1ssionDebugTest } from "@/pages/M1ssionDebugTest";
-import FirebaseNotificationDebug from "@/pages/firebase-notification-debug";
-// VAPIDKeyTest removed - using Web Push now
-import PushHealth from "@/pages/PushHealth";
+const PushDiagnostic = React.lazy(() => import("@/pages/debug/PushDiagnostic"));
+const M1ssionPushTest = React.lazy(() => import("@/pages/M1ssionPushTest"));
+const M1ssionDebugTest = React.lazy(() => import("@/pages/M1ssionDebugTest").then(m => ({ default: m.M1ssionDebugTest })));
+const FirebaseNotificationDebug = React.lazy(() => import("@/pages/firebase-notification-debug"));
+const PushHealth = React.lazy(() => import("@/pages/PushHealth"));
 const PushDebug = React.lazy(() => import("@/pages/PushDebug"));
-import { PushReport } from "@/pages/PushReport";
+const PushReport = React.lazy(() => import("@/pages/PushReport").then(m => ({ default: m.PushReport })));
 // QR pages removed - rewards now handled by popup in map
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
-import OnboardingSandbox from "@/pages/OnboardingSandbox";
+const OnboardingSandbox = React.lazy(() => import("@/pages/OnboardingSandbox"));
 
 import Terms from "@/pages/Terms";
 import TermsConditions from "@/pages/legal/TermsConditions";
@@ -99,8 +103,9 @@ import Contact from "@/pages/Contact";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import CookiePolicy from "@/pages/CookiePolicy";
 import SafeCreative from "@/pages/SafeCreative";
-import GameRules from "@/pages/GameRules";
+import GameRulesComplete from "@/pages/legal/GameRulesComplete";
 import Policies from "@/pages/legal/Policies";
+import GamePoliciesIt from "@/pages/legal/GamePolicies.it";
 
 // Subscription plan pages
 import SilverPlanPage from "@/pages/subscriptions/SilverPlanPage";
@@ -110,8 +115,8 @@ import TitaniumPlanPage from "@/pages/subscriptions/TitaniumPlanPage";
 import ChoosePlanPage from "@/pages/ChoosePlanPage";
 import SubscriptionVerify from "@/pages/SubscriptionVerify";
 import MissionIntroPage from "@/pages/MissionIntroPage";
-import FcmTest from "@/pages/FcmTest";
-import DevPushTest from "@/pages/dev/PushTest";
+const FcmTest = React.lazy(() => import("@/pages/FcmTest"));
+const DevPushTest = React.lazy(() => import("@/pages/dev/PushTest"));
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Import centralizzato
@@ -193,17 +198,17 @@ const WouterRoutes: React.FC = () => {
     (window.location.protocol === 'capacitor:' || 
      (window.location.hostname === 'localhost' && process.env.NODE_ENV === 'development'));
 
-  console.log('🔍 WOUTER ROUTING STATE DEBUG:', {
-    isAuthenticated,
-    isLoading,
-    isCapacitorApp,
-    currentPath: window.location.pathname,
-    userExists: !!isAuthenticated,
-    timestamp: new Date().toISOString()
-  });
-
-  console.log(`✅ ROUTE: Current path = ${window.location.pathname}`);
-  console.log(`🔐 AUTH STATUS: isAuthenticated = ${isAuthenticated}, isLoading = ${isLoading}`);
+  // Debug logs only in development
+  if (import.meta.env.DEV) {
+    console.log('🔍 WOUTER ROUTING STATE DEBUG:', {
+      isAuthenticated,
+      isLoading,
+      isCapacitorApp,
+      currentPath: window.location.pathname,
+      userExists: !!isAuthenticated,
+      timestamp: new Date().toISOString()
+    });
+  }
 
   return (
     <ErrorBoundary>
@@ -263,7 +268,7 @@ const WouterRoutes: React.FC = () => {
           <Route path="/map-3d-tiler">
             <ProtectedRoute>
               <GlobalLayout>
-                <React.Suspense fallback={<div>Loading 3D Map...</div>}>
+                <React.Suspense fallback={<PageSkeleton variant="map" />}>
                   {React.createElement(React.lazy(() => import('@/pages/sandbox/MapTiler3D')))}
                 </React.Suspense>
               </GlobalLayout>
@@ -274,7 +279,7 @@ const WouterRoutes: React.FC = () => {
           <Route path="/buzz-map">
             <ProtectedRoute>
               <GlobalLayout>
-                <React.Suspense fallback={<div>Loading 3D Map...</div>}>
+                <React.Suspense fallback={<PageSkeleton variant="map" />}>
                   {React.createElement(React.lazy(() => import('@/pages/sandbox/MapTiler3D')))}
                 </React.Suspense>
               </GlobalLayout>
@@ -551,235 +556,341 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          {/* Admin routes */}
+          {/* Admin routes - Protected with AdminProtectedRoute + Lazy loaded */}
           <Route path="/admin/send-notification">
-            <ProtectedRoute>
-              <SendNotificationPage />
-            </ProtectedRoute>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <SendNotificationPage />
+              </React.Suspense>
+            </AdminProtectedRoute>
           </Route>
 
           <Route path="/admin/mission-panel">
-            <ProtectedRoute>
-              <MissionPanelPage />
-            </ProtectedRoute>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <MissionPanelPage />
+              </React.Suspense>
+            </AdminProtectedRoute>
           </Route>
 
           <Route path="/admin/pulse-lab">
-            <ProtectedRoute>
-              <PulseLab />
-            </ProtectedRoute>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <PulseLab />
+              </React.Suspense>
+            </AdminProtectedRoute>
           </Route>
 
           <Route path="/panel/push">
-            <ProtectedRoute>
-              <AdminPushConsolePage />
-            </ProtectedRoute>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <AdminPushConsolePage />
+              </React.Suspense>
+            </AdminProtectedRoute>
           </Route>
 
           <Route path="/panel/push-sender">
-            <ProtectedRoute>
-              <PushSenderPanel />
-            </ProtectedRoute>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <PushSenderPanel />
+              </React.Suspense>
+            </AdminProtectedRoute>
           </Route>
 
-          {/* Push Console routes */}
+          {/* Push Console routes - Admin only */}
           <Route path="/panel/push-admin">
-            <ProtectedRoute>
-              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
                 {React.createElement(React.lazy(() => import('../pages/push/AdminPushConsolePage')))}
               </React.Suspense>
-            </ProtectedRoute>
+            </AdminProtectedRoute>
           </Route>
 
           <Route path="/panel/push">
-            <ProtectedRoute>
-              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
                 {React.createElement(React.lazy(() => import('../pages/push/UserPushConsolePage')))}
               </React.Suspense>
-            </ProtectedRoute>
+            </AdminProtectedRoute>
           </Route>
 
-          {/* Dev diagnostics route - only accessible to admins or in debug mode */}
-          <Route path="/dev/markers-healthcheck">
-            <ProtectedRoute>
-              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-                <MarkersHealthcheck />
-              </React.Suspense>
-            </ProtectedRoute>
-          </Route>
+          {/* ========================================== */}
+          {/* DEV/DEBUG ROUTES - Only available in DEV mode */}
+          {/* In production, these routes will not exist */}
+          {/* ========================================== */}
+          {IS_DEV && (
+            <>
+              {/* Dev diagnostics route */}
+              <Route path="/dev/markers-healthcheck">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <MarkersHealthcheck />
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* Dev Push Test Panel - MCP Only */}
-          <Route path="/dev/push-test">
-            <ProtectedRoute>
-              <DevPushTest />
-            </ProtectedRoute>
-          </Route>
+              {/* Dev Push Test Panel */}
+              <Route path="/dev/push-test">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <DevPushTest />
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
+              {/* Push Test Route */}
+              <Route path="/push-test">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <PushTestPage />
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* 🔥 PUSH TEST ROUTE - Fixed rendering */}
-          <Route path="/push-test">
-            <PushTestPage />
-          </Route>
+              {/* Unified Push Test Route */}
+              <Route path="/unified-push-test">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <GlobalLayout>
+                      <PushTestPage />
+                    </GlobalLayout>
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
+              
+              <Route path="/push-health">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <GlobalLayout>
+                      <PushHealth />
+                    </GlobalLayout>
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* 🚀 UNIFIED PUSH TEST ROUTE */}
-          <Route path="/unified-push-test">
-            <GlobalLayout>
-              <PushTestPage />
-            </GlobalLayout>
-          </Route>
-          
-          <Route path="/push-health">
-            <GlobalLayout>
-              <PushHealth />
-            </GlobalLayout>
-          </Route>
+              {/* Notification Debug Route */}
+              <Route path="/notification-debug">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <GlobalLayout><NotificationDebug /></GlobalLayout>
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* 🔍 NOTIFICATION DEBUG ROUTE - M1SSION™ ULTIMATE */}
-          <Route path="/notification-debug">
-            <GlobalLayout><NotificationDebug /></GlobalLayout>
-          </Route>
+              {/* Debug Push Test Route */}
+              <Route path="/debug/pushtest">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <PushTest />
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* 🔧 DEBUG PUSH TEST ROUTE */}
-          <Route path="/debug/pushtest">
-            <PushTest />
-          </Route>
+              {/* Push Diagnostic Route */}
+              <Route path="/debug/push">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <GlobalLayout><PushDiagnostic /></GlobalLayout>
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
+              
+              {/* Push Debug Console */}
+              <Route path="/push-debug">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <GlobalLayout><PushDebug /></GlobalLayout>
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* 🩺 PUSH DIAGNOSTIC ROUTE - BREAK-GLASS MODE */}
-          <Route path="/debug/push">
-            <GlobalLayout><PushDiagnostic /></GlobalLayout>
-          </Route>
-          
-          {/* 🔧 PUSH DEBUG CONSOLE */}
-          <Route path="/push-debug">
-            <GlobalLayout><PushDebug /></GlobalLayout>
-          </Route>
+              {/* Push Report Dashboard */}
+              <Route path="/push-report">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <GlobalLayout><PushReport /></GlobalLayout>
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* 📊 PUSH REPORT DASHBOARD */}
-          <Route path="/push-report">
-            <GlobalLayout><PushReport /></GlobalLayout>
-          </Route>
+              {/* M1SSION Pipeline Test Route */}
+              <Route path="/debug/m1ssion-push-test">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <GlobalLayout><M1ssionPushTest /></GlobalLayout>
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* 🛠️ M1SSION™ PIPELINE TEST ROUTE */}
-          <Route path="/debug/m1ssion-push-test">
-            <ProtectedRoute>
-              <GlobalLayout><M1ssionPushTest /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
+              {/* M1SSION Emergency Debug */}
+              <Route path="/debug/raw-test">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <GlobalLayout><M1ssionDebugTest /></GlobalLayout>
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* 🔧 M1SSION™ EMERGENCY DEBUG */}
-          <Route path="/debug/raw-test">
-            <GlobalLayout><M1ssionDebugTest /></GlobalLayout>
-          </Route>
+              {/* M1SSION Debug Alternative */}
+              <Route path="/raw-test">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <M1ssionDebugTest />
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
+            </>
+          )}
 
-          {/* 🔧 M1SSION™ DEBUG ALTERNATIVE */}
-          <Route path="/raw-test">
-            <M1ssionDebugTest />
-          </Route>
-
-          {/* Panel Access route */}
+          {/* Panel Access route - Admin only + Lazy loaded */}
           <Route path="/panel-access">
-            <ProtectedRoute>
-              <GlobalLayout><PanelAccessPage /></GlobalLayout>
-            </ProtectedRoute>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <GlobalLayout><PanelAccessPage /></GlobalLayout>
+              </React.Suspense>
+            </AdminProtectedRoute>
           </Route>
 
           <Route path="/panel-users">
-            <ProtectedRoute>
-              <PanelUsersPage />
-            </ProtectedRoute>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <PanelUsersPage />
+              </React.Suspense>
+            </AdminProtectedRoute>
           </Route>
 
           <Route path="/panel/bulk-marker-drop">
-            <ProtectedRoute>
-              <BulkMarkerDropPage />
-            </ProtectedRoute>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <BulkMarkerDropPage />
+              </React.Suspense>
+            </AdminProtectedRoute>
           </Route>
 
           <Route path="/panel/marker-rewards">
-            <ProtectedRoute>
-              <MarkerRewardsPage />
-            </ProtectedRoute>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <MarkerRewardsPage />
+              </React.Suspense>
+            </AdminProtectedRoute>
           </Route>
 
           <Route path="/panel/norah">
-            <ProtectedRoute>
-              <NorahAdmin />
-            </ProtectedRoute>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <NorahAdmin />
+              </React.Suspense>
+            </AdminProtectedRoute>
           </Route>
 
-          <Route path="/diag-supabase">
-            <ProtectedRoute>
-              <DiagSupabase />
-            </ProtectedRoute>
-          </Route>
+          {/* Dev/Test routes - only in development */}
+          {IS_DEV && (
+            <>
+              <Route path="/diag-supabase">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <DiagSupabase />
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* 🧪 ONBOARDING SANDBOX - Test Tutorial */}
-          <Route path="/onboarding-sandbox">
-            <ProtectedRoute>
-              <OnboardingSandbox />
-            </ProtectedRoute>
-          </Route>
+              {/* Onboarding Sandbox - Test Tutorial */}
+              <Route path="/onboarding-sandbox">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <OnboardingSandbox />
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          <Route path="/supabase-test">
-            <ProtectedRoute>
-              <SupabaseConnectionTest />
-            </ProtectedRoute>
-          </Route>
+              <Route path="/supabase-test">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <SupabaseConnectionTest />
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
+            </>
+          )}
 
           <Route path="/panel/push-control">
-            <ProtectedRoute>
-              <GlobalLayout><PanelAccessPage /></GlobalLayout>
-            </ProtectedRoute>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <GlobalLayout><PanelAccessPage /></GlobalLayout>
+              </React.Suspense>
+            </AdminProtectedRoute>
           </Route>
 
           <Route path="/panel/push-preflight">
-            <ProtectedRoute>
-              <GlobalLayout><PanelAccessPage /></GlobalLayout>
-            </ProtectedRoute>
+            <AdminProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <GlobalLayout><PanelAccessPage /></GlobalLayout>
+              </React.Suspense>
+            </AdminProtectedRoute>
           </Route>
 
-          {/* 🔧 Push Diagnostica Route */}
-          <Route path="/push-diagnosi">
-            <ProtectedRoute>
-              <PushDiagnosi />
-            </ProtectedRoute>
-          </Route>
+          {/* More dev/debug routes - only in development */}
+          {IS_DEV && (
+            <>
+              {/* Push Diagnostica Route */}
+              <Route path="/push-diagnosi">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <PushDiagnosi />
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* 🔥 Firebase Notification Debug Route */}
-          <Route path="/firebase-notification-debug">
-            <ProtectedRoute>
-              <GlobalLayout><FirebaseNotificationDebug /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
+              {/* Firebase Notification Debug Route */}
+              <Route path="/firebase-notification-debug">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <GlobalLayout><FirebaseNotificationDebug /></GlobalLayout>
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* 🔔 Push Debug Route */}
-          <Route path="/push-debug">
-            <ProtectedRoute>
-              <GlobalLayout><PushDebug /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
+              {/* Push Debug Route (duplicate, kept for compatibility) */}
+              <Route path="/push-debug">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <GlobalLayout><PushDebug /></GlobalLayout>
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
 
-          <Route path="/fcm-test">
-            <FcmTest />
-          </Route>
+              <Route path="/fcm-test">
+                <AdminProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <FcmTest />
+                  </React.Suspense>
+                </AdminProtectedRoute>
+              </Route>
+            </>
+          )}
 
-          {/* 🤖 Android Push Test Route */}
-          <Route path="/android-push-test">
-            <ProtectedRoute>
-              <GlobalLayout>
-                {React.createElement(React.lazy(() => import('../pages/android-push-test')))}
-              </GlobalLayout>
-            </ProtectedRoute>
-          </Route>
+          {/* Native platform debug routes - only in development */}
+          {IS_DEV && (
+            <>
+              {/* Android Push Test Route */}
+              <Route path="/android-push-test">
+                <AdminProtectedRoute>
+                  <GlobalLayout>
+                    {React.createElement(React.lazy(() => import('../pages/android-push-test')))}
+                  </GlobalLayout>
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* 📱 Native Push Test Route (iOS + Android) */}
-          <Route path="/native-push-test">
-            <ProtectedRoute>
-              <GlobalLayout>
-                {React.createElement(React.lazy(() => import('../pages/native-push-test')))}
-              </GlobalLayout>
-            </ProtectedRoute>
-          </Route>
+              {/* Native Push Test Route (iOS + Android) */}
+              <Route path="/native-push-test">
+                <AdminProtectedRoute>
+                  <GlobalLayout>
+                    {React.createElement(React.lazy(() => import('../pages/native-push-test')))}
+                  </GlobalLayout>
+                </AdminProtectedRoute>
+              </Route>
+            </>
+          )}
 
           {/* QR Routes REMOVED - rewards now handled by popup in map */}
           
@@ -807,7 +918,7 @@ const WouterRoutes: React.FC = () => {
           </Route>
           
           <Route path="/game-rules">
-            <GlobalLayout><GameRules /></GlobalLayout>
+            <GlobalLayout><GameRulesComplete /></GlobalLayout>
           </Route>
           
           <Route path="/policies">
@@ -817,25 +928,40 @@ const WouterRoutes: React.FC = () => {
           <Route path="/game-policies">
             <GlobalLayout><Policies /></GlobalLayout>
           </Route>
+          
+          <Route path="/game-policies-it">
+            <GlobalLayout><GamePoliciesIt /></GlobalLayout>
+          </Route>
 
           {/* Contact route */}
           <Route path="/contact">
             <GlobalLayout><Contact /></GlobalLayout>
           </Route>
 
-          {/* SMOKE TEST - Can be removed at any time */}
-          <Route path="/billing-smoke-test">
-            {React.createElement(React.lazy(() => import('@/pages/BillingSmokeTest')))}
-          </Route>
+          {/* Dev-only billing and setup routes */}
+          {IS_DEV && (
+            <>
+              {/* SMOKE TEST - Can be removed at any time */}
+              <Route path="/billing-smoke-test">
+                <AdminProtectedRoute>
+                  {React.createElement(React.lazy(() => import('@/pages/BillingSmokeTest')))}
+                </AdminProtectedRoute>
+              </Route>
 
-          {/* DEV SETUP - Stripe Keys Configuration (URL-only access) */}
-          <Route path="/dev-stripe-setup">
-            {React.createElement(React.lazy(() => import('@/pages/DevStripeKeysSetup')))}
-          </Route>
+              {/* DEV SETUP - Stripe Keys Configuration */}
+              <Route path="/dev-stripe-setup">
+                <AdminProtectedRoute>
+                  {React.createElement(React.lazy(() => import('@/pages/DevStripeKeysSetup')))}
+                </AdminProtectedRoute>
+              </Route>
+            </>
+          )}
 
           {/* Plan selection route - accessible even without plan selected */}
           <Route path="/choose-plan">
-            {isAuthenticated ? (
+            {isLoading ? (
+              <PageSkeleton variant="default" />
+            ) : isAuthenticated ? (
               <GlobalLayout><ChoosePlanPage /></GlobalLayout>
             ) : (
               <Login />
@@ -844,7 +970,9 @@ const WouterRoutes: React.FC = () => {
 
           {/* Subscription verification route */}
           <Route path="/subscription-verify">
-            {isAuthenticated ? (
+            {isLoading ? (
+              <PageSkeleton variant="default" />
+            ) : isAuthenticated ? (
               <SubscriptionVerify />
             ) : (
               <Login />

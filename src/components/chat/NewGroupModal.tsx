@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useChat } from '@/hooks/useChat';
 import { Button } from '@/components/ui/button';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { sanitizeSearchInput } from '@/utils/inputSanitizer';
 
 interface Agent {
   id: string;
@@ -67,7 +68,11 @@ export function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGroupModal
           .limit(50);
 
         if (searchQuery.trim()) {
-          query = query.or(`username.ilike.%${searchQuery}%,agent_code.ilike.%${searchQuery}%`);
+          // 🔐 Sanitize search input for SQL safety
+          const sanitized = sanitizeSearchInput(searchQuery);
+          if (sanitized) {
+            query = query.or(`username.ilike.%${sanitized}%,agent_code.ilike.%${sanitized}%`);
+          }
         }
 
         const { data, error } = await query;

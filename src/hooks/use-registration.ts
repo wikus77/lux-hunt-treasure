@@ -82,36 +82,31 @@ export const useRegistration = () => {
       if (!standardResult.error && standardResult.data.user) {
         console.log('✅ M1SSION registration successful!');
         
-        // Generate agent code client-side (temporary workaround)
-        const agentCode = `AG-${Date.now().toString(36).toUpperCase()}`;
-        
-        try {
-          // Invia notifiche di registrazione
-          await supabase.functions.invoke('send-registration-notification', {
-            body: {
-              userId: standardResult.data.user.id,
-              email: standardResult.data.user.email,
-              agentCode: agentCode,
-              fullName: name
-            }
-          });
-          console.log('📧 Notifiche post-registrazione inviate');
-        } catch (notificationError) {
-          console.error('⚠️ Errore invio notifiche:', notificationError);
-          // Non bloccare il flusso se le notifiche falliscono
-        }
-
+        // 🚀 OTTIMIZZAZIONE: Toast immediato + redirect veloce
         toast.success("Registrazione completata!", {
-          description: "Controlla la tua email per il codice agente. Ora scegli il tuo piano di abbonamento."
+          description: "Scegli il tuo piano per iniziare la missione."
         });
 
-        // Dopo registrazione successful, invia notifica e vai agli abbonamenti
-        console.log('📧 Inviando notifiche post-registrazione...');
+        // 🚀 REDIRECT IMMEDIATO (era 1500ms, ora 100ms)
+        setTimeout(() => {
+          navigate("/choose-plan");
+        }, 100);
+
+        // 🔥 NON-BLOCKING: Notifiche inviate in background (no await!)
+        // L'utente non deve aspettare l'email
+        supabase.functions.invoke('send-registration-notification', {
+          body: {
+            userId: standardResult.data.user.id,
+            email: standardResult.data.user.email,
+            agentCode: 'PENDING', // Il vero agent_code è nel DB trigger
+            fullName: name
+          }
+        }).then(() => {
+          console.log('📧 Notifiche post-registrazione inviate (background)');
+        }).catch((err) => {
+          console.warn('⚠️ Notifiche fallite (non-blocking):', err);
+        });
         
-          // Reindirizza alla selezione piano abbonamento
-          setTimeout(() => {
-            navigate("/choose-plan");
-          }, 1500);
         return;
       }
 
@@ -143,37 +138,30 @@ export const useRegistration = () => {
         if (bypassResult?.success) {
           console.log('✅ M1SSION bypass registration successful!');
           
-          // Per il bypass, generiamo un agent code client-side
-          try {
-            // Generate agent code client-side (temporary workaround)
-            const agentCode = `AG-${Date.now().toString(36).toUpperCase()}`;
-            
-            // Invia notifiche di registrazione
-            await supabase.functions.invoke('send-registration-notification', {
-              body: {
-                userId: 'bypass-user', // Per il bypass non abbiamo un ID reale
-                email: email,
-                agentCode: agentCode,
-                fullName: name
-              }
-            });
-            console.log('📧 Notifiche post-registrazione bypass inviate');
-          } catch (notificationError) {
-            console.error('⚠️ Errore invio notifiche bypass:', notificationError);
-          }
-          
+          // 🚀 OTTIMIZZAZIONE: Toast immediato + redirect veloce
           toast.success("Registrazione completata!", {
-            description: "Controlla la tua email per il codice agente. Ora scegli il tuo piano di abbonamento.",
-            duration: 4000
+            description: "Scegli il tuo piano per iniziare la missione."
           });
           
-          // Dopo registrazione bypass successful, invia notifica e vai agli abbonamenti
-          console.log('📧 Inviando notifiche post-registrazione bypass...');
-          
-          // Reindirizza alla selezione piano abbonamento
+          // 🚀 REDIRECT IMMEDIATO (era 1500ms, ora 100ms)
           setTimeout(() => {
             navigate("/choose-plan");
-          }, 1500);
+          }, 100);
+          
+          // 🔥 NON-BLOCKING: Notifiche inviate in background (no await!)
+          supabase.functions.invoke('send-registration-notification', {
+            body: {
+              userId: bypassResult.userId || 'bypass-user',
+              email: email,
+              agentCode: 'PENDING',
+              fullName: name
+            }
+          }).then(() => {
+            console.log('📧 Notifiche bypass inviate (background)');
+          }).catch((err) => {
+            console.warn('⚠️ Notifiche bypass fallite (non-blocking):', err);
+          });
+          
           return;
         }
       }

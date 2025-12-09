@@ -615,3 +615,4 @@ const TERMS_EN = {
 
 export default TermsConditions;
 
+

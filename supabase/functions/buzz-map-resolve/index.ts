@@ -81,6 +81,58 @@ serve(withCors(async (req: Request): Promise<Response> => {
 
     console.log('📊 Pricing:', { level, radiusKm, costM1U, currentWeek });
 
+    // 🔥 FIX: Get prize location from current_mission_data to center area around prize
+    // This ensures the generated area ALWAYS includes the prize city
+    let finalLat = lat;
+    let finalLng = lng;
+    
+    try {
+      console.log('🔍 [BUZZ-MAP-RESOLVE] Fetching prize location from current_mission_data...');
+      
+      const { data: missionData, error: missionError } = await supabase
+        .from('current_mission_data')
+        .select('prize_lat, prize_lng, city, country, is_active')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      console.log('🔍 [BUZZ-MAP-RESOLVE] Mission query result:', {
+        found: !!missionData,
+        error: missionError?.message,
+        prize_lat: missionData?.prize_lat,
+        prize_lng: missionData?.prize_lng,
+        city: missionData?.city,
+        is_active: missionData?.is_active
+      });
+
+      if (!missionError && missionData?.prize_lat && missionData?.prize_lng) {
+        // 🎯 Use prize coordinates with RANDOM OFFSET to not reveal exact location
+        // Offset range: ±5km to ±20km (converted to degrees, ~0.045° to ~0.18° at equator)
+        const offsetRange = 0.05 + Math.random() * 0.13; // Random between 0.05 and 0.18 degrees
+        const offsetLat = (Math.random() - 0.5) * 2 * offsetRange;
+        const offsetLng = (Math.random() - 0.5) * 2 * offsetRange;
+        
+        finalLat = missionData.prize_lat + offsetLat;
+        finalLng = missionData.prize_lng + offsetLng;
+        
+        console.log('🎯 [BUZZ-MAP-RESOLVE] Using PRIZE location (with offset):', {
+          prizeCity: missionData.city,
+          originalPrizeLat: missionData.prize_lat,
+          originalPrizeLng: missionData.prize_lng,
+          offsetLat: offsetLat.toFixed(4),
+          offsetLng: offsetLng.toFixed(4),
+          finalLat: finalLat.toFixed(4),
+          finalLng: finalLng.toFixed(4)
+        });
+      } else {
+        console.warn('⚠️ [BUZZ-MAP-RESOLVE] No active mission prize location found, using user coordinates');
+        console.warn('⚠️ [BUZZ-MAP-RESOLVE] Check: is_active field type, RLS policies on current_mission_data');
+      }
+    } catch (prizeError) {
+      console.error('⚠️ [BUZZ-MAP-RESOLVE] Error fetching prize location:', prizeError);
+    }
+
     // Step 2: Spend M1U - Use direct SQL instead of RPC to avoid parameter issues
     console.log('💎 Spending M1U...');
     
@@ -122,15 +174,17 @@ serve(withCors(async (req: Request): Promise<Response> => {
 
     console.log('✅ M1U deducted:', { spent: costM1U, newBalance });
 
-    // Step 3: Create map area
+    // Step 3: Create map area - 🔥 FIX: Use finalLat/finalLng (prize location with offset)
+    console.log('📍 Creating area at coordinates:', { finalLat, finalLng, radiusKm });
+    
     const { data: mapArea, error: mapError } = await supabase
       .from('user_map_areas')
       .insert({
         user_id: user.id,
-        lat,
-        lng,
-        center_lat: lat,
-        center_lng: lng,
+        lat: finalLat,           // 🔥 FIX: Use prize coordinates
+        lng: finalLng,           // 🔥 FIX: Use prize coordinates
+        center_lat: finalLat,    // 🔥 FIX: Use prize coordinates
+        center_lng: finalLng,    // 🔥 FIX: Use prize coordinates
         radius_km: radiusKm,
         source: 'buzz_map',
         level: level,
@@ -165,14 +219,14 @@ serve(withCors(async (req: Request): Promise<Response> => {
       radius_generated: radiusKm
     }).catch(() => {}); // Non-critical
 
-    // Success response
+    // Success response - 🔥 FIX: Return finalLat/finalLng (prize-centered coordinates)
     const response = {
       success: true,
       mode: 'map',
       area: {
         id: mapArea.id,
-        center_lat: lat,
-        center_lng: lng,
+        center_lat: finalLat,    // 🔥 FIX: Prize coordinates
+        center_lng: finalLng,    // 🔥 FIX: Prize coordinates
         radius_km: radiusKm,
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       },

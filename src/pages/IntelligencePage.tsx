@@ -1,12 +1,14 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION Intelligence Page - AION Entity + Chat Panel
+// Includes Shadow Protocol v2 Intercepts panel
 
 import React, { useRef, Suspense, lazy } from 'react';
 import AionEntity, { AionEntityHandle } from '@/components/aion/AionEntity';
 import IntelChatPanel from '@/pages/intel/IntelChatPanel';
 
-// Lazy load M1U Pill for performance
+// Lazy load components for performance
 const M1UPill = lazy(() => import('@/features/m1u/M1UPill'));
+const ShadowIntercepts = lazy(() => import('@/components/intelligence/ShadowIntercepts'));
 
 const IntelligencePage: React.FC = () => {
   const aionRef = useRef<AionEntityHandle>(null);
@@ -77,6 +79,11 @@ const IntelligencePage: React.FC = () => {
         </h2>
         <p className="text-xs text-gray-500 tracking-wide">Adaptive Intelligence ON</p>
       </div>
+
+      {/* Shadow Protocol v2 - Intercepts Panel (collapsible) */}
+      <Suspense fallback={null}>
+        <ShadowIntercepts />
+      </Suspense>
 
       {/* Chat Panel - Takes remaining space */}
       <div 

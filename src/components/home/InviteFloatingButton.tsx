@@ -13,7 +13,7 @@ const InviteFloatingButton: React.FC = () => {
         aria-label="Invita un Amico"
         data-onboarding="invite"
         onClick={() => setOpen(true)}
-        className="fixed z-[70] top-36 right-4 md:top-40 md:right-8 w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-[hsl(282,90%,45%)]/15 to-[hsl(218,79%,59%)]/15 backdrop-blur-md border border-white/15 shadow-[0_8px_30px_rgba(114,9,183,0.25)] hover:from-[hsl(282,90%,45%)]/25 hover:to-[hsl(218,79%,59%)]/25 transition-all flex items-center justify-center"
+        className="fixed z-[70] bottom-40 right-4 md:bottom-44 md:right-8 w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-[hsl(282,90%,45%)]/15 to-[hsl(218,79%,59%)]/15 backdrop-blur-md border border-white/15 shadow-[0_8px_30px_rgba(114,9,183,0.25)] hover:from-[hsl(282,90%,45%)]/25 hover:to-[hsl(218,79%,59%)]/25 transition-all flex items-center justify-center"
         initial={{ opacity: 0, scale: 0.9, y: -10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         whileHover={{ scale: 1.05 }}

@@ -17,3 +17,4 @@ CREATE INDEX IF NOT EXISTS idx_profiles_language ON profiles(preferred_language)
 -- © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 
+

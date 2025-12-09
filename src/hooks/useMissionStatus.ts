@@ -34,12 +34,12 @@ export const useMissionStatus = () => {
       setLoading(true);
       setError(null);
 
-      // 🔥 Fetch the current active mission from missions table
-      // Using maybeSingle() to avoid 406 errors when no active mission exists
+      // 🔥 FIXED: Read from current_mission_data (the actual mission config table)
+      // This is where the admin panel saves mission configurations
       const { data: activeMissionData, error: missionFetchError } = await supabase
-        .from('missions')
-        .select('id, title')
-        .eq('status', 'active')
+        .from('current_mission_data')
+        .select('id, mission_name, mission_status, mission_started_at, mission_ends_at')
+        .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -53,7 +53,7 @@ export const useMissionStatus = () => {
       }
 
       const missionId = activeMissionData?.id || "M001";
-      const missionTitle = activeMissionData?.title || "M1SSION ONE";
+      const missionTitle = activeMissionData?.mission_name || "MISSIONE IN CORSO";
 
       // 🔥 CRITICAL FIX: Get REAL clues count from MULTIPLE sources
       // Source 1: user_clues table (official clues)

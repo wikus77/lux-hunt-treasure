@@ -1,56 +1,73 @@
 // @ts-nocheck
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ - BUZZ Map Progressive Pricing Hook - 42 Levels System
+// COOLDOWN BUZZ MAP PER TIER: Free=24h, Silver=12h, Gold=8h, Black=4h, Titanium=0h
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
+import { 
+  getBuzzMapCooldownSeconds, 
+  normalizeTier, 
+  UserTier,
+  BUZZMAP_COOLDOWN_HOURS_BY_TIER 
+} from '@/config/tierLimits';
 
+// M1SSION™ – BUZZ MAP Strategy A (Mass Market Boost)
 // Progressive Pricing Table - 42 Levels
+// Range: 0–15 Entry, 16–21 Mid High-Spender, 22–29 High-Spender, 30–41 Elite
+// ⚠️ SYNC: Must match src/lib/buzzMapPricing.ts exactly (generation = level - 1)
 const PROGRESSIVE_PRICING_TABLE = [
-  { generation: 0, radius: 500, segment: "Entry", price: 4.99 },
-  { generation: 1, radius: 450, segment: "Entry", price: 6.99 },
-  { generation: 2, radius: 405, segment: "Entry", price: 8.99 },
-  { generation: 3, radius: 365, segment: "Entry", price: 10.99 },
-  { generation: 4, radius: 329, segment: "Entry", price: 12.99 },
-  { generation: 5, radius: 295, segment: "Entry", price: 14.99 },
-  { generation: 6, radius: 265, segment: "Entry", price: 16.99 },
-  { generation: 7, radius: 240, segment: "Entry", price: 19.99 },
-  { generation: 8, radius: 216, segment: "Entry", price: 21.99 },
-  { generation: 9, radius: 195, segment: "Entry", price: 25.99 },
-  { generation: 10, radius: 175, segment: "Entry", price: 29.99 },
-  { generation: 11, radius: 155, segment: "Entry", price: 29.99 },
-  { generation: 12, radius: 140, segment: "Entry", price: 29.99 },
-  { generation: 13, radius: 126, segment: "Entry", price: 29.99 },
-  { generation: 14, radius: 113, segment: "TRANSIZIONE", price: 29.99 },
-  { generation: 15, radius: 102, segment: "Mid High-Spender", price: 29.99 },
-  { generation: 16, radius: 92, segment: "Mid High-Spender", price: 44.99 },
-  { generation: 17, radius: 83, segment: "Mid High-Spender", price: 67.99 },
-  { generation: 18, radius: 75, segment: "Mid High-Spender", price: 101.99 },
-  { generation: 19, radius: 67, segment: "Mid High-Spender", price: 152.99 },
-  { generation: 20, radius: 60, segment: "Mid High-Spender", price: 229.99 },
-  { generation: 21, radius: 54, segment: "Mid High-Spender", price: 344.99 },
-  { generation: 22, radius: 49, segment: "Mid High-Spender", price: 517.99 },
-  { generation: 23, radius: 44, segment: "High-Spender", price: 776.99 },
-  { generation: 24, radius: 39, segment: "High-Spender", price: 1165.99 },
-  { generation: 25, radius: 35, segment: "High-Spender", price: 1748.99 },
-  { generation: 26, radius: 31, segment: "High-Spender", price: 2622.99 },
-  { generation: 27, radius: 28, segment: "High-Spender", price: 2622.99 },
-  { generation: 28, radius: 25, segment: "High-Spender", price: 2622.99 },
-  { generation: 29, radius: 23, segment: "High-Spender", price: 2622.99 },
-  { generation: 30, radius: 20, segment: "High-Spender", price: 2622.99 },
-  { generation: 31, radius: 18, segment: "ELITE", price: 2622.99 },
-  { generation: 32, radius: 16, segment: "ELITE", price: 2622.99 },
-  { generation: 33, radius: 14.5, segment: "ELITE", price: 2622.99 },
-  { generation: 34, radius: 13.1, segment: "ELITE", price: 2622.99 },
-  { generation: 35, radius: 11.8, segment: "ELITE", price: 3933.99 },
-  { generation: 36, radius: 10.6, segment: "ELITE", price: 3933.99 },
-  { generation: 37, radius: 9.5, segment: "ELITE", price: 4999.00 },
-  { generation: 38, radius: 8.6, segment: "ELITE", price: 4999.00 },
-  { generation: 39, radius: 7.7, segment: "ELITE", price: 4999.00 },
-  { generation: 40, radius: 6.9, segment: "ELITE", price: 4999.00 },
-  { generation: 41, radius: 5, segment: "ELITE", price: 4999.00 }
+  // Entry (gen 0-15 = levels 1-16): €4.99 → €29.99, 500km → 110km
+  { generation: 0,  radius: 500, segment: "Entry", price: 4.99 },
+  { generation: 1,  radius: 450, segment: "Entry", price: 6.99 },
+  { generation: 2,  radius: 400, segment: "Entry", price: 8.99 },
+  { generation: 3,  radius: 360, segment: "Entry", price: 10.99 },
+  { generation: 4,  radius: 320, segment: "Entry", price: 12.99 },
+  { generation: 5,  radius: 290, segment: "Entry", price: 14.99 },
+  { generation: 6,  radius: 260, segment: "Entry", price: 16.99 },
+  { generation: 7,  radius: 230, segment: "Entry", price: 18.99 },
+  { generation: 8,  radius: 210, segment: "Entry", price: 19.99 },
+  { generation: 9,  radius: 190, segment: "Entry", price: 21.99 },
+  { generation: 10, radius: 175, segment: "Entry", price: 23.99 },
+  { generation: 11, radius: 160, segment: "Entry", price: 24.99 },
+  { generation: 12, radius: 145, segment: "Entry", price: 26.99 },
+  { generation: 13, radius: 130, segment: "Entry", price: 27.99 },
+  { generation: 14, radius: 120, segment: "Entry", price: 28.99 },
+  { generation: 15, radius: 110, segment: "Entry", price: 29.99 },
+  // Mid High-Spender (gen 16-21 = levels 17-22): €39.99 → €149.99, 100km → 64km
+  { generation: 16, radius: 100, segment: "Mid High-Spender", price: 39.99 },
+  { generation: 17, radius: 92,  segment: "Mid High-Spender", price: 54.99 },
+  { generation: 18, radius: 84,  segment: "Mid High-Spender", price: 69.99 },
+  { generation: 19, radius: 77,  segment: "Mid High-Spender", price: 89.99 },
+  { generation: 20, radius: 70,  segment: "Mid High-Spender", price: 109.99 },
+  { generation: 21, radius: 64,  segment: "Mid High-Spender", price: 149.99 },
+  // High-Spender (gen 22-29 = levels 23-30): €199.99 → €699.99, 58km → 31km
+  { generation: 22, radius: 58,  segment: "High-Spender", price: 199.99 },
+  { generation: 23, radius: 53,  segment: "High-Spender", price: 249.99 },
+  { generation: 24, radius: 48,  segment: "High-Spender", price: 299.99 },
+  { generation: 25, radius: 44,  segment: "High-Spender", price: 349.99 },
+  { generation: 26, radius: 40,  segment: "High-Spender", price: 399.99 },
+  { generation: 27, radius: 37,  segment: "High-Spender", price: 449.99 },
+  { generation: 28, radius: 34,  segment: "High-Spender", price: 549.99 },
+  { generation: 29, radius: 31,  segment: "High-Spender", price: 699.99 },
+  // ELITE (gen 30-41 = levels 31-42): €999.99 → €1,999.99, 28km → 5km
+  { generation: 30, radius: 28,  segment: "ELITE", price: 999.99 },
+  { generation: 31, radius: 26,  segment: "ELITE", price: 1099.99 },
+  { generation: 32, radius: 24,  segment: "ELITE", price: 1199.99 },
+  { generation: 33, radius: 22,  segment: "ELITE", price: 1299.99 },
+  { generation: 34, radius: 20,  segment: "ELITE", price: 1399.99 },
+  { generation: 35, radius: 18,  segment: "ELITE", price: 1499.99 },
+  { generation: 36, radius: 16,  segment: "ELITE", price: 1599.99 },
+  { generation: 37, radius: 14,  segment: "ELITE", price: 1699.99 },
+  { generation: 38, radius: 12,  segment: "ELITE", price: 1799.99 },
+  { generation: 39, radius: 10,  segment: "ELITE", price: 1899.99 },
+  { generation: 40, radius: 8,   segment: "ELITE", price: 1949.99 },
+  { generation: 41, radius: 5,   segment: "ELITE", price: 1999.99 }
 ];
+
+// Maximum generation constant (= MAX_LEVEL - 1)
+const MAX_GENERATION = 41;
 
 interface BuzzMapCounter {
   user_id: string;
@@ -68,10 +85,60 @@ export const useBuzzMapProgressivePricing = () => {
   const [isEligibleForBuzz, setIsEligibleForBuzz] = useState(true);
   const { user } = useAuthContext();
   
+  // 🆕 User tier for cooldown calculation
+  const [userTier, setUserTier] = useState<UserTier>('base');
+  const [tierCooldownSeconds, setTierCooldownSeconds] = useState<number>(24 * 60 * 60); // Default 24h
+  
   // © 2025 Joseph MULÉ – M1SSION™ – BUZZ Override System DB-Driven
   const [buzzOverride, setBuzzOverride] = useState({ cooldown_disabled: false, free_remaining: 0, expires_at: null });
   const overrideLoadedRef = useRef(false);
   
+  // 🆕 Load user tier for cooldown calculation
+  const loadUserTier = useCallback(async (): Promise<UserTier> => {
+    if (!user?.id) return 'base';
+    
+    try {
+      // Prima prova subscriptions attive
+      const { data: subData } = await supabase
+        .from('subscriptions')
+        .select('tier')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (subData?.tier) {
+        const tier = normalizeTier(subData.tier);
+        console.log('🎟️ [BUZZ MAP] User tier loaded from subscriptions:', tier);
+        return tier;
+      }
+      
+      // Fallback a profilo
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('subscription_tier, tier')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (profileData?.subscription_tier) {
+        const tier = normalizeTier(profileData.subscription_tier);
+        console.log('🎟️ [BUZZ MAP] User tier loaded from profile.subscription_tier:', tier);
+        return tier;
+      }
+      if (profileData?.tier) {
+        const tier = normalizeTier(profileData.tier);
+        console.log('🎟️ [BUZZ MAP] User tier loaded from profile.tier:', tier);
+        return tier;
+      }
+      
+      return 'base';
+    } catch (err) {
+      console.error('[BUZZ MAP] Error loading user tier:', err);
+      return 'base';
+    }
+  }, [user?.id]);
+
   // © 2025 Joseph MULÉ – M1SSION™ – Load BUZZ Override - Hardcoded for wikus77@hotmail.it
   const loadBuzzOverride = useCallback(async () => {
     if (!user?.id || overrideLoadedRef.current) return;
@@ -128,6 +195,17 @@ export const useBuzzMapProgressivePricing = () => {
       // Load override first
       await loadBuzzOverride();
       
+      // 🆕 Load user tier for cooldown calculation
+      const tier = await loadUserTier();
+      setUserTier(tier);
+      const cooldownSec = getBuzzMapCooldownSeconds(tier);
+      setTierCooldownSeconds(cooldownSec);
+      console.log('🎟️ [BUZZ MAP] Tier-based cooldown set:', {
+        tier,
+        cooldownSeconds: cooldownSec,
+        cooldownHours: BUZZMAP_COOLDOWN_HOURS_BY_TIER[tier]
+      });
+      
       // Load map generation count from user_map_areas
       const { data: mapAreas, error: mapError } = await supabase
         .from('user_map_areas')
@@ -177,14 +255,19 @@ export const useBuzzMapProgressivePricing = () => {
         setLastBuzzTime(lastTime);
         
         // © 2025 Joseph MULÉ – M1SSION™ – Override Layer: Disable cooldown via DB override
+        // 🆕 Cooldown per tier: Free=24h, Silver=12h, Gold=8h, Black=4h, Titanium=0h
         let isEligible;
         if (buzzOverride.cooldown_disabled === true) {
           // Skip cooldown check for users with override
           isEligible = true;
           console.info('[FREE-OVERRIDE] Cooldown bypassed via DB override');
+        } else if (cooldownSec === 0) {
+          // 🆕 Titanium tier: nessun cooldown
+          isEligible = true;
+          console.info('🎟️ [BUZZ MAP] No cooldown for Titanium tier');
         } else {
-          // Normal cooldown logic: 3 hours
-          const cooldownTime = new Date(Date.now() - 3 * 60 * 60 * 1000); // 3 hours
+          // 🆕 Cooldown per tier (non più 3h hardcoded)
+          const cooldownTime = new Date(Date.now() - cooldownSec * 1000);
           isEligible = lastTime < cooldownTime;
         }
         setIsEligibleForBuzz(isEligible);
@@ -192,6 +275,9 @@ export const useBuzzMapProgressivePricing = () => {
         console.log('🕒 BUZZ MAPPA COOLDOWN CHECK:', {
           lastBuzzTime: lastTime.toISOString(),
           cooldownDisabled: buzzOverride.cooldown_disabled,
+          tier,
+          cooldownSeconds: cooldownSec,
+          cooldownHours: cooldownSec / 3600,
           secondsSinceLastBuzz: (Date.now() - lastTime.getTime()) / 1000,
           isEligible,
           debugMode: true,
@@ -214,7 +300,9 @@ export const useBuzzMapProgressivePricing = () => {
         radius: pricingData.radius,
         segment: pricingData.segment,
         dailyCounter: dailyCounter?.buzz_map_count || 0,
-        isEligible: lastAction ? new Date(lastAction.created_at) < new Date(Date.now() - 3 * 60 * 60 * 1000) : true,
+        tier,
+        cooldownSeconds: cooldownSec,
+        isEligible: lastAction ? new Date(lastAction.created_at) < new Date(Date.now() - cooldownSec * 1000) : true,
         resetDetected: generationCount === 0 && (mapAreas?.length === 0)
       });
       
@@ -230,12 +318,13 @@ export const useBuzzMapProgressivePricing = () => {
     } catch (err) {
       console.error('❌ Exception loading user BUZZ data:', err);
     }
-  }, [user?.id, loadBuzzOverride]);
+  }, [user?.id, loadBuzzOverride, loadUserTier]);
 
   // Get pricing data for specific generation
+  // Cap at MAX_GENERATION (41) = Level 42
   const getPricingForGeneration = (generation: number) => {
-    const maxGeneration = Math.min(generation, PROGRESSIVE_PRICING_TABLE.length - 1);
-    return PROGRESSIVE_PRICING_TABLE[maxGeneration];
+    const clampedGeneration = Math.min(Math.max(generation, 0), MAX_GENERATION);
+    return PROGRESSIVE_PRICING_TABLE[clampedGeneration];
   };
 
   // Anti-fraud validation
@@ -600,6 +689,9 @@ export const useBuzzMapProgressivePricing = () => {
     buzzOverride,
     setBuzzOverride,
     consumeFreeBuzz,
+    // 🆕 Tier-based cooldown
+    userTier,
+    tierCooldownSeconds,
     // Pricing table for reference
     PROGRESSIVE_PRICING_TABLE
   };

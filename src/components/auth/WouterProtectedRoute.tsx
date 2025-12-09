@@ -63,14 +63,27 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // Handle authentication states
-  if (!isAuthenticated || authLoading || accessLoading) {
-    if (!authLoading && !accessLoading && !isAuthenticated) {
-      return <Login />;
-    }
-    
+  // 🔥 FIX CRITICO: Se auth loading è finito e utente NON autenticato, mostra Login IMMEDIATAMENTE
+  // Non aspettare accessLoading per utenti non autenticati!
+  if (!authLoading && !isAuthenticated) {
+    console.log('🔐 [WouterProtectedRoute] User not authenticated, showing Login');
+    return <Login />;
+  }
+  
+  // Se auth è ancora in loading, mostra spinner
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-white">Verifica accesso...</div>
+      </div>
+    );
+  }
+  
+  // Se utente è autenticato ma access control è in loading, mostra spinner
+  if (isAuthenticated && accessLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-white">Verifica permessi...</div>
       </div>
     );
   }

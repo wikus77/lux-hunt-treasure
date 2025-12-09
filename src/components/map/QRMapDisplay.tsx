@@ -252,7 +252,7 @@ return (
     
     {/* Modal-style ClaimRewardModal */}
     {claimData.isOpen && (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div className="animate-pulse h-full w-full bg-slate-900/50 rounded-xl" />}>
         <ClaimRewardModal
           isOpen={claimData.isOpen}
           onClose={handleModalClose}

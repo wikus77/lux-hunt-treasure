@@ -31,12 +31,13 @@ export interface ClueDistributionConfig {
 }
 
 // Mappa quantità indizi per piano (per settimana)
+// 🆕 Allineato con documentazione ufficiale: Titanium = 7/settimana (era 9)
 const PLAN_WEEKLY_LIMITS: Record<UserPlan, number> = {
   base: 1,
   silver: 3,
   gold: 5,
   black: 7,
-  titanium: 9
+  titanium: 7  // ← Corretto: allineato con docs ufficiali (era 9)
 } as const;
 
 // Mappa accesso tier per piano utente

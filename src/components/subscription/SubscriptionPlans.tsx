@@ -183,44 +183,48 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     handleStripeReturn();
   }, []); // Empty dependency array - only run once on mount
 
+  // © 2025 Joseph MULÉ – M1SSION™ – Feature reali implementate per ogni tier
   const getSubscriptionFeatures = (type: string) => {
     switch (type) {
       case "Base":
         return [
-          { text: "Funzioni base (accesso alla missione con restrizioni)" },
-          { text: "Supporto email standard" },
-          { text: "1 indizio settimanale base" }
+          { text: "1 BUZZ gratuito a settimana" },
+          { text: "1 indizio a settimana (Livello 1)" },
+          { text: "Accesso alla missione con funzioni base" },
+          { text: "BUZZ MAP disponibili a pagamento" }
         ];
       case "Silver":
         return [
-          { text: "Tutti i vantaggi Base" },
-          { text: "3 indizi premium aggiuntivi a settimana" },
-          { text: "Accesso anticipato di 2 ore agli eventi" },
-          { text: "Badge Silver nel profilo" }
+          { text: "3 BUZZ gratuiti a settimana" },
+          { text: "3 indizi a settimana (Livelli 1-2)" },
+          { text: "Cooldown BUZZ MAP ridotto a 12h" },
+          { text: "Badge Silver nel profilo" },
+          { text: "Accesso anticipato agli aggiornamenti" }
         ];
       case "Gold":
         return [
-          { text: "Tutti i vantaggi Silver" },
-          { text: "4 indizi premium aggiuntivi a settimana" },
-          { text: "Accesso anticipato di 12 ore agli eventi" },
-          { text: "Partecipazione alle estrazioni Gold" },
-          { text: "Badge Gold esclusivo nel profilo" }
+          { text: "4 BUZZ gratuiti a settimana" },
+          { text: "5 indizi a settimana (Livelli 1-3)" },
+          { text: "Cooldown BUZZ MAP ridotto a 8h" },
+          { text: "Badge Gold nel profilo" },
+          { text: "Esperienza potenziata con AION" }
         ];
       case "Black":
         return [
-          { text: "Tutti i vantaggi Gold" },
-          { text: "Accesso VIP anticipato di 24 ore agli eventi" },
-          { text: "5 indizi premium aggiuntivi a settimana" },
-          { text: "Badge Black esclusivo" }
+          { text: "5 BUZZ gratuiti a settimana" },
+          { text: "7 indizi a settimana (Livelli 1-4)" },
+          { text: "1 BUZZ MAP inclusa al mese" },
+          { text: "Cooldown BUZZ MAP: solo 4h" },
+          { text: "Badge Black nel profilo" }
         ];
       case "Titanium":
         return [
-          { text: "Tutti i vantaggi Black" },
-          { text: "7 indizi premium aggiuntivi a settimana" },
-          { text: "Accesso VIP anticipato di 48 ore agli eventi" },
-          { text: "Supporto prioritario dedicato (24/7)" },
-          { text: "Eventi esclusivi M1SSION™" },
-          { text: "Badge Titanium esclusivo" }
+          { text: "7 BUZZ gratuiti a settimana" },
+          { text: "7 indizi a settimana (tutti i Livelli 1-5)" },
+          { text: "2 BUZZ MAP incluse al mese" },
+          { text: "BUZZ MAP senza cooldown" },
+          { text: "Badge Titanium esclusivo" },
+          { text: "Accesso prioritario alle novità M1SSION™" }
         ];
       default:
         return [];

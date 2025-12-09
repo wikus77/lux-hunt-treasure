@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureAgentCode, getAgentCodeForUser } from "@/services/agentCodeService";
+import { getAdminCode } from "@/config/adminConfig";
 
 // Cache key for localStorage
 const AGENT_CODE_CACHE_KEY = 'm1ssion_agent_code';
@@ -73,14 +74,13 @@ export const useAgentCode = () => {
           return;
         }
 
-        // Special case for admin user - AG-X0197  
-        const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
-        const SPECIAL_ADMIN_CODE = 'AG-X0197';
-
-        // First, check if the user is the admin
-        if (user.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
-          setAgentCode(SPECIAL_ADMIN_CODE);
-          setCachedAgentCode(SPECIAL_ADMIN_CODE, user.id);
+        // Special case for admin user - check centralized config
+        const adminCode = getAdminCode(user.email);
+        
+        // First, check if the user is an admin with special code
+        if (adminCode) {
+          setAgentCode(adminCode);
+          setCachedAgentCode(adminCode, user.id);
           setIsLoading(false);
           return;
         }

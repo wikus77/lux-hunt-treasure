@@ -80,14 +80,9 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         } catch {}
       }
       
-      // If no specific redirect, go to mission-intro, otherwise use the target
-      const finalTarget = target || '/mission-intro';
-      console.log('🚀 [StandardLoginForm] REDIRECTING');
-      
-      // Clear intro flag only if going to mission-intro
-      if (!target) {
-        sessionStorage.removeItem("hasSeenPostLoginIntro");
-      }
+      // If no specific redirect, go to home
+      const finalTarget = target || '/home';
+      console.log('🚀 [StandardLoginForm] REDIRECTING TO:', finalTarget);
       
       navigate(finalTarget);
       

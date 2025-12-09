@@ -374,6 +374,121 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   PAGE TRANSITIONS - ULTRA FAST NATIVE APP FEEL
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Fade-in VELOCISSIMO per tutte le pagine */
+@keyframes m1-page-enter {
+  0% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Classe per tutte le pagine - INSTANT */
+.m1-page-transition {
+  animation: m1-page-enter 0.08s ease-out forwards;
+}
+
+/* Main content transition - QUASI ISTANTANEA */
+main {
+  animation: m1-page-enter 0.08s ease-out;
+}
+
+/* GlobalLayout content - ULTRA FAST */
+.global-layout-content {
+  animation: m1-page-enter 0.1s ease-out;
+}
+
+/* Route change - INSTANT */
+[data-route] {
+  animation: m1-page-enter 0.08s ease-out;
+}
+
+/* Skeleton fade-out INSTANT */
+@keyframes m1-skeleton-fade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* NO FOUC - INSTANT */
+.m1-no-fouc {
+  opacity: 1;
+}
+
+/* Component mounting - INSTANT */
+.m1-mount-smooth {
+  animation: m1-page-enter 0.1s ease-out;
+}
+
+/* Card entrance - FASTER */
+@keyframes m1-card-stagger {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.m1-stagger-1 { animation: m1-card-stagger 0.08s ease-out forwards; }
+.m1-stagger-2 { animation: m1-card-stagger 0.08s ease-out 0.02s forwards; }
+.m1-stagger-3 { animation: m1-card-stagger 0.08s ease-out 0.04s forwards; }
+.m1-stagger-4 { animation: m1-card-stagger 0.08s ease-out 0.06s forwards; }
+
+/* Instant visibility - no wait */
+.m1-instant {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Header e Bottom Nav sempre visibili (no transizione) */
+.unified-header,
+.bottom-navigation-ios,
+header,
+nav {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+/* Skeleton shimmer ottimizzato */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(30, 41, 59, 1) 0%,
+    rgba(51, 65, 85, 1) 50%,
+    rgba(30, 41, 59, 1) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  main,
+  .m1-page-transition,
+  .global-layout-content,
+  [data-route],
+  .m1-mount-smooth,
+  .m1-stagger-1,
+  .m1-stagger-2,
+  .m1-stagger-3,
+  .m1-stagger-4 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
 
 

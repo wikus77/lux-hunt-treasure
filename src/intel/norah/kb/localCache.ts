@@ -56,35 +56,40 @@ const LOCAL_DOCS: LocalDoc[] = [
   },
   {
     slug: 'mission-tiers',
-    title: 'Tiers e limiti',
-    keywords: ['tier', 'free', 'silver', 'gold', 'black', 'limiti', 'pricing', 'vantaggi'],
-    content: `Free/Silver/Gold/Black: limiti mensili di BUZZ, costo/raggio e vantaggi accessori.
+    title: 'Tiers e limiti M1SSION™',
+    keywords: ['tier', 'free', 'silver', 'gold', 'black', 'titanium', 'limiti', 'pricing', 'vantaggi', 'abbonamento'],
+    content: `Abbonamenti M1SSION™: Free/Silver/Gold/Black/Titanium con BUZZ settimanali e indizi progressivi.
 
-**Free Tier:**
-• BUZZ mensili: 3
-• Raggio base: 100 km
-• Final Shot: 1/mese
+**Free Tier (Gratuito):**
+• 1 BUZZ gratuito/settimana
+• 1 indizio/settimana (Livello 1)
+• BUZZ MAP: solo a pagamento
+• Cooldown BUZZ MAP: 24h
 
-**Silver Tier:**
-• BUZZ mensili: 10
-• Raggio base: 250 km
-• Final Shot: 3/mese
-• Prezzo: 9,99€/mese
+**Silver Tier (3,99€/mese):**
+• 3 BUZZ gratuiti/settimana
+• 3 indizi/settimana (Livelli 1-2)
+• BUZZ MAP: solo a pagamento
+• Cooldown BUZZ MAP: 12h
 
-**Gold Tier:**
-• BUZZ mensili: 30
-• Raggio base: 500 km
-• Final Shot: 5/mese
-• Supporto prioritario
-• Prezzo: 29,99€/mese
+**Gold Tier (6,99€/mese):**
+• 4 BUZZ gratuiti/settimana
+• 5 indizi/settimana (Livelli 1-3)
+• BUZZ MAP: solo a pagamento
+• Cooldown BUZZ MAP: 8h
 
-**Black Tier:**
-• BUZZ illimitati
-• Raggio personalizzato
-• Final Shot illimitati
-• Accesso anticipato a nuovi premi
-• Concierge personale
-• Prezzo: 99,99€/mese`
+**Black Tier (9,99€/mese):**
+• 5 BUZZ gratuiti/settimana
+• 7 indizi/settimana (Livelli 1-4)
+• 1 BUZZ MAP gratuito/mese
+• Cooldown BUZZ MAP: 4h
+
+**Titanium Tier (29,99€/mese):**
+• 7 BUZZ gratuiti/settimana
+• 7 indizi/settimana (tutti i livelli 1-5)
+• 2 BUZZ MAP gratuiti/mese
+• Nessun cooldown BUZZ MAP
+• Supporto prioritario`
   }
 ];
 

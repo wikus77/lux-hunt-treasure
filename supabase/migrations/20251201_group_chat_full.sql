@@ -384,3 +384,4 @@ GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 DO $$ BEGIN RAISE NOTICE '✅ M1SSION Group Chat System installed successfully!'; END $$;
 
 
+

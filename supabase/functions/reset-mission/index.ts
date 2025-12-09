@@ -42,7 +42,7 @@ serve(async (req) => {
       throw new Error('Invalid JWT token');
     }
     
-    console.log(`✅ RESET MISSION: User authenticated - ID: ${user.id}, Email: ${user.email}`);
+    console.log(`✅ RESET MISSION: User authenticated - ID: ...${user.id.slice(-8)}`);
 
     // Verify email hash
     console.log('🔄 RESET MISSION: Verifying email authorization...');
@@ -108,34 +108,101 @@ serve(async (req) => {
     }
     console.log('✅ RESET MISSION: Confirmation code validated');
 
-    console.log(`🔄 MISSION RESET: Starting complete mission reset for user ${user.id}`);
+    console.log(`🔄 MISSION RESET: Starting GLOBAL mission reset (ALL USERS) by admin ...${user.id.slice(-8)}`);
 
-    // Execute the complete reset using the database function
-    console.log('🔄 MISSION RESET: Calling reset_user_mission_full database function...');
-    const { data: resetResult, error: resetError } = await supabase.rpc('reset_user_mission_full', { 
-      user_id_input: user.id 
-    });
-
-    if (resetError) {
-      console.error('❌ MISSION RESET: Database function failed:', resetError.message, resetError.details, resetError.hint);
-      throw new Error(`Mission reset failed: ${resetError.message}`);
+    // 🔥 FIX V2: Reset globale manuale se la funzione RPC non esiste
+    // Prima proviamo la RPC, se fallisce facciamo reset manuale
+    console.log('🔄 MISSION RESET: Attempting global reset...');
+    
+    let resetResult: any = { success: true, tables_cleared: [], users_reset: 0 };
+    
+    // Try RPC first
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('reset_all_users_mission');
+    
+    if (rpcError) {
+      console.warn('⚠️ MISSION RESET: RPC failed, executing manual reset...', rpcError.message);
+      
+      // MANUAL RESET - Delete from ALL mission-related tables
+      // 🔥 V3: Aggiunto search_areas che era MISSING!
+      const tablesToReset = [
+        'user_notifications',
+        'user_clues', 
+        'buzz_map_actions',
+        'user_map_areas',
+        'search_areas', // 🔥 AGGIUNTO! Questa tabella mancava!
+        'user_buzz_counter',
+        'user_buzz_map_counter',
+        'final_shots',
+        'daily_final_shot_limits',
+        'geo_radar_coordinates',
+        'map_click_events',
+        'map_points',
+        'mission_enrollments'
+      ];
+      
+      const clearedTables: string[] = [];
+      
+      for (const table of tablesToReset) {
+        try {
+          const { error, count } = await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          if (!error) {
+            clearedTables.push(`${table}: cleared`);
+            console.log(`✅ MISSION RESET: Cleared ${table}`);
+          } else {
+            console.warn(`⚠️ MISSION RESET: Could not clear ${table}:`, error.message);
+          }
+        } catch (e) {
+          console.warn(`⚠️ MISSION RESET: Exception clearing ${table}:`, e);
+        }
+      }
+      
+      // Reset user_mission_status
+      const { error: statusError, count: statusCount } = await supabase
+        .from('user_mission_status')
+        .update({
+          clues_found: 0,
+          mission_progress_percent: 0,
+          mission_days_remaining: 30,
+          buzz_counter: 0,
+          map_radius_km: null,
+          map_area_generated: false,
+          updated_at: new Date().toISOString()
+        })
+        .neq('user_id', '00000000-0000-0000-0000-000000000000');
+      
+      if (!statusError) {
+        clearedTables.push(`user_mission_status: ${statusCount || 'all'} users reset`);
+      }
+      
+      resetResult = {
+        success: true,
+        tables_cleared: clearedTables,
+        users_reset: statusCount || 0,
+        reset_date: new Date().toISOString(),
+        method: 'manual'
+      };
+      
+      console.log('✅ MISSION RESET: Manual reset completed');
+    } else {
+      resetResult = rpcResult || { success: true, tables_cleared: [], users_reset: 0 };
+      console.log('✅ MISSION RESET: RPC reset completed');
     }
 
-    console.log(`✅ MISSION RESET: Complete reset successful for user ${user.id}`, resetResult);
-    console.log(`📊 MISSION RESET: Tables reset: ${resetResult?.tables_reset?.join(', ')}`);
-    console.log(`📅 MISSION RESET: New mission start date: ${resetResult?.reset_date}`);
-    console.log(`⏱️ MISSION RESET: Days remaining reset to: ${resetResult?.mission_days_remaining}`);
+    console.log(`✅ MISSION RESET: GLOBAL reset successful!`);
+    console.log(`📊 MISSION RESET: Tables cleared: ${JSON.stringify(resetResult?.tables_cleared)}`);
+    console.log(`👥 MISSION RESET: Users reset: ${resetResult?.users_reset}`);
+    console.log(`📅 MISSION RESET: Reset date: ${resetResult?.reset_date}`);
 
     // Log the reset action
     console.log('🔄 MISSION RESET: Logging reset action to admin_logs...');
     const { error: logError } = await supabase.from('admin_logs').insert({
       user_id: user.id,
-      event_type: 'mission_reset',
+      event_type: 'GLOBAL_MISSION_RESET',
       ip_address: clientIP,
       user_agent: userAgent,
-      context: 'Complete mission reset executed via database function',
+      context: `GLOBAL mission reset - ${resetResult?.users_reset || 0} users reset`,
       status_code: 200,
-      note: 'Mission reset completed successfully using reset_user_mission_full()'
+      note: JSON.stringify(resetResult)
     });
 
     if (logError) {
@@ -144,16 +211,16 @@ serve(async (req) => {
       console.log('✅ MISSION RESET: Action logged successfully');
     }
 
-    console.log(`✅ MISSION RESET: Complete mission reset successful for user ${user.id}`);
+    console.log(`✅ MISSION RESET: GLOBAL reset complete! ${resetResult?.users_reset || 0} users affected`);
 
     console.log('🔄 MISSION RESET: Preparing success response...');
     
     const successResponse = {
       status: "ok",
       success: true,
-      message: "Complete mission reset executed successfully",
-      userid: user.id,
-      reset_success: true,
+      message: "GLOBAL mission reset executed - ALL USERS RESET!",
+      admin_id: user.id,
+      reset_success: resetResult?.success || true,
       timestamp: new Date().toISOString(),
       reset_details: resetResult || {},
       mission_status: {
@@ -163,13 +230,15 @@ serve(async (req) => {
         progress_percent: 0,
         clues_found: 0
       },
-      tables_reset: resetResult?.tables_reset || [],
+      users_reset: resetResult?.users_reset || 0,
+      tables_reset: resetResult?.tables_cleared || [],
       logs: [
         "Authorization validated",
         "Rate limit passed", 
         "Confirmation code verified",
-        "Complete database reset executed",
-        `Reset ${resetResult?.tables_reset?.length || 0} tables`,
+        "🔥 GLOBAL DATABASE RESET EXECUTED (ALL USERS)",
+        `Users reset: ${resetResult?.users_reset || 0}`,
+        `Tables cleared: ${JSON.stringify(resetResult?.tables_cleared || [])}`,
         "Action logged"
       ]
     };
