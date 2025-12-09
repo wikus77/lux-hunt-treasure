@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ SHADOW PROTOCOL™ v7 - Shadow Behaviors Hook
 // Gestisce i behavior avanzati di Shadow basati su interazione e tempo
-// v7: Enhanced ambient effects, threat-based modulation
+// v7: Enhanced ambient effects, threat-based modulation, unified context triggers
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'wouter';
@@ -12,6 +12,7 @@ import {
   selectShadowThreatLevel,
 } from '@/stores/entityOverlayStore';
 import { getThreatLevelCategory } from '@/config/shadowProtocolConfig';
+import { useMapGlitchEffect } from './useMapGlitchEffect';
 
 // ============================================================================
 // BEHAVIOR TRACKING
@@ -251,6 +252,69 @@ export function useShadowBehaviors() {
   }, [threatCategory]);
 
   // =========================================================================
+  // 🆕 v7: Map Glitch Effect Integration
+  // =========================================================================
+  const { triggerMapGlitch, glitchCount } = useMapGlitchEffect();
+
+  // =========================================================================
+  // 🆕 v7: Context-aware behavior triggers
+  // Unified reactions when contexts are notified
+  // =========================================================================
+  useEffect(() => {
+    const handleContextTrigger = (e: CustomEvent<{ context: string }>) => {
+      const context = e.detail?.context;
+      
+      if (SHADOW_DEBUG) {
+        console.log(`[SHADOW v7] 🎯 Context trigger received: ${context}`);
+      }
+
+      // Add context-specific v6 behaviors on top of v4 narrative
+      switch (context) {
+        case 'buzz':
+          // BUZZ: Quick crosshair + whisper at high threat
+          if (threatCategory === 'HIGH') {
+            setTimeout(() => ShadowGlitchEngine.triggerCrosshair(), 200);
+          }
+          break;
+          
+        case 'map':
+          // Map: Trigger map jammer at medium+ threat
+          if (threatCategory !== 'LOW') {
+            setTimeout(() => ShadowGlitchEngine.triggerMapJammer(1), 300);
+          }
+          break;
+          
+        case 'reward':
+          // Reward: Whisper at any threat, breath pattern at high
+          setTimeout(() => {
+            ShadowGlitchEngine.triggerWhisper('Noted.');
+          }, 500);
+          if (threatCategory === 'HIGH') {
+            setTimeout(() => ShadowGlitchEngine.triggerBreathPattern(0.8), 1000);
+          }
+          break;
+          
+        case 'leaderboard':
+          // Leaderboard: Crosshair + whisper at high threat
+          if (threatCategory === 'HIGH') {
+            setTimeout(() => ShadowGlitchEngine.triggerCrosshair(), 300);
+            setTimeout(() => {
+              ShadowGlitchEngine.triggerWhisper('Ambition is visible.');
+            }, 800);
+          }
+          break;
+      }
+    };
+
+    // Listen for context triggers from notifyShadowContext
+    window.addEventListener('shadow:contextTrigger', handleContextTrigger as EventListener);
+    
+    return () => {
+      window.removeEventListener('shadow:contextTrigger', handleContextTrigger as EventListener);
+    };
+  }, [threatCategory]);
+
+  // =========================================================================
   // Exposed functions for manual triggering
   // =========================================================================
   const triggerWhisper = useCallback((message: string) => {
@@ -269,6 +333,8 @@ export function useShadowBehaviors() {
     triggerWhisper,
     triggerCrosshair,
     triggerTimelineSkip,
+    triggerMapGlitch,
+    glitchCount,
     getHeatLevel: ShadowGlitchEngine.getHeatLevel,
   };
 }

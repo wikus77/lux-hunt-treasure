@@ -55,3 +55,4 @@ END $$;
 -- 7. Comment on table
 COMMENT ON TABLE public.rate_limit_log IS 'Rate limiting log for Edge Functions - M1SSION™ Security';
 
+

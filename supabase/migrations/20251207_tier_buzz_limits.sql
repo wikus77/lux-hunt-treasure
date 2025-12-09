@@ -121,3 +121,4 @@ COMMENT ON TABLE public.user_buzzmap_monthly IS 'M1SSION™ - Traccia BUZZ MAP m
 -- FINE MIGRATION
 -- ============================================================================
 
+

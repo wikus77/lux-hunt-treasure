@@ -119,17 +119,24 @@ export const ShadowBehaviorsLayer: React.FC = () => {
   // Event Handlers
   // =========================================================================
   const handleWhisper = useCallback((e: CustomEvent<{ text: string }>) => {
+    // 🆕 v7: Clear any existing whisper timeout
+    const existingTimeout = timeoutsRef.current.get('whisper');
+    if (existingTimeout) {
+      window.clearTimeout(existingTimeout);
+    }
+
     setStates(prev => ({
       ...prev,
       whisper: { visible: true, text: e.detail.text }
     }));
 
+    // 🆕 v7: Longer display time (4s) for better visibility
     const timeout = window.setTimeout(() => {
       setStates(prev => ({
         ...prev,
         whisper: { visible: false, text: '' }
       }));
-    }, 3000);
+    }, 4000);
     timeoutsRef.current.set('whisper', timeout);
   }, []);
 

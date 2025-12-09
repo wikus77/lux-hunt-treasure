@@ -125,8 +125,8 @@ export const SHADOW_PROTOCOL_TIMING = {
   MAX_INTERVAL_MS: 300_000,  // 5 minuti
   // Limite massimo eventi per sessione (anti-spam)
   MAX_EVENTS_PER_SESSION: 8,
-  // Durata minima overlay prima di poter chiudere (ms)
-  MIN_DISPLAY_MS: 2000,
+  // 🆕 v7: Reduced min display time for faster UX (was 2000)
+  MIN_DISPLAY_MS: 1500,
   // Delay tra eventi concatenati (catene MCP ↔ SHADOW)
   CHAIN_DELAY_MS: 3000, // 3 secondi tra messaggio SHADOW e risposta MCP
   // Delay per trigger contestuali (after BUZZ, map open, etc.)
@@ -139,6 +139,8 @@ export const SHADOW_PROTOCOL_TIMING = {
   INACTIVITY_THRESHOLD_MS: 2 * 60 * 60 * 1000, // 2 ore
   // 🆕 v4: Finestra per leaderboard frequente (aumenta threat)
   LEADERBOARD_FREQUENT_WINDOW_MS: 10 * 60 * 1000, // 10 minuti
+  // 🆕 v7: Whisper display duration (ms)
+  WHISPER_DURATION_MS: 4000, // 4 seconds for whispers to be visible
 } as const;
 
 // ============================================================================

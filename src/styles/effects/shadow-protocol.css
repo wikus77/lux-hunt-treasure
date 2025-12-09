@@ -32,18 +32,22 @@
   animation: shadow-overlay-in 0.3s ease-out;
 }
 
-/* 🆕 v7: Faster entry animation */
+/* 🆕 v7: Faster entry animation - reduced from 0.3s to 0.2s */
 @keyframes shadow-overlay-in {
   0% {
     opacity: 0;
     backdrop-filter: blur(0px);
-    transform: scale(1.02);
+    transform: scale(1.01);
   }
   100% {
     opacity: 1;
     backdrop-filter: blur(4px);
     transform: scale(1);
   }
+}
+
+.shadow-protocol-overlay {
+  animation: shadow-overlay-in 0.2s ease-out; /* Faster entry */
 }
 
 /* ============================================================================
@@ -236,18 +240,21 @@
   transform: translateY(10px);
 }
 
-/* 🆕 v7: More prominent dismiss button */
+/* 🆕 v7: More prominent dismiss button - ENHANCED for better UX */
 .shadow-protocol-button.visible {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
-  animation: shadow-button-appear 0.25s ease-out, shadow-button-glow 2s ease-in-out infinite 0.5s;
+  animation: shadow-button-appear 0.2s ease-out, shadow-button-glow 1.5s ease-in-out infinite 0.3s;
+  /* Bigger touch target for mobile */
+  min-height: 48px;
+  min-width: 140px;
 }
 
 @keyframes shadow-button-appear {
   0% {
     opacity: 0;
-    transform: translateY(15px) scale(0.95);
+    transform: translateY(10px) scale(0.95);
   }
   100% {
     opacity: 1;
@@ -255,13 +262,13 @@
   }
 }
 
-/* 🆕 v7: Subtle glow animation to attract attention */
+/* 🆕 v7: More noticeable glow animation to attract attention */
 @keyframes shadow-button-glow {
   0%, 100% {
-    box-shadow: 0 0 10px currentColor;
+    box-shadow: 0 0 15px currentColor;
   }
   50% {
-    box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+    box-shadow: 0 0 25px currentColor, 0 0 40px currentColor;
   }
 }
 
@@ -1774,37 +1781,55 @@ html.shadow-global-glitch-active[style*="--global-glitch-intensity: 0.3"] {
 
 .shadow-whisper {
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom, 20px) + 80px);
+  bottom: calc(env(safe-area-inset-bottom, 20px) + 100px);
   left: calc(env(safe-area-inset-left, 16px) + 16px);
   z-index: 999985;
   pointer-events: none;
-  max-width: 280px;
+  max-width: 300px;
   
-  /* Whisper styling */
-  padding: 8px 16px;
+  /* 🆕 v7: Enhanced whisper styling - MORE VISIBLE */
+  padding: 12px 20px;
   background: linear-gradient(
     135deg,
-    rgba(0, 0, 0, 0.9) 0%,
-    rgba(30, 0, 20, 0.85) 100%
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(40, 0, 25, 0.92) 100%
   );
-  border-left: 2px solid #ff0055;
-  border-radius: 4px;
+  border-left: 3px solid #ff0055;
+  border-radius: 6px;
   box-shadow: 
-    0 0 20px rgba(255, 0, 85, 0.3),
-    inset 0 0 30px rgba(0, 0, 0, 0.5);
+    0 0 30px rgba(255, 0, 85, 0.4),
+    0 4px 20px rgba(0, 0, 0, 0.8),
+    inset 0 0 40px rgba(0, 0, 0, 0.5);
   
-  /* Animation */
-  animation: shadow-whisper-in 0.3s ease-out, shadow-whisper-flicker 3s steps(2);
+  /* Animation - longer duration for visibility */
+  animation: shadow-whisper-in 0.4s ease-out, shadow-whisper-breathe 2s ease-in-out infinite 0.4s;
 }
 
 .shadow-whisper-text {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-size: 13px;
   color: #ff0055;
-  text-shadow: 0 0 8px rgba(255, 0, 85, 0.6);
-  letter-spacing: 0.05em;
-  line-height: 1.4;
+  text-shadow: 0 0 12px rgba(255, 0, 85, 0.8), 0 0 20px rgba(255, 0, 85, 0.4);
+  letter-spacing: 0.08em;
+  line-height: 1.5;
   display: block;
+  font-weight: 500;
+}
+
+/* 🆕 v7: Breathing animation for whisper */
+@keyframes shadow-whisper-breathe {
+  0%, 100% {
+    box-shadow: 
+      0 0 30px rgba(255, 0, 85, 0.4),
+      0 4px 20px rgba(0, 0, 0, 0.8),
+      inset 0 0 40px rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow: 
+      0 0 40px rgba(255, 0, 85, 0.6),
+      0 4px 25px rgba(0, 0, 0, 0.9),
+      inset 0 0 50px rgba(0, 0, 0, 0.6);
+  }
 }
 
 @keyframes shadow-whisper-in {

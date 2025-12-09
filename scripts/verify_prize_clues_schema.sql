@@ -9,3 +9,4 @@ WHERE table_schema = 'public'
   AND table_name = 'prize_clues'
 ORDER BY ordinal_position;
 
+

@@ -56,3 +56,4 @@ COMMENT ON FUNCTION public.update_user_balance IS
 -- © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 
+
