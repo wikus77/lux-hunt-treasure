@@ -97,7 +97,7 @@ const TutorialOverlay: React.FC = () => {
   const currentSlideData = tutorialSlides[currentSlide];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black text-white overflow-hidden">
+    <div className="fixed inset-0 z-[10001] bg-black text-white overflow-hidden">
       <SafeAreaWrapper>
         {/* Header with Skip Button */}
         <div className="absolute top-4 right-4 z-10">

@@ -361,22 +361,57 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
   };
 
   // Handle successful in-app payment
-  const handleInAppPaymentSuccess = async () => {
-    console.log('🎉 M1SSION™ In-app payment successful');
-    setShowInAppCheckout(false);
+  const handleInAppPaymentSuccess = async (paymentIntentId: string) => {
+    console.log('🎉 M1SSION™ In-app payment successful:', paymentIntentId);
     
-    // Update local state
-    setSelected(selectedPlan);
-    
-    // Force refresh subscription data
     try {
+      // 🔥 CRITICAL: Call handle-payment-success to activate subscription in database
+      console.log('📞 M1SSION™ Calling handle-payment-success Edge Function...');
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
+      const { data: successData, error: successError } = await supabase.functions.invoke('handle-payment-success', {
+        body: {
+          payment_intent_id: paymentIntentId,
+          user_id: user.id,
+          plan: selectedPlan
+        }
+      });
+
+      if (successError) {
+        console.error('❌ M1SSION™ handle-payment-success error:', successError);
+        sonnerToast.error('Errore nell\'attivazione abbonamento', {
+          description: `Contatta supporto con riferimento: ${paymentIntentId}`,
+          duration: 8000
+        });
+        return;
+      }
+
+      console.log('✅ M1SSION™ handle-payment-success result:', successData);
+
+      setShowInAppCheckout(false);
+      
+      // Update local state
+      setSelected(selectedPlan);
+      
+      // Force refresh subscription data
       await upgradeSubscription(selectedPlan);
+      
       sonnerToast.success(`🎉 Piano ${selectedPlan} attivato!`, {
-        description: 'Il tuo abbonamento è ora attivo',
+        description: 'Il tuo abbonamento è ora attivo e funzionante',
         duration: 6000
       });
+      
     } catch (error) {
-      console.error('❌ M1SSION™ Error refreshing subscription:', error);
+      console.error('❌ M1SSION™ Error in handleInAppPaymentSuccess:', error);
+      sonnerToast.error('Errore nell\'attivazione abbonamento', {
+        description: 'Il pagamento è andato a buon fine ma c\'è stato un errore. Contatta il supporto.',
+        duration: 8000
+      });
     }
   };
 
@@ -602,7 +637,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
             }}
             onSuccess={async (paymentIntentId: string) => {
               console.log('🎉 Subscription payment completed:', paymentIntentId);
-              await handleInAppPaymentSuccess();
+              await handleInAppPaymentSuccess(paymentIntentId);
             }}
             onCancel={handleInAppPaymentCancel}
           />

@@ -14,17 +14,13 @@ const IntelligencePage: React.FC = () => {
   const aionRef = useRef<AionEntityHandle>(null);
 
   return (
+    // 🆕 FIX: Layout normale (NO position fixed) - rispetta GlobalLayout
+    // La bottom nav rimane sempre nella sua posizione originale
     <div 
+      className="flex flex-col px-4 pb-4"
       style={{
-        position: 'fixed',
-        inset: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 85px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 95px)',
-        paddingLeft: '16px',
-        paddingRight: '16px'
+        minHeight: 'calc(100dvh - var(--header-height, 80px) - var(--bottom-nav-height, 80px) - var(--safe-top, 0px) - var(--safe-bottom, 0px))',
+        overflow: 'visible'
       }}
     >
       {/* M1U Pill - Below header */}

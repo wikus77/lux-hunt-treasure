@@ -71,8 +71,34 @@ serve(withCors(async (req: Request): Promise<Response> => {
     }
 
     const level = pricing.level;
-    const radiusKm = pricing.radius_km;
+    const baseRadiusKm = pricing.radius_km;
     const costM1U = pricing.m1u; // 🔥 FIX: Changed from cost_m1u to m1u
+    
+    // 🚀 BOOTSTRAP BOOST: First 10 BUZZ MAP get 2× radius (4× area)
+    const BUZZ_MAP_BOOTSTRAP_COUNT = 10;
+    const BUZZ_MAP_BOOTSTRAP_MULTIPLIER = 2;
+    
+    // Query actual BUZZ MAP count for this user
+    const { count: buzzMapCount } = await supabase
+      .from('user_map_areas')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('source', 'buzz_map');
+    
+    const currentCount = buzzMapCount ?? 0;
+    const isBootstrapEligible = currentCount < BUZZ_MAP_BOOTSTRAP_COUNT;
+    const radiusKm = isBootstrapEligible 
+      ? baseRadiusKm * BUZZ_MAP_BOOTSTRAP_MULTIPLIER 
+      : baseRadiusKm;
+    
+    // 🔴 LOG for verification
+    console.log('🚀 [BOOTSTRAP] BUZZ MAP #' + (currentCount + 1) + ':', {
+      currentCount,
+      isBootstrapEligible,
+      baseRadiusKm,
+      effectiveRadiusKm: radiusKm,
+      multiplier: isBootstrapEligible ? BUZZ_MAP_BOOTSTRAP_MULTIPLIER : 1
+    });
     
     // Calculate current week
     const now = new Date();

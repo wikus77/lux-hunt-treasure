@@ -135,14 +135,11 @@ const M1UPill: React.FC<M1UPillProps> = ({
       // Refetch to get actual new balance from server
       setTimeout(() => refetch(), 100);
       
-      // Start the rolling animation
+      // Start the rolling animation - NO TOAST, let the animation speak!
       animateBalance(currentDisplayed, newBalance, 2500); // 2.5 seconds for dramatic effect
       
-      // Show celebratory toast
-      toast.success(`💰 +${amount} M1U!`, {
-        description: 'Guarda i tuoi crediti salire! 🎰',
-        duration: 3000
-      });
+      // 🎰 Toast removed - the slot machine animation IS the celebration!
+      console.log(`[M1UPill] 🎰 Slot machine animation started: +${amount} M1U`);
     };
 
     window.addEventListener('m1u-credited', handleM1UCredited as EventListener);

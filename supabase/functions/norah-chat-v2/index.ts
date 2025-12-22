@@ -185,7 +185,12 @@ serve(async (req) => {
   }
 
   try {
-    const { session_id, text, messages = [], system } = await req.json();
+    const { session_id, text, messages = [], system, is_retry = false, retry_attempt = 0 } = await req.json();
+
+    // 🔍 OBSERVABILITY: Log retry attempts
+    if (is_retry) {
+      console.log(`[AION] RETRY_ATTEMPT: ${retry_attempt}, session: ${session_id?.substring(0, 20)}`);
+    }
 
     // Validate input
     if (!session_id || !text) {
@@ -226,6 +231,25 @@ serve(async (req) => {
         const { data: { user } } = await userClient.auth.getUser();
         userId = user?.id || null;
 
+        // 🔍 OBSERVABILITY: Log retry event to ai_events table
+        if (userId && is_retry) {
+          try {
+            await supabase.from('ai_events').insert({
+              user_id: userId,
+              session_id: session_id,
+              event_type: 'AION_RETRY_ATTEMPT',
+              payload: {
+                retry_attempt,
+                timestamp: new Date().toISOString(),
+                text_preview: text.substring(0, 50)
+              }
+            });
+            console.log(`[AION] Retry event logged for user: ${userId.substring(0, 8)}`);
+          } catch (retryLogErr) {
+            console.warn('[AION] Failed to log retry event (non-blocking):', retryLogErr);
+          }
+        }
+
         if (userId) {
           // Check access via RPC using USER client (not service role)
           // This is needed because check_aion_access uses auth.uid()
@@ -236,22 +260,72 @@ serve(async (req) => {
             );
 
             if (accessError) {
-              // RPC might not exist yet - allow access without M1U check
-              console.warn('[AION] Access check RPC error:', accessError.message);
-              accessResult = { authorized: true, plan: 'FREE', m1u_spent: 0, free_remaining: 0 };
+              // 🔒 HARDENED: RPC error = HARD FAIL (no bypass)
+              console.error('[AION] BILLING_RPC_UNAVAILABLE:', accessError.message);
+              return new Response(
+                JSON.stringify({
+                  authorized: false,
+                  error_code: 'RPC_UNAVAILABLE',
+                  message: 'Sistema di billing non disponibile. Riprova più tardi.',
+                  meta: { provider: 'billing_error', rpc_error: accessError.message }
+                }),
+                { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
             } else {
               console.log('[AION] Access check result:', accessData);
               accessResult = accessData;
             }
           } catch (rpcError) {
-            // RPC doesn't exist - proceed without M1U checks
-            console.warn('[AION] RPC call failed:', rpcError);
-            accessResult = { authorized: true, plan: 'FREE', m1u_spent: 0, free_remaining: 0 };
+            // 🔒 HARDENED: RPC catch = HARD FAIL (no bypass)
+            console.error('[AION] BILLING_RPC_EXCEPTION:', rpcError);
+            return new Response(
+              JSON.stringify({
+                authorized: false,
+                error_code: 'RPC_UNAVAILABLE',
+                message: 'Sistema di billing non disponibile. Riprova più tardi.',
+                meta: { provider: 'billing_exception' }
+              }),
+              { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
           }
+        } else {
+          // 🔒 HARDENED: No user ID = HARD FAIL
+          console.error('[AION] NO_USER_ID: Cannot proceed without authenticated user');
+          return new Response(
+            JSON.stringify({
+              authorized: false,
+              error_code: 'NOT_AUTHENTICATED',
+              message: 'Autenticazione richiesta per accedere ad AION.',
+              meta: { provider: 'auth_required' }
+            }),
+            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
       } catch (authError) {
-        console.error('[AION] Auth error:', authError);
+        // 🔒 HARDENED: Auth error = HARD FAIL
+        console.error('[AION] AUTH_EXCEPTION:', authError);
+        return new Response(
+          JSON.stringify({
+            authorized: false,
+            error_code: 'AUTH_ERROR',
+            message: 'Errore di autenticazione. Effettua nuovamente il login.',
+            meta: { provider: 'auth_exception' }
+          }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
+    } else {
+      // 🔒 HARDENED: No userClient = HARD FAIL
+      console.error('[AION] NO_AUTH_HEADER: Authorization header missing');
+      return new Response(
+        JSON.stringify({
+          authorized: false,
+          error_code: 'NOT_AUTHENTICATED',
+          message: 'Header di autorizzazione mancante.',
+          meta: { provider: 'no_auth_header' }
+        }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // If access check failed or not authorized, return error

@@ -103,4 +103,13 @@ export function withSecureCors(res: Response, origin: string | null): Response {
   });
 }
 
+/**
+ * 🔧 FIX: secureCors helper function for backwards compatibility
+ * Takes a Request and returns CORS headers object
+ */
+export function secureCors(req: Request): Record<string, string> {
+  const origin = req.headers.get('Origin');
+  return getSecureCorsHeaders(origin);
+}
+
 

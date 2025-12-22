@@ -29,8 +29,9 @@ import { PushCenter } from '@/components/panel/PushCenter';
 import PushControlPanelPage from '@/pages/panel/PushControlPanelPage';
 import PushAutoPreflightPage from '@/pages/panel/PushAutoPreflightPage';
 import { PUSH_PREFLIGHT_ENABLED } from '@/config/featureFlags';
+import { QrOpsPanel } from '@/components/qr/QrOpsPanel';
 
-type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'mission-command-center' | 'qr-control' | 'marker-rewards' | 'push-center' | 'push-control' | 'push-sender' | 'push-preflight';
+type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'mission-command-center' | 'qr-control' | 'qr-ops' | 'marker-rewards' | 'push-center' | 'push-control' | 'push-sender' | 'push-preflight';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -247,6 +248,29 @@ const PanelAccessPage = () => {
   }
 
   // Removed old debug-test view - replaced by unified Push Center
+
+  // ⚡ QR OPS Panel - Nuovo generatore avanzato QR
+  if (currentView === 'qr-ops' && hasAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <Helmet>
+          <title>M1SSION PANEL™ - QR OPS</title>
+        </Helmet>
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <div className="max-w-4xl mx-auto">
+            <QrOpsPanel onBack={() => setCurrentView('home')} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Push Center View
   if (currentView === 'push-center' && hasAccess && isAdmin) {
@@ -568,6 +592,25 @@ const PanelAccessPage = () => {
                     <h3 className="font-semibold text-white">QR Control Panel</h3>
                     <p className="text-gray-400 text-sm">Gestione QR codes e marker</p>
                   </div>
+                </div>
+              </motion.div>
+
+              {/* ⚡ QR OPS - Nuovo generatore avanzato */}
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setCurrentView('qr-ops')}
+                className="glass-card p-4 border-2 border-purple-500/50 cursor-pointer group bg-gradient-to-r from-purple-900/20 to-cyan-900/20"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-purple-600 to-cyan-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <QrCode className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">⚡ QR OPS Panel</h3>
+                    <p className="text-gray-400 text-sm">Generatore avanzato: Link, Claim, Invite, Checkpoint, Batch</p>
+                  </div>
+                  <span className="px-2 py-0.5 bg-purple-500/30 text-purple-300 text-xs rounded-full">NEW</span>
                 </div>
               </motion.div>
 

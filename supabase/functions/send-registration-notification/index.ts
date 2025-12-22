@@ -72,39 +72,21 @@ serve(async (req) => {
       );
     }
 
-    // 2. Email di benvenuto - IN PARALLELO
+    // 2. Email di benvenuto PREMIUM via IONOS SMTP - IN PARALLELO
     tasks.push(
-      supabase.functions.invoke('send-email', {
+      supabase.functions.invoke('send-welcome-email', {
         body: {
           to: email,
-          subject: "🧠 Benvenuto in M1SSION™ - Il tuo codice agente è pronto",
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0a0a0a; color: #ffffff; padding: 20px; border-radius: 10px;">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #00d1ff; font-size: 28px; margin: 0;">M1SSION™</h1>
-                <p style="color: #888; margin: 5px 0 0 0;">Tactical Intelligence Game</p>
-              </div>
-              <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #00d1ff33;">
-                <h2 style="color: #00d1ff; margin-top: 0;">🧠 Benvenuto in M1SSION™!</h2>
-                <p style="font-size: 16px; line-height: 1.6;">Ciao ${fullName || 'Agente'},</p>
-                <p style="font-size: 16px; line-height: 1.6;">La tua registrazione è stata completata. Il tuo codice agente è:</p>
-                <div style="text-align: center; margin: 20px 0;">
-                  <span style="font-size: 24px; font-weight: bold; color: #00d1ff; background: #1a1a2e; padding: 10px 20px; border-radius: 6px; border: 2px solid #00d1ff;">${realAgentCode}</span>
-                </div>
-              </div>
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="https://m1ssion.eu/choose-plan" style="display: inline-block; background: linear-gradient(135deg, #00d1ff, #0099cc); color: #000; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">🚀 SCEGLI IL TUO PIANO</a>
-              </div>
-              <div style="background: #1a1a1a; padding: 15px; border-radius: 6px; border-left: 4px solid #ffa500; margin-bottom: 20px;">
-                <p style="margin: 0; font-size: 14px; color: #ccc;"><strong>⚠️ Importante:</strong> Per accedere alla missione devi completare l'abbonamento.</p>
-              </div>
-              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #333; text-align: center;">
-                <p style="font-size: 12px; color: #666; margin: 0;">© 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™</p>
-              </div>
-            </div>
-          `
+          fullName: fullName || 'Agente',
+          agentCode: realAgentCode
         }
-      }).then(r => ({ type: 'email', success: !r.error })).catch(() => ({ type: 'email', success: false }))
+      }).then(r => {
+        console.log('📧 Welcome email result:', r);
+        return { type: 'email', success: !r.error };
+      }).catch((err) => {
+        console.error('📧 Welcome email error:', err);
+        return { type: 'email', success: false };
+      })
     );
 
     // 3. Log attività - IN PARALLELO

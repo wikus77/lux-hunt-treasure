@@ -17,42 +17,18 @@ export function useNotificationManager() {
   
   const [notificationsBannerOpen, setNotificationsBannerOpen] = useState(false);
   
-  // FIXED: Reduced polling interval to 5 seconds for better responsiveness
-  const pollingIntervalRef = useRef<number | null>(null);
+  // 🔧 v3: REMOVED DUPLICATE POLLING - useNotifications already handles polling
+  // This was causing double requests every 5 seconds!
   const isInitialLoadDone = useRef<boolean>(false);
   
-  // FIXED: Setup notification polling every 5 seconds instead of 3 minutes
+  // Only do initial load once - useNotifications handles ongoing polling
   useEffect(() => {
-    const startPolling = () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-      
-      // FIXED: Poll every 5 seconds instead of 180 seconds
-      pollingIntervalRef.current = window.setInterval(() => {
-        if (document.visibilityState === 'visible') {
-          console.log('🔄 NOTIFICATION_MANAGER: Polling for new notifications...');
-          reloadNotifications();
-        } else {
-          console.log('⏸️ NOTIFICATION_MANAGER: Skipping polling - page not visible');
-        }
-      }, 5000) as unknown as number; // 5 seconds
-    };
-    
-    // Initial load
     if (!isInitialLoadDone.current) {
       reloadNotifications().then(() => {
         console.log('📱 NOTIFICATION_MANAGER: Initial notifications loaded');
         isInitialLoadDone.current = true;
-        startPolling();
       });
     }
-    
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
   }, [reloadNotifications]);
 
   // Handle opening notifications banner

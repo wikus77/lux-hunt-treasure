@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     console.log("[AUTO-PUSH-CRON] ✅ Auth check passed (internal CRON)");
 
     console.log(`[AUTO-PUSH-CRON] ✅ Cron authenticated (dry-run: ${dryRun}, bypass-quiet: ${bypassQuietHours}, force-user: ${forceUserId || 'none'})`);
-    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2025-12-03-v4-FIXED`);
+    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2025-12-18-v5-TIME-SLOTS`);
 
     // 2. Load config
     const supabase = createClient(SB_URL, SERVICE_ROLE_KEY);
@@ -98,22 +98,24 @@ Deno.serve(async (req) => {
       return json({ ok: true, message: "Auto-push disabled" }, 200);
     }
 
-    // 3. Time check: Quiet hours (Europe/Rome tz)
+    // 3. Time check: Specific time slots (Europe/Rome tz)
+    // Slots: 09:00-09:59, 11:00-11:59, 15:00-15:59, 18:00-18:59
+    const ALLOWED_HOURS = [9, 11, 15, 18];
     const now = new Date();
     const romeTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Rome' }));
     const hour = romeTime.getHours();
 
-    // Global quiet hours check (21:00-08:59) - can be bypassed for tests
-    if (!bypassQuietHours && (hour >= 21 || hour < 9)) {
-      console.log(`[AUTO-PUSH-CRON] ⏸️ Global quiet hours (${hour}:00 Rome time)`);
-      return json({ ok: true, message: "Quiet hours" }, 200);
+    // Check if current hour is in allowed slots (bypass for tests)
+    if (!bypassQuietHours && !ALLOWED_HOURS.includes(hour)) {
+      console.log(`[AUTO-PUSH-CRON] ⏸️ Not in allowed time slot (${hour}:00 Rome time). Allowed: ${ALLOWED_HOURS.join(', ')}`);
+      return json({ ok: true, message: `Not in time slot. Current: ${hour}:00, Allowed: ${ALLOWED_HOURS.join(', ')}` }, 200);
     }
 
     if (bypassQuietHours) {
-      console.log(`[AUTO-PUSH-CRON] ⚡ Quiet hours bypassed for testing`);
+      console.log(`[AUTO-PUSH-CRON] ⚡ Time slot check bypassed for testing`);
     }
 
-    console.log(`[AUTO-PUSH-CRON] ✅ Active time confirmed (${hour}:00 Rome time)`);
+    console.log(`[AUTO-PUSH-CRON] ✅ Active time slot confirmed (${hour}:00 Rome time)`);
 
     // 4. Load active templates
     const { data: allTemplates, error: tplError } = await supabase
@@ -155,47 +157,65 @@ Deno.serve(async (req) => {
 
     console.log(`[AUTO-PUSH-CRON] ✅ Found ${users.length} users`);
 
-    // 6. Get today's logs for frequency cap - WITH TIME SLOT TRACKING
+    // 6. Get today's logs for frequency cap - WITH 4 TIME SLOT TRACKING
+    // Slots: 09:00-09:59, 11:00-11:59, 15:00-15:59, 18:00-18:59
     const today = new Date().toISOString().split('T')[0];
     const { data: todayLogs } = await supabase
       .from('auto_push_log')
       .select('user_id, template_id, details')
       .eq('sent_date', today);
 
-    // Track notifications per user AND per time slot
+    // Track notifications per user AND per time slot (4 slots)
     const userNotifCount = new Map<string, number>();
-    const userMorningCount = new Map<string, number>(); // 09:00-13:59
-    const userAfternoonCount = new Map<string, number>(); // 14:00-20:59
+    const userSlot9Count = new Map<string, number>();  // 09:00-09:59
+    const userSlot11Count = new Map<string, number>(); // 11:00-11:59
+    const userSlot15Count = new Map<string, number>(); // 15:00-15:59
+    const userSlot18Count = new Map<string, number>(); // 18:00-18:59
     
     todayLogs?.forEach((log: any) => {
       userNotifCount.set(log.user_id, (userNotifCount.get(log.user_id) || 0) + 1);
       
-      // Check time slot from details.sent_at
+      // Check time slot from details.sent_at (using Rome timezone)
       const sentAt = log.details?.sent_at;
       if (sentAt) {
-        const sentHour = new Date(sentAt).getHours();
-        if (sentHour >= 9 && sentHour < 14) {
-          userMorningCount.set(log.user_id, (userMorningCount.get(log.user_id) || 0) + 1);
-        } else if (sentHour >= 14 && sentHour <= 20) {
-          userAfternoonCount.set(log.user_id, (userAfternoonCount.get(log.user_id) || 0) + 1);
+        const sentDate = new Date(sentAt);
+        const sentRomeTime = new Date(sentDate.toLocaleString('en-US', { timeZone: 'Europe/Rome' }));
+        const sentHour = sentRomeTime.getHours();
+        
+        if (sentHour === 9) {
+          userSlot9Count.set(log.user_id, (userSlot9Count.get(log.user_id) || 0) + 1);
+        } else if (sentHour === 11) {
+          userSlot11Count.set(log.user_id, (userSlot11Count.get(log.user_id) || 0) + 1);
+        } else if (sentHour === 15) {
+          userSlot15Count.set(log.user_id, (userSlot15Count.get(log.user_id) || 0) + 1);
+        } else if (sentHour === 18) {
+          userSlot18Count.set(log.user_id, (userSlot18Count.get(log.user_id) || 0) + 1);
         }
       }
     });
 
-    // 7. Process users - WITH TIME SLOT LIMITS
+    // 7. Process users - WITH 4 SPECIFIC TIME SLOT LIMITS
+    // 1 notification per slot, 4 slots total = max 4 per day
     const MAX_NOTIF_PER_DAY = 4;
-    const MAX_NOTIF_PER_SLOT = 2; // Max 2 morning + 2 afternoon
+    const MAX_NOTIF_PER_SLOT = 1; // Max 1 per time slot
     const BATCH_SIZE = 200;
     const logsToInsert: any[] = [];
     let sentCount = 0;
     let skippedCount = 0;
 
-    // Determine current time slot
-    const isMorning = hour >= 9 && hour < 14;
-    const isAfternoon = hour >= 14 && hour <= 20;
-    const currentSlot = isMorning ? 'morning' : 'afternoon';
+    // Current time slot name for logging
+    const currentSlot = `slot_${hour}`;
     
-    console.log(`[AUTO-PUSH-CRON] 🕐 Current slot: ${currentSlot} (${hour}:00)`);
+    // Get the right slot counter based on current hour
+    const getSlotCount = (userId: string): number => {
+      if (hour === 9) return userSlot9Count.get(userId) || 0;
+      if (hour === 11) return userSlot11Count.get(userId) || 0;
+      if (hour === 15) return userSlot15Count.get(userId) || 0;
+      if (hour === 18) return userSlot18Count.get(userId) || 0;
+      return 0;
+    };
+    
+    console.log(`[AUTO-PUSH-CRON] 🕐 Current slot: ${hour}:00 Rome time`);
 
     // Shuffle users for random selection
     const shuffledUsers = users.sort(() => Math.random() - 0.5).slice(0, BATCH_SIZE);
@@ -209,13 +229,11 @@ Deno.serve(async (req) => {
         continue;
       }
       
-      // Check time slot limit (2 per slot)
-      const slotCount = isMorning 
-        ? (userMorningCount.get(user.id) || 0)
-        : (userAfternoonCount.get(user.id) || 0);
+      // Check time slot limit (1 per slot)
+      const slotCount = getSlotCount(user.id);
         
       if (slotCount >= MAX_NOTIF_PER_SLOT) {
-        console.log(`[AUTO-PUSH-CRON] ⏭️ User ${user.agent_code} at ${currentSlot} limit (${slotCount}/${MAX_NOTIF_PER_SLOT})`);
+        console.log(`[AUTO-PUSH-CRON] ⏭️ User ${user.agent_code} at ${hour}:00 slot limit (${slotCount}/${MAX_NOTIF_PER_SLOT})`);
         skippedCount++;
         continue;
       }
@@ -393,7 +411,7 @@ Deno.serve(async (req) => {
 
     return json({
       ok: true,
-      version: '2025-12-03-v4-FIXED',
+      version: '2025-12-18-v5-TIME-SLOTS',
       users_processed: shuffledUsers.length,
       sent: sentCount,
       skipped: skippedCount,

@@ -1,9 +1,10 @@
 
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - BUZZ Page Component - FIXED PRICING LOGIC
+// V2: Added START M1SSION gate enforcement
 
 import React, { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BuzzActionButton } from '@/components/buzz/BuzzActionButton';
 import { BuzzInstructions } from '@/components/buzz/BuzzInstructions';
 import { BuzzRewardHandler } from '@/components/buzz/BuzzRewardHandler';
@@ -17,6 +18,9 @@ import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import M1UPill from '@/features/m1u/M1UPill';
 import { useDebugFlag } from '@/debug/useDebugFlag';
 import { DebugBuzzPanel } from '@/debug/DebugBuzzPanel';
+import { useActiveMissionEnrollment } from '@/hooks/useActiveMissionEnrollment';
+import { Rocket, Lock, AlertCircle } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
@@ -25,6 +29,10 @@ export const BuzzPage: React.FC = () => {
   const vortexSoundRef = useRef<ReturnType<typeof createVortexSound> | null>(null);
   const debugEnabled = useDebugFlag();
   const [forceShow, setForceShow] = React.useState(false);
+  const [, setLocation] = useLocation();
+  
+  // 🚨 START M1SSION GATE: Check if user is enrolled in mission
+  const { isEnrolled, isLoading: enrollmentLoading, missionId } = useActiveMissionEnrollment();
   
   // 🔥 FIXED: Use centralized pricing logic from useBuzzCounter
   const { 
@@ -33,8 +41,54 @@ export const BuzzPage: React.FC = () => {
     loadDailyBuzzCounter  // ✅ ADD THIS for force refresh
   } = useBuzzCounter(user?.id);
 
-  // 🔥 FIXED: Use only centralized M1U pricing
-  const isBlocked = false; // Never blocked, progressive pricing continues
+  // 🔥 V5 FIX DEFINITIVO: Cache localStorage è source of truth per UI iniziale
+  // Il modal si mostra SOLO se:
+  // 1. Cache localStorage dice NON enrolled
+  // 2. L'enrollment check DB è COMPLETATO (isLoading=false)
+  // 3. Il DB conferma NON iscritto (isEnrolled=false)
+  // 4. Sono passati almeno 1000ms dal mount
+  
+  const cachedEnrollmentValue = React.useMemo(() => {
+    try {
+      return localStorage.getItem('m1_mission_enrolled') === '1';
+    } catch { return false; }
+  }, []); // Solo al mount!
+  
+  const [mountTime] = React.useState(() => Date.now());
+  const [showGate, setShowGate] = React.useState(false);
+  
+  React.useEffect(() => {
+    // 🔒 REGOLA 1: Se cache dice enrolled → MAI mostrare gate
+    if (cachedEnrollmentValue) {
+      setShowGate(false);
+      return;
+    }
+    
+    // 🔒 REGOLA 2: Se DB dice enrolled → MAI mostrare gate
+    if (isEnrolled) {
+      setShowGate(false);
+      return;
+    }
+    
+    // 🔒 REGOLA 3: Se ancora in loading → MAI mostrare gate
+    if (enrollmentLoading) {
+      setShowGate(false);
+      return;
+    }
+    
+    // Solo qui: cache=false, DB=false, loading=false → mostra dopo 1s
+    const timeSinceMount = Date.now() - mountTime;
+    const remainingDelay = Math.max(0, 1000 - timeSinceMount);
+    const timer = setTimeout(() => {
+      // Ricontrolla prima di mostrare
+      if (!isEnrolled && !cachedEnrollmentValue) {
+        setShowGate(true);
+      }
+    }, remainingDelay);
+    return () => clearTimeout(timer);
+  }, [enrollmentLoading, isEnrolled, mountTime, cachedEnrollmentValue]);
+  
+  const isBlocked = !isEnrolled && !enrollmentLoading;
   const currentPriceDisplay = getCurrentBuzzDisplayCostM1U();
 
   // ⏱️ Safety timeout: force show page after 3 seconds to prevent infinite spinner
@@ -182,6 +236,84 @@ export const BuzzPage: React.FC = () => {
 
           {/* Container centrato verticalmente e orizzontalmente */}
           <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+            
+            {/* 🚨 START M1SSION GATE: Show overlay when not enrolled (V4: no flash) */}
+            <AnimatePresence mode="wait">
+              {showGate && !isEnrolled && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+                  style={{ 
+                    paddingTop: 'calc(119px + env(safe-area-inset-top, 0px))',
+                    paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+                  }}
+                >
+                  <motion.div 
+                    className="text-center p-8 mx-4 rounded-3xl max-w-sm"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(0,30,60,0.95) 0%, rgba(0,15,30,0.98) 100%)',
+                      border: '1px solid rgba(0, 209, 255, 0.3)',
+                      boxShadow: '0 0 60px rgba(0, 209, 255, 0.2), inset 0 0 30px rgba(0, 209, 255, 0.05)',
+                    }}
+                  >
+                    {/* Lock Icon */}
+                    <motion.div
+                      animate={{ 
+                        scale: [1, 1.1, 1],
+                        rotate: [0, 5, -5, 0],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="mb-6"
+                    >
+                      <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255,100,100,0.2) 0%, rgba(255,50,50,0.1) 100%)',
+                          border: '2px solid rgba(255,100,100,0.4)',
+                        }}
+                      >
+                        <Lock className="w-10 h-10 text-red-400" />
+                      </div>
+                    </motion.div>
+                    
+                    {/* Title */}
+                    <h2 className="text-2xl font-orbitron font-bold text-white mb-3">
+                      MISSIONE NON AVVIATA
+                    </h2>
+                    
+                    {/* Description */}
+                    <p className="text-white/70 mb-6 text-sm leading-relaxed">
+                      Per utilizzare <span className="text-cyan-400 font-semibold">BUZZ</span> devi prima avviare la missione del mese.
+                      <br />
+                      Torna alla Home e premi <span className="text-cyan-400 font-semibold">START M1SSION</span>.
+                    </p>
+                    
+                    {/* CTA Button */}
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setLocation('/home')}
+                      className="w-full py-4 px-6 rounded-xl font-orbitron font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-3"
+                      style={{
+                        background: 'linear-gradient(135deg, #00D1FF 0%, #0099CC 100%)',
+                        boxShadow: '0 0 30px rgba(0, 209, 255, 0.4)',
+                      }}
+                    >
+                      <Rocket className="w-5 h-5" />
+                      VAI ALLA HOME
+                    </motion.button>
+                    
+                    {/* Info */}
+                    <div className="mt-4 flex items-center justify-center gap-2 text-white/40 text-xs">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>Il BUZZ sarà disponibile dopo l'avvio</span>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
             {/* Pulsante BUZZ centrato */}
             <div className="text-center mb-6" data-onboarding="buzz-button">
               <BuzzActionButton

@@ -9,6 +9,9 @@ interface BuzzApiParams {
   coordinates?: { lat: number; lng: number };
   prizeId?: string;
   sessionId?: string;
+  // 🔍 OBSERVABILITY: Audit metadata for FREE/PAID tracking
+  buzzType?: 'TIER_FREE' | 'GRANT_FREE' | 'M1U_PAID';
+  m1uCost?: number;
 }
 
 interface BuzzApiResponse {
@@ -40,7 +43,7 @@ const DEBUG_BUZZ = import.meta.env.VITE_DEBUG_BUZZ_MAP === '1';
 const dlog = (...args: any[]) => { if (DEBUG_BUZZ) console.log(...args); };
 
 export function useBuzzApi() {
-  const handleBuzzPress = async ({ userId, mode, generateMap, coordinates, prizeId, sessionId }: BuzzApiParams): Promise<BuzzApiResponse> => {
+  const handleBuzzPress = async ({ userId, mode, generateMap, coordinates, prizeId, sessionId, buzzType, m1uCost }: BuzzApiParams): Promise<BuzzApiResponse> => {
     try {
       if (!userId) {
         console.error("UserId mancante nella chiamata API");
@@ -90,6 +93,10 @@ export function useBuzzApi() {
         if (prizeId) payload.prizeId = prizeId;
         if (sessionId) payload.sessionId = sessionId;
         
+        // 🔍 OBSERVABILITY: Include audit metadata for FREE/PAID tracking
+        if (buzzType) payload.buzz_type = buzzType;
+        if (m1uCost !== undefined) payload.m1u_cost = m1uCost;
+        
         console.log(`🎯 HANDLE-BUZZ-PRESS payload:`, payload);
       }
       
@@ -101,9 +108,8 @@ export function useBuzzApi() {
         hasCoordinates: 'coordinates' in payload
       });
       
-      // Check user session before calling edge function
+      // Get user session for API call
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
       const jwt = sessionData?.session?.access_token || '';
       
       // 🔍 DIAGNOSTIC TRACE (as requested in task)
@@ -141,12 +147,13 @@ export function useBuzzApi() {
       console.log(`📡 Function URL: ${functionUrl}`);
       console.log(`📦 Payload:`, JSON.stringify(payload));
       
+      // 🔥 FIX: Simple direct call - no retry, clean request
       const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${jwt}`,
-          'apikey': (supabase as any).supabaseKey
+          'apikey': (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY || ''
         },
         body: JSON.stringify(payload)
       });

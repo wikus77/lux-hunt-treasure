@@ -188,20 +188,22 @@ export function useShadowBehaviors() {
     const ambientIntervalRef: { current: number | null } = { current: null };
 
     // Calculate interval based on threat (more frequent at high threat)
+    // 🔧 v7.1: Adjusted LOW interval for PRODUCTION visibility
     const getAmbientInterval = () => {
       switch (threatCategory) {
         case 'HIGH': return 30_000;   // Every 30s
         case 'MEDIUM': return 60_000; // Every 60s
-        case 'LOW': return 120_000;   // Every 2min
+        case 'LOW': return 70_000;    // 🔧 v7.1: Reduced from 120s to 70s for PRODUCTION
       }
     };
 
     // Calculate probability based on threat
+    // 🔧 v7.1: Adjusted LOW probability for PRODUCTION visibility
     const getAmbientProbability = () => {
       switch (threatCategory) {
-        case 'HIGH': return 0.5;   // 50% chance
+        case 'HIGH': return 0.5;    // 50% chance
         case 'MEDIUM': return 0.25; // 25% chance
-        case 'LOW': return 0.1;    // 10% chance
+        case 'LOW': return 0.28;    // 🔧 v7.1: Increased from 10% to 28% for PRODUCTION
       }
     };
 

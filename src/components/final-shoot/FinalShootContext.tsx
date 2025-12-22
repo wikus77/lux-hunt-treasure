@@ -1,9 +1,10 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // FINAL SHOOT CONTEXT - Shared state between Pill and Overlay
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuthContext } from '@/contexts/auth';
 
 interface FinalShootState {
   isAvailable: boolean;
@@ -43,10 +44,29 @@ const isTestMode = () => {
   return params.get('test-final-shoot') === 'true';
 };
 
-// Test coordinates (Piazza Duomo, Milano)
+// Test coordinates (Piazza Duomo, Milano) - used as fallback only
 const TEST_COORDINATES = { lat: 45.4642, lng: 9.1900 };
 
+// WINNING DISTANCE: 50 meters (reasonable for mobile GPS accuracy)
+const WINNING_DISTANCE_METERS = 50;
+
+// Generate hint based on distance
+const getHintFromDistance = (distanceMeters: number): string => {
+  if (distanceMeters <= WINNING_DISTANCE_METERS) return '🎯 PERFETTO! HAI VINTO!';
+  if (distanceMeters <= 100) return '🔥 Caldissimo! Sei vicinissimo! (< 100m)';
+  if (distanceMeters <= 250) return '🌡️ Molto caldo! Quasi ci sei! (< 250m)';
+  if (distanceMeters <= 500) return '☀️ Caldo! Stai andando bene! (< 500m)';
+  if (distanceMeters <= 1000) return '😊 Tiepido. Direzione giusta! (< 1km)';
+  if (distanceMeters <= 2000) return '😐 Freddo. Riprova! (< 2km)';
+  if (distanceMeters <= 5000) return '❄️ Molto freddo. Sei lontano. (< 5km)';
+  return '🥶 Freddissimo! Sei molto lontano. (> 5km)';
+};
+
 export function FinalShootProvider({ children }: { children: ReactNode }) {
+  // 🔥 FIX: Use AuthContext instead of direct supabase.auth.getUser() call
+  const { user: authUser, isLoading: authLoading } = useAuthContext();
+  const hasInitializedRef = useRef(false);
+  
   const [state, setState] = useState<FinalShootState>({
     isAvailable: false,
     isActive: false,
@@ -66,36 +86,49 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
   const [isLocked, setIsLocked] = useState(true);
   const [totalMissionDays, setTotalMissionDays] = useState(30);
 
-  // Generate hint based on distance
-  const getHintFromDistance = (distanceMeters: number): string => {
-    if (distanceMeters <= 19) return '🎯 PERFETTO! HAI VINTO!';
-    if (distanceMeters <= 50) return '🔥 Caldissimo! Sei vicinissimo!';
-    if (distanceMeters <= 100) return '🌡️ Molto caldo! Quasi ci sei!';
-    if (distanceMeters <= 250) return '☀️ Caldo! Stai andando bene!';
-    if (distanceMeters <= 500) return '😊 Tiepido. Direzione giusta!';
-    if (distanceMeters <= 1000) return '😐 Freddo. Riprova!';
-    if (distanceMeters <= 2000) return '❄️ Molto freddo. Sei lontano.';
-    return '🥶 Freddissimo! Sei molto lontano.';
-  };
-
   // Check if Final Shoot is available
+  // 🔥 FIX: Depend on authUser and authLoading to re-run when auth becomes ready
   useEffect(() => {
+    // Skip if auth is still loading
+    if (authLoading) {
+      console.log('🎯 [FINAL-SHOOT-CTX] Waiting for auth...');
+      return;
+    }
+    
     const checkAvailability = async () => {
       try {
         const testMode = isTestMode();
         
+        // Get current mission data (ALWAYS load real data, even in test mode)
+        // 🔥 FIX: Use is_active=true instead of mission_status='active'
+        const { data: mission, error: missionError } = await supabase
+          .from('current_mission_data')
+          .select('id, prize_lat, prize_lng, mission_ends_at, mission_started_at, mission_status, linked_mission_id')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
         if (testMode) {
-          console.log('🎯 [FINAL-SHOOT-CTX] TEST MODE ENABLED');
+          console.log('🎯 [FINAL-SHOOT-CTX] TEST MODE ENABLED - Using REAL mission coordinates');
+          
+          // Use REAL mission coordinates if available, fallback to test coordinates
+          const prizeLocation = (mission?.prize_lat && mission?.prize_lng)
+            ? { lat: mission.prize_lat, lng: mission.prize_lng }
+            : TEST_COORDINATES;
+          
+          console.log('🎯 [FINAL-SHOOT-CTX] Prize location:', prizeLocation);
+          
           setMissionData({
-            missionId: 'test-mission-id',
-            prizeLocation: TEST_COORDINATES,
+            missionId: mission?.linked_mission_id || mission?.id || 'test-mission-id',
+            prizeLocation,
             endsAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
           });
           setIsLocked(false);
           setState({
             isAvailable: true,
             isActive: false,
-            remainingAttempts: 3,
+            remainingAttempts: 99, // Unlimited attempts in test mode
             daysRemaining: 3,
             hasWon: false,
             isLoading: false,
@@ -105,15 +138,7 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        // Get current mission data
-        const { data: mission, error: missionError } = await supabase
-          .from('current_mission_data')
-          .select('id, prize_lat, prize_lng, mission_ends_at, mission_started_at, mission_status, linked_mission_id')
-          .eq('mission_status', 'active')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
+        // Normal mode - use already loaded mission data
         if (missionError || !mission) {
           console.log('🎯 [FINAL-SHOOT-CTX] No active mission found');
           setState(prev => ({ ...prev, isLoading: false, isAvailable: false }));
@@ -123,17 +148,24 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
 
         // Calculate total mission days
         const startedAt = mission.mission_started_at ? new Date(mission.mission_started_at) : null;
-        const endsAt = mission.mission_ends_at ? new Date(mission.mission_ends_at) : null;
+        let endsAt = mission.mission_ends_at ? new Date(mission.mission_ends_at) : null;
+        
+        // 🔥 FIX: If endsAt is not set, assume 30 days from start
+        if (!endsAt && startedAt) {
+          endsAt = new Date(startedAt.getTime() + 30 * 24 * 60 * 60 * 1000);
+          console.log('🎯 [FINAL-SHOOT-CTX] No end date set, assuming 30 days from start:', endsAt);
+        }
+        
         const missionDuration = (startedAt && endsAt) 
           ? Math.ceil((endsAt.getTime() - startedAt.getTime()) / (1000 * 60 * 60 * 24))
           : 30;
-        setTotalMissionDays(missionDuration);
+        setTotalMissionDays(Math.max(1, missionDuration)); // Ensure at least 1 day
 
         // Calculate days remaining
         const now = new Date();
         const daysRemaining = endsAt 
           ? Math.max(0, Math.ceil((endsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
-          : 0;
+          : 30; // 🔥 FIX: Default to 30 if no end date
 
         const isAvailable = daysRemaining > 0 && daysRemaining <= 7;
         setIsLocked(!isAvailable);
@@ -147,11 +179,13 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
         });
 
         // Get user's remaining attempts
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        // 🔥 FIX: Use authUser from context instead of direct Supabase call
+        if (!authUser) {
+          console.log('🎯 [FINAL-SHOOT-CTX] No user from auth context');
           setState(prev => ({ ...prev, isLoading: false, isAvailable: false }));
           return;
         }
+        const user = authUser;
 
         const { data: attempts, error: attemptsError } = await supabase
           .from('final_shoot_attempts')
@@ -195,7 +229,8 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
     };
 
     checkAvailability();
-  }, []);
+    hasInitializedRef.current = true;
+  }, [authUser?.id, authLoading]); // 🔥 FIX: Re-run when user becomes available
 
   // Activate Final Shoot mode
   const activateFinalShoot = useCallback(() => {
@@ -252,17 +287,17 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       const distance = R * c;
 
-      const isWinner = distance <= 19;
+      const isWinner = distance <= WINNING_DISTANCE_METERS;
       const hint = getHintFromDistance(distance);
 
       console.log('🎯 [FINAL-SHOOT-CTX] Distance:', distance, 'isWinner:', isWinner);
 
-      // Get user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      // 🔥 FIX: Use authUser from context instead of direct Supabase call
+      if (!authUser) {
         toast.error('Devi essere loggato');
         return false;
       }
+      const user = authUser;
 
       // Save attempt (skip in test mode for now)
       if (!isTestMode()) {
@@ -317,7 +352,7 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
       toast.error('Errore durante il tentativo');
       return false;
     }
-  }, [missionData, state.remainingAttempts, state.hasWon]);
+  }, [missionData, state.remainingAttempts, state.hasWon, authUser]); // 🔥 FIX: Added authUser dependency
 
   const value: FinalShootContextValue = {
     ...state,
@@ -346,6 +381,7 @@ export function useFinalShootContext() {
 }
 
 export default FinalShootContext;
+
 
 
 

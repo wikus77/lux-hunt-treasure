@@ -360,98 +360,40 @@ export function OnboardingOverlay() {
   const padding = currentStep.spotlightPadding || 12;
   const hasTarget = rect !== null;
   
-  // Check if mobile
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 480;
-  const tooltipWidth = isMobile ? Math.min(280, window.innerWidth - 32) : 320;
-
-  // Tooltip position - FULLY RESPONSIVE
+  // 🔥 SEMPLIFICATO: Tooltip SEMPRE centrato orizzontalmente, posizione verticale basata su elemento
   const getTooltipStyle = (): React.CSSProperties => {
-    const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const safeMargin = 16;
     
-    // Center if no target
+    // Se non c'è target, centra tutto
     if (!rect) {
       return { 
         top: '50%', 
-        left: '50%', 
-        transform: 'translate(-50%, -50%)',
-        maxWidth: `calc(100vw - ${safeMargin * 2}px)`,
+        left: '16px',
+        right: '16px',
+        transform: 'translateY(-50%)',
       };
     }
 
-    const pos = currentStep.position || 'bottom';
-    const gap = isMobile ? 12 : 20;
+    // Calcola se l'elemento è nella parte alta o bassa dello schermo
+    const elementCenterY = rect.top + rect.height / 2;
+    const isElementInTopHalf = elementCenterY < vh / 2;
     
-    // Calculate horizontal center, clamped to screen
-    const centerX = rect.left + rect.width / 2;
-    const halfTooltip = tooltipWidth / 2;
-    const leftPos = Math.max(safeMargin, Math.min(centerX - halfTooltip, vw - tooltipWidth - safeMargin));
-
-    // For mobile, prefer bottom or center positioning
-    if (isMobile) {
-      // Check if there's space below
-      const spaceBelow = vh - rect.bottom - padding;
-      const spaceAbove = rect.top - padding;
-      
-      if (spaceBelow > 200 || spaceBelow > spaceAbove) {
-        return {
-          top: Math.min(rect.bottom + gap + padding, vh - 220),
-          left: safeMargin,
-          right: safeMargin,
-          maxWidth: `calc(100vw - ${safeMargin * 2}px)`,
-        };
-      } else {
-        return {
-          bottom: vh - rect.top + gap + padding,
-          left: safeMargin,
-          right: safeMargin,
-          maxWidth: `calc(100vw - ${safeMargin * 2}px)`,
-        };
-      }
-    }
-
-    // Desktop positioning
-    if (pos === 'top') {
+    // Posiziona SOPRA se elemento è in basso, SOTTO se elemento è in alto
+    if (isElementInTopHalf) {
+      // Elemento in alto -> tooltip SOTTO
       return {
-        bottom: vh - rect.top + gap + padding,
-        left: leftPos,
+        top: Math.min(rect.bottom + padding + 16, vh - 250),
+        left: '16px',
+        right: '16px',
       };
-    }
-    if (pos === 'bottom') {
+    } else {
+      // Elemento in basso -> tooltip SOPRA
       return {
-        top: Math.min(rect.bottom + gap + padding, vh - 250),
-        left: leftPos,
+        bottom: vh - rect.top + padding + 16,
+        left: '16px',
+        right: '16px',
       };
     }
-    if (pos === 'left') {
-      const rightSpace = vw - rect.left + gap + padding;
-      return {
-        top: Math.max(100, Math.min(rect.top + rect.height / 2 - 100, vh - 250)),
-        right: Math.min(rightSpace, vw - tooltipWidth - safeMargin),
-      };
-    }
-    if (pos === 'right') {
-      return {
-        top: Math.max(100, Math.min(rect.top + rect.height / 2 - 100, vh - 250)),
-        left: Math.min(rect.right + gap + padding, vw - tooltipWidth - safeMargin),
-      };
-    }
-    if (pos === 'center') {
-      return { 
-        top: '50%', 
-        left: '50%', 
-        transform: 'translate(-50%, -50%)',
-        maxWidth: `calc(100vw - ${safeMargin * 2}px)`,
-      };
-    }
-    
-    return { 
-      top: '50%', 
-      left: '50%', 
-      transform: 'translate(-50%, -50%)',
-      maxWidth: `calc(100vw - ${safeMargin * 2}px)`,
-    };
   };
 
   return createPortal(
@@ -517,17 +459,15 @@ export function OnboardingOverlay() {
               transition={{ duration: 1.5, repeat: Infinity }}
             />
 
-            {/* FRECCIA */}
+            {/* FRECCIA - Semplificata */}
             <motion.div
-              className="fixed text-4xl pointer-events-none"
+              className="fixed text-3xl pointer-events-none z-[9999]"
               style={{
-                top: rect.top - padding - 50,
-                left: rect.left + rect.width / 2 - 20,
-                filter: currentStep.isFinalStep 
-                  ? 'drop-shadow(0 0 15px rgba(255,215,0,0.9))'
-                  : 'drop-shadow(0 0 10px rgba(0,209,255,0.8))',
+                top: rect.top - 45,
+                left: rect.left + rect.width / 2 - 15,
+                filter: 'drop-shadow(0 0 10px rgba(0,209,255,0.8))',
               }}
-              animate={{ y: [0, 10, 0] }}
+              animate={{ y: [0, 8, 0] }}
               transition={{ duration: 0.8, repeat: Infinity }}
             >
               {currentStep.isFinalStep ? '🎉' : '👇'}
@@ -543,44 +483,44 @@ export function OnboardingOverlay() {
           </div>
         )}
 
-        {/* TOOLTIP - MOBILE OPTIMIZED */}
+        {/* TOOLTIP - SEMPLIFICATO E RESPONSIVE */}
         <motion.div
           key={`tooltip-${currentStepIndex}`}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.15 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.3 }}
           className="fixed pointer-events-auto z-[10000]"
-          style={{
-            ...getTooltipStyle(),
-            width: isMobile ? 'auto' : `${tooltipWidth}px`,
-          }}
+          style={getTooltipStyle()}
         >
-          <div className={`bg-gray-900/98 backdrop-blur-xl rounded-xl border-2 shadow-[0_0_30px_rgba(0,209,255,0.3)] p-3 ${
+          <div className={`bg-gray-900/98 backdrop-blur-xl rounded-2xl border-2 shadow-[0_0_30px_rgba(0,209,255,0.3)] p-4 max-w-md mx-auto ${
             currentStep.isFinalStep ? 'border-yellow-500/60' : 'border-cyan-500/60'
           }`}>
-            {/* Header - Compact */}
+            {/* Header */}
             <div className="flex justify-between items-center mb-2">
-              <span className={`text-[10px] font-bold ${currentStep.isFinalStep ? 'text-yellow-400' : 'text-cyan-400'}`}>
+              <span className={`text-xs font-bold ${currentStep.isFinalStep ? 'text-yellow-400' : 'text-cyan-400'}`}>
                 {currentStepIndex + 1}/{totalSteps}
               </span>
-              <button onClick={handleSkip} className="p-0.5 hover:bg-white/10 rounded-full">
-                <X className="w-3 h-3 text-gray-400" />
+              <button 
+                onClick={handleSkip} 
+                className="p-1.5 hover:bg-white/10 rounded-full"
+              >
+                <X className="w-4 h-4 text-gray-400" />
               </button>
             </div>
 
-            {/* Title - Compact */}
-            <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-1.5">
-              <span className="text-lg">{currentStep.icon}</span>
+            {/* Title */}
+            <h3 className="text-base font-bold text-white mb-2 flex items-center gap-2">
+              <span className="text-xl">{currentStep.icon}</span>
               {currentStep.title}
             </h3>
 
-            {/* Description - Compact */}
-            <p className="text-xs text-gray-300 mb-2 leading-snug">
+            {/* Description */}
+            <p className="text-sm text-gray-300 mb-3 leading-relaxed">
               {currentStep.description}
             </p>
 
-            {/* Progress - Thinner */}
-            <div className="h-1 bg-gray-700 rounded-full mb-2 overflow-hidden">
+            {/* Progress */}
+            <div className="h-1.5 bg-gray-700 rounded-full mb-3 overflow-hidden">
               <motion.div
                 className={`h-full ${currentStep.isFinalStep 
                   ? 'bg-gradient-to-r from-yellow-500 to-pink-500' 
@@ -588,25 +528,24 @@ export function OnboardingOverlay() {
                 }`}
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
-                transition={{ duration: 0.3 }}
               />
             </div>
 
-            {/* Buttons - Always visible */}
-            <div className="flex justify-between items-center gap-2">
-              <button onClick={handleSkip} className="text-[10px] text-gray-400 hover:text-white">
+            {/* Buttons */}
+            <div className="flex justify-between items-center">
+              <button onClick={handleSkip} className="text-xs text-gray-400 hover:text-white">
                 Salta
               </button>
 
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 {!isFirstStep && (
-                  <button onClick={handlePrev} className="px-2 py-1 bg-gray-700/50 text-white text-[10px] rounded-md">
-                    ← 
+                  <button onClick={handlePrev} className="px-3 py-2 bg-gray-700/50 text-white text-xs rounded-lg">
+                    ←
                   </button>
                 )}
                 <button
                   onClick={handleNext}
-                  className={`px-3 py-1.5 text-white text-[11px] font-bold rounded-md flex items-center shadow-md ${
+                  className={`px-4 py-2 text-white text-sm font-bold rounded-lg ${
                     currentStep.isFinalStep 
                       ? 'bg-gradient-to-r from-yellow-500 to-pink-500'
                       : 'bg-gradient-to-r from-cyan-600 to-purple-600'

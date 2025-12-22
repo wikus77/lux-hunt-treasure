@@ -94,6 +94,7 @@ const PushReport = React.lazy(() => import("@/pages/PushReport").then(m => ({ de
 // QR pages removed - rewards now handled by popup in map
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 const OnboardingSandbox = React.lazy(() => import("@/pages/OnboardingSandbox"));
+const OnboardingTestSandbox = React.lazy(() => import("@/pages/sandbox/OnboardingSandbox"));
 
 import Terms from "@/pages/Terms";
 import TermsConditions from "@/pages/legal/TermsConditions";
@@ -217,12 +218,18 @@ const WouterRoutes: React.FC = () => {
           {/* ✅ QR routes - redirected to main app with marker rewards popup */}
 
           {/* Landing page - FAIL-OPEN FIRST VISIT LOGIC */}
+          {/* ⚠️ TEMP: Always show landing for development - REMOVE BEFORE DEPLOY */}
           <Route path="/">
             {isLoading ? (
               <PageSkeleton variant="default" />
             ) : !isAuthenticated ? (
               (() => {
                 try {
+                  // ⚠️ TEMP: Always show LandingPage for development
+                  // TODO: Restore first-visit logic before production deploy
+                  return <LandingPage />;
+                  
+                  /* ORIGINAL CODE - RESTORE BEFORE DEPLOY:
                   // Check if this is first visit using localStorage
                   const isFirstVisit = !localStorage.getItem('m1_first_visit_seen');
                   
@@ -232,6 +239,7 @@ const WouterRoutes: React.FC = () => {
                   } else {
                     return <Login />;
                   }
+                  */
                 } catch (error) {
                   console.error('[BOOT] Landing page error, showing login:', error);
                   return <Login />;
@@ -260,7 +268,22 @@ const WouterRoutes: React.FC = () => {
           {/* Protected routes */}
           <Route path="/home">
             <ProtectedRoute>
-              <GlobalLayout><AppHome /></GlobalLayout>
+              <GlobalLayout>
+                {/* 🎯 MAP-FIRST: Nuovi utenti vanno alla mappa per capire il gioco */}
+                {(() => {
+                  const isFirstSession = !localStorage.getItem('m1_first_session_completed');
+                  const hasSeenMap = localStorage.getItem('m1_has_seen_map');
+                  
+                  // Se è prima sessione e non ha ancora visto la mappa, redirect
+                  if (isFirstSession && !hasSeenMap) {
+                    // Segna che abbiamo provato a mostrare la mappa
+                    localStorage.setItem('m1_map_redirect_attempted', 'true');
+                    // Redirect sarà gestito nel useEffect di AppHome
+                  }
+                  
+                  return <AppHome />;
+                })()}
+              </GlobalLayout>
             </ProtectedRoute>
           </Route>
 
@@ -292,6 +315,15 @@ const WouterRoutes: React.FC = () => {
               <GlobalLayout>
                 <LivingMap3D />
               </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Final Shoot Test Page */}
+          <Route path="/final-shoot-test">
+            <ProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="map" />}>
+                {React.createElement(React.lazy(() => import('@/pages/sandbox/FinalShootTest')))}
+              </React.Suspense>
             </ProtectedRoute>
           </Route>
 
@@ -458,6 +490,7 @@ const WouterRoutes: React.FC = () => {
               <DNAPage />
             </ProtectedRoute>
           </Route>
+
 
           <Route path="/settings/agent-profile">
             <ProtectedRoute>
@@ -812,6 +845,13 @@ const WouterRoutes: React.FC = () => {
               </Route>
             </>
           )}
+
+          {/* Onboarding Test Sandbox - Public access for testing */}
+          <Route path="/onboarding-test">
+            <React.Suspense fallback={<PageSkeleton variant="default" />}>
+              <OnboardingTestSandbox />
+            </React.Suspense>
+          </Route>
 
           <Route path="/panel/push-control">
             <AdminProtectedRoute>

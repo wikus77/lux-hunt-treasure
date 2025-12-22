@@ -2,6 +2,7 @@
 // iOS PWA Permission Manager - Smart Permission Handling
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -169,59 +170,62 @@ export const IOSPermissionManager: React.FC<IOSPermissionManagerProps> = ({
     return null;
   }
 
-  return (
-    <Card className="fixed bottom-4 right-4 w-80 z-50 border-2 border-primary shadow-lg">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center justify-between">
-          🔔 Notifiche Push
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsVisible(false)}
-            className="h-6 w-6 p-0"
-          >
-            ×
-          </Button>
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="space-y-3">
-        <div className="text-sm text-muted-foreground">
-          Abilita le notifiche push per ricevere aggiornamenti importanti su M1SSION™
-        </div>
-
-        {permissionState === 'denied' && hasRequestedOnce && (
-          <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
-            Permessi negati. Vai in <strong>Impostazioni Safari &gt; Notifiche siti web</strong> per abilitarli.
-          </div>
-        )}
-
-        <div className="flex flex-col gap-2">
-          <Button 
-            onClick={requestPermission}
-            disabled={isRequestingPermission}
-            className="w-full"
-            variant="default"
-          >
-            {isRequestingPermission ? '🔄 Richiesta in corso...' : '🔔 Abilita Notifiche'}
-          </Button>
-
-          {hasRequestedOnce && permissionState === 'denied' && (
-            <Button 
-              onClick={() => setIsVisible(false)}
-              variant="outline"
-              className="w-full"
+  return createPortal(
+    <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <Card className="w-full max-w-sm border-2 border-primary shadow-2xl">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center justify-between">
+            🔔 Notifiche Push
+            <Button
+              variant="ghost"
               size="sm"
+              onClick={() => setIsVisible(false)}
+              className="h-6 w-6 p-0"
             >
-              Continua senza notifiche
+              ×
             </Button>
-          )}
-        </div>
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent className="space-y-3">
+          <div className="text-sm text-muted-foreground">
+            Abilita le notifiche push per ricevere aggiornamenti importanti su M1SSION™
+          </div>
 
-        <div className="text-xs text-muted-foreground">
-          {isIOS && isPWA ? '📱 iOS PWA Mode' : '🌐 Web Mode'}
-        </div>
-      </CardContent>
-    </Card>
+          {permissionState === 'denied' && hasRequestedOnce && (
+            <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
+              Permessi negati. Vai in <strong>Impostazioni Safari &gt; Notifiche siti web</strong> per abilitarli.
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2">
+            <Button 
+              onClick={requestPermission}
+              disabled={isRequestingPermission}
+              className="w-full"
+              variant="default"
+            >
+              {isRequestingPermission ? '🔄 Richiesta in corso...' : '🔔 Abilita Notifiche'}
+            </Button>
+
+            {hasRequestedOnce && permissionState === 'denied' && (
+              <Button 
+                onClick={() => setIsVisible(false)}
+                variant="outline"
+                className="w-full"
+                size="sm"
+              >
+                Continua senza notifiche
+              </Button>
+            )}
+          </div>
+
+          <div className="text-xs text-muted-foreground">
+            {isIOS && isPWA ? '📱 iOS PWA Mode' : '🌐 Web Mode'}
+          </div>
+        </CardContent>
+      </Card>
+    </div>,
+    document.body
   );
 };

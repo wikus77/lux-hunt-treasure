@@ -4,6 +4,30 @@ import { syncFromNotice } from "@/utils/appBadge";
 import { updateBadgeState } from "@/utils/badgeDiagnostics";
 import { testBadgeAPI } from "@/utils/pwaBadgeAudit";
 import { syncAppIconBadge } from "@/utils/appIconBadgeSync";
+import type { User } from "@supabase/supabase-js";
+
+// 🔧 v4: Global cached user to prevent repeated auth.getUser() calls
+let cachedUser: User | null = null;
+let cachedUserTimestamp = 0;
+const CACHE_TTL_MS = 30000; // Cache user for 30 seconds
+
+async function getCachedUser(): Promise<User | null> {
+  const now = Date.now();
+  // Return cached user if valid
+  if (cachedUser && (now - cachedUserTimestamp) < CACHE_TTL_MS) {
+    return cachedUser;
+  }
+  // Fetch fresh user
+  try {
+    const { data } = await supabase.auth.getUser();
+    cachedUser = data?.user || null;
+    cachedUserTimestamp = now;
+    return cachedUser;
+  } catch (err) {
+    console.warn('⚠️ getCachedUser failed:', err);
+    return cachedUser; // Return stale cache on error
+  }
+}
 
 // Tipizzazione
 export interface Notification {
@@ -95,8 +119,8 @@ export function useNotifications() {
       localStorage.removeItem(STORAGE_KEY);
       let notifs: Notification[] = [];
       
-      // Se l'utente è autenticato, carica da Supabase
-      const { data: { user } } = await supabase.auth.getUser();
+      // 🔧 v4: Use cached user to prevent request storms
+      const user = await getCachedUser();
       if (user) {
         console.log("👤 NOTIFICATIONS: User authenticated, loading from Supabase...");
         const { data: supabaseNotifs, error } = await supabase
@@ -189,7 +213,7 @@ export function useNotifications() {
     
     console.log("📖 Marcando tutte le notifiche come lette...");
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getCachedUser();
       if (user) {
         // Aggiorna su Supabase
         const { error } = await supabase
@@ -234,7 +258,7 @@ export function useNotifications() {
   // FIXED: Setup Supabase realtime subscription con maggiore responsività
   useEffect(() => {
     const setupRealtimeSubscription = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getCachedUser();
       if (!user) return;
       
       console.log('🔔 NOTIFICATIONS: Setting up real-time subscription for user:', user.id);
@@ -268,16 +292,20 @@ export function useNotifications() {
     setupRealtimeSubscription();
   }, [reloadNotifications]);
 
-  // FIXED: Setup polling più frequente (5s invece di 180s)
+  // 🔧 v3: Reduced polling frequency to prevent ERR_INSUFFICIENT_RESOURCES
+  // Realtime subscription is the primary mechanism - polling is fallback only
   useEffect(() => {
     const startPolling = () => {
-      // FIXED: Poll ogni 5 secondi invece di 3 minuti per notifiche
+      // 🔧 v3: Poll every 60 seconds (was 5s which caused massive request storms!)
       const interval = setInterval(() => {
         if (document.visibilityState === 'visible') {
-          console.log('🔄 NOTIFICATIONS: Polling for updates...');
+          // Only log in DEV to avoid console spam
+          if (import.meta.env.DEV) {
+            console.log('🔄 NOTIFICATIONS: Periodic sync...');
+          }
           reloadNotifications();
         }
-      }, 5000); // 5 secondi
+      }, 60000); // 60 seconds (was 5s - too aggressive!)
       
       return interval;
     };
@@ -328,7 +356,7 @@ export function useNotifications() {
   const markAsRead = useCallback(async (id: string) => {
     console.log("📖 Marcando notifica come letta:", id);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getCachedUser();
       if (user) {
         const { error } = await supabase
           .from('user_notifications')
@@ -384,7 +412,7 @@ export function useNotifications() {
   const deleteNotification = useCallback(async (id: string) => {
     try {
       console.log("Deleting notification:", id);
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getCachedUser();
       if (user) {
         const { error } = await supabase
           .from('user_notifications')
@@ -440,7 +468,7 @@ export function useNotifications() {
         type
       };
       
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getCachedUser();
       if (user) {
         const { error, data } = await supabase
           .from('user_notifications')

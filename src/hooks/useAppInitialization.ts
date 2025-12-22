@@ -80,8 +80,9 @@ export const useAppInitialization = () => {
   // iOS PWA-specific optimizations (no Capacitor dependencies)
   useEffect(() => {
     if (state.isInitialized) {
-      // Prevent iOS bounce scroll
-      document.body.style.overscrollBehavior = 'none';
+      // 🔥 FIX: Allow native pull-to-refresh in Safari browser
+      // Note: PWA standalone on iOS never has native pull-to-refresh
+      document.body.style.overscrollBehavior = 'auto';
       (document.body.style as any).WebkitOverflowScrolling = 'touch';
       
       // Add safe area CSS variables for iOS PWA

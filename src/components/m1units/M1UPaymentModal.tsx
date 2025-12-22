@@ -70,8 +70,9 @@ const CheckoutForm: React.FC<{
             metadata: {
               pack_code: packCode,
               pack_name: packName,
-              m1u_amount: m1uAmount,
-              user_email: user.email
+              m1u_amount: String(m1uAmount), // Must be string for Stripe metadata
+              user_email: user.email || '',
+              user_id: user.id // Critical for webhook to credit M1U
             }
           }
         });
@@ -134,20 +135,56 @@ const CheckoutForm: React.FC<{
       } else if (paymentIntent.status === 'succeeded') {
         console.log('[M1U MODAL] ✅ Payment succeeded:', paymentIntent.id);
         
-        toast.success('Pagamento completato!', {
-          description: `${m1uAmount} M1U aggiunti al tuo account`
-        });
-
-        // Dispatch success event
-        window.dispatchEvent(new CustomEvent('m1uPurchaseSucceeded', {
-          detail: { 
-            paymentIntentId: paymentIntent.id,
-            packCode,
-            m1uAmount 
-          }
-        }));
+        // 🔥 CRITICAL: Call Edge Function to credit M1U BEFORE showing success
+        console.log('[M1U MODAL] 💰 Calling credit-m1u-purchase to credit M1U...');
         
-        onSuccess();
+        try {
+          const { data: creditData, error: creditError } = await supabase.functions.invoke('credit-m1u-purchase', {
+            body: {
+              payment_intent_id: paymentIntent.id,
+              user_id: user?.id,
+              m1u_amount: m1uAmount,
+              pack_code: packCode
+            }
+          });
+
+          if (creditError) {
+            console.error('[M1U MODAL] ❌ Failed to credit M1U:', creditError);
+            toast.error('Pagamento ricevuto ma errore nell\'accredito M1U. Contatta il supporto.', {
+              description: `Riferimento: ${paymentIntent.id}`
+            });
+            return;
+          }
+
+          if (creditData?.success) {
+            console.log('[M1U MODAL] ✅ M1U credited successfully:', creditData);
+            
+            // 🎰 NO TOAST - Let the slot machine animation show the success!
+            // The M1UPill component will handle the visual feedback
+
+            // Dispatch success event ONLY after M1U are credited
+            window.dispatchEvent(new CustomEvent('m1uPurchaseSucceeded', {
+              detail: { 
+                paymentIntentId: paymentIntent.id,
+                packCode,
+                m1uAmount,
+                newBalance: creditData.new_balance
+              }
+            }));
+            
+            onSuccess();
+          } else {
+            console.error('[M1U MODAL] ❌ Credit returned false:', creditData);
+            toast.error('Errore nell\'accredito M1U. Contatta il supporto.', {
+              description: creditData?.error || `Riferimento: ${paymentIntent.id}`
+            });
+          }
+        } catch (creditException) {
+          console.error('[M1U MODAL] ❌ Exception crediting M1U:', creditException);
+          toast.error('Errore nell\'accredito M1U. Contatta il supporto.', {
+            description: `Riferimento: ${paymentIntent.id}`
+          });
+        }
       }
     } catch (error) {
       console.error('[M1U MODAL] Payment processing error:', error);

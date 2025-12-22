@@ -1,7 +1,9 @@
 // Layer Toggle Panel - Control visibility of 3D map layers
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Layers, Users, Gift, Circle, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { Layers, Users, Gift, Circle, FileText, ChevronDown, ChevronUp, Map } from 'lucide-react';
+
+export type MapStyleType = 'neon' | 'streets' | 'satellite';
 
 interface LayerTogglePanelProps {
   layers: {
@@ -12,9 +14,11 @@ interface LayerTogglePanelProps {
     notes: boolean;
   };
   onToggle: (layer: keyof LayerTogglePanelProps['layers']) => void;
+  mapStyle?: MapStyleType;
+  onMapStyleChange?: (style: MapStyleType) => void;
 }
 
-const LayerTogglePanel: React.FC<LayerTogglePanelProps> = ({ layers, onToggle }) => {
+const LayerTogglePanel: React.FC<LayerTogglePanelProps> = ({ layers, onToggle, mapStyle = 'neon', onMapStyleChange }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const layerConfigs = [
@@ -23,6 +27,12 @@ const LayerTogglePanel: React.FC<LayerTogglePanelProps> = ({ layers, onToggle })
     { key: 'rewards' as const, label: 'Rewards', icon: Gift, color: '#FFD700' },
     { key: 'areas' as const, label: 'Aree', icon: Circle, color: '#00D1FF' },
     { key: 'notes' as const, label: 'Note', icon: FileText, color: '#a855f7' },
+  ];
+
+  const styleConfigs: { key: MapStyleType; label: string; color: string }[] = [
+    { key: 'neon', label: 'Neon', color: '#00D1FF' },
+    { key: 'streets', label: 'Standard', color: '#4CAF50' },
+    { key: 'satellite', label: 'Satellite', color: '#FF9800' },
   ];
 
   return (
@@ -78,6 +88,39 @@ const LayerTogglePanel: React.FC<LayerTogglePanelProps> = ({ layers, onToggle })
               <div className={`ml-auto w-2 h-2 rounded-full ${layers[key] ? 'bg-green-500' : 'bg-gray-600'}`} />
             </Button>
           ))}
+          
+          {/* Map Style Selector */}
+          {onMapStyleChange && (
+            <>
+              <div className="mt-2 pt-2 border-t border-white/10">
+                <div className="flex items-center gap-2 mb-2 px-2">
+                  <Map className="w-4 h-4 text-cyan-400" />
+                  <span className="text-xs text-white font-bold font-orbitron">MAP STYLE</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {styleConfigs.map(({ key, label, color }) => (
+                    <button
+                      key={key}
+                      onClick={() => onMapStyleChange(key)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                        mapStyle === key
+                          ? 'bg-white/20 text-white'
+                          : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                      }`}
+                      style={{
+                        borderWidth: '1px',
+                        borderStyle: 'solid',
+                        borderColor: mapStyle === key ? color : 'transparent',
+                        boxShadow: mapStyle === key ? `0 0 8px ${color}40` : 'none'
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -121,7 +121,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center bg-black px-4 py-8 relative overflow-x-hidden overflow-y-auto">
       {/* 🚀 M1 Logo Splash Animation - 7 seconds */}
       {showSplash && (
         <M1LogoSplash 
@@ -133,31 +133,29 @@ const Login = () => {
       <BackgroundParticles count={15} />
 
       <motion.div 
-        className="w-full max-w-md z-10"
+        className="w-full max-w-md z-10 my-auto"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-3">
             <AnimatedLogo />
           </div>
-          <h2 className="text-2xl font-bold mb-1">
+          <h2 className="text-xl sm:text-2xl font-bold mb-1">
             <span className="text-[#00E5FF] drop-shadow-[0_0_10px_rgba(0,229,255,0.8)]">M1</span>
             <span className="text-white">SSION™</span>
           </h2>
-          <p className="text-gray-400">
+          <p className="text-gray-400 text-sm">
             Accedi per iniziare la tua missione
           </p>
         </div>
 
-        <div 
-          className="m1-relief p-6 rounded-xl relative"
-        >
+        <div className="m1-relief p-4 sm:p-6 rounded-xl relative">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
           <StandardLoginForm verificationStatus={verificationStatus} />
 
-          <div className="mt-6 text-center space-y-3">
+          <div className="mt-4 sm:mt-6 text-center space-y-2">
             <p className="text-sm text-white/70">
               Non hai un account?{" "}
               <Link to="/register" className="text-cyan-400 hover:text-cyan-300 transition-colors">
@@ -169,10 +167,8 @@ const Login = () => {
                 ← Torna alla homepage
               </Link>
             </p>
-            
           </div>
         </div>
-
       </motion.div>
       
       {/* Emergency Login Modal */}

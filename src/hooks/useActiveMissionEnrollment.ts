@@ -10,13 +10,43 @@ import { useAuth } from '@/hooks/use-auth';
 const ENROLLMENT_CACHE_KEY = 'm1_mission_enrolled';
 const ENROLLMENT_MISSION_KEY = 'm1_enrolled_mission_id';
 
-// Helper per pulire TUTTA la cache enrollment
+// Helper per pulire TUTTA la cache enrollment E mission data
 const clearEnrollmentCache = () => {
   try {
     localStorage.removeItem(ENROLLMENT_CACHE_KEY);
     localStorage.removeItem(ENROLLMENT_MISSION_KEY);
-    console.log('🧹 [useActiveMissionEnrollment] Cache cleared');
+    // 🔧 FIX: Pulisci TUTTA la cache mission-related
+    localStorage.removeItem('mission-progress');
+    localStorage.removeItem('purchased-clues');
+    localStorage.removeItem('diary-entries');
+    localStorage.removeItem('cch_last_checked');
+    localStorage.removeItem('ums_last_checked');
+    console.log('🧹 [useActiveMissionEnrollment] ALL cache cleared');
   } catch (_) {}
+};
+
+// 🔧 FIX: Check cross-page reset on module load
+const checkCrossPageReset = (): boolean => {
+  try {
+    const lastResetStr = localStorage.getItem('m1ssion_last_reset');
+    const lastCheckedStr = localStorage.getItem('enrollment_last_checked');
+    
+    if (lastResetStr) {
+      const lastReset = parseInt(lastResetStr, 10);
+      const lastChecked = lastCheckedStr ? parseInt(lastCheckedStr, 10) : 0;
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+      
+      if (lastReset > lastChecked && lastReset > fiveMinutesAgo) {
+        console.log('🚨 [useActiveMissionEnrollment] Cross-page reset detected on load!');
+        localStorage.setItem('enrollment_last_checked', Date.now().toString());
+        clearEnrollmentCache();
+        return true;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
 };
 
 interface EnrollmentState {
@@ -29,17 +59,28 @@ interface EnrollmentState {
 
 export const useActiveMissionEnrollment = () => {
   const { user } = useAuth();
+  
+  // 🔧 FIX: Check for cross-page reset FIRST before using cache
+  const wasReset = checkCrossPageReset();
+  
+  // 🔥 V3 FIX: Leggi cache SUBITO per evitare flash (MA NON se c'è stato reset!)
+  const cachedEnrollment = (() => {
+    if (wasReset) return false; // 🔧 FIX: Se reset, ignora cache!
+    try {
+      return localStorage.getItem(ENROLLMENT_CACHE_KEY) === '1';
+    } catch { return false; }
+  })();
+  
   const [state, setState] = useState<EnrollmentState>({
-    isEnrolled: false, // 🔥 FIX: Parte da FALSE, NON da cache
-    isLoading: true,
+    isEnrolled: cachedEnrollment, // 🔥 Usa cache come valore iniziale
+    isLoading: !cachedEnrollment || wasReset, // Se cache dice enrolled E non c'è stato reset, non mostrare loading
     missionId: null,
     enrolledAt: null,
     error: null,
   });
   const hasCheckedDb = useRef(false);
 
-  // 🔥 FIX: NON leggere più la cache all'avvio!
-  // Il DB è la source of truth. La cache serve solo per persistence offline.
+  // La cache è usata per il rendering iniziale, poi il DB la sovrascrive
 
   // Main enrollment check function
   const checkEnrollment = useCallback(async () => {
@@ -211,9 +252,31 @@ export const useActiveMissionEnrollment = () => {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('🔄 [useActiveMissionEnrollment] Realtime update:', payload.eventType);
-          // Refresh on any change
+          console.log('🔄 [useActiveMissionEnrollment] Enrollment change:', payload.eventType);
           checkEnrollment();
+        }
+      )
+      // 🔧 FIX: Ascolta anche i cambiamenti di current_mission_data
+      // Così quando viene lanciata una nuova missione, l'hook si aggiorna
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'current_mission_data',
+        },
+        (payload) => {
+          console.log('🚀 [useActiveMissionEnrollment] Mission changed:', payload.eventType);
+          // Pulisci cache e ri-verifica
+          clearEnrollmentCache();
+          setState({
+            isEnrolled: false,
+            isLoading: true,
+            missionId: null,
+            enrolledAt: null,
+            error: null,
+          });
+          setTimeout(checkEnrollment, 500);
         }
       )
       .subscribe();
@@ -227,10 +290,20 @@ export const useActiveMissionEnrollment = () => {
   useEffect(() => {
     const handleEnrolled = (event: CustomEvent) => {
       console.log('🎯 [useActiveMissionEnrollment] mission:enrolled event received:', event.detail);
+      
+      // 🔥 V4 FIX: Set cache IMMEDIATAMENTE per evitare flash su altre pagine
+      try {
+        localStorage.setItem(ENROLLMENT_CACHE_KEY, '1');
+        if (event.detail?.missionId) {
+          localStorage.setItem(ENROLLMENT_MISSION_KEY, event.detail.missionId);
+        }
+      } catch (_) {}
+      
       // Immediate optimistic update
       setState(prev => ({
         ...prev,
         isEnrolled: true,
+        isLoading: false, // 🔥 V4 FIX: Anche isLoading a false!
         missionId: event.detail?.missionId || prev.missionId,
       }));
       // Also refresh from DB to confirm

@@ -366,7 +366,8 @@ export const NotificationsPage: React.FC = () => {
       <div 
         className="min-h-screen m1-app-bg relative flex flex-col" 
         style={{ 
-          paddingTop: '90px', 
+          /* 🆕 FIX: Aumentato paddingTop per evitare conflitto con Header */
+          paddingTop: 'calc(var(--header-height, 80px) + var(--safe-top, env(safe-area-inset-top, 0px)) + 24px)', 
           paddingBottom: '100px',
           width: '100vw',
           maxWidth: '100vw',

@@ -258,46 +258,32 @@ class ProductionMonitor {
   }
 
   private async sendMetricsToServer() {
+    // DISABLED: /api/metrics endpoint is not implemented on Cloudflare Pages
+    // This prevents 405 errors in console. Metrics are stored locally only.
+    // To re-enable, implement a proper metrics endpoint or use a third-party service.
+    
     if (!import.meta.env.PROD) return;
 
-    try {
-      // Only send if we have metrics to report
-      const hasMetrics = this.metrics.errors.length > 0 || 
-                        this.metrics.performance.length > 0 || 
-                        this.metrics.features.length > 0;
+    // Just clear metrics locally to prevent memory growth
+    // No server-side reporting since endpoint doesn't exist
+    const hasMetrics = this.metrics.errors.length > 0 || 
+                      this.metrics.performance.length > 0 || 
+                      this.metrics.features.length > 0;
 
-      if (!hasMetrics) return;
-
-      // Prepare sanitized metrics
-      const payload = {
-        ...this.metrics,
-        diagnostics: {
-          queueSize: diagnostics.queueSize(),
-          sessionId: diagnostics.sessionId(),
-          status: diagnostics.lastFlushStatus()
-        }
-      };
-
-      // Send to monitoring endpoint (if available)
-      const response = await fetch('/api/metrics', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        // Clear sent metrics
-        this.metrics.errors = [];
-        this.metrics.performance = [];
-        this.metrics.features = [];
-      }
-    } catch (error) {
-      // Silently fail - don't break the app
+    if (hasMetrics) {
+      // Log to console in debug mode only
       if (import.meta.env.DEV) {
-        console.warn('Failed to send metrics:', error);
+        console.log('[ProductionMonitor] Metrics collected (local only):', {
+          errors: this.metrics.errors.length,
+          performance: this.metrics.performance.length,
+          features: this.metrics.features.length
+        });
       }
+      
+      // Clear metrics to prevent memory buildup
+      this.metrics.errors = [];
+      this.metrics.performance = [];
+      this.metrics.features = [];
     }
   }
 

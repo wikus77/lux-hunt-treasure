@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Mail, MapPin, Send } from 'lucide-react';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -43,12 +43,29 @@ const Contact: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase
+      // Save to database
+      const { error: dbError } = await supabase
         .from('contacts')
         .insert([formData]);
 
-      if (error) {
-        throw error;
+      if (dbError) {
+        console.error('Database error:', dbError);
+      }
+
+      // Send email via edge function
+      const { data, error: emailError } = await supabase.functions.invoke('send-contact-email', {
+        body: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          subject: formData.subject || 'Contatto dal sito M1SSION',
+          message: formData.message
+        }
+      });
+
+      if (emailError) {
+        console.error('Email error:', emailError);
+        throw emailError;
       }
 
       toast({
@@ -78,7 +95,7 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-4 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-4 pt-20 pb-32">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-orbitron font-bold mb-4">
@@ -114,17 +131,7 @@ const Contact: React.FC = () => {
                 <Mail className="w-5 h-5 text-[#00D1FF] mt-1" />
                 <div>
                   <h3 className="text-white font-medium">Email</h3>
-                  <p className="text-white/70">info@m1ssion.app</p>
-                  <p className="text-white/70">support@m1ssion.app</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <Phone className="w-5 h-5 text-[#00D1FF] mt-1" />
-                <div>
-                  <h3 className="text-white font-medium">Telefono</h3>
-                  <p className="text-white/70">+39 XXX XXX XXXX</p>
-                  <p className="text-white/60 text-sm">Lun-Ven 9:00-18:00</p>
+                  <p className="text-white/70">contact@m1ssion.com</p>
                 </div>
               </div>
 
@@ -140,9 +147,8 @@ const Contact: React.FC = () => {
               <div className="pt-6 border-t border-white/10">
                 <h3 className="text-white font-medium mb-3">Team di Sviluppo</h3>
                 <p className="text-white/70 text-sm">
-                  M1SSION™ è sviluppato da <strong>Joseph MULÉ</strong>, 
-                  CEO di NIYVORA KFT™. Il team è dedicato a creare 
-                  esperienze di gioco innovative e coinvolgenti.
+                  M1SSION™ è sviluppato da <strong>NIYVORA KFT™</strong>. 
+                  Il team è dedicato a creare esperienze di gioco innovative e coinvolgenti.
                 </p>
               </div>
             </CardContent>
@@ -265,6 +271,23 @@ const Contact: React.FC = () => {
               esclusivamente per rispondere alla tua richiesta. Non condividiamo mai 
               i dati degli utenti con terze parti.
             </p>
+          </div>
+        </div>
+
+        {/* IP Footer - Compact Apple Style */}
+        <div className="mt-12 pt-6 border-t border-white/10 text-center space-y-4">
+          <p className="text-white/60 text-sm">© 2025 M1SSION™ — All rights reserved — NIYVORA KFT™</p>
+          
+          {/* IP Notice - Compact */}
+          <div className="pt-4 border-t border-white/5 space-y-2">
+            <p className="text-white/25 text-[9px] uppercase tracking-wider">Registrazioni & Certificazioni</p>
+            <p className="text-white/30 text-[10px]">
+              <span className="text-[#00D1FF]/50">M1SSION™</span> • SafeCreative: <a href="https://www.safecreative.org/certificate/2505261861325-2VXE4Q" target="_blank" rel="noopener noreferrer" className="text-[#00D1FF]/40 hover:text-[#00D1FF]/60">2505261861325</a> • <a href="https://www.safecreative.org/certificate/2512103987648-62HXMR" target="_blank" rel="noopener noreferrer" className="text-[#00D1FF]/40 hover:text-[#00D1FF]/60">2512103987648</a> • <a href="https://www.safecreative.org/certificate/2512103988744-9TFSDH" target="_blank" rel="noopener noreferrer" className="text-[#00D1FF]/40 hover:text-[#00D1FF]/60">2512103988744</a>
+            </p>
+            <p className="text-white/30 text-[10px]">
+              EUIPO Trademark: M1SSION™ • Geo-Pulse Engine™ — Proprietary System
+            </p>
+            <p className="text-amber-400/30 text-[10px]">⚠️ Proprietà intellettuale protetta. Riproduzione non autorizzata vietata.</p>
           </div>
         </div>
       </div>

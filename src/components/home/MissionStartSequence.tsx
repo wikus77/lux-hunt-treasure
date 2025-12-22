@@ -4,6 +4,7 @@
 // Integrazione con Shadow Protocol v2
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEntityOverlayStore } from '@/stores/entityOverlayStore';
 
@@ -76,13 +77,21 @@ export const MissionStartSequence: React.FC<MissionStartSequenceProps> = ({
   // 🔥 RIMOSSO: Non permettere skip cliccando sullo sfondo
   // L'utente DEVE aspettare il bottone e cliccarlo
 
-  return (
+  // 🔥 FIX: Use createPortal to render directly in body, bypassing CSS containment issues
+  const overlayContent = (
     <motion.div
       className="mission-start-sequence"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      // 🔥 RIMOSSO onClick={handleSkip} - L'utente deve usare il bottone
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     >
       {/* CRT overlay effect */}
       <div className="mission-start-crt">
@@ -116,11 +125,11 @@ export const MissionStartSequence: React.FC<MissionStartSequenceProps> = ({
         >
           INIZIA LA CACCIA
         </motion.button>
-
-        {/* 🔥 RIMOSSO "Tap to skip" - L'utente deve usare il bottone */}
       </div>
     </motion.div>
   );
+
+  return createPortal(overlayContent, document.body);
 };
 
 export default MissionStartSequence;

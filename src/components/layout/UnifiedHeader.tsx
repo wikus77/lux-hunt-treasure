@@ -243,18 +243,24 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       </MinimalHeaderStrip>
       {/* FLOATING PILL HEADER - Same style as bottom nav */}
       <div
+        className="unified-header-wrapper"
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
-          zIndex: 50,
+          zIndex: 9999,
           display: 'flex',
           justifyContent: 'center',
           paddingTop: isPWA ? 'calc(env(safe-area-inset-top, 0px) + 12px)' : '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
           pointerEvents: 'none',
+          // 🔧 PWA FIX: GPU layer promotion per stabilità durante scroll
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
         }}
       >
       <header
@@ -262,9 +268,11 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           width: '100%',
           maxWidth: '600px',
           height: '64px',
-          background: 'linear-gradient(180deg, #2A3441 0%, #1E2630 100%)',
+          background: 'rgba(15, 20, 30, 0.65)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderRadius: '32px',
-          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.05)',
+          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255,255,255,0.08)',
           pointerEvents: 'auto',
           position: 'relative',
           isolation: 'isolate',

@@ -44,18 +44,15 @@ export const PrizeList: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch active prizes with clue counts
+      // Fetch active prizes (without join to avoid 400 errors)
       const { data: prizesData, error: prizesError } = await supabase
         .from('prizes')
-        .select(`
-          *,
-          prize_clues!inner(count)
-        `)
+        .select('*')
         .eq('is_active', true)
         .order('start_date', { ascending: false });
 
       if (prizesError) {
-        console.error('Error loading prizes:', prizesError);
+        console.error('[PrizeList] Error loading prizes:', prizesError.message);
         setError('Errore nel caricamento dei premi');
         return;
       }

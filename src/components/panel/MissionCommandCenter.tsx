@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Spinner } from '@/components/ui/spinner';
 import { logMissionConfigChange } from '@/utils/auditLog';
+import { ManualCluesEditor } from './ManualCluesEditor';
 
 // ============================================
 // TYPES
@@ -150,6 +151,10 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
   const [participants, setParticipants] = useState<any[]>([]);
   const [participantCount, setParticipantCount] = useState(0);
   const [linkedMissions, setLinkedMissions] = useState<any[]>([]);
+  
+  // 🆕 Manual clues tracking for launch validation
+  const [weekCluesCounts, setWeekCluesCounts] = useState<Record<number, number>>({ 1: 0, 2: 0, 3: 0, 4: 0 });
+  const MIN_CLUES_PER_WEEK = 50;
 
   // ============================================
   // LOAD DATA
@@ -242,38 +247,71 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Sessione non trovata');
 
-      // Deactivate current active
-      await supabase
-        .from('current_mission_data')
-        .update({ is_active: false })
-        .eq('is_active', true);
+      // 🔥 FIX: If we already have an ID, UPDATE instead of INSERT
+      // This preserves the ID used for clue generation
+      const existingId = config.id || config.linked_mission_id;
+      let savedMissionId: string = existingId || ''; // 🔧 FIX: Track ID outside scope
+      
+      if (existingId) {
+        // UPDATE existing mission - PRESERVE THE ID!
+        console.log('📝 [MCC] Updating existing mission:', existingId);
+        
+        const payload = {
+          ...config,
+          is_active: true,
+          created_by: session.user.id,
+        };
+        delete payload.id;
+        delete payload.created_at;
+        delete payload.linked_mission_id;
 
-      // Insert/Update mission config
-      const payload = {
-        ...config,
-        is_active: true,
-        created_by: session.user.id,
-      };
+        const { data, error } = await supabase
+          .from('current_mission_data')
+          .update(payload)
+          .eq('id', existingId)
+          .select()
+          .single();
 
-      delete payload.id;
-      delete payload.created_at;
+        if (error) throw error;
+        savedMissionId = data?.id || existingId;
+        console.log('✅ [MCC] Mission updated, ID preserved:', savedMissionId);
+        setConfig(prev => ({ ...prev, id: savedMissionId }));
+      } else {
+        // Deactivate current active (only for NEW missions)
+        await supabase
+          .from('current_mission_data')
+          .update({ is_active: false })
+          .eq('is_active', true);
 
-      const { data, error } = await supabase
-        .from('current_mission_data')
-        .insert(payload)
-        .select()
-        .single();
+        // INSERT new mission
+        console.log('📝 [MCC] Creating new mission...');
+        
+        const payload = {
+          ...config,
+          is_active: true,
+          created_by: session.user.id,
+        };
+        delete payload.id;
+        delete payload.created_at;
 
-      if (error) throw error;
+        const { data, error } = await supabase
+          .from('current_mission_data')
+          .insert(payload)
+          .select()
+          .single();
 
-      setConfig(prev => ({ ...prev, id: data.id }));
+        if (error) throw error;
+        savedMissionId = data?.id || '';
+        console.log('✅ [MCC] New mission created with ID:', savedMissionId);
+        setConfig(prev => ({ ...prev, id: savedMissionId }));
+      }
       
       // 🔐 Audit log for mission config change
       await logMissionConfigChange(
         session.user.id,
         'mission_config_update',
         config.id || 'new',
-        data.id
+        savedMissionId
       );
       
       toast.success('✅ Configurazione salvata!');
@@ -284,6 +322,9 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
       setIsSaving(false);
     }
   };
+
+  // 🔥 NEW: State for progress tracking
+  const [clueProgress, setClueProgress] = useState(0);
 
   const handleGenerateClues = async () => {
     if (!config.city || !config.country) {
@@ -297,6 +338,8 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
     }
 
     setIsGeneratingClues(true);
+    setClueProgress(0);
+    
     try {
       // 🔧 FIX: Se non abbiamo un ID, prima salviamo la missione
       let missionId = config.linked_mission_id || config.id;
@@ -334,67 +377,134 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
         console.log('✅ [MCC] Mission saved with ID:', missionId);
       }
 
-      // Pass ALL prize details for intelligent clue generation
-      const cluePayload = {
-        prize_id: missionId,
-        // Location
-        city: config.city,
-        country: config.country,
-        region: '',
-        street: config.street,
-        // Prize details - ALL of them!
-        prize_name: config.prize_name,
-        prize_brand: config.prize_brand,
-        prize_model: config.prize_model,
-        prize_type: config.prize_type,
-        prize_color: config.prize_color,
-        prize_material: config.prize_material,
-        prize_category: config.prize_category,
-        prize_size: config.prize_size,
-        prize_weight: config.prize_weight,
-        prize_description: config.prize_description,
-        prize_value_estimate: config.prize_value_estimate,
-        // Coordinates for Final Shoot
-        lat: config.prize_lat,
-        lng: config.prize_lng,
-      };
+      // ═══════════════════════════════════════════════════════════════════════════
+      // 🚀 NEW: 4 BATCH CALLS (100 × 4 = 400 TOTAL) - NO TIMEOUT!
+      // ═══════════════════════════════════════════════════════════════════════════
+      
+      const TOTAL_TARGET = 400;
+      const PER_BATCH = 100;
+      const NUM_BATCHES = Math.ceil(TOTAL_TARGET / PER_BATCH); // 4 batches
+      
+      let totalGenerated = 0;
+      let totalLocation = 0;
+      let totalPrize = 0;
+      let totalDecoy = 0;
 
-      console.log('🎯 Generating clues with payload:', cluePayload);
+      console.log(`🎯 [MCC] Starting ${NUM_BATCHES} batch generation (${PER_BATCH} each)...`);
 
-      const { data, error } = await supabase.functions.invoke('generate-mission-clues', {
-        body: cluePayload,
-      });
-
-      console.log('🔍 [MCC] Response:', { data, error });
-
-      if (error) {
-        console.error('❌ [MCC] Edge function error:', error);
-        throw new Error(`Edge Function error: ${error.message || JSON.stringify(error)}`);
-      }
-
-      if (data?.success) {
-        setConfig(prev => ({
-          ...prev,
-          clues_generated: true,
-          clues_count: data.breakdown?.total || 0,
-        }));
+      for (let batchNum = 1; batchNum <= NUM_BATCHES; batchNum++) {
+        console.log(`📡 [MCC] Batch ${batchNum}/${NUM_BATCHES}...`);
+        toast.info(`🔄 Generazione batch ${batchNum}/4...`, { duration: 3000 });
         
-        // Show sample clues if available
-        if (data.sample_clues?.length > 0) {
-          console.log('📝 Sample clues:', data.sample_clues);
+        const cluePayload = {
+          prize_id: missionId,
+          city: config.city,
+          country: config.country,
+          prize_type: config.prize_type,
+          prize_color: config.prize_color,
+          prize_material: config.prize_material,
+          prize_category: config.prize_category,
+          batchSize: PER_BATCH,
+          batchNumber: batchNum,
+          clearExisting: batchNum === 1, // Only clear on first batch
+        };
+
+        let retries = 2;
+        let batchSuccess = false;
+        let lastError = null;
+
+        while (retries > 0 && !batchSuccess) {
+          try {
+            console.log(`📡 [MCC] Calling edge function (attempt ${3 - retries}/2)...`);
+            
+            const { data, error } = await supabase.functions.invoke('generate-mission-clues-ai', {
+              body: cluePayload,
+            });
+
+            console.log(`📥 [MCC] Batch ${batchNum} response:`, { data, error });
+
+            if (error) {
+              console.error(`❌ [MCC] Batch ${batchNum} invoke error:`, error);
+              lastError = error;
+              retries--;
+              if (retries > 0) {
+                console.log(`🔄 [MCC] Retrying in 3s...`);
+                await new Promise(r => setTimeout(r, 3000));
+                continue;
+              }
+              throw new Error(`Batch ${batchNum} fallito: ${error.message || JSON.stringify(error)}`);
+            }
+
+            if (!data?.success) {
+              console.error(`❌ [MCC] Batch ${batchNum} data error:`, data);
+              if (data?.retryable) {
+                retries--;
+                if (retries > 0) {
+                  console.log(`🔄 [MCC] Retryable error, waiting 5s...`);
+                  await new Promise(r => setTimeout(r, 5000));
+                  continue;
+                }
+              }
+              throw new Error(data?.error || `Batch ${batchNum} fallito`);
+            }
+
+            // SUCCESS!
+            batchSuccess = true;
+            totalGenerated += data.clues_generated || 0;
+            totalLocation += data.breakdown?.location_clues || 0;
+            totalPrize += data.breakdown?.prize_clues || 0;
+            totalDecoy += data.breakdown?.decoy_clues || 0;
+
+            // Update progress
+            setClueProgress(batchNum * PER_BATCH);
+            
+            console.log(`✅ [MCC] Batch ${batchNum} complete: +${data.clues_generated} clues (total: ${totalGenerated})`);
+
+          } catch (fetchError: any) {
+            console.error(`❌ [MCC] Batch ${batchNum} fetch error:`, fetchError);
+            lastError = fetchError;
+            retries--;
+            if (retries > 0) {
+              console.log(`🔄 [MCC] Fetch error, retrying in 3s...`);
+              await new Promise(r => setTimeout(r, 3000));
+            }
+          }
+        }
+
+        if (!batchSuccess) {
+          console.error(`❌ [MCC] Batch ${batchNum} failed after all retries`);
+          throw new Error(`Batch ${batchNum} fallito dopo 2 tentativi: ${lastError?.message || 'Unknown error'}`);
         }
         
-        toast.success(`✅ Generati ${data.breakdown?.total || 0} indizi intelligenti!`, {
-          description: `${data.breakdown?.real_clues || 0} reali, ${data.breakdown?.fake_clues || 0} falsi`
-        });
-      } else {
-        throw new Error(data?.error || 'Errore generazione');
+        // Delay between batches to avoid rate limiting
+        if (batchNum < NUM_BATCHES) {
+          console.log(`⏳ [MCC] Waiting 2s before next batch...`);
+          await new Promise(r => setTimeout(r, 2000));
+        }
       }
+
+      // ═══════════════════════════════════════════════════════════════════════════
+      // SUCCESS: All 4 batches complete
+      // ═══════════════════════════════════════════════════════════════════════════
+      
+      console.log(`🎉 [MCC] ALL BATCHES COMPLETE: ${totalGenerated} indizi totali`);
+
+      setConfig(prev => ({
+        ...prev,
+        clues_generated: true,
+        clues_count: totalGenerated,
+      }));
+      
+      toast.success(`✅ Generati ${totalGenerated} indizi INTELLIGENCE-GRADE!`, {
+        description: `${totalLocation} location + ${totalPrize} prize | ${totalDecoy} decoy (${Math.round(totalDecoy/totalGenerated*100)}%)`
+      });
+
     } catch (err: any) {
       console.error('Generate clues error:', err);
       toast.error('Errore generazione indizi', { description: err.message });
     } finally {
       setIsGeneratingClues(false);
+      setClueProgress(0);
     }
   };
 
@@ -418,6 +528,16 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
     }
     if (!config.clues_generated) {
       toast.error('❌ Genera gli indizi prima di lanciare la missione');
+      return;
+    }
+
+    // 🆕 Validate minimum clues per week
+    if (!areCluesReadyForLaunch()) {
+      const missingWeeks = [1, 2, 3, 4]
+        .filter(week => (weekCluesCounts[week] || 0) < MIN_CLUES_PER_WEEK)
+        .map(week => `Week ${week} (${weekCluesCounts[week] || 0}/150 — min ${MIN_CLUES_PER_WEEK})`)
+        .join(', ');
+      toast.error(`❌ Indizi incompleti: ${missingWeeks}`);
       return;
     }
 
@@ -495,6 +615,12 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
           reset_result: data.reset_result,
         }
       }));
+      
+      // 🔧 FIX: Store reset timestamp in localStorage for cross-page sync
+      // Components on other pages will check this on mount
+      localStorage.setItem('m1ssion_last_reset', Date.now().toString());
+      localStorage.setItem('m1ssion_reset_mission_id', config.linked_mission_id || config.id || '');
+      console.log('📢 [MCC] Stored reset timestamp in localStorage for cross-page sync');
 
     } catch (err: any) {
       console.error('Launch error:', err);
@@ -842,90 +968,26 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
     </div>
   );
 
+  // 🆕 Handler for manual clues count updates
+  const handleCluesCountChange = useCallback((totalCount: number, weekCounts: Record<number, number>) => {
+    setWeekCluesCounts(weekCounts);
+    setConfig(prev => ({
+      ...prev,
+      clues_count: totalCount,
+      clues_generated: totalCount > 0,
+    }));
+  }, []);
+
+  // 🆕 Check if all weeks have minimum clues for launch
+  const areCluesReadyForLaunch = useCallback(() => {
+    return [1, 2, 3, 4].every(week => (weekCluesCounts[week] || 0) >= MIN_CLUES_PER_WEEK);
+  }, [weekCluesCounts]);
+
   const renderCluesTab = () => (
-    <div className="space-y-6">
-      <Card className="glass-card border-purple-500/30">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Wand2 className="w-5 h-5 text-purple-400" />
-            Generazione Indizi AI
-          </CardTitle>
-          <CardDescription>
-            Genera automaticamente 400 indizi basati su località e premio
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Status */}
-          <div className="flex items-center gap-4 p-4 rounded-lg bg-black/30">
-            {config.clues_generated ? (
-              <>
-                <CheckCircle className="w-8 h-8 text-green-400" />
-                <div>
-                  <p className="text-green-400 font-semibold">✅ Indizi Generati</p>
-                  <p className="text-gray-400 text-sm">{config.clues_count} indizi creati</p>
-                </div>
-              </>
-            ) : (
-              <>
-                <AlertTriangle className="w-8 h-8 text-yellow-400" />
-                <div>
-                  <p className="text-yellow-400 font-semibold">⚠️ Indizi Non Generati</p>
-                  <p className="text-gray-400 text-sm">Clicca il bottone per generare</p>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Requirements check */}
-          <div className="space-y-2">
-            <p className="text-sm text-gray-400">Requisiti per generazione:</p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className={`flex items-center gap-2 ${config.city ? 'text-green-400' : 'text-red-400'}`}>
-                {config.city ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
-                Città: {config.city || 'Mancante'}
-              </div>
-              <div className={`flex items-center gap-2 ${config.country ? 'text-green-400' : 'text-red-400'}`}>
-                {config.country ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
-                Paese: {config.country || 'Mancante'}
-              </div>
-              <div className={`flex items-center gap-2 ${config.prize_type ? 'text-green-400' : 'text-red-400'}`}>
-                {config.prize_type ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
-                Tipo: {config.prize_type || 'Mancante'}
-              </div>
-              <div className={`flex items-center gap-2 ${config.prize_color ? 'text-green-400' : 'text-gray-400'}`}>
-                {config.prize_color ? <CheckCircle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
-                Colore: {config.prize_color || 'Opzionale'}
-              </div>
-            </div>
-          </div>
-
-          {/* Generate Button */}
-          <Button
-            onClick={handleGenerateClues}
-            disabled={isGeneratingClues || !config.city || !config.country || !config.prize_type}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-          >
-            {isGeneratingClues ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generazione in corso...
-              </>
-            ) : (
-              <>
-                <Wand2 className="w-4 h-4 mr-2" />
-                {config.clues_generated ? 'RIGENERA INDIZI' : 'GENERA 400 INDIZI'}
-              </>
-            )}
-          </Button>
-
-          {config.clues_generated && (
-            <p className="text-xs text-gray-500 text-center">
-              ⚠️ Rigenerare gli indizi sovrascriverà quelli esistenti
-            </p>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    <ManualCluesEditor
+      missionId={config.id || config.linked_mission_id || null}
+      onCluesCountChange={handleCluesCountChange}
+    />
   );
 
   const renderParticipantsTab = () => (
@@ -1015,11 +1077,30 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
               </span>
             </div>
 
-            <div className={`flex items-center gap-3 p-3 rounded-lg ${config.clues_generated ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
-              {config.clues_generated ? <CheckCircle className="w-5 h-5 text-green-400" /> : <AlertTriangle className="w-5 h-5 text-red-400" />}
-              <span className={config.clues_generated ? 'text-green-400' : 'text-red-400'}>
-                Indizi: {config.clues_generated ? `✅ ${config.clues_count} generati` : '❌ Non generati'}
-              </span>
+            {/* 🆕 Enhanced clues status with week breakdown */}
+            <div className={`p-3 rounded-lg ${areCluesReadyForLaunch() ? 'bg-green-500/10 border border-green-500/30' : 'bg-yellow-500/10 border border-yellow-500/30'}`}>
+              <div className="flex items-center gap-3 mb-2">
+                {areCluesReadyForLaunch() ? <CheckCircle className="w-5 h-5 text-green-400" /> : <AlertTriangle className="w-5 h-5 text-yellow-400" />}
+                <span className={areCluesReadyForLaunch() ? 'text-green-400' : 'text-yellow-400'}>
+                  Indizi: {areCluesReadyForLaunch() ? `✅ ${config.clues_count} pronti` : '⚠️ Incompleti'}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-2 text-xs">
+                {[1, 2, 3, 4].map(week => {
+                  const count = weekCluesCounts[week] || 0;
+                  const isOk = count >= MIN_CLUES_PER_WEEK;
+                  return (
+                    <div key={week} className={`text-center p-1 rounded ${isOk ? 'text-green-400' : 'text-yellow-400'}`}>
+                      W{week}: {count}/150 {isOk ? '✅' : '⚠️'}
+                    </div>
+                  );
+                })}
+              </div>
+              {!areCluesReadyForLaunch() && (
+                <p className="text-xs text-yellow-400 mt-2">
+                  ⚠️ Minimo {MIN_CLUES_PER_WEEK} indizi per week richiesti
+                </p>
+              )}
             </div>
           </div>
 
@@ -1048,7 +1129,8 @@ const MissionCommandCenter: React.FC<MissionCommandCenterProps> = ({ onBack }) =
               !config.prize_type ||
               !config.prize_lat ||
               !config.prize_lng ||
-              !config.clues_generated
+              !config.clues_generated ||
+              !areCluesReadyForLaunch() // 🆕 Block if not enough clues per week
             }
             className="w-full h-14 text-lg bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700"
           >

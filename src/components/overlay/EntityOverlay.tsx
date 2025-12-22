@@ -1,21 +1,23 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// M1SSION™ SHADOW PROTOCOL™ v5 - Entity Overlay Component
+// M1SSION™ SHADOW PROTOCOL™ v8 - Entity Overlay Component
 // Fullscreen overlay per eventi MCP / SHADOW / ECHO
 // Include frammenti di volto glitchato per SHADOW entity
 // v3: Force repaint per iOS Safari
 // v5: Interactive CTA buttons + Global glitch effects
+// v8: Cinematic entity visuals with per-entity animations
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'wouter';
-import { useEntityOverlayStore, SHADOW_DEBUG } from '@/stores/entityOverlayStore';
+import { useEntityOverlayStore, SHADOW_DEBUG, type EntityEvolutionLevel } from '@/stores/entityOverlayStore';
 import { EntityMessage } from './EntityMessage';
-import { SHADOW_PROTOCOL_TIMING } from '@/config/shadowProtocolConfig';
+import { SHADOW_PROTOCOL_TIMING, type ShadowEntity, getEvolutionModifiedText } from '@/config/shadowProtocolConfig';
 import { useGlobalGlitchEffect } from '@/hooks/useGlobalGlitchEffect';
 import { ShadowGlitchEngine } from '@/engine/shadowGlitchEngine';
 import '@/styles/effects/shadow-protocol.css';
 
 /**
- * EntityOverlay - Overlay fullscreen per Shadow Protocol v3
+ * EntityOverlay - Overlay fullscreen per Shadow Protocol v8
  * 
  * Comportamento:
  * - Se !isVisible || !currentEvent → null
@@ -25,14 +27,34 @@ import '@/styles/effects/shadow-protocol.css';
  * - Tap o ACKNOWLEDGE chiude (se non blocking o dopo MIN_DISPLAY_MS)
  * - Rispetta prefers-reduced-motion
  * - v3: Force repaint per iOS Safari
+ * - v8: Cinematic entity visuals with evolution-based modifiers
  */
 export const EntityOverlay: React.FC = () => {
-  const { currentEvent, isVisible, hideOverlay, canNavigateCta, recordCtaNavigation } = useEntityOverlayStore();
+  const { 
+    currentEvent, 
+    isVisible, 
+    hideOverlay, 
+    canNavigateCta, 
+    recordCtaNavigation,
+    entityEvolution,
+    recordFastDismiss,
+  } = useEntityOverlayStore();
   const [, navigate] = useLocation();
   const [canDismiss, setCanDismiss] = useState(false);
   const [typingComplete, setTypingComplete] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const overlayShownAtRef = useRef<number>(0); // 🆕 v8: Track when overlay was shown
+  
+  // 🔧 v9: Portal container for guaranteed fullscreen (escapes transform stacking contexts)
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+
+  // 🔧 v9: Initialize portal container on mount (SSR safe)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && document?.body) {
+      setPortalContainer(document.body);
+    }
+  }, []);
 
   // 🆕 v5: Global glitch effect hook
   useGlobalGlitchEffect();
@@ -91,6 +113,7 @@ export const EntityOverlay: React.FC = () => {
 
     setCanDismiss(false);
     setTypingComplete(false);
+    overlayShownAtRef.current = Date.now(); // 🆕 v8: Record when shown
 
     const timer = setTimeout(() => {
       setCanDismiss(true);
@@ -100,10 +123,23 @@ export const EntityOverlay: React.FC = () => {
   }, [isVisible, currentEvent]);
 
   // Handler per dismiss
+  // 🆕 v8: Track fast dismissals for branching behavior
   const handleDismiss = useCallback(() => {
     if (!canDismiss) return;
+    
+    // Check if this was a fast dismiss (< 3 seconds after becoming dismissible)
+    const timeSinceShown = Date.now() - overlayShownAtRef.current;
+    const FAST_DISMISS_THRESHOLD = 3000; // 3 seconds
+    
+    if (timeSinceShown < FAST_DISMISS_THRESHOLD + SHADOW_PROTOCOL_TIMING.MIN_DISPLAY_MS) {
+      recordFastDismiss();
+      if (SHADOW_DEBUG) {
+        console.log('[SHADOW v8] ⏩ Fast dismiss detected');
+      }
+    }
+    
     hideOverlay();
-  }, [canDismiss, hideOverlay]);
+  }, [canDismiss, hideOverlay, recordFastDismiss]);
 
   // Handler per typing completato
   const handleTypingEnd = useCallback(() => {
@@ -147,9 +183,14 @@ export const EntityOverlay: React.FC = () => {
   }, [currentEvent?.ctaRoute, canDismiss, canNavigateCta, recordCtaNavigation, hideOverlay, navigate]);
 
   // Non renderizzare se non visibile o nessun evento
-  if (!isVisible || !currentEvent) return null;
+  // 🔧 v9: Also check portal container is ready (SSR safe)
+  if (!isVisible || !currentEvent || !portalContainer) return null;
 
   const { entity, text, blocking, intensity } = currentEvent;
+  
+  // 🆕 v8: Get entity evolution level and modify text
+  const evolutionLevel = entityEvolution[entity] as EntityEvolutionLevel;
+  const modifiedText = getEvolutionModifiedText(text, entity, evolutionLevel);
 
   // Classe per entità
   const entityClass =
@@ -165,7 +206,8 @@ export const EntityOverlay: React.FC = () => {
   // Classe per reduced motion
   const motionClass = prefersReducedMotion ? 'reduced-motion' : '';
 
-  return (
+  // 🔧 v9: Overlay content to render via portal
+  const overlayContent = (
     <div
       ref={overlayRef}
       className={`shadow-protocol-overlay ${entityClass} ${intensityClass} ${motionClass}`}
@@ -185,6 +227,14 @@ export const EntityOverlay: React.FC = () => {
         <ShadowFaceFragment intensity={intensity} />
       )}
 
+      {/* 🆕 v8: Cinematic Entity Visual */}
+      <EntityVisual 
+        entity={entity} 
+        intensity={intensity}
+        evolutionLevel={evolutionLevel}
+        reducedMotion={prefersReducedMotion}
+      />
+
       {/* Content */}
       <div className="shadow-protocol-content">
         {/* Entity Badge */}
@@ -192,9 +242,9 @@ export const EntityOverlay: React.FC = () => {
           {entity}
         </div>
 
-        {/* Message with typing effect */}
+        {/* Message with typing effect - v8: uses evolution-modified text */}
         <EntityMessage
-          text={text}
+          text={modifiedText}
           typingSpeed={30}
           onTypingEnd={handleTypingEnd}
           className={entityClass}
@@ -236,6 +286,168 @@ export const EntityOverlay: React.FC = () => {
           </div>
         )}
       </div>
+    </div>
+  );
+
+  // 🔧 v9: Render via portal to document.body
+  // This ensures the overlay escapes any parent stacking contexts created by
+  // transform, filter, will-change, etc. on ancestor elements
+  return createPortal(overlayContent, portalContainer);
+};
+
+// ============================================================================
+// 🆕 v8: ENTITY VISUAL COMPONENTS - Cinematic animations per entity
+// ============================================================================
+
+interface EntityVisualProps {
+  entity: ShadowEntity;
+  intensity: number;
+  evolutionLevel: EntityEvolutionLevel;
+  reducedMotion: boolean;
+}
+
+/**
+ * EntityVisual - Dispatcher component that renders entity-specific visual
+ */
+const EntityVisual: React.FC<EntityVisualProps> = ({ entity, intensity, evolutionLevel, reducedMotion }) => {
+  switch (entity) {
+    case 'SHADOW':
+      return <ShadowEntityVisual intensity={intensity} evolutionLevel={evolutionLevel} reducedMotion={reducedMotion} />;
+    case 'MCP':
+      return <McpEntityVisual intensity={intensity} evolutionLevel={evolutionLevel} reducedMotion={reducedMotion} />;
+    case 'ECHO':
+      return <EchoEntityVisual intensity={intensity} evolutionLevel={evolutionLevel} reducedMotion={reducedMotion} />;
+    default:
+      return null;
+  }
+};
+
+/**
+ * ShadowEntityVisual - Inverted red triangle with eye
+ * The eye "watches" the user. Glitches intensify with evolution.
+ */
+const ShadowEntityVisual: React.FC<Omit<EntityVisualProps, 'entity'>> = ({ intensity, evolutionLevel, reducedMotion }) => {
+  const glitchIntensity = reducedMotion ? 0 : Math.min(1, (intensity + evolutionLevel) / 5);
+  
+  return (
+    <div 
+      className={`entity-visual shadow-visual ${reducedMotion ? 'reduced-motion' : ''}`}
+      style={{ '--evolution-level': evolutionLevel, '--glitch-intensity': glitchIntensity } as React.CSSProperties}
+      aria-hidden="true"
+    >
+      {/* Inverted Triangle */}
+      <div className="shadow-visual-triangle">
+        {/* The Eye */}
+        <div className="shadow-visual-eye">
+          <div className="shadow-visual-pupil" />
+        </div>
+        {/* Glitch lines */}
+        {!reducedMotion && evolutionLevel >= 1 && (
+          <>
+            <div className="shadow-visual-glitch-line line-1" />
+            <div className="shadow-visual-glitch-line line-2" />
+          </>
+        )}
+        {!reducedMotion && evolutionLevel >= 2 && (
+          <div className="shadow-visual-glitch-line line-3" />
+        )}
+      </div>
+      {/* Glow ring - intensifies with evolution */}
+      <div className="shadow-visual-glow" />
+    </div>
+  );
+};
+
+/**
+ * McpEntityVisual - Cyan HUD / Shield interface
+ * Rotating rings, scan-lines, protective feel
+ */
+const McpEntityVisual: React.FC<Omit<EntityVisualProps, 'entity'>> = ({ intensity, evolutionLevel, reducedMotion }) => {
+  return (
+    <div 
+      className={`entity-visual mcp-visual ${reducedMotion ? 'reduced-motion' : ''}`}
+      style={{ '--evolution-level': evolutionLevel } as React.CSSProperties}
+      aria-hidden="true"
+    >
+      {/* Outer ring */}
+      <div className="mcp-visual-ring ring-outer">
+        {/* Tick marks */}
+        {[...Array(12)].map((_, i) => (
+          <div key={i} className="mcp-visual-tick" style={{ transform: `rotate(${i * 30}deg)` }} />
+        ))}
+      </div>
+      {/* Inner ring */}
+      <div className="mcp-visual-ring ring-inner" />
+      {/* Center hexagon */}
+      <div className="mcp-visual-hex">
+        <div className="mcp-visual-hex-inner" />
+      </div>
+      {/* Scan line */}
+      {!reducedMotion && (
+        <div className="mcp-visual-scan" />
+      )}
+      {/* Shield pulse - activates at higher evolution */}
+      {evolutionLevel >= 2 && !reducedMotion && (
+        <div className="mcp-visual-shield-pulse" />
+      )}
+    </div>
+  );
+};
+
+/**
+ * EchoEntityVisual - Ghosted waveform / broken circle
+ * Flickers, fades, signal loss effect
+ */
+const EchoEntityVisual: React.FC<Omit<EntityVisualProps, 'entity'>> = ({ intensity, evolutionLevel, reducedMotion }) => {
+  // Generate wave segments
+  const segments = useMemo(() => {
+    const count = 8 + evolutionLevel * 2;
+    return Array.from({ length: count }, (_, i) => ({
+      id: i,
+      angle: (i / count) * 360,
+      opacity: 0.3 + Math.random() * 0.5,
+      scale: 0.8 + Math.random() * 0.4,
+      delay: Math.random() * 2,
+    }));
+  }, [evolutionLevel]);
+
+  return (
+    <div 
+      className={`entity-visual echo-visual ${reducedMotion ? 'reduced-motion' : ''}`}
+      style={{ '--evolution-level': evolutionLevel } as React.CSSProperties}
+      aria-hidden="true"
+    >
+      {/* Broken circle segments */}
+      <div className="echo-visual-ring">
+        {segments.map((seg) => (
+          <div
+            key={seg.id}
+            className="echo-visual-segment"
+            style={{
+              transform: `rotate(${seg.angle}deg)`,
+              opacity: reducedMotion ? 0.5 : seg.opacity,
+              animationDelay: reducedMotion ? '0s' : `${seg.delay}s`,
+            }}
+          />
+        ))}
+      </div>
+      {/* Waveform center */}
+      <div className="echo-visual-wave">
+        <div className="echo-visual-wave-line line-1" />
+        <div className="echo-visual-wave-line line-2" />
+        <div className="echo-visual-wave-line line-3" />
+      </div>
+      {/* Ghost copies at higher evolution */}
+      {evolutionLevel >= 2 && !reducedMotion && (
+        <>
+          <div className="echo-visual-ghost ghost-1" />
+          <div className="echo-visual-ghost ghost-2" />
+        </>
+      )}
+      {/* Static noise at level 3 */}
+      {evolutionLevel >= 3 && !reducedMotion && (
+        <div className="echo-visual-static" />
+      )}
     </div>
   );
 };

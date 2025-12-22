@@ -8,7 +8,7 @@
 .pb-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9998;
+  z-index: 10001;
   background:
     radial-gradient(1000px 600px at 75% 0%, rgba(0, 229, 255, 0.25), transparent 60%),
     radial-gradient(800px 500px at -10% 15%, rgba(123, 92, 255, 0.22), transparent 60%),

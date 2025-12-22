@@ -122,10 +122,23 @@ function getTargetElement(target?: string): HTMLElement | null {
 
 // ============================================================================
 // HELPER: Check reduced motion
+// 🆕 v7.1: DEV bypass for testing (SHADOW_IGNORE_REDUCED_MOTION)
 // ============================================================================
+
+/**
+ * SHADOW_IGNORE_REDUCED_MOTION - When true, bypasses prefers-reduced-motion in DEV
+ * In PRODUCTION, this is always false to respect accessibility preferences.
+ */
+const SHADOW_IGNORE_REDUCED_MOTION = import.meta.env.DEV;
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return true;
+  
+  // 🆕 v7.1: Bypass reduced motion check in DEV for testing
+  if (SHADOW_IGNORE_REDUCED_MOTION) {
+    return false;
+  }
+  
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
@@ -552,11 +565,12 @@ export const ShadowGlitchEngine = {
 
   /**
    * Random Shadow behavior trigger based on heat level
+   * 🔧 v7.1: Threshold reduced from 30 to 12 for PRODUCTION visibility
    */
   triggerRandomBehavior(): void {
     const heat = engineState.heatMeter;
     
-    if (heat < 30) return; // Not hot enough
+    if (heat < 12) return; // 🔧 v7.1: Reduced from 30 to 12 for earlier activation
 
     const whispers = [
       'We are watching...',
@@ -722,6 +736,116 @@ export const ShadowGlitchEngine = {
     window.dispatchEvent(new CustomEvent('shadow:requestMessage', { 
       detail: { context } 
     }));
+  },
+
+  /**
+   * 🆕 v7.2: triggerHeavyMapInterference - Visible map blackout sequence
+   * 
+   * Creates a dramatic sequence:
+   * 1. Full map blackout (1.5-3s)
+   * 2. Heavy glitch effects (noise, tearing)
+   * 3. Automatic SHADOW message after blackout
+   * 
+   * @param duration - Blackout duration in ms (default: 2000)
+   * @param autoMessage - If true, trigger SHADOW message after (default: true)
+   */
+  triggerHeavyMapInterference(duration: number = 2000, autoMessage: boolean = true): void {
+    if (prefersReducedMotion()) {
+      // Fallback: just show message
+      if (autoMessage) {
+        setTimeout(() => {
+          this.triggerPostGlitchMessage('map');
+        }, 500);
+      }
+      return;
+    }
+
+    const mapContainer = document.querySelector('#ml-sandbox');
+    if (!mapContainer) {
+      if (SHADOW_DEBUG) {
+        console.log('[SHADOW v7.2] ❌ Heavy interference skipped: map container not found');
+      }
+      return;
+    }
+
+    if (SHADOW_DEBUG) {
+      console.log(`[SHADOW v7.2] 🌑 HEAVY MAP INTERFERENCE - Duration: ${duration}ms`);
+    }
+
+    // Step 1: Create blackout overlay
+    const blackout = document.createElement('div');
+    blackout.id = 'shadow-map-blackout';
+    blackout.className = 'shadow-map-blackout';
+    blackout.innerHTML = `
+      <div class="shadow-blackout-inner">
+        <div class="shadow-blackout-scan"></div>
+        <div class="shadow-blackout-text">SIGNAL LOST</div>
+        <div class="shadow-blackout-static"></div>
+      </div>
+    `;
+    (mapContainer as HTMLElement).appendChild(blackout);
+
+    // Step 2: Add glitch effects to entire page
+    document.documentElement.classList.add('shadow-heavy-interference');
+    
+    // Step 3: Trigger random glitches during blackout
+    const glitchInterval = setInterval(() => {
+      const glitchTypes: GlitchType[] = ['noise', 'tearing', 'channelShift', 'blackoutFlash'];
+      const type = glitchTypes[Math.floor(Math.random() * glitchTypes.length)];
+      executeGlitch({
+        type,
+        duration: 80 + Math.random() * 120,
+        intensity: 0.8 + Math.random() * 0.2,
+        priority: 'critical',
+        target: 'global',
+      });
+    }, 300);
+
+    // Step 4: Cleanup after duration
+    setTimeout(() => {
+      clearInterval(glitchInterval);
+      blackout.classList.add('fade-out');
+      
+      setTimeout(() => {
+        blackout.remove();
+        document.documentElement.classList.remove('shadow-heavy-interference');
+        
+        // Step 5: Trigger SHADOW message
+        if (autoMessage) {
+          if (SHADOW_DEBUG) {
+            console.log('[SHADOW v7.2] 📝 Triggering post-interference SHADOW message');
+          }
+          this.triggerPostGlitchMessage('map');
+        }
+      }, 500);
+    }, duration);
+  },
+
+  /**
+   * 🆕 v7.2: triggerQuickMapStatic - Quick static burst on map
+   * Lighter effect than heavy interference
+   */
+  triggerQuickMapStatic(duration: number = 600): void {
+    if (prefersReducedMotion()) return;
+
+    const mapContainer = document.querySelector('#ml-sandbox');
+    if (!mapContainer) return;
+
+    const staticOverlay = document.createElement('div');
+    staticOverlay.className = 'shadow-map-static-burst';
+    (mapContainer as HTMLElement).appendChild(staticOverlay);
+
+    // Camera shake
+    (mapContainer as HTMLElement).classList.add('shadow-glitch-camera-shake');
+
+    setTimeout(() => {
+      staticOverlay.remove();
+      (mapContainer as HTMLElement).classList.remove('shadow-glitch-camera-shake');
+    }, duration);
+
+    if (SHADOW_DEBUG) {
+      console.log('[SHADOW v7.2] ⚡ Quick map static burst');
+    }
   },
 };
 

@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Vault, Gift, Clock, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
@@ -239,93 +240,96 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
         </div>
       </motion.div>
 
-      {/* Claim Modal */}
-      <AnimatePresence>
-        {showClaimModal && accumulatedM1U > 0 && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowClaimModal(false)}
-          >
+      {/* Claim Modal - Renderizzato via Portal nel body */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showClaimModal && accumulatedM1U > 0 && (
             <motion.div
-              className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 max-w-sm w-full border border-cyan-500/30 shadow-2xl"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowClaimModal(false)}
             >
-              {/* Icon */}
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center shadow-xl shadow-cyan-500/30">
-                  <Vault className="w-8 h-8 text-white" />
+              <motion.div
+                className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 max-w-sm w-full border border-cyan-500/30 shadow-2xl"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Icon */}
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center shadow-xl shadow-cyan-500/30">
+                    <Vault className="w-8 h-8 text-white" />
+                  </div>
                 </div>
-              </div>
 
-              {/* Title */}
-              <h3 className="text-xl font-bold text-center text-white mb-2">
-                M1SSION Cashback Vault™
-              </h3>
+                {/* Title */}
+                <h3 className="text-xl font-bold text-center text-white mb-2">
+                  M1SSION Cashback Vault™
+                </h3>
 
-              {/* Amount */}
-              <div className="text-center mb-6">
-                <span className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-pink-400 bg-clip-text text-transparent">
-                  +{accumulatedM1U.toLocaleString()}
-                </span>
-                <span className="text-xl text-cyan-300 ml-2">M1U</span>
-                <p className="text-gray-400 text-sm mt-2">
-                  Cashback accumulato pronto per essere riscattato
-                </p>
-              </div>
+                {/* Amount */}
+                <div className="text-center mb-6">
+                  <span className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-pink-400 bg-clip-text text-transparent">
+                    +{accumulatedM1U.toLocaleString()}
+                  </span>
+                  <span className="text-xl text-cyan-300 ml-2">M1U</span>
+                  <p className="text-gray-400 text-sm mt-2">
+                    Cashback accumulato pronto per essere riscattato
+                  </p>
+                </div>
 
-              {/* Buttons */}
-              <div className="flex gap-3">
-                <motion.button
-                  className="flex-1 py-3 px-4 rounded-xl bg-gray-700 text-white font-medium"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowClaimModal(false)}
-                >
-                  Annulla
-                </motion.button>
-                <motion.button
-                  className={`flex-1 py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2
-                    ${canClaim 
-                      ? 'bg-gradient-to-r from-cyan-500 to-pink-500 text-white' 
-                      : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    }`}
-                  whileHover={canClaim ? { scale: 1.02 } : {}}
-                  whileTap={canClaim ? { scale: 0.98 } : {}}
-                  onClick={handleClaim}
-                  disabled={!canClaim || isClaiming}
-                >
-                  {isClaiming ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Gift className="w-4 h-4" />
-                      Riscatta
-                    </>
-                  )}
-                </motion.button>
-              </div>
+                {/* Buttons */}
+                <div className="flex gap-3">
+                  <motion.button
+                    className="flex-1 py-3 px-4 rounded-xl bg-gray-700 text-white font-medium"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowClaimModal(false)}
+                  >
+                    Annulla
+                  </motion.button>
+                  <motion.button
+                    className={`flex-1 py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2
+                      ${canClaim 
+                        ? 'bg-gradient-to-r from-cyan-500 to-pink-500 text-white' 
+                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      }`}
+                    whileHover={canClaim ? { scale: 1.02 } : {}}
+                    whileTap={canClaim ? { scale: 0.98 } : {}}
+                    onClick={handleClaim}
+                    disabled={!canClaim || isClaiming}
+                  >
+                    {isClaiming ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Gift className="w-4 h-4" />
+                        Riscatta
+                      </>
+                    )}
+                  </motion.button>
+                </div>
 
-              {/* Info - SOLO DOMENICA */}
-              {!canClaim && (
-                <p className="text-center text-gray-500 text-xs mt-4">
-                  {!isSunday 
-                    ? '⏰ Il riscatto è disponibile solo di Domenica'
-                    : nextClaimAvailable 
-                      ? `Prossimo riscatto: ${formatNextClaim()}`
-                      : 'Accumula cashback per riscattare'
-                  }
-                </p>
-              )}
+                {/* Info - SOLO DOMENICA */}
+                {!canClaim && (
+                  <p className="text-center text-gray-500 text-xs mt-4">
+                    {!isSunday 
+                      ? '⏰ Il riscatto è disponibile solo di Domenica'
+                      : nextClaimAvailable 
+                        ? `Prossimo riscatto: ${formatNextClaim()}`
+                        : 'Accumula cashback per riscattare'
+                    }
+                  </p>
+                )}
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 };

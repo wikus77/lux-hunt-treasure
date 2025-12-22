@@ -13,8 +13,20 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useLandingTranslations } from "@/hooks/useLandingTranslations";
 import "../styles/landing-flip-cards.css";
+import "../styles/landing-premium.css";
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Prize images array for carousel
+const prizeImages = [
+  "/lovable-uploads/eccb4710-0336-46f8-9137-906f61fbdebd.png", // Main Ferrari/Lambo image
+  "/lovable-uploads/211b98b7-646d-4c40-80d6-416ac71a54fc.png", // Lamborghini Huracán
+  "/lovable-uploads/2f1f79ad-4221-4a49-a188-81e28222514d.png", // Ferrari SF90 Stradale
+  "/lovable-uploads/3b5f5a13-bb71-472b-9348-6e52c12cba7e.png", // Aston Martin DBX
+  "/lovable-uploads/7bda6b4a-6ac6-489d-8b2f-b9a4f9c312a2.png", // Porsche 911 Turbo
+  "/assets/m1ssion-prize/hero-forest-watch.png", // Rolex Watch
+  "/assets/m1ssion-prize/hero-forest-lambo.png", // Lamborghini Forest
+];
 
 const LandingPage = () => {
   const [, setLocation] = useLocation();
@@ -24,6 +36,9 @@ const LandingPage = () => {
   const [showEmergencyLogin, setShowEmergencyLogin] = useState(false);
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [currentPrizeIndex, setCurrentPrizeIndex] = useState(0);
+  const [showLearnMore, setShowLearnMore] = useState(false);
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   
   // Use landing page translations with device language detection
   const { t } = useLandingTranslations();
@@ -35,6 +50,41 @@ const LandingPage = () => {
   const [isTypingComplete, setIsTypingComplete] = useState(false);
 
   console.log('🌟 M1SSION™ LANDING PAGE - Xavier Cusso Style - Showing to anonymous user');
+
+  // Prize carousel auto-advance
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentPrizeIndex((prev) => (prev + 1) % prizeImages.length);
+    }, 4000); // Change image every 4 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Countdown to M1SSION launch - December 19, 2025 at 19:00 (7 PM)
+  useEffect(() => {
+    const targetDate = new Date('2025-12-19T19:00:00').getTime();
+    
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const difference = targetDate - now;
+      
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        
+        setCountdown({ days, hours, minutes, seconds });
+      } else {
+        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+    
+    updateCountdown(); // Initial call
+    const interval = setInterval(updateCountdown, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Optimized GSAP Animations setup
   useEffect(() => {
@@ -254,86 +304,120 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black overflow-x-hidden relative">
-      {/* Dynamic Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black opacity-80" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(0,229,255,0.1),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,0,255,0.1),transparent_50%)]" />
+    <div className="min-h-screen bg-black overflow-x-hidden relative ambient-bg">
+      {/* Noise Overlay - Subtle Film Grain */}
+      <div className="noise-overlay" />
+      
+      {/* Vignette Effect */}
+      <div className="vignette" />
+      
+      {/* Dynamic Background - Enhanced */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0a0a12] to-black" />
+        <motion.div 
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_30%,rgba(0,229,255,0.12),transparent_60%)]"
+          animate={{ opacity: [0.8, 1, 0.8] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_70%,rgba(168,85,247,0.1),transparent_60%)]"
+          animate={{ opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        />
+        <motion.div 
+          className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,229,255,0.03),transparent_70%)]"
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        />
         
-        {/* Floating Elements */}
-        {[...Array(30)].map((_, i) => (
+        {/* Floating Particles - More Dense */}
+        {[...Array(50)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full opacity-20"
+            className="absolute rounded-full"
             style={{
-              width: `${Math.random() * 4 + 2}px`,
-              height: `${Math.random() * 4 + 2}px`,
-              background: i % 2 === 0 ? "#00E5FF" : "#FF00FF",
+              width: `${Math.random() * 3 + 1}px`,
+              height: `${Math.random() * 3 + 1}px`,
+              background: i % 3 === 0 ? "#00E5FF" : i % 3 === 1 ? "#8B5CF6" : "#FF00FF",
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
+              opacity: 0.15,
             }}
             animate={{
-              y: [0, -30, 0],
-              x: [0, 15, -15, 0],
-              opacity: [0.1, 0.3, 0.1],
+              y: [0, -50, 0],
+              x: [0, 20, -20, 0],
+              opacity: [0.05, 0.25, 0.05],
+              scale: [1, 1.2, 1],
             }}
             transition={{
-              duration: Math.random() * 20 + 15,
+              duration: Math.random() * 25 + 20,
               repeat: Infinity,
               ease: "easeInOut",
-              delay: Math.random() * 10
+              delay: Math.random() * 15
             }}
           />
         ))}
       </div>
 
-      {/* Floating Action Buttons */}
+      {/* Floating Action Buttons - Premium */}
       <div className="fixed bottom-8 right-8 z-40 flex flex-col gap-4">
         <motion.button 
           onClick={() => setShowPrizeDetails(true)}
-          className="p-4 rounded-full bg-cyan-500/20 backdrop-blur-sm border border-cyan-400/30 text-cyan-400 hover:bg-cyan-500/30 transition-all duration-300"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
+          className="p-4 rounded-full bg-cyan-500/10 backdrop-blur-xl border border-cyan-400/20 text-cyan-400 breathing-glow transition-all duration-500"
+          whileHover={{ scale: 1.15, boxShadow: '0 0 40px rgba(0,229,255,0.4)' }}
+          whileTap={{ scale: 0.9 }}
         >
           <Info className="h-6 w-6" />
         </motion.button>
         
         <motion.button 
           onClick={openInviteFriend}
-          className="p-4 rounded-full bg-purple-500/20 backdrop-blur-sm border border-purple-400/30 text-purple-400 hover:bg-purple-500/30 transition-all duration-300"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
+          className="p-4 rounded-full bg-purple-500/10 backdrop-blur-xl border border-purple-400/20 text-purple-400 breathing-glow-purple transition-all duration-500"
+          whileHover={{ scale: 1.15, boxShadow: '0 0 40px rgba(168,85,247,0.4)' }}
+          whileTap={{ scale: 0.9 }}
         >
           <UserPlus className="h-6 w-6" />
         </motion.button>
       </div>
       
-      {/* HERO SECTION - Xavier Cusso Style */}
+      {/* HERO SECTION - Premium Cinematic */}
       <section 
         ref={heroRef}
-        className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-4 py-20 overflow-hidden"
+        className="relative w-full flex flex-col items-center justify-start text-center px-4 pt-10 pb-2"
       >
-        {/* Main Title */}
+        {/* Main Title - Enhanced Glow */}
         <div className="z-10 max-w-6xl mx-auto">
-          <h1 
+          <motion.h1 
             ref={titleRef}
             className="text-6xl md:text-7xl lg:text-[8rem] font-black leading-none mb-6"
+            animate={{ 
+              textShadow: [
+                '0 0 40px rgba(0,229,255,0.4)',
+                '0 0 80px rgba(0,229,255,0.6)',
+                '0 0 40px rgba(0,229,255,0.4)'
+              ]
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           >
             <div className="overflow-hidden">
-              <span className="text-cyan-400 glow-text block drop-shadow-[0_0_30px_rgba(0,229,255,0.8)]">
+              <motion.span 
+                className="text-cyan-400 block title-glow"
+                style={{ 
+                  textShadow: '0 0 60px rgba(0,229,255,0.8), 0 0 120px rgba(0,229,255,0.4)'
+                }}
+              >
                 M1
-              </span>
+              </motion.span>
             </div>
             <div className="overflow-hidden -mt-8">
-              <span className="text-white block">
+              <span className="text-white block" style={{ textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>
                 SSION<span className="text-2xl align-top">™</span>
               </span>
             </div>
-          </h1>
+          </motion.h1>
           
           <motion.p 
-            className="text-2xl md:text-3xl font-light tracking-[0.3em] mb-12 uppercase"
+            className="text-2xl md:text-3xl font-light tracking-[0.3em] mb-4 uppercase"
             style={{ color: '#00FF00' }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -342,8 +426,61 @@ const LandingPage = () => {
             M1SSION STARTS ON 19 DECEMBER
           </motion.p>
           
+          {/* Countdown Timer - Premium Glass */}
+          <motion.div 
+            className="flex justify-center gap-2 md:gap-3 mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.7 }}
+          >
+            <motion.div 
+              className="countdown-box text-center"
+              whileHover={{ scale: 1.05, borderColor: 'rgba(0,229,255,0.4)' }}
+            >
+              <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-cyan-400 countdown-number">
+                {String(countdown.days).padStart(2, '0')}
+              </div>
+              <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1">Giorni</div>
+            </motion.div>
+            <div className="text-2xl md:text-3xl font-bold text-white/20 self-center">:</div>
+            <motion.div 
+              className="countdown-box text-center"
+              whileHover={{ scale: 1.05, borderColor: 'rgba(0,229,255,0.4)' }}
+            >
+              <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-cyan-400 countdown-number">
+                {String(countdown.hours).padStart(2, '0')}
+              </div>
+              <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1">Ore</div>
+            </motion.div>
+            <div className="text-2xl md:text-3xl font-bold text-white/20 self-center">:</div>
+            <motion.div 
+              className="countdown-box text-center"
+              whileHover={{ scale: 1.05, borderColor: 'rgba(0,229,255,0.4)' }}
+            >
+              <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-cyan-400 countdown-number">
+                {String(countdown.minutes).padStart(2, '0')}
+              </div>
+              <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1">Minuti</div>
+            </motion.div>
+            <div className="text-2xl md:text-3xl font-bold text-white/20 self-center">:</div>
+            <motion.div 
+              className="countdown-box text-center"
+              style={{ borderColor: 'rgba(168,85,247,0.3)' }}
+              whileHover={{ scale: 1.05, borderColor: 'rgba(168,85,247,0.5)' }}
+            >
+              <motion.div 
+                className="text-3xl md:text-4xl lg:text-5xl font-bold text-purple-400 countdown-number"
+                animate={{ opacity: [1, 0.7, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                {String(countdown.seconds).padStart(2, '0')}
+              </motion.div>
+              <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1">Secondi</div>
+            </motion.div>
+          </motion.div>
+          
           <motion.p 
-            className="text-xl md:text-2xl text-gray-400 mb-16 max-w-4xl mx-auto leading-relaxed"
+            className="text-lg md:text-xl text-gray-400 mb-6 max-w-4xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 2 }}
@@ -352,7 +489,7 @@ const LandingPage = () => {
           </motion.p>
           
           <motion.div 
-            className="text-yellow-300 text-lg md:text-xl tracking-[0.5em] mb-16 relative font-light"
+            className="text-yellow-300 text-base md:text-lg tracking-[0.5em] mb-6 relative font-light"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 2.5 }}
@@ -361,115 +498,152 @@ const LandingPage = () => {
           </motion.div>
           
           <motion.div 
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 3 }}
+            style={{ overflow: 'visible' }}
           >
             <motion.button 
-              className="px-12 py-6 rounded-full bg-gradient-to-r from-cyan-400 to-purple-600 text-black text-xl font-black uppercase tracking-wider hover:shadow-[0_0_40px_rgba(34,211,238,0.8)] transition-all duration-300 relative group"
+              className="cta-premium px-8 py-4 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-500 to-purple-600 text-black text-base font-black uppercase tracking-wider relative group"
               onClick={handleRegisterClick}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, boxShadow: '0 0 60px rgba(34,211,238,0.6), 0 0 100px rgba(34,211,238,0.3)' }}
               whileTap={{ scale: 0.95 }}
+              style={{ boxShadow: '0 0 30px rgba(34,211,238,0.3)', overflow: 'visible' }}
             >
               <span className="relative z-10">{t('joinTheHunt')}</span>
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"
-              />
             </motion.button>
             
             <motion.button 
-              className="px-12 py-6 rounded-full text-white font-black uppercase tracking-wider bg-white/5 border-2 border-white/20 hover:bg-white/10 hover:border-cyan-400/50 hover:text-cyan-400 transition-all duration-300"
-              whileHover={{ scale: 1.05 }}
+              className="px-8 py-4 rounded-full text-white font-bold uppercase tracking-wider bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-cyan-400/40 hover:text-cyan-400 transition-all duration-500"
+              onClick={() => setShowLearnMore(true)}
+              whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(0,229,255,0.2)' }}
               whileTap={{ scale: 0.95 }}
+              style={{ overflow: 'visible' }}
             >
               {t('learnMore')}
             </motion.button>
           </motion.div>
         </div>
 
-        {/* Scroll Indicator */}
+        {/* Scroll Indicator - Minimal */}
         <motion.div 
-          className="absolute bottom-12 left-1/2 transform -translate-x-1/2"
-          animate={{ y: [0, 10, 0] }}
+          className="mt-4"
+          animate={{ y: [0, 8, 0], opacity: [0.3, 0.6, 0.3] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <ArrowDown className="w-8 h-8 text-white/40" />
+          <ArrowDown className="w-5 h-5 text-cyan-400/50" />
         </motion.div>
       </section>
 
-      {/* PREMI IN PALIO SECTION - Xavier Cusso Style */}
+      {/* PREMI IN PALIO SECTION - Premium */}
       <section 
         ref={(el) => el && (sectionsRef.current[0] = el)}
-        className="relative py-32 px-4"
+        className="relative py-8 px-4"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-transparent to-cyan-900/20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent" />
         
         <div className="max-w-7xl mx-auto relative">
           <motion.div 
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
+            className="text-center mb-8"
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
+            viewport={{ once: true, margin: "-50px" }}
           >
-            <h2 className="text-4xl md:text-5xl font-black mb-6 text-white leading-none">
+            <motion.h2 
+              className="text-3xl md:text-4xl font-black mb-3 text-white leading-none"
+              style={{ textShadow: '0 0 40px rgba(255,255,255,0.1)' }}
+              whileInView={{ 
+                textShadow: ['0 0 20px rgba(0,229,255,0.3)', '0 0 40px rgba(0,229,255,0.5)', '0 0 20px rgba(0,229,255,0.3)']
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
               {t('realPrizes')}
-            </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            </motion.h2>
+            <motion.p 
+              className="text-base text-gray-400 max-w-2xl mx-auto subtitle-elegant"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+            >
               {t('realPrizesDescription')}
-            </p>
+            </motion.p>
           </motion.div>
 
           <motion.div 
-            className="relative h-[40vh] md:h-[50vh] lg:h-[60vh] rounded-3xl bg-black/40 backdrop-blur-sm border border-white/10 overflow-hidden"
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.5 }}
+            className="image-container-premium relative h-[35vh] md:h-[45vh] lg:h-[50vh] glass-container-glow overflow-hidden"
+            initial={{ opacity: 0, y: 60, rotateX: 10 }}
+            whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+            whileHover={{ scale: 1.02, boxShadow: '0 30px 60px rgba(0,229,255,0.2)' }}
+            transition={{ duration: 0.8, type: "spring", stiffness: 80 }}
+            viewport={{ once: true, margin: "-100px" }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-purple-500/20 opacity-60" />
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-purple-500/20 opacity-60 z-10" />
             
-            <img 
-              src="/lovable-uploads/eccb4710-0336-46f8-9137-906f61fbdebd.png" 
-              alt="M1SSION PREMI IN PALIO - Ferrari, Lamborghini, Rolex"
-              className="w-full h-full object-cover object-center"
-              style={{ 
-                objectFit: 'cover',
-                objectPosition: 'center',
-                aspectRatio: '16/9'
-              }}
-              onLoad={() => {
-                console.log('✅ Immagine Premi in Palio caricata con successo');
-                setImageLoaded(true);
-              }}
-              onError={(e) => {
-                console.log('❌ Errore caricamento immagine, usando fallback');
-                setImageLoaded(false);
-                e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='450' viewBox='0 0 800 450'%3E%3Crect width='800' height='450' fill='%23000'/%3E%3Ctext x='400' y='225' font-family='Arial, sans-serif' font-size='24' fill='%2300E5FF' text-anchor='middle' dy='.3em'%3EM1SSION PREMI IN PALIO%3C/text%3E%3C/svg%3E";
-              }}
-            />
+            {/* Prize Images Carousel */}
+            {prizeImages.map((image, index) => (
+              <motion.img 
+                key={index}
+                src={image}
+                alt={`M1SSION PREMI IN PALIO ${index + 1}`}
+                className="absolute inset-0 w-full h-full object-cover object-center"
+                initial={{ opacity: 0 }}
+                animate={{ 
+                  opacity: currentPrizeIndex === index ? 1 : 0,
+                  scale: currentPrizeIndex === index ? 1 : 1.1
+                }}
+                transition={{ duration: 1, ease: "easeInOut" }}
+                style={{ 
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                }}
+                onLoad={() => {
+                  if (index === 0) {
+                    console.log('✅ Immagine Premi in Palio caricata con successo');
+                    setImageLoaded(true);
+                  }
+                }}
+              />
+            ))}
+            
+            {/* Carousel Indicators */}
+            <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex gap-2 z-20">
+              {prizeImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPrizeIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    currentPrizeIndex === index 
+                      ? 'bg-cyan-400 w-6' 
+                      : 'bg-white/40 hover:bg-white/60'
+                  }`}
+                />
+              ))}
+            </div>
             
             {/* Animated scanner effect */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent z-10"
               animate={{ x: ["-100%", "100%"] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
             
             {/* Caption always visible when image is loaded */}
-            <div className="absolute bottom-4 right-4 text-white/60 text-xs font-normal bg-black/20 backdrop-blur-sm px-2 py-1 rounded border border-white/10">
+            <div className="absolute bottom-4 right-4 text-white/60 text-xs font-normal bg-black/20 backdrop-blur-sm px-2 py-1 rounded border border-white/10 z-20">
               Image for illustration purposes only
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Launch Progress Bar - Animated */}
+      {/* Launch Progress Bar - Premium */}
       <motion.section 
-        className="relative py-16 px-4 bg-black"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-        viewport={{ once: true }}
+        className="relative py-6 px-4"
+        initial={{ opacity: 0, y: 30, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
+        viewport={{ once: true, margin: "-50px" }}
       >
         <div className="max-w-4xl mx-auto text-center">
           <motion.h3 
@@ -498,7 +672,7 @@ const LandingPage = () => {
                   "linear-gradient(90deg, #FF00FF, #00E5FF, #FF00FF)",
                   "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
                 ],
-                width: ["0%", "78%"]
+                width: ["0%", "100%"]
               }}
               transition={{
                 background: { duration: 3, repeat: Infinity, ease: "easeInOut" },
@@ -520,66 +694,116 @@ const LandingPage = () => {
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            78% completato - La caccia inizia presto
+            100% completato - La caccia inizia presto
           </motion.p>
         </div>
       </motion.section>
 
-      {/* WELCOME TO M1SSION™ Text Section */}
+      {/* INSTALLATION SECTION - Premium Glass */}
+      <section className="py-6 px-4">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            className="glass-container-glow p-6 md:p-8 text-center relative overflow-hidden"
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            whileHover={{ boxShadow: '0 0 80px rgba(0,229,255,0.15)' }}
+            transition={{ duration: 0.7, type: "spring", stiffness: 80 }}
+            viewport={{ once: true, margin: "-80px" }}
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-white">
+              Installa <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+            </h2>
+            
+            <p className="text-base mb-6 text-gray-300 subtitle-elegant">
+              Per installare M1SSION™ sul tuo dispositivo mobile:
+            </p>
+            
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center justify-center text-gray-400 text-sm">
+                <span className="mr-2">📱</span>
+                <span><strong className="text-white">iOS (Safari):</strong> premi il tasto "Condividi" e seleziona "Aggiungi alla Home"</span>
+              </div>
+              <div className="flex items-center justify-center text-gray-400 text-sm">
+                <span className="mr-2">🤖</span>
+                <span><strong className="text-white">Android (Chrome):</strong> apri il menu ⋮ e premi "Installa App"</span>
+              </div>
+            </div>
+            
+            <motion.div
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <Button 
+                onClick={handleRegisterClick}
+                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-bold px-8 py-3 rounded-full shadow-lg hover:shadow-cyan-500/30 transition-all duration-300"
+              >
+                Aggiungi M1SSION™ alla tua Home
+              </Button>
+            </motion.div>
+            
+            <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* WELCOME TO M1SSION™ Text Section - Premium */}
       <motion.section 
-        className="relative py-20 px-4 bg-black"
-        initial={{ opacity: 0, y: 40 }}
+        className="relative py-6 px-4"
+        initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-        viewport={{ once: true }}
+        transition={{ duration: 0.7, type: "spring", stiffness: 80 }}
+        viewport={{ once: true, margin: "-80px" }}
       >
         <div className="max-w-4xl mx-auto">
           <motion.div 
-            className="glass-card p-8 md:p-12 text-center relative overflow-hidden"
-            whileHover={{ scale: 1.01 }}
-            transition={{ duration: 0.3 }}
+            className="glass-container p-6 md:p-8 text-center relative overflow-hidden"
+            initial={{ scale: 0.95 }}
+            whileInView={{ scale: 1 }}
+            whileHover={{ borderColor: 'rgba(0,229,255,0.3)', boxShadow: '0 0 60px rgba(0,229,255,0.1)' }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-4xl font-orbitron mb-8">
+            <h2 className="text-2xl md:text-3xl font-orbitron mb-6" style={{ textShadow: '0 0 30px rgba(255,255,255,0.1)' }}>
               WELCOME TO{" "}
               <span>
-                <span className="text-[#00E5FF]">M1</span>
+                <span className="text-[#00E5FF]" style={{ textShadow: '0 0 20px rgba(0,229,255,0.5)' }}>M1</span>
                 <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
               </span>
             </h2>
             
-            <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
+            <p className="text-base mb-4 max-w-3xl mx-auto text-gray-300 leading-relaxed">
               In the near future... The world becomes a gameboard. The clues are encrypted. The stakes are real.
             </p>
             
-            <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
+            <p className="text-base mb-4 max-w-3xl mx-auto text-gray-300 leading-relaxed">
               Thousands will try. Only a few will see the pattern. You're not just chasing a prize—you're chasing the proof that you can outthink them all.
             </p>
 
-            <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
+            <p className="text-base max-w-3xl mx-auto text-gray-300 leading-relaxed">
               This is <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>. The countdown has begun. Are you ready?
             </p>
 
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+            <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
           </motion.div>
         </div>
       </motion.section>
 
-      {/* REGISTRATION FORM SECTION - Stile M1SSION Prize con Gradient Animato */}
+      {/* REGISTRATION FORM SECTION - Premium Gradient */}
       <motion.section 
-        className="relative py-20 px-4"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-        viewport={{ once: true }}
+        className="relative py-8 px-4"
+        initial={{ opacity: 0, y: 60, scale: 0.9 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.8, type: "spring", stiffness: 70 }}
+        viewport={{ once: true, margin: "-100px" }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-cyan-900/40 to-pink-900/40"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/15 to-transparent"></div>
         <div className="max-w-lg mx-auto relative z-10">
           <motion.div 
-            className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10 text-center"
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.3 }}
+            className="relative glass-container-glow overflow-hidden p-6 text-center breathing-glow-purple"
+            whileHover={{ scale: 1.03, boxShadow: '0 0 100px rgba(168,85,247,0.25)' }}
+            transition={{ duration: 0.4 }}
           >
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+            <h2 className="text-xl md:text-2xl font-bold mb-2">
               Registrati per{" "}
               <span>
                 <span className="text-[#00E5FF]">M1</span>
@@ -587,41 +811,31 @@ const LandingPage = () => {
               </span>
             </h2>
             
-            <p className="text-white/70 mb-6">
+            <p className="text-white/60 mb-6 text-sm subtitle-elegant">
               Ottieni accesso esclusivo e un codice referral unico. Preparati per l'avventura che cambierà tutto.
             </p>
             
             <div className="space-y-4">
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 className="relative overflow-hidden rounded-xl"
               >
                 <motion.div
                   className="absolute inset-0"
                   style={{
-                    background: "linear-gradient(45deg, #ec4899, #d946ef, #ec4899, #d946ef)"
+                    background: "linear-gradient(45deg, #ec4899, #8B5CF6, #00E5FF)"
                   }}
                   animate={{
-                    background: [
-                      "linear-gradient(45deg, #ec4899, #d946ef, #ec4899, #d946ef)",
-                      "linear-gradient(135deg, #d946ef, #ec4899, #d946ef, #ec4899)",
-                      "linear-gradient(45deg, #ec4899, #d946ef, #ec4899, #d946ef)"
-                    ]
+                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
                   }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 />
                 <Button 
                   onClick={handleRegisterClick}
-                  className="relative w-full bg-transparent text-white text-xl font-bold py-4 px-12 hover:bg-transparent transition-all duration-300 shadow-lg hover:shadow-cyan-500/30"
+                  className="relative w-full bg-transparent text-white text-lg font-bold py-4 px-12 hover:bg-transparent transition-all duration-500"
                   style={{
-                    boxShadow: "0 0 20px rgba(236, 72, 153, 0.3)"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = "0 0 30px rgba(0, 229, 255, 0.5), 0 0 60px rgba(236, 72, 153, 0.3)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = "0 0 20px rgba(236, 72, 153, 0.3)";
+                    boxShadow: "0 0 30px rgba(139, 92, 246, 0.4)"
                   }}
                 >
                   START M1SSION
@@ -632,18 +846,24 @@ const LandingPage = () => {
         </div>
       </motion.section>
 
-      {/* SCOPRI M1SSION SECTION - 4 Steps */}
+      {/* SCOPRI M1SSION SECTION - Premium */}
       <motion.section 
-        className="py-20 px-4 bg-black"
-        initial={{ opacity: 0, y: 40 }}
+        className="py-10 px-4"
+        initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-        viewport={{ once: true }}
+        transition={{ duration: 0.7, type: "spring", stiffness: 80 }}
+        viewport={{ once: true, margin: "-80px" }}
       >
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">
-            Scopri <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span>
-          </h2>
+          <motion.h2 
+            className="text-2xl md:text-3xl font-bold mb-8 text-center"
+            style={{ textShadow: '0 0 30px rgba(255,255,255,0.1)' }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            Scopri <span className="text-[#00E5FF]" style={{ textShadow: '0 0 20px rgba(0,229,255,0.5)' }}>M1</span><span className="text-white">SSION</span>
+          </motion.h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 relative">
             {/* Linea connettore per desktop */}
@@ -706,49 +926,71 @@ const LandingPage = () => {
         </div>
       </motion.section>
 
-      {/* STAY UPDATED SECTION */}
-      <section className="py-12 px-4 bg-black">
+      {/* STAY UPDATED SECTION - Compact */}
+      <motion.section 
+        className="py-4 px-4"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        viewport={{ once: true }}
+      >
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <motion.h2 
+            className="text-lg md:text-xl font-bold text-white mb-1"
+            initial={{ y: 20 }}
+            whileInView={{ y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
             Stay Updated
-          </h2>
-          <p className="text-white/70 mb-8">
+          </motion.h2>
+          <p className="text-white/40 text-xs subtitle-elegant">
             Get the latest updates about M1SSION™ and be the first to know about new challenges.
           </p>
         </div>
-      </section>
+      </motion.section>
 
-      {/* SUBSCRIPTION SECTION - MODIFICATO: Allineamento singola riga */}
-      <section className="py-16 px-4 bg-black relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black opacity-80"></div>
+      {/* SUBSCRIPTION SECTION - Premium */}
+      <motion.section 
+        className="py-8 px-4 relative"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true, margin: "-80px" }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-900/5 to-transparent"></div>
         
         <div className="relative z-10 max-w-7xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-6"
           >
-            <h2 className="text-3xl md:text-4xl font-bold inline-block">
-              <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span> Abbonamenti
-            </h2>
-            <p className="mt-4 text-white/70 max-w-2xl mx-auto">
+            <motion.h2 
+              className="text-xl md:text-2xl font-bold inline-block"
+              style={{ textShadow: '0 0 30px rgba(255,255,255,0.1)' }}
+              whileInView={{ scale: [0.95, 1] }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="text-[#00E5FF]" style={{ textShadow: '0 0 20px rgba(0,229,255,0.5)' }}>M1</span><span className="text-white">SSION</span> Abbonamenti
+            </motion.h2>
+            <p className="mt-2 text-white/40 max-w-2xl mx-auto text-xs subtitle-elegant">
               Scegli il piano più adatto a te e inizia la tua avventura. Tutti i piani offrono la possibilità di vincere premi reali.
             </p>
           </motion.div>
           
-          {/* MODIFICATO: Grid per allineamento singola riga con 5 colonne */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-12">
+          {/* Premium Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
             {subscriptions.map((sub, index) => (
               <motion.div
                 key={index}
-                className={`rounded-xl relative p-4 ${sub.highlight ? 'bg-gradient-to-b from-[#00E5FF]/20 to-black/70 border border-[#00E5FF]/30' : 'bg-white/5 border border-white/10'}`}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                className={`subscription-card p-3 ${sub.highlight ? 'subscription-card-highlight bg-gradient-to-b from-[#00E5FF]/10 to-black/80' : ''}`}
+                initial={{ opacity: 0, y: 40, scale: 0.9 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}
+                transition={{ delay: index * 0.1, duration: 0.5, type: "spring", stiffness: 100 }}
+                viewport={{ once: true, margin: "-50px" }}
               >
                 {/* Badge per il piano consigliato */}
                 {sub.highlight && (
@@ -790,83 +1032,66 @@ const LandingPage = () => {
           </div>
 
           <div className="text-center">
-            <p className="text-white/60 text-sm">
+            <p className="text-white/50 text-xs">
               Tutti i piani sono soggetti ai termini e condizioni di servizio.
             </p>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* AGE VERIFICATION SECTION */}
-      <section className="py-20 px-4 bg-black relative">
+      {/* AGE VERIFICATION SECTION - Premium */}
+      <motion.section 
+        className="py-8 px-4 relative"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true, margin: "-60px" }}
+      >
         <div className="max-w-lg mx-auto">
           <motion.div
-            className="glass-card p-8 text-center"
-            initial={{ opacity: 0, scale: 0.95 }}
+            className="glass-container p-5 text-center"
+            initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
+            whileHover={{ boxShadow: '0 0 60px rgba(168,85,247,0.15)' }}
+            transition={{ duration: 0.6, type: "spring", stiffness: 80 }}
             viewport={{ once: true }}
           >
-            <div className="mb-6">
-              <IdCard className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-2">
+            <div className="mb-4">
+              <motion.div
+                animate={{ 
+                  boxShadow: [
+                    '0 0 20px rgba(168,85,247,0.2)',
+                    '0 0 40px rgba(168,85,247,0.4)',
+                    '0 0 20px rgba(168,85,247,0.2)'
+                  ]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="inline-block rounded-full p-3 bg-purple-500/10 mb-3"
+              >
+                <IdCard className="w-10 h-10 text-purple-400" />
+              </motion.div>
+              <h2 className="text-xl font-bold text-white mb-2">
                 Verifica la tua identità
               </h2>
-              <p className="text-white/70">
+              <p className="text-white/50 text-sm subtitle-elegant">
                 Per garantire un'esperienza di gioco sicura e conforme alle normative, è necessario completare la verifica dell'identità prima di ricevere premi.
               </p>
             </div>
             
-            <Button 
-              onClick={handleRegisterClick}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold px-8 py-3 rounded-full hover:shadow-[0_0_15px_rgba(128,0,128,0.5)]"
+            <motion.div
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
             >
-              Vai alla verifica identità
-            </Button>
+              <Button 
+                onClick={handleRegisterClick}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold px-6 py-2.5 rounded-full hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-all duration-300"
+              >
+                Vai alla verifica identità
+              </Button>
+            </motion.div>
           </motion.div>
         </div>
-      </section>
-
-      {/* INSTALLATION SECTION */}
-      <section className="py-20 px-4 bg-black">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            className="glass-card p-8 md:p-12 text-center relative overflow-hidden"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-8 text-white">
-              Installa <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>
-            </h2>
-            
-            <p className="text-lg mb-8 text-gray-200">
-              Per installare M1SSION™ sul tuo dispositivo mobile:
-            </p>
-            
-            <div className="space-y-4 mb-8">
-              <div className="flex items-center justify-center text-gray-300">
-                <span className="mr-2">📱</span>
-                <span><strong>iOS (Safari):</strong> premi il tasto "Condividi" e seleziona "Aggiungi alla Home"</span>
-              </div>
-              <div className="flex items-center justify-center text-gray-300">
-                <span className="mr-2">🤖</span>
-                <span><strong>Android (Chrome):</strong> apri il menu ⋮ e premi "Installa App"</span>
-              </div>
-            </div>
-            
-            <Button 
-              onClick={handleRegisterClick}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-full"
-            >
-              Aggiungi M1SSION™ alla tua Home
-            </Button>
-            
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
-          </motion.div>
-        </div>
-      </section>
+      </motion.section>
 
       {/* Footer */}
       <LandingFooter />
@@ -962,6 +1187,227 @@ const LandingPage = () => {
                 className="bg-purple-600 hover:bg-purple-700 text-white"
               >
                 Ottieni il tuo codice referral
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* SCOPRI DI PIÙ - Learn More Modal */}
+      {showLearnMore && (
+        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[9999] p-4 overflow-y-auto" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
+          <motion.div
+            className="bg-gradient-to-br from-gray-900/98 to-black/98 border border-cyan-500/40 rounded-2xl p-6 md:p-8 max-w-3xl w-full relative max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          >
+            <button
+              onClick={() => setShowLearnMore(false)}
+              className="absolute top-4 right-4 text-white/60 hover:text-white z-10"
+            >
+              <X className="w-7 h-7" />
+            </button>
+            
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+              </h2>
+              <p className="text-cyan-400 text-lg font-semibold">La Prima Caccia al Tesoro Globale con Premi Reali</p>
+              <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent mx-auto mt-4" />
+            </div>
+
+            {/* 🎯 Cos'è M1SSION™ */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                <span className="text-2xl mr-3">🎯</span>
+                Cos'è M1SSION™
+              </h3>
+              <p className="text-gray-300 leading-relaxed mb-4">
+                M1SSION™ è un gioco investigativo geolocalizzato che trasforma il mondo reale in una mappa viva.
+              </p>
+              <p className="text-gray-300 leading-relaxed mb-4">
+                Ogni missione è costruita su indizi progressivi, analisi logica e decisioni strategiche.
+              </p>
+              <p className="text-gray-300 leading-relaxed mb-4">
+                In M1SSION™ <strong className="text-cyan-400">non esistono simulazioni</strong>: chi arriva per primo sul posto giusto, vince davvero.
+              </p>
+              <p className="text-white font-semibold italic">
+                Non è fortuna. Non è simulazione. È intelligenza applicata al territorio reale.
+              </p>
+            </div>
+
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8" />
+
+            {/* 🧠 Come funziona davvero */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                <span className="text-2xl mr-3">🧠</span>
+                Come funziona davvero
+              </h3>
+              
+              <div className="space-y-6">
+                {/* Step 1 */}
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <h4 className="text-cyan-400 font-bold mb-2">1. Entra come Agente</h4>
+                  <p className="text-gray-300 text-sm">Registrati e crea il tuo account agente, accedi alla missione attiva. Ogni giocatore parte dalle stesse condizioni iniziali.</p>
+                </div>
+
+                {/* Step 2 */}
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <h4 className="text-cyan-400 font-bold mb-2">2. Analizza la Mappa</h4>
+                  <p className="text-gray-300 text-sm">La mappa non mostra il premio: mostra aree, segnali e anomalie. Sta a te interpretarli. Cerca i 99 premi presenti in Mappa.</p>
+                </div>
+
+                {/* Step 3 */}
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <h4 className="text-cyan-400 font-bold mb-2">3. Attiva BUZZ (indizi)</h4>
+                  <p className="text-gray-300 text-sm mb-3">Usando BUZZ ottieni indizi crittografati, rebus, triangolazioni e segnali geografici. Ogni BUZZ restringe il campo, ma non rivela mai direttamente la posizione.</p>
+                  <div className="bg-purple-500/10 rounded-lg p-3 border border-purple-500/20">
+                    <p className="text-purple-300 text-sm"><strong>🧭 BUZZ MAP</strong> - Oltre agli indizi, puoi usare BUZZ MAP per restringere l'area di ricerca sulla mappa. Più lo usi, più l'area si riduce e diventa precisa — ma non rivela mai direttamente la posizione finale: devi comunque arrivarci con logica e deduzione.</p>
+                  </div>
+                </div>
+
+                {/* Step 4 */}
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <h4 className="text-cyan-400 font-bold mb-2">4. Ragiona, collega, deduci</h4>
+                  <p className="text-gray-300 text-sm">Gli indizi sono dipendenti tra loro e seguono una progressione settimanale:</p>
+                  <ul className="text-gray-400 text-sm mt-2 space-y-1 ml-4">
+                    <li>• da astratti</li>
+                    <li>• a contestuali</li>
+                    <li>• fino a comprensibili solo per chi ha seguito il percorso corretto</li>
+                  </ul>
+                </div>
+
+                {/* Step 5 */}
+                <div className="bg-yellow-500/10 rounded-xl p-4 border border-yellow-500/30">
+                  <h4 className="text-yellow-400 font-bold mb-2">5. Final Shoot (Settimana 4)</h4>
+                  <p className="text-gray-300 text-sm mb-2">Il premio principale non si vince prima della Settimana 4. Da Settimana 4, se sei sul posto giusto, puoi tentare il colpo finale premendo il tasto sulla mappa (Final Shoot).</p>
+                  <p className="text-red-400 text-sm font-semibold">⚠️ Hai solo 3 tentativi per missione.</p>
+                  <p className="text-yellow-300 text-sm mt-2 font-semibold">Chi esegue il Final Shoot corretto per primo vince davvero.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8" />
+
+            {/* 🗺️ Premi & Struttura */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                <span className="text-2xl mr-3">🗺️</span>
+                Premi & Struttura di Gioco
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-xl p-4 border border-yellow-500/30">
+                  <h4 className="text-yellow-400 font-bold mb-2">🏆 1 Premio Principale</h4>
+                  <p className="text-gray-300 text-sm">Vincibile solo da Settimana 4 tramite Final Shoot</p>
+                </div>
+                <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-xl p-4 border border-cyan-500/30">
+                  <h4 className="text-cyan-400 font-bold mb-2">🎁 99 Premi Secondari</h4>
+                  <p className="text-gray-300 text-sm">Già presenti sulla mappa, si vincono trovandoli e sbloccandoli: il premio viene assegnato al primo giocatore che lo trova.</p>
+                </div>
+              </div>
+              
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                <p className="text-gray-300 text-sm">
+                  <strong className="text-white">Premio Principale</strong> (1 premio per Missione, completamente casuale): Auto, orologi, oggetti esclusivi e premi fisici reali fanno parte del sistema.
+                </p>
+              </div>
+            </div>
+
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8" />
+
+            {/* ⚠️ Regole Fondamentali */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                <span className="text-2xl mr-3">⚠️</span>
+                Regole Fondamentali
+              </h3>
+              <ul className="text-gray-300 space-y-2">
+                <li className="flex items-start">
+                  <Check className="w-5 h-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                  <span>Devi avere almeno 18 anni</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="w-5 h-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                  <span>Gli indizi non possono essere condivisi</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="w-5 h-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                  <span>Ogni agente gioca individualmente</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="w-5 h-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                  <span>Il premio va al primo che scopre la sua posizione tramite Final Shoot</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="w-5 h-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                  <span>Verifica dell'identità obbligatoria prima del ritiro</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="w-5 h-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                  <span>Tentativi di forzatura o manipolazione portano all'esclusione</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8" />
+
+            {/* 🔐 Una cosa importante */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                <span className="text-2xl mr-3">🔐</span>
+                Una cosa importante
+              </h3>
+              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl p-5 border border-purple-500/30">
+                <p className="text-gray-300 leading-relaxed mb-3">
+                  M1SSION™ non premia la velocità, ma la <strong className="text-purple-300">capacità di leggere il sistema</strong>.
+                </p>
+                <p className="text-gray-300 leading-relaxed mb-3">
+                  Chi tenta scorciatoie, deduzioni premature o copia, viene automaticamente penalizzato.
+                </p>
+                <p className="text-white font-bold text-lg">
+                  M1SSION™ non è un gioco di fortuna.
+                </p>
+                <p className="text-cyan-400 font-semibold">
+                  È strategia, deduzione, movimento reale.
+                </p>
+                <p className="text-yellow-400 font-bold mt-3">
+                  Se sei il primo ad arrivare, vinci davvero.
+                </p>
+              </div>
+            </div>
+
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8" />
+
+            {/* 🚀 CTA */}
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold text-white mb-2 flex items-center justify-center">
+                <span className="text-2xl mr-3">🚀</span>
+                Sei pronto a pensare come un agente?
+              </h3>
+              <p className="text-gray-400">Unisciti ora e inizia a osservare la mappa come nessuno ha mai fatto prima.</p>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                onClick={() => {
+                  setShowLearnMore(false);
+                  handleRegisterClick();
+                }}
+                className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold px-8 py-4 rounded-full text-lg hover:shadow-[0_0_20px_rgba(0,229,255,0.5)]"
+              >
+                UNISCITI ORA
+              </Button>
+              <Button 
+                onClick={() => setShowLearnMore(false)}
+                variant="outline"
+                className="border-white/30 text-white hover:bg-white/10 px-8 py-4 rounded-full text-lg"
+              >
+                CHIUDI
               </Button>
             </div>
           </motion.div>

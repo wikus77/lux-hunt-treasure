@@ -1,36 +1,62 @@
+/**
+ * M1SSION AGENT™ - Agent Diary with Modal + Agent Lab
+ * Tap header to open full-screen modal, Agent Lab button opens customization
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, Plus, RefreshCw, Sparkles, User } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { AgentLabModal } from "@/components/agent/AgentLabModal";
+import { GlassModal } from "@/components/ui/GlassModal";
+import { useAgentCode } from "@/hooks/useAgentCode";
+import { useAgentEnergy } from "@/features/pulse/hooks/useAgentEnergy";
 
 interface DiaryEntry {
-  type: "purchase" | "note" | "achievement" | "clue";
+  type: "purchase" | "note" | "achievement" | "clue" | "buzz";
   content: string;
   timestamp: string;
 }
 
-interface AgentDiaryProps {
-  entries: DiaryEntry[];
-  onAddNote: (note: string) => void;
-  purchasedClues: any[];
+interface AgentStats {
+  totalActivities: number;
+  notesCount: number;
+  purchasesCount: number;
+  cluesCount: number;
 }
 
-export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [newNote, setNewNote] = useState("");
-  const [showAddNote, setShowAddNote] = useState(false);
+// ═══════════════════════════════════════════════════════════════════════════
+// AGENT DIARY MODAL CONTENT
+// ═══════════════════════════════════════════════════════════════════════════
+interface AgentDiaryModalContentProps {
+  stats: AgentStats;
+  entries: DiaryEntry[];
+  loading: boolean;
+  newNote: string;
+  setNewNote: (note: string) => void;
+  showAddNote: boolean;
+  setShowAddNote: (show: boolean) => void;
+  handleAddNote: () => void;
+  fetchRealData: () => void;
+  onOpenAgentLab: () => void;
+  onClose: () => void;
+}
 
-  const handleHeaderClick = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  const handleAddNote = () => {
-    if (newNote.trim()) {
-      onAddNote(newNote.trim());
-      setNewNote("");
-      setShowAddNote(false);
-    }
-  };
+function AgentDiaryModalContent({
+  stats,
+  entries,
+  loading,
+  newNote,
+  setNewNote,
+  showAddNote,
+  setShowAddNote,
+  handleAddNote,
+  fetchRealData,
+  onOpenAgentLab,
+  onClose
+}: AgentDiaryModalContentProps) {
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -43,186 +69,629 @@ export function AgentDiary({ entries, onAddNote, purchasedClues }: AgentDiaryPro
     });
   };
 
-  const getAgentStats = () => {
-    return {
-      totalEntries: entries.length,
-      notesCount: entries.filter(entry => entry.type === 'note').length,
-      purchasesCount: entries.filter(entry => entry.type === 'purchase').length,
-      cluesCount: purchasedClues.length
-    };
+  const getEntryIcon = (type: string) => {
+    switch (type) {
+      case 'clue': return '🔍';
+      case 'buzz': return '⚡';
+      case 'purchase': return '💰';
+      case 'note': return '📝';
+      case 'achievement': return '🏆';
+      default: return '📌';
+    }
   };
 
-  const stats = getAgentStats();
-
   return (
-    <motion.div 
-      className="m1-relief rounded-[20px] overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02] mb-4 relative"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      {/* Animated glow strip like header */}
-      <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
-          style={{
-            animation: 'slideGlowAgent 3s ease-in-out infinite',
-            width: '200%',
-            left: '-100%'
-          }}
-        />
-      </div>
-      <style>{`
-        @keyframes slideGlowAgent {
-          0% { transform: translateX(0); }
-          50% { transform: translateX(50%); }
-          100% { transform: translateX(0); }
-        }
-      `}</style>
-      <div 
-        className="p-6 border-b border-white/10 flex justify-between items-center"
-        onClick={handleHeaderClick}
+    <>
+      {/* Agent Lab Quick Access Button */}
+      <motion.button
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+          setTimeout(onOpenAgentLab, 300);
+        }}
+        className="w-full mb-5 p-4 rounded-2xl border border-cyan-500/30 hover:border-cyan-500/50 transition-all group"
+        style={{ background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.08) 0%, rgba(123, 46, 255, 0.08) 100%)' }}
+        whileTap={{ scale: 0.98 }}
       >
-        <h2 className="text-lg md:text-xl font-orbitron font-bold text-white">
-          M1SSION AGENT
-        </h2>
-        
-        <div className="flex items-center space-x-2">
-          <span className="text-xs text-white/70">Attività: {entries.length}</span>
-          <motion.div
-            animate={{ rotate: isExpanded ? 180 : 0 }}
-            transition={{ duration: 0.3 }}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/30 to-purple-500/30 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-orbitron font-bold text-white group-hover:text-cyan-400 transition-colors">
+                AGENT LAB™
+              </p>
+              <p className="text-xs text-white/50">
+                Customize • Shop • Upgrades
+              </p>
+            </div>
+          </div>
+          <div className="text-2xl">🧬</div>
+        </div>
+      </motion.button>
+
+      {/* Agent Statistics */}
+      <div 
+        className="rounded-2xl p-4 mb-5"
+        style={{
+          background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.1) 0%, rgba(123, 46, 255, 0.05) 100%)',
+          border: '1px solid rgba(0, 209, 255, 0.25)',
+          boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+        }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-white font-medium flex items-center gap-2">
+            <User className="w-4 h-4 text-cyan-400" />
+            Statistiche Agente
+          </h3>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              fetchRealData();
+            }}
+            className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
           >
-            <ChevronDown className="w-4 h-4 text-white/60" />
-          </motion.div>
+            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+            Aggiorna
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl p-3 text-center border border-white/10" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+            <p className="text-2xl font-bold text-blue-400">
+              {loading ? '...' : stats.totalActivities}
+            </p>
+            <p className="text-xs text-white/50 mt-1">Attività Totali</p>
+          </div>
+          <div className="rounded-xl p-3 text-center border border-white/10" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+            <p className="text-2xl font-bold text-green-400">
+              {loading ? '...' : stats.notesCount}
+            </p>
+            <p className="text-xs text-white/50 mt-1">Note Personali</p>
+          </div>
+          <div className="rounded-xl p-3 text-center border border-white/10" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+            <p className="text-2xl font-bold text-yellow-400">
+              {loading ? '...' : stats.purchasesCount}
+            </p>
+            <p className="text-xs text-white/50 mt-1">Acquisti</p>
+          </div>
+          <div className="rounded-xl p-3 text-center border border-white/10" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
+            <p className="text-2xl font-bold text-purple-400">
+              {loading ? '...' : stats.cluesCount}
+            </p>
+            <p className="text-xs text-white/50 mt-1">Indizi</p>
+          </div>
         </div>
       </div>
 
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            <div className="p-6">
-              {/* Agent Statistics */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                <div className="bg-[#0a0a0a]/50 p-3 rounded-[16px] text-center">
-                  <p className="text-lg font-bold text-blue-400">{stats.totalEntries}</p>
-                  <p className="text-xs text-white/60">Attività Totali</p>
-                </div>
-                <div className="bg-[#0a0a0a]/50 p-3 rounded-[16px] text-center">
-                  <p className="text-lg font-bold text-green-400">{stats.notesCount}</p>
-                  <p className="text-xs text-white/60">Note Personali</p>
-                </div>
-                <div className="bg-[#0a0a0a]/50 p-3 rounded-[16px] text-center">
-                  <p className="text-lg font-bold text-yellow-400">{stats.purchasesCount}</p>
-                  <p className="text-xs text-white/60">Acquisti</p>
-                </div>
-                <div className="bg-[#0a0a0a]/50 p-3 rounded-[16px] text-center">
-                  <p className="text-lg font-bold text-purple-400">{stats.cluesCount}</p>
-                  <p className="text-xs text-white/60">Indizi</p>
+      {/* Add Note Section */}
+      <div className="mb-5">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowAddNote(!showAddNote);
+          }}
+          className="w-full p-3 border border-[#365EFF]/30 rounded-xl text-white transition-all flex items-center justify-center space-x-2"
+          style={{ background: 'linear-gradient(135deg, rgba(54, 94, 255, 0.15) 0%, rgba(252, 30, 255, 0.15) 100%)' }}
+        >
+          <Plus className="w-4 h-4" />
+          <span className="text-sm font-orbitron">Aggiungi Nota Personale</span>
+        </button>
+
+        <AnimatePresence>
+          {showAddNote && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mt-3 overflow-hidden"
+            >
+              <div className="space-y-3">
+                <textarea
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  placeholder="Scrivi la tua nota personale..."
+                  className="w-full p-3 border border-white/20 rounded-xl text-white placeholder-white/40 resize-none focus:outline-none focus:border-cyan-500/50"
+                  style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+                  rows={3}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <div className="flex space-x-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddNote();
+                    }}
+                    className="flex-1 py-2.5 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-xl text-sm font-orbitron font-medium"
+                  >
+                    Salva Nota
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowAddNote(false);
+                      setNewNote("");
+                    }}
+                    className="px-4 py-2.5 text-white/70 rounded-xl text-sm font-orbitron border border-white/20"
+                    style={{ background: 'rgba(255, 255, 255, 0.08)' }}
+                  >
+                    Annulla
+                  </button>
                 </div>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
-              {/* Add Note Section */}
-              <div className="mb-4">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowAddNote(!showAddNote);
-                  }}
-                  className="w-full p-3 bg-gradient-to-r from-[#365EFF]/20 to-[#FC1EFF]/20 border border-[#365EFF]/30 rounded-[16px] text-white hover:from-[#365EFF]/30 hover:to-[#FC1EFF]/30 transition-all flex items-center justify-center space-x-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span className="text-sm font-orbitron">Aggiungi Nota Personale</span>
-                </button>
-
-                <AnimatePresence>
-                  {showAddNote && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="mt-3 overflow-hidden"
-                    >
-                      <div className="space-y-3">
-                        <textarea
-                          value={newNote}
-                          onChange={(e) => setNewNote(e.target.value)}
-                          placeholder="Scrivi la tua nota personale..."
-                          className="w-full p-3 bg-[#0a0a0a]/50 border border-white/20 rounded-[16px] text-white placeholder-white/50 resize-none focus:outline-none focus:border-[#365EFF]/50"
-                          rows={3}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddNote();
-                            }}
-                            className="px-4 py-2 bg-gradient-to-r from-[#365EFF] to-[#FC1EFF] text-white rounded-full text-sm hover:shadow-lg transition-all font-orbitron"
-                          >
-                            Salva Nota
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowAddNote(false);
-                              setNewNote("");
-                            }}
-                            className="px-4 py-2 bg-gray-600 text-white rounded-full text-sm hover:bg-gray-700 transition-all font-orbitron"
-                          >
-                            Annulla
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Diary Entries */}
-              <div className="space-y-3 max-h-[calc(100vh-30rem)] overflow-y-auto pr-1 custom-scrollbar">
-                <h4 className="text-white font-medium mb-3 font-orbitron">
-                  Diario delle Attività
-                </h4>
-                
-                {entries.length > 0 ? (
-                  entries.map((entry, index) => (
-                    <motion.div
-                      key={index}
-                      className="p-3 bg-[#0a0a0a]/50 rounded-[16px] border border-white/10 hover:border-white/20 transition-colors"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm leading-relaxed break-words">
-                            {entry.content}
-                          </p>
-                          <span className="text-xs text-white/60 mt-2 block">
-                            {formatTimestamp(entry.timestamp)}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-white/50">
-                    <p className="text-sm">Nessuna attività registrata</p>
-                    <p className="text-xs text-white/40 mt-1">Le tue azioni verranno registrate qui</p>
-                  </div>
-                )}
-              </div>
+      {/* Diary Entries */}
+      <div>
+        <h3 className="text-white font-medium mb-3 font-orbitron flex items-center gap-2">
+          📋 Diario delle Attività
+        </h3>
+        
+        <div className="space-y-2">
+          {loading ? (
+            <div className="text-center py-8 text-white/50">
+              <RefreshCw className="w-6 h-6 mx-auto animate-spin mb-2" />
+              <p className="text-sm">Caricamento attività...</p>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+          ) : entries.length > 0 ? (
+            entries.map((entry, index) => (
+              <motion.div
+                key={`${entry.timestamp}-${index}`}
+                className="p-3 rounded-xl border border-white/10"
+                style={{ background: 'rgba(255, 255, 255, 0.04)' }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: index * 0.03 }}
+              >
+                <div className="flex items-start space-x-3">
+                  <span className="text-lg flex-shrink-0">{getEntryIcon(entry.type)}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm leading-relaxed break-words">
+                      {entry.content}
+                    </p>
+                    <span className="text-xs text-white/40 mt-1 block">
+                      {formatTimestamp(entry.timestamp)}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-14 h-14 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'rgba(255, 255, 255, 0.05)' }}>
+                <User className="w-7 h-7 text-white/30" />
+              </div>
+              <p className="text-white/60 text-sm">Nessuna attività registrata</p>
+              <p className="text-xs text-white/40 mt-1">Usa BUZZ per scoprire indizi!</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+export function AgentDiary() {
+  const { user } = useAuth();
+  const { agentCode } = useAgentCode();
+  const { energy } = useAgentEnergy();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAgentLab, setShowAgentLab] = useState(false);
+  const [newNote, setNewNote] = useState("");
+  const [showAddNote, setShowAddNote] = useState(false);
+  const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const [stats, setStats] = useState<AgentStats>({
+    totalActivities: 0,
+    notesCount: 0,
+    purchasesCount: 0,
+    cluesCount: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [localNotes, setLocalNotes] = useState<DiaryEntry[]>([]);
+
+  useEffect(() => {
+    if (user?.id) {
+      const saved = localStorage.getItem(`agent_notes_${user.id}`);
+      if (saved) {
+        try {
+          setLocalNotes(JSON.parse(saved));
+        } catch {
+          setLocalNotes([]);
+        }
+      }
+    }
+  }, [user?.id]);
+
+  const fetchRealData = useCallback(async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    
+    try {
+      // 🔧 FIX: Traccia TUTTE le attività
+      
+      // 1. Indizi BUZZ
+      const { count: cluesCount } = await supabase
+        .from('user_clues')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // 2. Acquisti (payment_transactions) - Stripe payments
+      const { count: stripePaymentsCount } = await supabase
+        .from('payment_transactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'completed');
+
+      // 3. BUZZ MAP (user_map_areas)
+      const { data: buzzMapAreas, count: buzzMapCount } = await supabase
+        .from('user_map_areas')
+        .select('*', { count: 'exact' })
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      // 4. Notifiche/Attività generiche
+      const { data: buzzActivities } = await supabase
+        .from('user_notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      // 5. Indizi recenti
+      const { data: recentClues } = await supabase
+        .from('user_clues')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      const newEntries: DiaryEntry[] = [];
+
+      // Aggiungi indizi BUZZ
+      if (recentClues) {
+        recentClues.forEach(clue => {
+          newEntries.push({
+            type: 'clue',
+            content: `🔍 Indizio scoperto: ${clue.title_it || clue.clue_id}`,
+            timestamp: clue.created_at || new Date().toISOString()
+          });
+        });
+      }
+
+      // 🔧 FIX: Aggiungi BUZZ MAP
+      if (buzzMapAreas) {
+        buzzMapAreas.forEach(area => {
+          newEntries.push({
+            type: 'buzz',
+            content: `🗺️ BUZZ MAP: Area ${Math.round(area.radius_km || 0)}km generata`,
+            timestamp: area.created_at || new Date().toISOString()
+          });
+        });
+      }
+
+      // Aggiungi altre attività (notifiche)
+      if (buzzActivities) {
+        buzzActivities.forEach(activity => {
+          if (activity.type === 'buzz' || activity.title?.includes('BUZZ')) {
+            newEntries.push({
+              type: 'buzz',
+              content: activity.message || activity.title || 'Attività BUZZ',
+              timestamp: activity.created_at
+            });
+          }
+        });
+      }
+
+      // Aggiungi note personali
+      localNotes.forEach(note => {
+        newEntries.push(note);
+      });
+
+      // Ordina per data
+      newEntries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      // 🔧 FIX: Conta TUTTE le attività (incluso BUZZ MAP)
+      const buzzNotifCount = buzzActivities?.filter(a => a.type === 'buzz' || a.title?.includes('BUZZ')).length || 0;
+      const totalActivities = (cluesCount || 0) + (stripePaymentsCount || 0) + buzzNotifCount + (buzzMapCount || 0) + localNotes.length;
+
+      // 🔧 ACQUISTI = Stripe payments + Buzz Map purchases
+      const totalPurchases = (stripePaymentsCount || 0) + (buzzMapCount || 0);
+      
+      setStats({
+        totalActivities,
+        notesCount: localNotes.length,
+        purchasesCount: totalPurchases,
+        cluesCount: cluesCount || 0
+      });
+
+      setEntries(newEntries.slice(0, 30));
+
+    } catch (error) {
+      console.error('Error fetching agent data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, localNotes]);
+
+  useEffect(() => {
+    fetchRealData();
+  }, [fetchRealData]);
+
+  // 🔄 REALTIME: Subscription per aggiornamenti acquisti in tempo reale
+  useEffect(() => {
+    if (!user?.id) return;
+
+    console.log('[AgentDiary] 🔄 Setting up realtime subscriptions for purchases...');
+
+    // Channel per payment_transactions (Stripe purchases)
+    const paymentsChannel = supabase
+      .channel('agent-diary-payments')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'payment_transactions',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('[AgentDiary] 💰 New payment detected:', payload);
+          // Refresh data when new payment is inserted
+          fetchRealData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'payment_transactions',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('[AgentDiary] 💰 Payment updated:', payload);
+          fetchRealData();
+        }
+      )
+      .subscribe();
+
+    // Channel per user_map_areas (Buzz Map purchases)
+    const buzzMapChannel = supabase
+      .channel('agent-diary-buzzmap')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_map_areas',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('[AgentDiary] 🗺️ New Buzz Map detected:', payload);
+          fetchRealData();
+        }
+      )
+      .subscribe();
+
+    // Channel per user_clues (Buzz clues - acquisti indizi)
+    const cluesChannel = supabase
+      .channel('agent-diary-clues')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_clues',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('[AgentDiary] 🔍 New clue detected:', payload);
+          fetchRealData();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      console.log('[AgentDiary] 🔄 Cleaning up realtime subscriptions...');
+      supabase.removeChannel(paymentsChannel);
+      supabase.removeChannel(buzzMapChannel);
+      supabase.removeChannel(cluesChannel);
+    };
+  }, [user?.id, fetchRealData]);
+
+  // 🔧 FIX: Listen for mission reset to clear data
+  useEffect(() => {
+    const handleMissionReset = () => {
+      console.log('🔄 [AgentDiary] Mission reset - clearing data...');
+      setEntries([]);
+      setStats({
+        totalActivities: 0,
+        notesCount: 0,
+        purchasesCount: 0,
+        cluesCount: 0
+      });
+      // Clear local notes for this user
+      if (user?.id) {
+        localStorage.removeItem(`agent_notes_${user.id}`);
+        setLocalNotes([]);
+      }
+      // Reload fresh data after a short delay
+      setTimeout(() => fetchRealData(), 1000);
+    };
+
+    // 🔧 FIX: Check localStorage for cross-page reset signal on mount
+    const lastResetStr = localStorage.getItem('m1ssion_last_reset');
+    const lastCheckedStr = localStorage.getItem(`agent_diary_last_checked_${user?.id}`);
+    
+    if (lastResetStr && user?.id) {
+      const lastReset = parseInt(lastResetStr, 10);
+      const lastChecked = lastCheckedStr ? parseInt(lastCheckedStr, 10) : 0;
+      
+      // If reset happened after last check, trigger reset
+      if (lastReset > lastChecked) {
+        console.log('🔄 [AgentDiary] Detected cross-page mission reset, clearing data...');
+        handleMissionReset();
+        localStorage.setItem(`agent_diary_last_checked_${user.id}`, Date.now().toString());
+      }
+    }
+
+    window.addEventListener('missionLaunched', handleMissionReset);
+    window.addEventListener('missionReset', handleMissionReset);
+    window.addEventListener('mission:reset', handleMissionReset);
+
+    return () => {
+      window.removeEventListener('missionLaunched', handleMissionReset);
+      window.removeEventListener('missionReset', handleMissionReset);
+      window.removeEventListener('mission:reset', handleMissionReset);
+    };
+  }, [user?.id, fetchRealData]);
+
+  const handleAddNote = () => {
+    if (newNote.trim() && user?.id) {
+      const newNoteEntry: DiaryEntry = {
+        type: 'note',
+        content: newNote.trim(),
+        timestamp: new Date().toISOString()
+      };
+      
+      const updatedNotes = [newNoteEntry, ...localNotes];
+      setLocalNotes(updatedNotes);
+      localStorage.setItem(`agent_notes_${user.id}`, JSON.stringify(updatedNotes));
+      
+      setEntries(prev => [newNoteEntry, ...prev].slice(0, 30));
+      setStats(prev => ({
+        ...prev,
+        notesCount: prev.notesCount + 1,
+        totalActivities: prev.totalActivities + 1
+      }));
+      
+      setNewNote("");
+      setShowAddNote(false);
+    }
+  };
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  return (
+    <>
+      {/* Compact Card - Tap to open modal */}
+      <motion.div 
+        className="m1-relief rounded-[20px] overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 mb-4 relative"
+        onClick={handleOpenModal}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        {/* Animated glow strip */}
+        <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
+          <div 
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
+            style={{
+              animation: 'slideGlowAgent 3s ease-in-out infinite',
+              width: '200%',
+              left: '-100%'
+            }}
+          />
+        </div>
+        <style>{`
+          @keyframes slideGlowAgent {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(50%); }
+            100% { transform: translateX(0); }
+          }
+        `}</style>
+        
+        <div className="p-5">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-cyan-400 rounded-full" />
+              <h2 className="text-lg font-orbitron font-bold text-white">
+                M1SSION AGENT
+              </h2>
+              {/* 🔧 FIX: Agent Code + Rank Badge (replaces FlaskConical icon) */}
+              <motion.div
+                className="px-2 py-1 rounded-lg bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 flex flex-col items-center justify-center"
+                style={{ 
+                  minWidth: '60px',
+                  textShadow: '0 0 8px rgba(0, 212, 255, 0.5)'
+                }}
+              >
+                <span className="text-[9px] font-orbitron font-bold text-cyan-400 leading-tight">
+                  {agentCode || '---'}
+                </span>
+                <span className="text-[8px] font-orbitron text-purple-400 leading-tight" style={{ textShadow: '0 0 6px rgba(168, 85, 247, 0.5)' }}>
+                  {energy?.rank?.code || 'AG-01'}
+                </span>
+              </motion.div>
+            </div>
+            <ChevronDown className="w-4 h-4 text-white/40" />
+          </div>
+          
+          {/* Quick Stats Preview */}
+          <div className="grid grid-cols-4 gap-2">
+            <div className="text-center">
+              <p className="text-lg font-bold text-blue-400">{loading ? '...' : stats.totalActivities}</p>
+              <p className="text-[10px] text-white/50">Attività</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-green-400">{loading ? '...' : stats.notesCount}</p>
+              <p className="text-[10px] text-white/50">Note</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-yellow-400">{loading ? '...' : stats.purchasesCount}</p>
+              <p className="text-[10px] text-white/50">Acquisti</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-purple-400">{loading ? '...' : stats.cluesCount}</p>
+              <p className="text-[10px] text-white/50">Indizi</p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Agent Diary Modal */}
+      <GlassModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        accentColor="#00D1FF"
+        title="M1SSION AGENT"
+        subtitle="Il tuo diario operativo e statistiche"
+      >
+        <AgentDiaryModalContent
+          stats={stats}
+          entries={entries}
+          loading={loading}
+          newNote={newNote}
+          setNewNote={setNewNote}
+          showAddNote={showAddNote}
+          setShowAddNote={setShowAddNote}
+          handleAddNote={handleAddNote}
+          fetchRealData={fetchRealData}
+          onOpenAgentLab={() => setShowAgentLab(true)}
+          onClose={() => setIsModalOpen(false)}
+        />
+      </GlassModal>
+
+      {/* Agent Lab Modal (separate) */}
+      <AgentLabModal 
+        isOpen={showAgentLab} 
+        onClose={() => setShowAgentLab(false)} 
+      />
+    </>
+  );
+}
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

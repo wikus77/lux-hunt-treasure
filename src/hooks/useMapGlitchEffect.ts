@@ -20,11 +20,14 @@ import {
 // ============================================================================
 
 const MAP_GLITCH_GUARDRAILS = {
-  MIN_INTERVAL_MS: 45_000,           // Minimum 45s between glitches
-  MAX_INTERVAL_MS: 120_000,          // Maximum 2min between glitches
-  MESSAGE_AFTER_GLITCH_CHANCE: 0.2,  // 20% chance to show message after glitch
+  MIN_INTERVAL_MS: 18_000,           // 🔧 v7.1: Reduced from 45s to 18s for PRODUCTION visibility
+  MAX_INTERVAL_MS: 55_000,           // 🔧 v7.1: Reduced from 120s to 55s for PRODUCTION visibility
+  MESSAGE_AFTER_GLITCH_CHANCE: 0.25, // 🔧 v7.2: Increased to 25% chance to show message after glitch
   MICRO_CTA_CHANCE: 0.15,            // 15% chance to show micro CTA (1 in ~7)
   GLITCH_DURING_BUZZ_COOLDOWN_MS: 5000, // No glitch for 5s after BUZZ action
+  WELCOME_GLITCH_DELAY_MS: 6_000,    // 🆕 v7.1: Welcome glitch after 6s on map mount
+  HEAVY_INTERFERENCE_CHANCE: 0.12,   // 🆕 v7.2: 12% chance for heavy blackout interference
+  HEAVY_INTERFERENCE_COOLDOWN_MS: 90_000, // 🆕 v7.2: At least 90s between heavy interferences
 };
 
 // ============================================================================
@@ -49,8 +52,10 @@ export function useMapGlitchEffect() {
   const intervalRef = useRef<number | null>(null);
   const lastGlitchTimeRef = useRef<number>(0);
   const lastBuzzTimeRef = useRef<number>(0);
+  const lastHeavyInterferenceRef = useRef<number>(0); // 🆕 v7.2: Track heavy interference
   const mountedRef = useRef(true);
   const glitchCountRef = useRef<number>(0);
+  const welcomeGlitchFiredRef = useRef<boolean>(false); // 🆕 v7.1: Track welcome glitch
 
   // Only active on map page
   const isMapPage = location === '/map-3d-tiler';
@@ -101,6 +106,28 @@ export function useMapGlitchEffect() {
       console.log(`[SHADOW v7] 🗺️ Map glitch sequence #${glitchCountRef.current} started`);
     }
 
+    // 🆕 v7.2: Check if we should trigger heavy interference (dramatic blackout)
+    const timeSinceHeavy = now - lastHeavyInterferenceRef.current;
+    const canDoHeavy = timeSinceHeavy >= MAP_GLITCH_GUARDRAILS.HEAVY_INTERFERENCE_COOLDOWN_MS;
+    const shouldDoHeavy = canDoHeavy && 
+      Math.random() < MAP_GLITCH_GUARDRAILS.HEAVY_INTERFERENCE_CHANCE;
+    
+    if (shouldDoHeavy) {
+      // Heavy interference: full blackout + auto SHADOW message
+      lastHeavyInterferenceRef.current = now;
+      
+      if (SHADOW_DEBUG) {
+        console.log('[SHADOW v7.2] 🌑 HEAVY MAP INTERFERENCE TRIGGERED');
+      }
+      
+      ShadowGlitchEngine.triggerHeavyMapInterference(
+        1500 + Math.random() * 1500, // 1.5-3s blackout
+        true // auto message
+      );
+      return; // Skip normal glitch flow
+    }
+
+    // Normal glitch flow
     // Step 1: Trigger map distortion (200-600ms)
     ShadowGlitchEngine.triggerMapDistortion('#ml-sandbox');
     
@@ -172,13 +199,19 @@ export function useMapGlitchEffect() {
         window.clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+      // Reset welcome glitch flag when leaving map
+      welcomeGlitchFiredRef.current = false;
       return;
     }
 
-    // Check prefers-reduced-motion
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    // Check prefers-reduced-motion (respects SHADOW_IGNORE_REDUCED_MOTION in DEV)
+    const shouldRespectReducedMotion = typeof window !== 'undefined' && 
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+      !import.meta.env.DEV; // 🆕 v7.1: DEV bypass for testing
+    
+    if (shouldRespectReducedMotion) {
       if (SHADOW_DEBUG) {
-        console.log('[SHADOW v7] 🗺️ Map glitches disabled: reduced motion preference');
+        console.log('[SHADOW v7] 🗺️ Map glitches disabled: reduced motion preference (PROD)');
       }
       return;
     }
@@ -187,6 +220,48 @@ export function useMapGlitchEffect() {
     
     if (SHADOW_DEBUG) {
       console.log(`[SHADOW v7] 🗺️ Map glitch scheduler started: interval=${Math.round(interval/1000)}s, threat=${threatLevel}`);
+    }
+
+    // 🆕 v7.1: WELCOME GLITCH - One-time glitch on first map mount
+    if (!welcomeGlitchFiredRef.current) {
+      const welcomeDelay = MAP_GLITCH_GUARDRAILS.WELCOME_GLITCH_DELAY_MS + Math.random() * 2000; // 6-8s
+      
+      if (SHADOW_DEBUG) {
+        console.log(`[SHADOW v7] 🗺️ Welcome glitch scheduled in ${Math.round(welcomeDelay/1000)}s`);
+      }
+      
+      const welcomeTimeout = window.setTimeout(() => {
+        if (!mountedRef.current || !isMapPage) return;
+        
+        // Check BUZZ cooldown before welcome glitch
+        const now = Date.now();
+        if (now - lastBuzzTimeRef.current < MAP_GLITCH_GUARDRAILS.GLITCH_DURING_BUZZ_COOLDOWN_MS) {
+          if (SHADOW_DEBUG) {
+            console.log('[SHADOW v7] 🗺️ Welcome glitch skipped: BUZZ cooldown');
+          }
+          return;
+        }
+        
+        welcomeGlitchFiredRef.current = true;
+        lastGlitchTimeRef.current = now;
+        
+        if (SHADOW_DEBUG) {
+          console.log('[SHADOW v7] 🗺️ Welcome glitch triggered!');
+        }
+        
+        // Light map jammer + camera shake
+        ShadowGlitchEngine.triggerMapJammer(2);
+        setTimeout(() => {
+          if (mountedRef.current) {
+            ShadowGlitchEngine.triggerWhisper('Your position is logged.');
+          }
+        }, 800);
+      }, welcomeDelay);
+      
+      // Cleanup welcome timeout
+      return () => {
+        window.clearTimeout(welcomeTimeout);
+      };
     }
 
     // Schedule periodic glitches

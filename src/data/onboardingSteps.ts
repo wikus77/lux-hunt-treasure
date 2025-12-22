@@ -2,8 +2,12 @@
  * ONBOARDING STEPS CONFIGURATION
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  * 
- * 12 Step Tutorial Interattivo
+ * 🎯 LITE MODE: 3 Step Tutorial (Default per nuovi utenti)
+ * FULL MODE: 12 Step Tutorial (Attivabile da settings)
  */
+
+// 🎚️ FEATURE FLAG: Set to false per tutorial completo 12 step
+export const ONBOARDING_LITE_MODE = true;
 
 export interface OnboardingStep {
   id: string;
@@ -236,14 +240,77 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
 ];
 
+// ═══════════════════════════════════════════════════════════════
+// 🚀 LITE ONBOARDING (3 Step) - Per nuovi utenti
+// ═══════════════════════════════════════════════════════════════
+export const ONBOARDING_STEPS_LITE: OnboardingStep[] = [
+  // 1. MAPPA - Il cuore del gioco
+  {
+    id: 'map-intro',
+    page: '/map-3d-tiler',
+    targetSelector: '[data-onboarding="buzz-map-button"]',
+    title: '🗺️ ESPLORA LA MAPPA',
+    description: 'Questo è il tuo campo di gioco! Cerca i marker 🔴 per trovare indizi e premi.',
+    icon: '🗺️',
+    action: 'info',
+    position: 'top',
+    spotlightPadding: 16,
+    autoAdvanceOnClick: true,
+    highlightPulse: true,
+    skipIfNotFound: true,
+  },
+  // 2. BUZZ - Come ottenere indizi
+  {
+    id: 'buzz-intro',
+    page: '/buzz',
+    targetSelector: '[data-onboarding="buzz-button"]',
+    title: '🎰 OTTIENI INDIZI',
+    description: 'Premi BUZZ per ottenere hint che ti avvicinano al tesoro!',
+    icon: '🎰',
+    action: 'info',
+    position: 'top',
+    spotlightPadding: 16,
+    autoAdvanceOnClick: true,
+    highlightPulse: true,
+    skipIfNotFound: true,
+  },
+  // 3. FINE - Sei pronto!
+  {
+    id: 'ready',
+    page: '/map-3d-tiler',
+    targetSelector: '[data-onboarding="bottom-nav"]',
+    title: '🎉 SEI PRONTO!',
+    description: 'Usa la navigazione per esplorare. Buona caccia al tesoro!',
+    icon: '🎉',
+    action: 'info',
+    position: 'top',
+    spotlightPadding: 8,
+    autoAdvanceOnClick: true,
+    highlightPulse: true,
+    skipIfNotFound: false,
+    isFinalStep: true,
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// 🎯 ACTIVE STEPS - Usa LITE o FULL in base al flag
+// ═══════════════════════════════════════════════════════════════
+const FULL_STEPS = ONBOARDING_STEPS;
+const ACTIVE_STEPS = ONBOARDING_LITE_MODE ? ONBOARDING_STEPS_LITE : FULL_STEPS;
+
 // Raggruppa step per pagina
-export const STEPS_BY_PAGE = ONBOARDING_STEPS.reduce((acc, step) => {
+export const STEPS_BY_PAGE = ACTIVE_STEPS.reduce((acc, step) => {
   if (!acc[step.page]) acc[step.page] = [];
   acc[step.page].push(step);
   return acc;
 }, {} as Record<string, OnboardingStep[]>);
 
 // Ordine delle pagine per navigazione
-export const PAGE_ORDER = ['/home', '/map-3d-tiler', '/buzz', '/intelligence', '/leaderboard'];
+export const PAGE_ORDER = ONBOARDING_LITE_MODE 
+  ? ['/map-3d-tiler', '/buzz'] // Lite: solo mappa e buzz
+  : ['/home', '/map-3d-tiler', '/buzz', '/intelligence', '/leaderboard']; // Full
 
-export const TOTAL_STEPS = ONBOARDING_STEPS.length;
+export const TOTAL_STEPS = ACTIVE_STEPS.length;
+
+// Re-export ACTIVE steps as the main export
+export { ACTIVE_STEPS as ONBOARDING_STEPS_ACTIVE };

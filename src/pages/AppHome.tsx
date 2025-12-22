@@ -17,10 +17,10 @@ import { useDeepLinkQR } from "@/hooks/useDeepLinkQR";
 import M1UPill from "@/features/m1u/M1UPill";
 import { PageSkeleton } from "@/components/ui/skeleton-loader";
 import { AgentEnergyPill } from "@/features/pulse";
-import { PulseBreakerPill } from "@/features/pulse-breaker";
 import { PULSE_ENABLED } from "@/config/featureFlags";
 import StreakPill from "@/components/gamification/StreakPill";
 import CashbackVaultPill from "@/components/home/CashbackVaultPill";
+import MissionSync from "@/components/home/MissionSync";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -50,6 +50,23 @@ const { isConnected } = useRealTimeNotifications();
 
   // Deep link QR handler (runs once on mount)
   useDeepLinkQR();
+
+  // 🎯 MAP-FIRST REDIRECT: Nuovi utenti vanno alla mappa per prima cosa
+  useEffect(() => {
+    const isFirstSession = !localStorage.getItem('m1_first_session_completed');
+    const hasSeenMap = localStorage.getItem('m1_has_seen_map');
+    const redirectAttempted = localStorage.getItem('m1_map_redirect_attempted');
+    
+    // Se è prima sessione, non ha visto la mappa e non abbiamo già provato
+    if (isFirstSession && !hasSeenMap && !redirectAttempted) {
+      console.log('[AppHome] 🗺️ MAP-FIRST: Redirect nuovo utente alla mappa');
+      localStorage.setItem('m1_map_redirect_attempted', 'true');
+      // Piccolo delay per permettere all'app di stabilizzarsi
+      setTimeout(() => {
+        navigate('/map-3d-tiler');
+      }, 500);
+    }
+  }, [navigate]);
 
   // 🔐 ALL EFFECTS MUST BE CALLED BEFORE CONDITIONAL RETURNS
   // Check for developer access and Capacitor environment
@@ -90,6 +107,25 @@ const { isConnected } = useRealTimeNotifications();
       });
     }
   }, [error]);
+
+  // 🔄 Mission Sync - Pull to Refresh handler
+  const handleMissionSync = async () => {
+    console.log('[MissionSync] Refreshing home data...');
+    try {
+      // Refresh user data
+      await getCurrentUser();
+      // Small delay for smooth UX
+      await new Promise(resolve => setTimeout(resolve, 500));
+      toast.success('Mission Sync Complete', {
+        description: 'Data aggiornati',
+        position: 'top-center',
+        duration: 2000
+      });
+    } catch (err) {
+      console.error('[MissionSync] Error:', err);
+      toast.error('Sync failed', { position: 'top-center' });
+    }
+  };
   
   // User state validated
   
@@ -154,6 +190,7 @@ const { isConnected } = useRealTimeNotifications();
       </Helmet>
       
       {/* CRITICAL FIX: Remove duplicate header/nav - GlobalLayout handles these */}
+      <MissionSync onRefresh={handleMissionSync}>
       <div className="px-4 space-y-6 relative z-10">
         <AnimatePresence>
           {isLoaded && (
@@ -186,73 +223,62 @@ const { isConnected } = useRealTimeNotifications();
               )}
 
                   <div className="container mx-auto px-3 pb-20">
-                {/* 🚀 FLOATING PILLS - LEFT SIDE (same style as Invite/DNA on right) */}
-                {/* M1U Pill - Floating top left */}
+                {/* 🚀 FLOATING PILLS - FIXED POSITIONING */}
+                {/* M1U Pill - Fixed, left side, below header */}
                 <motion.div
                   id="m1u-pill-home-slot"
                   data-onboarding="m1u-pill"
-                  className="fixed z-[70] top-36 left-4 md:top-40 md:left-8"
+                  className="fixed z-[100] top-[170px] sm:top-[94px] left-3 sm:left-4 md:left-6"
                   initial={{ opacity: 0, scale: 0.9, y: -10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
+                  transition={{ duration: 0.3 }}
                   style={{ pointerEvents: 'auto' }}
                 >
                   <M1UPill showLabel showPlusButton />
                 </motion.div>
                 
-                {/* Streak Pill - Floating below M1U */}
+                {/* Streak Pill - Fixed, left side, below M1U */}
                 <motion.div
                   data-onboarding="streak-pill"
-                  className="fixed z-[70] top-48 left-4 md:top-52 md:left-8"
+                  className="fixed z-[100] top-[218px] sm:top-[142px] left-3 sm:left-4 md:left-6"
                   initial={{ opacity: 0, scale: 0.9, y: -10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.1 }}
+                  transition={{ duration: 0.3, delay: 0.05 }}
                   style={{ pointerEvents: 'auto' }}
                 >
                   <StreakPill showLabel />
                 </motion.div>
                 
-                {/* M1SSION Cashback Vault™ Pill - SPOSTATO A DESTRA, sotto header (stessa altezza M1U) */}
+                {/* M1SSION Cashback Vault™ Pill - Fixed, right side, below header */}
                 <motion.div
                   data-onboarding="cashback-pill"
-                  className="fixed z-[70] top-36 right-4 md:top-40 md:right-8"
+                  className="fixed z-[100] top-[170px] sm:top-[94px] right-3 sm:right-4 md:right-6"
                   initial={{ opacity: 0, scale: 0.9, y: -10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.12 }}
+                  transition={{ duration: 0.3, delay: 0.05 }}
                   style={{ pointerEvents: 'auto' }}
                 >
                   <CashbackVaultPill />
                 </motion.div>
                 
-                {/* Agent Energy Pill (PE/Rank Progress) - SPOSTATO A DESTRA, sotto Cashback (+15%) */}
+                {/* Agent Energy Pill (🔺 Triangolo) - Fixed, right side, below Cashback */}
                 {PULSE_ENABLED && (
                   <motion.div
-                    className="fixed z-[70] top-[13.5rem] right-4 md:top-64 md:right-8"
+                    className="fixed z-[100] top-[218px] sm:top-[142px] right-3 sm:right-4 md:right-6"
                     initial={{ opacity: 0, scale: 0.9, y: -10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.15 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
                     style={{ pointerEvents: 'auto' }}
                   >
                     <AgentEnergyPill />
                   </motion.div>
                 )}
                 
-                {/* Pulse Breaker Pill - SOTTO Agent Energy (stesso stile, +15%) */}
-                {PULSE_ENABLED && (
-                  <motion.div
-                    className="fixed z-[70] top-[16.5rem] right-4 md:top-80 md:right-8"
-                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.18 }}
-                    style={{ pointerEvents: 'auto' }}
-                  >
-                    <PulseBreakerPill />
-                  </motion.div>
-                )}
 
                 {/* 🚀 NATIVE: Layout responsive per titolo */}
+                {/* 🎯 CONTENT_BELOW_BLOCK: tutto sotto i pill (badge + contenuti) */}
                 <motion.div
-                  className="relative my-4 sm:my-6 pt-16 text-center"
+                  className="relative my-4 sm:my-6 pt-16 text-center home-content-below-pills"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
@@ -268,14 +294,13 @@ const { isConnected } = useRealTimeNotifications();
                   </h1>
 
                   {/* ON M1SSION Badge Portal - Fixed slot for MissionBadgeInjector */}
+                  {/* 🔥 FIX: Rimosso "Centro di Comando Agente" - badge ora è il titolo principale */}
                   <div 
                     id="mission-status-badge-portal" 
                     data-anchor="m1-header-badge"
                     data-persistent="true"
                     className="flex justify-center my-2 sm:my-3"
                   />
-                  
-                  <p className="text-gray-400 mt-1 sm:mt-2 text-center text-sm sm:text-base">Centro di Comando Agente</p>
                 </motion.div>
 
 
@@ -358,6 +383,7 @@ const { isConnected } = useRealTimeNotifications();
           )}
         </AnimatePresence>
       </div>
+      </MissionSync>
     </div>
   );
 };

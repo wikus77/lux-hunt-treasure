@@ -104,6 +104,29 @@ export default function CommandCenterHome() {
     }
   }, [missionStatus, setProgress]);
 
+  // 🔧 FIX: Listen for mission reset to clear ALL cached data (NO RELOAD - just clear state)
+  useEffect(() => {
+    const handleMissionReset = () => {
+      console.log('🔄 [CommandCenterHome] Mission reset - clearing local state...');
+      // Reset all local state - NO RELOAD
+      setProgress(0);
+      setPurchasedClues([]);
+      setDiaryEntries([]);
+      setCredits(1000);
+      setPrizeUnlockStatus("locked");
+    };
+
+    window.addEventListener('missionLaunched', handleMissionReset);
+    window.addEventListener('missionReset', handleMissionReset);
+    window.addEventListener('mission:reset', handleMissionReset);
+
+    return () => {
+      window.removeEventListener('missionLaunched', handleMissionReset);
+      window.removeEventListener('missionReset', handleMissionReset);
+      window.removeEventListener('mission:reset', handleMissionReset);
+    };
+  }, [setProgress, setPurchasedClues, setDiaryEntries, setCredits]);
+
   // Update prize status based on progress and days remaining
   useEffect(() => {
     // Calculate visibility based on the provided algorithm
@@ -214,13 +237,24 @@ export default function CommandCenterHome() {
   <DNAQuickAction />
 </div>
 
-    {/* Active Mission Box below the Prize Vision - Wrapper removed */}
+
+    {/* M1SSION AGENT - Moved ABOVE Indizi trovati */}
+    <motion.div 
+      className="mb-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
+    >
+      <AgentDiary />
+    </motion.div>
+
+    {/* Active Mission Box (contains Indizi trovati, Tempo rimasto, Stato missione) */}
     <motion.div 
       className="mb-6"
       data-onboarding="mission-card"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
+      transition={{ duration: 0.5, delay: 0.15 }}
     >
       <ActiveMissionBox 
         mission={activeMission} 
@@ -229,36 +263,16 @@ export default function CommandCenterHome() {
       />
     </motion.div>
 
-{/* Floating button handles invitations; removed inline list button */}
-
-
-      {/* Two column layout for Battle Console and Agent */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Left Column - M1SSION BATTLE (Battle Console) */}
-        <motion.div 
-          className="order-2 md:order-1 m1-card"
-          data-onboarding="battle"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <BattleConsole />
-        </motion.div>
-
-        {/* Right Column - M1SSION AGENT (Agent Diary) */}
-        <motion.div 
-          className="order-3 md:order-2 m1-card"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <AgentDiary 
-            entries={diaryEntries}
-            onAddNote={addPersonalNote}
-            purchasedClues={purchasedClues}
-          />
-        </motion.div>
-      </div>
+    {/* M1SSION BATTLE (Battle Console) - Full width below */}
+    <motion.div 
+      className="mb-6 m1-card"
+      data-onboarding="battle"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+    >
+      <BattleConsole />
+    </motion.div>
 
       {/* Battle Arena Overlay - Opens for deep-links */}
       <BattleArenaOverlay

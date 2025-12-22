@@ -236,12 +236,7 @@ function generateQRCodeString(): string {
 }
 
 const saveMarkerRewards = async () => {
-    // Validazioni base
-    if (!formData.locationName.trim()) {
-      toast.error('⚠️ Marker ID obbligatorio');
-      return;
-    }
-
+    // Validazioni base - Marker ID ora OPZIONALE
     if (!formData.rewardType) {
       toast.error('⚠️ Tipo ricompensa obbligatorio');
       return;
@@ -252,13 +247,15 @@ const saveMarkerRewards = async () => {
       return;
     }
 
-    console.log('M1QR-TRACE:', { step: 'save_marker_start', markerId: formData.locationName, rewardType: formData.rewardType });
+    // Genera Marker ID automatico se non fornito
+    const markerCode = formData.locationName.trim() || `M1-${Date.now().toString(36).toUpperCase()}`;
+
+    console.log('M1QR-TRACE:', { step: 'save_marker_start', markerId: markerCode, rewardType: formData.rewardType });
 
     try {
       setIsCreating(true);
 
       // 1. WRITE TO qr_codes (for map display) - CRITICAL
-      const markerCode = formData.locationName.trim();
       const { error: qrError } = await supabase
         .from('qr_codes')
         .upsert([{

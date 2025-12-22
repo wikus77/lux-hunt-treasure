@@ -1,6 +1,7 @@
 // © 2025 M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -126,30 +127,31 @@ const LegalOnboarding: React.FC = () => {
 
   const content = translations[currentLang];
 
-  return (
+  return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[10000] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[10000] flex items-center justify-center p-4 overflow-y-auto"
+           style={{ paddingTop: 'max(env(safe-area-inset-top, 16px), 16px)', paddingBottom: 'max(env(safe-area-inset-bottom, 16px), 16px)' }}>
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="w-full max-w-lg"
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="w-full max-w-md my-auto"
         >
-          <Card className="bg-gradient-to-br from-gray-900/95 to-black/95 border-[#00D1FF]/30 shadow-2xl">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between mb-4">
-                <CardTitle className="flex items-center text-white text-lg">
-                  <Shield className="w-6 h-6 mr-3 text-[#00D1FF]" />
-                  {content.title}
+          <Card className="bg-gradient-to-br from-gray-900/98 to-black/98 border-[#00D1FF]/40 shadow-2xl">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between mb-3">
+                <CardTitle className="flex items-center text-white text-base sm:text-lg">
+                  <Shield className="w-5 h-5 mr-2 text-[#00D1FF] flex-shrink-0" />
+                  <span className="truncate">{content.title}</span>
                 </CardTitle>
                 
                 {/* Language Selector */}
-                <div className="flex gap-1">
+                <div className="flex gap-1 flex-shrink-0">
                   {(['en', 'fr', 'es', 'de'] as SupportedLanguage[]).map((lang) => (
                     <button
                       key={lang}
                       onClick={() => handleLanguageChange(lang)}
-                      className={`px-2 py-1 text-xs rounded-md transition-all ${
+                      className={`px-1.5 py-0.5 text-[10px] sm:text-xs rounded transition-all ${
                         currentLang === lang
                           ? 'bg-[#00D1FF] text-black font-semibold'
                           : 'bg-white/10 text-white/70 hover:bg-white/20'
@@ -162,44 +164,44 @@ const LegalOnboarding: React.FC = () => {
               </div>
               
               {/* Skill-Based Badge */}
-              <div className="flex items-center justify-center mb-4">
-                <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-full px-4 py-2">
-                  <span className="text-green-400 text-sm font-medium">
+              <div className="flex items-center justify-center">
+                <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-full px-3 py-1.5">
+                  <span className="text-green-400 text-xs sm:text-sm font-medium">
                     {content.skillBased}
                   </span>
                 </div>
               </div>
             </CardHeader>
             
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 pt-2">
               <div className="text-center">
-                <p className="text-white/90 text-base leading-relaxed mb-6">
+                <p className="text-white/90 text-sm sm:text-base leading-relaxed">
                   {content.description}
                 </p>
               </div>
 
               {/* Key Points */}
-              <div className="grid grid-cols-1 gap-3">
-                <div className="flex items-center text-sm text-white/80">
-                  <Check className="w-4 h-4 mr-3 text-green-400 flex-shrink-0" />
+              <div className="grid grid-cols-1 gap-2">
+                <div className="flex items-center text-xs sm:text-sm text-white/80">
+                  <Check className="w-4 h-4 mr-2 text-green-400 flex-shrink-0" />
                   <span>Skill-based gameplay only</span>
                 </div>
-                <div className="flex items-center text-sm text-white/80">
-                  <Check className="w-4 h-4 mr-3 text-green-400 flex-shrink-0" />
+                <div className="flex items-center text-xs sm:text-sm text-white/80">
+                  <Check className="w-4 h-4 mr-2 text-green-400 flex-shrink-0" />
                   <span>No gambling or random mechanics</span>
                 </div>
-                <div className="flex items-center text-sm text-white/80">
-                  <Check className="w-4 h-4 mr-3 text-green-400 flex-shrink-0" />
+                <div className="flex items-center text-xs sm:text-sm text-white/80">
+                  <Check className="w-4 h-4 mr-2 text-green-400 flex-shrink-0" />
                   <span>Fair play and transparency</span>
                 </div>
               </div>
               
               {/* Action Buttons */}
-              <div className="flex flex-col space-y-3 pt-4">
+              <div className="flex flex-col space-y-2 pt-2">
                 <Button
                   onClick={handleAccept}
                   disabled={accepting}
-                  className="w-full bg-gradient-to-r from-[#00D1FF] to-[#7B2BF9] hover:opacity-90 text-white font-semibold py-3"
+                  className="w-full bg-gradient-to-r from-[#00D1FF] to-[#7B2BF9] hover:opacity-90 text-white font-semibold py-2.5"
                 >
                   {accepting ? (
                     <div className="flex items-center">
@@ -217,7 +219,7 @@ const LegalOnboarding: React.FC = () => {
                     openTerms();
                   }}
                   variant="outline"
-                  className="w-full border-white/20 text-white hover:bg-white/10"
+                  className="w-full border-white/20 text-white hover:bg-white/10 py-2"
                 >
                   <FileText className="w-4 h-4 mr-2" />
                   {content.learnMore}
@@ -225,8 +227,8 @@ const LegalOnboarding: React.FC = () => {
               </div>
               
               {/* Footer */}
-              <div className="text-center pt-4 border-t border-white/10">
-                <p className="text-xs text-white/50">
+              <div className="text-center pt-3 border-t border-white/10">
+                <p className="text-[10px] sm:text-xs text-white/50">
                   © 2025 M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
                 </p>
               </div>
@@ -234,7 +236,8 @@ const LegalOnboarding: React.FC = () => {
           </Card>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

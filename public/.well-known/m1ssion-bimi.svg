@@ -1,0 +1,10 @@
+<svg version="1.2" baseProfile="tiny-ps" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<title>M1SSION</title>
+<rect width="512" height="512" rx="102" fill="#0A0A0F"/>
+<g fill="#00E5FF">
+<polygon points="100,380 100,132 148,132 196,220 244,132 292,132 292,380 244,380 244,236 196,324 148,236 148,380"/>
+</g>
+<g fill="#FFFFFF">
+<polygon points="340,380 340,132 412,132 412,180 388,180 388,380"/>
+</g>
+</svg>

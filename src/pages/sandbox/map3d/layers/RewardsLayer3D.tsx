@@ -10,6 +10,7 @@ interface RewardMarker {
   lng: number;
   title?: string;
   claimed?: boolean; // Se true, marker diventa VIOLA
+  min_zoom?: number; // Zoom minimo per vedere il marker (default 17)
 }
 
 interface RewardsLayer3DProps {
@@ -20,8 +21,8 @@ interface RewardsLayer3DProps {
   isAdmin?: boolean; // Admin vede SEMPRE tutti i marker
 }
 
-// 🎯 ZOOM MINIMO per vedere i marker reward (zoom 17 = molto vicino)
-const MIN_ZOOM_FOR_REWARDS = 17;
+// 🎯 ZOOM DEFAULT per marker senza min_zoom configurato
+const DEFAULT_MIN_ZOOM = 17;
 
 const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers = [], userPosition, isAdmin = false }) => {
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
@@ -67,10 +68,11 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
   if (!enabled || markers.length === 0) return null;
   
   // 🟣 Marker VIOLA (riscattati) → SEMPRE visibili a qualsiasi zoom
-  // 🟢 Marker VERDI (non riscattati) → solo con zoom >= MIN_ZOOM_FOR_REWARDS
-  const visibleMarkers = markers.filter(m => 
-    m.claimed || currentZoom >= MIN_ZOOM_FOR_REWARDS
-  );
+  // 🟢 Marker VERDI (non riscattati) → solo con zoom >= min_zoom del marker
+  const visibleMarkers = markers.filter(m => {
+    const markerMinZoom = m.min_zoom || DEFAULT_MIN_ZOOM;
+    return m.claimed || currentZoom >= markerMinZoom;
+  });
   
   if (visibleMarkers.length === 0) return null;
 
