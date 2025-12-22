@@ -30,10 +30,20 @@ serve(withCors(async (req: Request): Promise<Response> => {
       });
     }
 
-    // Initialize Supabase client
+    // Initialize Supabase client with SERVICE ROLE (bypasses RLS)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // 🔥 FIX: Explicit options to ensure service_role bypasses RLS
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false
+      }
+    });
+    
+    console.log('🔐 [HANDLE-BUZZ-PRESS] Client initialized with service_role key');
 
     // Get user from JWT
     const authHeader = req.headers.get('Authorization');
@@ -59,6 +69,79 @@ serve(withCors(async (req: Request): Promise<Response> => {
     const userId = rawBody.userId ?? rawBody.user_id ?? user.id;
     const body = { ...rawBody, userId };
     const { mode, generateMap, coordinates: rawCoordinates, sessionId } = body;
+    
+    // 🔍 OBSERVABILITY: Extract audit metadata from request
+    const buzzType = body.buzz_type || 'UNKNOWN';
+    const m1uCost = body.m1u_cost ?? 0;
+    
+    // 🚨 =======================================================================
+    // START M1SSION GATE V3: Simplified enrollment check
+    // =======================================================================
+    console.log('🔐 [GATE] Checking enrollment for user:', user.id.slice(-8));
+    
+    // 🔥 SIMPLIFIED: Just check if user has ANY enrollment record
+    // Don't require specific mission_id match - user is enrolled if they have any active enrollment
+    const { data: anyEnrollment, error: enrollCheckError } = await supabase
+      .from('mission_enrollments')
+      .select('id, mission_id, created_at, state')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    if (enrollCheckError) {
+      console.error('❌ [GATE] Enrollment check error:', enrollCheckError);
+      // Don't block on error - let user proceed
+      console.log('⚠️ [GATE] Allowing user due to DB error');
+    } else if (!anyEnrollment) {
+      console.log('🚨 [GATE] No enrollment found for user');
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'not_enrolled',
+        code: 'START_MISSION_REQUIRED',
+        message: 'Devi avviare la missione prima di utilizzare BUZZ. Torna alla Home e premi START M1SSION.'
+      }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } else {
+      // User has enrollment - check state if exists
+      const enrollState = anyEnrollment.state;
+      const isValidState = !enrollState || enrollState === 'enrolled' || enrollState === 'active';
+      
+      if (!isValidState) {
+        console.log('🚨 [GATE] Enrollment found but invalid state:', enrollState);
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'enrollment_inactive',
+          code: 'START_MISSION_REQUIRED',
+          message: 'La tua iscrizione non è attiva. Torna alla Home e premi START M1SSION.'
+        }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
+      console.log('✅ [GATE] User enrolled:', {
+        missionId: anyEnrollment.mission_id,
+        enrolledAt: anyEnrollment.created_at,
+        state: enrollState || 'legacy'
+      });
+    }
+    
+    // Get mission ID for later use (for clue generation)
+    let missionId = anyEnrollment?.mission_id;
+    if (!missionId) {
+      // Fallback: get active mission
+      const { data: activeMission } = await supabase
+        .from('current_mission_data')
+        .select('id')
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+      missionId = activeMission?.id;
+    }
+    // 🚨 END GATE =================================================
     
     // 🔥 FIX: Normalize coordinates with strict validation
     function normalizeCoordinates(c: any): { lat: number; lng: number } | null {
@@ -110,17 +193,46 @@ serve(withCors(async (req: Request): Promise<Response> => {
       }
 
       const level = nextLevel.level;
-      const radius_km = nextLevel.radius_km;
+      const baseRadiusKm = nextLevel.radius_km;
       const costM1U = nextLevel.m1u;
       const currentWeek = nextLevel.current_week;
+
+      // 🚀 BOOTSTRAP BOOST: First 10 BUZZ MAP get 2× radius (4× area)
+      // FIX: Get actual count from user_map_areas table (RPC doesn't return it)
+      const BUZZ_MAP_BOOTSTRAP_COUNT = 10;
+      const BUZZ_MAP_BOOTSTRAP_MULTIPLIER = 2;
+      
+      // Query actual BUZZ MAP count for this user
+      const { count: buzzMapCount } = await supabase
+        .from('user_map_areas')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('source', 'buzz_map');
+      
+      const currentCount = buzzMapCount ?? 0;
+      const isBootstrapEligible = currentCount < BUZZ_MAP_BOOTSTRAP_COUNT;
+      const radius_km = isBootstrapEligible 
+        ? baseRadiusKm * BUZZ_MAP_BOOTSTRAP_MULTIPLIER 
+        : baseRadiusKm;
+      
+      // 🔴 ALWAYS LOG for verification (remove after testing)
+      console.log('🚀 [BOOTSTRAP] BUZZ MAP #' + (currentCount + 1) + ':', {
+        currentCount,
+        isBootstrapEligible,
+        baseRadiusKm,
+        effectiveRadiusKm: radius_km,
+        multiplier: isBootstrapEligible ? BUZZ_MAP_BOOTSTRAP_MULTIPLIER : 1
+      });
 
       dlog('[DBG] SERVER-CALCULATED pricing (RPC):', {
         source: 'rpc_server',
         currentWeek: nextLevel.current_week,
-        currentCount: nextLevel.current_count,
+        currentCount: currentCount,
         nextLevel: level,
+        baseRadiusKm: baseRadiusKm,
         radiusKm: radius_km,
-        costM1U: costM1U
+        costM1U: costM1U,
+        bootstrapBoost: isBootstrapEligible
       });
       
       // 🔥 SERVER-AUTHORITATIVE: Spend M1U using server-calculated cost
@@ -287,96 +399,183 @@ serve(withCors(async (req: Request): Promise<Response> => {
       });
     }
 
-    // 🎯 M1SSION™ CLUE ENGINE V2: Progressive weekly clues with anti-duplication
-    console.log('🎯 [HANDLE-BUZZ-PRESS] Loading clue from database (V2)...');
+    // 🎯 M1SSION™ CLUE ENGINE V2.1: FIXED - Uses current_mission_data as source
+    // FIX: Now reads from current_mission_data.id (same as where clues are written)
+    console.log('🎯 [HANDLE-BUZZ-PRESS] Loading clue from database (V2.1 - FIXED)...');
     
     let clueText = '';
     let clueId = '';
     
     try {
-      // 1. Get active prize with start_date for week calculation
-      const { data: activePrize, error: prizeError } = await supabase
-        .from('prizes')
-        .select('id, title, start_date')
+      // 🔥 FIX V2.1: Get mission from current_mission_data (where clues are generated)
+      // NOT from prizes table (which caused the mismatch!)
+      const { data: currentMission, error: missionQueryError } = await supabase
+        .from('current_mission_data')
+        .select('id, mission_name, mission_started_at, city, country')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
       
-      if (prizeError) {
-        console.error('❌ [HANDLE-BUZZ-PRESS] Error fetching active prize:', prizeError);
+      if (missionQueryError) {
+        console.error('❌ [HANDLE-BUZZ-PRESS] Error fetching current_mission_data:', missionQueryError);
       }
       
-      if (activePrize) {
-        console.log('🎁 [HANDLE-BUZZ-PRESS] Active prize found:', activePrize.title);
+      // Fallback to prizes table only if current_mission_data is empty
+      let activePrizeId: string | null = currentMission?.id || null;
+      let missionStartDate: Date = currentMission?.mission_started_at 
+        ? new Date(currentMission.mission_started_at) 
+        : new Date();
+      let missionTitle = currentMission?.mission_name || 'Mission';
+      
+      if (!activePrizeId) {
+        console.log('⚠️ [HANDLE-BUZZ-PRESS] No current_mission_data, falling back to prizes table...');
+        const { data: fallbackPrize } = await supabase
+          .from('prizes')
+          .select('id, title, start_date')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
         
+        if (fallbackPrize) {
+          activePrizeId = fallbackPrize.id;
+          missionStartDate = fallbackPrize.start_date ? new Date(fallbackPrize.start_date) : new Date();
+          missionTitle = fallbackPrize.title;
+        }
+      }
+      
+      console.log('🎁 [HANDLE-BUZZ-PRESS] Active mission for clues:', { 
+        id: activePrizeId, 
+        title: missionTitle, 
+        source: currentMission ? 'current_mission_data' : 'prizes_fallback' 
+      });
+      
+      if (activePrizeId) {
         // 2. Calculate current week (1-4) based on mission start date
-        const missionStart = activePrize.start_date 
-          ? new Date(activePrize.start_date) 
-          : new Date();
-        
         const now = new Date();
-        const daysSinceStart = Math.floor((now.getTime() - missionStart.getTime()) / (1000 * 60 * 60 * 24));
+        const daysSinceStart = Math.floor((now.getTime() - missionStartDate.getTime()) / (1000 * 60 * 60 * 24));
         const currentWeek = Math.min(4, Math.max(1, Math.floor(daysSinceStart / 7) + 1));
         
-        console.log('📅 [HANDLE-BUZZ-PRESS] Mission timing:', { missionStart, daysSinceStart, currentWeek });
+        console.log('📅 [HANDLE-BUZZ-PRESS] Mission timing:', { missionStartDate, daysSinceStart, currentWeek });
         
         // 3. Get user's already unlocked clue IDs
-        const { data: userUnlockedClues } = await supabase
+        const { data: userUnlockedClues, error: userCluesError } = await supabase
           .from('user_clues')
           .select('clue_id')
           .eq('user_id', user.id);
         
-        const unlockedClueIds = new Set((userUnlockedClues || []).map(uc => uc.clue_id));
-        console.log('🔓 [HANDLE-BUZZ-PRESS] User has unlocked', unlockedClueIds.size, 'clues');
+        // 🔥 DEBUG: Log raw query result
+        console.log('🔍 [HANDLE-BUZZ-PRESS] user_clues query result:', {
+          error: userCluesError?.message || 'none',
+          code: userCluesError?.code || 'none',
+          dataLength: userUnlockedClues?.length ?? 'null',
+          rawData: JSON.stringify(userUnlockedClues?.slice(0, 5) || []),
+          userId: user.id
+        });
         
-        // 4. Get clues up to current week
-        const { data: prizeClues, error: cluesError } = await supabase
+        // 🔥 FIX: Convert ALL IDs to strings to avoid type mismatch (UUID vs string)
+        const unlockedClueIds = new Set((userUnlockedClues || []).map(uc => String(uc.clue_id)));
+        console.log('🔓 [HANDLE-BUZZ-PRESS] UNLOCKED CLUES DEBUG:', {
+          count: unlockedClueIds.size,
+          rawData: JSON.stringify(userUnlockedClues?.slice(0, 3) || []),
+          convertedIds: Array.from(unlockedClueIds).slice(0, 5),
+          userId: user.id
+        });
+        
+        // 🆕 FIX DETERMINISTIC: Usa order_index per erogare indizi in ordine
+        // Alterna LOCATION/PRIZE basandosi sul count degli indizi già sbloccati
+        const useLocation = unlockedClueIds.size % 2 === 0;
+        const targetCategory = useLocation ? 'location' : 'prize';
+        
+        console.log('📊 [HANDLE-BUZZ-PRESS] Deterministic clue selection:', {
+          unlockedCount: unlockedClueIds.size,
+          targetCategory,
+          currentWeek
+        });
+        
+        // 4. Query: PRIMO indizio disponibile per categoria, ordinato per order_index
+        let { data: nextClue, error: clueError } = await supabase
           .from('prize_clues')
-          .select('id, description_it, week, clue_category, is_fake')
-          .eq('prize_id', activePrize.id)
+          .select('id, description_it, week, clue_category, is_fake, order_index')
+          .eq('prize_id', activePrizeId)
+          .eq('clue_category', targetCategory)
           .lte('week', currentWeek)
-          .order('week', { ascending: true });
+          .order('week', { ascending: true })
+          .order('order_index', { ascending: true })
+          .limit(100); // Fetch batch to filter client-side
         
-        if (cluesError) {
-          console.error('❌ [HANDLE-BUZZ-PRESS] Error fetching prize clues:', cluesError);
+        if (clueError) {
+          console.error('❌ [HANDLE-BUZZ-PRESS] Error fetching prize clues:', clueError);
         }
         
-        if (prizeClues && prizeClues.length > 0) {
-          // 5. Filter out already seen clues
-          const availableClues = prizeClues.filter(c => !unlockedClueIds.has(c.id));
-          
-          console.log('📊 [HANDLE-BUZZ-PRESS] Clue stats:', {
-            total: prizeClues.length,
-            available: availableClues.length,
-            currentWeek
+        // 5. Filtra quelli già sbloccati e prendi il PRIMO
+        // 🔥 DEBUG: Log what we're comparing
+        if (nextClue && nextClue.length > 0) {
+          console.log('🔍 [HANDLE-BUZZ-PRESS] Comparing clues:', {
+            firstClueId: nextClue[0].id,
+            firstClueIdType: typeof nextClue[0].id,
+            unlockedIdsArray: Array.from(unlockedClueIds).slice(0, 3),
+            unlockedIdsType: unlockedClueIds.size > 0 ? typeof Array.from(unlockedClueIds)[0] : 'empty',
+            isFirstClueInUnlocked: unlockedClueIds.has(nextClue[0].id),
+            // Convert to string and check again
+            stringMatch: unlockedClueIds.has(String(nextClue[0].id))
           });
+        }
+        
+        // 🔥 FIX: Convert clue ID to string for comparison (type mismatch fix)
+        let availableClues = (nextClue || []).filter(c => !unlockedClueIds.has(String(c.id)));
+        
+        // Se non ci sono indizi della categoria target, prova l'altra categoria
+        if (availableClues.length === 0) {
+          const fallbackCategory = targetCategory === 'location' ? 'prize' : 'location';
+          console.log('⚠️ [HANDLE-BUZZ-PRESS] No clues for', targetCategory, '- trying', fallbackCategory);
           
-          if (availableClues.length > 0) {
-            // 6. Balance location vs prize (50/50)
-            const locationClues = availableClues.filter(c => c.clue_category === 'location');
-            const prizeOnlyClues = availableClues.filter(c => c.clue_category === 'prize');
-            
-            const useLocation = unlockedClueIds.size % 2 === 0;
-            let pool = useLocation && locationClues.length > 0 
-              ? locationClues 
-              : prizeOnlyClues.length > 0 ? prizeOnlyClues : availableClues;
-            
-            // 7. Random selection
-            const selected = pool[Math.floor(Math.random() * pool.length)];
-            clueText = selected.description_it || 'Indizio non disponibile';
-            clueId = selected.id;
-            
-            console.log('🎯 [HANDLE-BUZZ-PRESS] Clue selected:', {
-              clueId, week: selected.week, category: selected.clue_category, isFake: selected.is_fake
-            });
-          } else {
-            clueText = `Hai sbloccato tutti gli indizi della settimana ${currentWeek}. Torna la prossima settimana!`;
-            clueId = `week_complete_${currentWeek}_${Date.now()}`;
-          }
+          const { data: fallbackClues } = await supabase
+            .from('prize_clues')
+            .select('id, description_it, week, clue_category, is_fake, order_index')
+            .eq('prize_id', activePrizeId)
+            .eq('clue_category', fallbackCategory)
+            .lte('week', currentWeek)
+            .order('week', { ascending: true })
+            .order('order_index', { ascending: true })
+            .limit(100);
+          
+          // 🔥 FIX: Convert clue ID to string for comparison (type mismatch fix)
+          availableClues = (fallbackClues || []).filter(c => !unlockedClueIds.has(String(c.id)));
+        }
+        
+        console.log('📊 [HANDLE-BUZZ-PRESS] Query result for prize_id=' + activePrizeId + ':', {
+          cluesFound: nextClue?.length || 0,
+          available: availableClues.length,
+          error: clueError?.message || 'none'
+        });
+        
+        if (availableClues.length > 0) {
+          // 🆕 DETERMINISTIC: Prendi il PRIMO (già ordinato per order_index)
+          const selected = availableClues[0];
+          clueText = selected.description_it || 'Indizio non disponibile';
+          clueId = selected.id;
+          
+          console.log('🎯 [HANDLE-BUZZ-PRESS] Clue selected (DETERMINISTIC):', {
+            clueId, 
+            week: selected.week, 
+            category: selected.clue_category, 
+            order_index: selected.order_index,
+            isFake: selected.is_fake,
+            missionId: activePrizeId
+          });
         } else {
-          clueText = 'Gli indizi non sono ancora stati generati. Contatta l\'amministratore.';
-          clueId = `no_clues_${Date.now()}`;
+          clueText = `Hai sbloccato tutti gli indizi della settimana ${currentWeek}. Torna la prossima settimana!`;
+          clueId = `week_complete_${currentWeek}_${Date.now()}`;
+        }
+        
+        // Mantieni questo blocco per il messaggio quando non ci sono indizi
+        if (!clueText || clueText === 'Indizio non disponibile') {
+          // 🔥 FIX V2.1: Provide detailed error message
+          clueText = `Gli indizi per la missione "${missionTitle}" non sono ancora stati generati. L'admin deve cliccare "GENERA INDIZI" nel pannello.`;
+          clueId = `no_clues_${activePrizeId}_${Date.now()}`;
+          console.warn('⚠️ [HANDLE-BUZZ-PRESS] No clues found for prize_id:', activePrizeId);
         }
       } else {
         clueText = 'Nessuna missione attiva al momento. Resta sintonizzato!';
@@ -421,7 +620,8 @@ serve(withCors(async (req: Request): Promise<Response> => {
       console.log('✅ [HANDLE-BUZZ-PRESS] Counter incremented successfully to:', newCount);
     }
 
-    // Log the BUZZ action
+    // Log the BUZZ action (buzz_activations)
+    // 🔍 OBSERVABILITY: Include audit metadata in location JSONB
     const { error: logError } = await supabase
       .from('buzz_activations')
       .insert({
@@ -429,14 +629,49 @@ serve(withCors(async (req: Request): Promise<Response> => {
         location: {
           clue_text: clueText,
           source: 'handle_buzz_press',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          // 🔍 OBSERVABILITY: Audit fields for FREE/PAID tracking
+          buzz_type: buzzType,
+          m1u_cost: m1uCost
         }
       });
 
     if (logError) {
       console.error('❌ [HANDLE-BUZZ-PRESS] Log error:', logError);
     } else {
-      console.log('✅ [HANDLE-BUZZ-PRESS] BUZZ logged successfully');
+      console.log('✅ [HANDLE-BUZZ-PRESS] BUZZ logged successfully', { buzzType, m1uCost });
+    }
+
+    // 🔥 FIX: Log to buzz_logs to trigger PE increment (+15 PE)
+    // This is required because the handle_buzz_pe trigger listens to buzz_logs table
+    // 🔍 OBSERVABILITY: Include buzz_type and m1u_cost for audit trail
+    try {
+      const { error: buzzLogError } = await supabase
+        .from('buzz_logs')
+        .insert({
+          user_id: user.id,
+          step: 'BUZZ_COMPLETED', // 🔧 FIX: Required column for buzz_logs table
+          action: 'clue_generated', // 🔧 FIX: Action type
+          details: {
+            clue_text: clueText?.substring(0, 200),
+            clue_id: clueId,
+            source: 'handle_buzz_press',
+            buzz_count: newCount,
+            timestamp: new Date().toISOString(),
+            // 🔍 OBSERVABILITY: Audit fields for FREE/PAID tracking
+            buzz_type: buzzType,
+            m1u_cost: m1uCost,
+            is_free: buzzType === 'TIER_FREE' || buzzType === 'GRANT_FREE'
+          }
+        });
+
+      if (buzzLogError) {
+        console.warn('⚠️ [HANDLE-BUZZ-PRESS] buzz_logs insert error (PE may not increment):', buzzLogError.message);
+      } else {
+        console.log('✅ [HANDLE-BUZZ-PRESS] buzz_logs entry created - PE trigger should fire (+15 PE)', { buzzType, m1uCost });
+      }
+    } catch (buzzLogErr) {
+      console.warn('⚠️ [HANDLE-BUZZ-PRESS] buzz_logs exception (non-blocking):', buzzLogErr);
     }
 
     // Create notification
@@ -455,37 +690,106 @@ serve(withCors(async (req: Request): Promise<Response> => {
       console.log('✅ [HANDLE-BUZZ-PRESS] Notification created successfully');
     }
     
-    // 🔥 Save clue to user_clues table (only if it's a real clue, not fallback/error/special)
-    const isRealClue = clueId && 
+    // 🔥 CRITICAL FIX: Save clue to user_clues table BEFORE returning
+    // This MUST succeed to prevent "stuck on same clue" bug
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const isValidUUID = clueId && uuidRegex.test(clueId);
+    const isRealClue = isValidUUID && 
       !clueId.startsWith('fallback_') && 
       !clueId.startsWith('error_') &&
       !clueId.startsWith('week_complete_') &&
       !clueId.startsWith('no_clues_') &&
       !clueId.startsWith('no_mission_');
     
-    console.log('🔍 [HANDLE-BUZZ-PRESS] Checking if clue should be saved:', { clueId, isRealClue });
+    console.log('🔍 [HANDLE-BUZZ-PRESS] Clue save check:', { clueId, isValidUUID, isRealClue });
+    
+    let clueSaved = false;
     
     if (isRealClue) {
-      const { error: saveClueError } = await supabase
+      // 🔥 FIX V3: Use direct INSERT instead of UPSERT to avoid RLS issues
+      // First check if already exists
+      const { data: existingClue, error: checkError } = await supabase
         .from('user_clues')
-        .upsert({
+        .select('clue_id')
+        .eq('user_id', user.id)
+        .eq('clue_id', clueId)
+        .maybeSingle();
+      
+      console.log('🔍 [HANDLE-BUZZ-PRESS] Check existing clue:', {
+        exists: !!existingClue,
+        checkError: checkError?.message || 'none',
+        clueId: clueId?.substring(0, 36),
+        userId: user.id?.substring(0, 8)
+      });
+      
+      if (existingClue) {
+        // Already saved - this is OK, just log and continue
+        console.log('✅ [HANDLE-BUZZ-PRESS] Clue already in user_clues (skipping insert):', existingClue.clue_id);
+        clueSaved = true;
+      } else {
+        // INSERT new clue
+        // 🔥 FIX V4: Include ALL required NOT NULL columns
+        const cluePayload = {
           user_id: user.id,
           clue_id: clueId,
-          title_it: '🎯 Indizio BUZZ',
-          description_it: clueText,
-          clue_type: 'buzz',
+          title_it: clueText?.substring(0, 100) || '🎯 Indizio BUZZ',
+          description_it: clueText || 'Indizio sbloccato', // 🔥 REQUIRED: NOT NULL column
+          clue_type: 'buzz', // 🔥 REQUIRED: NOT NULL column
           buzz_cost: 20,
           unlocked_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,clue_id'
+        };
+        
+        console.log('💾 [HANDLE-BUZZ-PRESS] Inserting new clue:', JSON.stringify(cluePayload));
+        
+        const { data: insertData, error: insertError } = await supabase
+          .from('user_clues')
+          .insert(cluePayload)
+          .select();
+        
+        console.log('💾 [HANDLE-BUZZ-PRESS] INSERT result:', {
+          error: insertError?.message || 'none',
+          code: insertError?.code || 'none',
+          hint: insertError?.hint || 'none',
+          dataReturned: insertData ? JSON.stringify(insertData) : 'null'
         });
-      
-      if (saveClueError) {
-        console.error('❌ [HANDLE-BUZZ-PRESS] Error saving clue to user_clues:', saveClueError);
-      } else {
-        console.log('✅ [HANDLE-BUZZ-PRESS] Clue saved to user_clues:', clueId);
+        
+        if (insertError) {
+          console.error('❌ [HANDLE-BUZZ-PRESS] CRITICAL: Failed to insert clue:', {
+            error: insertError.message,
+            code: insertError.code,
+            details: insertError.details,
+            hint: insertError.hint,
+            clueId,
+            userId: user.id
+          });
+          clueSaved = false;
+        } else {
+          console.log('✅ [HANDLE-BUZZ-PRESS] Clue inserted successfully:', clueId, 'returned:', insertData?.length || 0, 'rows');
+          clueSaved = true;
+        }
       }
+      
+      // 🔥 FINAL VERIFICATION: Count total clues for this user
+      const { count: totalClues, error: countError } = await supabase
+        .from('user_clues')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+      
+      console.log('📊 [HANDLE-BUZZ-PRESS] User total clues after operation:', {
+        totalClues,
+        countError: countError?.message || 'none'
+      });
+    } else {
+      console.log('⏭️ [HANDLE-BUZZ-PRESS] Skipping save - not a real clue UUID:', clueId?.substring(0, 30));
+      clueSaved = true; // Not a real clue, so "saved" is N/A
     }
+    
+    // 🔥 DEBUG: Log final state for troubleshooting
+    console.log('📊 [HANDLE-BUZZ-PRESS] Clue delivery summary:', {
+      clueId: clueId?.substring(0, 36),
+      isRealClue,
+      clueSaved
+    });
 
     const response = {
       success: true,

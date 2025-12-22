@@ -32,9 +32,9 @@ export const usePWANavigation = () => {
     
     // PWA-specific optimizations
     if (isPWA) {
-      // Prevent bounce scroll
-      document.body.style.overscrollBehavior = 'none';
-      document.body.style.touchAction = 'manipulation';
+      // 🔥 FIX: Allow native pull-to-refresh in Safari browser
+      document.body.style.overscrollBehavior = 'auto';
+      document.body.style.touchAction = 'pan-x pan-y';
       
       // Force scroll to top for new routes
       setTimeout(() => {

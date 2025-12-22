@@ -220,6 +220,45 @@ export const useMissionStatus = () => {
     }
   };
 
+  // 🔧 FIX: Listen for mission reset events (cross-page sync)
+  useEffect(() => {
+    const handleMissionReset = () => {
+      console.log('🔄 [useMissionStatus] Mission reset detected - resetting state...');
+      setMissionStatus(null);
+      setLoading(true);
+      // Small delay to allow database to complete reset
+      setTimeout(() => {
+        loadMissionStatus();
+      }, 500);
+    };
+
+    // Check localStorage for cross-page reset signal on mount
+    const lastResetStr = localStorage.getItem('m1ssion_last_reset');
+    const lastCheckedStr = localStorage.getItem('ums_last_checked');
+    
+    if (lastResetStr && user) {
+      const lastReset = parseInt(lastResetStr, 10);
+      const lastChecked = lastCheckedStr ? parseInt(lastCheckedStr, 10) : 0;
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+      
+      if (lastReset > lastChecked && lastReset > fiveMinutesAgo) {
+        console.log('🔄 [useMissionStatus] Cross-page mission reset detected, forcing reload...');
+        localStorage.setItem('ums_last_checked', Date.now().toString());
+        handleMissionReset();
+      }
+    }
+
+    window.addEventListener('missionLaunched', handleMissionReset);
+    window.addEventListener('missionReset', handleMissionReset);
+    window.addEventListener('mission:reset', handleMissionReset);
+
+    return () => {
+      window.removeEventListener('missionLaunched', handleMissionReset);
+      window.removeEventListener('missionReset', handleMissionReset);
+      window.removeEventListener('mission:reset', handleMissionReset);
+    };
+  }, [user]);
+
   // Subscribe to real-time changes
   useEffect(() => {
     if (!user) return;

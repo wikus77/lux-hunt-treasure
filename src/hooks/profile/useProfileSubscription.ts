@@ -2,7 +2,8 @@
 
 // ✅ COMPONENT MODIFICATO
 // BY JOSEPH MULE — 2025-07-12
-import { useState, useEffect } from "react";
+// 🔧 v2: Added in-flight guard to prevent request storms
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuthContext } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useUniversalSubscriptionSync } from "@/hooks/useUniversalSubscriptionSync";
@@ -16,11 +17,30 @@ export const useProfileSubscription = () => {
     benefits: ["Accesso di base", "Missioni standard"]
   });
   const [credits, setCredits] = useState(500);
+  
+  // 🔧 v2: In-flight guard to prevent request storms
+  const isFetchingRef = useRef(false);
+  const lastFetchRef = useRef(0);
+  const MIN_FETCH_INTERVAL = 5000; // 5 seconds between fetches
 
   // M1SSION™ Sistema Sincronizzazione Abbonamenti
-  const loadSubscriptionFromSupabase = async () => {
+  const loadSubscriptionFromSupabase = useCallback(async () => {
       const currentUser = getCurrentUser();
       if (!currentUser) return;
+      
+      // 🔧 v2: Guard against concurrent/rapid fetches
+      const now = Date.now();
+      if (isFetchingRef.current) {
+        console.log('⏸️ useProfileSubscription: fetch in progress, skipping');
+        return;
+      }
+      if (now - lastFetchRef.current < MIN_FETCH_INTERVAL) {
+        console.log('⏸️ useProfileSubscription: too soon, skipping');
+        return;
+      }
+      
+      isFetchingRef.current = true;
+      lastFetchRef.current = now;
 
       try {
         // PRIORITÀ 1: Subscription attiva (silent error handling)
@@ -115,20 +135,18 @@ export const useProfileSubscription = () => {
         
       } catch (error) {
         // Silent error - don't flood console
+      } finally {
+        // 🔧 v2: Reset in-flight guard
+        isFetchingRef.current = false;
       }
-    };
+    }, [getCurrentUser, triggerGlobalSync]);
 
   useEffect(() => {
     loadSubscriptionFromSupabase();
 
-    // Listen for localStorage changes to sync across tabs
-    const handleStorageChange = () => {
-      loadSubscriptionFromSupabase();
-    };
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [getCurrentUser]);
+    // 🔧 v2: Removed storage listener - it was causing request storms
+    // The hook will refresh when the component remounts
+  }, [loadSubscriptionFromSupabase]);
 
   const upgradeSubscription = async (newPlan: string) => {
     const currentUser = getCurrentUser();
@@ -205,22 +223,14 @@ export const useProfileSubscription = () => {
       // 🚨 CRITICAL FIX: Force localStorage sync
       localStorage.setItem('subscription_plan', newPlan);
       localStorage.setItem('userTier', newPlan);
-      window.dispatchEvent(new Event('storage'));
       
-      // 🚨 CRITICAL FIX: Force immediate UI state update (triplo refresh per sincronizzazione garantita)
+      // 🔧 v2: Single refresh after upgrade (not triple!)
+      // Reset the guard to allow immediate fetch after upgrade
+      isFetchingRef.current = false;
+      lastFetchRef.current = 0;
       setTimeout(() => {
         loadSubscriptionFromSupabase();
-      }, 100);
-      
-      // 🚨 CRITICAL FIX: Force component refresh after delay to ensure DB consistency
-      setTimeout(() => {
-        loadSubscriptionFromSupabase();
-      }, 1000);
-      
-      // 🚨 CRITICAL FIX: Final safety refresh for persistent state sync
-      setTimeout(() => {
-        loadSubscriptionFromSupabase();
-      }, 3000);
+      }, 500);
       
       console.warn(`✅ M1SSION™ UPGRADE COMPLETE: ${newPlan}`);
       

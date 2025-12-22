@@ -1,8 +1,9 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ Tier Free BUZZ Hook
 // Gestisce i BUZZ gratuiti settimanali basati sul tier abbonamento
+// 🔧 v2: Added in-flight guards to prevent request storms
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { FREE_BUZZ_WEEKLY_BY_TIER, normalizeTier, UserTier } from '@/config/tierLimits';
@@ -57,6 +58,11 @@ const getWeekStart = (date: Date = new Date()): string => {
  */
 export const useTierFreeBuzz = (): UseTierFreeBuzzReturn => {
   const { user } = useUnifiedAuth();
+  
+  // 🔧 v2: In-flight guard to prevent request storms
+  const isFetchingRef = useRef(false);
+  const lastFetchRef = useRef<number>(0);
+  const MIN_FETCH_INTERVAL = 3000; // Minimum 3s between fetches
   
   const [state, setState] = useState<TierFreeBuzzState>({
     isLoading: true,
@@ -114,6 +120,7 @@ export const useTierFreeBuzz = (): UseTierFreeBuzzReturn => {
 
   /**
    * Carica o crea il record settimanale dell'utente
+   * 🔧 v2: Added in-flight guard
    */
   const loadWeeklyState = useCallback(async () => {
     if (!user?.id) {
@@ -121,6 +128,19 @@ export const useTierFreeBuzz = (): UseTierFreeBuzzReturn => {
       return;
     }
 
+    // 🔧 v2: Guard against concurrent/rapid fetches
+    const now = Date.now();
+    if (isFetchingRef.current) {
+      console.log('⏸️ useTierFreeBuzz: fetch already in progress, skipping');
+      return;
+    }
+    if (now - lastFetchRef.current < MIN_FETCH_INTERVAL) {
+      console.log('⏸️ useTierFreeBuzz: too soon since last fetch, skipping');
+      return;
+    }
+    
+    isFetchingRef.current = true;
+    lastFetchRef.current = now;
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
@@ -178,6 +198,9 @@ export const useTierFreeBuzz = (): UseTierFreeBuzzReturn => {
         isLoading: false,
         error: err.message || 'Errore caricamento stato BUZZ settimanale',
       }));
+    } finally {
+      // 🔧 v2: Reset in-flight guard
+      isFetchingRef.current = false;
     }
   }, [user?.id, loadUserTier]);
 

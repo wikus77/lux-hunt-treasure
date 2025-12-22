@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
 
 interface DialogProps {
@@ -23,7 +24,7 @@ const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
   };
 
   return (
-    <div>
+    <>
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
           return React.cloneElement(child as React.ReactElement<any>, {
@@ -33,7 +34,7 @@ const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
         }
         return child;
       })}
-    </div>
+    </>
   );
 };
 
@@ -63,21 +64,37 @@ interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
   ({ className, isOpen, onOpenChange, children, ...props }, ref) => {
-    if (!isOpen) return null;
+    const [mounted, setMounted] = React.useState(false);
 
-    return (
-      <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+    React.useEffect(() => {
+      setMounted(true);
+      return () => setMounted(false);
+    }, []);
+
+    if (!isOpen || !mounted) return null;
+
+    const content = (
+      <div 
+        className="fixed inset-0 z-[10000] bg-black/80 flex items-center justify-center p-4"
+        onClick={(e) => {
+          // Chiudi cliccando sullo sfondo
+          if (e.target === e.currentTarget) {
+            onOpenChange?.(false);
+          }
+        }}
+      >
         <div
           ref={ref}
           className={cn(
             "relative bg-background rounded-lg shadow-lg max-w-lg w-full max-h-[85vh] overflow-y-auto m1ssion-glass-card",
             className
           )}
+          onClick={(e) => e.stopPropagation()}
           {...props}
         >
           <button
             onClick={() => onOpenChange?.(false)}
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-white hover:text-[#00D1FF]"
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-white hover:text-[#00D1FF] z-10"
           >
             <span className="sr-only">Close</span>
             ✕
@@ -86,6 +103,9 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
         </div>
       </div>
     );
+
+    // Usa Portal per renderizzare direttamente nel body
+    return createPortal(content, document.body);
   }
 );
 DialogContent.displayName = "DialogContent";

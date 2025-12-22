@@ -9,6 +9,11 @@ import { createClient } from 'jsr:@supabase/supabase-js@2.49.8';
 interface DistributionRequest {
   type: string;
   count: number;
+  payload?: {
+    amount?: number;
+    min_zoom?: number;
+    [key: string]: any;
+  };
 }
 
 interface BulkDropRequest {
@@ -346,11 +351,12 @@ serve(async (req) => {
             continue;
           }
 
-          // Insert reward for the marker
+          // Insert reward for the marker - preserve min_zoom from payload
           const m1uAmount = dist.payload?.amount || 50;
+          const minZoom = dist.payload?.min_zoom || 17; // Default zoom 17 if not specified
           const payload = dist.type === 'M1U' 
-            ? { amount: Math.min(10000, Math.max(1, m1uAmount)) }
-            : (dist.payload || {});
+            ? { amount: Math.min(10000, Math.max(1, m1uAmount)), min_zoom: minZoom }
+            : { ...(dist.payload || {}), min_zoom: minZoom };
             
           const { error: rewardError } = await adminClient
             .from('marker_rewards')

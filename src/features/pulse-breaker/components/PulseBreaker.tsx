@@ -462,16 +462,21 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose }) =
     }
   }, [isOpen, refreshBalance]);
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
-        className="pb-overlay"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
+      {isOpen && (
+        <motion.div
+          className="pb-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={(e) => {
+            // Chiudi cliccando sull'overlay (fuori dal container)
+            if (e.target === e.currentTarget && gameState.status !== 'running') {
+              handleClose();
+            }
+          }}
+        >
         {/* Crash flash */}
         <AnimatePresence>
           {showCrashEffect && (
@@ -514,8 +519,16 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose }) =
           {/* Close Button */}
           <button 
             className="pb-close-btn" 
-            onClick={handleClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              if (gameState.status !== 'running') {
+                resetGame();
+                onClose();
+              }
+            }}
             disabled={gameState.status === 'running'}
+            type="button"
           >
             <X size={24} />
           </button>
@@ -837,6 +850,7 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose }) =
           )}
         </AnimatePresence>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 };

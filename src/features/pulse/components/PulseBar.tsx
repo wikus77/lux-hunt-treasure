@@ -53,13 +53,22 @@ export const PulseBar = ({ onTap }: PulseBarProps) => {
   const filledSegments = Math.floor((value / 100) * totalSegments);
   const cyan = '#00e7ff';
 
+  // Handler per aprire il gioco quando si clicca sulla barra
+  const handleBarClick = () => {
+    if (onTap) {
+      onTap();
+    } else {
+      // Se non c'è onTap prop, apri direttamente il gioco
+      setIsGameOpen(true);
+    }
+  };
+
   return (
     <motion.div
-      className="relative w-full flex items-center gap-2"
+      className="relative w-full flex items-center gap-2 cursor-pointer"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      onClick={onTap}
-      style={{ cursor: onTap ? 'pointer' : 'default' }}
+      onClick={handleBarClick}
     >
       {/* === CIRCULAR GAUGE (Left) === */}
       <div className="relative flex-shrink-0" style={{ width: 56, height: 56 }}>
@@ -219,36 +228,9 @@ export const PulseBar = ({ onTap }: PulseBarProps) => {
         />
       </div>
 
-      {/* PLAY Button */}
-      <motion.button
-        className="flex-shrink-0 flex items-center justify-center"
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, rgba(0, 231, 255, 0.2) 0%, rgba(0, 100, 150, 0.3) 100%)',
-          border: `2px solid ${cyan}`,
-          boxShadow: `0 0 12px rgba(0, 231, 255, 0.4), inset 0 0 8px rgba(0, 231, 255, 0.1)`,
-          cursor: 'pointer',
-        }}
-        whileHover={{ scale: 1.1, boxShadow: `0 0 20px rgba(0, 231, 255, 0.6)` }}
-        whileTap={{ scale: 0.95 }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsGameOpen(true);
-        }}
-        title="PULSE BREAKER"
-      >
-        <Gamepad2 
-          size={18} 
-          style={{ 
-            color: cyan,
-            filter: `drop-shadow(0 0 4px ${cyan})`,
-          }} 
-        />
-      </motion.button>
+      {/* 🔥 RIMOSSO: PLAY Button - ora si accede solo dal PulseBreakerPill floating */}
 
-      {/* Game Modal */}
+      {/* Game Modal - Kept for floating pill */}
       <PulseBreaker 
         isOpen={isGameOpen} 
         onClose={() => setIsGameOpen(false)} 

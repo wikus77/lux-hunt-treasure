@@ -1,6 +1,6 @@
 // @ts-nocheck
 // Force rebuild to load MapTiler secrets from environment
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import maplibregl, { Map as MLMap } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import neonStyleTemplate from '../map/styles/m1_neon_style_FULL_3D.json';
@@ -26,11 +26,13 @@ import AgentsLayer3D from './map3d/layers/AgentsLayer3D';
 import PortalsLayer3D from './map3d/layers/PortalsLayer3D';
 import RewardsLayer3D from './map3d/layers/RewardsLayer3D';
 import AreasLayer3D from './map3d/layers/AreasLayer3D';
+import RewardZoneLayer3D from './map3d/layers/RewardZoneLayer3D';
 import BuzzDiagnosticPanel from './map3d/components/BuzzDiagnosticPanel';
 import BuzzDebugBadge from './map3d/components/BuzzDebugBadge';
 import MapVerificationPanel from './map3d/components/MapVerificationPanel';
 import NotesLayer3D from './map3d/layers/NotesLayer3D';
-import LayerTogglePanel from './map3d/components/LayerTogglePanel';
+import LayerTogglePanel, { MapStyleType } from './map3d/components/LayerTogglePanel';
+import RealtimePlayersPill from './map3d/components/RealtimePlayersPill';
 import { GeolocationPermissionGuide } from '@/components/map/GeolocationPermissionGuide';
 import '@/styles/map-dock.css';
 import '@/styles/portal-container.css';
@@ -41,6 +43,7 @@ import '@/features/living-map/styles/livingMap.css';
 import '@/components/map/leaflet-fixes.css';
 import '@/styles/map3d-containers.css';
 import M1UPill from '@/features/m1u/M1UPill';
+import SearchLocationPill from '@/components/map/SearchLocationPill';
 import { use3DDevMocks } from './hooks/use3DDevMocks';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
@@ -79,7 +82,7 @@ export default function MapTiler3D() {
   const debugEnabled = useDebugFlag();
 
   // 🆕 v5: Shadow Protocol Map Glitch Effect
-  useMapGlitchEffect(containerRef);
+  useMapGlitchEffect();
   const [diag, setDiag] = useState<DiagState>({ 
     keyMode: '?', 
     tiles: '?', 
@@ -92,6 +95,26 @@ export default function MapTiler3D() {
   // 🚫 REMOVED AGGRESSIVE CACHE BUSTING - Was causing page reload and slow loading!
   // The map now loads instantly without forcing cache clear and reload.
   // MapTiler secrets are loaded from environment at build time.
+  
+  // 🎯 FIRST SESSION: Mark that user has seen the map (completes first session)
+  useEffect(() => {
+    // Segna che l'utente ha visto la mappa
+    if (!localStorage.getItem('m1_has_seen_map')) {
+      localStorage.setItem('m1_has_seen_map', 'true');
+      console.log('[MapTiler3D] 🗺️ Prima visita alla mappa registrata');
+    }
+    
+    // Completa la prima sessione dopo 30 secondi sulla mappa
+    // (dà tempo all'utente di esplorare)
+    const timer = setTimeout(() => {
+      if (!localStorage.getItem('m1_first_session_completed')) {
+        localStorage.setItem('m1_first_session_completed', 'true');
+        console.log('[MapTiler3D] ✅ Prima sessione completata');
+      }
+    }, 30000);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   // Expose runtime ENV for debugging (only in dev mode)
   useEffect(() => {
@@ -112,6 +135,17 @@ export default function MapTiler3D() {
     areas: true,
     notes: true
   });
+  
+  // 🎯 REWARD ZONE: Area temporanea per guidare l'utente verso un marker
+  const [rewardZoneArea, setRewardZoneArea] = useState<{
+    lat: number;
+    lng: number;
+    radius: number;
+    markerId: string;
+  } | null>(null);
+  
+  // 🗺️ Map style state (neon, streets, satellite)
+  const [mapStyle, setMapStyle] = useState<MapStyleType>('neon');
   
   const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 
@@ -134,7 +168,8 @@ export default function MapTiler3D() {
     handleAddArea,
     handleMapClickArea,
     deleteSearchArea,
-    setPendingRadius
+    setPendingRadius,
+    createAreaDirect
   } = useSearchAreasLogic(DEFAULT_LOCATION);
 
   // Wrapper to inject selectedRadius into handleAddArea
@@ -156,7 +191,7 @@ export default function MapTiler3D() {
   } = useMapMarkersLogic();
   
   // Rewards (indizi) live from Supabase when authenticated
-  type RewardMarkerMinimal = { id: string; lat: number; lng: number; title?: string; claimed?: boolean };
+  type RewardMarkerMinimal = { id: string; lat: number; lng: number; title?: string; claimed?: boolean; min_zoom?: number };
   const { isAuthenticated, user } = useUnifiedAuth();
   const [rewardMarkersLive, setRewardMarkersLive] = useState<RewardMarkerMinimal[]>([]);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
@@ -195,14 +230,29 @@ export default function MapTiler3D() {
           .select('marker_id')
           .in('marker_id', markerIds);
         
+        // Load rewards to get min_zoom from payload
+        const { data: rewardsData } = await supabase
+          .from('marker_rewards')
+          .select('marker_id, payload')
+          .in('marker_id', markerIds);
+        
         const claimedIds = new Set((claimsData || []).map(c => c.marker_id));
+        
+        // Create map of marker_id -> min_zoom
+        const minZoomMap = new Map<string, number>();
+        (rewardsData || []).forEach((r: any) => {
+          if (r.payload?.min_zoom) {
+            minZoomMap.set(r.marker_id, r.payload.min_zoom);
+          }
+        });
         
         setRewardMarkersLive((markersData || []).map((m:any) => ({ 
           id: m.id, 
           lat: m.lat, 
           lng: m.lng, 
           title: m.title,
-          claimed: claimedIds.has(m.id) // 🟣 VIOLA se riscattato
+          claimed: claimedIds.has(m.id), // 🟣 VIOLA se riscattato
+          min_zoom: minZoomMap.get(m.id) || 17 // Zoom minimo per visibilità (default 17)
         })));
       } catch (e) { console.warn('[Map3D] markers load exception', e); }
     };
@@ -265,6 +315,101 @@ export default function MapTiler3D() {
       enableGeo();
     }
   }, [geoStatus, enableGeo]);
+
+  // 🎯 REWARD ZONE: Process fly-to target
+  const processRewardZoneTarget = useCallback(() => {
+    const targetStr = sessionStorage.getItem('reward_zone_target');
+    if (!targetStr) return;
+
+    try {
+      const target = JSON.parse(targetStr);
+      console.log('🎯 [Map3D] Reward zone target found:', target);
+      
+      // Only process if recent (within 60 seconds)
+      if (Date.now() - target.timestamp > 60000) {
+        console.log('🎯 [Map3D] Target expired, removing');
+        sessionStorage.removeItem('reward_zone_target');
+        return;
+      }
+      
+      // Clear immediately to prevent re-processing
+      sessionStorage.removeItem('reward_zone_target');
+      
+      // Set the reward zone area
+      setRewardZoneArea({
+        lat: target.lat,
+        lng: target.lng,
+        radius: target.radius,
+        markerId: target.markerId
+      });
+
+      // FlyTo with retry logic
+      let retryCount = 0;
+      const MAX_RETRIES = 20;
+      
+      const flyToTarget = () => {
+        const map = mapRef.current;
+        
+        if (!map || !map.isStyleLoaded()) {
+          retryCount++;
+          if (retryCount < MAX_RETRIES) {
+            console.log(`🎯 [Map3D] Map not ready, retry ${retryCount}/${MAX_RETRIES}...`);
+            setTimeout(flyToTarget, 500);
+          } else {
+            console.warn('🎯 [Map3D] Max retries reached, map never became ready');
+          }
+          return;
+        }
+
+        console.log('🎯 [Map3D] Flying to reward zone:', target.lat, target.lng);
+        map.flyTo({
+          center: [target.lng, target.lat],
+          zoom: 15,
+          pitch: 45,
+          bearing: 0,
+          duration: 3000
+        });
+      };
+
+      // Start fly-to with initial delay for map to settle
+      setTimeout(flyToTarget, 500);
+    } catch (e) {
+      console.warn('[Map3D] Error parsing reward zone target:', e);
+      sessionStorage.removeItem('reward_zone_target');
+    }
+  }, []);
+
+  // 🎯 REWARD ZONE: Check on mount + listen for fly-to events
+  useEffect(() => {
+    // Check immediately on mount
+    processRewardZoneTarget();
+
+    // Also check periodically for 10 seconds (fallback)
+    let checkInterval: NodeJS.Timeout | null = null;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 20;
+
+    checkInterval = setInterval(() => {
+      attempts++;
+      if (attempts >= MAX_ATTEMPTS) {
+        if (checkInterval) clearInterval(checkInterval);
+        return;
+      }
+      processRewardZoneTarget();
+    }, 500);
+
+    // Listen for custom event (triggered when popup navigates while map is already mounted)
+    const handleFlyToEvent = () => {
+      console.log('🎯 [Map3D] Received reward-zone-fly-to event');
+      processRewardZoneTarget();
+    };
+    window.addEventListener('reward-zone-fly-to', handleFlyToEvent);
+
+    return () => {
+      if (checkInterval) clearInterval(checkInterval);
+      window.removeEventListener('reward-zone-fly-to', handleFlyToEvent);
+    };
+  }, [processRewardZoneTarget]);
   
   // 🔔 Realtime: Auto-fit bounds on new BUZZ area INSERT
   useEffect(() => {
@@ -518,6 +663,57 @@ export default function MapTiler3D() {
       console.log(`🎨 Layer ${String(layer)}: ${newState[layer] ? 'ENABLED' : 'DISABLED'}`);
       return newState;
     });
+  };
+  
+  // 🗺️ Change map style (neon, streets, satellite)
+  const handleMapStyleChange = (newStyle: MapStyleType) => {
+    const map = mapRef.current;
+    if (!map) return;
+    
+    // Get API key
+    const hostname = window.location.hostname;
+    const isPreview = hostname.includes('lovable') || hostname.includes('pages.dev') || hostname === 'localhost' || hostname === '127.0.0.1';
+    const key = isPreview 
+      ? (import.meta.env.VITE_MAPTILER_KEY_DEV || '')
+      : (import.meta.env.VITE_MAPTILER_KEY_PROD || '');
+    
+    if (!key) {
+      toast.error('MapTiler API key missing');
+      return;
+    }
+    
+    let styleUrl: string;
+    
+    if (newStyle === 'neon') {
+      // Reload with our custom neon style
+      const style = JSON.parse(JSON.stringify(neonStyleTemplate));
+      // Inject API key
+      if (style.sources) {
+        Object.keys(style.sources).forEach((sourceKey) => {
+          const source = style.sources[sourceKey];
+          if (source.url) source.url = source.url.replace('{key}', key).replace('YOUR_MAPTILER_API_KEY_HERE', key);
+          if (source.tiles) source.tiles = source.tiles.map((t: string) => t.replace('{key}', key).replace('YOUR_MAPTILER_API_KEY_HERE', key));
+        });
+      }
+      if (style.glyphs) style.glyphs = style.glyphs.replace('{key}', key).replace('YOUR_MAPTILER_API_KEY_HERE', key);
+      if (style.sprite) style.sprite = style.sprite.replace('{key}', key).replace('YOUR_MAPTILER_API_KEY_HERE', key);
+      map.setStyle(style);
+      setMapStyle('neon');
+      toast.success('🌃 Stile Neon attivato');
+      console.log('🗺️ Map style changed to: NEON');
+      return;
+    } else if (newStyle === 'streets') {
+      styleUrl = `https://api.maptiler.com/maps/streets-v2/style.json?key=${key}`;
+    } else if (newStyle === 'satellite') {
+      styleUrl = `https://api.maptiler.com/maps/hybrid/style.json?key=${key}`;
+    } else {
+      return;
+    }
+    
+    setMapStyle(newStyle);
+    map.setStyle(styleUrl);
+    toast.success(`🗺️ Stile ${newStyle === 'streets' ? 'Standard' : 'Satellite'} attivato`);
+    console.log(`🗺️ Map style changed to: ${newStyle}`);
   };
 
   // ✅ REMOVED DUPLICATE Listener #2 - Only Listener #1 (lines 238-320) remains active
@@ -957,6 +1153,9 @@ export default function MapTiler3D() {
     };
   }, [isAddingMarker, isAddingSearchArea, handleMapClickMarker, handleMapClickArea]);
 
+  // 🗺️ Track if we already centered on user position (only do it ONCE)
+  const hasInitialCenteredRef = useRef(false);
+  
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !position) return;
@@ -967,9 +1166,16 @@ export default function MapTiler3D() {
       return;
     }
 
+    // ✅ FIX: Only center on user position ONCE (first time), then let user explore freely
+    if (hasInitialCenteredRef.current) {
+      console.log('📍 Position updated but NOT recentering (user can explore freely)');
+      return;
+    }
+
     if (!map.loaded()) {
       map.once('load', () => {
-        console.log('📍 Flying to user position:', position);
+        console.log('📍 Flying to user position (initial):', position);
+        hasInitialCenteredRef.current = true;
         map.flyTo({
           center: [position.lng, position.lat],
           zoom: 15.5,
@@ -980,7 +1186,8 @@ export default function MapTiler3D() {
         });
       });
     } else {
-      console.log('📍 Flying to user position:', position);
+      console.log('📍 Flying to user position (initial):', position);
+      hasInitialCenteredRef.current = true;
       map.flyTo({
         center: [position.lng, position.lat],
         zoom: 15.5,
@@ -1418,6 +1625,12 @@ export default function MapTiler3D() {
         onDeleteSearchArea={(id) => deleteSearchArea(id)}
         currentAreaVersion={currentAreaVersion}
       />
+      {/* 🎯 REWARD ZONE: Area verde per guidare verso marker reward */}
+      <RewardZoneLayer3D
+        map={mapRef.current}
+        rewardZone={rewardZoneArea}
+        onDelete={() => setRewardZoneArea(null)}
+      />
       <NotesLayer3D map={mapRef.current} enabled={layerVisibility.notes} />
 
       {/* Battle FX Layer - Visual effects for battle events */}
@@ -1441,7 +1654,7 @@ export default function MapTiler3D() {
       {/* M1U Pill Slot - Map 3D (overlay below header, aligned like Home) */}
       <div 
         id="m1u-pill-map3d-slot" 
-        className="fixed left-4 z-[1001] flex items-center gap-2"
+        className="fixed left-4 z-[1001] flex flex-col gap-3"
         style={{ 
           top: 'calc(env(safe-area-inset-top, 0px) + 96px)',
           paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
@@ -1450,6 +1663,8 @@ export default function MapTiler3D() {
         aria-hidden={false}
       >
         <M1UPill showLabel showPlusButton />
+        {/* 🔍 Search Location Pill - Fly to any city */}
+        <SearchLocationPill map={mapRef.current} />
       </div>
       
       {/* DEV-only debug panels (non-intrusive) */}
@@ -1461,11 +1676,28 @@ export default function MapTiler3D() {
             onDelete={(id) => deleteSearchArea(id)}
             onFocus={(id) => setActiveSearchArea(id)}
             onAddArea={handleAddAreaWithRadius}
+            onCreateAreaDirect={createAreaDirect}
           />
         </>
 
       {/* Layer Toggle Panel */}
-      <LayerTogglePanel layers={layerVisibility} onToggle={toggleLayer} />
+      <LayerTogglePanel 
+        layers={layerVisibility} 
+        onToggle={toggleLayer}
+        mapStyle={mapStyle}
+        onMapStyleChange={handleMapStyleChange}
+      />
+
+      {/* Realtime Players Pill - Below LAYERS panel */}
+      <div 
+        className="fixed right-4 z-[100]"
+        style={{ 
+          top: 'calc(env(safe-area-inset-top, 0px) + 150px)',
+          pointerEvents: 'auto' 
+        }}
+      >
+        <RealtimePlayersPill />
+      </div>
 
       {/* FINAL SHOOT Pill - Only visible in last 7 days of mission */}
       <div 

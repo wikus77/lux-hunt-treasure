@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import BottomNavigation from './BottomNavigation';
 import { useNavigationStore } from '@/stores/navigationStore';
-import PullToRefreshIndicator from '@/components/pwa/PullToRefreshIndicator';
 
 interface NavigationWrapperProps {
   children: React.ReactNode;
@@ -29,9 +28,9 @@ const NavigationWrapper: React.FC<NavigationWrapperProps> = ({ children }) => {
     const isMobile = /iPad|iPhone|iPod|Android|Mobile/i.test(navigator.userAgent);
     
     if (isPWA || isMobile) {
-      // Prevent horizontal bounce only (allow vertical for pull-to-refresh)
-      document.body.style.overscrollBehaviorX = 'none';
-      document.body.style.overscrollBehaviorY = 'auto';
+      // 🔥 FIX: Allow native pull-to-refresh in Safari browser
+      // Note: PWA standalone on iOS never has native pull-to-refresh
+      document.body.style.overscrollBehavior = 'auto';
       
       // Fix viewport on orientation change
       const handleOrientationChange = () => {
@@ -49,8 +48,7 @@ const NavigationWrapper: React.FC<NavigationWrapperProps> = ({ children }) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#070818] relative">
-      <PullToRefreshIndicator />
+    <div className="min-h-screen bg-transparent relative">
       <main className="pb-20">
         {children}
       </main>

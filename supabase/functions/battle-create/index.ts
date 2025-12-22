@@ -11,14 +11,14 @@ import { withCors } from "../_shared/cors.ts";
 interface CreateBattleRequest {
   opponent_id?: string;
   opponent_handle?: string;
-  stake_type: 'energy' | 'buzz' | 'clue';
+  stake_type: 'm1u' | 'pulse_energy' | 'energy' | 'buzz' | 'clue';
   stake_percentage: 25 | 50 | 75;
   arena_lat?: number;
   arena_lng?: number;
 }
 
-// Validation constants
-const VALID_STAKE_TYPES = ['energy', 'buzz', 'clue'] as const;
+// Validation constants - includes both old (energy/buzz/clue) and new (m1u/pulse_energy) types
+const VALID_STAKE_TYPES = ['m1u', 'pulse_energy', 'energy', 'buzz', 'clue'] as const;
 const VALID_STAKE_PERCENTAGES = [25, 50, 75] as const;
 
 serve(withCors(async (req) => {
@@ -115,10 +115,10 @@ serve(withCors(async (req) => {
       }, 403);
     }
 
-    // Get creator profile for stake calculation
+    // Get creator profile for stake calculation (includes both old and new currency fields)
     const { data: profile } = await supabase
       .from('profiles')
-      .select('energy_fragments, buzz_count, clues_found')
+      .select('m1_units, pulse_energy, energy_fragments, buzz_count, clues_found')
       .eq('id', user.id)
       .single();
 
@@ -131,9 +131,11 @@ serve(withCors(async (req) => {
       }, 404);
     }
 
-    // Calculate stake amount
+    // Calculate stake amount based on stake_type
     let availableAmount = 0;
-    if (stake_type === 'energy') availableAmount = profile.energy_fragments || 0;
+    if (stake_type === 'm1u') availableAmount = profile.m1_units || 0;
+    else if (stake_type === 'pulse_energy') availableAmount = profile.pulse_energy || 0;
+    else if (stake_type === 'energy') availableAmount = profile.energy_fragments || 0;
     else if (stake_type === 'buzz') availableAmount = profile.buzz_count || 0;
     else if (stake_type === 'clue') availableAmount = profile.clues_found || 0;
 

@@ -2,6 +2,11 @@
 // Living Map™ Read-Only Data Adapter
 // No DB writes - only reads and subscriptions
 
+import { FICTITIOUS_AGENTS, CITY_AGENTS, TOTAL_NPC_COUNT } from '@/data/fictitious-agents.seed';
+
+// Combined NPC agents (original + city-specific)
+const ALL_NPC_AGENTS = [...FICTITIOUS_AGENTS, ...CITY_AGENTS];
+
 export interface PortalDTO {
   id: string;
   lat: number;
@@ -148,12 +153,14 @@ export async function getLiveEvents(): Promise<EventDTO[]> {
 }
 
 export async function getLiveAgents(): Promise<AgentDTO[]> {
-  // 🎯 MOCK MODE: Return mock data immediately
+  // 🎯 MOCK MODE: Return mock data + fictitious agents
   if (USE_MOCK) {
     const mockAgents = generateMockAgents();
-    console.debug('[LiveAgents] Data source: MOCK (forced by ENV)', { count: mockAgents.length });
+    // Combine mock with fictitious NPC agents
+    const allAgents = [...mockAgents, ...ALL_NPC_AGENTS];
+    console.debug('[LiveAgents] Data source: MOCK + NPC', { mock: mockAgents.length, npc: ALL_NPC_AGENTS.length, total: allAgents.length });
     return new Promise((resolve) => {
-      setTimeout(() => resolve(mockAgents), 300);
+      setTimeout(() => resolve(allAgents), 300);
     });
   }
   
@@ -175,58 +182,55 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
       .order('updated_at', { ascending: false })
       .limit(100);
     
-    if (locError) {
-      console.debug('[LiveAgents] Query error:', locError.message);
-      return [];
-    }
+    let realAgents: AgentDTO[] = [];
     
-    if (!locations || locations.length === 0) {
-      console.debug('[LiveAgents] Data source: DB (no users with positions)');
-      return [];
-    }
-    
-    // Get user profiles for usernames, agent_code, and rank_id
-    const userIds = locations.map((l: any) => l.user_id);
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, full_name, agent_code, rank_id')
-      .in('id', userIds);
-    
-    const profileMap = new Map(
-      profiles?.map(p => [
-        p.id, 
-        { 
-          full_name: p.full_name, 
-          agent_code: (p as any).agent_code, 
-          rank_id: (p as any).rank_id 
-        }
-      ]) || []
-    );
-    
-    // 🎯 Determine online status based on updated_at (15 minutes = online, else offline)
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-    
-    const agents = locations.map((row: any) => {
-      const profile = profileMap.get(row.user_id);
-      const isRecent = row.updated_at && row.updated_at > fifteenMinutesAgo;
+    if (!locError && locations && locations.length > 0) {
+      // Get user profiles for usernames, agent_code, and rank_id
+      const userIds = locations.map((l: any) => l.user_id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, agent_code, rank_id')
+        .in('id', userIds);
       
-      return {
-        id: row.user_id,
-        lat: row.lat,
-        lng: row.lng,
-        username: profile?.full_name || profile?.agent_code || 'Agent',
-        status: isRecent ? 'online' : 'offline',
-        lastSeen: row.updated_at,
-        agent_code: profile?.agent_code,
-        rank_id: profile?.rank_id
-      };
-    });
+      const profileMap = new Map(
+        profiles?.map(p => [
+          p.id, 
+          { 
+            full_name: p.full_name, 
+            agent_code: (p as any).agent_code, 
+            rank_id: (p as any).rank_id 
+          }
+        ]) || []
+      );
+      
+      // 🎯 Determine online status based on updated_at (15 minutes = online, else offline)
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      
+      realAgents = locations.map((row: any) => {
+        const profile = profileMap.get(row.user_id);
+        const isRecent = row.updated_at && row.updated_at > fifteenMinutesAgo;
+        
+        return {
+          id: row.user_id,
+          lat: row.lat,
+          lng: row.lng,
+          username: profile?.full_name || profile?.agent_code || 'Agent',
+          status: isRecent ? 'online' : 'offline',
+          lastSeen: row.updated_at,
+          agent_code: profile?.agent_code,
+          rank_id: profile?.rank_id
+        };
+      });
+    }
     
-    console.debug('[LiveAgents] Data source: DB', { count: agents.length, online: agents.filter(a => a.status === 'online').length });
-    return agents;
+    // 🔥 IMPORTANT: Always combine real agents with fictitious NPC agents
+    const allAgents = [...realAgents, ...ALL_NPC_AGENTS];
+    console.debug('[LiveAgents] Data source: DB + NPC', { real: realAgents.length, npc: ALL_NPC_AGENTS.length, total: allAgents.length });
+    return allAgents;
   } catch (e: any) {
-    console.debug('[LiveAgents] Exception in REAL mode:', e.message);
-    return [];
+    console.debug('[LiveAgents] Exception in REAL mode, returning NPC only:', e.message);
+    // Even on error, return fictitious agents so map is populated
+    return [...ALL_NPC_AGENTS];
   }
 }
 

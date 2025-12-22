@@ -3,7 +3,7 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,17 +17,32 @@ interface StreakPillProps {
 }
 
 const StreakPill: React.FC<StreakPillProps> = ({ className = '', showLabel = true }) => {
-  const { user } = useAuthContext();
+  const { user, isLoading: authLoading } = useAuthContext();
   const [streak, setStreak] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [pulseAnimation, setPulseAnimation] = useState(false);
   const [canCheckIn, setCanCheckIn] = useState(true);
+  const hasLoadedRef = useRef(false);
 
+  // 🔥 FIX: Load data when user becomes available (handles race condition)
   useEffect(() => {
-    if (user) loadStreakData();
-  }, [user]);
+    // Skip if auth is still loading
+    if (authLoading) {
+      console.log('[StreakPill] Waiting for auth...');
+      return;
+    }
+    
+    if (user) {
+      console.log('[StreakPill] User available, loading data...');
+      loadStreakData();
+      hasLoadedRef.current = true;
+    } else if (!authLoading) {
+      // Auth finished but no user - stop loading state
+      setIsLoading(false);
+    }
+  }, [user, authLoading]);
 
   const loadStreakData = async (retryCount = 0) => {
     if (!user) return;

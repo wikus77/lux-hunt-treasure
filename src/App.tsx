@@ -32,11 +32,15 @@ import { InterestSignalsProvider } from "./components/InterestSignalsProvider";
 import FirstLoginQuizManager from "./components/quiz/FirstLoginQuizManager";
 // WalkthroughManager RIMOSSO - verrà ricreato
 import DNAManager from "./components/dna/DNAManager";
+import { WelcomeBonusManager } from "./components/welcome";
 import { CookieConsentManager } from "./features/consent/CookieConsentManager";
 // Import per esporre funzione popolamento KB globalmente
 import "@/utils/populateKnowledgeBase";
 import { NorahProactiveManager } from "./components/norah/NorahProactiveManager";
 import { MissionBadgeInjector } from "./components/home/MissionBadgeInjector";
+import { RewardZonePopup } from "./components/rewards/RewardZonePopup";
+import { PulseBreakerInfoPopup } from "./components/popups/PulseBreakerInfoPopup";
+import { GlobalPulseBreakerModal } from "./components/popups/GlobalPulseBreakerModal";
 import { UpdateBanner } from "./components/sw/UpdateBanner";
 import '@/features/living-map/styles/livingMap.css';
 import { OnboardingProvider, OnboardingOverlay } from "./components/onboarding";
@@ -48,8 +52,6 @@ import { ReconnectBadge } from "./components/net/ReconnectBadge";
 import { M1UnitsDebugPanel } from "./components/debug/M1UnitsDebugPanel";
 import { initGA4, trackPageView } from './lib/analytics/ga4';
 import { useLocation } from 'wouter';
-import { usePullToRefresh } from "./hooks/usePullToRefresh";
-import PullToRefreshIndicator from "./components/pwa/PullToRefreshIndicator";
 import M1LogoSplash from "./components/intro/M1LogoSplash";
 import { useGlobalGlitchListener } from "./hooks/useGlobalGlitch";
 // 🌑 M1SSION™ SHADOW PROTOCOL™
@@ -58,6 +60,10 @@ import { ShadowProtocolEngine } from "./components/overlay/ShadowProtocolEngine"
 import { ShadowBehaviorsLayer } from "./components/overlay/ShadowBehaviorsLayer";
 // 🎬 Mission Start Sequence (fullscreen, fuori dal portal)
 import { MissionIntroOverlay } from "./components/overlay/MissionIntroOverlay";
+// 🎁 Prize Intro Cinematic System
+import { MissionPrizeIntroOverlay } from "./components/overlay/MissionPrizeIntroOverlay";
+// 📱 Native Safe Area Provider - Cross-device layout adaptation
+import { NativeSafeAreaProvider } from "./components/layout/NativeSafeAreaProvider";
 
 function App() {
   // 🚀 NATIVE APP FEEL: Show splash on EVERY app launch (but only once per session)
@@ -126,14 +132,6 @@ function App() {
   // Activity tracker - traccia comportamento per notifiche intelligenti
   useActivityTracker();
 
-  // Pull to Refresh - scroll down prolungato per refresh
-  // DISABILITATO su pagine mappa per evitare conflitti con touch events
-  const isMapPage = location.includes('map') || location.includes('buzz');
-  const { pullDistance, isRefreshing, progress } = usePullToRefresh({
-    threshold: 120, // pixels to pull before refresh
-    enabled: !isMapPage // Disabilitato su pagine mappa
-  });
-
   // 🎬 Global Glitch Listener - riceve broadcast da admin
   useGlobalGlitchListener();
   
@@ -147,21 +145,30 @@ function App() {
             // Mark splash as shown for this session (clears when app closes)
             sessionStorage.setItem('m1_splash_shown_session', 'true');
           }} 
-          duration={5000} // 5 seconds
+          duration={3000} // 3 seconds (reduced from 5s for better UX)
         />
       )}
       
-      {/* SFONDO GRADIENTE CHE COPRE TUTTO INCLUSA SAFE AREA iOS */}
-      <div className="m1-fullscreen-bg" />
+      {/* SFONDO GRADIENTE FULLSCREEN - z-index: 0 per stare SOTTO tutto ma VISIBILE */}
+      <div 
+        className="m1-fullscreen-bg" 
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+          background: `
+            radial-gradient(ellipse 1200px 800px at 85% -10%, rgba(0, 229, 255, 0.35), transparent 50%),
+            radial-gradient(ellipse 1000px 700px at -15% 25%, rgba(123, 46, 255, 0.30), transparent 50%),
+            radial-gradient(ellipse 800px 500px at 50% 90%, rgba(252, 30, 255, 0.15), transparent 45%),
+            linear-gradient(180deg, #0a0b0f 0%, #0c0e14 25%, #0e1118 50%, #0a0c10 75%, #080a0d 100%)
+          `,
+        }}
+      />
       <div className="m1-grain"></div>
       
-      {/* Pull to Refresh Indicator */}
-      <PullToRefreshIndicator 
-        pullDistance={pullDistance}
-        isRefreshing={isRefreshing}
-        progress={progress}
-      />
-      
+      {/* 📱 NATIVE SAFE AREA PROVIDER - Injects CSS variables for cross-device layout */}
+      <NativeSafeAreaProvider debug={import.meta.env.DEV}>
       <PushFrozenNotice />
       <ErrorBoundary fallback={
         <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
@@ -200,6 +207,8 @@ function App() {
                     {/* 🚫 QUIZ AGENTE DISABILITATO - Da ricreare in futuro */}
                     {/* <FirstLoginQuizManager /> */}
                     <DNAManager />
+                    {/* 🎁 Welcome Bonus: 500 M1U per nuovi utenti dopo onboarding */}
+                    <WelcomeBonusManager />
                     <CookieConsentManager />
                     {/* Onboarding Tutorial Interattivo */}
                     <OnboardingOverlay />
@@ -215,6 +224,12 @@ function App() {
                     </DynamicIslandProvider>
                     <NorahProactiveManager />
                     <MissionBadgeInjector />
+                    {/* 🎯 REWARD ZONE: Popup per scoprire marker rewards */}
+                    <RewardZonePopup />
+                    {/* 🎮 PULSE BREAKER: Popup informativo dopo 2 minuti */}
+                    <PulseBreakerInfoPopup />
+                    {/* 🎮 PULSE BREAKER: Modal del gioco (globale) */}
+                    <GlobalPulseBreakerModal />
                     {/* 🔋 PULSE: Toast globale per contribuzioni energia */}
                     <PulseContributionListener />
                     {/* 🎁 PULSE: Notifiche ricompense soglie */}
@@ -226,8 +241,11 @@ function App() {
                     <ShadowBehaviorsLayer />
                     {/* 🎬 Mission Start Sequence (fullscreen, fuori dal portal) */}
                     <MissionIntroOverlay />
+                    {/* 🎁 Prize Intro Cinematic (shows after onboarding, before gameplay) */}
+                    <MissionPrizeIntroOverlay />
                     <BadgeAuditReport />
-                    <M1UnitsDebugPanel />
+                    {/* M1UnitsDebugPanel nascosto per il lancio - rimuovere in produzione */}
+                    {/* <M1UnitsDebugPanel /> */}
                   </InterestSignalsProvider>
                   </OnboardingProvider>
                 </AuthProvider>
@@ -237,6 +255,7 @@ function App() {
         </ProductionSafety>
       </ProductionSafetyWrapper>
       </ErrorBoundary>
+      </NativeSafeAreaProvider>
       
       {/* Service Worker Update Banner - outside router/auth context */}
       <UpdateBanner />

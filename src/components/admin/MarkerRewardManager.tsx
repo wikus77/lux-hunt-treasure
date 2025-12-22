@@ -66,6 +66,7 @@ const MarkerRewardManager: React.FC = () => {
   const [xpPoints, setXpPoints] = useState(10);
   const [messageText, setMessageText] = useState('');
   const [visibilityHours, setVisibilityHours] = useState(24);
+  const [minZoom, setMinZoom] = useState(17); // Zoom minimo per vedere il marker (17 = vicino, 10 = lontano)
   
   // Coordinates (manual input)
   const [lat, setLat] = useState('41.9028');
@@ -75,6 +76,7 @@ const MarkerRewardManager: React.FC = () => {
   const [bulkCount, setBulkCount] = useState(25);
   const [bulkRewardType, setBulkRewardType] = useState('M1U');
   const [bulkM1uAmount, setBulkM1uAmount] = useState(50);
+  const [bulkMinZoom, setBulkMinZoom] = useState(17); // Zoom minimo per bulk markers
   
   // Existing markers
   const [existingMarkers, setExistingMarkers] = useState<ExistingMarker[]>([]);
@@ -108,22 +110,39 @@ const MarkerRewardManager: React.FC = () => {
   // Load markers
   const loadMarkers = useCallback(async () => {
     try {
-      const { data: markersData } = await supabase
+      console.log('📥 [MarkerManager] Loading markers from database...');
+      
+      // Include ALL markers (active or not) - no filter on active/visible
+      const { data: markersData, error: markersError } = await supabase
         .from('markers')
-        .select('id, lat, lng, title, active, created_at')
+        .select('id, lat, lng, title, active, created_at, visible_from, visible_to')
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(200);
 
-      if (!markersData) {
+      if (markersError) {
+        console.error('❌ [MarkerManager] Error loading markers:', markersError);
+        return;
+      }
+      
+      console.log('📥 [MarkerManager] Loaded markers:', markersData?.length || 0);
+
+      if (!markersData || markersData.length === 0) {
+        console.log('📥 [MarkerManager] No markers found in database');
         setExistingMarkers([]);
         return;
       }
 
       const markerIds = markersData.map(m => m.id);
-      const { data: rewardsData } = await supabase
+      const { data: rewardsData, error: rewardsError } = await supabase
         .from('marker_rewards')
         .select('marker_id, reward_type, payload')
         .in('marker_id', markerIds);
+
+      if (rewardsError) {
+        console.error('❌ [MarkerManager] Error loading rewards:', rewardsError);
+      }
+      
+      console.log('📥 [MarkerManager] Loaded rewards:', rewardsData?.length || 0);
 
       const markers = markersData.map(m => ({
         ...m,
@@ -132,9 +151,10 @@ const MarkerRewardManager: React.FC = () => {
           .map(r => ({ reward_type: r.reward_type, payload: r.payload }))
       }));
 
+      console.log('✅ [MarkerManager] Setting existingMarkers:', markers.length);
       setExistingMarkers(markers);
     } catch (error) {
-      console.error('Error loading markers:', error);
+      console.error('❌ [MarkerManager] Exception loading markers:', error);
     }
   }, []);
 
@@ -162,6 +182,8 @@ const MarkerRewardManager: React.FC = () => {
     const latNum = parseFloat(lat);
     const lngNum = parseFloat(lng);
     
+    console.log('🎯 [MarkerManager] Creating marker at:', { lat: latNum, lng: lngNum, title: markerTitle });
+    
     if (isNaN(latNum) || isNaN(lngNum)) {
       toast.error('Inserisci coordinate valide');
       return;
@@ -172,6 +194,7 @@ const MarkerRewardManager: React.FC = () => {
       const now = new Date();
       const visibleTo = new Date(now.getTime() + visibilityHours * 60 * 60 * 1000);
 
+      console.log('🎯 [MarkerManager] Inserting into markers table...');
       const { data: marker, error: markerError } = await supabase
         .from('markers')
         .insert({
@@ -185,18 +208,35 @@ const MarkerRewardManager: React.FC = () => {
         .select()
         .single();
 
-      if (markerError) throw markerError;
+      if (markerError) {
+        console.error('❌ [MarkerManager] Marker insert error:', markerError);
+        throw markerError;
+      }
+      
+      console.log('✅ [MarkerManager] Marker created:', marker);
 
+      // Aggiungi min_zoom al payload
+      const payloadWithZoom = {
+        ...buildPayload(),
+        min_zoom: minZoom
+      };
+
+      console.log('🎯 [MarkerManager] Inserting reward with payload:', payloadWithZoom);
       const { error: rewardError } = await supabase
         .from('marker_rewards')
         .insert({
           marker_id: marker.id,
           reward_type: selectedRewardType.toLowerCase(), // 🔥 IMPORTANTE: minuscolo per Edge Function
-          payload: buildPayload(),
+          payload: payloadWithZoom,
           description: `${REWARD_TYPES.find(r => r.value === selectedRewardType)?.label} reward`
         });
 
-      if (rewardError) throw rewardError;
+      if (rewardError) {
+        console.error('❌ [MarkerManager] Reward insert error:', rewardError);
+        throw rewardError;
+      }
+      
+      console.log('✅ [MarkerManager] Reward created successfully!');
 
       // 🔐 Audit log for marker creation
       await logAuditEvent({
@@ -211,8 +251,13 @@ const MarkerRewardManager: React.FC = () => {
       });
 
       toast.success('✅ Marker creato!');
+      console.log('🎯 [MarkerManager] SUCCESS! Marker ID:', marker.id, 'at:', marker.lat, marker.lng);
+      console.log('🎯 [MarkerManager] Reloading markers list...');
       setMarkerTitle('');
-      loadMarkers();
+      // Force a delay to ensure DB is updated
+      setTimeout(() => {
+        loadMarkers();
+      }, 500);
     } catch (error: any) {
       console.error('Error:', error);
       toast.error(`Errore: ${error.message}`);
@@ -310,7 +355,9 @@ const MarkerRewardManager: React.FC = () => {
           distributions: [{
             type: bulkRewardType,
             count: bulkCount,
-            payload: bulkRewardType === 'M1U' ? { amount: bulkM1uAmount } : {}
+            payload: bulkRewardType === 'M1U' 
+              ? { amount: bulkM1uAmount, min_zoom: bulkMinZoom } 
+              : { min_zoom: bulkMinZoom }
           }],
           // WORLDWIDE bbox - markers sparsi in tutto il mondo
           bbox: {
@@ -511,6 +558,25 @@ const MarkerRewardManager: React.FC = () => {
                   <Input type="number" min={1} max={168} value={visibilityHours} onChange={e => setVisibilityHours(+e.target.value || 24)} />
                 </div>
 
+                <div>
+                  <Label>Zoom Visibilità (10-20)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      type="number" 
+                      min={10} 
+                      max={20} 
+                      value={minZoom} 
+                      onChange={e => setMinZoom(Math.min(20, Math.max(10, +e.target.value || 17)))} 
+                    />
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {minZoom <= 12 ? '🔭 Molto visibile' : minZoom <= 15 ? '👁️ Visibile' : minZoom <= 17 ? '🔍 Vicino' : '🎯 Molto vicino'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Zoom basso = più visibile da lontano | Zoom alto = devi avvicinarti
+                  </p>
+                </div>
+
                 <Button onClick={handleCreateMarker} disabled={isLoading} className="w-full bg-gradient-to-r from-cyan-500 to-pink-500">
                   {isLoading ? 'Creazione...' : '✨ Crea Marker'}
                 </Button>
@@ -540,6 +606,25 @@ const MarkerRewardManager: React.FC = () => {
                     <Input type="number" min={10} max={1000} value={bulkM1uAmount} onChange={e => setBulkM1uAmount(+e.target.value || 50)} />
                   </div>
                 )}
+
+                <div>
+                  <Label>Zoom Visibilità (10-20)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      type="number" 
+                      min={10} 
+                      max={20} 
+                      value={bulkMinZoom} 
+                      onChange={e => setBulkMinZoom(Math.min(20, Math.max(10, +e.target.value || 17)))} 
+                    />
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {bulkMinZoom <= 12 ? '🔭 Molto visibile' : bulkMinZoom <= 15 ? '👁️ Visibile' : bulkMinZoom <= 17 ? '🔍 Vicino' : '🎯 Molto vicino'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Zoom basso = più visibile da lontano | Zoom alto = devi avvicinarti
+                  </p>
+                </div>
 
                 <Button onClick={handleBulkCreate} disabled={isLoading} className="w-full bg-gradient-to-r from-purple-500 to-pink-500">
                   {isLoading ? 'Generazione...' : `🎲 Genera ${bulkCount} Marker`}

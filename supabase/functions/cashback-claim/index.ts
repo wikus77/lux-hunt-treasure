@@ -10,9 +10,14 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 serve(async (req) => {
-  // CORS preflight
+  // 🔧 FIX: CORS preflight - must return 204 with proper headers
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: secureCors(req) });
+    const corsHeaders = secureCors(req);
+    console.log("[cashback-claim] ✅ OPTIONS preflight handled");
+    return new Response(null, { 
+      status: 204, 
+      headers: corsHeaders 
+    });
   }
 
   try {
@@ -119,34 +124,43 @@ serve(async (req) => {
 
     const amountToCredit = wallet.accumulated_m1u;
 
-    // Trasferisci M1U al profilo usando RPC o update diretto
-    // Prima prova con admin_credit_m1u RPC se esiste
-    const { data: creditResult, error: creditError } = await supabaseAdmin
-      .rpc("admin_credit_m1u", {
-        p_user_id: userId,
-        p_amount: amountToCredit,
-        p_reason: "cashback_claim"
-      });
+    // 🔧 FIX: Trasferisci M1U al profilo - leggi prima il saldo attuale poi aggiorna
+    // Step 1: Leggi saldo attuale
+    const { data: currentProfile, error: profileReadError } = await supabaseAdmin
+      .from("profiles")
+      .select("m1_units")
+      .eq("id", userId)
+      .single();
 
-    if (creditError) {
-      // Fallback: update diretto se RPC non disponibile
-      console.log(`[cashback-claim] RPC failed, trying direct update: ${creditError.message}`);
-      
-      const { error: updateError } = await supabaseAdmin
-        .from("profiles")
-        .update({ 
-          m1_units: supabaseAdmin.rpc("increment_m1u", { amount: amountToCredit })
-        })
-        .eq("id", userId);
-
-      if (updateError) {
-        console.error(`[cashback-claim] Credit failed for user ...${userId.slice(-8)}: ${updateError.message}`);
-        return new Response(
-          JSON.stringify({ error: "Failed to credit M1U. Please try again later." }),
-          { status: 500, headers: { ...secureCors(req), "Content-Type": "application/json" } }
-        );
-      }
+    if (profileReadError) {
+      console.error(`[cashback-claim] Profile read failed for user ...${userId.slice(-8)}: ${profileReadError.message}`);
+      return new Response(
+        JSON.stringify({ error: "Failed to read profile. Please try again later." }),
+        { status: 500, headers: { ...secureCors(req), "Content-Type": "application/json" } }
+      );
     }
+
+    const currentBalance = currentProfile?.m1_units || 0;
+    const newBalance = currentBalance + amountToCredit;
+
+    // Step 2: Aggiorna con nuovo saldo
+    const { error: updateError } = await supabaseAdmin
+      .from("profiles")
+      .update({ 
+        m1_units: newBalance,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", userId);
+
+    if (updateError) {
+      console.error(`[cashback-claim] Credit failed for user ...${userId.slice(-8)}: ${updateError.message}`);
+      return new Response(
+        JSON.stringify({ error: "Failed to credit M1U. Please try again later." }),
+        { status: 500, headers: { ...secureCors(req), "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`[cashback-claim] ✅ Credited ${amountToCredit} M1U (${currentBalance} → ${newBalance})`)
 
     // Reset wallet
     const { error: resetError } = await supabaseAdmin

@@ -62,8 +62,13 @@ export const TronBuzzSkin: React.FC<TronBuzzSkinProps> = ({
             </span>
           </div>
         ) : (
-          <div className="tron-price">
-            {priceDisplay}
+          <div className="flex flex-col items-center space-y-2">
+            <span className="text-sm font-semibold text-white/60" style={{ 
+              fontFamily: 'Orbitron, sans-serif',
+              letterSpacing: '0.1em'
+            }}>
+              {priceDisplay}
+            </span>
           </div>
         )}
       </div>

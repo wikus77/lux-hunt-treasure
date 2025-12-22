@@ -7,6 +7,7 @@ import { getPWASafeAreaInsets } from '@/utils/pwaNativeFunctions';
 interface SafeAreaWrapperProps {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
   top?: boolean;
   bottom?: boolean;
   left?: boolean;
@@ -17,6 +18,7 @@ interface SafeAreaWrapperProps {
 export const SafeAreaWrapper: React.FC<SafeAreaWrapperProps> = ({
   children,
   className = '',
+  style = {},
   top = true,
   bottom = true,
   left = true,
@@ -65,7 +67,7 @@ export const SafeAreaWrapper: React.FC<SafeAreaWrapperProps> = ({
   return (
     <div 
       className={`safe-area-wrapper ${className}`}
-      style={paddingStyle}
+      style={{ ...paddingStyle, ...style }}
     >
       {debug && isPWA && (
         <div className="fixed top-0 left-0 z-[10000] bg-red-500 text-white text-xs p-2">

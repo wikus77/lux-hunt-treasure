@@ -11,6 +11,7 @@ import { useAuthContext } from '@/contexts/auth';
 // Tipi di contribuzione supportati (da pulse_config_weights)
 export type PulseEventType = 
   | 'BUZZ_COMPLETED'
+  | 'BUZZ_MAP_COMPLETED'
   | 'PORTAL_DISCOVERED'
   | 'DAILY_STREAK'
   | 'QR_SCAN_VERIFIED'
@@ -20,6 +21,7 @@ export type PulseEventType =
 // Mapping peso → incremento visuale (per UI)
 const EVENT_DISPLAY_INFO: Record<PulseEventType, { label: string; emoji: string }> = {
   BUZZ_COMPLETED: { label: 'Buzz completato!', emoji: '🎯' },
+  BUZZ_MAP_COMPLETED: { label: 'Buzz Map creato!', emoji: '🗺️' },
   PORTAL_DISCOVERED: { label: 'Portale scoperto!', emoji: '🌀' },
   DAILY_STREAK: { label: 'Login giornaliero!', emoji: '🔥' },
   QR_SCAN_VERIFIED: { label: 'QR verificato!', emoji: '📱' },
@@ -146,6 +148,7 @@ export const usePulseContribute = (): UsePulseContributeReturn => {
 };
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
 
 
 

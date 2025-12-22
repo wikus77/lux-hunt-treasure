@@ -18,8 +18,28 @@ export const StartMissionButton: React.FC = () => {
   // 🆕 Usa store globale per la sequenza (renderizzata in App.tsx, NON nel portal)
   const triggerMissionIntro = useEntityOverlayStore((s) => s.triggerMissionIntro);
 
-  // Hide button if user is already enrolled
-  if (enrollmentLoading || isEnrolled) return null;
+  // Show "ON M1SSION" if enrolled, loading state if checking
+  if (enrollmentLoading) {
+    return (
+      <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-[#00D1FF]/5 border border-[#00D1FF]/20">
+        <div className="animate-spin rounded-full h-3 w-3 border border-[#00D1FF] border-t-transparent mr-2" />
+        <span className="text-xs font-orbitron font-semibold text-[#00D1FF]/60 uppercase tracking-wider">
+          Verifica...
+        </span>
+      </div>
+    );
+  }
+  
+  // Show "ON M1SSION" badge when enrolled
+  if (isEnrolled) {
+    return (
+      <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-[#00FF88]/10 border border-[#00FF88]/40">
+        <span className="text-xs font-orbitron font-bold text-[#00FF88] uppercase tracking-wider">
+          ON M1SSION
+        </span>
+      </div>
+    );
+  }
 
   const handleStartMission = async () => {
     setIsLoading(true);

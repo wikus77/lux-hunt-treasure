@@ -1,14 +1,13 @@
 /**
- * Practice Mode - Solo training for reaction time
- * Play against AI Bot to improve your skills
+ * BATTLE ARENA - Solo Mode with Real M1U/PE Stakes
+ * Play against AI Bot with real currency stakes (max 5)
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Trophy, RotateCcw, Target, Bot, Clock, TrendingUp } from 'lucide-react';
+import { Zap, Trophy, RotateCcw, Target, Bot, Coins, Battery } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,6 +17,7 @@ interface PracticeModeProps {
 }
 
 type GameState = 'idle' | 'countdown' | 'waiting' | 'flash' | 'result' | 'too_early';
+type StakeCurrency = 'M1U' | 'PE';
 
 // Bot difficulty levels with reaction time ranges (ms)
 const BOT_LEVELS = {
@@ -29,6 +29,9 @@ const BOT_LEVELS = {
 
 type BotLevel = keyof typeof BOT_LEVELS;
 
+// Stake amounts (max 5)
+const STAKE_AMOUNTS = [1, 2, 3, 5];
+
 export function PracticeMode({ userId, onClose }: PracticeModeProps) {
   const [gameState, setGameState] = useState<GameState>('idle');
   const [countdown, setCountdown] = useState(3);
@@ -39,16 +42,46 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
   const [stats, setStats] = useState({ wins: 0, losses: 0, bestTime: 0, avgTime: 0, totalGames: 0 });
   const [recentTimes, setRecentTimes] = useState<number[]>([]);
   
+  // Stake system
+  const [stakeCurrency, setStakeCurrency] = useState<StakeCurrency>('M1U');
+  const [stakeAmount, setStakeAmount] = useState(1);
+  const [userBalance, setUserBalance] = useState({ m1u: 0, pe: 0 });
+  const [lastPayout, setLastPayout] = useState<number | null>(null);
+  
   const flashTimeRef = useRef<number>(0);
   const waitingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const currentStakeRef = useRef<{ amount: number; currency: StakeCurrency }>({ amount: 0, currency: 'M1U' });
+
+  // Fetch balance
+  const refreshBalance = useCallback(async () => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('m1_units, pulse_energy')
+        .eq('id', userId)
+        .single();
+      if (data) {
+        setUserBalance({
+          m1u: data.m1_units || 0,
+          pe: data.pulse_energy || 0
+        });
+      }
+    } catch {
+      // Silent
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    refreshBalance();
+  }, [refreshBalance]);
 
   // Load practice stats from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem(`practice_stats_${userId}`);
+    const saved = localStorage.getItem(`battle_stats_${userId}`);
     if (saved) {
       setStats(JSON.parse(saved));
     }
-    const savedTimes = localStorage.getItem(`practice_times_${userId}`);
+    const savedTimes = localStorage.getItem(`battle_times_${userId}`);
     if (savedTimes) {
       setRecentTimes(JSON.parse(savedTimes));
     }
@@ -56,17 +89,56 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
 
   // Save stats to localStorage
   const saveStats = useCallback((newStats: typeof stats, newTimes: number[]) => {
-    localStorage.setItem(`practice_stats_${userId}`, JSON.stringify(newStats));
-    localStorage.setItem(`practice_times_${userId}`, JSON.stringify(newTimes.slice(-20))); // Keep last 20
+    localStorage.setItem(`battle_stats_${userId}`, JSON.stringify(newStats));
+    localStorage.setItem(`battle_times_${userId}`, JSON.stringify(newTimes.slice(-20)));
   }, [userId]);
 
-  // Start game
+  // Update balance in Supabase (fire and forget, like Pulse Breaker)
+  const updateBalanceAsync = useCallback(async (currency: StakeCurrency, newBalance: number) => {
+    try {
+      const field = currency === 'M1U' ? 'm1_units' : 'pulse_energy';
+      await supabase
+        .from('profiles')
+        .update({ [field]: Math.floor(Math.max(0, newBalance)) })
+        .eq('id', userId);
+    } catch {
+      // Silent - local balance still works
+    }
+  }, [userId]);
+
+  // Check if user can afford stake
+  const canAffordStake = () => {
+    const balance = stakeCurrency === 'M1U' ? userBalance.m1u : userBalance.pe;
+    return balance >= stakeAmount;
+  };
+
+  // Start game (deduct stake)
   const startGame = () => {
+    if (!canAffordStake()) {
+      return;
+    }
+
+    // Deduct stake from local balance
+    const currentBalance = stakeCurrency === 'M1U' ? userBalance.m1u : userBalance.pe;
+    const newBalance = currentBalance - stakeAmount;
+    
+    setUserBalance(prev => ({
+      ...prev,
+      [stakeCurrency.toLowerCase()]: newBalance
+    }));
+    
+    // Fire async update to Supabase
+    updateBalanceAsync(stakeCurrency, newBalance);
+    
+    // Store current stake for payout calculation
+    currentStakeRef.current = { amount: stakeAmount, currency: stakeCurrency };
+    
     setGameState('countdown');
     setCountdown(3);
     setMyReaction(null);
     setBotReaction(null);
     setWinner(null);
+    setLastPayout(null);
   };
 
   // Countdown timer
@@ -77,7 +149,6 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
       const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
       return () => clearTimeout(timer);
     } else {
-      // Countdown finished, move to waiting
       setGameState('waiting');
     }
   }, [gameState, countdown]);
@@ -86,12 +157,9 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
   useEffect(() => {
     if (gameState !== 'waiting') return;
 
-    // Random delay between 2 and 8 seconds
     const delay = 2000 + Math.random() * 6000;
-    console.log(`[Practice] Flash will appear in ${Math.round(delay)}ms`);
     
     const timer = setTimeout(() => {
-      console.log('[Practice] FLASH!');
       flashTimeRef.current = Date.now();
       
       // Generate bot reaction time
@@ -111,15 +179,23 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
 
   // Handle tap
   const handleTap = () => {
-    console.log('[Practice] Tap! State:', gameState);
-    
     if (gameState === 'waiting') {
-      // Too early! Cancel the pending flash
-      console.log('[Practice] Too early!');
+      // Too early! Lose stake
       if (waitingTimeoutRef.current) {
         clearTimeout(waitingTimeoutRef.current);
         waitingTimeoutRef.current = null;
       }
+      
+      // Player loses - no payout
+      const newStats = {
+        ...stats,
+        losses: stats.losses + 1,
+        totalGames: stats.totalGames + 1,
+      };
+      setStats(newStats);
+      saveStats(newStats, recentTimes);
+      setLastPayout(-currentStakeRef.current.amount);
+      
       setGameState('too_early');
       return;
     }
@@ -132,6 +208,28 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
       const botTime = botReaction || 999;
       const playerWon = reaction < botTime;
       setWinner(playerWon ? 'player' : 'bot');
+      
+      // Calculate payout
+      const stake = currentStakeRef.current;
+      let payout = 0;
+      
+      if (playerWon) {
+        // Win: Get stake back + winnings (2x stake = original stake as profit)
+        payout = stake.amount * 2;
+        const currentBalance = stake.currency === 'M1U' ? userBalance.m1u : userBalance.pe;
+        const newBalance = currentBalance + payout;
+        
+        setUserBalance(prev => ({
+          ...prev,
+          [stake.currency.toLowerCase()]: newBalance
+        }));
+        
+        updateBalanceAsync(stake.currency, newBalance);
+        setLastPayout(stake.amount); // Show profit only
+      } else {
+        // Loss: Stake already deducted
+        setLastPayout(-stake.amount);
+      }
       
       // Update stats
       const newTimes = [...recentTimes, reaction];
@@ -184,9 +282,82 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
   }, [gameState, countdown]);
 
   const bot = BOT_LEVELS[botLevel];
+  const currentBalance = stakeCurrency === 'M1U' ? userBalance.m1u : userBalance.pe;
 
   return (
     <div className="space-y-4">
+      {/* Balance Display */}
+      <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <Coins className="w-4 h-4 text-yellow-400" />
+            <span className="font-bold text-yellow-400">{userBalance.m1u}</span>
+            <span className="text-xs text-gray-400">M1U</span>
+          </div>
+          <div className="w-px h-4 bg-gray-600" />
+          <div className="flex items-center gap-1.5">
+            <Battery className="w-4 h-4 text-cyan-400" />
+            <span className="font-bold text-cyan-400">{userBalance.pe}</span>
+            <span className="text-xs text-gray-400">PE</span>
+          </div>
+        </div>
+        {lastPayout !== null && (
+          <Badge className={lastPayout > 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
+            {lastPayout > 0 ? '+' : ''}{lastPayout} {currentStakeRef.current.currency}
+          </Badge>
+        )}
+      </div>
+
+      {/* Stake Selection - Only visible in idle state */}
+      {(gameState === 'idle' || gameState === 'result' || gameState === 'too_early') && (
+        <div className="space-y-3">
+          {/* Currency Toggle */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              size="sm"
+              variant={stakeCurrency === 'M1U' ? 'default' : 'outline'}
+              onClick={() => setStakeCurrency('M1U')}
+              className={`flex items-center gap-1.5 ${stakeCurrency === 'M1U' ? 'bg-yellow-500 hover:bg-yellow-600 text-black' : ''}`}
+            >
+              <Coins className="w-3.5 h-3.5" />
+              M1U
+            </Button>
+            <Button
+              size="sm"
+              variant={stakeCurrency === 'PE' ? 'default' : 'outline'}
+              onClick={() => setStakeCurrency('PE')}
+              className={`flex items-center gap-1.5 ${stakeCurrency === 'PE' ? 'bg-cyan-500 hover:bg-cyan-600 text-black' : ''}`}
+            >
+              <Battery className="w-3.5 h-3.5" />
+              PE
+            </Button>
+          </div>
+
+          {/* Stake Amount */}
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-xs text-gray-400 mr-2">Stake:</span>
+            {STAKE_AMOUNTS.map((amount) => (
+              <Button
+                key={amount}
+                size="sm"
+                variant={stakeAmount === amount ? 'default' : 'outline'}
+                onClick={() => setStakeAmount(amount)}
+                disabled={currentBalance < amount}
+                className={`w-10 h-8 text-sm ${
+                  stakeAmount === amount 
+                    ? 'bg-purple-500 hover:bg-purple-600' 
+                    : currentBalance < amount 
+                      ? 'opacity-50' 
+                      : ''
+                }`}
+              >
+                {amount}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Bot Selector */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -256,12 +427,19 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
               className="absolute inset-0 flex flex-col items-center justify-center"
             >
               <Target className="w-16 h-16 text-cyan-400 mb-4" />
-              <p className="text-white text-lg font-semibold mb-2">Practice Mode</p>
-              <p className="text-gray-400 text-sm mb-4">Train against {bot.name}</p>
-              <Button onClick={startGame} className="bg-cyan-500 hover:bg-cyan-600">
+              <p className="text-white text-lg font-semibold mb-2">Battle Arena</p>
+              <p className="text-gray-400 text-sm mb-4">Stake {stakeAmount} {stakeCurrency} vs {bot.name}</p>
+              <Button 
+                onClick={startGame} 
+                disabled={!canAffordStake()}
+                className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50"
+              >
                 <Zap className="mr-2 h-4 w-4" />
-                Start Training
+                Start Battle ({stakeAmount} {stakeCurrency})
               </Button>
+              {!canAffordStake() && (
+                <p className="text-red-400 text-xs mt-2">Saldo {stakeCurrency} insufficiente</p>
+              )}
             </motion.div>
           )}
 
@@ -303,6 +481,7 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
                 <div className="w-12 h-12 rounded-full bg-cyan-400/20" />
               </motion.div>
               <p className="text-cyan-400 mt-4 text-lg">Wait for GREEN...</p>
+              <p className="text-yellow-400 text-sm mt-2">⚡ {stakeAmount} {stakeCurrency} at stake</p>
             </motion.div>
           )}
 
@@ -332,11 +511,12 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
               animate={{ opacity: 1 }}
               className="absolute inset-0 flex flex-col items-center justify-center"
             >
-              <p className="text-white text-3xl font-bold mb-4">TOO EARLY! ❌</p>
+              <p className="text-white text-3xl font-bold mb-2">TOO EARLY! ❌</p>
+              <p className="text-red-400 text-lg mb-2">-{currentStakeRef.current.amount} {currentStakeRef.current.currency}</p>
               <p className="text-white/80 mb-6">Wait for the green flash</p>
-              <Button onClick={startGame} variant="outline" className="border-white text-white">
+              <Button onClick={startGame} disabled={!canAffordStake()} variant="outline" className="border-white text-white">
                 <RotateCcw className="mr-2 h-4 w-4" />
-                Try Again
+                Try Again ({stakeAmount} {stakeCurrency})
               </Button>
             </motion.div>
           )}
@@ -352,8 +532,13 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
               <div className="text-6xl mb-2">
                 {winner === 'player' ? '🏆' : '💀'}
               </div>
-              <p className={`text-2xl font-bold mb-4 ${winner === 'player' ? 'text-green-400' : 'text-red-400'}`}>
+              <p className={`text-2xl font-bold mb-2 ${winner === 'player' ? 'text-green-400' : 'text-red-400'}`}>
                 {winner === 'player' ? 'YOU WIN!' : 'BOT WINS!'}
+              </p>
+              
+              {/* Payout display */}
+              <p className={`text-lg font-bold mb-4 ${winner === 'player' ? 'text-green-400' : 'text-red-400'}`}>
+                {winner === 'player' ? '+' : ''}{lastPayout} {currentStakeRef.current.currency}
               </p>
               
               <div className="flex gap-6 mb-4">
@@ -377,9 +562,13 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
                 </Badge>
               )}
 
-              <Button onClick={startGame} className="bg-cyan-500 hover:bg-cyan-600">
+              <Button 
+                onClick={startGame} 
+                disabled={!canAffordStake()}
+                className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600"
+              >
                 <RotateCcw className="mr-2 h-4 w-4" />
-                Play Again
+                Play Again ({stakeAmount} {stakeCurrency})
               </Button>
             </motion.div>
           )}
@@ -388,11 +577,10 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
 
       {/* Tips */}
       <div className="text-center text-xs text-gray-500">
-        <p>💡 Pro tip: Focus on the center and use your peripheral vision</p>
+        <p>💡 Win = 2x your stake | Lose or Too Early = lose stake</p>
       </div>
     </div>
   );
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-

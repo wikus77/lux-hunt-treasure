@@ -316,6 +316,83 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     }
   };
 
+  // 🔥 FIX: Direct area creation with coordinates (prevents double area bug)
+  const createAreaDirect = async (radius: number, lat: number, lng: number) => {
+    console.log("🎯 CREATE DIRECT: Creating area directly with coordinates", { radius, lat, lng });
+    
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session?.user) {
+        console.error("❌ AUTH: User not authenticated");
+        if (DEV_MOCKS) {
+          const newAreaLocal: SearchArea = {
+            id: uuidv4(),
+            lat,
+            lng,
+            radius,
+            label: `Area di ricerca ${searchAreasThisWeek + 1}`,
+            color: "#00f0ff",
+            position: { lat, lng }
+          };
+          setSearchAreas(prev => [...prev, newAreaLocal]);
+          setActiveSearchArea(newAreaLocal.id);
+          return;
+        }
+        toast.error("Utente non autenticato");
+        return;
+      }
+
+      const userId = sessionData.session.user.id;
+
+      const newArea: SearchArea = {
+        id: uuidv4(),
+        lat,
+        lng,
+        radius,
+        label: `Area di ricerca ${searchAreasThisWeek + 1}`,
+        color: "#00f0ff",
+        position: { lat, lng }
+      };
+
+      const { data, error } = await supabase
+        .from('search_areas')
+        .insert({
+          user_id: userId,
+          lat,
+          lng,
+          radius,
+          label: newArea.label
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("❌ DB ERROR: Error saving search area:", error);
+        if (DEV_MOCKS) {
+          setSearchAreasThisWeek(prev => prev + 1);
+          setSearchAreas(prevAreas => [...prevAreas, newArea]);
+          setActiveSearchArea(newArea.id);
+          return;
+        }
+        toast.error("Si è verificato un errore nel salvare l'area di ricerca");
+        return;
+      }
+
+      if (data) newArea.id = data.id;
+
+      setSearchAreasThisWeek(prev => prev + 1);
+      setSearchAreas(prevAreas => [...prevAreas, newArea]);
+      setActiveSearchArea(newArea.id);
+      console.log("✅ CREATE DIRECT: Area created successfully", newArea.id);
+
+      // Ensure consistency
+      setTimeout(() => { forceReloadAreas(); }, 500);
+    } catch (error) {
+      console.error("❌ EXCEPTION: Error in createAreaDirect:", error);
+      toast.error("Si è verificato un errore nell'aggiunta dell'area");
+    }
+  };
+
   return {
     searchAreas,
     setSearchAreas,
@@ -331,6 +408,7 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
     toggleAddingSearchArea,
     isLoading,
     forceReloadAreas, // Export for manual refresh
+    createAreaDirect, // 🔥 NEW: Direct creation to prevent double area bug
     setPendingRadius: (radius: number) => {
       pendingRadiusRef.current = radius;
     }

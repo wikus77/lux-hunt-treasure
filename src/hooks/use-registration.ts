@@ -84,12 +84,16 @@ export const useRegistration = () => {
         
         // 🚀 OTTIMIZZAZIONE: Toast immediato + redirect veloce
         toast.success("Registrazione completata!", {
-          description: "Scegli il tuo piano per iniziare la missione."
+          description: "Benvenuto in M1SSION™!"
         });
 
-        // 🚀 REDIRECT IMMEDIATO (era 1500ms, ora 100ms)
+        // 🎯 FIRST SESSION FIX: Skip choose-plan, go directly to home
+        // Import flag at top of file if needed
+        const SKIP_PLAN = true; // Feature flag - set false to restore old behavior
+        
+        // 🚀 REDIRECT IMMEDIATO a /home (skip /choose-plan per nuovi utenti)
         setTimeout(() => {
-          navigate("/choose-plan");
+          navigate(SKIP_PLAN ? "/home" : "/choose-plan");
         }, 100);
 
         // 🔥 NON-BLOCKING: Notifiche inviate in background (no await!)

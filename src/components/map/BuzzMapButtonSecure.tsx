@@ -1,8 +1,9 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// V2: Added START M1SSION gate enforcement
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, MapPin } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
@@ -11,6 +12,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
 import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION Cashback Vault™
 import { notifyShadowContext } from '@/stores/entityOverlayStore'; // 🌑 Shadow Protocol v3
+import { useActiveMissionEnrollment } from '@/hooks/useActiveMissionEnrollment'; // 🚨 START M1SSION GATE
+import { BuzzMapLockedModal } from './BuzzMapLockedModal'; // 🚨 Modal clone from BuzzPage
+import { usePulseContribute } from '@/features/pulse'; // 🔋 PULSE: Contribuzione energia collettiva
 import '@/styles/buzz/BuzzTronDisc.css';
 
 interface BuzzMapButtonSecureProps {
@@ -27,6 +31,11 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
   const { isAuthenticated, user } = useAuthContext();
   const { callBuzzApi } = useBuzzApi();
   const { accrueFromBuzzMap } = useCashbackWallet(); // 🆕 M1SSION Cashback Vault™
+  const { contribute: contributeToPulse } = usePulseContribute(); // 🔋 PULSE
+  
+  // 🚨 START M1SSION GATE: Check if user is enrolled in mission
+  const { isEnrolled, isLoading: enrollmentLoading } = useActiveMissionEnrollment();
+  const [showGateModal, setShowGateModal] = useState(false);
   
   // 🔥 SERVER-AUTHORITATIVE: Get pricing from RPC, not client calculation
   const [serverPricing, setServerPricing] = useState<{
@@ -148,6 +157,13 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
   const handleBuzzMapPress = async () => {
     if (!isAuthenticated || !user) {
       toast.error('Devi accedere per usare BUZZ MAP.');
+      return;
+    }
+    
+    // 🚨 START M1SSION GATE: Block if not enrolled
+    if (!isEnrolled && !enrollmentLoading) {
+      console.log('🚨 [BUZZ MAP] User not enrolled - showing gate modal');
+      setShowGateModal(true);
       return;
     }
 
@@ -281,6 +297,15 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         // Non bloccare - l'area è già stata creata con successo
       }
 
+      // 🔋 PULSE: Contribuisci energia collettiva (async, non bloccante)
+      contributeToPulse('BUZZ_MAP_COMPLETED', { 
+        level: actualLevel, 
+        radius_km: actualRadius,
+        cost_m1u: costM1U 
+      }).catch(err => {
+        console.warn('[PULSE] BUZZ MAP contribution failed (non-blocking):', err);
+      });
+
       // 🔥 FIX: Update agent location immediately after BUZZ (geolocation sync)
       try {
         console.log('📍 Updating agent location after BUZZ...', { lat: coordinates[0], lng: coordinates[1] });
@@ -355,15 +380,32 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
     }
   };
 
-  // Format price for display
+  // 🚀 BOOTSTRAP BOOST: Calculate effective radius for display (same logic as backend)
+  const BUZZ_MAP_BOOTSTRAP_COUNT = 10;
+  const BUZZ_MAP_BOOTSTRAP_MULTIPLIER = 2;
+  
+  const getEffectiveRadiusKm = (): number => {
+    if (!serverPricing) return 0;
+    const currentCount = serverPricing.current_count ?? 0;
+    const isBootstrapEligible = currentCount < BUZZ_MAP_BOOTSTRAP_COUNT;
+    return isBootstrapEligible 
+      ? serverPricing.radius_km * BUZZ_MAP_BOOTSTRAP_MULTIPLIER 
+      : serverPricing.radius_km;
+  };
+
+  // Format price for display with BOOSTED radius
+  const effectiveRadiusKm = getEffectiveRadiusKm();
   const priceDisplay = serverPricing 
-    ? `${serverPricing.radius_km}km · ${serverPricing.m1u} M1U` 
+    ? `${Math.round(effectiveRadiusKm)}km · ${serverPricing.m1u} M1U` 
     : 'Loading...';
 
   const isDisabled = !isAuthenticated || isProcessing || pricingLoading;
 
   return (
     <>
+      {/* 🚨 START M1SSION GATE MODAL - Portal to body */}
+      <BuzzMapLockedModal isOpen={showGateModal} />
+      
       {/* M1SSION™ BUZZ MAP Button - TronDisc RED variant */}
       <motion.div 
         className="fixed left-1/2 transform -translate-x-1/2 z-50"

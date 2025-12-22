@@ -1,6 +1,7 @@
 // @ts-nocheck
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT™
-import { useState, useEffect } from 'react';
+// 🔧 v4: Request storm protection added
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Calendar, Target, Clock, Copy, X, LogOut, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,20 +42,122 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
   const [, setLocation] = useLocation();
   const { xpStatus } = useXpSystem();
   const totalXp = xpStatus?.total_xp ?? 0;
+  
+  // 🔧 v4: Request storm protection
+  const isFetchingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const retryCountRef = useRef(0);
+  const MAX_RETRIES = 2;
+
+  // 🔧 v4: Memoized fetch with in-flight guard and abort
+  const fetchProfileData = useCallback(async () => {
+    // In-flight guard: don't start if already fetching
+    if (isFetchingRef.current) {
+      console.log('⏸️ ProfileToast: fetch already in progress, skipping');
+      return;
+    }
+    
+    // Abort previous request if any
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    isFetchingRef.current = true;
+    abortControllerRef.current = new AbortController();
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        isFetchingRef.current = false;
+        return;
+      }
+
+      console.log('🔄 M1SSION™ ProfileToast fetching data (guarded)...');
+
+      // Fetch profile data
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('username, full_name, subscription_tier')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      // Fetch mission status with real-time calculation
+      const { data: missionStatus } = await supabase
+        .from('user_mission_status')
+        .select('clues_found, mission_started_at, mission_days_remaining')
+        .eq('user_id', user.id)
+        .single();
+
+      // Real-time days calculation to match home page
+      let daysRemaining = 30;
+      if (missionStatus?.mission_started_at) {
+        const startDate = new Date(missionStatus.mission_started_at);
+        const currentDate = new Date();
+        const daysPassed = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        daysRemaining = Math.max(0, 30 - daysPassed);
+      }
+
+      // Fetch subscription data with prioritized logic
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('tier')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .single();
+
+      // Use unified source
+      const userTier = subscription?.tier || profile?.subscription_tier || 'Base';
+
+      setProfileData({
+        username: profile?.username || profile?.full_name || 'Agente',
+        email: user.email || '',
+        cluesFound: missionStatus?.clues_found || 0,
+        totalClues: 12,
+        daysRemaining: daysRemaining,
+        missionStartDate: missionStatus?.mission_started_at || new Date().toISOString(),
+        subscriptionTier: userTier
+      });
+      
+      // Reset retry count on success
+      retryCountRef.current = 0;
+    } catch (error: any) {
+      // Don't log aborted requests
+      if (error?.name === 'AbortError') return;
+      
+      console.error('❌ ProfileToast fetch error:', error);
+      
+      // Limited retry logic
+      if (retryCountRef.current < MAX_RETRIES) {
+        retryCountRef.current++;
+        console.log(`🔄 ProfileToast retry ${retryCountRef.current}/${MAX_RETRIES}`);
+        // Delay retry to avoid storm
+        setTimeout(() => {
+          isFetchingRef.current = false;
+          fetchProfileData();
+        }, 2000 * retryCountRef.current);
+        return;
+      }
+    } finally {
+      isFetchingRef.current = false;
+      setLoading(false);
+    }
+  }, []);
 
   // © 2025 Joseph MULÉ – M1SSION™ - Real-time sync implementation
+  // 🔧 v4: Protected with in-flight guards and controlled retries
   useEffect(() => {
     if (isOpen) {
+      // Reset retry count when opening
+      retryCountRef.current = 0;
       fetchProfileData();
-      
-      // Set up real-time updates every 1 second for live sync
-      const interval = setInterval(() => {
-        fetchProfileData();
-      }, 1000);
 
-      // Set up Supabase real-time subscription for instant updates
+      // Set up Supabase real-time subscription for instant updates (no polling needed)
       const subscription = supabase
-        .channel('profile-updates')
+        .channel('profile-updates-toast')
         .on('postgres_changes', 
           { event: '*', schema: 'public', table: 'user_mission_status' }, 
           () => {
@@ -72,81 +175,14 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
         .subscribe();
 
       return () => {
-        clearInterval(interval);
+        // Cleanup: abort pending request and unsubscribe
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
         subscription.unsubscribe();
       };
     }
-  }, [isOpen]);
-
-  const fetchProfileData = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      console.log('🔄 M1SSION™ ProfileToast fetching real-time data...');
-
-      // Fetch profile data
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('username, full_name, subscription_tier')
-        .eq('id', user.id)
-        .single();
-
-      // Fetch mission status with real-time calculation
-      const { data: missionStatus } = await supabase
-        .from('user_mission_status')
-        .select('clues_found, mission_started_at, mission_days_remaining')
-        .eq('user_id', user.id)
-        .single();
-
-      // Real-time days calculation to match home page
-      let daysRemaining = 30;
-      if (missionStatus?.mission_started_at) {
-        const startDate = new Date(missionStatus.mission_started_at);
-        const currentDate = new Date();
-        const daysPassed = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-        daysRemaining = Math.max(0, 30 - daysPassed);
-        
-        console.log('🔄 M1SSION™ Real-time days calculation:', { 
-          startDate: startDate.toISOString(),
-          currentDate: currentDate.toISOString(),
-          daysPassed,
-          daysRemaining 
-        });
-      }
-
-      // Fetch subscription data with prioritized logic
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('tier')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .single();
-
-      // 🔑 M1SSION™ FINAL SUBSCRIPTION SYNC - Use unified source
-      let userTier = subscription?.tier || profile?.subscription_tier || 'Base';
-      
-      console.log('🔄 M1SSION™ ProfileToast sync data:', { 
-        daysRemaining,
-        cluesFound: missionStatus?.clues_found || 0,
-        tier: userTier 
-      });
-
-      setProfileData({
-        username: profile?.username || profile?.full_name || 'Agente',
-        email: user.email || '',
-        cluesFound: missionStatus?.clues_found || 0,
-        totalClues: 12, // Total clues in the mission
-        daysRemaining: daysRemaining, // Use real-time calculated value
-        missionStartDate: missionStatus?.mission_started_at || new Date().toISOString(),
-        subscriptionTier: userTier
-      });
-    } catch (error) {
-      console.error('❌ M1SSION™ Error fetching profile data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isOpen, fetchProfileData]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('it-IT', {

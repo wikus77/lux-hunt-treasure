@@ -39,6 +39,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   'INSUFFICIENT_M1U_FOR_AION': '⚡ Energia M1U insufficiente per attivare il canale AION. Ricarica le tue unità per continuare.',
   'AION_DAILY_CAP_EXCEEDED': '🔒 Limite giornaliero AION raggiunto. Il canale si ricaricherà domani. Riprova più tardi.',
   'NOT_AUTHENTICATED': '🔐 Connessione neurale non autenticata. Effettua il login per accedere ad AION.',
+  'AUTH_ERROR': '🔐 Errore di autenticazione. Effettua nuovamente il login.',
+  'RPC_UNAVAILABLE': '⚙️ Sistema di billing temporaneamente non disponibile. Riprova tra qualche secondo.',
   'INTERNAL_ERROR': '⚠️ Interferenza nel canale. Riprova tra qualche secondo.',
 };
 
@@ -56,6 +58,10 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   const [isMicEnabled, setIsMicEnabled] = useState(true); // ON by default - AION must speak!
   const [status, setStatus] = useState<'idle' | 'listening' | 'speaking'>('idle');
   const [aionStatus, setAionStatus] = useState<AionStatus | null>(null);
+  // 🔍 OBSERVABILITY: Retry tracking for 503 errors
+  const [retryCount, setRetryCount] = useState(0);
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
+  const MAX_RETRY_COUNT = 3;
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -140,41 +146,64 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   };
 
   // Send message to AION
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+  // 🔍 OBSERVABILITY: Added isRetry parameter for retry tracking
+  const sendMessage = async (isRetry: boolean = false, retryText?: string) => {
+    const messageText = isRetry && retryText ? retryText : input.trim();
+    if (!messageText || isLoading) return;
 
     // 🍎 iOS: Force unlock audio when user sends message (user gesture context)
     unlockAudio();
 
-    const userMessage: Message = {
-      id: `user_${Date.now()}`,
-      role: 'user',
-      content: input.trim(),
-      timestamp: new Date()
-    };
+    // Only add user message bubble if not a retry (retry reuses last message)
+    if (!isRetry) {
+      const userMessage: Message = {
+        id: `user_${Date.now()}`,
+        role: 'user',
+        content: messageText,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, userMessage]);
+      setInput('');
+      setLastFailedMessage(null);
+      setRetryCount(0);
+    }
 
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
     setIsLoading(true);
     setStatus('listening');
 
     try {
+      // 🔍 OBSERVABILITY: Track retry attempts
+      const currentRetry = isRetry ? retryCount + 1 : 0;
+      if (isRetry) {
+        setRetryCount(currentRetry);
+        console.log(`[AION] Retry attempt ${currentRetry}/${MAX_RETRY_COUNT}`);
+      }
+
       // Call norah-chat-v2 edge function
       const { data, error } = await supabase.functions.invoke('norah-chat-v2', {
         body: {
           session_id: sessionIdRef.current,
-          text: userMessage.content,
+          text: messageText,
           messages: messages.filter(m => m.role !== 'system' && m.role !== 'error').slice(-10),
-          system: 'AION_CLIENT'
+          system: 'AION_CLIENT',
+          // 🔍 OBSERVABILITY: Include retry metadata
+          is_retry: isRetry,
+          retry_attempt: currentRetry
         }
       });
 
       if (error) throw error;
 
-      // Check if access was denied (only if RPC is working)
-      if (data?.authorized === false && data?.error_code !== 'NOT_AUTHENTICATED') {
+      // 🔒 HARDENED: Check if access was denied (ALL cases, no bypass)
+      if (data?.authorized === false) {
         const errorCode = data.error_code || 'INTERNAL_ERROR';
         const errorMessage = ERROR_MESSAGES[errorCode] || data.message || 'Accesso AION non autorizzato.';
+        
+        // 🔍 OBSERVABILITY: Track 503/RPC_UNAVAILABLE for retry
+        const isRetryableError = errorCode === 'RPC_UNAVAILABLE' || errorCode === 'INTERNAL_ERROR';
+        if (isRetryableError) {
+          setLastFailedMessage(messageText);
+        }
         
         const errorMsg: Message = {
           id: `error_${Date.now()}`,
@@ -184,7 +213,10 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
           meta: {
             error_code: errorCode,
             m1u_spent: 0,
-            free_remaining: data.free_remaining
+            free_remaining: data.free_remaining,
+            // 🔍 OBSERVABILITY: Include retry info in error message
+            can_retry: isRetryableError && retryCount < MAX_RETRY_COUNT,
+            retry_attempt: isRetry ? retryCount + 1 : 0
           }
         };
         
@@ -199,10 +231,9 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         return;
       }
       
-      // If RPC doesn't exist yet, just process the reply normally
-      if (data?.authorized === false && data?.error_code === 'NOT_AUTHENTICATED') {
-        console.warn('[AION] RPC check_aion_access may not exist yet, proceeding anyway');
-      }
+      // 🔍 OBSERVABILITY: Clear retry state on success
+      setLastFailedMessage(null);
+      setRetryCount(0);
 
       // Success - process reply
       let reply = data?.reply || 'Mi dispiace, non ho capito. Riprova.';
@@ -274,16 +305,32 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
     } catch (error) {
       console.error('[AION] Chat error:', error);
       
+      // 🔍 OBSERVABILITY: Track catch errors for retry
+      setLastFailedMessage(messageText);
+      
       const fallbackMessage: Message = {
         id: `error_${Date.now()}`,
         role: 'error',
         content: '⚠️ Interferenza nel canale. Riprova tra qualche secondo.',
-        timestamp: new Date()
+        timestamp: new Date(),
+        meta: {
+          error_code: 'NETWORK_ERROR',
+          can_retry: retryCount < MAX_RETRY_COUNT,
+          retry_attempt: isRetry ? retryCount + 1 : 0
+        }
       };
       setMessages(prev => [...prev, fallbackMessage]);
       setStatus('idle');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // 🔍 OBSERVABILITY: Retry handler for 503/network errors
+  const handleRetry = () => {
+    if (lastFailedMessage && retryCount < MAX_RETRY_COUNT) {
+      console.log(`[AION] User initiated retry for: "${lastFailedMessage.substring(0, 50)}..."`);
+      sendMessage(true, lastFailedMessage);
     }
   };
 
@@ -363,8 +410,11 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-80 min-h-[200px]"
-        style={{ scrollBehavior: 'smooth' }}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[200px]"
+        style={{ 
+          scrollBehavior: 'smooth',
+          WebkitOverflowScrolling: 'touch'
+        }}
       >
         <AnimatePresence>
           {messages.map((message) => (
@@ -382,7 +432,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
                     : message.role === 'system'
                     ? 'bg-gray-800/50 text-gray-400 italic text-sm'
                     : message.role === 'error'
-                    ? 'bg-red-900/30 text-red-300 border border-red-500/30'
+                    ? 'bg-red-900/30 text-red-300 border border-red-500/30 relative'
                     : 'bg-gray-800/80 text-white border border-cyan-500/20'
                 }`}
               >
@@ -392,6 +442,17 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
                   <p className="text-xs text-cyan-400/70 mt-1">
                     -{message.meta.m1u_spent} M1U
                   </p>
+                )}
+                {/* 🔍 OBSERVABILITY: Retry button for recoverable errors */}
+                {message.role === 'error' && message.meta?.can_retry && lastFailedMessage && retryCount < MAX_RETRY_COUNT && (
+                  <button
+                    onClick={handleRetry}
+                    disabled={isLoading}
+                    className="mt-2 px-3 py-1.5 text-xs bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    <RotateCw className="w-3 h-3" />
+                    Riprova ({MAX_RETRY_COUNT - retryCount} tentativi)
+                  </button>
                 )}
               </div>
             </motion.div>
@@ -413,11 +474,11 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Status */}
+      {/* Status - UX Resilience: Clear status messages */}
       <div className="px-4 py-2 text-xs text-center text-gray-500">
-        {status === 'listening' && 'Elaborazione...'}
-        {status === 'speaking' && 'AION sta parlando...'}
-        {status === 'idle' && 'In attesa...'}
+        {status === 'listening' && '⚡ Verifica accesso in corso...'}
+        {status === 'speaking' && '🔊 AION sta parlando...'}
+        {status === 'idle' && '✨ Pronto'}
       </div>
 
       {/* Input */}

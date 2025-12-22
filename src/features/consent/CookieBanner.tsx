@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,7 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isVisible && (
         <motion.div
@@ -39,7 +40,7 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="fixed bottom-0 left-0 right-0 z-[60] pb-safe"
+          className="fixed bottom-0 left-0 right-0 z-[10001] pb-safe"
           role="dialog"
           aria-labelledby="cookie-banner-title"
           aria-describedby="cookie-banner-description"
@@ -47,7 +48,7 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({
           <div 
             className="relative mx-4 mb-4 p-6 shadow-2xl overflow-hidden rounded-[24px]"
             style={{
-              background: 'rgba(0, 0, 0, 0.05)',
+              background: 'rgba(0, 0, 0, 0.85)',
               backdropFilter: 'blur(40px)',
               WebkitBackdropFilter: 'blur(40px)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -109,7 +110,8 @@ export const CookieBanner: React.FC<CookieBannerProps> = ({
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

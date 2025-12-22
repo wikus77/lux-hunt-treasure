@@ -33,11 +33,11 @@ interface CashbackWallet {
  * che non effettua chiamate al backend.
  */
 export function useCashbackWallet(): CashbackWallet {
-  const { user } = useAuthContext();
+  const { user, isLoading: authLoading } = useAuthContext();
   const [accumulatedM1U, setAccumulatedM1U] = useState(0);
   const [lifetimeEarnedM1U, setLifetimeEarnedM1U] = useState(0);
   const [lastClaimAt, setLastClaimAt] = useState<Date | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // 🔥 FIX: Start as loading
   const [error, setError] = useState<string | null>(null);
   const [userTier, setUserTier] = useState<UserTier>('base');
 
@@ -144,11 +144,21 @@ export function useCashbackWallet(): CashbackWallet {
   }, [user?.id]);
 
   // Carica wallet al mount
+  // 🔥 FIX: Wait for auth to finish loading before fetching
   useEffect(() => {
-    if (M1SSION_ENABLE_CASHBACK && user?.id) {
-      loadWallet();
+    if (authLoading) {
+      console.log('[useCashbackWallet] Waiting for auth...');
+      return;
     }
-  }, [user?.id, loadWallet]);
+    
+    if (M1SSION_ENABLE_CASHBACK && user?.id) {
+      console.log('[useCashbackWallet] User available, loading wallet...');
+      loadWallet();
+    } else if (!authLoading) {
+      // Auth finished but no user - stop loading state
+      setIsLoading(false);
+    }
+  }, [user?.id, authLoading, loadWallet]);
 
   // Accrue cashback generico
   const accrueInternal = useCallback(async (

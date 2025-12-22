@@ -89,10 +89,14 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   }, [dailyBuzzCounter, userTier, hasTierFreeBuzz, tierFreeBuzzRemaining, tierWeeklyLimit, hasGrantFreeBuzz, grantRemaining, hasAnyFreeBuzz, currentCostM1U, currentPriceDisplay]);
   
   // 🔥 FIX: Pass actual M1U cost to useBuzzHandler to avoid price check blocking
+  // 🔍 OBSERVABILITY: Determine buzzType for audit logging
+  const determinedBuzzType = hasTierFreeBuzz ? 'TIER_FREE' : hasGrantFreeBuzz ? 'GRANT_FREE' : 'M1U_PAID';
+  
   const { buzzing, showShockwave, handleBuzz } = useBuzzHandler({
     currentPrice: currentCostM1U, // Use actual M1U cost for validation
     onSuccess,
-    hasFreeBuzz: hasAnyFreeBuzz // Combined free buzz check
+    hasFreeBuzz: hasAnyFreeBuzz, // Combined free buzz check
+    buzzType: determinedBuzzType // 🔍 OBSERVABILITY: Pass buzzType for audit
   });
 
   // © 2025 Joseph MULÉ – M1SSION™ – Progressive BUZZ Pricing Handler
@@ -185,6 +189,22 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     // © 2025 Joseph MULÉ – M1SSION™ – Play spacecraft ignition sound on BUZZ click
     playSound('spacecraftIgnition', 0.6);
     
+    // 🔍 DEV-ONLY: BUZZ Flow Decision Log
+    if (import.meta.env.DEV) {
+      console.log('[BUZZ FLOW] 🔍 Decision State:', {
+        tier: userTier,
+        tierFreeBuzzRemaining,
+        tierWeeklyLimit,
+        hasTierFreeBuzz,
+        grantFreeBuzzRemaining: grantRemaining,
+        hasGrantFreeBuzz,
+        m1uBalance: unitsData?.balance || 0,
+        nextCostM1U: getCurrentBuzzCostM1U(),
+        dailyBuzzCounter,
+        decisionPath: hasTierFreeBuzz ? '1️⃣ TIER FREE' : hasGrantFreeBuzz ? '2️⃣ GRANT FREE' : '3️⃣ M1U PAYMENT'
+      });
+    }
+    
     if (!user) {
       toast.error('Devi essere loggato per utilizzare BUZZ!');
       return;
@@ -215,6 +235,20 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         window.dispatchEvent(new CustomEvent('buzzCompleted'));
         // 🌑 Shadow Protocol v3 - Trigger contestuale BUZZ
         notifyShadowContext('buzz');
+        
+        // 🔍 DEV-ONLY: BUZZ Flow Result Log (Tier Free)
+        if (import.meta.env.DEV) {
+          console.log('[BUZZ FLOW] ✅ Result:', {
+            tier: userTier,
+            wasPaid: false,
+            source: 'TIER_FREE',
+            tierFreeBuzzRemaining: tierFreeBuzzRemaining - 1,
+            tierWeeklyLimit,
+            grantFreeBuzzRemaining: grantRemaining,
+            m1uBalance: unitsData?.balance || 0
+          });
+        }
+        
         if (!__buzz.shown) {
           toast.success(`BUZZ gratuito! (${tierFreeBuzzRemaining - 1}/${tierWeeklyLimit} rimasti)`);
         }
@@ -237,6 +271,19 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         window.dispatchEvent(new CustomEvent('buzzCompleted'));
         // 🌑 Shadow Protocol v3 - Trigger contestuale BUZZ
         notifyShadowContext('buzz');
+        
+        // 🔍 DEV-ONLY: BUZZ Flow Result Log (Grant Free)
+        if (import.meta.env.DEV) {
+          console.log('[BUZZ FLOW] ✅ Result:', {
+            tier: userTier,
+            wasPaid: false,
+            source: 'GRANT_FREE',
+            tierFreeBuzzRemaining,
+            grantFreeBuzzRemaining: grantRemaining - 1,
+            m1uBalance: unitsData?.balance || 0
+          });
+        }
+        
         if (!__buzz.shown) {
           toast.success('BUZZ gratuito (premio) utilizzato!');
         }
@@ -251,14 +298,29 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     // =========================================================================
     // PRIORITÀ 3: Pricing progressivo M1U
     // =========================================================================
+    
+    // 🔥 FIX: Force refetch M1U balance before payment to avoid stale data
+    console.log('🔄 M1SSION™ M1U BUZZ: Refetching M1U balance...');
+    await refetchM1U();
+    
+    // Re-read the balance after refetch
     const costM1U = getCurrentBuzzCostM1U();
-    const currentBalance = unitsData?.balance || 0;
+    // Get fresh balance from refetched data
+    const { data: freshProfile } = await supabase
+      .from('profiles')
+      .select('m1_units')
+      .eq('id', user.id)
+      .single();
+    
+    const currentBalance = freshProfile?.m1_units ?? unitsData?.balance ?? 0;
     
     console.log('💎 M1SSION™ M1U BUZZ: Initiating M1U payment', { 
       dailyCount: dailyBuzzCounter,
       nextClick: dailyBuzzCounter + 1,
       costM1U,
       currentBalance,
+      freshBalance: freshProfile?.m1_units,
+      cachedBalance: unitsData?.balance,
       userId: user.id,
       hasTierFreeBuzz,
       hasGrantFreeBuzz,
@@ -338,6 +400,19 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       // 🆕 M1SSION Cashback Vault™ - Accumula cashback (1 M1U = €0.10)
       const costEur = costM1U / 10;
       await accrueFromBuzz({ costEur, tier: userTier });
+      
+      // 🔍 DEV-ONLY: BUZZ Flow Result Log
+      if (import.meta.env.DEV) {
+        console.log('[BUZZ FLOW] ✅ Result:', {
+          tier: userTier,
+          wasPaid: true,
+          m1uBalanceBefore: currentBalance,
+          m1uBalanceAfter: newBalance,
+          costM1U,
+          tierFreeBuzzRemaining,
+          grantFreeBuzzRemaining: grantRemaining
+        });
+      }
       
       console.log('🎉 M1SSION™ BUZZ: Complete!');
 

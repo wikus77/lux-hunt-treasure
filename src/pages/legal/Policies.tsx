@@ -629,11 +629,24 @@ const Policies: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Footer */}
-          <div className="pt-6 border-t border-white/10 text-center text-white/60">
-            <p>{t.footer.copyright}</p>
-            <p className="text-sm mt-1">{t.footer.company}</p>
-            <p className="text-xs mt-2 text-white/40">
+          {/* Footer with IP */}
+          <div className="pt-6 border-t border-white/10 text-center space-y-4">
+            <p className="text-white/60">{t.footer.copyright}</p>
+            <p className="text-sm text-white/50">{t.footer.company}</p>
+            
+            {/* IP Notice - Compact */}
+            <div className="pt-4 border-t border-white/5 space-y-2">
+              <p className="text-white/25 text-[9px] uppercase tracking-wider">Registrazioni & Certificazioni</p>
+              <p className="text-white/30 text-[10px]">
+                <span className="text-[#00D1FF]/50">M1SSION™</span> • SafeCreative: <a href="https://www.safecreative.org/certificate/2505261861325-2VXE4Q" target="_blank" rel="noopener noreferrer" className="text-[#00D1FF]/40 hover:text-[#00D1FF]/60">2505261861325</a> • <a href="https://www.safecreative.org/certificate/2512103987648-62HXMR" target="_blank" rel="noopener noreferrer" className="text-[#00D1FF]/40 hover:text-[#00D1FF]/60">2512103987648</a> • <a href="https://www.safecreative.org/certificate/2512103988744-9TFSDH" target="_blank" rel="noopener noreferrer" className="text-[#00D1FF]/40 hover:text-[#00D1FF]/60">2512103988744</a>
+              </p>
+              <p className="text-white/30 text-[10px]">
+                EUIPO Trademark: M1SSION™ • Geo-Pulse Engine™ — Proprietary System
+              </p>
+              <p className="text-amber-400/30 text-[10px]">⚠️ Proprietà intellettuale protetta. Riproduzione non autorizzata vietata.</p>
+            </div>
+            
+            <p className="text-xs text-white/40">
               {t.footer.lastUpdate}: {new Date().toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>

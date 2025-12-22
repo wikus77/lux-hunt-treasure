@@ -146,8 +146,8 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
           type: 'fill',
           source: 'search-areas',
           paint: {
-            'fill-color': 'rgba(255,0,255,0.1)',
-            'fill-opacity': 0.6
+            'fill-color': 'rgba(123, 46, 255, 0.25)', // 🔥 FIX: More visible purple fill
+            'fill-opacity': 0.8
           }
         });
         console.info('🗺️ M1-3D layer:add (search-areas-fill)');
@@ -159,39 +159,48 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
           type: 'line',
           source: 'search-areas',
           paint: {
-            'line-color': '#ff00ff',
-            'line-width': 2,
-            'line-opacity': 0.6
+            'line-color': '#7B2EFF', // 🔥 FIX: Bright purple border matching UI
+            'line-width': 3,
+            'line-opacity': 0.9
           }
         });
         console.info('🗺️ M1-3D layer:add (search-areas-border)');
       }
       
-      // 🔧 DEBUG MODE: Hide search-areas if debug OR uaOnly
+      // 🔧 DEBUG MODE: Hide search-areas ONLY if ?uaOnly=1 (specific debug mode)
       const urlParams = new URLSearchParams(window.location.search);
-      const isDebug = urlParams.has('debug');
       const uaOnly = urlParams.has('uaOnly');
       
-      if (isDebug || uaOnly) {
+      if (uaOnly) {
         if (map.getLayer('search-areas-fill')) {
           map.setLayoutProperty('search-areas-fill', 'visibility', 'none');
         }
         if (map.getLayer('search-areas-border')) {
           map.setLayoutProperty('search-areas-border', 'visibility', 'none');
         }
-        console.info(`🔧 M1-3D ${uaOnly ? 'uaOnly' : 'debug'}: search-areas layers hidden for clarity`);
+        console.info('🔧 M1-3D uaOnly: search-areas layers hidden for clarity');
       }
       
-      // 🔥 CRITICAL: Ensure user-areas layers are on top
-      if (map.getLayer('user-areas-fill') && map.getLayer('search-areas-fill')) {
+      // 🔥 CRITICAL: Ensure proper layer order (search-areas → user-areas on top)
+      // Move all area layers to top of layer stack
+      if (map.getLayer('search-areas-fill')) {
+        map.moveLayer('search-areas-fill');
+      }
+      if (map.getLayer('search-areas-border')) {
+        map.moveLayer('search-areas-border');
+      }
+      if (map.getLayer('user-areas-fill')) {
         map.moveLayer('user-areas-fill');
-        map.moveLayer('user-areas-border');
-        console.info('🗺️ M1-3D layers reordered: user-areas on top');
       }
+      if (map.getLayer('user-areas-border')) {
+        map.moveLayer('user-areas-border');
+      }
+      console.info('🗺️ M1-3D layers reordered: all area layers moved to top');
       
-      // 🔧 DEBUG: Log search-areas initialization status
-      if (isDebug) {
+      // 🔧 DEBUG: Log initialization status
+      if (urlParams.has('debug')) {
         console.info('[M1-3D] search-areas enabled:', searchAreas.length > 0);
+        console.info('[M1-3D] Layers initialized successfully');
       }
 
       // Click handlers
@@ -401,28 +410,84 @@ const AreasLayer3D: React.FC<AreasLayer3DProps> = ({
 
   // Update search areas GeoJSON data
   useEffect(() => {
-    if (!map || !initializedRef.current) return;
+    if (!map || !initializedRef.current) {
+      console.info('🗺️ M1-3D source:update (search-areas) SKIPPED', { 
+        mapReady: !!map, 
+        initialized: initializedRef.current 
+      });
+      return;
+    }
 
     const source = map.getSource('search-areas') as any;
-    if (!source) return;
+    if (!source) {
+      console.warn('🗺️ M1-3D source:update (search-areas) FAILED - source not found');
+      return;
+    }
 
-    const features = searchAreas.map(area => {
-      const radiusKm = area.radius / 1000;
-      const circle = makeCircle(area.lng, area.lat, radiusKm);
-      return {
-        ...circle,
-        properties: {
-          ...circle.properties,
-          id: area.id,
-          label: area.label || 'Search Area',
-          radiusKm,
-          color: area.color || '#ff00ff'
+    // Validate and create features
+    const features = searchAreas
+      .filter(area => {
+        // Validate coordinates
+        const isValidLat = typeof area.lat === 'number' && isFinite(area.lat) && Math.abs(area.lat) <= 90;
+        const isValidLng = typeof area.lng === 'number' && isFinite(area.lng) && Math.abs(area.lng) <= 180;
+        const isValidRadius = typeof area.radius === 'number' && isFinite(area.radius) && area.radius > 0;
+        
+        if (!isValidLat || !isValidLng || !isValidRadius) {
+          console.warn('🚫 M1-3D SKIP invalid search area', {
+            id: area.id,
+            lat: area.lat,
+            lng: area.lng,
+            radius: area.radius,
+            isValidLat,
+            isValidLng,
+            isValidRadius
+          });
+          return false;
         }
-      };
-    });
+        return true;
+      })
+      .map(area => {
+        const radiusKm = area.radius / 1000;
+        const circle = makeCircle(area.lng, area.lat, radiusKm);
+        
+        console.info('🗺️ M1-3D creating search-area feature', {
+          id: area.id,
+          center: [area.lng, area.lat],
+          radiusKm
+        });
+        
+        return {
+          ...circle,
+          properties: {
+            ...circle.properties,
+            id: area.id,
+            label: area.label || 'Search Area',
+            radiusKm,
+            color: area.color || '#ff00ff'
+          }
+        };
+      });
 
     source.setData({ type: 'FeatureCollection', features });
     console.info('🗺️ M1-3D source:update (search-areas)', { count: features.length });
+    
+    // 🔥 CRITICAL FIX: Move search-areas layers to top (SAME AS POINTS)
+    if (features.length > 0) {
+      try {
+        // Ensure visibility is enabled (may have been hidden in debug mode)
+        if (map.getLayer('search-areas-fill')) {
+          map.setLayoutProperty('search-areas-fill', 'visibility', 'visible');
+          map.moveLayer('search-areas-fill');
+        }
+        if (map.getLayer('search-areas-border')) {
+          map.setLayoutProperty('search-areas-border', 'visibility', 'visible');
+          map.moveLayer('search-areas-border');
+        }
+        console.info('🗺️ M1-3D search-areas layers moved to top and made visible');
+      } catch (e) {
+        console.warn('Failed to move search-areas layers:', e);
+      }
+    }
   }, [map, searchAreas]);
 
   if (!enabled) return null;

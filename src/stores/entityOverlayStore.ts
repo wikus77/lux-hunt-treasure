@@ -30,6 +30,13 @@ const STORAGE_KEY_LAST_EVENT_TIME = 'm1ssion_shadow_last_event';
 const STORAGE_KEY_SESSION_ENTITY_COUNTS = 'm1ssion_shadow_entity_counts';
 // 🆕 v5: Last CTA navigation time (for cooldown)
 const STORAGE_KEY_LAST_CTA_TIME = 'm1ssion_shadow_last_cta';
+// 🆕 v8: Entity Evolution Levels
+const STORAGE_KEY_ENTITY_EVOLUTION = 'm1ssion_shadow_entity_evolution';
+const STORAGE_KEY_EVOLUTION_LAST_UPDATED = 'm1ssion_shadow_evolution_updated';
+// 🆕 v8: Branching behavior flags
+const STORAGE_KEY_BRANCHING_FLAGS = 'm1ssion_shadow_branching';
+// 🆕 v8: Rare templates consumed
+const STORAGE_KEY_RARE_CONSUMED = 'm1ssion_shadow_rare_consumed';
 
 // ============================================================================
 // 🆕 v4: LOCALSTORAGE HELPERS (SSR-safe)
@@ -85,6 +92,37 @@ export interface EntityEventCounts {
   MCP: number;
   SHADOW: number;
   ECHO: number;
+}
+
+// ============================================================================
+// 🆕 v8: EVOLVING ENTITIES SYSTEM
+// ============================================================================
+
+/**
+ * EntityEvolutionLevel - Evolution state per entity (0-3)
+ * 
+ * SHADOW: 0=Observer, 1=Interfering, 2=Hostile, 3=Invasive
+ * MCP: 0=Neutral, 1=Supportive, 2=Protective, 3=Critical
+ * ECHO: 0=Background, 1=Anxious, 2=Paranoid, 3=Cryptic
+ */
+export type EntityEvolutionLevel = 0 | 1 | 2 | 3;
+
+export interface EntityEvolutionLevels {
+  SHADOW: EntityEvolutionLevel;
+  MCP: EntityEvolutionLevel;
+  ECHO: EntityEvolutionLevel;
+}
+
+/**
+ * BranchingBehaviorFlags - Flags for behavior-driven branching
+ */
+export interface BranchingBehaviorFlags {
+  lastShadowWarningAt: number | null;        // When last SHADOW warning occurred
+  lastShadowWarningRoute: string | null;     // Route where warning occurred
+  lastUserFollowedHintAt: number | null;     // When user followed a hint
+  fastDismissCount: number;                  // Count of fast dismissals
+  lastFastDismissAt: number | null;          // When last fast dismiss
+  ignoredWarningCount: number;               // Count of ignored warnings
 }
 
 interface EntityOverlayState {
@@ -160,6 +198,20 @@ interface EntityOverlayState {
   endMapGlitch: () => void;
   canNavigateCta: () => boolean;
   recordCtaNavigation: () => void;
+  
+  // 🆕 v8: Entity Evolution System
+  entityEvolution: EntityEvolutionLevels;
+  branchingFlags: BranchingBehaviorFlags;
+  rareTemplatesConsumed: string[];
+  getEntityEvolution: (entity: ShadowEntity) => EntityEvolutionLevel;
+  increaseEntityEvolution: (entity: ShadowEntity, delta?: number) => void;
+  decreaseEntityEvolution: (entity: ShadowEntity, delta?: number) => void;
+  recordFastDismiss: () => void;
+  recordIgnoredWarning: (route: string) => void;
+  recordFollowedHint: () => void;
+  checkEvolutionDecay: () => void;
+  markRareTemplateConsumed: (templateId: string) => void;
+  isRareTemplateConsumed: (templateId: string) => boolean;
 }
 
 // ============================================================================
@@ -205,6 +257,43 @@ function loadInitialLastCtaTime(): number | null {
   return safeGetStorage<number | null>(STORAGE_KEY_LAST_CTA_TIME, null);
 }
 
+// ============================================================================
+// 🆕 v8: LOAD INITIAL EVOLUTION STATE
+// ============================================================================
+
+const DEFAULT_EVOLUTION: EntityEvolutionLevels = {
+  SHADOW: 0,
+  MCP: 0,
+  ECHO: 0,
+};
+
+const DEFAULT_BRANCHING_FLAGS: BranchingBehaviorFlags = {
+  lastShadowWarningAt: null,
+  lastShadowWarningRoute: null,
+  lastUserFollowedHintAt: null,
+  fastDismissCount: 0,
+  lastFastDismissAt: null,
+  ignoredWarningCount: 0,
+};
+
+function loadInitialEntityEvolution(): EntityEvolutionLevels {
+  const stored = safeGetStorage<EntityEvolutionLevels>(STORAGE_KEY_ENTITY_EVOLUTION, DEFAULT_EVOLUTION);
+  // Validate and clamp each level to 0-3
+  return {
+    SHADOW: Math.max(0, Math.min(3, stored?.SHADOW ?? 0)) as EntityEvolutionLevel,
+    MCP: Math.max(0, Math.min(3, stored?.MCP ?? 0)) as EntityEvolutionLevel,
+    ECHO: Math.max(0, Math.min(3, stored?.ECHO ?? 0)) as EntityEvolutionLevel,
+  };
+}
+
+function loadInitialBranchingFlags(): BranchingBehaviorFlags {
+  return safeGetStorage<BranchingBehaviorFlags>(STORAGE_KEY_BRANCHING_FLAGS, DEFAULT_BRANCHING_FLAGS);
+}
+
+function loadInitialRareConsumed(): string[] {
+  return safeGetStorage<string[]>(STORAGE_KEY_RARE_CONSUMED, []);
+}
+
 export const useEntityOverlayStore = create<EntityOverlayState>((set, get) => ({
   // Stato iniziale
   currentEvent: null,
@@ -232,6 +321,11 @@ export const useEntityOverlayStore = create<EntityOverlayState>((set, get) => ({
   globalGlitchIntensity: 0,
   isMapGlitchActive: false,
   lastCtaNavigationTime: loadInitialLastCtaTime(),
+  
+  // 🆕 v8: Entity Evolution System
+  entityEvolution: loadInitialEntityEvolution(),
+  branchingFlags: loadInitialBranchingFlags(),
+  rareTemplatesConsumed: loadInitialRareConsumed(),
 
   // Mostra overlay con un template
   showOverlay: (template: ShadowMessageTemplate) => {
@@ -678,6 +772,199 @@ export const useEntityOverlayStore = create<EntityOverlayState>((set, get) => ({
       console.log('[SHADOW PROTOCOL v5] 🔗 CTA navigation recorded');
     }
   },
+
+  // =========================================================================
+  // 🆕 v8: ENTITY EVOLUTION SYSTEM ACTIONS
+  // =========================================================================
+
+  /**
+   * getEntityEvolution - Get current evolution level for an entity
+   */
+  getEntityEvolution: (entity: ShadowEntity): EntityEvolutionLevel => {
+    return get().entityEvolution[entity];
+  },
+
+  /**
+   * increaseEntityEvolution - Increase evolution level for an entity
+   * Clamped to 0-3
+   */
+  increaseEntityEvolution: (entity: ShadowEntity, delta: number = 1) => {
+    const state = get();
+    const currentLevel = state.entityEvolution[entity];
+    const newLevel = Math.min(3, currentLevel + delta) as EntityEvolutionLevel;
+    
+    if (newLevel === currentLevel) return;
+    
+    const newEvolution = { ...state.entityEvolution, [entity]: newLevel };
+    safeSetStorage(STORAGE_KEY_ENTITY_EVOLUTION, newEvolution);
+    safeSetStorage(STORAGE_KEY_EVOLUTION_LAST_UPDATED, Date.now());
+    
+    if (SHADOW_DEBUG) {
+      console.log(`[SHADOW v8] 🔺 ${entity} evolution: ${currentLevel} → ${newLevel}`);
+    }
+    
+    set({ entityEvolution: newEvolution });
+  },
+
+  /**
+   * decreaseEntityEvolution - Decrease evolution level for an entity
+   * Clamped to 0-3
+   */
+  decreaseEntityEvolution: (entity: ShadowEntity, delta: number = 1) => {
+    const state = get();
+    const currentLevel = state.entityEvolution[entity];
+    const newLevel = Math.max(0, currentLevel - delta) as EntityEvolutionLevel;
+    
+    if (newLevel === currentLevel) return;
+    
+    const newEvolution = { ...state.entityEvolution, [entity]: newLevel };
+    safeSetStorage(STORAGE_KEY_ENTITY_EVOLUTION, newEvolution);
+    safeSetStorage(STORAGE_KEY_EVOLUTION_LAST_UPDATED, Date.now());
+    
+    if (SHADOW_DEBUG) {
+      console.log(`[SHADOW v8] 🔻 ${entity} evolution: ${currentLevel} → ${newLevel}`);
+    }
+    
+    set({ entityEvolution: newEvolution });
+  },
+
+  /**
+   * recordFastDismiss - Record when user dismisses overlay quickly
+   * Used for branching behavior detection
+   */
+  recordFastDismiss: () => {
+    const state = get();
+    const now = Date.now();
+    const newCount = state.branchingFlags.fastDismissCount + 1;
+    
+    const newFlags = {
+      ...state.branchingFlags,
+      fastDismissCount: newCount,
+      lastFastDismissAt: now,
+    };
+    
+    safeSetStorage(STORAGE_KEY_BRANCHING_FLAGS, newFlags);
+    set({ branchingFlags: newFlags });
+    
+    // If many fast dismisses, increase SHADOW evolution
+    if (newCount >= 3 && newCount % 3 === 0) {
+      get().increaseEntityEvolution('SHADOW', 1);
+    }
+    
+    if (SHADOW_DEBUG) {
+      console.log(`[SHADOW v8] ⏩ Fast dismiss recorded (count: ${newCount})`);
+    }
+  },
+
+  /**
+   * recordIgnoredWarning - Record when user ignores a SHADOW warning
+   * (e.g., opens map right after SHADOW said "don't")
+   */
+  recordIgnoredWarning: (route: string) => {
+    const state = get();
+    const now = Date.now();
+    const newCount = state.branchingFlags.ignoredWarningCount + 1;
+    
+    const newFlags: BranchingBehaviorFlags = {
+      ...state.branchingFlags,
+      lastShadowWarningAt: now,
+      lastShadowWarningRoute: route,
+      ignoredWarningCount: newCount,
+    };
+    
+    safeSetStorage(STORAGE_KEY_BRANCHING_FLAGS, newFlags);
+    set({ branchingFlags: newFlags });
+    
+    // Increase SHADOW evolution for ignoring warnings
+    get().increaseEntityEvolution('SHADOW', 1);
+    
+    if (SHADOW_DEBUG) {
+      console.log(`[SHADOW v8] ⚠️ Ignored warning recorded (route: ${route}, count: ${newCount})`);
+    }
+  },
+
+  /**
+   * recordFollowedHint - Record when user follows an MCP/SHADOW hint
+   */
+  recordFollowedHint: () => {
+    const state = get();
+    const now = Date.now();
+    
+    const newFlags = {
+      ...state.branchingFlags,
+      lastUserFollowedHintAt: now,
+    };
+    
+    safeSetStorage(STORAGE_KEY_BRANCHING_FLAGS, newFlags);
+    set({ branchingFlags: newFlags });
+    
+    // Increase MCP evolution for following hints
+    get().increaseEntityEvolution('MCP', 1);
+    // Decrease SHADOW evolution slightly
+    get().decreaseEntityEvolution('SHADOW', 0.5);
+    
+    if (SHADOW_DEBUG) {
+      console.log('[SHADOW v8] ✅ User followed hint - MCP evolution +1');
+    }
+  },
+
+  /**
+   * checkEvolutionDecay - Apply decay to evolution levels over time
+   * Called periodically or on session start
+   */
+  checkEvolutionDecay: () => {
+    const state = get();
+    const lastUpdated = safeGetStorage<number | null>(STORAGE_KEY_EVOLUTION_LAST_UPDATED, null);
+    
+    if (!lastUpdated) return;
+    
+    const now = Date.now();
+    const hoursSinceUpdate = (now - lastUpdated) / (60 * 60 * 1000);
+    
+    // Decay after 4+ hours of inactivity
+    if (hoursSinceUpdate >= 4) {
+      const decayAmount = Math.min(Math.floor(hoursSinceUpdate / 4), 2); // Max 2 levels decay
+      
+      if (decayAmount > 0) {
+        const newEvolution: EntityEvolutionLevels = {
+          SHADOW: Math.max(0, state.entityEvolution.SHADOW - decayAmount) as EntityEvolutionLevel,
+          MCP: Math.max(0, state.entityEvolution.MCP - decayAmount) as EntityEvolutionLevel,
+          ECHO: Math.max(0, state.entityEvolution.ECHO - decayAmount) as EntityEvolutionLevel,
+        };
+        
+        safeSetStorage(STORAGE_KEY_ENTITY_EVOLUTION, newEvolution);
+        safeSetStorage(STORAGE_KEY_EVOLUTION_LAST_UPDATED, now);
+        set({ entityEvolution: newEvolution });
+        
+        if (SHADOW_DEBUG) {
+          console.log(`[SHADOW v8] 🕐 Evolution decay applied (-${decayAmount}) after ${hoursSinceUpdate.toFixed(1)}h`);
+        }
+      }
+    }
+  },
+
+  /**
+   * markRareTemplateConsumed - Mark a rare template as shown
+   */
+  markRareTemplateConsumed: (templateId: string) => {
+    const state = get();
+    if (state.rareTemplatesConsumed.includes(templateId)) return;
+    
+    const newConsumed = [...state.rareTemplatesConsumed, templateId];
+    safeSetStorage(STORAGE_KEY_RARE_CONSUMED, newConsumed);
+    set({ rareTemplatesConsumed: newConsumed });
+    
+    if (SHADOW_DEBUG) {
+      console.log(`[SHADOW v8] 🌟 Rare template consumed: ${templateId}`);
+    }
+  },
+
+  /**
+   * isRareTemplateConsumed - Check if a rare template was already shown
+   */
+  isRareTemplateConsumed: (templateId: string): boolean => {
+    return get().rareTemplatesConsumed.includes(templateId);
+  },
 }));
 
 // ============================================================================
@@ -704,6 +991,40 @@ export const selectEntityEventCounts = (state: EntityOverlayState) => state.enti
 export const selectIsGlobalGlitchActive = (state: EntityOverlayState) => state.isGlobalGlitchActive;
 export const selectGlobalGlitchIntensity = (state: EntityOverlayState) => state.globalGlitchIntensity;
 export const selectIsMapGlitchActive = (state: EntityOverlayState) => state.isMapGlitchActive;
+// 🆕 v8 selectors
+export const selectEntityEvolution = (state: EntityOverlayState) => state.entityEvolution;
+export const selectBranchingFlags = (state: EntityOverlayState) => state.branchingFlags;
+export const selectRareTemplatesConsumed = (state: EntityOverlayState) => state.rareTemplatesConsumed;
+
+// ============================================================================
+// 🆕 v8: HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * getThreatLevelCategoryFromLevel - Get threat category from numeric level
+ */
+function getThreatLevelCategoryFromLevel(level: number): 'LOW' | 'MEDIUM' | 'HIGH' {
+  if (level <= 1) return 'LOW';
+  if (level <= 3) return 'MEDIUM';
+  return 'HIGH';
+}
+
+/**
+ * isNightTime - Check if current local time is between 02:00 and 05:00
+ * Used for time-of-day variants
+ */
+export function isNightTime(): boolean {
+  const hour = new Date().getHours();
+  return hour >= 2 && hour < 5;
+}
+
+/**
+ * getTimeOfDayModifier - Get modifier based on time of day
+ * Returns 'night' | 'day'
+ */
+export function getTimeOfDayModifier(): 'night' | 'day' {
+  return isNightTime() ? 'night' : 'day';
+}
 
 // ============================================================================
 // HELPER: Notify Shadow Context (per trigger esterni)
@@ -777,13 +1098,6 @@ export const notifyShadowContext = async (trigger: ShadowContextTrigger): Promis
       break;
   }
 };
-
-// Helper to get threat category (avoiding circular import)
-function getThreatLevelCategoryFromLevel(level: number): 'LOW' | 'MEDIUM' | 'HIGH' {
-  if (level <= 1) return 'LOW';
-  if (level <= 3) return 'MEDIUM';
-  return 'HIGH';
-}
 
 // ============================================================================
 // 🆕 v7: HEAT → THREAT SYNC LISTENER

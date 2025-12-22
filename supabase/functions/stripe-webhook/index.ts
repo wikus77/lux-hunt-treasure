@@ -153,7 +153,85 @@ serve(async (req) => {
             }
           }
 
-          // Optionally: Send notification or update user balance here
+          // 🔥 M1U PURCHASE: Credit M1U to user account
+          if (paymentType === 'm1u_purchase') {
+            const m1uAmount = parseInt(paymentIntent.metadata?.m1u_amount || '0', 10);
+            const packCode = paymentIntent.metadata?.pack_code || 'unknown';
+            
+            if (m1uAmount > 0) {
+              logStep("💰 Processing M1U purchase credit", { 
+                userId, 
+                m1uAmount,
+                packCode,
+                paymentIntentId: paymentIntent.id 
+              });
+
+              // Call admin_credit_m1u RPC to credit M1U
+              const { data: creditResult, error: creditError } = await supabaseClient.rpc('admin_credit_m1u', {
+                p_user_id: userId,
+                p_amount: m1uAmount,
+                p_reason: `m1u_purchase:${packCode}:${paymentIntent.id}`
+              });
+
+              if (creditError) {
+                logError("Failed to credit M1U via RPC", creditError);
+                
+                // Fallback: Direct update (less safe but ensures credit)
+                const { error: directError } = await supabaseClient
+                  .from('profiles')
+                  .update({ 
+                    m1_units: supabaseClient.rpc('m1u_add', { amount: m1uAmount }),
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', userId);
+                  
+                if (directError) {
+                  logError("Direct M1U update also failed", directError);
+                  
+                  // Last resort: raw SQL increment
+                  const { error: rawError } = await supabaseClient.rpc('admin_credit_m1u', {
+                    p_user_id: userId,
+                    p_amount: m1uAmount,
+                    p_reason: `m1u_purchase_retry:${packCode}:${paymentIntent.id}`
+                  });
+                  
+                  if (rawError) {
+                    logError("All M1U credit attempts failed!", rawError);
+                  }
+                }
+              } else {
+                logStep("✅ M1U credited successfully", { 
+                  userId, 
+                  m1uAmount, 
+                  result: creditResult,
+                  paymentIntentId: paymentIntent.id 
+                });
+
+                // Log successful M1U purchase to audit
+                await supabaseClient
+                  .from('admin_logs')
+                  .insert({
+                    event_type: 'm1u_purchase_credited',
+                    user_id: userId,
+                    note: `M1U Purchase: ${m1uAmount} M1U credited from ${packCode}`,
+                    context: JSON.stringify({
+                      payment_intent_id: paymentIntent.id,
+                      m1u_amount: m1uAmount,
+                      pack_code: packCode,
+                      credit_result: creditResult,
+                      stripe_mode: stripeMode,
+                      timestamp: new Date().toISOString()
+                    })
+                  });
+              }
+            } else {
+              logError("M1U purchase has no m1u_amount in metadata", { 
+                paymentIntentId: paymentIntent.id,
+                metadata: paymentIntent.metadata 
+              });
+            }
+          }
+
           // Example: Update user credits for buzz map
           if (paymentType === 'buzz_map') {
             logStep("🎯 BUZZ MAP payment confirmed", { 

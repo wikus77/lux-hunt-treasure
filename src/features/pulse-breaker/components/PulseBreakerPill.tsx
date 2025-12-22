@@ -5,13 +5,13 @@
  */
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
 import { Gamepad2 } from 'lucide-react';
 import { PulseBreaker } from './PulseBreaker';
+import { usePulseBreakerStore } from '@/stores/pulseBreakerStore';
 import '@/features/pulse/styles/pulse-pill.css';
 
 export const PulseBreakerPill = () => {
-  const [isGameOpen, setIsGameOpen] = useState(false);
+  const { isOpen, openPulseBreaker, closePulseBreaker } = usePulseBreakerStore();
 
   return (
     <div className="relative">
@@ -21,7 +21,7 @@ export const PulseBreakerPill = () => {
         aria-label="Pulse Breaker Game"
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
-        onClick={() => setIsGameOpen(true)}
+        onClick={openPulseBreaker}
       >
         {/* Gamepad icon inside */}
         <Gamepad2 className="w-5 h-5 z-10 relative text-cyan-400" style={{ filter: 'drop-shadow(0 0 4px #00d4ff)' }} />
@@ -61,8 +61,8 @@ export const PulseBreakerPill = () => {
 
       {/* Game Modal */}
       <PulseBreaker 
-        isOpen={isGameOpen} 
-        onClose={() => setIsGameOpen(false)} 
+        isOpen={isOpen} 
+        onClose={closePulseBreaker} 
       />
     </div>
   );

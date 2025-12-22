@@ -2,7 +2,7 @@
 
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - BUZZ Handler Hook - RESET COMPLETO 17/07/2025
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,9 +32,15 @@ interface UseBuzzHandlerProps {
   onSuccess: () => void;
   hasFreeBuzz?: boolean; // 🔥 ADDED: Flag to indicate if user has free buzz
   context?: { source?: string; skipServerBuzzPress?: boolean }; // 🔥 ADDED: Context to avoid post-payment toast duplication
+  // 🔍 OBSERVABILITY: Audit metadata for FREE/PAID tracking
+  buzzType?: 'TIER_FREE' | 'GRANT_FREE' | 'M1U_PAID';
 }
 
-export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, context }: UseBuzzHandlerProps) {
+// 🔥 FIX: Use refs to always get latest values at call time
+export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, context, buzzType }: UseBuzzHandlerProps) {
+  // Store props in refs so handleBuzz always uses latest values
+  const propsRef = useRef({ currentPrice, hasFreeBuzz, buzzType });
+  propsRef.current = { currentPrice, hasFreeBuzz, buzzType };
   const [buzzing, setBuzzing] = useState(false);
   const [showShockwave, setShowShockwave] = useState(false);
   const { user } = useAuth();
@@ -49,9 +55,14 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
   const { contribute: contributeToPulse } = usePulseContribute();
 
   const handleBuzz = async () => {
+    // 🔥 FIX: Use refs to get LATEST values at call time (not stale closure values)
+    const { currentPrice: latestPrice, hasFreeBuzz: latestHasFreeBuzz, buzzType: latestBuzzType } = propsRef.current;
+    
     console.log('🚀 BUZZ PRESSED - Start handleBuzz - RESET COMPLETO 17/07/2025', { 
       user: !!user, 
-      currentPrice,
+      currentPrice: latestPrice,
+      hasFreeBuzz: latestHasFreeBuzz,
+      buzzType: latestBuzzType,
       context,
       timestamp: new Date().toISOString()
     });
@@ -77,16 +88,16 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
       setShowShockwave(true);
       await triggerHaptic('buzzUnlocked');
       
-      console.log('💰 BUZZ PRICE CHECK - FIXED', { currentPrice, hasFreeBuzz });
+      console.log('💰 BUZZ PRICE CHECK - FIXED', { currentPrice: latestPrice, hasFreeBuzz: latestHasFreeBuzz });
       
       // Progressive pricing - no blocking, price increases with usage
-      console.log('💰 PROGRESSIVE PRICING: Current price M1U' + currentPrice + ' for usage level');
+      console.log('💰 PROGRESSIVE PRICING: Current price M1U' + latestPrice + ' for usage level');
       
       // 🔥 FIX: After M1U payment is already processed in BuzzActionButton, 
       // we should NOT block here. The payment validation happened before this function.
       // Only check for invalid/negative prices as a safety net.
-      if (!hasFreeBuzz && (currentPrice < 0 || isNaN(currentPrice))) {
-        console.error('❌ BUZZ: Invalid price detected', { currentPrice, hasFreeBuzz });
+      if (!latestHasFreeBuzz && (latestPrice < 0 || isNaN(latestPrice))) {
+        console.error('❌ BUZZ: Invalid price detected', { currentPrice: latestPrice, hasFreeBuzz: latestHasFreeBuzz });
         toast.error('Errore nel calcolo del prezzo BUZZ');
         return;
       }
@@ -109,7 +120,10 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         generateMap: false, // Regular BUZZ, not map
         coordinates: null,
         prizeId: null,
-        sessionId: `buzz_${Date.now()}`
+        sessionId: `buzz_${Date.now()}`,
+        // 🔍 OBSERVABILITY: Pass audit metadata for FREE/PAID tracking (use LATEST values)
+        buzzType: latestBuzzType || (latestHasFreeBuzz ? 'TIER_FREE' : 'M1U_PAID'),
+        m1uCost: latestHasFreeBuzz ? 0 : latestPrice
       });
       
       console.log('✅ BUZZ API CALL COMPLETED');
@@ -169,7 +183,7 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         buzzToastShown = true;
         
         // 🔋 PULSE: Contribuisci energia collettiva (async, non bloccante)
-        contributeToPulse('BUZZ_COMPLETED', { price: currentPrice }).catch(err => {
+        contributeToPulse('BUZZ_COMPLETED', { price: latestPrice }).catch(err => {
           console.warn('[PULSE] Contribution failed (non-blocking):', err);
         });
         

@@ -162,7 +162,7 @@ export const LeaderboardPage: React.FC = () => {
       className="min-h-[100dvh] w-full overflow-x-hidden p-4 space-y-4" 
       data-onboarding="leaderboard"
       style={{
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 90px)',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
       }}
     >
