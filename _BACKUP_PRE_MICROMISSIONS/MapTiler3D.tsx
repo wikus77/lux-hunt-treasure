@@ -62,10 +62,6 @@ import '@/features/m1u/m1u-ui.css'; // For pill-orb style
 import { useDebugFlag } from '@/debug/useDebugFlag';
 import { DebugMapPanel } from '@/debug/DebugMapPanel';
 import { useMapGlitchEffect } from '@/hooks/useMapGlitchEffect';
-// 🎯 FIRST SESSION: Guided discovery components
-import { MapHUD, MicroMissionsCard, BuzzHelpPopup } from '@/components/first-session';
-// 🎯 DAILY MISSIONS: Mission pill
-import { MissionPill } from '@/missions/ui/MissionPill';
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
 const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
@@ -1741,9 +1737,6 @@ export default function MapTiler3D() {
       {/* Battle Pill - Circular floating button */}
       <BattlePill userId={battleUserId} />
 
-      {/* Mission Pill - Daily missions */}
-      <MissionPill />
-
       {/* Agent Battle Card */}
       {selectedAgent && (
         <AgentBattleCard
@@ -1818,11 +1811,6 @@ export default function MapTiler3D() {
 
       {/* BUZZ Diagnostic Panel (dev-only) */}
       <BuzzDiagnosticPanel />
-
-      {/* 🎯 FIRST SESSION: Guided Discovery System (feature-flagged) */}
-      <MapHUD mapContainerId="ml-sandbox" />
-      <MicroMissionsCard mapContainerId="ml-sandbox" />
-      <BuzzHelpPopup mapContainerId="ml-sandbox" />
     </FinalShootProvider>
   );
 }

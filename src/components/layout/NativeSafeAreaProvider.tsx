@@ -12,7 +12,10 @@ const DESIGN_BASE_WIDTH = 430;
 
 // 🔧 FEATURE FLAG: Enable/disable viewport scaling
 // Set to false for instant rollback
-const ENABLE_VIEWPORT_SCALING = true;
+// ⚠️ DISABLED 22/12/2025: Causava problemi di layout su iPhone XR e altri dispositivi
+// Il transform: scale() rompeva position: fixed su BottomNav e altri elementi
+// Per riattivare: cambiare a true (NON CONSIGLIATO)
+const ENABLE_VIEWPORT_SCALING = false;
 
 interface NativeSafeAreaProviderProps {
   children: React.ReactNode;

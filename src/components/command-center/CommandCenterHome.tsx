@@ -33,20 +33,9 @@ export default function CommandCenterHome() {
   // Battle overlay for deep-links
   const { battleId, isOpen, closeBattle } = useBattleOverlay();
   
-  // 🧹 FORCE CLEAR ALL CACHE - RESET COMPLETO 17/07/2025
-  useEffect(() => {
-    // Clear ALL localStorage cache to force fresh data
-    localStorage.removeItem("mission-progress");
-    localStorage.removeItem("purchased-clues");
-    localStorage.removeItem("diary-entries");
-    localStorage.removeItem("user-credits");
-    localStorage.removeItem("mission-data");
-    localStorage.removeItem("clue-data");
-    localStorage.removeItem("mission-08-06-2025"); // RIMUOVI MISSIONE PRECEDENTE
-    localStorage.removeItem("timeline-08-06");
-    localStorage.removeItem("old-mission-data");
-    console.log("🧹 FULL CACHE CLEARED - RESET COMPLETO 17/07/2025");
-  }, []);
+  // 🚀 PERFORMANCE FIX: Cache clearing DISABLED - was causing slow loads
+  // Old code cleared cache on EVERY mount, forcing DB refetch each time
+  // Now relies on proper cache invalidation when data actually changes
   
   // Track the user's progress (FORCED TO REAL DATA)
   const [progress, setProgress] = useLocalStorage<number>("mission-progress", 0);

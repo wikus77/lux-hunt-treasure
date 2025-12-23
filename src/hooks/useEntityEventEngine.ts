@@ -39,6 +39,8 @@ export function useEntityEventEngine(): void {
   const clearContextTrigger = useEntityOverlayStore((s) => s.clearContextTrigger);
   const isIntroActive = useEntityOverlayStore((s) => s.isIntroActive);
   const introStartTime = useEntityOverlayStore((s) => s.introStartTime);
+  // 🆕 v9: Popup Interaction Blocker
+  const isPopupInteractionActive = useEntityOverlayStore((s) => s.isPopupInteractionActive);
   const pendingChainTriggerId = useEntityOverlayStore((s) => s.pendingChainTriggerId);
   const setPendingChain = useEntityOverlayStore((s) => s.setPendingChain);
   
@@ -280,6 +282,14 @@ export function useEntityEventEngine(): void {
       return;
     }
     
+    // 🆕 v9: Check popup interaction blocker
+    if (store.isPopupInteractionActive) {
+      if (SHADOW_DEBUG) {
+        console.log('[SHADOW PROTOCOL v9] 🌑 Scheduling paused: popup interaction active');
+      }
+      return;
+    }
+    
     if (store.eventsShownThisSession >= SHADOW_PROTOCOL_TIMING.MAX_EVENTS_PER_SESSION) {
       if (SHADOW_DEBUG) {
         console.log('[SHADOW PROTOCOL v4] 🌑 Scheduling stopped: session limit reached');
@@ -310,6 +320,15 @@ export function useEntityEventEngine(): void {
       
       // Verifica condizioni prima di triggerare
       if (currentStore.isIntroActive) {
+        scheduleNextEvent();
+        return;
+      }
+      
+      // 🆕 v9: Check popup interaction blocker
+      if (currentStore.isPopupInteractionActive) {
+        if (SHADOW_DEBUG) {
+          console.log('[SHADOW PROTOCOL v9] 🌑 Event skipped: popup interaction active');
+        }
         scheduleNextEvent();
         return;
       }
@@ -376,6 +395,7 @@ export function useEntityEventEngine(): void {
       const store = useEntityOverlayStore.getState();
       if (store.isVisible) return;
       if (store.isIntroActive) return;
+      if (store.isPopupInteractionActive) return; // 🆕 v9: Block if popup active
       if (store.eventsShownThisSession >= SHADOW_PROTOCOL_TIMING.MAX_EVENTS_PER_SESSION) return;
 
       // Trigger a contextual event
@@ -440,6 +460,7 @@ export function useEntityEventEngine(): void {
     if (!pendingContextTrigger) return;
     if (isVisible) return;
     if (isIntroActive) return;
+    if (isPopupInteractionActive) return; // 🆕 v9: Block if popup active
     
     const triggerCopy = pendingContextTrigger;
     clearContextTrigger();
@@ -449,6 +470,7 @@ export function useEntityEventEngine(): void {
       
       const store = useEntityOverlayStore.getState();
       if (store.isVisible || store.isIntroActive) return;
+      if (store.isPopupInteractionActive) return; // 🆕 v9: Block if popup active
       if (store.eventsShownThisSession >= SHADOW_PROTOCOL_TIMING.MAX_EVENTS_PER_SESSION) return;
       
       triggerContextEvent(triggerCopy);
@@ -460,7 +482,7 @@ export function useEntityEventEngine(): void {
         contextTimerRef.current = null;
       }
     };
-  }, [pendingContextTrigger, isVisible, isIntroActive, clearContextTrigger, triggerContextEvent]);
+  }, [pendingContextTrigger, isVisible, isIntroActive, isPopupInteractionActive, clearContextTrigger, triggerContextEvent]);
 
   // =========================================================================
   // Effect: Catene MCP ↔ SHADOW

@@ -166,6 +166,10 @@ interface EntityOverlayState {
   isMapGlitchActive: boolean; // True when map glitch is running
   lastCtaNavigationTime: number | null; // Per CTA cooldown
   
+  // 🆕 v9: Popup Interaction Blocker (blocks Shadow when other popups are active)
+  isPopupInteractionActive: boolean;
+  activePopupIds: string[]; // Track which popups are active
+  
   // Azioni
   showOverlay: (template: ShadowMessageTemplate) => void;
   hideOverlay: () => void;
@@ -212,6 +216,10 @@ interface EntityOverlayState {
   checkEvolutionDecay: () => void;
   markRareTemplateConsumed: (templateId: string) => void;
   isRareTemplateConsumed: (templateId: string) => boolean;
+  
+  // 🆕 v9: Popup Interaction Blocker actions
+  registerActivePopup: (popupId: string) => void;
+  unregisterActivePopup: (popupId: string) => void;
 }
 
 // ============================================================================
@@ -321,6 +329,10 @@ export const useEntityOverlayStore = create<EntityOverlayState>((set, get) => ({
   globalGlitchIntensity: 0,
   isMapGlitchActive: false,
   lastCtaNavigationTime: loadInitialLastCtaTime(),
+  
+  // 🆕 v9: Popup Interaction Blocker
+  isPopupInteractionActive: false,
+  activePopupIds: [],
   
   // 🆕 v8: Entity Evolution System
   entityEvolution: loadInitialEntityEvolution(),
@@ -965,6 +977,48 @@ export const useEntityOverlayStore = create<EntityOverlayState>((set, get) => ({
   isRareTemplateConsumed: (templateId: string): boolean => {
     return get().rareTemplatesConsumed.includes(templateId);
   },
+
+  // =========================================================================
+  // 🆕 v9: POPUP INTERACTION BLOCKER ACTIONS
+  // =========================================================================
+
+  /**
+   * registerActivePopup - Register a popup as active (blocks Shadow)
+   * Call this when a popup (MapHUD, MicroMissions, RewardZone, etc.) appears
+   */
+  registerActivePopup: (popupId: string) => {
+    const state = get();
+    if (state.activePopupIds.includes(popupId)) return;
+    
+    const newActivePopups = [...state.activePopupIds, popupId];
+    
+    if (SHADOW_DEBUG) {
+      console.log(`[SHADOW v9] 🔒 Popup registered: ${popupId} (total: ${newActivePopups.length})`);
+    }
+    
+    set({
+      activePopupIds: newActivePopups,
+      isPopupInteractionActive: true,
+    });
+  },
+
+  /**
+   * unregisterActivePopup - Unregister a popup (allows Shadow if no others active)
+   * Call this when a popup is dismissed/hidden
+   */
+  unregisterActivePopup: (popupId: string) => {
+    const state = get();
+    const newActivePopups = state.activePopupIds.filter(id => id !== popupId);
+    
+    if (SHADOW_DEBUG) {
+      console.log(`[SHADOW v9] 🔓 Popup unregistered: ${popupId} (remaining: ${newActivePopups.length})`);
+    }
+    
+    set({
+      activePopupIds: newActivePopups,
+      isPopupInteractionActive: newActivePopups.length > 0,
+    });
+  },
 }));
 
 // ============================================================================
@@ -995,6 +1049,9 @@ export const selectIsMapGlitchActive = (state: EntityOverlayState) => state.isMa
 export const selectEntityEvolution = (state: EntityOverlayState) => state.entityEvolution;
 export const selectBranchingFlags = (state: EntityOverlayState) => state.branchingFlags;
 export const selectRareTemplatesConsumed = (state: EntityOverlayState) => state.rareTemplatesConsumed;
+// 🆕 v9 selectors
+export const selectIsPopupInteractionActive = (state: EntityOverlayState) => state.isPopupInteractionActive;
+export const selectActivePopupIds = (state: EntityOverlayState) => state.activePopupIds;
 
 // ============================================================================
 // 🆕 v8: HELPER FUNCTIONS

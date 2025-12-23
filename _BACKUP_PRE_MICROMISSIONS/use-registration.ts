@@ -6,7 +6,6 @@ import { useWouterNavigation } from './useWouterNavigation';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration } from '@/utils/form-validation';
-import { MAP_FIRST_ENABLED } from '@/config/firstSessionConfig';
 
 // Tipo per i dati del form
 export type FormData = {
@@ -88,14 +87,13 @@ export const useRegistration = () => {
           description: "Benvenuto in M1SSION™!"
         });
 
-        // 🎯 MAP-FIRST: Nuovi utenti vanno direttamente alla mappa
-        // Controllato da MAP_FIRST_ENABLED in firstSessionConfig.ts
-        const targetRoute = MAP_FIRST_ENABLED ? "/map-3d-tiler" : "/home";
-        console.log(`🗺️ [Registration] MAP-FIRST=${MAP_FIRST_ENABLED}, redirecting to: ${targetRoute}`);
+        // 🎯 FIRST SESSION FIX: Skip choose-plan, go directly to home
+        // Import flag at top of file if needed
+        const SKIP_PLAN = true; // Feature flag - set false to restore old behavior
         
-        // 🚀 REDIRECT IMMEDIATO
+        // 🚀 REDIRECT IMMEDIATO a /home (skip /choose-plan per nuovi utenti)
         setTimeout(() => {
-          navigate(targetRoute);
+          navigate(SKIP_PLAN ? "/home" : "/choose-plan");
         }, 100);
 
         // 🔥 NON-BLOCKING: Notifiche inviate in background (no await!)
