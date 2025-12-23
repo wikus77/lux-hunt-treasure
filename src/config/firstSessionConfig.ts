@@ -1,0 +1,242 @@
+/**
+ * FIRST SESSION CONFIGURATION
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * 
+ * 🎚️ Feature flags per gestire l'esperienza del primo utilizzo
+ * Tutti i flag sono disattivabili per rollback immediato
+ */
+
+// ═══════════════════════════════════════════════════════════════
+// 🎚️ MASTER FLAGS - Toggle per funzionalità
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Se true, i nuovi utenti vengono portati alla MAP dopo il primo login
+ * ROLLBACK: Metti a false per tornare alla Home
+ */
+export const MAP_FIRST_ENABLED = true;
+
+/**
+ * Se true, mostra l'HUD con la frase sulla mappa
+ * ROLLBACK: Metti a false per nascondere
+ */
+export const MAP_HUD_ENABLED = true;
+
+/**
+ * Se true, attiva il sistema di micro-missioni
+ * ROLLBACK: Metti a false per disattivare
+ */
+export const MICRO_MISSIONS_ENABLED = true;
+
+/**
+ * Se true, mostra il popup di aiuto Buzz dopo inattività
+ * ROLLBACK: Metti a false per disattivare
+ */
+export const BUZZ_HELP_POPUP_ENABLED = true;
+
+// ═══════════════════════════════════════════════════════════════
+// ⏱️ TIMING CONFIGURATION
+// ═══════════════════════════════════════════════════════════════
+
+export const TIMING = {
+  /** Tempo dopo cui l'HUD sparisce automaticamente (ms) */
+  HUD_AUTO_HIDE_MS: 15000, // 15 secondi
+  
+  /** Tempo di inattività prima di mostrare BuzzHelpPopup (ms) */
+  BUZZ_HELP_INACTIVITY_MS: 25000, // 25 secondi
+  
+  /** Delay prima di mostrare la prima micro-mission dopo HUD (ms) */
+  FIRST_MISSION_DELAY_MS: 500,
+  
+  /** Durata animazione completamento micro-mission (ms) */
+  MISSION_COMPLETE_ANIMATION_MS: 2000,
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 📝 COPY/TESTI
+// ═══════════════════════════════════════════════════════════════
+
+export const COPY = {
+  HUD: {
+    line1: 'One real prize is hidden near you.',
+    line2: 'Explore the map to get closer.',
+    line3: 'Start exploring.',
+  },
+  BUZZ_HELP: {
+    title: 'Need help?',
+    body: 'Buzz reveals something nearby.',
+    button: 'Open Buzz',
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 🎯 MICRO-MISSIONS DATA
+// ═══════════════════════════════════════════════════════════════
+
+export type MicroMissionTrigger = 'map_pan' | 'map_zoom' | 'map_tap' | 'buzz_open' | 'nav_home';
+
+export interface MicroMission {
+  id: string;
+  trigger: MicroMissionTrigger;
+  icon: string;
+  title: string;
+  instruction: string;
+  completeText: string;
+  motivationText: string;
+}
+
+export const MICRO_MISSIONS: MicroMission[] = [
+  {
+    id: 'move',
+    trigger: 'map_pan',
+    icon: '🧭',
+    title: 'MOVE THE MAP',
+    instruction: 'Drag the map to explore the area',
+    completeText: '✅ Area scanned',
+    motivationText: "You're learning how hunters think.",
+  },
+  {
+    id: 'zoom',
+    trigger: 'map_zoom',
+    icon: '🔍',
+    title: 'ZOOM IN',
+    instruction: 'Something might be closer than you think',
+    completeText: '✅ Focus increased',
+    motivationText: 'Details reveal hidden truths.',
+  },
+  {
+    id: 'tap',
+    trigger: 'map_tap',
+    icon: '👆',
+    title: 'TAP THE MAP',
+    instruction: 'Tap anywhere to interact with the world',
+    completeText: '✅ Connection established',
+    motivationText: 'Every interaction counts.',
+  },
+  {
+    id: 'buzz',
+    trigger: 'buzz_open',
+    icon: '⚡',
+    title: 'DISCOVER BUZZ',
+    instruction: 'Buzz reveals something nearby',
+    completeText: '🎉 You discovered Buzz!',
+    motivationText: 'Knowledge is power.',
+  },
+  {
+    id: 'return',
+    trigger: 'nav_home',
+    icon: '🏠',
+    title: 'CHECK YOUR BASE',
+    instruction: 'Visit your command center',
+    completeText: '✅ Base checked',
+    motivationText: 'The hunt continues.',
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// 🔧 UTILITIES - Helper functions
+// ═══════════════════════════════════════════════════════════════
+
+const STORAGE_KEYS = {
+  FIRST_SESSION_ACTIVE: 'm1_first_session_active',
+  HUD_DISMISSED: 'm1_map_hud_dismissed',
+  MISSION_INDEX: 'm1_micro_mission_index',
+  MISSIONS_COMPLETED: 'm1_micro_missions_completed',
+  BUZZ_HELP_SHOWN: 'm1_buzz_help_shown',
+};
+
+/** Controlla se questa è la prima sessione dell'utente */
+export function isFirstSession(): boolean {
+  try {
+    return localStorage.getItem('m1_first_session_completed') !== 'true';
+  } catch {
+    return true;
+  }
+}
+
+/** Controlla se l'HUD è stato già dismissato */
+export function isHudDismissed(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.HUD_DISMISSED) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/** Segna l'HUD come dismissato */
+export function dismissHud(): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.HUD_DISMISSED, 'true');
+  } catch {}
+}
+
+/** Ottiene l'indice della micro-mission corrente */
+export function getMissionIndex(): number {
+  try {
+    return parseInt(localStorage.getItem(STORAGE_KEYS.MISSION_INDEX) || '0', 10);
+  } catch {
+    return 0;
+  }
+}
+
+/** Avanza alla prossima micro-mission */
+export function advanceMission(): number {
+  try {
+    const current = getMissionIndex();
+    const next = current + 1;
+    localStorage.setItem(STORAGE_KEYS.MISSION_INDEX, next.toString());
+    
+    // Se completate tutte, segna come fatto
+    if (next >= MICRO_MISSIONS.length) {
+      localStorage.setItem(STORAGE_KEYS.MISSIONS_COMPLETED, 'true');
+    }
+    
+    return next;
+  } catch {
+    return 0;
+  }
+}
+
+/** Controlla se tutte le micro-missions sono completate */
+export function areMissionsCompleted(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.MISSIONS_COMPLETED) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/** Ottiene la micro-mission corrente (null se completate tutte) */
+export function getCurrentMission(): MicroMission | null {
+  if (areMissionsCompleted()) return null;
+  const index = getMissionIndex();
+  return MICRO_MISSIONS[index] || null;
+}
+
+/** Controlla se il BuzzHelp è già stato mostrato */
+export function isBuzzHelpShown(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.BUZZ_HELP_SHOWN) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/** Segna BuzzHelp come mostrato */
+export function markBuzzHelpShown(): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.BUZZ_HELP_SHOWN, 'true');
+  } catch {}
+}
+
+/** Reset completo (per testing) */
+export function resetFirstSession(): void {
+  try {
+    Object.values(STORAGE_KEYS).forEach(key => {
+      localStorage.removeItem(key);
+    });
+    localStorage.removeItem('m1_first_session_completed');
+    console.log('[FirstSession] 🔄 Reset completo');
+  } catch {}
+}
+

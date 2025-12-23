@@ -188,6 +188,7 @@ export const SHADOW_EXCLUDED_PATHS: string[] = [
   '/cookies',
   '/policies',
   '/mission-intro', // Esclusa per non sovrapporre elementi narrativi
+  '/panel-access', // Admin panel - no Shadow interference
 ];
 
 // Route dove è particolarmente "benvenuto" (peso bonus)

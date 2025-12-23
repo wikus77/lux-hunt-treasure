@@ -9,8 +9,10 @@ import { X, MapPin, Navigation, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { useEntityOverlayStore } from '@/stores/entityOverlayStore';
 
 const STORAGE_KEY = 'm1ssion_reward_popup_dismissed';
+const POPUP_ID = 'reward-zone';
 
 interface MarkerData {
   id: string;
@@ -37,6 +39,20 @@ export const RewardZonePopup: React.FC = () => {
   const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [, navigate] = useLocation();
   const { isAuthenticated } = useUnifiedAuth();
+  const registerActivePopup = useEntityOverlayStore((s) => s.registerActivePopup);
+  const unregisterActivePopup = useEntityOverlayStore((s) => s.unregisterActivePopup);
+
+  // 🆕 v9: Registra/deregistra popup per bloccare Shadow
+  useEffect(() => {
+    if (isVisible) {
+      registerActivePopup(POPUP_ID);
+    } else {
+      unregisterActivePopup(POPUP_ID);
+    }
+    return () => {
+      unregisterActivePopup(POPUP_ID);
+    };
+  }, [isVisible, registerActivePopup, unregisterActivePopup]);
 
   // Get user position
   useEffect(() => {

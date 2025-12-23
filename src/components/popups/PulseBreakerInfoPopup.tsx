@@ -12,14 +12,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Gamepad2, X, Zap, TrendingUp, Coins } from 'lucide-react';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { usePulseBreakerStore } from '@/stores/pulseBreakerStore';
+import { useEntityOverlayStore } from '@/stores/entityOverlayStore';
 
 const STORAGE_KEY = 'm1ssion_pulse_breaker_popup_dismissed';
 const POPUP_DELAY_MS = 2 * 60 * 1000; // 2 minuti
+const POPUP_ID = 'pulse-breaker';
 
 export const PulseBreakerInfoPopup: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const { isAuthenticated } = useUnifiedAuth();
   const { openPulseBreaker } = usePulseBreakerStore();
+  const registerActivePopup = useEntityOverlayStore((s) => s.registerActivePopup);
+  const unregisterActivePopup = useEntityOverlayStore((s) => s.unregisterActivePopup);
+
+  // 🆕 v9: Registra/deregistra popup per bloccare Shadow
+  useEffect(() => {
+    if (isVisible) {
+      registerActivePopup(POPUP_ID);
+    } else {
+      unregisterActivePopup(POPUP_ID);
+    }
+    return () => {
+      unregisterActivePopup(POPUP_ID);
+    };
+  }, [isVisible, registerActivePopup, unregisterActivePopup]);
 
   // Check if popup should show (with queue management)
   useEffect(() => {

@@ -64,6 +64,8 @@ import { MissionIntroOverlay } from "./components/overlay/MissionIntroOverlay";
 import { MissionPrizeIntroOverlay } from "./components/overlay/MissionPrizeIntroOverlay";
 // 📱 Native Safe Area Provider - Cross-device layout adaptation
 import { NativeSafeAreaProvider } from "./components/layout/NativeSafeAreaProvider";
+// 🎯 Daily Missions System
+import { DailyMissionsController } from "./missions";
 
 function App() {
   // 🚀 NATIVE APP FEEL: Show splash on EVERY app launch (but only once per session)
@@ -209,6 +211,8 @@ function App() {
                     <DNAManager />
                     {/* 🎁 Welcome Bonus: 500 M1U per nuovi utenti dopo onboarding */}
                     <WelcomeBonusManager />
+                    {/* 🎯 Daily Missions System */}
+                    <DailyMissionsController />
                     <CookieConsentManager />
                     {/* Onboarding Tutorial Interattivo */}
                     <OnboardingOverlay />

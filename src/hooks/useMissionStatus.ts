@@ -11,6 +11,7 @@ export interface MissionStatus {
   title: string;
   state: "ATTIVA" | "COMPLETATA" | "SCADUTA";
   startDate: Date;
+  endDate: Date | null; // 🔥 FIX: Data fine globale dal Mission Panel
   daysRemaining: number;
   totalDays: number;
   cluesFound: number;
@@ -54,6 +55,24 @@ export const useMissionStatus = () => {
 
       const missionId = activeMissionData?.id || "M001";
       const missionTitle = activeMissionData?.mission_name || "MISSIONE IN CORSO";
+      
+      // 🔥 FIX: Use GLOBAL mission end date from Mission Panel (same for ALL users!)
+      const missionEndDate = activeMissionData?.mission_ends_at 
+        ? new Date(activeMissionData.mission_ends_at) 
+        : null;
+      const missionStartDate = activeMissionData?.mission_started_at
+        ? new Date(activeMissionData.mission_started_at)
+        : new Date();
+      
+      // 🔥 Calculate days remaining from GLOBAL end date (not user registration!)
+      const calculateGlobalDaysRemaining = (): number => {
+        if (!missionEndDate) return 30; // Fallback if no end date set
+        const now = new Date();
+        const diffMs = missionEndDate.getTime() - now.getTime();
+        return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+      };
+      
+      const globalDaysRemaining = calculateGlobalDaysRemaining();
 
       // 🔥 CRITICAL FIX: Get REAL clues count from MULTIPLE sources
       // Source 1: user_clues table (official clues)
@@ -133,7 +152,7 @@ export const useMissionStatus = () => {
             clues_found: 0,
             mission_progress_percent: 0,
             mission_started_at: new Date().toISOString(),
-            mission_days_remaining: 30,
+            mission_days_remaining: globalDaysRemaining, // 🔥 FIX: Use global days
             buzz_counter: 0,
             map_radius_km: null,
             map_area_generated: false
@@ -146,12 +165,6 @@ export const useMissionStatus = () => {
           setError('Errore nella creazione dello stato missione');
           return;
         }
-
-        // Use the newly created data
-        const missionStart = new Date(newMissionData.mission_started_at);
-        const now = new Date();
-        const daysPassed = Math.floor((now.getTime() - missionStart.getTime()) / (1000 * 60 * 60 * 24));
-        const daysRemaining = Math.max(0, 30 - daysPassed);
 
         // 🔥 AUTO-UPDATE mission status with real clues count
         const { error: updateError } = await supabase
@@ -166,24 +179,20 @@ export const useMissionStatus = () => {
           console.error('❌ Error updating mission status:', updateError);
         }
 
+        // 🔥 FIX: Use GLOBAL days remaining (same for ALL users)
         setMissionStatus({
           id: missionId,
           title: missionTitle,
-          state: daysRemaining > 0 ? "ATTIVA" : "SCADUTA",
-          startDate: missionStart,
-          daysRemaining: daysRemaining,
+          state: globalDaysRemaining > 0 ? "ATTIVA" : "SCADUTA",
+          startDate: missionStartDate,
+          endDate: missionEndDate,
+          daysRemaining: globalDaysRemaining,
           totalDays: 30,
           cluesFound: realCluesCount,
           totalClues: 250,
           progressPercent: actualProgress
         });
       } else {
-        // Calculate remaining days based on mission_started_at
-        const missionStart = new Date(userMissionData.mission_started_at);
-        const now = new Date();
-        const daysPassed = Math.floor((now.getTime() - missionStart.getTime()) / (1000 * 60 * 60 * 24));
-        const daysRemaining = Math.max(0, 30 - daysPassed);
-
         // 🔥 AUTO-UPDATE mission status with real clues count
         if ((userMissionData.clues_found || 0) !== realCluesCount) {
           const { error: updateError } = await supabase
@@ -199,12 +208,14 @@ export const useMissionStatus = () => {
           }
         }
 
+        // 🔥 FIX: Use GLOBAL days remaining (same for ALL users)
         setMissionStatus({
           id: missionId,
           title: missionTitle,
-          state: daysRemaining > 0 ? "ATTIVA" : "SCADUTA",
-          startDate: missionStart,
-          daysRemaining: daysRemaining,
+          state: globalDaysRemaining > 0 ? "ATTIVA" : "SCADUTA",
+          startDate: missionStartDate,
+          endDate: missionEndDate,
+          daysRemaining: globalDaysRemaining,
           totalDays: 30,
           cluesFound: realCluesCount,
           totalClues: 250,
@@ -335,10 +346,12 @@ export const useMissionStatus = () => {
     if (!missionStatus) return;
 
     const interval = setInterval(() => {
-      const missionStart = missionStatus.startDate;
+      // 🔥 FIX: Calculate from GLOBAL end date (not user start date!)
+      if (!missionStatus.endDate) return;
+      
       const now = new Date();
-      const daysPassed = Math.floor((now.getTime() - missionStart.getTime()) / (1000 * 60 * 60 * 24));
-      const daysRemaining = Math.max(0, 30 - daysPassed);
+      const diffMs = missionStatus.endDate.getTime() - now.getTime();
+      const daysRemaining = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 
       if (daysRemaining !== missionStatus.daysRemaining) {
         setMissionStatus(prev => prev ? {
