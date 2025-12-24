@@ -160,12 +160,8 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
       return;
     }
     
-    // 🚨 START M1SSION GATE: Block if not enrolled
-    if (!isEnrolled && !enrollmentLoading) {
-      console.log('🚨 [BUZZ MAP] User not enrolled - showing gate modal');
-      setShowGateModal(true);
-      return;
-    }
+    // ✅ FIX 23/12/2025: Rimosso gate ON M1SSION - BUZZ MAP sempre accessibile
+    // L'utente verrà guidato a premere START M1SSION tramite le micro-missions
 
     const coordinates = getCoordinates();
     if (!coordinates || !coordinates[0] || !coordinates[1]) {

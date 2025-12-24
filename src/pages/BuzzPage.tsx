@@ -41,54 +41,10 @@ export const BuzzPage: React.FC = () => {
     loadDailyBuzzCounter  // ✅ ADD THIS for force refresh
   } = useBuzzCounter(user?.id);
 
-  // 🔥 V5 FIX DEFINITIVO: Cache localStorage è source of truth per UI iniziale
-  // Il modal si mostra SOLO se:
-  // 1. Cache localStorage dice NON enrolled
-  // 2. L'enrollment check DB è COMPLETATO (isLoading=false)
-  // 3. Il DB conferma NON iscritto (isEnrolled=false)
-  // 4. Sono passati almeno 1000ms dal mount
-  
-  const cachedEnrollmentValue = React.useMemo(() => {
-    try {
-      return localStorage.getItem('m1_mission_enrolled') === '1';
-    } catch { return false; }
-  }, []); // Solo al mount!
-  
-  const [mountTime] = React.useState(() => Date.now());
-  const [showGate, setShowGate] = React.useState(false);
-  
-  React.useEffect(() => {
-    // 🔒 REGOLA 1: Se cache dice enrolled → MAI mostrare gate
-    if (cachedEnrollmentValue) {
-      setShowGate(false);
-      return;
-    }
-    
-    // 🔒 REGOLA 2: Se DB dice enrolled → MAI mostrare gate
-    if (isEnrolled) {
-      setShowGate(false);
-      return;
-    }
-    
-    // 🔒 REGOLA 3: Se ancora in loading → MAI mostrare gate
-    if (enrollmentLoading) {
-      setShowGate(false);
-      return;
-    }
-    
-    // Solo qui: cache=false, DB=false, loading=false → mostra dopo 1s
-    const timeSinceMount = Date.now() - mountTime;
-    const remainingDelay = Math.max(0, 1000 - timeSinceMount);
-    const timer = setTimeout(() => {
-      // Ricontrolla prima di mostrare
-      if (!isEnrolled && !cachedEnrollmentValue) {
-        setShowGate(true);
-      }
-    }, remainingDelay);
-    return () => clearTimeout(timer);
-  }, [enrollmentLoading, isEnrolled, mountTime, cachedEnrollmentValue]);
-  
-  const isBlocked = !isEnrolled && !enrollmentLoading;
+  // ✅ FIX 23/12/2025: Rimosso gate ON M1SSION - ora Buzz è sempre accessibile
+  // L'utente verrà guidato a premere START M1SSION tramite le micro-missions
+  const showGate = false; // Gate disabilitato
+  const isBlocked = false; // Buzz sempre accessibile
   const currentPriceDisplay = getCurrentBuzzDisplayCostM1U();
 
   // ⏱️ Safety timeout: force show page after 3 seconds to prevent infinite spinner

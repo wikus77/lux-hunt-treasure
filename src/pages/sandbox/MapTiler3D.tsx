@@ -63,7 +63,8 @@ import { useDebugFlag } from '@/debug/useDebugFlag';
 import { DebugMapPanel } from '@/debug/DebugMapPanel';
 import { useMapGlitchEffect } from '@/hooks/useMapGlitchEffect';
 // 🎯 FIRST SESSION: Guided discovery components
-import { MapHUD, MicroMissionsCard, BuzzHelpPopup } from '@/components/first-session';
+import { MapHUD, BuzzHelpPopup } from '@/components/first-session';
+// MicroMissionsCard ora è globale in App.tsx
 // 🎯 DAILY MISSIONS: Mission pill
 import { MissionPill } from '@/missions/ui/MissionPill';
 
@@ -108,16 +109,13 @@ export default function MapTiler3D() {
       console.log('[MapTiler3D] 🗺️ Prima visita alla mappa registrata');
     }
     
-    // Completa la prima sessione dopo 30 secondi sulla mappa
-    // (dà tempo all'utente di esplorare)
-    const timer = setTimeout(() => {
-      if (!localStorage.getItem('m1_first_session_completed')) {
-        localStorage.setItem('m1_first_session_completed', 'true');
-        console.log('[MapTiler3D] ✅ Prima sessione completata');
-      }
-    }, 30000);
-    
-    return () => clearTimeout(timer);
+    // ✅ FIX B6 (23/12/2025): Setta flag immediatamente al mount
+    // BUG PRECEDENTE: setTimeout 30s causava loop se utente usciva prima
+    // Ora il flag viene settato subito, evitando il "first session forever" bug
+    if (!localStorage.getItem('m1_first_session_completed')) {
+      localStorage.setItem('m1_first_session_completed', 'true');
+      console.log('[MapTiler3D] ✅ Prima sessione completata (immediate)');
+    }
   }, []);
   
   // Expose runtime ENV for debugging (only in dev mode)
@@ -1821,7 +1819,7 @@ export default function MapTiler3D() {
 
       {/* 🎯 FIRST SESSION: Guided Discovery System (feature-flagged) */}
       <MapHUD mapContainerId="ml-sandbox" />
-      <MicroMissionsCard mapContainerId="ml-sandbox" />
+      {/* MicroMissionsCard ora è globale in App.tsx */}
       <BuzzHelpPopup mapContainerId="ml-sandbox" />
     </FinalShootProvider>
   );

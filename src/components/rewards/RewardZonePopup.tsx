@@ -41,6 +41,7 @@ export const RewardZonePopup: React.FC = () => {
   const { isAuthenticated } = useUnifiedAuth();
   const registerActivePopup = useEntityOverlayStore((s) => s.registerActivePopup);
   const unregisterActivePopup = useEntityOverlayStore((s) => s.unregisterActivePopup);
+  const isPopupInteractionActive = useEntityOverlayStore((s) => s.isPopupInteractionActive);
 
   // 🆕 v9: Registra/deregistra popup per bloccare Shadow
   useEffect(() => {
@@ -93,12 +94,17 @@ export const RewardZonePopup: React.FC = () => {
     // Show popup after 1 minute
     console.log('[RewardZonePopup] ⏰ Popup will show in 1 minute...');
     const timer = setTimeout(() => {
+      // ✅ FIX 23/12/2025: Non mostrare se ci sono micro-missions o altri popup attivi
+      if (isPopupInteractionActive) {
+        console.log('[RewardZonePopup] ⏸️ Skipped - other popup active');
+        return;
+      }
       console.log('[RewardZonePopup] ✅ Showing popup NOW!');
       setIsVisible(true);
     }, 60000); // 60 seconds = 1 minuto
 
     return () => clearTimeout(timer);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isPopupInteractionActive]);
 
   // Load markers for random selection
   useEffect(() => {

@@ -712,3 +712,33 @@ nav[style*="position: fixed"] {
   -webkit-backface-visibility: hidden !important;
   will-change: transform !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   🎯 MICRO-MISSIONS HIGHLIGHT EFFECT
+   ✅ FIX 23/12/2025: Evidenzia elementi durante le micro-missions
+   ═══════════════════════════════════════════════════════════════ */
+.micro-mission-highlight {
+  position: relative;
+  z-index: 100;
+  animation: micro-mission-pulse 2s ease-in-out infinite;
+  box-shadow: 
+    0 0 0 3px rgba(0, 255, 136, 0.6),
+    0 0 20px rgba(0, 255, 136, 0.4),
+    0 0 40px rgba(0, 255, 136, 0.2) !important;
+  border-radius: 12px;
+}
+
+@keyframes micro-mission-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 3px rgba(0, 255, 136, 0.6),
+      0 0 20px rgba(0, 255, 136, 0.4),
+      0 0 40px rgba(0, 255, 136, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 5px rgba(0, 255, 136, 0.8),
+      0 0 30px rgba(0, 255, 136, 0.6),
+      0 0 60px rgba(0, 255, 136, 0.3);
+  }
+}

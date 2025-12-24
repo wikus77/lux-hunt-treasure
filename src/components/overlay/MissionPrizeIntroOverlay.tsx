@@ -106,6 +106,7 @@ const EntitySymbol: React.FC<{
 
 /**
  * DialogueTyper - Typing effect for entity dialogue
+ * ✅ FIX 23/12/2025 v2: Completamente riscritto per compatibilità con StrictMode
  */
 const DialogueTyper: React.FC<{
   lines: string[];
@@ -113,28 +114,37 @@ const DialogueTyper: React.FC<{
   onComplete: () => void;
   className?: string;
 }> = ({ lines, typingSpeed, onComplete, className = '' }) => {
-  const [displayedText, setDisplayedText] = useState('');
+  const fullText = useMemo(() => lines.join('\n'), [lines]);
+  const [charIndex, setCharIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
-  const fullText = lines.join('\n');
 
+  // Reset quando fullText cambia
   useEffect(() => {
-    let index = 0;
-    setDisplayedText('');
+    setCharIndex(0);
     setIsComplete(false);
+  }, [fullText]);
 
-    const timer = setInterval(() => {
-      if (index < fullText.length) {
-        setDisplayedText(fullText.slice(0, index + 1));
-        index++;
-      } else {
-        clearInterval(timer);
-        setIsComplete(true);
-        onComplete();
-      }
+  // Timer per l'effetto typewriter
+  useEffect(() => {
+    if (isComplete || !fullText) return;
+
+    console.log('[DialogueTyper] 🎬 Typing char', charIndex, '/', fullText.length);
+
+    if (charIndex >= fullText.length) {
+      setIsComplete(true);
+      console.log('[DialogueTyper] ✅ Typing complete');
+      onComplete();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setCharIndex(prev => prev + 1);
     }, typingSpeed);
 
-    return () => clearInterval(timer);
-  }, [fullText, typingSpeed, onComplete]);
+    return () => clearTimeout(timer);
+  }, [charIndex, fullText, typingSpeed, isComplete, onComplete]);
+
+  const displayedText = fullText.slice(0, charIndex);
 
   return (
     <pre className={`prize-intro-dialogue ${className}`}>

@@ -66,6 +66,10 @@ import { MissionPrizeIntroOverlay } from "./components/overlay/MissionPrizeIntro
 import { NativeSafeAreaProvider } from "./components/layout/NativeSafeAreaProvider";
 // 🎯 Daily Missions System
 import { DailyMissionsController } from "./missions";
+// 🎯 FIRST SESSION: Micro-missions (global - works on all pages)
+import { MicroMissionsCard } from "./components/first-session";
+// 🏆 CLUE MILESTONES: Global watcher for level-up rewards
+import { ClueMilestoneWatcher } from "./components/milestones/ClueMilestoneWatcher";
 
 function App() {
   // 🚀 NATIVE APP FEEL: Show splash on EVERY app launch (but only once per session)
@@ -213,6 +217,10 @@ function App() {
                     <WelcomeBonusManager />
                     {/* 🎯 Daily Missions System */}
                     <DailyMissionsController />
+                    {/* 🎯 FIRST SESSION: Micro-missions (global - works on all pages) */}
+                    <MicroMissionsCard />
+                    {/* 🏆 CLUE MILESTONES: Global watcher for level-up rewards */}
+                    <ClueMilestoneWatcher />
                     <CookieConsentManager />
                     {/* Onboarding Tutorial Interattivo */}
                     <OnboardingOverlay />

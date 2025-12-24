@@ -14,22 +14,23 @@ import { useAuth } from '@/hooks/use-auth';
 export interface ClueMilestone {
   threshold: number;
   m1u: number;
+  pe: number; // Pulse Energy reward
   title: string | null; // null = no popup
   key: string;
 }
 
 export const CLUE_MILESTONES: ClueMilestone[] = [
-  { threshold: 10,  m1u: 10,   title: 'AGENT 1 RANG', key: 'clues_10' },
-  { threshold: 25,  m1u: 50,   title: 'AGENT 2 RANG', key: 'clues_25' },
-  { threshold: 50,  m1u: 100,  title: 'AGENT 3 RANG', key: 'clues_50' },
-  { threshold: 75,  m1u: 125,  title: 'WRESTLER',     key: 'clues_75' },
-  { threshold: 100, m1u: 150,  title: 'FIGHTER',      key: 'clues_100' },
-  { threshold: 125, m1u: 175,  title: null,           key: 'clues_125' },
-  { threshold: 150, m1u: 200,  title: 'WARRIOR',      key: 'clues_150' },
-  { threshold: 175, m1u: 250,  title: null,           key: 'clues_175' },
-  { threshold: 200, m1u: 300,  title: 'CHAMPION',     key: 'clues_200' },
-  { threshold: 225, m1u: 400,  title: null,           key: 'clues_225' },
-  { threshold: 250, m1u: 500,  title: 'LEGEND',       key: 'clues_250' },
+  { threshold: 10,  m1u: 10,   pe: 10,  title: 'AGENT LEVEL 1',  key: 'clues_10' },
+  { threshold: 25,  m1u: 25,   pe: 10,  title: 'AGENT LEVEL 2',  key: 'clues_25' },
+  { threshold: 50,  m1u: 50,   pe: 15,  title: 'AGENT LEVEL 3',  key: 'clues_50' },
+  { threshold: 75,  m1u: 75,   pe: 15,  title: 'WRESTLER',       key: 'clues_75' },
+  { threshold: 100, m1u: 100,  pe: 20,  title: 'FIGHTER',        key: 'clues_100' },
+  { threshold: 125, m1u: 125,  pe: 20,  title: 'HUNTER',         key: 'clues_125' },
+  { threshold: 150, m1u: 150,  pe: 25,  title: 'WARRIOR',        key: 'clues_150' },
+  { threshold: 175, m1u: 175,  pe: 25,  title: 'ELITE',          key: 'clues_175' },
+  { threshold: 200, m1u: 200,  pe: 30,  title: 'CHAMPION',       key: 'clues_200' },
+  { threshold: 225, m1u: 250,  pe: 35,  title: 'MASTER',         key: 'clues_225' },
+  { threshold: 250, m1u: 500,  pe: 50,  title: 'LEGEND',         key: 'clues_250' },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -70,9 +71,15 @@ export const useClueMilestones = (): UseClueMilestonesReturn => {
   const lastClueCount = useRef<number>(0);
   const isProcessing = useRef<boolean>(false);
 
-  // Fetch claimed milestones from DB (with fallback to localStorage if RPC doesn't exist)
+  // 🔥 DEBUG LOG
+  console.log('[CLUE_MILESTONE_HOOK] 🎯 Hook initialized - user:', user?.id?.slice(0, 8) || 'none');
+
+  // ✅ FIX: Use ONLY localStorage - no RPC dependency
   const fetchClaimedMilestones = useCallback(async () => {
+    console.log('[CLUE_MILESTONE_HOOK] 📥 fetchClaimedMilestones called');
+    
     if (!user?.id) {
+      console.log('[CLUE_MILESTONE_HOOK] ⚠️ No user, setting isLoading=false');
       setIsLoading(false);
       return;
     }
@@ -80,44 +87,32 @@ export const useClueMilestones = (): UseClueMilestonesReturn => {
     try {
       setIsLoading(true);
       
-      // Try RPC first
-      const { data, error } = await supabase.rpc('get_claimed_clue_milestones');
+      // ✅ DIRECT localStorage - no RPC!
+      const localKey = `clue_milestones_${user.id}`;
+      console.log('[CLUE_MILESTONE_HOOK] 📂 Reading localStorage key:', localKey);
       
-      if (error) {
-        // 🔧 FIX: If RPC doesn't exist, fall back to localStorage
-        if (error.message?.includes('function') || error.code === '42883' || error.code === 'PGRST202') {
-          console.warn('[CLUE_MILESTONE] RPC not found, using localStorage fallback');
-          const localKey = `clue_milestones_${user.id}`;
-          try {
-            const local = localStorage.getItem(localKey);
-            if (local) {
-              const parsed = JSON.parse(local) as string[];
-              setClaimedKeys(new Set(parsed));
-              if (import.meta.env.DEV) {
-                console.log('[CLUE_MILESTONE] Loaded from localStorage:', parsed);
-              }
-            }
-          } catch {}
-          setIsLoading(false);
-          return;
+      const local = localStorage.getItem(localKey);
+      console.log('[CLUE_MILESTONE_HOOK] 📂 localStorage value:', local);
+      
+      if (local) {
+        try {
+          const parsed = JSON.parse(local) as string[];
+          setClaimedKeys(new Set(parsed));
+          console.log('[CLUE_MILESTONE_HOOK] ✅ Loaded claimed milestones:', parsed);
+        } catch (parseErr) {
+          console.error('[CLUE_MILESTONE_HOOK] ❌ JSON parse error:', parseErr);
+          setClaimedKeys(new Set());
         }
-        console.error('[CLUE_MILESTONE] Fetch error:', error);
-        setIsLoading(false);
-        return;
+      } else {
+        console.log('[CLUE_MILESTONE_HOOK] 📂 No claimed milestones in localStorage (first time)');
+        setClaimedKeys(new Set());
       }
-
-      const claimed = data as ClaimedMilestone[] || [];
-      const keys = new Set(claimed.map(m => m.key));
-      
-      if (import.meta.env.DEV) {
-        console.log('[CLUE_MILESTONE] Loaded claimed milestones:', Array.from(keys));
-      }
-      
-      setClaimedKeys(keys);
     } catch (err) {
-      console.error('[CLUE_MILESTONE] Exception:', err);
+      console.error('[CLUE_MILESTONE_HOOK] ❌ Exception:', err);
+      setClaimedKeys(new Set());
     } finally {
       setIsLoading(false);
+      console.log('[CLUE_MILESTONE_HOOK] ✅ isLoading set to false');
     }
   }, [user?.id]);
 
@@ -133,117 +128,90 @@ export const useClueMilestones = (): UseClueMilestonesReturn => {
     );
   }, [claimedKeys]);
 
-  // Claim a single milestone
+  // ✅ FIX: Claim a single milestone - DIRECT localStorage + Supabase (no RPC)
   const claimMilestone = useCallback(async (milestone: ClueMilestone): Promise<MilestoneClaimResult> => {
+    console.log('[CLUE_MILESTONE_HOOK] 🎯 claimMilestone called:', milestone.key);
+    
     if (!user?.id) {
+      console.log('[CLUE_MILESTONE_HOOK] ❌ No user, cannot claim');
       return { success: false, milestone, error: 'Not authenticated' };
     }
 
     if (claimedKeys.has(milestone.key)) {
+      console.log('[CLUE_MILESTONE_HOOK] ⚠️ Already claimed:', milestone.key);
       return { success: false, milestone, alreadyClaimed: true };
     }
 
+    console.log('[CLUE_MILESTONE_HOOK] 🏆 Claiming milestone:', {
+      key: milestone.key,
+      m1u: milestone.m1u,
+      pe: milestone.pe,
+      title: milestone.title
+    });
+
     try {
-      if (import.meta.env.DEV) {
-        console.log('[CLUE_MILESTONE] Claiming:', {
-          milestone: milestone.key,
-          m1u: milestone.m1u,
-          title: milestone.title
-        });
+      // 1️⃣ SAVE TO LOCALSTORAGE FIRST
+      const localKey = `clue_milestones_${user.id}`;
+      const existing = localStorage.getItem(localKey);
+      const claimed = existing ? JSON.parse(existing) as string[] : [];
+      
+      if (!claimed.includes(milestone.key)) {
+        claimed.push(milestone.key);
+        localStorage.setItem(localKey, JSON.stringify(claimed));
+        console.log('[CLUE_MILESTONE_HOOK] 💾 Saved to localStorage:', claimed);
       }
 
-      // Try RPC first
-      const { data, error } = await supabase.rpc('claim_clue_milestone', {
-        p_milestone_key: milestone.key,
-        p_m1u_amount: milestone.m1u
-      });
+      // 2️⃣ UPDATE LOCAL STATE IMMEDIATELY
+      setClaimedKeys(prev => new Set([...prev, milestone.key]));
+      console.log('[CLUE_MILESTONE_HOOK] 📊 Updated local state');
 
-      // 🔧 FIX: If RPC doesn't exist, use fallback (localStorage + direct M1U update)
-      if (error && (error.message?.includes('function') || error.code === '42883' || error.code === 'PGRST202')) {
-        console.warn('[CLUE_MILESTONE] RPC not found, using fallback');
+      // 3️⃣ GRANT M1U + PE via Supabase
+      let newM1UBalance = 0;
+      try {
+        const { data: profile, error: fetchErr } = await supabase
+          .from('profiles')
+          .select('m1_units, pulse_energy')
+          .eq('id', user.id)
+          .single();
         
-        // Save to localStorage
-        const localKey = `clue_milestones_${user.id}`;
-        try {
-          const existing = localStorage.getItem(localKey);
-          const claimed = existing ? JSON.parse(existing) as string[] : [];
-          if (!claimed.includes(milestone.key)) {
-            claimed.push(milestone.key);
-            localStorage.setItem(localKey, JSON.stringify(claimed));
-          }
-        } catch {}
-
-        // Grant M1U directly (best effort)
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('m1_units')
-            .eq('id', user.id)
-            .single();
+        if (fetchErr) {
+          console.error('[CLUE_MILESTONE_HOOK] ❌ Error fetching profile:', fetchErr);
+        } else if (profile) {
+          newM1UBalance = (profile.m1_units || 0) + milestone.m1u;
+          const newPEBalance = (profile.pulse_energy || 0) + milestone.pe;
           
-          if (profile) {
-            const newBalance = (profile.m1_units || 0) + milestone.m1u;
-            await supabase
-              .from('profiles')
-              .update({ m1_units: newBalance, updated_at: new Date().toISOString() })
-              .eq('id', user.id);
-            
-            if (import.meta.env.DEV) {
-              console.log('[CLUE_MILESTONE] ✅ Fallback M1U granted:', milestone.m1u, 'new balance:', newBalance);
-            }
-            
-            // Update local state
-            setClaimedKeys(prev => new Set([...prev, milestone.key]));
-            window.dispatchEvent(new CustomEvent('m1u-balance-updated'));
-            
-            return { success: true, milestone, newBalance };
+          const { error: updateErr } = await supabase
+            .from('profiles')
+            .update({ 
+              m1_units: newM1UBalance, 
+              pulse_energy: newPEBalance,
+              updated_at: new Date().toISOString() 
+            })
+            .eq('id', user.id);
+          
+          if (updateErr) {
+            console.error('[CLUE_MILESTONE_HOOK] ❌ Error updating profile:', updateErr);
+          } else {
+            console.log('[CLUE_MILESTONE_HOOK] ✅ Supabase updated:', {
+              m1u: milestone.m1u,
+              pe: milestone.pe,
+              newM1UBalance,
+              newPEBalance
+            });
           }
-        } catch (e) {
-          console.error('[CLUE_MILESTONE] Fallback M1U grant failed:', e);
         }
-        
-        // Still mark as claimed locally
-        setClaimedKeys(prev => new Set([...prev, milestone.key]));
-        return { success: true, milestone };
+      } catch (dbErr) {
+        console.error('[CLUE_MILESTONE_HOOK] ❌ DB error:', dbErr);
       }
 
-      if (error) {
-        console.error('[CLUE_MILESTONE] RPC error:', error);
-        return { success: false, milestone, error: error.message };
-      }
+      // 4️⃣ NOTE: m1u-credited event will be dispatched by ClueMilestoneModal
+      // after the animation completes (no double dispatch)
 
-      const result = data as { success: boolean; new_balance?: number; already_claimed?: boolean; error?: string };
-
-      if (result.success) {
-        // Update local state
-        setClaimedKeys(prev => new Set([...prev, milestone.key]));
-        
-        // Trigger M1U refresh
-        window.dispatchEvent(new CustomEvent('m1u-balance-updated'));
-
-        if (import.meta.env.DEV) {
-          console.log('[CLUE_MILESTONE] ✅ Claimed successfully:', {
-            milestone: milestone.key,
-            grantedM1U: milestone.m1u,
-            newBalance: result.new_balance
-          });
-        }
-
-        return {
-          success: true,
-          milestone,
-          newBalance: result.new_balance
-        };
-      } else {
-        return {
-          success: false,
-          milestone,
-          error: result.error,
-          alreadyClaimed: result.already_claimed
-        };
-      }
+      console.log('[CLUE_MILESTONE_HOOK] ✅ Milestone claimed successfully:', milestone.key);
+      return { success: true, milestone, newBalance: newM1UBalance };
+      
     } catch (err) {
-      console.error('[CLUE_MILESTONE] Exception claiming:', err);
+      console.error('[CLUE_MILESTONE_HOOK] ❌ Exception claiming:', err);
       return { success: false, milestone, error: String(err) };
     }
   }, [user?.id, claimedKeys]);
