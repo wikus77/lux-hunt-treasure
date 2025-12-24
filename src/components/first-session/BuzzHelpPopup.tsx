@@ -38,6 +38,8 @@ export default function BuzzHelpPopup({ mapContainerId = 'ml-sandbox' }: BuzzHel
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const registerActivePopup = useEntityOverlayStore((s) => s.registerActivePopup);
   const unregisterActivePopup = useEntityOverlayStore((s) => s.unregisterActivePopup);
+  // ✅ FIX B5: Usa flag store invece di DOM query
+  const isPopupInteractionActive = useEntityOverlayStore((s) => s.isPopupInteractionActive);
 
   // 🆕 v9: Registra/deregistra popup per bloccare Shadow
   useEffect(() => {
@@ -58,23 +60,23 @@ export default function BuzzHelpPopup({ mapContainerId = 'ml-sandbox' }: BuzzHel
 
   // Controlla se può mostrare il popup
   const canShow = useCallback(() => {
-    // Non mostrare se già mostrato
+    // Non mostrare se già mostrato (o se utente ha scelto "non mostrare più")
     if (isBuzzHelpShown()) return false;
-    // Non mostrare se non è prima sessione
-    if (!isFirstSession()) return false;
+    // ✅ FIX 23/12/2025: Rimosso check isFirstSession() - usa solo isBuzzHelpShown()
+    // Il flag m1_buzz_help_shown traccia già se il popup è stato mostrato/disabilitato
     // Non mostrare se utente ha già iniziato le missioni (passata la prima)
     if (getMissionIndex() > 0) return false;
-    // Non mostrare se ci sono altri popup aperti (check z-index elements)
-    const existingPopups = document.querySelectorAll('[class*="z-[1000"]');
-    if (existingPopups.length > 0) return false;
+    // ✅ FIX B5: Usa flag store affidabile invece di DOM query fragile
+    // Non mostrare se ci sono altri popup aperti (registrati nel store)
+    if (isPopupInteractionActive) return false;
     
     return true;
-  }, []);
+  }, [isPopupInteractionActive]);
 
   // Setup activity tracking
   useEffect(() => {
     if (!BUZZ_HELP_POPUP_ENABLED) return;
-    if (!isFirstSession()) return;
+    // ✅ FIX 23/12/2025: Rimosso check isFirstSession() - mostra popup anche dopo first session
     if (isBuzzHelpShown()) return;
 
     const mapContainer = document.getElementById(mapContainerId);
@@ -261,7 +263,7 @@ export default function BuzzHelpPopup({ mapContainerId = 'ml-sandbox' }: BuzzHel
               {COPY.BUZZ_HELP.button}
             </motion.button>
 
-            {/* Not now link */}
+            {/* ✅ FIX 23/12/2025: Tasto "Non mostrare più" - setta flag permanente */}
             <button
               onClick={handleClose}
               style={{
@@ -272,9 +274,10 @@ export default function BuzzHelpPopup({ mapContainerId = 'ml-sandbox' }: BuzzHel
                 fontSize: '12px',
                 cursor: 'pointer',
                 padding: '8px',
+                textDecoration: 'underline',
               }}
             >
-              Not now
+              Non mostrare più
             </button>
           </div>
         </motion.div>

@@ -192,10 +192,11 @@ export default function CommandCenterHome() {
 
   return (
     <div className="w-full">
-      {/* Full-width Prize Vision at the top */}
+      {/* Full-width Prize Vision at the top - CASHBACK / M1U */}
       <motion.div 
         className="mb-6 w-full m1-card"
         data-onboarding="prize-vision"
+        data-section="cashback"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -230,6 +231,7 @@ export default function CommandCenterHome() {
     {/* M1SSION AGENT - Moved ABOVE Indizi trovati */}
     <motion.div 
       className="mb-6"
+      data-section="agent"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.1 }}
@@ -241,6 +243,7 @@ export default function CommandCenterHome() {
     <motion.div 
       className="mb-6"
       data-onboarding="mission-card"
+      data-section="status"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.15 }}
@@ -256,6 +259,7 @@ export default function CommandCenterHome() {
     <motion.div 
       className="mb-6 m1-card"
       data-onboarding="battle"
+      data-section="battle"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}

@@ -24,6 +24,7 @@ export const PulseBreakerInfoPopup: React.FC = () => {
   const { openPulseBreaker } = usePulseBreakerStore();
   const registerActivePopup = useEntityOverlayStore((s) => s.registerActivePopup);
   const unregisterActivePopup = useEntityOverlayStore((s) => s.unregisterActivePopup);
+  const isPopupInteractionActive = useEntityOverlayStore((s) => s.isPopupInteractionActive);
 
   // 🆕 v9: Registra/deregistra popup per bloccare Shadow
   useEffect(() => {
@@ -50,12 +51,17 @@ export const PulseBreakerInfoPopup: React.FC = () => {
     console.log('[PulseBreakerPopup] 🎮 Popup will show in 2 minutes...');
     
     const timer = setTimeout(() => {
+      // ✅ FIX 23/12/2025: Non mostrare se ci sono micro-missions o altri popup attivi
+      if (isPopupInteractionActive) {
+        console.log('[PulseBreakerPopup] ⏸️ Skipped - other popup active');
+        return;
+      }
       console.log('[PulseBreakerPopup] ✅ Showing popup NOW!');
       setIsVisible(true);
     }, POPUP_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isPopupInteractionActive]);
 
   const handleDismiss = useCallback(() => {
     localStorage.setItem(STORAGE_KEY, 'true');

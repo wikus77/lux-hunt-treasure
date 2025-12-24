@@ -3,7 +3,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useState, useEffect } from "react";
-import { Route, Switch, useLocation } from "wouter";
+import { Route, Switch, useLocation, Redirect } from "wouter";
 
 // Dev tools (conditionally loaded)
 const MarkersHealthcheck = React.lazy(() => import('../pages/dev/MarkersHealthcheck'));
@@ -217,20 +217,16 @@ const WouterRoutes: React.FC = () => {
         <Switch>
           {/* ✅ QR routes - redirected to main app with marker rewards popup */}
 
-          {/* Landing page - FAIL-OPEN FIRST VISIT LOGIC */}
-          {/* ⚠️ TEMP: Always show landing for development - REMOVE BEFORE DEPLOY */}
+          {/* Landing page - FIRST VISIT LOGIC */}
+          {/* ✅ FIX B1: Prima visita → Landing, visite successive → Login */}
           <Route path="/">
             {isLoading ? (
               <PageSkeleton variant="default" />
             ) : !isAuthenticated ? (
               (() => {
                 try {
-                  // ⚠️ TEMP: Always show LandingPage for development
-                  // TODO: Restore first-visit logic before production deploy
-                  return <LandingPage />;
-                  
-                  /* ORIGINAL CODE - RESTORE BEFORE DEPLOY:
-                  // Check if this is first visit using localStorage
+                  // ✅ FIX B1 (23/12/2025): Ripristinata logica first-visit
+                  // Prima visita → Landing, visite successive → Login
                   const isFirstVisit = !localStorage.getItem('m1_first_visit_seen');
                   
                   if (isFirstVisit) {
@@ -239,7 +235,6 @@ const WouterRoutes: React.FC = () => {
                   } else {
                     return <Login />;
                   }
-                  */
                 } catch (error) {
                   console.error('[BOOT] Landing page error, showing login:', error);
                   return <Login />;
@@ -446,11 +441,7 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          <Route path="/intelligence/rag">
-            <ProtectedRoute>
-              <GlobalLayout><IntelligenceRAG /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
+          {/* ✅ FIX B2: Rimossa route duplicata /intelligence/rag (già definita sopra) */}
 
           <Route path="/leaderboard">
             <ProtectedRoute>
@@ -468,14 +459,9 @@ const WouterRoutes: React.FC = () => {
             <GlobalLayout><Notifications /></GlobalLayout>
           </Route>
 
+          {/* ✅ FIX B3: SPA redirect invece di window.location.href */}
           <Route path="/profile">
-            {() => {
-              // Redirect to /settings/agent-profile
-              if (typeof window !== 'undefined') {
-                window.location.href = '/settings/agent-profile';
-              }
-              return null;
-            }}
+            <Redirect to="/settings/agent-profile" />
           </Route>
 
           <Route path="/settings">
@@ -639,13 +625,8 @@ const WouterRoutes: React.FC = () => {
             </AdminProtectedRoute>
           </Route>
 
-          <Route path="/panel/push">
-            <AdminProtectedRoute>
-              <React.Suspense fallback={<PageSkeleton variant="default" />}>
-                {React.createElement(React.lazy(() => import('../pages/push/UserPushConsolePage')))}
-              </React.Suspense>
-            </AdminProtectedRoute>
-          </Route>
+          {/* ✅ FIX B2: Rimossa route duplicata /panel/push (già definita sopra con AdminPushConsolePage) */}
+          {/* NOTA: Se serve UserPushConsolePage, creare una route separata /panel/push-user */}
 
           {/* ========================================== */}
           {/* DEV/DEBUG ROUTES - Only available in DEV mode */}
@@ -890,14 +871,7 @@ const WouterRoutes: React.FC = () => {
                 </AdminProtectedRoute>
               </Route>
 
-              {/* Push Debug Route (duplicate, kept for compatibility) */}
-              <Route path="/push-debug">
-                <AdminProtectedRoute>
-                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
-                    <GlobalLayout><PushDebug /></GlobalLayout>
-                  </React.Suspense>
-                </AdminProtectedRoute>
-              </Route>
+              {/* ✅ FIX B2: Rimossa route duplicata /push-debug (già definita sopra) */}
 
               <Route path="/fcm-test">
                 <AdminProtectedRoute>

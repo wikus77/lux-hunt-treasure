@@ -22,6 +22,7 @@ import DeveloperAccess from "@/components/auth/DeveloperAccess";
 import TermsBanner from '@/components/legal/TermsBanner';
 import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
 import { useOnboardingTutorial } from "@/hooks/useOnboardingTutorial";
+// MicroMissionsCard ora è globale in App.tsx
 
 const Home = () => {
   const [error, setError] = useState<string | null>(null);
@@ -366,6 +367,8 @@ const Home = () => {
           onClose={hideTutorialForever}
         />
       )}
+
+      {/* MicroMissionsCard ora è globale in App.tsx */}
     </>
   );
 };

@@ -539,6 +539,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
         {/* INDIZI TROVATI */}
         <motion.div
           className="m1-relief-sm rounded-2xl p-4 cursor-pointer hover:border-green-500/30 transition-colors overflow-hidden relative"
+          data-section="clues"
           onClick={() => setIsCluesModalOpen(true)}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -608,6 +609,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
 
         {/* TEMPO RIMASTO - with pulse animation when <= 10 days */}
         <motion.div
+          data-section="time"
           className={`m1-relief-sm rounded-2xl p-4 cursor-pointer transition-colors overflow-hidden relative ${
             isFinalDay ? 'border-red-500/50 hover:border-red-500/70' : 
             isUrgent ? 'border-orange-500/40 hover:border-orange-500/60' : 
@@ -774,11 +776,8 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
         totalClues={totalClues}
       />
       
-      {/* 🏆 Milestone Celebration Modal */}
-      <ClueMilestoneModal
-        milestone={pendingMilestone}
-        onClose={dismissMilestone}
-      />
+      {/* 🏆 Milestone Celebration Modal - MOVED TO GLOBAL ClueMilestoneWatcher in App.tsx */}
+      {/* Modal ora gestito globalmente per funzionare anche sulla mappa */}
       
       {/* ⏰ Mission End Warning Modal */}
       <GlassModal

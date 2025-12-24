@@ -73,7 +73,7 @@ export const COPY = {
 // 🎯 MICRO-MISSIONS DATA
 // ═══════════════════════════════════════════════════════════════
 
-export type MicroMissionTrigger = 'map_pan' | 'map_zoom' | 'map_tap' | 'buzz_open' | 'nav_home';
+export type MicroMissionTrigger = 'map_pan' | 'map_zoom' | 'map_tap' | 'buzz_open' | 'nav_home' | 'home_tap';
 
 export interface MicroMission {
   id: string;
@@ -83,6 +83,8 @@ export interface MicroMission {
   instruction: string;
   completeText: string;
   motivationText: string;
+  /** CSS selector per evidenziare l'elemento coinvolto */
+  highlightSelector?: string;
 }
 
 export const MICRO_MISSIONS: MicroMission[] = [
@@ -91,45 +93,107 @@ export const MICRO_MISSIONS: MicroMission[] = [
     trigger: 'map_pan',
     icon: '🧭',
     title: 'MOVE THE MAP',
-    instruction: 'Drag the map to explore the area',
-    completeText: '✅ Area scanned',
-    motivationText: "You're learning how hunters think.",
+    instruction: 'Trascina la mappa per esplorare l\'area circostante. Scopri cosa si nasconde intorno a te.',
+    completeText: '✅ Area esplorata',
+    motivationText: 'Stai imparando a pensare come un cacciatore.',
   },
   {
     id: 'zoom',
     trigger: 'map_zoom',
     icon: '🔍',
     title: 'ZOOM IN',
-    instruction: 'Something might be closer than you think',
-    completeText: '✅ Focus increased',
-    motivationText: 'Details reveal hidden truths.',
+    instruction: 'Fai zoom sulla mappa (pinch o rotella). Alcuni dettagli si vedono solo da vicino.',
+    completeText: '✅ Focus aumentato',
+    motivationText: 'I dettagli rivelano verità nascoste.',
   },
   {
     id: 'tap',
     trigger: 'map_tap',
     icon: '👆',
     title: 'TAP THE MAP',
-    instruction: 'Tap anywhere to interact with the world',
-    completeText: '✅ Connection established',
-    motivationText: 'Every interaction counts.',
+    instruction: 'Tocca un punto qualsiasi della mappa per interagire con il mondo.',
+    completeText: '✅ Connessione stabilita',
+    motivationText: 'Ogni interazione conta.',
   },
   {
     id: 'buzz',
     trigger: 'buzz_open',
     icon: '⚡',
     title: 'DISCOVER BUZZ',
-    instruction: 'Buzz reveals something nearby',
-    completeText: '🎉 You discovered Buzz!',
-    motivationText: 'Knowledge is power.',
+    instruction: 'Buzz ti aiuta a scoprire indizi nascosti nelle vicinanze. Premi il pulsante per provare.',
+    completeText: '🎉 Hai scoperto Buzz!',
+    motivationText: 'La conoscenza è potere.',
+    highlightSelector: '[data-buzz-button]',
   },
   {
     id: 'return',
     trigger: 'nav_home',
     icon: '🏠',
-    title: 'CHECK YOUR BASE',
-    instruction: 'Visit your command center',
-    completeText: '✅ Base checked',
-    motivationText: 'The hunt continues.',
+    title: 'GO TO HOME',
+    instruction: 'Vai alla Home per vedere il tuo centro di comando e tutte le informazioni sulla missione.',
+    completeText: '✅ Base raggiunta',
+    motivationText: 'La caccia continua.',
+  },
+  // === HOME PAGE DISCOVERY ===
+  {
+    id: 'home_cashback',
+    trigger: 'home_tap',
+    icon: '💰',
+    title: 'DISCOVER CASHBACK',
+    instruction: 'Qui trovi il tuo saldo M1U e i premi guadagnati. Tocca per continuare.',
+    completeText: '✅ Cashback scoperto',
+    motivationText: 'Ogni azione ti fa guadagnare.',
+    highlightSelector: '[data-section="cashback"]',
+  },
+  {
+    id: 'home_agent',
+    trigger: 'home_tap',
+    icon: '🕵️',
+    title: 'M1SSION AGENT',
+    instruction: 'Il tuo profilo agente con statistiche e progressi. Tocca per continuare.',
+    completeText: '✅ Profilo agente trovato',
+    motivationText: 'Conosci te stesso, conosci la missione.',
+    highlightSelector: '[data-section="agent"]',
+  },
+  {
+    id: 'home_clues',
+    trigger: 'home_tap',
+    icon: '🔍',
+    title: 'CLUES FOUND',
+    instruction: 'Qui trovi tutti gli indizi che hai scoperto finora. Tocca per continuare.',
+    completeText: '✅ Tracker indizi trovato',
+    motivationText: 'Ogni indizio ti avvicina al premio.',
+    highlightSelector: '[data-section="clues"]',
+  },
+  {
+    id: 'home_time',
+    trigger: 'home_tap',
+    icon: '⏱️',
+    title: 'TIME REMAINING',
+    instruction: 'Il conto alla rovescia della missione. Il tempo stringe! Tocca per continuare.',
+    completeText: '✅ Timer trovato',
+    motivationText: 'Il tempo è prezioso.',
+    highlightSelector: '[data-section="time"]',
+  },
+  {
+    id: 'home_status',
+    trigger: 'home_tap',
+    icon: '📊',
+    title: 'MISSION STATUS',
+    instruction: 'Lo stato attuale della tua missione e i progressi. Tocca per continuare.',
+    completeText: '✅ Stato verificato',
+    motivationText: 'Resta informato, resta avanti.',
+    highlightSelector: '[data-section="status"]',
+  },
+  {
+    id: 'home_battle',
+    trigger: 'home_tap',
+    icon: '⚔️',
+    title: 'M1SSION BATTLE',
+    instruction: 'Sfida altri agenti e scala la classifica! Tocca per completare la scoperta.',
+    completeText: '🎉 SCOPERTA COMPLETATA!',
+    motivationText: 'Sei pronto per la caccia!',
+    highlightSelector: '[data-section="battle"]',
   },
 ];
 
@@ -151,6 +215,16 @@ export function isFirstSession(): boolean {
     return localStorage.getItem('m1_first_session_completed') !== 'true';
   } catch {
     return true;
+  }
+}
+
+/** ✅ FIX 23/12/2025: Controlla se l'onboarding tutorial è completato */
+export function isOnboardingCompleted(): boolean {
+  try {
+    return localStorage.getItem('m1ssion_onboarding_completed') === 'true' ||
+           localStorage.getItem('m1ssion_onboarding_skipped') === 'true';
+  } catch {
+    return false;
   }
 }
 

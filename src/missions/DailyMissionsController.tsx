@@ -10,6 +10,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useEntityOverlayStore } from '@/stores/entityOverlayStore';
 import { MISSIONS_ENABLED } from './missionsRegistry';
+import { areMissionsCompleted as areMicroMissionsCompleted } from '@/config/firstSessionConfig';
 import { 
   getMissionState, 
   startMission, 
@@ -59,6 +60,13 @@ export default function DailyMissionsController() {
 
   useEffect(() => {
     if (!MISSIONS_ENABLED || !isAuthenticated) return;
+
+    // ✅ FIX 23/12/2025: Aspetta che le micro-missions siano completate
+    // prima di mostrare le Daily Missions
+    if (!areMicroMissionsCompleted()) {
+      console.log('[DailyMissions] ⏳ Waiting for micro-missions to complete...');
+      return;
+    }
 
     const timer = setTimeout(() => {
       const state = getEngineState();
