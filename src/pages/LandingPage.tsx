@@ -571,6 +571,23 @@ const LandingPage = () => {
               {t('learnMore')}
             </motion.button>
           </motion.div>
+          
+          {/* Spectator Mode CTA */}
+          <motion.button
+            className="mt-3 text-white/50 text-xs hover:text-cyan-400 transition-colors flex items-center gap-1 mx-auto"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("m1ssion:landing", { 
+                detail: { action: "landing_spectator_click" } 
+              }));
+              setLocation('/spectator');
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 3.5 }}
+          >
+            <span>👁️</span>
+            <span>GUARDA COME SPETTATORE</span>
+          </motion.button>
         </div>
 
         {/* Scroll Indicator - Minimal */}
