@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ReferralCodeDisplay from "@/components/layout/header/ReferralCodeDisplay";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import MinimalHeaderStrip from "@/components/layout/MinimalHeaderStrip";
+import { SettingsModal } from "@/components/settings/SettingsModal";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -65,6 +66,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const isBuzzRoute = location === '/buzz';
   const { shouldHideHeader: windowHide } = useScrollDirection(50);
   const [mapHide, setMapHide] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   
   // 🛡️ BUZZ ROUTE GUARD: Disable scroll-hide on /buzz to prevent freeze
   const hideHeader = isBuzzRoute ? false : (isMapRoute ? mapHide : windowHide);
@@ -348,30 +350,32 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
             {/* Right Section */}
             <motion.div className="flex items-center space-x-1 sm:space-x-3" animate={{ opacity: hideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
-              {/* Settings - 🚀 NATIVE: Pulsante più grande */}
-              <Link to="/settings">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-xl hover:bg-white/10 unified-header-btn w-11 h-11 m1-touch-feedback"
+              {/* Settings - 🚀 NATIVE: Apre modal popup */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-xl hover:bg-white/10 unified-header-btn w-11 h-11 m1-touch-feedback"
+                onClick={() => {
+                  hapticLight();
+                  setIsSettingsModalOpen(true);
+                }}
+              >
+                <motion.div
+                  animate={{ 
+                    rotate: [0, 360],
+                    scale: [1, 1.08, 1]
+                  }}
+                  transition={{ 
+                    rotate: { duration: reduceAnimations ? 1.6 : 8, repeat: reduceAnimations ? 0 : Infinity, ease: "linear" },
+                    scale: { duration: reduceAnimations ? 1.2 : 4, repeat: reduceAnimations ? 0 : Infinity, ease: "easeInOut" }
+                  }}
+                  style={{
+                    filter: "drop-shadow(0 0 10px rgba(0, 209, 255, 0.5))"
+                  }}
                 >
-                  <motion.div
-                    animate={{ 
-                      rotate: [0, 360],
-                      scale: [1, 1.08, 1]
-                    }}
-                    transition={{ 
-                      rotate: { duration: reduceAnimations ? 1.6 : 8, repeat: reduceAnimations ? 0 : Infinity, ease: "linear" },
-                      scale: { duration: reduceAnimations ? 1.2 : 4, repeat: reduceAnimations ? 0 : Infinity, ease: "easeInOut" }
-                    }}
-                    style={{
-                      filter: "drop-shadow(0 0 10px rgba(0, 209, 255, 0.5))"
-                    }}
-                  >
-                    <Settings className="w-6 h-6 text-[#00D1FF]" />
-                  </motion.div>
-                </Button>
-              </Link>
+                  <Settings className="w-6 h-6 text-[#00D1FF]" />
+                </motion.div>
+              </Button>
 
               {/* Profile Dropdown - 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
               <ProfileDropdown
@@ -384,6 +388,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         </div>
       </header>
       </div>
+      
+      {/* Settings Modal */}
+      <SettingsModal 
+        isOpen={isSettingsModalOpen} 
+        onClose={() => setIsSettingsModalOpen(false)} 
+      />
     </>
   );
 };

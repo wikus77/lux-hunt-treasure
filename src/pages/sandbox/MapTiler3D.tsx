@@ -63,7 +63,7 @@ import { useDebugFlag } from '@/debug/useDebugFlag';
 import { DebugMapPanel } from '@/debug/DebugMapPanel';
 import { useMapGlitchEffect } from '@/hooks/useMapGlitchEffect';
 // 🎯 FIRST SESSION: Guided discovery components
-import { MapHUD, BuzzHelpPopup } from '@/components/first-session';
+import { MapHUD, BuzzHelpPopup, MapExploreHint } from '@/components/first-session';
 // MicroMissionsCard ora è globale in App.tsx
 // 🎯 DAILY MISSIONS: Mission pill
 import { MissionPill } from '@/missions/ui/MissionPill';
@@ -1821,6 +1821,8 @@ export default function MapTiler3D() {
       <MapHUD mapContainerId="ml-sandbox" />
       {/* MicroMissionsCard ora è globale in App.tsx */}
       <BuzzHelpPopup mapContainerId="ml-sandbox" />
+      {/* 🆕 Hint "Esplora la mappa" per utenti inattivi (1 volta al giorno) */}
+      <MapExploreHint mapContainerId="ml-sandbox" />
     </FinalShootProvider>
   );
 }

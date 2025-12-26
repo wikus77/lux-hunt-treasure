@@ -9,6 +9,7 @@ import IntelChatPanel from '@/pages/intel/IntelChatPanel';
 // Lazy load components for performance
 const M1UPill = lazy(() => import('@/features/m1u/M1UPill'));
 const ShadowIntercepts = lazy(() => import('@/components/intelligence/ShadowIntercepts'));
+import { InactivityHint } from '@/components/first-session';
 
 const IntelligencePage: React.FC = () => {
   const aionRef = useRef<AionEntityHandle>(null);
@@ -99,6 +100,8 @@ const IntelligencePage: React.FC = () => {
           style={{ minHeight: 0 }}
         />
       </div>
+      {/* 🆕 Hint per utenti inattivi (1 volta al giorno) */}
+      <InactivityHint type="aion" />
     </div>
   );
 };

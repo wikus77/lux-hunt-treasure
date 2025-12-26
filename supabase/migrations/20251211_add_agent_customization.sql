@@ -27,3 +27,4 @@ GRANT SELECT, UPDATE ON public.profiles TO authenticated;
 
 
 
+

@@ -51,3 +51,4 @@ const IntellectualPropertyFooter: React.FC<IntellectualPropertyFooterProps> = ({
 export default IntellectualPropertyFooter;
 
 
+

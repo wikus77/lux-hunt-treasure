@@ -71,3 +71,4 @@ GRANT EXECUTE ON FUNCTION get_max_leak_risk TO authenticated, anon;
 
 
 
+

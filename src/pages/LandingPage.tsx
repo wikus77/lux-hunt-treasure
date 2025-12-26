@@ -8,6 +8,8 @@ import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
 import LandingFooter from "@/components/landing/LandingFooter";
 import AdminEmergencyLogin from "@/components/auth/AdminEmergencyLogin";
 import CookieBanner from "@/components/gdpr/CookieBanner";
+import { MindsetMicroTest } from "@/components/landing/MindsetMicroTest";
+import { PremiumPlansAccordion } from "@/components/landing/PremiumPlansAccordion";
 import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -60,9 +62,9 @@ const LandingPage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Countdown to M1SSION launch - December 19, 2025 at 19:00 (7 PM)
+  // Countdown to NEXT M1SSION - January 1, 2026 at 19:00 (next mission cycle)
   useEffect(() => {
-    const targetDate = new Date('2025-12-19T19:00:00').getTime();
+    const targetDate = new Date('2026-01-01T19:00:00').getTime();
     
     const updateCountdown = () => {
       const now = new Date().getTime();
@@ -417,21 +419,37 @@ const LandingPage = () => {
           </motion.h1>
           
           <motion.p 
-            className="text-2xl md:text-3xl font-light tracking-[0.3em] mb-4 uppercase"
-            style={{ color: '#00FF00' }}
+            className="text-2xl md:text-3xl font-bold tracking-[0.2em] mb-2 uppercase"
+            style={{ color: '#00FF00', textShadow: '0 0 20px rgba(0,255,0,0.5)' }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.5 }}
           >
-            M1SSION STARTS ON 19 DECEMBER
+            M1SSION IS LIVE
+          </motion.p>
+          <motion.p
+            className="text-base md:text-lg text-cyan-400/80 mb-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.7 }}
+          >
+            La caccia è iniziata. Il premio è reale.
           </motion.p>
           
-          {/* Countdown Timer - Premium Glass */}
+          {/* Countdown Timer - NEXT MISSION */}
+          <motion.p
+            className="text-xs md:text-sm text-white/50 uppercase tracking-[0.3em] mb-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.8 }}
+          >
+            Prossima Missione tra
+          </motion.p>
           <motion.div 
             className="flex justify-center gap-2 md:gap-3 mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.7 }}
+            transition={{ duration: 0.8, delay: 1.9 }}
           >
             <motion.div 
               className="countdown-box text-center"
@@ -489,13 +507,31 @@ const LandingPage = () => {
           </motion.p>
           
           <motion.div 
-            className="text-yellow-300 text-base md:text-lg tracking-[0.5em] mb-6 relative font-light"
+            className="text-yellow-300 text-base md:text-lg tracking-[0.5em] mb-4 relative font-light"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 2.5 }}
           >
             <TypingEffect text="IT IS POSSIBLE" onComplete={() => setIsTypingComplete(true)} />
           </motion.div>
+          
+          {/* Tension/Competition Element */}
+<motion.p 
+            className="text-white/50 text-sm md:text-base mb-2 max-w-xl mx-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 2.8 }}
+          >
+            La maggior parte si ferma alla settimana 2. Chi cerca scorciatoie non arriva al premio.
+          </motion.p>
+          <motion.p 
+            className="text-yellow-400/80 text-xs md:text-sm mb-6 font-medium"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 3.0 }}
+          >
+            Chi entra ora compete con chi ha già iniziato.
+          </motion.p>
           
           <motion.div 
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4"
@@ -506,10 +542,21 @@ const LandingPage = () => {
           >
             <motion.button 
               className="cta-premium px-8 py-4 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-500 to-purple-600 text-black text-base font-black uppercase tracking-wider relative group"
-              onClick={handleRegisterClick}
+              onClick={() => {
+                // Dispatch tracking event
+                window.dispatchEvent(new CustomEvent("m1ssion:landing", { 
+                  detail: { action: "landing_cta_primary_click" } 
+                }));
+                // Scroll to mini-test
+                const miniTest = document.getElementById('mission-mini-test');
+                if (miniTest) {
+                  miniTest.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
               whileHover={{ scale: 1.05, boxShadow: '0 0 60px rgba(34,211,238,0.6), 0 0 100px rgba(34,211,238,0.3)' }}
               whileTap={{ scale: 0.95 }}
               style={{ boxShadow: '0 0 30px rgba(34,211,238,0.3)', overflow: 'visible' }}
+              aria-label="Vai al test di mentalità"
             >
               <span className="relative z-10">{t('joinTheHunt')}</span>
             </motion.button>
@@ -535,6 +582,73 @@ const LandingPage = () => {
           <ArrowDown className="w-5 h-5 text-cyan-400/50" />
         </motion.div>
       </section>
+
+      {/* WHY MOST WILL FAIL - Marketing Hook */}
+      <motion.section 
+        className="relative py-8 px-4"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true, margin: "-50px" }}
+      >
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            className="glass-container p-6 md:p-8 text-center relative overflow-hidden border-l-4 border-red-500/50"
+            whileHover={{ borderColor: 'rgba(239,68,68,0.8)' }}
+          >
+            <motion.h3 
+              className="text-xl md:text-2xl font-bold mb-6 text-white"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              Perché la maggior parte <span className="text-red-400">non vincerà</span>
+            </motion.h3>
+            
+            <div className="space-y-4 text-left mb-6">
+              <motion.div 
+                className="flex items-start gap-3"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                <span className="text-white/80">Cercano scorciatoie invece di analizzare i pattern</span>
+              </motion.div>
+              <motion.div 
+                className="flex items-start gap-3"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                <span className="text-white/80">Ignorano gli indizi iniziali pensando siano irrilevanti</span>
+              </motion.div>
+              <motion.div 
+                className="flex items-start gap-3"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                <span className="text-white/80">Sottovalutano la connessione tra le informazioni</span>
+              </motion.div>
+            </div>
+            
+            <motion.p 
+              className="text-cyan-400 font-semibold text-sm md:text-base"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              M1SSION non premia chi prova.<br/>
+              <span className="text-white">Premia chi capisce.</span>
+            </motion.p>
+            
+            <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-red-500/30 via-transparent to-transparent" />
+          </motion.div>
+        </div>
+      </motion.section>
 
       {/* PREMI IN PALIO SECTION - Premium */}
       <section 
@@ -562,12 +676,28 @@ const LandingPage = () => {
               {t('realPrizes')}
             </motion.h2>
             <motion.p 
-              className="text-base text-gray-400 max-w-2xl mx-auto subtitle-elegant"
+              className="text-base text-gray-400 max-w-2xl mx-auto subtitle-elegant mb-2"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.6 }}
             >
               {t('realPrizesDescription')}
+            </motion.p>
+            <motion.p 
+              className="text-sm text-cyan-400/80 max-w-2xl mx-auto font-medium mb-2"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+            >
+              Il premio viene consegnato fisicamente al vincitore. Nessun duplicato.
+            </motion.p>
+            <motion.p 
+              className="text-xs text-red-400/80 max-w-2xl mx-auto font-medium"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+            >
+              Ogni premio esiste una sola volta. Quando viene vinto, sparisce.
             </motion.p>
           </motion.div>
 
@@ -633,11 +763,17 @@ const LandingPage = () => {
             <div className="absolute bottom-4 right-4 text-white/60 text-xs font-normal bg-black/20 backdrop-blur-sm px-2 py-1 rounded border border-white/10 z-20">
               Image for illustration purposes only
             </div>
+            
+            {/* Credibility badge */}
+            <div className="absolute bottom-4 left-4 text-green-400 text-xs font-semibold bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-green-500/30 z-20 flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5" />
+              Consegna reale al vincitore
+            </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Launch Progress Bar - Premium */}
+      {/* MISSION ACTIVE Status Bar */}
       <motion.section 
         className="relative py-6 px-4"
         initial={{ opacity: 0, y: 30, scale: 0.98 }}
@@ -646,61 +782,65 @@ const LandingPage = () => {
         viewport={{ once: true, margin: "-50px" }}
       >
         <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/30"
+            animate={{ 
+              boxShadow: [
+                '0 0 10px rgba(34,197,94,0.2)',
+                '0 0 20px rgba(34,197,94,0.4)',
+                '0 0 10px rgba(34,197,94,0.2)'
+              ]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-green-400 text-sm font-bold uppercase tracking-wider">Missione Attiva</span>
+          </motion.div>
+          
           <motion.h3 
-            className="text-2xl md:text-3xl font-bold mb-6 text-white"
+            className="text-xl md:text-2xl font-bold mb-4 text-white"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span> in arrivo
+            La caccia è in corso
           </motion.h3>
           
           <motion.div 
-            className="relative w-full h-3 bg-black/60 rounded-full overflow-hidden border border-white/20 mb-4"
+            className="relative w-full h-2 bg-black/60 rounded-full overflow-hidden border border-cyan-500/30 mb-3"
             initial={{ scale: 0.8, opacity: 0 }}
             whileInView={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
+            {/* Animated pulse bar - no percentage, just activity indicator */}
             <motion.div
-              className="h-full rounded-full relative overflow-hidden"
-              style={{
-                background: "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
+              className="absolute inset-0 bg-gradient-to-r from-cyan-500/50 via-purple-500/50 to-cyan-500/50"
+              animate={{ 
+                x: ["-100%", "100%"],
+                opacity: [0.5, 1, 0.5]
               }}
-              animate={{
-                background: [
-                  "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)",
-                  "linear-gradient(90deg, #FF00FF, #00E5FF, #FF00FF)",
-                  "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
-                ],
-                width: ["0%", "100%"]
-              }}
-              transition={{
-                background: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-                width: { duration: 2, ease: "easeOut" }
-              }}
-            />
-            
-            {/* Pulse Effect */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-              animate={{ x: ["-100%", "100%"] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             />
           </motion.div>
           
           <motion.p 
-            className="text-white/70 text-sm"
+            className="text-white/60 text-sm mb-6"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            100% completato - La caccia inizia presto
+            Ogni decisione conta. Chi arriva tardi parte svantaggiato.
           </motion.p>
+          
+          {/* Micro Test di Mentalità */}
+          <div id="mission-mini-test" className="scroll-mt-20">
+            <MindsetMicroTest />
+          </div>
         </div>
       </motion.section>
 
       {/* INSTALLATION SECTION - Premium Glass */}
-      <section className="py-6 px-4">
+      <section id="install-section" className="py-6 px-4">
         <div className="max-w-4xl mx-auto">
           <motion.div
             className="glass-container-glow p-6 md:p-8 text-center relative overflow-hidden"
@@ -771,8 +911,9 @@ const LandingPage = () => {
               </span>
             </h2>
             
-            <p className="text-base mb-4 max-w-3xl mx-auto text-gray-300 leading-relaxed">
-              In the near future... The world becomes a gameboard. The clues are encrypted. The stakes are real.
+            <p className="text-base mb-4 max-w-3xl mx-auto text-white font-semibold leading-relaxed">
+              Non stai entrando in un gioco.<br/>
+              Stai entrando in un sistema.
             </p>
             
             <p className="text-base mb-4 max-w-3xl mx-auto text-gray-300 leading-relaxed">
@@ -815,7 +956,7 @@ const LandingPage = () => {
               Ottieni accesso esclusivo e un codice referral unico. Preparati per l'avventura che cambierà tutto.
             </p>
             
-            <div className="space-y-4">
+            <div className="space-y-3">
               <motion.div
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -824,7 +965,7 @@ const LandingPage = () => {
                 <motion.div
                   className="absolute inset-0"
                   style={{
-                    background: "linear-gradient(45deg, #ec4899, #8B5CF6, #00E5FF)"
+                    background: "linear-gradient(45deg, #ec4899, #8B5CF6, #ec4899)"
                   }}
                   animate={{
                     backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
@@ -835,25 +976,24 @@ const LandingPage = () => {
                   onClick={handleRegisterClick}
                   className="relative w-full bg-transparent text-white text-lg font-bold py-4 px-12 hover:bg-transparent transition-all duration-500"
                   style={{
-                    boxShadow: "0 0 30px rgba(139, 92, 246, 0.4)"
+                    boxShadow: "0 0 30px rgba(236, 72, 153, 0.4)"
                   }}
                 >
                   START M1SSION
                 </Button>
               </motion.div>
+              
+              {/* Trust micro-copy - riduzione frizione */}
+              <p className="text-white/40 text-xs text-center">
+                Accesso gratuito. La verifica serve solo in caso di vittoria.
+              </p>
             </div>
           </motion.div>
         </div>
       </motion.section>
 
       {/* SCOPRI M1SSION SECTION - Premium */}
-      <motion.section 
-        className="py-10 px-4"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, type: "spring", stiffness: 80 }}
-        viewport={{ once: true, margin: "-80px" }}
-      >
+      <section className="py-10 px-4">
         <div className="max-w-6xl mx-auto">
           <motion.h2 
             className="text-2xl md:text-3xl font-bold mb-8 text-center"
@@ -914,17 +1054,16 @@ const LandingPage = () => {
             })}
           </div>
 
-          <div className="text-center">
-            <Button 
+          <div className="text-center mt-8 mb-4">
+            <button 
               onClick={handleRegisterClick}
-              className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black font-bold px-8 py-6 rounded-full text-lg hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
-              size="lg"
+              className="text-cyan-400 hover:text-cyan-300 text-sm font-medium underline underline-offset-4 transition-colors"
             >
-              Inizia La Tua M1SSION
-            </Button>
+              Pronto? Registrati ora →
+            </button>
           </div>
         </div>
-      </motion.section>
+      </section>
 
       {/* STAY UPDATED SECTION - Compact */}
       <motion.section 
@@ -980,56 +1119,94 @@ const LandingPage = () => {
             </p>
           </motion.div>
           
-          {/* Premium Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-            {subscriptions.map((sub, index) => (
-              <motion.div
-                key={index}
-                className={`subscription-card p-3 ${sub.highlight ? 'subscription-card-highlight bg-gradient-to-b from-[#00E5FF]/10 to-black/80' : ''}`}
-                initial={{ opacity: 0, y: 40, scale: 0.9 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}
-                transition={{ delay: index * 0.1, duration: 0.5, type: "spring", stiffness: 100 }}
-                viewport={{ once: true, margin: "-50px" }}
+          {/* Piano Base - Sempre Visibile */}
+          <div className="flex justify-center mb-4">
+            <motion.div
+              className="subscription-card p-4 max-w-sm w-full"
+              initial={{ opacity: 0, y: 40, scale: 0.9 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}
+              transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
+              viewport={{ once: true, margin: "-50px" }}
+            >
+              <div className="mb-4">
+                <h3 className="text-lg font-bold text-white">{subscriptions[0].title}</h3>
+                <div className="mt-2">
+                  <span className="text-xl font-bold text-white">{subscriptions[0].price}</span>
+                  {subscriptions[0].period && <span className="text-white/50 text-xs">{subscriptions[0].period}</span>}
+                </div>
+              </div>
+              
+              <div className="space-y-2 mb-4">
+                {subscriptions[0].features.map((feature, idx) => (
+                  <div key={idx} className="flex items-start">
+                    <Check className="w-4 h-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80 text-sm">{feature}</span>
+                  </div>
+                ))}
+              </div>
+              
+              <Button
+                onClick={handleRegisterClick}
+                className={`w-full text-sm py-2 ${subscriptions[0].buttonColor}`}
+                disabled={false}
               >
-                {/* Badge per il piano consigliato */}
-                {sub.highlight && (
-                  <div className="absolute -top-3 -right-3 bg-[#00E5FF] text-black text-xs font-bold py-1 px-2 rounded-full flex items-center">
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Top
-                  </div>
-                )}
-                
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold text-white">{sub.title}</h3>
-                  <div className="mt-2">
-                    <span className="text-xl font-bold text-white">{sub.price}</span>
-                    {sub.period && <span className="text-white/50 text-xs">{sub.period}</span>}
-                  </div>
-                </div>
-                
-                <div className="space-y-2 mb-4">
-                  {sub.features.slice(0, 3).map((feature, idx) => (
-                    <div key={idx} className="flex items-start">
-                      <Check className="w-4 h-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                      <span className="text-white/80 text-sm">{feature}</span>
-                    </div>
-                  ))}
-                  {sub.features.length > 3 && (
-                    <p className="text-white/60 text-xs">+{sub.features.length - 3} altri vantaggi</p>
-                  )}
-                </div>
-                
-                <Button
-                  onClick={handleRegisterClick}
-                  className={`w-full text-sm py-2 ${sub.buttonColor}`}
-                  disabled={false}
-                >
-                  {sub.buttonText}
-                </Button>
-              </motion.div>
-            ))}
+                {subscriptions[0].buttonText}
+              </Button>
+            </motion.div>
           </div>
+
+          {/* Piani Premium - Accordion */}
+          <PremiumPlansAccordion>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              {subscriptions.slice(1).map((sub, index) => (
+                <motion.div
+                  key={index}
+                  className={`subscription-card p-3 ${sub.highlight ? 'subscription-card-highlight bg-gradient-to-b from-[#00E5FF]/10 to-black/80' : ''}`}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}
+                  transition={{ delay: index * 0.1, duration: 0.4, type: "spring", stiffness: 100 }}
+                >
+                  {/* Badge per il piano consigliato */}
+                  {sub.highlight && (
+                    <div className="absolute -top-3 -right-3 bg-[#00E5FF] text-black text-xs font-bold py-1 px-2 rounded-full flex items-center">
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Top
+                    </div>
+                  )}
+                  
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-white">{sub.title}</h3>
+                    <div className="mt-2">
+                      <span className="text-xl font-bold text-white">{sub.price}</span>
+                      {sub.period && <span className="text-white/50 text-xs">{sub.period}</span>}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 mb-4">
+                    {sub.features.slice(0, 3).map((feature, idx) => (
+                      <div key={idx} className="flex items-start">
+                        <Check className="w-4 h-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                        <span className="text-white/80 text-sm">{feature}</span>
+                      </div>
+                    ))}
+                    {sub.features.length > 3 && (
+                      <p className="text-white/60 text-xs">+{sub.features.length - 3} altri vantaggi</p>
+                    )}
+                  </div>
+                  
+                  <Button
+                    onClick={handleRegisterClick}
+                    className={`w-full text-sm py-2 ${sub.buttonColor}`}
+                    disabled={false}
+                  >
+                    {sub.buttonText}
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
+          </PremiumPlansAccordion>
 
           <div className="text-center">
             <p className="text-white/50 text-xs">
@@ -1073,8 +1250,11 @@ const LandingPage = () => {
               <h2 className="text-xl font-bold text-white mb-2">
                 Verifica la tua identità
               </h2>
-              <p className="text-white/50 text-sm subtitle-elegant">
+              <p className="text-white/50 text-sm subtitle-elegant mb-2">
                 Per garantire un'esperienza di gioco sicura e conforme alle normative, è necessario completare la verifica dell'identità prima di ricevere premi.
+              </p>
+              <p className="text-cyan-400/70 text-xs font-medium">
+                ✓ La verifica serve solo per la consegna del premio al vincitore
               </p>
             </div>
             

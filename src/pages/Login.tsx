@@ -122,11 +122,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center bg-black px-4 py-8 relative overflow-x-hidden overflow-y-auto">
-      {/* 🚀 M1 Logo Splash Animation - 7 seconds */}
+      {/* 🚀 M1 Logo Splash Animation - 2 seconds (reduced from 7s for better UX) */}
       {showSplash && (
         <M1LogoSplash 
           onComplete={handleSplashComplete} 
-          duration={7000} 
+          duration={2000} 
         />
       )}
       

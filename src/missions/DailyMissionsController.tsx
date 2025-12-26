@@ -105,7 +105,15 @@ export default function DailyMissionsController() {
     unregisterActivePopup('DailyMissions:Briefing');
     refreshState();
     console.log('[DailyMissions] 🚀 Mission started');
-  }, [engineState.currentMission, unregisterActivePopup, refreshState]);
+    
+    // ✅ FIX: Apri automaticamente il modal delle azioni dopo START MISSION
+    // Così l'utente sa cosa fare per completare la fase 1
+    setTimeout(() => {
+      setShowActionsModal(true);
+      registerActivePopup('DailyMissions:Actions');
+      console.log('[DailyMissions] 📋 Opened actions modal automatically');
+    }, 300);
+  }, [engineState.currentMission, unregisterActivePopup, refreshState, registerActivePopup]);
 
   const handleDismissBriefing = useCallback(() => {
     markBriefingShown();

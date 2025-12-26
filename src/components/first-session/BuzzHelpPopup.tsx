@@ -19,6 +19,7 @@ import {
   COPY,
   isFirstSession,
   getMissionIndex,
+  areMissionsCompleted,
   isBuzzHelpShown,
   markBuzzHelpShown,
 } from '@/config/firstSessionConfig';
@@ -62,10 +63,16 @@ export default function BuzzHelpPopup({ mapContainerId = 'ml-sandbox' }: BuzzHel
   const canShow = useCallback(() => {
     // Non mostrare se già mostrato (o se utente ha scelto "non mostrare più")
     if (isBuzzHelpShown()) return false;
-    // ✅ FIX 23/12/2025: Rimosso check isFirstSession() - usa solo isBuzzHelpShown()
-    // Il flag m1_buzz_help_shown traccia già se il popup è stato mostrato/disabilitato
-    // Non mostrare se utente ha già iniziato le missioni (passata la prima)
-    if (getMissionIndex() > 0) return false;
+    
+    // ✅ FIX 24/12/2025: Mostra popup SOLO in questi casi:
+    // 1. Utente è alla prima micro-missione (getMissionIndex() === 0) e non sta interagendo
+    // 2. Utente ha completato TUTTE le micro-missioni ed è tornato sulla mappa
+    const missionIndex = getMissionIndex();
+    const missionsCompleted = areMissionsCompleted();
+    
+    // Se le micro-missioni sono in corso (non completate e non alla prima), non interrompere
+    if (!missionsCompleted && missionIndex > 0) return false;
+    
     // ✅ FIX B5: Usa flag store affidabile invece di DOM query fragile
     // Non mostrare se ci sono altri popup aperti (registrati nel store)
     if (isPopupInteractionActive) return false;
