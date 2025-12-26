@@ -66,6 +66,7 @@ import PrivacyPermissionsSettings from "@/pages/settings/PrivacyPermissionsSetti
 import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import SpectatorPage from "@/pages/SpectatorPage";
 // © 2025 M1SSION™ – Lazy-loaded Admin/Panel pages for bundle optimization
 const SendNotificationPage = React.lazy(() => import("@/pages/admin/SendNotificationPage"));
 const MissionPanelPage = React.lazy(() => import("@/pages/admin/MissionPanelPage"));
@@ -258,6 +259,11 @@ const WouterRoutes: React.FC = () => {
           {/* Landing Page - Always accessible */}
           <Route path="/landing">
             <LandingPage />
+          </Route>
+
+          {/* Spectator Mode - Public Preview (No Auth Required) */}
+          <Route path="/spectator">
+            <SpectatorPage />
           </Route>
 
           {/* Protected routes */}

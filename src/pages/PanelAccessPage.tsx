@@ -30,8 +30,9 @@ import PushControlPanelPage from '@/pages/panel/PushControlPanelPage';
 import PushAutoPreflightPage from '@/pages/panel/PushAutoPreflightPage';
 import { PUSH_PREFLIGHT_ENABLED } from '@/config/featureFlags';
 import { QrOpsPanel } from '@/components/qr/QrOpsPanel';
+import LandingTelemetryPanel from '@/components/panel/LandingTelemetryPanel';
 
-type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'mission-command-center' | 'qr-control' | 'qr-ops' | 'marker-rewards' | 'push-center' | 'push-control' | 'push-sender' | 'push-preflight';
+type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'mission-command-center' | 'qr-control' | 'qr-ops' | 'marker-rewards' | 'push-center' | 'push-control' | 'push-sender' | 'push-preflight' | 'landing-telemetry';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -398,6 +399,37 @@ const PanelAccessPage = () => {
     );
   }
 
+  // Landing Telemetry View
+  if (currentView === 'landing-telemetry' && hasAccess && isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <Helmet>
+          <title>M1SSION PANEL™ - Landing Telemetry</title>
+        </Helmet>
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-4 mb-8">
+              <button 
+                onClick={() => setCurrentView('home')}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ← Torna al Panel
+              </button>
+            </div>
+            <LandingTelemetryPanel />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ========== HOME VIEW ==========
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
@@ -685,6 +717,26 @@ const PanelAccessPage = () => {
                     <div>
                       <h3 className="font-semibold text-white">🔍 Push Preflight (RO)</h3>
                       <p className="text-gray-400 text-sm">Diagnostica catena push (solo lettura)</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Landing Telemetry - Enterprise Funnel Tracking */}
+              {isAdmin && (
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setCurrentView('landing-telemetry')}
+                  className="glass-card p-4 border border-cyan-500/30 cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Zap className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">📊 Landing Telemetry</h3>
+                      <p className="text-gray-400 text-sm">Funnel events & conversioni landing</p>
                     </div>
                   </div>
                 </motion.div>
