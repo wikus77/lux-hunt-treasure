@@ -21,6 +21,7 @@ import { DebugBuzzPanel } from '@/debug/DebugBuzzPanel';
 import { useActiveMissionEnrollment } from '@/hooks/useActiveMissionEnrollment';
 import { Rocket, Lock, AlertCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { InactivityHint } from '@/components/first-session';
 
 export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
@@ -347,6 +348,8 @@ export const BuzzPage: React.FC = () => {
 
       {/* Debug Panel (only if enabled) */}
       {debugEnabled && <DebugBuzzPanel />}
+      {/* 🆕 Hint per utenti inattivi (1 volta al giorno) */}
+      <InactivityHint type="buzz" />
     </div>
   );
 };

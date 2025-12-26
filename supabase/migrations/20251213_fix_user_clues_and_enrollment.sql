@@ -164,3 +164,4 @@ DO $$ BEGIN RAISE NOTICE '✅ Migration 20251213_fix_user_clues_and_enrollment c
 
 
 
+

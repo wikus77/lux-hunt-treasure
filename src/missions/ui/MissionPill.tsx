@@ -12,7 +12,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Target, Clock, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { useAuth } from '@/hooks/use-auth';
 import { 
   MISSIONS_ENABLED, 
   getMissionOfTheDay,
@@ -33,12 +33,13 @@ import { creditM1USafe } from '../rewards/creditM1U';
 import '@/features/m1u/m1u-ui.css';
 
 export function MissionPill() {
-  const { isAuthenticated } = useUnifiedAuth();
+  const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [phase, setPhase] = useState(0);
   const [showCompletion, setShowCompletion] = useState(false);
   const [completedReward, setCompletedReward] = useState(0);
   const [completedPhase, setCompletedPhase] = useState<1 | 2>(1);
+  const [isReady, setIsReady] = useState(false);
 
   const mission = getMissionOfTheDay();
   const { phase1: phase1Reward, phase2: phase2Reward } = calculatePhaseRewards(mission.totalRewardM1U);
@@ -49,17 +50,31 @@ export function MissionPill() {
     setPhase(state.phase);
   }, []);
 
+  // Initialize after mount
   useEffect(() => {
-    if (!MISSIONS_ENABLED || !isAuthenticated) return;
-    refreshState();
+    if (!MISSIONS_ENABLED) return;
     
-    // Check periodically
+    // Wait a bit for auth to settle, then show
+    const timer = setTimeout(() => {
+      refreshState();
+      setIsReady(true);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [refreshState]);
+
+  // Refresh periodically when user is available
+  useEffect(() => {
+    if (!MISSIONS_ENABLED || !user || !isReady) return;
+    
     const interval = setInterval(refreshState, 5000);
     return () => clearInterval(interval);
-  }, [isAuthenticated, refreshState]);
+  }, [user, isReady, refreshState]);
 
-  // Don't render if disabled or not authenticated or mission completed
-  if (!MISSIONS_ENABLED || !isAuthenticated || phase === 3) return null;
+  // Don't render if disabled or not ready or mission completed
+  if (!MISSIONS_ENABLED) return null;
+  if (!isReady) return null;
+  if (phase === 3) return null;
 
   const isPhase2Ready = isPhase2Available();
   const isNotStarted = phase === 0;
@@ -99,10 +114,11 @@ export function MissionPill() {
     <>
       {/* PILL */}
       <motion.button
-        className="pill-orb fixed z-[1001]"
+        className="pill-orb fixed"
         style={{
           left: '16px',
           bottom: 'calc(env(safe-area-inset-bottom, 34px) + 170px)',
+          zIndex: 9998,
         }}
         onClick={() => setShowModal(true)}
         initial={{ scale: 0 }}

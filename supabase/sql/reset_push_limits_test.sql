@@ -27,3 +27,4 @@ SELECT COUNT(*) as log_rimanenti_oggi FROM auto_push_log WHERE sent_date = CURRE
 
 
 
+

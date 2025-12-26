@@ -15,3 +15,4 @@ ALTER COLUMN stake_type SET DEFAULT 'm1u';
 
 
 
+

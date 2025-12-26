@@ -21,6 +21,8 @@ import { PULSE_ENABLED } from "@/config/featureFlags";
 import StreakPill from "@/components/gamification/StreakPill";
 import CashbackVaultPill from "@/components/home/CashbackVaultPill";
 import MissionSync from "@/components/home/MissionSync";
+import { MissionPill } from "@/missions/ui/MissionPill";
+import { InactivityHint } from "@/components/first-session";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -273,6 +275,9 @@ const { isConnected } = useRealTimeNotifications();
                     <AgentEnergyPill />
                   </motion.div>
                 )}
+
+                {/* 🎯 DAILY MISSIONS: Mission Pill - Fixed, bottom, same position as Map */}
+                <MissionPill />
                 
 
                 {/* 🚀 NATIVE: Layout responsive per titolo */}
@@ -383,6 +388,8 @@ const { isConnected } = useRealTimeNotifications();
           )}
         </AnimatePresence>
       </div>
+      {/* 🆕 Hint per utenti inattivi (1 volta al giorno) */}
+      <InactivityHint type="home" />
       </MissionSync>
     </div>
   );

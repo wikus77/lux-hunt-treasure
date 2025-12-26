@@ -38,3 +38,4 @@ GRANT EXECUTE ON FUNCTION public.m1_get_next_buzz_level(UUID) TO authenticated;
 
 
 
+

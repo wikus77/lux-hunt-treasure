@@ -138,3 +138,4 @@ GRANT EXECUTE ON FUNCTION public.get_claimed_clue_milestones() TO authenticated;
 
 
 
+

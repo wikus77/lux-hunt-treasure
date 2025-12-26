@@ -272,3 +272,4 @@ export const QR_TYPE_LABELS: Record<MissionQrType, { label: string; icon: string
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 
+

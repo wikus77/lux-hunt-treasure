@@ -23,6 +23,8 @@ import TermsBanner from '@/components/legal/TermsBanner';
 import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
 import { useOnboardingTutorial } from "@/hooks/useOnboardingTutorial";
 // MicroMissionsCard ora è globale in App.tsx
+// 🎯 DAILY MISSIONS: Mission pill (same as MapTiler3D)
+import { MissionPill } from '@/missions/ui/MissionPill';
 
 const Home = () => {
   const [error, setError] = useState<string | null>(null);
@@ -367,6 +369,9 @@ const Home = () => {
           onClose={hideTutorialForever}
         />
       )}
+
+      {/* 🎯 DAILY MISSIONS: Mission pill (stessa posizione della mappa) */}
+      <MissionPill />
 
       {/* MicroMissionsCard ora è globale in App.tsx */}
     </>

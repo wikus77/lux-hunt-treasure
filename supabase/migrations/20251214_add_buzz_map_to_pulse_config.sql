@@ -19,3 +19,4 @@ SELECT type, weight, cooldown_sec, per_user_cap_day, enabled FROM public.pulse_c
 
 
 
+
