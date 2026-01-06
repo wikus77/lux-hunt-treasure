@@ -7,7 +7,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight } from 'lucide-react';
-import { GameEvent, getEventCopy } from '@/gameplay/events';
+import { GameEvent, getEventCopy, cancelAutoDismiss, startAutoDismiss } from '@/gameplay/events';
 
 interface CelebrationToastProps {
   event: GameEvent;
@@ -59,16 +59,12 @@ export const CelebrationToast: React.FC<CelebrationToastProps> = ({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onMouseEnter={() => {
-            // Pause auto-dismiss on hover
-            import('@/gameplay/events').then(({ cancelAutoDismiss }) => {
-              cancelAutoDismiss();
-            });
+            // Pause auto-dismiss on hover (top-level import, no dynamic)
+            cancelAutoDismiss();
           }}
           onMouseLeave={() => {
-            // Resume auto-dismiss
-            import('@/gameplay/events').then(({ startAutoDismiss }) => {
-              startAutoDismiss();
-            });
+            // Resume auto-dismiss (top-level import, no dynamic)
+            startAutoDismiss();
           }}
         >
           <div className="flex items-center p-4 gap-3">
