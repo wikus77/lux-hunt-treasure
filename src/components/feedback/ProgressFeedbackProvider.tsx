@@ -30,12 +30,28 @@ export const ProgressFeedbackProvider: React.FC<{ children: React.ReactNode }> =
   const [, navigate] = useLocation();
   
   // 🛡️ ALLOWLIST CHECK: Only show celebrations to allowlisted users
-  const isAllowed = isUserInProgressFeedbackAllowlist(user?.email);
+  const userEmail = user?.email;
+  const isAllowed = isUserInProgressFeedbackAllowlist(userEmail);
+  
+  // 🐛 DEBUG: Log state on every render (only for allowlisted users)
+  useEffect(() => {
+    console.log('[ProgressFeedback] 🔍 DEBUG STATE:', {
+      PROGRESS_FEEDBACK_ENABLED,
+      authLoading,
+      userEmail: userEmail || 'NOT_AVAILABLE',
+      isAllowed,
+      hasUser: !!user,
+      timestamp: new Date().toISOString()
+    });
+  }, [authLoading, userEmail, isAllowed, user]);
   
   // Subscribe to queue changes
   useEffect(() => {
     // Wait for auth to load before checking
-    if (authLoading) return;
+    if (authLoading) {
+      console.log('[ProgressFeedback] ⏳ Auth still loading, waiting...');
+      return;
+    }
     
     if (!PROGRESS_FEEDBACK_ENABLED) {
       console.log('[ProgressFeedback] ⚠️ Feature disabled via flag');
@@ -44,7 +60,7 @@ export const ProgressFeedbackProvider: React.FC<{ children: React.ReactNode }> =
     
     // 🛡️ ALLOWLIST: Skip if user not in allowlist
     if (!isAllowed) {
-      console.log('[ProgressFeedback] 🔒 User not in allowlist, skipping');
+      console.log('[ProgressFeedback] 🔒 User not in allowlist:', { userEmail });
       return;
     }
     
@@ -66,20 +82,36 @@ export const ProgressFeedbackProvider: React.FC<{ children: React.ReactNode }> =
   
   // Listen for global game events
   useEffect(() => {
-    if (!PROGRESS_FEEDBACK_ENABLED) return;
-    if (!isAllowed) return; // 🛡️ ALLOWLIST check
+    // Wait for auth to finish loading
+    if (authLoading) {
+      console.log('[ProgressFeedback] 📡 Event listener: waiting for auth...');
+      return;
+    }
+    
+    if (!PROGRESS_FEEDBACK_ENABLED) {
+      console.log('[ProgressFeedback] 📡 Event listener: feature disabled');
+      return;
+    }
+    
+    if (!isAllowed) {
+      console.log('[ProgressFeedback] 📡 Event listener: user not allowed, skipping');
+      return;
+    }
+    
+    console.log('[ProgressFeedback] 📡 ATTACHING global event listener for:', userEmail);
     
     const handleGameEvent = (e: CustomEvent<GameEvent>) => {
-      console.log('[ProgressFeedback] 📥 Received event:', e.detail.type);
+      console.log('[ProgressFeedback] 📥 RECEIVED event:', e.detail.type, e.detail);
       enqueueEvent(e.detail);
     };
     
     window.addEventListener('m1ssion:game-event', handleGameEvent as EventListener);
     
     return () => {
+      console.log('[ProgressFeedback] 📡 REMOVING global event listener');
       window.removeEventListener('m1ssion:game-event', handleGameEvent as EventListener);
     };
-  }, [isAllowed]);
+  }, [authLoading, isAllowed, userEmail]);
   
   // Handle dismiss
   const handleDismiss = useCallback(() => {
@@ -127,10 +159,42 @@ export const ProgressFeedbackProvider: React.FC<{ children: React.ReactNode }> =
     return null;
   };
   
+  // 🐛 DEBUG INDICATOR: Only visible to allowlisted users (Joseph)
+  const renderDebugIndicator = () => {
+    if (!isAllowed) return null;
+    
+    return (
+      <div 
+        style={{
+          position: 'fixed',
+          bottom: '100px',
+          right: '10px',
+          zIndex: 99999,
+          background: 'rgba(0, 255, 136, 0.9)',
+          color: '#000',
+          padding: '8px 12px',
+          borderRadius: '8px',
+          fontSize: '10px',
+          fontFamily: 'monospace',
+          maxWidth: '200px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
+        }}
+      >
+        <div><strong>🎉 PF DEBUG</strong></div>
+        <div>FLAG: {PROGRESS_FEEDBACK_ENABLED ? '✅ ON' : '❌ OFF'}</div>
+        <div>AUTH: {authLoading ? '⏳' : '✅'}</div>
+        <div>EMAIL: {userEmail?.slice(0, 10) || '❌ N/A'}...</div>
+        <div>ALLOWED: {isAllowed ? '✅' : '❌'}</div>
+        <div>EVENT: {currentEvent?.type || 'none'}</div>
+      </div>
+    );
+  };
+  
   return (
     <>
       {children}
       {renderOverlay()}
+      {renderDebugIndicator()}
     </>
   );
 };
