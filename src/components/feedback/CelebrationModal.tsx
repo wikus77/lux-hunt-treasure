@@ -4,7 +4,7 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -22,15 +22,21 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
   onCtaClick,
 }) => {
   const copy = getEventCopy(event);
+  const animationRef = useRef<number | null>(null);
+  const isMountedRef = useRef(true);
   
-  // Trigger confetti on mount
+  // Trigger confetti on mount with proper cleanup
   useEffect(() => {
+    isMountedRef.current = true;
     const duration = 2000;
     const end = Date.now() + duration;
     
     const colors = getConfettiColors(event.type);
     
     const frame = () => {
+      // 🛡️ Cleanup check: stop if unmounted
+      if (!isMountedRef.current) return;
+      
       confetti({
         particleCount: 3,
         angle: 60,
@@ -46,8 +52,8 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
         colors,
       });
       
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
+      if (Date.now() < end && isMountedRef.current) {
+        animationRef.current = requestAnimationFrame(frame);
       }
     };
     
@@ -57,6 +63,14 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
     if (navigator.vibrate) {
       navigator.vibrate([50, 30, 100]);
     }
+    
+    // 🛡️ Cleanup on unmount
+    return () => {
+      isMountedRef.current = false;
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [event.type]);
   
   // Handle ESC key

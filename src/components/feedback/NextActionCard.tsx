@@ -12,7 +12,7 @@ import { determineNextAction, NextAction } from '@/gameplay/progress';
 import { useMissionStatus } from '@/hooks/useMissionStatus';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
-import { PROGRESS_FEEDBACK_ENABLED } from '@/config/featureFlags';
+import { PROGRESS_FEEDBACK_ENABLED, isUserInProgressFeedbackAllowlist } from '@/config/featureFlags';
 
 interface NextActionCardProps {
   className?: string;
@@ -24,6 +24,9 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ className = '' }
   const { missionStatus } = useMissionStatus();
   const { dailyBuzzCounter } = useBuzzCounter(user?.id);
   
+  // 🛡️ ALLOWLIST CHECK
+  const isAllowed = isUserInProgressFeedbackAllowlist(user?.email);
+  
   // Determine next action
   const nextAction: NextAction = useMemo(() => {
     return determineNextAction({
@@ -34,8 +37,8 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ className = '' }
     });
   }, [missionStatus?.cluesFound, dailyBuzzCounter]);
   
-  // Don't render if feature disabled
-  if (!PROGRESS_FEEDBACK_ENABLED) return null;
+  // Don't render if feature disabled OR user not in allowlist
+  if (!PROGRESS_FEEDBACK_ENABLED || !isAllowed) return null;
   
   // Don't render if no action or low priority
   if (!nextAction || nextAction.priority < 50) return null;

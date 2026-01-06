@@ -51,6 +51,20 @@ export const BUZZ_MAP_ENABLED = true;
 // Set to false to disable all celebrations (safe rollback)
 export const PROGRESS_FEEDBACK_ENABLED = true;  // 🎉 Progress & Celebration System
 
+// 🛡️ ALLOWLIST: Only these emails see Progress Feedback (dark ship)
+// Add more emails to gradually rollout the feature
+export const PROGRESS_FEEDBACK_ALLOWLIST: string[] = [
+  'wikus77@hotmail.it',
+  // Add more test users here before full rollout
+];
+
+// Helper to check if user is in allowlist
+export const isUserInProgressFeedbackAllowlist = (email: string | undefined | null): boolean => {
+  if (!PROGRESS_FEEDBACK_ENABLED) return false;
+  if (!email) return false;
+  return PROGRESS_FEEDBACK_ALLOWLIST.includes(email.toLowerCase());
+};
+
 // ====== LAUNCH FLAGS (19 Dec 2025) ======
 // Set to true when ready for production launch
 export const PRODUCTION_LAUNCH_READY = false;
