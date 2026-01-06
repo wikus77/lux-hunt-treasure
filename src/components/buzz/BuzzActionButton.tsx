@@ -22,6 +22,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 // 🌑 Shadow Protocol v3 - Contextual trigger
 import { notifyShadowContext } from '@/stores/entityOverlayStore';
+// 🎉 Progress Feedback System - Celebration events
+import { emitGameEvent } from '@/gameplay/events';
 
 interface BuzzActionButtonProps {
   isBlocked: boolean;
@@ -235,6 +237,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         window.dispatchEvent(new CustomEvent('buzzCompleted'));
         // 🌑 Shadow Protocol v3 - Trigger contestuale BUZZ
         notifyShadowContext('buzz');
+        // 🎉 Progress Feedback - BUZZ Success event
+        emitGameEvent('BUZZ_SUCCESS', { source: 'TIER_FREE', tier: userTier });
         
         // 🔍 DEV-ONLY: BUZZ Flow Result Log (Tier Free)
         if (import.meta.env.DEV) {
@@ -271,6 +275,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         window.dispatchEvent(new CustomEvent('buzzCompleted'));
         // 🌑 Shadow Protocol v3 - Trigger contestuale BUZZ
         notifyShadowContext('buzz');
+        // 🎉 Progress Feedback - BUZZ Success event
+        emitGameEvent('BUZZ_SUCCESS', { source: 'GRANT_FREE', tier: userTier });
         
         // 🔍 DEV-ONLY: BUZZ Flow Result Log (Grant Free)
         if (import.meta.env.DEV) {
@@ -334,6 +340,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         available: currentBalance
       });
       showInsufficientM1UToast(costM1U, currentBalance);
+      // 🎉 Progress Feedback - Insufficient M1U event
+      emitGameEvent('BUZZ_INSUFFICIENT_M1U', { required: costM1U, available: currentBalance });
       return;
     }
 
@@ -396,10 +404,14 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       window.dispatchEvent(new CustomEvent('buzzCompleted'));
       // 🌑 Shadow Protocol v3 - Trigger contestuale BUZZ
       notifyShadowContext('buzz');
+      // 🎉 Progress Feedback - BUZZ Success event
+      emitGameEvent('BUZZ_SUCCESS', { source: 'M1U_PAID', costM1U, tier: userTier });
       
       // 🆕 M1SSION Cashback Vault™ - Accumula cashback (1 M1U = €0.10)
       const costEur = costM1U / 10;
       await accrueFromBuzz({ costEur, tier: userTier });
+      // 🎉 Progress Feedback - Cashback accrued event
+      emitGameEvent('CASHBACK_ACCRUED', { amount: costEur });
       
       // 🔍 DEV-ONLY: BUZZ Flow Result Log
       if (import.meta.env.DEV) {
