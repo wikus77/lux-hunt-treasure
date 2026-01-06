@@ -23,6 +23,7 @@ import CashbackVaultPill from "@/components/home/CashbackVaultPill";
 import MissionSync from "@/components/home/MissionSync";
 import { MissionPill } from "@/missions/ui/MissionPill";
 import { InactivityHint } from "@/components/first-session";
+import { NextActionCard } from "@/components/feedback";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -275,6 +276,8 @@ const { isConnected } = useRealTimeNotifications();
                 {/* 🎯 DAILY MISSIONS: Mission Pill - Fixed, bottom, same position as Map */}
                 <MissionPill />
                 
+                {/* 🎯 PROSSIMO PASSO: Next Action Card (Progress Feedback System) */}
+                <NextActionCard className="mb-4" />
 
                 {/* 🎯 CONTENT_BELOW_BLOCK: contenuto sotto i pill */}
                 <motion.div

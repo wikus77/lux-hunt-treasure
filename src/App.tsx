@@ -70,6 +70,8 @@ import { DailyMissionsController } from "./missions";
 import { MicroMissionsCard } from "./components/first-session";
 // 🏆 CLUE MILESTONES: Global watcher for level-up rewards
 import { ClueMilestoneWatcher } from "./components/milestones/ClueMilestoneWatcher";
+// 🎉 PROGRESS FEEDBACK: Celebration overlays and progress toasts
+import { ProgressFeedbackProvider } from "./components/feedback";
 
 function App() {
   // 🚀 NATIVE APP FEEL: Show splash on EVERY app launch (but only once per session)
@@ -258,6 +260,8 @@ function App() {
                     <BadgeAuditReport />
                     {/* M1UnitsDebugPanel nascosto per il lancio - rimuovere in produzione */}
                     {/* <M1UnitsDebugPanel /> */}
+                    {/* 🎉 PROGRESS FEEDBACK: Celebration overlays and progress toasts */}
+                    <ProgressFeedbackProvider children={null} />
                   </InterestSignalsProvider>
                   </OnboardingProvider>
                 </AuthProvider>
