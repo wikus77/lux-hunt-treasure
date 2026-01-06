@@ -20,10 +20,10 @@ import { AgentEnergyPill } from "@/features/pulse";
 import { PULSE_ENABLED } from "@/config/featureFlags";
 import StreakPill from "@/components/gamification/StreakPill";
 import CashbackVaultPill from "@/components/home/CashbackVaultPill";
+import FortuneWheelPill from "@/components/home/FortuneWheelPill";
 import MissionSync from "@/components/home/MissionSync";
-import { MissionPill } from "@/missions/ui/MissionPill";
 import { InactivityHint } from "@/components/first-session";
-import { NextActionCard } from "@/components/feedback";
+import { NextActionCard, DailyMissionCard, MotivationalPopup, FortuneWheel } from "@/components/feedback";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -31,6 +31,7 @@ const AppHome = () => {
   // 🔐 CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showFortuneWheel, setShowFortuneWheel] = useState(false);
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
@@ -261,6 +262,15 @@ const { isConnected } = useRealTimeNotifications();
                       <CashbackVaultPill />
                     </motion.div>
                     
+                    {/* 🎡 Fortune Wheel Pill - Once daily */}
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, delay: 0.08 }}
+                    >
+                      <FortuneWheelPill />
+                    </motion.div>
+                    
                     {PULSE_ENABLED && (
                       <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
@@ -273,11 +283,11 @@ const { isConnected } = useRealTimeNotifications();
                   </div>
                 </div>
 
-                {/* 🎯 DAILY MISSIONS: Mission Pill - Fixed, bottom, same position as Map */}
-                <MissionPill />
-                
-                {/* 🎯 PROSSIMO PASSO: Next Action Card (Progress Feedback System) */}
-                <NextActionCard className="mb-4" />
+                {/* 🎯 ACTION CARDS ROW: Prossimo Passo + Daily Mission affiancati */}
+                <div className="flex gap-3 mb-4">
+                  <NextActionCard />
+                  <DailyMissionCard />
+                </div>
 
                 {/* 🎯 CONTENT_BELOW_BLOCK: contenuto sotto i pill */}
                 <motion.div
@@ -388,6 +398,15 @@ const { isConnected } = useRealTimeNotifications();
       </div>
       {/* 🆕 Hint per utenti inattivi (1 volta al giorno) */}
       <InactivityHint type="home" />
+      
+      {/* 🎯 Motivational Popup - Shows once per session */}
+      <MotivationalPopup pageType="home" />
+      
+      {/* 🎡 Fortune Wheel Modal */}
+      <FortuneWheel 
+        isOpen={showFortuneWheel} 
+        onClose={() => setShowFortuneWheel(false)} 
+      />
       </MissionSync>
     </div>
   );

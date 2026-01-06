@@ -15,6 +15,7 @@ import { notifyShadowContext } from '@/stores/entityOverlayStore'; // 🌑 Shado
 import { useActiveMissionEnrollment } from '@/hooks/useActiveMissionEnrollment'; // 🚨 START M1SSION GATE
 import { BuzzMapLockedModal } from './BuzzMapLockedModal'; // 🚨 Modal clone from BuzzPage
 import { usePulseContribute } from '@/features/pulse'; // 🔋 PULSE: Contribuzione energia collettiva
+import { emitGameEvent } from '@/gameplay/events'; // 🎉 Progress Feedback System
 import '@/styles/buzz/BuzzTronDisc.css';
 
 interface BuzzMapButtonSecureProps {
@@ -267,6 +268,15 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         level: actualLevel,
         radiusKm: actualRadius,
         source: 'server'
+      });
+
+      // 🎉 EMIT GAME EVENT for Progress Feedback System
+      emitGameEvent('BUZZ_MAP_AREA_CREATED', {
+        level: actualLevel,
+        radius: actualRadius,
+        costM1U,
+        areaId: edgeResult.area_id,
+        coordinates: { lat: coordinates[0], lng: coordinates[1] }
       });
 
       // Show success toast

@@ -252,61 +252,104 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
               onClick={() => setShowClaimModal(false)}
             >
               <motion.div
-                className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 max-w-sm w-full border border-cyan-500/30 shadow-2xl"
+                className="rounded-3xl p-7 max-w-md w-full relative overflow-hidden"
+                style={{
+                  background: 'linear-gradient(145deg, rgba(0, 40, 40, 0.98), rgba(0, 60, 60, 0.95))',
+                  border: '2px solid rgba(0, 255, 136, 0.5)',
+                  boxShadow: '0 0 60px rgba(0, 255, 136, 0.3), 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1)',
+                }}
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
               >
+                {/* Ambient glow */}
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.2) 0%, transparent 60%)',
+                  pointerEvents: 'none',
+                  borderRadius: '24px',
+                }} />
+                
                 {/* Icon */}
-                <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center shadow-xl shadow-cyan-500/30">
-                    <Vault className="w-8 h-8 text-white" />
+                <div className="relative flex justify-center mb-5">
+                  <div 
+                    className="w-20 h-20 rounded-2xl flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
+                      boxShadow: '0 8px 30px rgba(0, 255, 136, 0.5)',
+                    }}
+                  >
+                    <Vault className="w-10 h-10 text-black" />
                   </div>
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xl font-bold text-center text-white mb-2">
+                <h3 
+                  className="text-2xl font-bold text-center mb-3"
+                  style={{ 
+                    color: '#00FF88',
+                    textShadow: '0 0 20px rgba(0, 255, 136, 0.6)',
+                  }}
+                >
                   M1SSION Cashback Vault™
                 </h3>
 
                 {/* Amount */}
-                <div className="text-center mb-6">
-                  <span className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-pink-400 bg-clip-text text-transparent">
+                <div className="relative text-center mb-7">
+                  <span 
+                    className="text-5xl font-bold"
+                    style={{
+                      background: 'linear-gradient(135deg, #00FF88, #00E5FF)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      textShadow: '0 0 30px rgba(0, 255, 136, 0.4)',
+                    }}
+                  >
                     +{accumulatedM1U.toLocaleString()}
                   </span>
-                  <span className="text-xl text-cyan-300 ml-2">M1U</span>
-                  <p className="text-gray-400 text-sm mt-2">
+                  <span className="text-2xl text-cyan-300 ml-2">M1U</span>
+                  <p className="text-white/70 text-sm mt-3">
                     Cashback accumulato pronto per essere riscattato
                   </p>
                 </div>
 
                 {/* Buttons */}
-                <div className="flex gap-3">
+                <div className="relative flex gap-3">
                   <motion.button
-                    className="flex-1 py-3 px-4 rounded-xl bg-gray-700 text-white font-medium"
-                    whileHover={{ scale: 1.02 }}
+                    className="flex-1 py-4 px-5 rounded-xl font-semibold"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      color: '#fff',
+                    }}
+                    whileHover={{ scale: 1.02, background: 'rgba(255, 255, 255, 0.15)' }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setShowClaimModal(false)}
                   >
                     Annulla
                   </motion.button>
                   <motion.button
-                    className={`flex-1 py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2
-                      ${canClaim 
-                        ? 'bg-gradient-to-r from-cyan-500 to-pink-500 text-white' 
-                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                      }`}
-                    whileHover={canClaim ? { scale: 1.02 } : {}}
+                    className="flex-1 py-4 px-5 rounded-xl font-bold flex items-center justify-center gap-2"
+                    style={{
+                      background: canClaim 
+                        ? 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)' 
+                        : 'rgba(100,100,100,0.3)',
+                      color: canClaim ? '#000' : 'rgba(255,255,255,0.4)',
+                      boxShadow: canClaim ? '0 4px 25px rgba(0, 255, 136, 0.4)' : 'none',
+                      cursor: canClaim ? 'pointer' : 'not-allowed',
+                    }}
+                    whileHover={canClaim ? { scale: 1.02, boxShadow: '0 6px 35px rgba(0, 255, 136, 0.6)' } : {}}
                     whileTap={canClaim ? { scale: 0.98 } : {}}
                     onClick={handleClaim}
                     disabled={!canClaim || isClaiming}
                   >
                     {isClaiming ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                     ) : (
                       <>
-                        <Gift className="w-4 h-4" />
+                        <Gift className="w-5 h-5" />
                         Riscatta
                       </>
                     )}
@@ -315,7 +358,7 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
 
                 {/* Info - SOLO DOMENICA */}
                 {!canClaim && (
-                  <p className="text-center text-gray-500 text-xs mt-4">
+                  <p className="relative text-center text-white/50 text-xs mt-5">
                     {!isSunday 
                       ? '⏰ Il riscatto è disponibile solo di Domenica'
                       : nextClaimAvailable 

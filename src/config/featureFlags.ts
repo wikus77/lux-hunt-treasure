@@ -49,8 +49,7 @@ export const BUZZ_MAP_ENABLED = true;
 // ====== PROGRESS FEEDBACK SYSTEM ======
 // Celebration overlays and progress toasts
 // Set to false to disable all celebrations (safe rollback)
-// ⚠️ DISABLED: Bug found - breaks BUZZ functionality
-export const PROGRESS_FEEDBACK_ENABLED = false;  // 🚫 DISABLED - investigating bugs
+export const PROGRESS_FEEDBACK_ENABLED = true;  // 🎉 RE-ENABLED after CORS fix
 
 // 🛡️ ALLOWLIST: Only these emails see Progress Feedback (dark ship)
 // Add more emails to gradually rollout the feature
