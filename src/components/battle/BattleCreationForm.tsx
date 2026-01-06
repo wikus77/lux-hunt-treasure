@@ -16,6 +16,7 @@ import { STAKE_TYPES, STAKE_PERCENTS } from '@/lib/battle/constants';
 import { WeaponDefenseSelector } from './WeaponDefenseSelector';
 import { BattleOverlay } from './BattleOverlay';
 import { BattleResultModal } from './BattleResultModal';
+import { emitGameEvent } from '@/gameplay/events';
 
 interface BattleCreationFormProps {
   userId: string;
@@ -135,13 +136,23 @@ export function BattleCreationForm({
       console.log('🏁 [Battle] Battle ended:', event.detail);
       setBattleResult(event.detail);
       setShowResult(true);
+      
+      // 🎉 Progress Feedback - Battle result event
+      if (event.detail.won) {
+        emitGameEvent('BATTLE_WIN', { 
+          reward: stakePercent + '%', 
+          rewardType: stakeType 
+        });
+      } else {
+        emitGameEvent('BATTLE_LOSE', {});
+      }
     };
 
     window.addEventListener(BATTLE_END_EVENT, handleBattleEnd as EventListener);
     return () => {
       window.removeEventListener(BATTLE_END_EVENT, handleBattleEnd as EventListener);
     };
-  }, []);
+  }, [stakePercent, stakeType]);
 
   const handleResultClose = () => {
     setShowResult(false);

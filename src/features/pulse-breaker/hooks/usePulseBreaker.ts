@@ -9,6 +9,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { emitGameEvent } from '@/gameplay/events';
 
 export type GameStatus = 'idle' | 'running' | 'cashed_out' | 'crashed';
 export type BetCurrency = 'PE' | 'M1U';
@@ -210,6 +211,11 @@ export function usePulseBreaker(): UsePulseBreakerReturn {
           payout: 0,
           potentialWinAtCrash: prev.betAmount * crashPt,
         }));
+        
+        // 🎉 Progress Feedback - Pulse Breaker crash event
+        emitGameEvent('PULSE_BREAKER_CRASH', {
+          crashPoint: crashPt.toFixed(2),
+        });
         return;
       }
 
@@ -261,6 +267,13 @@ export function usePulseBreaker(): UsePulseBreakerReturn {
       nearMissMultiplier: nearMiss,
       potentialWinAtCrash: potentialWin ? Math.floor(potentialWin) : null,
     }));
+    
+    // 🎉 Progress Feedback - Pulse Breaker cashout event
+    emitGameEvent('PULSE_BREAKER_CASHOUT', {
+      payout,
+      multiplier: cashoutMult.toFixed(2),
+      currency: bet.currency,
+    });
 
     return true;
   }, [user, gameState, userBalance, cleanup, updateBalanceAsync]);

@@ -12,6 +12,7 @@ import {
   UserTier,
   BUZZMAP_COOLDOWN_HOURS_BY_TIER 
 } from '@/config/tierLimits';
+import { emitGameEvent } from '@/gameplay/events';
 
 // M1SSION™ – BUZZ MAP Strategy A (Mass Market Boost)
 // Progressive Pricing Table - 42 Levels
@@ -575,6 +576,13 @@ export const useBuzzMapProgressivePricing = () => {
         nextPrice: nextPricing.price,
         nextRadius: nextPricing.radius,
         nextSegment: nextPricing.segment
+      });
+      
+      // 🎉 Progress Feedback - Buzz Map area created event
+      emitGameEvent('BUZZ_MAP_AREA_CREATED', {
+        radius: radiusKm,
+        generation: newGenerationCount,
+        segment: nextPricing.segment,
       });
 
       return true;
