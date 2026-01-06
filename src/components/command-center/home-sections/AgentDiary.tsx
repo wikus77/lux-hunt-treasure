@@ -4,12 +4,13 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Plus, RefreshCw, Sparkles, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { AgentLabModal } from "@/components/agent/AgentLabModal";
+// 🔥 CRITICAL: Lazy load AgentLabModal to prevent THREE.js hook errors
+const AgentLabModal = lazy(() => import("@/components/agent/AgentLabModal").then(m => ({ default: m.AgentLabModal })));
 import { GlassModal } from "@/components/ui/GlassModal";
 import { useAgentCode } from "@/hooks/useAgentCode";
 import { useAgentEnergy } from "@/features/pulse/hooks/useAgentEnergy";
@@ -685,11 +686,13 @@ export function AgentDiary() {
         />
       </GlassModal>
 
-      {/* Agent Lab Modal (separate) */}
-      <AgentLabModal 
-        isOpen={showAgentLab} 
-        onClose={() => setShowAgentLab(false)} 
-      />
+      {/* Agent Lab Modal (separate) - Lazy loaded to prevent THREE.js errors */}
+      <Suspense fallback={null}>
+        <AgentLabModal 
+          isOpen={showAgentLab} 
+          onClose={() => setShowAgentLab(false)} 
+        />
+      </Suspense>
     </>
   );
 }

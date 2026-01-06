@@ -63,13 +63,69 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [isCapacitor, setIsCapacitor] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
   const isMapRoute = location === '/map' || location.startsWith('/map/');
+  const isHomeRoute = location === '/home';
   const isBuzzRoute = location === '/buzz';
   const { shouldHideHeader: windowHide } = useScrollDirection(50);
   const [mapHide, setMapHide] = useState(false);
+  const [homeHide, setHomeHide] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   
   // 🛡️ BUZZ ROUTE GUARD: Disable scroll-hide on /buzz to prevent freeze
-  const hideHeader = isBuzzRoute ? false : (isMapRoute ? mapHide : windowHide);
+  const hideHeader = isBuzzRoute ? false : (isMapRoute ? mapHide : (isHomeRoute ? homeHide : windowHide));
+
+  // 🛡️ HOME SCROLL-HIDE: Scroll position based (più affidabile)
+  useEffect(() => {
+    if (!isHomeRoute || disableScrollHide) return;
+    
+    let lastScrollY = 0;
+    let ticking = false;
+    
+    const updateHeader = () => {
+      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      
+      // Solo se abbiamo scrollato abbastanza
+      if (Math.abs(currentScrollY - lastScrollY) > 5) {
+        if (currentScrollY > lastScrollY && currentScrollY > 80) {
+          // Scrolling DOWN = nascondi header
+          setHomeHide(true);
+        } else if (currentScrollY < lastScrollY) {
+          // Scrolling UP = mostra header
+          setHomeHide(false);
+        }
+        lastScrollY = currentScrollY;
+      }
+      ticking = false;
+    };
+    
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(updateHeader);
+        ticking = true;
+      }
+    };
+    
+    // Touch fallback per iOS dove scroll potrebbe non triggare
+    let touchStartY = 0;
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0]?.clientY || 0;
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      const touchEndY = e.changedTouches[0]?.clientY || 0;
+      const diff = touchStartY - touchEndY;
+      if (diff > 60) setHomeHide(true);
+      else if (diff < -60) setHomeHide(false);
+    };
+    
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.body.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.body.addEventListener('touchend', onTouchEnd, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      document.body.removeEventListener('touchstart', onTouchStart);
+      document.body.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [isHomeRoute, disableScrollHide]);
 
   // 🛡️ SCROLL-HIDE LISTENERS: Only active on /map route, disabled on /buzz to prevent freeze
   useEffect(() => {
@@ -204,7 +260,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const reduceAnimations = location === '/profile' || location === '/settings/agent-profile';
   
   // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT - Pages that should NOT show back arrow 
-  const bottomNavPages = ['/', '/home', '/map', '/buzz', '/games', '/notifications', '/leaderboard', '/intelligence', '/map-3d-tiler'];
+  const bottomNavPages = ['/', '/home', '/map', '/buzz', '/games', '/notifications', '/leaderboard', '/intelligence', '/map-3d-tiler', '/forum'];
   const isBottomNavPage = bottomNavPages.includes(location);
   const isMap = location === '/map';
 
@@ -244,8 +300,11 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         </div>
       </MinimalHeaderStrip>
       {/* FLOATING PILL HEADER - Same style as bottom nav */}
-      <div
+      <motion.div
         className="unified-header-wrapper"
+        initial={{ y: 0 }}
+        animate={{ y: hideHeader ? -120 : 0 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
         style={{
           position: 'fixed',
           top: 0,
@@ -259,8 +318,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           paddingRight: '16px',
           pointerEvents: 'none',
           // 🔧 PWA FIX: GPU layer promotion per stabilità durante scroll
-          transform: 'translateZ(0)',
-          WebkitTransform: 'translateZ(0)',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
         }}
@@ -286,7 +343,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           {/* Main Header Row */}
           <div className="flex items-center justify-between h-full px-4 sm:px-6 relative">
             {/* Left Section */}
-            <motion.div className="flex items-center" animate={{ opacity: hideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
+            <div className="flex items-center">
               {leftComponent ? (
                 leftComponent
               ) : (
@@ -314,7 +371,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                   </Link>
                 </div>
               )}
-            </motion.div>
+            </div>
 
             {/* Center section - Agent Code Vertical Layout - 🚀 NATIVE: Badge più visibile */}
             <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5">
@@ -349,7 +406,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </div>
 
             {/* Right Section */}
-            <motion.div className="flex items-center space-x-1 sm:space-x-3" animate={{ opacity: hideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
+            <div className="flex items-center space-x-1 sm:space-x-3">
               {/* Settings - 🚀 NATIVE: Apre modal popup */}
               <Button
                 variant="ghost"
@@ -382,12 +439,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                 profileImage={currentProfileImage}
                 className="cursor-pointer"
               />
-            </motion.div>
+            </div>
           </div>
 
         </div>
       </header>
-      </div>
+      </motion.div>
       
       {/* Settings Modal */}
       <SettingsModal 

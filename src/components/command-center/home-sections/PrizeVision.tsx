@@ -10,12 +10,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getAgentById, getDefaultAgent } from "@/components/agent/agentCatalog";
 
-// M1SSION PRIZE - real assets from public/assets/m1ssion-prize
+// M1SSION PRIZE - real assets from public/assets/prizes (percorsi reali)
 const missionPrizeImages = [
-  "/assets/m1ssion-prize/hero-forest-watch.png",
-  "/assets/m1ssion-prize/hero-forest-lambo.png",
-  "/assets/m1ssion-prize/hero-forest-lambo-porsche.png",
-  "/assets/m1ssion-prize/treasure-forest-car.png"
+  "/assets/prizes/auto-reali/ AUTO NASCOSTA.png",
+  "/assets/prizes/auto-reali/PORSCHE_CAYENNE_COUPE.png",
+  "/assets/prizes/99premi/APPLE WATCH_ULTRA.png",
+  "/assets/prizes/99premi/IPAD_PRO.png",
+  "/assets/prizes/gioielli-reali/collana_pietra.png",
+  "/assets/prizes/gioielli-reali/ANELLO_04.png",
+  "/assets/prizes/orologi-reali/PANERAI.png",
+  "/assets/prizes/orologi-reali/ROLEX SUBMARINER-ORO.png",
+  "/assets/prizes/borse-reali/CHANEL.png",
+  "/assets/prizes/borse-reali/HERMES_BIRKIN_COCCODRILLO.png"
 ];
 
 interface PrizeVisionProps {

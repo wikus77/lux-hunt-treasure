@@ -2,6 +2,7 @@
 // With Chat/Messages Tab
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'wouter';
 import { 
   Bell, 
   BellOff, 
@@ -28,6 +29,7 @@ import BottomNavigation from '@/components/layout/BottomNavigation';
 import { ChatList } from '@/components/chat/ChatList';
 import { ChatView } from '@/components/chat/ChatView';
 import { NewChatModal } from '@/components/chat/NewChatModal';
+import { NewGroupChatModal } from '@/components/chat/NewGroupChatModal';
 import { useChat } from '@/hooks/useChat';
 
 interface Notification {
@@ -46,6 +48,7 @@ export const NotificationsPage: React.FC = () => {
   const [markingAsRead, setMarkingAsRead] = useState<string | null>(null);
   const { user } = useAuth();
   const { vibrate } = usePWAHardwareStub();
+  const [location, setLocation] = useLocation();
   
   // Chat state
   const [activeTab, setActiveTab] = useState<'notifications' | 'messages'>('notifications');
@@ -55,7 +58,37 @@ export const NotificationsPage: React.FC = () => {
     avatar: string | null;
   } | null>(null);
   const [showNewChatModal, setShowNewChatModal] = useState(false);
-  const { totalUnreadCount: chatUnreadCount } = useChat();
+  const [showNewGroupModal, setShowNewGroupModal] = useState(false);
+  const { totalUnreadCount: chatUnreadCount, conversations } = useChat();
+
+  // ✅ Auto-open chat from URL parameter (notification deep link)
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const chatId = url.searchParams.get('chat');
+    
+    if (chatId && user && conversations.length > 0) {
+      console.log('[NotificationsPage] Opening chat from URL:', chatId);
+      
+      // Switch to messages tab
+      setActiveTab('messages');
+      
+      // Find conversation name from conversations list
+      const conv = conversations.find(c => c.conversation_id === chatId);
+      const displayName = conv?.conversation_type === 'group' 
+        ? conv?.conversation_name 
+        : conv?.other_user_username;
+      
+      setSelectedConversation({
+        id: chatId,
+        name: displayName || 'Chat',
+        avatar: conv?.other_user_avatar || null
+      });
+      
+      // Clean URL parameter after opening
+      url.searchParams.delete('chat');
+      window.history.replaceState({}, '', url.pathname);
+    }
+  }, [user, conversations]);
 
   // Load notifications
   const loadNotifications = preserveFunctionName(async () => {
@@ -343,12 +376,11 @@ export const NotificationsPage: React.FC = () => {
   }
 
   // Handle chat conversation selection
-  const handleSelectConversation = (conversationId: string) => {
-    // Find conversation details from chat hook
+  const handleSelectConversation = (conversationId: string, name: string, avatar: string | null) => {
     setSelectedConversation({
       id: conversationId,
-      name: 'Chat', // Will be updated by ChatView
-      avatar: null
+      name: name,
+      avatar: avatar
     });
   };
 
@@ -360,15 +392,22 @@ export const NotificationsPage: React.FC = () => {
     });
   };
 
-  // If viewing a chat conversation
+  const handleGroupCreated = (conversationId: string, groupName: string) => {
+    setSelectedConversation({
+      id: conversationId,
+      name: groupName,
+      avatar: null
+    });
+  };
+
+  // If viewing a chat conversation - ✅ NO BOTTOM NAV in chat view
   if (selectedConversation) {
     return (
       <div 
         className="min-h-screen m1-app-bg relative flex flex-col" 
         style={{ 
-          /* 🆕 FIX: Aumentato paddingTop per evitare conflitto con Header */
           paddingTop: 'calc(var(--header-height, 80px) + var(--safe-top, env(safe-area-inset-top, 0px)) + 24px)', 
-          paddingBottom: '100px',
+          paddingBottom: '20px', // ✅ Ridotto - no bottom nav
           width: '100vw',
           maxWidth: '100vw',
           overflowX: 'hidden'
@@ -386,19 +425,7 @@ export const NotificationsPage: React.FC = () => {
             onBack={() => setSelectedConversation(null)}
           />
         </div>
-        <div 
-          id="mission-bottom-nav-container"
-          style={{ 
-            position: 'fixed', 
-            bottom: 0, 
-            left: 0, 
-            right: 0, 
-            width: '100vw',
-            zIndex: 10000,
-          } as React.CSSProperties}
-        >
-          <BottomNavigation />
-        </div>
+        {/* ✅ RIMOSSA BOTTOM NAV - chat fullscreen come WhatsApp/Telegram */}
       </div>
     );
   }
@@ -615,6 +642,7 @@ export const NotificationsPage: React.FC = () => {
               <ChatList 
                 onSelectConversation={handleSelectConversation}
                 onNewChat={() => setShowNewChatModal(true)}
+                onNewGroup={() => setShowNewGroupModal(true)}
               />
             </TabsContent>
           </Tabs>
@@ -626,6 +654,13 @@ export const NotificationsPage: React.FC = () => {
         isOpen={showNewChatModal}
         onClose={() => setShowNewChatModal(false)}
         onChatCreated={handleChatCreated}
+      />
+
+      {/* New Group Chat Modal */}
+      <NewGroupChatModal
+        isOpen={showNewGroupModal}
+        onClose={() => setShowNewGroupModal(false)}
+        onGroupCreated={handleGroupCreated}
       />
       
       </div>

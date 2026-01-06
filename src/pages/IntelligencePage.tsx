@@ -3,7 +3,9 @@
 // Includes Shadow Protocol v2 Intercepts panel
 
 import React, { useRef, Suspense, lazy } from 'react';
-import AionEntity, { AionEntityHandle } from '@/components/aion/AionEntity';
+// 🔥 CRITICAL: Lazy load AionEntity to prevent THREE.js hook errors during initial load
+const AionEntity = lazy(() => import('@/components/aion/AionEntity'));
+import type { AionEntityHandle } from '@/components/aion/AionEntity';
 import IntelChatPanel from '@/pages/intel/IntelChatPanel';
 
 // Lazy load components for performance
@@ -38,7 +40,7 @@ const IntelligencePage: React.FC = () => {
         </Suspense>
       </div>
 
-      {/* AION Entity - Fixed height */}
+      {/* AION Entity - Fixed height - Lazy loaded */}
       <div 
         style={{ 
           height: '25%',
@@ -52,12 +54,14 @@ const IntelligencePage: React.FC = () => {
           zIndex: 1
         }}
       >
-        <AionEntity 
-          ref={aionRef}
-          intensity={1.0} 
-          idleSpeed={0.7}
-          className="mx-auto"
-        />
+        <Suspense fallback={<div className="w-24 h-24 rounded-full bg-cyan-500/20 animate-pulse" />}>
+          <AionEntity 
+            ref={aionRef}
+            intensity={1.0} 
+            idleSpeed={0.7}
+            className="mx-auto"
+          />
+        </Suspense>
       </div>
       
       {/* AION Label - Above animation with z-index */}

@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Gamepad2, X, Zap, TrendingUp, Coins } from 'lucide-react';
@@ -20,11 +21,15 @@ const POPUP_ID = 'pulse-breaker';
 
 export const PulseBreakerInfoPopup: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [location] = useLocation();
   const { isAuthenticated } = useUnifiedAuth();
   const { openPulseBreaker } = usePulseBreakerStore();
   const registerActivePopup = useEntityOverlayStore((s) => s.registerActivePopup);
   const unregisterActivePopup = useEntityOverlayStore((s) => s.unregisterActivePopup);
   const isPopupInteractionActive = useEntityOverlayStore((s) => s.isPopupInteractionActive);
+  
+  // 🚫 Non mostrare popup su pagine pubbliche (check spostato dopo gli hook)
+  const isPublicPage = location === '/landing' || location === '/spectator' || location === '/register' || location === '/login' || location.startsWith('/about') || location.startsWith('/how-to-play') || location.startsWith('/prizes') || location.startsWith('/team') || location.startsWith('/subscriptions');
 
   // 🆕 v9: Registra/deregistra popup per bloccare Shadow
   useEffect(() => {
@@ -75,8 +80,10 @@ export const PulseBreakerInfoPopup: React.FC = () => {
     setTimeout(() => {
       openPulseBreaker();
     }, 300);
-  }, [openPulseBreaker]);
+    }, [openPulseBreaker]);
 
+  // 🚫 Non mostrare su pagine pubbliche (DOPO tutti gli hook!)
+  if (isPublicPage) return null;
   if (!isVisible) return null;
 
   return createPortal(

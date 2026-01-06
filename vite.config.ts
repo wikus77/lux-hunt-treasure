@@ -59,7 +59,8 @@ export default defineConfig(({ mode }) => ({
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast'],
           'supabase-vendor': ['@supabase/supabase-js'],
           'animation-vendor': ['framer-motion', 'lottie-react'],
-          'three-vendor': ['three', '@react-three/drei'],
+          // THREE.js only - @react-three/fiber bundled with components that use it
+          'three-vendor': ['three'],
           'map-vendor': ['leaflet', 'react-leaflet', '@react-google-maps/api'],
           // maplibre-gl is bundled separately to fix worker issues
           'stripe-vendor': ['@stripe/stripe-js', '@stripe/react-stripe-js']

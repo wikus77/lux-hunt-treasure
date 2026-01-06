@@ -37,11 +37,14 @@ export const RewardZonePopup: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { isAuthenticated } = useUnifiedAuth();
   const registerActivePopup = useEntityOverlayStore((s) => s.registerActivePopup);
   const unregisterActivePopup = useEntityOverlayStore((s) => s.unregisterActivePopup);
   const isPopupInteractionActive = useEntityOverlayStore((s) => s.isPopupInteractionActive);
+  
+  // 🚫 Non mostrare popup su landing, spectator, register, login (DOPO tutti gli hook!)
+  const isPublicPage = location === '/landing' || location === '/spectator' || location === '/register' || location === '/login' || location.startsWith('/about') || location.startsWith('/how-to-play') || location.startsWith('/prizes') || location.startsWith('/team') || location.startsWith('/subscriptions');
 
   // 🆕 v9: Registra/deregistra popup per bloccare Shadow
   useEffect(() => {
@@ -224,6 +227,8 @@ export const RewardZonePopup: React.FC = () => {
     }, 100);
   }, [navigate]);
 
+  // 🚫 Non mostrare su pagine pubbliche
+  if (isPublicPage) return null;
   if (!isVisible) return null;
 
   return createPortal(

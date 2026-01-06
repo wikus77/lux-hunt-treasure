@@ -8,12 +8,28 @@ import { create } from 'zustand';
 // CONSTANTS
 // ============================================================================
 
-const STORAGE_KEY_HAS_SEEN = 'm1ssion_hasSeenPrizeIntro';
-const STORAGE_KEY_LAST_MISSION_ID = 'm1ssion_lastPrizeIntroMissionId';
-const STORAGE_KEY_SEEN_AT = 'm1ssion_prizeIntroSeenAt';
+// 🔐 Chiavi localStorage con supporto per user-id
+const getStorageKey = (base: string, userId?: string) => 
+  userId ? `${base}_${userId}` : base;
+
+const STORAGE_KEY_BASE_HAS_SEEN = 'm1ssion_hasSeenPrizeIntro';
+const STORAGE_KEY_BASE_LAST_MISSION_ID = 'm1ssion_lastPrizeIntroMissionId';
+const STORAGE_KEY_BASE_SEEN_AT = 'm1ssion_prizeIntroSeenAt';
+
+// Current user ID (set when user logs in)
+let currentUserId: string | undefined;
 
 // Debug flag
 export const PRIZE_INTRO_DEBUG = true;
+
+// 🔐 Set current user ID (called from auth context)
+export const setPrizeIntroUserId = (userId: string | undefined) => {
+  currentUserId = userId;
+  // Reload state from localStorage with new user ID
+  if (userId) {
+    usePrizeIntroStore.getState().reloadForUser(userId);
+  }
+};
 
 // ============================================================================
 // TYPES
@@ -84,33 +100,81 @@ function safeRemoveStorage(key: string): void {
 }
 
 // ============================================================================
-// INITIAL STATE LOADERS
+// INITIAL STATE LOADERS (user-specific with legacy fallback)
 // ============================================================================
 
-function loadHasSeenPrizeIntro(): boolean {
-  return safeGetStorage<boolean>(STORAGE_KEY_HAS_SEEN, false);
+function loadHasSeenPrizeIntro(userId?: string): boolean {
+  // 🔐 Prima controlla chiave user-specific
+  if (userId) {
+    const userKey = getStorageKey(STORAGE_KEY_BASE_HAS_SEEN, userId);
+    const userValue = safeGetStorage<boolean>(userKey, false);
+    if (userValue) return true;
+  }
+  
+  // 🔄 Fallback: controlla chiave legacy (senza userId)
+  const legacyValue = safeGetStorage<boolean>(STORAGE_KEY_BASE_HAS_SEEN, false);
+  
+  // Se trovato in legacy E abbiamo userId, migra alla nuova chiave
+  if (legacyValue && userId) {
+    const newKey = getStorageKey(STORAGE_KEY_BASE_HAS_SEEN, userId);
+    safeSetStorage(newKey, true);
+    if (PRIZE_INTRO_DEBUG) {
+      console.log('[PRIZE INTRO] 🔄 Migrated hasSeenPrizeIntro to user-specific key');
+    }
+  }
+  
+  return legacyValue;
 }
 
-function loadLastSeenMissionId(): string | null {
-  return safeGetStorage<string | null>(STORAGE_KEY_LAST_MISSION_ID, null);
+function loadLastSeenMissionId(userId?: string): string | null {
+  if (userId) {
+    const userKey = getStorageKey(STORAGE_KEY_BASE_LAST_MISSION_ID, userId);
+    const userValue = safeGetStorage<string | null>(userKey, null);
+    if (userValue) return userValue;
+  }
+  return safeGetStorage<string | null>(STORAGE_KEY_BASE_LAST_MISSION_ID, null);
 }
 
-function loadLastSeenAt(): number | null {
-  return safeGetStorage<number | null>(STORAGE_KEY_SEEN_AT, null);
+function loadLastSeenAt(userId?: string): number | null {
+  if (userId) {
+    const userKey = getStorageKey(STORAGE_KEY_BASE_SEEN_AT, userId);
+    const userValue = safeGetStorage<number | null>(userKey, null);
+    if (userValue) return userValue;
+  }
+  return safeGetStorage<number | null>(STORAGE_KEY_BASE_SEEN_AT, null);
 }
 
 // ============================================================================
 // STORE
 // ============================================================================
 
-export const usePrizeIntroStore = create<PrizeIntroState>((set, get) => ({
-  // Initial state (loaded from localStorage)
-  hasSeenPrizeIntro: loadHasSeenPrizeIntro(),
-  lastSeenMissionId: loadLastSeenMissionId(),
-  lastSeenAt: loadLastSeenAt(),
+interface PrizeIntroStateWithReload extends PrizeIntroState {
+  reloadForUser: (userId: string) => void;
+}
+
+export const usePrizeIntroStore = create<PrizeIntroStateWithReload>((set, get) => ({
+  // Initial state (loaded from localStorage - will be reloaded when user logs in)
+  hasSeenPrizeIntro: loadHasSeenPrizeIntro(currentUserId),
+  lastSeenMissionId: loadLastSeenMissionId(currentUserId),
+  lastSeenAt: loadLastSeenAt(currentUserId),
   isOverlayVisible: false,
   currentPrizeIndex: 0,
   isSequenceComplete: false,
+
+  /**
+   * reloadForUser - Reload state for a specific user
+   * Called when user logs in
+   */
+  reloadForUser: (userId: string) => {
+    if (PRIZE_INTRO_DEBUG) {
+      console.log('[PRIZE INTRO] 🔄 Reloading for user:', userId);
+    }
+    set({
+      hasSeenPrizeIntro: loadHasSeenPrizeIntro(userId),
+      lastSeenMissionId: loadLastSeenMissionId(userId),
+      lastSeenAt: loadLastSeenAt(userId),
+    });
+  },
 
   /**
    * markPrizeIntroSeen - Mark the prize intro as seen
@@ -119,14 +183,19 @@ export const usePrizeIntroStore = create<PrizeIntroState>((set, get) => ({
   markPrizeIntroSeen: (missionId?: string) => {
     const now = Date.now();
     
-    safeSetStorage(STORAGE_KEY_HAS_SEEN, true);
-    safeSetStorage(STORAGE_KEY_SEEN_AT, now);
+    // 🔐 Usa chiavi user-specific
+    const keyHasSeen = getStorageKey(STORAGE_KEY_BASE_HAS_SEEN, currentUserId);
+    const keySeenAt = getStorageKey(STORAGE_KEY_BASE_SEEN_AT, currentUserId);
+    const keyLastMissionId = getStorageKey(STORAGE_KEY_BASE_LAST_MISSION_ID, currentUserId);
+    
+    safeSetStorage(keyHasSeen, true);
+    safeSetStorage(keySeenAt, now);
     if (missionId) {
-      safeSetStorage(STORAGE_KEY_LAST_MISSION_ID, missionId);
+      safeSetStorage(keyLastMissionId, missionId);
     }
 
     if (PRIZE_INTRO_DEBUG) {
-      console.log('[PRIZE INTRO] ✅ Marked as seen', { missionId, timestamp: now });
+      console.log('[PRIZE INTRO] ✅ Marked as seen', { missionId, timestamp: now, userId: currentUserId });
     }
 
     set({
@@ -148,12 +217,17 @@ export const usePrizeIntroStore = create<PrizeIntroState>((set, get) => ({
    * Useful for testing or when a new mission starts
    */
   resetPrizeIntro: () => {
-    safeRemoveStorage(STORAGE_KEY_HAS_SEEN);
-    safeRemoveStorage(STORAGE_KEY_LAST_MISSION_ID);
-    safeRemoveStorage(STORAGE_KEY_SEEN_AT);
+    // 🔐 Usa chiavi user-specific
+    const keyHasSeen = getStorageKey(STORAGE_KEY_BASE_HAS_SEEN, currentUserId);
+    const keySeenAt = getStorageKey(STORAGE_KEY_BASE_SEEN_AT, currentUserId);
+    const keyLastMissionId = getStorageKey(STORAGE_KEY_BASE_LAST_MISSION_ID, currentUserId);
+    
+    safeRemoveStorage(keyHasSeen);
+    safeRemoveStorage(keyLastMissionId);
+    safeRemoveStorage(keySeenAt);
 
     if (PRIZE_INTRO_DEBUG) {
-      console.log('[PRIZE INTRO] 🔄 Reset');
+      console.log('[PRIZE INTRO] 🔄 Reset for user:', currentUserId);
     }
 
     set({

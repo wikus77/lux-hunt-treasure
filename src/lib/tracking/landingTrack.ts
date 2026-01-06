@@ -1,6 +1,9 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
 // Lightweight landing page tracking helper
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
 /**
  * Get or create session ID for tracking
  */
@@ -24,26 +27,31 @@ export async function trackLandingEvent(
 ): Promise<void> {
   const sessionId = getSessionId();
   
-  // Dispatch custom event for any local listeners
+  // Dispatch custom event for any local listeners (always works)
   window.dispatchEvent(new CustomEvent("m1ssion:landing", { 
     detail: { action: eventName, ...data, sessionId } 
   }));
 
-  // Send to edge function (fire-and-forget, silent fail)
-  try {
-    await fetch('/functions/v1/track_event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event_name: eventName,
-        event_data: data,
-        session_id: sessionId,
-        path: window.location.pathname,
-        referrer: document.referrer
-      })
-    });
-  } catch {
-    // Silent fail - tracking should never break user experience
+  // Send to Supabase edge function
+  if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/track_event`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          event_name: eventName,
+          event_data: data,
+          session_id: sessionId,
+          path: window.location.pathname,
+          referrer: document.referrer
+        })
+      });
+    } catch {
+      // Silent fail - tracking should never break user experience
+    }
   }
 }
 

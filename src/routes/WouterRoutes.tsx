@@ -28,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
 import { PageSkeleton } from "@/components/ui/skeleton-loader";
+import ScrollToTop from "@/components/routing/ScrollToTop";
 
 // Intel module components
 import CoordinateSelector from '@/components/intelligence/CoordinateSelector';
@@ -47,6 +48,7 @@ import IntelligenceAnswerTest from "@/pages/IntelligenceAnswerTest";
 import HallOfWinnersStyledPage from "@/pages/HallOfWinnersStyledPage";
 import HallOfWinners from "@/pages/HallOfWinners";
 import LeaderboardPage from "@/pages/LeaderboardPage";
+import ForumPage from "@/pages/ForumPage";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
 import NorahAssistant from "@/pages/NorahAssistant";
@@ -67,6 +69,12 @@ import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SpectatorPage from "@/pages/SpectatorPage";
+// Public info pages
+import AboutPage from "@/pages/public/AboutPage";
+import HowToPlayPage from "@/pages/public/HowToPlayPage";
+import PrizesPage from "@/pages/public/PrizesPage";
+import TeamPage from "@/pages/public/TeamPage";
+import SubscriptionsInfoPage from "@/pages/public/SubscriptionsInfoPage";
 // © 2025 M1SSION™ – Lazy-loaded Admin/Panel pages for bundle optimization
 const SendNotificationPage = React.lazy(() => import("@/pages/admin/SendNotificationPage"));
 const MissionPanelPage = React.lazy(() => import("@/pages/admin/MissionPanelPage"));
@@ -84,7 +92,8 @@ const NorahAdmin = React.lazy(() => import("@/pages/panel/NorahAdmin"));
 const DiagSupabase = React.lazy(() => import("@/pages/DiagSupabase"));
 const SupabaseConnectionTest = React.lazy(() => import("@/pages/SupabaseConnectionTest"));
 const PushTest = React.lazy(() => import("@/pages/debug/PushTest"));
-import DNAPage from "@/pages/DNAPage";
+// 🔥 CRITICAL: Lazy load DNAPage to prevent THREE.js hook errors
+const DNAPage = React.lazy(() => import("@/pages/DNAPage"));
 const PushDiagnostic = React.lazy(() => import("@/pages/debug/PushDiagnostic"));
 const M1ssionPushTest = React.lazy(() => import("@/pages/M1ssionPushTest"));
 const M1ssionDebugTest = React.lazy(() => import("@/pages/M1ssionDebugTest").then(m => ({ default: m.M1ssionDebugTest })));
@@ -214,33 +223,18 @@ const WouterRoutes: React.FC = () => {
 
   return (
     <ErrorBoundary>
+      <ScrollToTop />
       <IOSSafeAreaOverlay>
         <Switch>
           {/* ✅ QR routes - redirected to main app with marker rewards popup */}
 
-          {/* Landing page - FIRST VISIT LOGIC */}
-          {/* ✅ FIX B1: Prima visita → Landing, visite successive → Login */}
+          {/* Landing page - SEMPRE Landing per utenti non autenticati */}
+          {/* ✅ FIX (26/12/2025): Utenti non autenticati → sempre Landing, non Login */}
           <Route path="/">
             {isLoading ? (
               <PageSkeleton variant="default" />
             ) : !isAuthenticated ? (
-              (() => {
-                try {
-                  // ✅ FIX B1 (23/12/2025): Ripristinata logica first-visit
-                  // Prima visita → Landing, visite successive → Login
-                  const isFirstVisit = !localStorage.getItem('m1_first_visit_seen');
-                  
-                  if (isFirstVisit) {
-                    localStorage.setItem('m1_first_visit_seen', '1');
-                    return <LandingPage />;
-                  } else {
-                    return <Login />;
-                  }
-                } catch (error) {
-                  console.error('[BOOT] Landing page error, showing login:', error);
-                  return <Login />;
-                }
-              })()
+              <LandingPage />
             ) : (
               <ProtectedRoute>
                 <GlobalLayout>
@@ -264,6 +258,23 @@ const WouterRoutes: React.FC = () => {
           {/* Spectator Mode - Public Preview (No Auth Required) */}
           <Route path="/spectator">
             <SpectatorPage />
+          </Route>
+
+          {/* Public Info Pages (No Auth Required) */}
+          <Route path="/about">
+            <AboutPage />
+          </Route>
+          <Route path="/how-to-play">
+            <HowToPlayPage />
+          </Route>
+          <Route path="/prizes">
+            <PrizesPage />
+          </Route>
+          <Route path="/team">
+            <TeamPage />
+          </Route>
+          <Route path="/subscriptions-info">
+            <SubscriptionsInfoPage />
           </Route>
 
           {/* Protected routes */}
@@ -455,6 +466,16 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          {/* 📣 Forum - Community M1SSION (pubblico E in-app) */}
+          {/* Se loggato: usa GlobalLayout, se non loggato: ForumPage gestisce da solo */}
+          <Route path="/forum">
+            {isAuthenticated ? (
+              <GlobalLayout><ForumPage /></GlobalLayout>
+            ) : (
+              <ForumPage />
+            )}
+          </Route>
+
           <Route path="/winners">
             <ProtectedRoute>
               <GlobalLayout><HallOfWinners /></GlobalLayout>
@@ -476,10 +497,12 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          {/* DNA Route - M1SSION DNA™ */}
+          {/* DNA Route - M1SSION DNA™ - Lazy loaded */}
           <Route path="/dna">
             <ProtectedRoute>
-              <DNAPage />
+              <React.Suspense fallback={<PageSkeleton />}>
+                <DNAPage />
+              </React.Suspense>
             </ProtectedRoute>
           </Route>
 

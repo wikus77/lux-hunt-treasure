@@ -178,16 +178,16 @@ const XavierStyleLandingPage = ({ onRegisterClick, openInviteFriend }: XavierSty
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4">
         <div className="text-center max-w-6xl mx-auto relative z-10">
-          {/* Main Title - Xavier Cusso Style */}
+          {/* Main Title - Xavier Cusso Style with M1SSION Font */}
           <div ref={titleRef} className="mb-8">
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black leading-none">
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-mission font-black leading-none">
               <div className="overflow-hidden">
-                <span className="text-cyan-400 glow-text block">
+                <span className="text-cyan-400 glow-text block" style={{ textShadow: '0 0 60px rgba(0,229,255,0.8), 0 0 120px rgba(0,229,255,0.4)' }}>
                   {splitText("M1")}
                 </span>
               </div>
               <div className="overflow-hidden -mt-4">
-                <span className="text-white block">
+                <span className="text-white block" style={{ textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>
                   {splitText("SSION")}
                 </span>
               </div>

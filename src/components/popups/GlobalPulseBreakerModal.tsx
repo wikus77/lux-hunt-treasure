@@ -7,14 +7,19 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { useLocation } from 'wouter';
 import { PulseBreaker } from '@/features/pulse-breaker/components/PulseBreaker';
 import { usePulseBreakerStore } from '@/stores/pulseBreakerStore';
 
 export const GlobalPulseBreakerModal: React.FC = () => {
   const { isOpen, closePulseBreaker } = usePulseBreakerStore();
+  const [location] = useLocation();
 
-  // Non renderizzare nulla se non è aperto
-  if (!isOpen) return null;
+  // 🚫 Non mostrare su pagine pubbliche
+  const isPublicPage = location === '/landing' || location === '/spectator' || location === '/register' || location === '/login';
+  
+  // Non renderizzare nulla se non è aperto o su pagine pubbliche
+  if (!isOpen || isPublicPage) return null;
 
   // Usa createPortal per renderizzare direttamente nel body
   return createPortal(

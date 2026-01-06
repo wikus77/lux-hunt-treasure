@@ -17,6 +17,8 @@ import { AuthContextType } from './types';
 import { authHealthLogger } from '@/utils/AuthHealthCheckLog';
 import { logAuditEvent } from '@/utils/auditLog';
 import { isAdminEmail } from '@/config/adminConfig';
+// 🔐 Sync prize intro state with user
+import { setPrizeIntroUserId } from '@/stores/prizeIntroStore';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -76,6 +78,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch {}
   };
+
+  // 🔐 Sync prize intro & onboarding state with user ID
+  useEffect(() => {
+    setPrizeIntroUserId(user?.id);
+  }, [user?.id]);
 
   // INIZIALIZZAZIONE SESSIONE - PWA Safari iOS Optimized with Cache Clear + AbortController
   useEffect(() => {

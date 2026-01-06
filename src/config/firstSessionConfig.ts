@@ -218,11 +218,23 @@ export function isFirstSession(): boolean {
   }
 }
 
-/** ✅ FIX 23/12/2025: Controlla se l'onboarding tutorial è completato */
+/** ✅ FIX 05/01/2026: Controlla se l'onboarding tutorial è completato (supporta chiavi user-specific) */
 export function isOnboardingCompleted(): boolean {
   try {
-    return localStorage.getItem('m1ssion_onboarding_completed') === 'true' ||
-           localStorage.getItem('m1ssion_onboarding_skipped') === 'true';
+    // Controlla chiave legacy (vecchio sistema)
+    if (localStorage.getItem('m1ssion_onboarding_completed') === 'true' ||
+        localStorage.getItem('m1ssion_onboarding_skipped') === 'true') {
+      return true;
+    }
+    
+    // Controlla chiavi user-specific (nuovo sistema)
+    const keys = Object.keys(localStorage);
+    const completedKeys = keys.filter(k => 
+      k.startsWith('m1ssion_onboarding_completed_') || 
+      k.startsWith('m1ssion_onboarding_skipped_')
+    );
+    
+    return completedKeys.some(k => localStorage.getItem(k) === 'true');
   } catch {
     return false;
   }

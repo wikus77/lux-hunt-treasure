@@ -11,11 +11,14 @@ import {
   MapPin, 
   Loader2, 
   User,
-  Lock
+  Lock,
+  Check,
+  CheckCheck
 } from 'lucide-react';
 import { useChatMessages, ChatMessage } from '@/hooks/useChat';
 import { Button } from '@/components/ui/button';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { supabase } from '@/integrations/supabase/client';
 import { format, isToday, isYesterday } from 'date-fns';
 import { it } from 'date-fns/locale';
 
@@ -34,6 +37,7 @@ export function ChatView({
 }: ChatViewProps) {
   const { messages, isLoading, isSending, sendMessage, sendLocation } = useChatMessages(conversationId);
   const [inputValue, setInputValue] = useState('');
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { position } = useGeolocation();
@@ -49,6 +53,38 @@ export function ChatView({
   useEffect(() => {
     setTimeout(() => inputRef.current?.focus(), 100);
   }, []);
+
+  // ✅ Detect keyboard open/close using visualViewport API
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.visualViewport) {
+        // Se l'altezza del viewport è significativamente minore dello schermo, la tastiera è aperta
+        const keyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
+        setIsKeyboardOpen(keyboardOpen);
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      handleResize(); // Check initial state
+    }
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
+    };
+  }, []);
+
+  // ✅ Mark messages as read when viewing conversation
+  useEffect(() => {
+    if (conversationId && messages.length > 0) {
+      supabase.rpc('mark_messages_read', { p_conversation_id: conversationId })
+        .then(({ error }) => {
+          if (error) console.warn('[ChatView] Error marking read:', error);
+        });
+    }
+  }, [conversationId, messages.length]);
 
   const handleSend = async () => {
     if (!inputValue.trim() || isSending) return;
@@ -93,7 +129,6 @@ export function ChatView({
   // Calculate heights for proper layout
   const headerHeight = 60;
   const inputHeight = 56;
-  const bottomNavHeight = 80;
   const safeAreaTop = 'env(safe-area-inset-top, 47px)';
   const safeAreaBottom = 'env(safe-area-inset-bottom, 34px)';
 
@@ -102,7 +137,7 @@ export function ChatView({
       className="fixed inset-0 bg-[#070818] flex flex-col"
       style={{
         paddingTop: `calc(72px + ${safeAreaTop})`, // UnifiedHeader height
-        zIndex: 100,
+        zIndex: 50000, // ✅ Sopra TUTTO inclusa bottom nav
       }}
     >
       {/* Chat Header - FIXED */}
@@ -144,7 +179,7 @@ export function ChatView({
       <div 
         className="flex-1 overflow-y-auto overscroll-contain"
         style={{
-          paddingBottom: '8px',
+          paddingBottom: `calc(${inputHeight}px + 100px + env(safe-area-inset-bottom, 0px) + 16px)`, // Input + bottom nav + safe area + margin
           paddingTop: '8px',
         }}
       >
@@ -191,12 +226,14 @@ export function ChatView({
         </div>
       </div>
 
-      {/* Input Bar - FIXED at bottom, above bottom nav */}
+      {/* Input Bar - RESPONSIVE: sopra bottom nav quando tastiera chiusa, sopra tastiera quando aperta */}
       <div 
-        className="border-t border-white/10 bg-gray-900/95 backdrop-blur-sm shrink-0"
+        className="fixed left-0 right-0 border-t border-white/10 bg-gray-900/95 backdrop-blur-sm transition-[bottom] duration-150"
         style={{ 
-          height: `${inputHeight}px`,
-          marginBottom: `calc(${bottomNavHeight}px + ${safeAreaBottom})`,
+          bottom: isKeyboardOpen ? '0px' : 'calc(100px + env(safe-area-inset-bottom, 0px))', // ✅ 100px + safe area
+          paddingBottom: isKeyboardOpen ? 'env(safe-area-inset-bottom, 0px)' : '0px',
+          minHeight: `${inputHeight}px`,
+          zIndex: 60000,
         }}
       >
         <div className="flex items-center gap-2 px-3 h-full">
@@ -276,32 +313,51 @@ function MessageBubble({ message, showAvatar }: MessageBubbleProps) {
         </div>
       )}
       
-      <div
-        className={`max-w-[75%] px-3 py-2 rounded-2xl ${
-          isOwn
-            ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-br-sm'
-            : 'bg-gray-800/90 text-white border border-white/5 rounded-bl-sm'
-        }`}
-      >
-        {isLocation && message.metadata?.lat && message.metadata?.lng ? (
-          <a
-            href={`https://www.google.com/maps?q=${message.metadata.lat},${message.metadata.lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm hover:underline"
-          >
-            <MapPin className="w-4 h-4" />
-            <span>📍 Apri posizione</span>
-          </a>
-        ) : (
-          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-            {message.content}
-          </p>
+      <div className="flex flex-col max-w-[75%]">
+        {/* ✅ FIX: Mostra nome mittente per messaggi non propri (utile in gruppi) */}
+        {!isOwn && showAvatar && message.sender_username && (
+          <span className="text-[11px] text-purple-400 font-medium mb-0.5 ml-1 truncate">
+            {message.sender_username}
+          </span>
         )}
         
-        <p className={`text-[10px] mt-0.5 text-right ${isOwn ? 'text-white/60' : 'text-gray-500'}`}>
-          {format(new Date(message.created_at), 'HH:mm')}
-        </p>
+        <div
+          className={`px-3 py-2 rounded-2xl ${
+            isOwn
+              ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-br-sm'
+              : 'bg-gray-800/90 text-white border border-white/5 rounded-bl-sm'
+          }`}
+        >
+          {isLocation && message.metadata?.lat && message.metadata?.lng ? (
+            <a
+              href={`https://www.google.com/maps?q=${message.metadata.lat},${message.metadata.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm hover:underline"
+            >
+              <MapPin className="w-4 h-4" />
+              <span>📍 Apri posizione</span>
+            </a>
+          ) : (
+            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+              {message.content}
+            </p>
+          )}
+          
+          <div className={`flex items-center justify-end gap-1 mt-0.5 ${isOwn ? 'text-white/60' : 'text-gray-500'}`}>
+            <span className="text-[10px]">
+              {format(new Date(message.created_at), 'HH:mm')}
+            </span>
+            {/* ✅ Spunte lettura solo per messaggi propri */}
+            {isOwn && (
+              message.read_by && message.read_by.length > 0 ? (
+                <CheckCheck className="w-3.5 h-3.5 text-cyan-400" /> 
+              ) : (
+                <Check className="w-3.5 h-3.5" />
+              )
+            )}
+          </div>
+        </div>
       </div>
     </motion.div>
   );

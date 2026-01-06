@@ -45,7 +45,7 @@ export const useRegistration = () => {
 
     console.log('🚀 STARTING M1SSION REGISTRATION WITH ACCESS CONTROL');
     console.log('📧 Registration submitted');
-    console.log('🔐 Password length:', formData.password.length);
+    // 🔐 Password length log removed for security
     console.log('🎯 Mission preference:', missionPreference);
 
     // Validazione client-side

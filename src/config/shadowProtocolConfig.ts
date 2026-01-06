@@ -177,10 +177,22 @@ export const SHADOW_GLITCH_TIMING = {
 
 // Route dove NON deve MAI attivarsi (auth, pagamenti, legal, intro)
 export const SHADOW_EXCLUDED_PATHS: string[] = [
+  '/', // Landing page principale
+  '/landing',
+  '/spectator',
   '/login',
   '/register',
   '/subscriptions',
   '/subscriptions/checkout',
+  '/about',
+  '/how-to-play',
+  '/prizes',
+  '/team',
+  '/chi-siamo',
+  '/come-si-gioca',
+  '/premi',
+  '/abbonamenti',
+  '/what-is',
   '/kyc',
   '/verification',
   '/terms',

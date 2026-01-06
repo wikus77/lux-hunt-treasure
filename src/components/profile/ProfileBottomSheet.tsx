@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🔧 v4: Bottom sheet with INLINE Stripe checkout (no navigation)
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -224,6 +224,18 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const { user, logout } = useAuth();
   const { navigate } = useWouterNavigation();
+  
+  // 🆕 Swipe-to-close
+  const dragY = useMotionValue(0);
+  const dragOpacity = useTransform(dragY, [0, 200], [1, 0.5]);
+  const SWIPE_THRESHOLD = 100;
+  
+  const handleDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.y > SWIPE_THRESHOLD || info.velocity.y > 500) {
+      onClose();
+    }
+    dragY.set(0);
+  }, [onClose, dragY]);
   const { toast } = useToast();
   const sheetRef = useRef<HTMLDivElement>(null);
   const { pulseEnergy, currentRank, nextRank, progressToNextRank, loading: peLoading } = usePulseEnergy();
@@ -428,7 +440,7 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
             onClick={onClose}
           />
 
-          {/* Bottom Sheet */}
+          {/* Bottom Sheet - SEMI-TRASPARENTE + SWIPE */}
           <motion.div
             ref={sheetRef}
             initial={{ y: '100%' }}
@@ -438,16 +450,24 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
             className="fixed inset-x-0 bottom-0 z-[99999] max-h-[90vh] overflow-hidden"
             style={{
               paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+              opacity: dragOpacity,
+              y: dragY,
             }}
+            // 🆕 SWIPE-TO-CLOSE
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.5 }}
+            onDragEnd={handleDragEnd}
           >
-            <div className="rounded-t-3xl bg-[#0a0a0f] border-t border-x border-[#00D1FF]/30 shadow-2xl overflow-hidden"
+            {/* 🆕 Background SEMI-TRASPARENTE */}
+            <div className="rounded-t-3xl bg-[#0a0a0f]/85 backdrop-blur-xl border-t border-x border-[#00D1FF]/30 shadow-2xl overflow-hidden"
               style={{
                 boxShadow: '0 -10px 40px rgba(0, 209, 255, 0.15), 0 0 0 1px rgba(0, 209, 255, 0.1)',
               }}
             >
-              {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-2">
-                <div className="w-10 h-1 rounded-full bg-white/20" />
+              {/* Drag handle - più visibile */}
+              <div className="flex justify-center pt-3 pb-2 cursor-grab">
+                <div className="w-12 h-1.5 rounded-full bg-white/30" />
               </div>
 
               {/* Header */}

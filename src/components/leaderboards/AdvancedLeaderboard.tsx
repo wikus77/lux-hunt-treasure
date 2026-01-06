@@ -73,50 +73,122 @@ export function AdvancedLeaderboard() {
     return Math.floor(activityScore + engagementScore + socialScore + consistencyBonus + tierBonus);
   };
 
-  // Fetch leaderboard data from Supabase - optimized for instant load
+  // Fetch leaderboard data from Supabase - REAL DATA
   const fetchLeaderboardData = async () => {
     setLoading(true);
     try {
-      // In production, this would fetch from actual Supabase tables
-      // For now, using enhanced mock data with complex scoring
-      const mockData: AdvancedUserRanking[] = [
-        {
-          id: "1", name: "Marco B.", avatar: "", totalScore: 0, weeklyScore: 0, monthlyScore: 0,
-          cluesFound: 95, areasExplored: 42, buzzUsed: 67, premiumActivities: 28,
-          reputation: 4.9, tier: "vip", achievements: ["first_prize", "explorer", "social_butterfly"],
-          rankChange: 2, streakDays: 14, lastActiveDate: "2024-01-13"
-        },
-        {
-          id: "2", name: "Giulia S.", avatar: "", totalScore: 0, weeklyScore: 0, monthlyScore: 0,
-          cluesFound: 88, areasExplored: 45, buzzUsed: 71, premiumActivities: 31,
-          reputation: 4.8, tier: "premium", achievements: ["consistency", "explorer"],
-          rankChange: -1, streakDays: 21, lastActiveDate: "2024-01-13"
-        },
-        {
-          id: "3", name: "Alessandro R.", avatar: "", totalScore: 0, weeklyScore: 0, monthlyScore: 0,
-          cluesFound: 76, areasExplored: 38, buzzUsed: 55, premiumActivities: 19,
-          reputation: 4.6, tier: "premium", achievements: ["solver", "active"],
-          rankChange: 0, streakDays: 7, lastActiveDate: "2024-01-12"
-        },
-        {
-          id: "4", name: "Francesca M.", avatar: "", totalScore: 0, weeklyScore: 0, monthlyScore: 0,
-          cluesFound: 82, areasExplored: 29, buzzUsed: 48, premiumActivities: 15,
-          reputation: 4.5, tier: "free", achievements: ["rookie"],
-          rankChange: 3, streakDays: 5, lastActiveDate: "2024-01-13"
-        }
-      ];
+      // 🔥 REAL DATA: Fetch from Supabase profiles table
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          agent_code,
+          full_name,
+          avatar_url,
+          subscription_plan,
+          current_streak_days,
+          pulse_energy,
+          m1_units
+        `)
+        .not('agent_code', 'is', null)
+        .order('pulse_energy', { ascending: false })
+        .limit(50);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw profilesError;
+      }
+
+      if (!profiles || profiles.length === 0) {
+        console.log('[AdvancedLeaderboard] No profiles found');
+        setRankings([]);
+        return;
+      }
+
+      // Get user IDs for additional queries
+      const userIds = profiles.map(p => p.id);
+
+      // Get clues count for each user
+      const { data: cluesData } = await supabase
+        .from('user_clues')
+        .select('user_id')
+        .in('user_id', userIds);
+
+      const cluesCount: Record<string, number> = {};
+      cluesData?.forEach(c => {
+        cluesCount[c.user_id] = (cluesCount[c.user_id] || 0) + 1;
+      });
+
+      // Get buzz count for each user
+      const { data: buzzData } = await supabase
+        .from('user_buzz_counter')
+        .select('user_id, buzz_count')
+        .in('user_id', userIds);
+
+      const buzzCount: Record<string, number> = {};
+      buzzData?.forEach(b => {
+        buzzCount[b.user_id] = (buzzCount[b.user_id] || 0) + (b.buzz_count || 0);
+      });
+
+      // Map subscription_plan to tier
+      const mapTier = (plan: string | null): string => {
+        if (!plan) return 'free';
+        const planLower = plan.toLowerCase();
+        if (planLower.includes('titanium') || planLower.includes('black')) return 'vip';
+        if (planLower.includes('gold') || planLower.includes('silver')) return 'premium';
+        return 'free';
+      };
+
+      // Calculate reputation based on activity (0-5 scale)
+      const calculateReputation = (clues: number, buzz: number, streak: number): number => {
+        const activityScore = (clues * 2 + buzz + streak * 3) / 100;
+        return Math.min(5, Math.max(0, Math.round(activityScore * 10) / 10));
+      };
+
+      // Build real data array
+      const realData: AdvancedUserRanking[] = profiles.map((profile) => {
+        const clues = cluesCount[profile.id] || 0;
+        const buzz = buzzCount[profile.id] || 0;
+        const streak = profile.current_streak_days || 0;
+        const tier = mapTier(profile.subscription_plan);
+        const reputation = calculateReputation(clues, buzz, streak);
+
+        return {
+          id: profile.id,
+          name: profile.full_name || profile.agent_code || 'Agent',
+          avatar: profile.avatar_url || '',
+          totalScore: 0, // Will be calculated
+          weeklyScore: 0, // Will be calculated
+          monthlyScore: 0, // Will be calculated
+          cluesFound: clues,
+          areasExplored: Math.floor((profile.pulse_energy || 0) / 50), // Estimate from pulse energy
+          buzzUsed: buzz,
+          premiumActivities: profile.m1_units || 0,
+          reputation: reputation,
+          tier: tier,
+          achievements: streak >= 7 ? ['streak_master'] : streak >= 3 ? ['active'] : [],
+          rankChange: 0, // Real change tracking requires position history
+          streakDays: streak,
+          lastActiveDate: new Date().toISOString().split('T')[0]
+        };
+      });
 
       // Calculate scores for each timeframe
-      const enhancedData = mockData.map(user => ({
-        ...user,
-        weeklyScore: calculateComplexScore(user, 'weekly'),
-        monthlyScore: calculateComplexScore(user, 'monthly'),
-        totalScore: calculateComplexScore(user, 'alltime')
+      const enhancedData = realData.map(userData => ({
+        ...userData,
+        weeklyScore: calculateComplexScore(userData, 'weekly'),
+        monthlyScore: calculateComplexScore(userData, 'monthly'),
+        totalScore: calculateComplexScore(userData, 'alltime')
       }));
 
+      // Sort by total score (default)
+      enhancedData.sort((a, b) => b.totalScore - a.totalScore);
+
+      console.log('[AdvancedLeaderboard] Loaded', enhancedData.length, 'real users');
       setRankings(enhancedData);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
+      setRankings([]);
     } finally {
       setLoading(false);
     }
