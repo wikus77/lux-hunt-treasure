@@ -20,6 +20,9 @@ const ALLOWED_ORIGINS = [
   /\.m1ssion\.eu$/i,
   /^m1ssion\.app$/i,
   /\.m1ssion\.app$/i,
+  // 🔧 FIX: Cloudflare Pages previews (m1ssion-launch.pages.dev)
+  /\.pages\.dev$/i,
+  /^[a-z0-9-]+\.m1ssion-launch\.pages\.dev$/i,
   // Local/dev
   /^localhost$/i,
   /^127\.0\.0\.1$/i
@@ -144,6 +147,9 @@ export function corsHeaders(origin: string | null) {
     /^https:\/\/m1ssion\.eu$/,
     /^https:\/\/.*\.m1ssion\.eu$/,
     /^https:\/\/.*\.vercel\.app$/,
+    // 🔧 FIX: Cloudflare Pages previews
+    /^https:\/\/.*\.pages\.dev$/,
+    /^https:\/\/[a-z0-9-]+\.m1ssion-launch\.pages\.dev$/,
     /^http:\/\/localhost:\d+$/
   ];
   
