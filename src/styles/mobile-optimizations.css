@@ -175,13 +175,5 @@ html, body {
 }
 
 /* ============================================= */
-/* 🎯 HOME MOBILE SPACING: +10% sotto i pill    */
-/* Sposta giù "ON M1SSION" e tutto il contenuto */
-/* I pill fixed (M1U/Cashback/Streak) invariati */
-/* ============================================= */
-@media screen and (max-width: 768px) {
-  .home-content-below-pills {
-    margin-top: clamp(16px, 5vh, 56px) !important;
-    padding-top: calc(4rem + clamp(8px, 3vh, 32px)) !important;
-  }
-}
+/* 🎯 HOME MOBILE SPACING - RIMOSSO spazio extra */
+/* I pill ora scorrono con la pagina */

@@ -108,11 +108,15 @@ serve(async (req) => {
     const payload = JSON.stringify({
       title,
       body: bodyText,
-      url: "/notifications",
+      url: `/notifications?chat=${conversation_id}`,
       icon: "/icon-512.png",
       badge: "/icon-192.png",
       tag: `chat_${conversation_id}`,
-      renotify: true
+      renotify: true,
+      data: {
+        conversation_id,
+        type: 'chat_message'
+      }
     });
 
     let sent = 0;

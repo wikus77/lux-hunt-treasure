@@ -13,7 +13,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 interface ChatListProps {
-  onSelectConversation: (conversationId: string) => void;
+  onSelectConversation: (conversationId: string, name: string, avatar: string | null) => void;
   onNewChat: () => void;
   onNewGroup?: () => void;
 }
@@ -109,15 +109,37 @@ export function ChatList({ onSelectConversation, onNewChat, onNewGroup }: ChatLi
         </motion.div>
       ) : (
         <AnimatePresence mode="popLayout">
-          {conversations.map((conversation, index) => (
-            <SwipeableConversationItem
-              key={conversation.conversation_id}
-              conversation={conversation}
-              onClick={() => onSelectConversation(conversation.conversation_id)}
-              onDelete={() => setDeleteConfirm(conversation.conversation_id)}
-              index={index}
-            />
-          ))}
+          {conversations.map((conversation, index) => {
+            const displayName = conversation.conversation_type === 'group' 
+              ? conversation.conversation_name 
+              : conversation.other_user_username;
+            
+            // DEBUG: Log per verificare i dati
+            console.log('[ChatList] Conv:', {
+              id: conversation.conversation_id,
+              type: conversation.conversation_type,
+              name: conversation.conversation_name,
+              other_user: conversation.other_user_username,
+              displayName
+            });
+            
+            return (
+              <SwipeableConversationItem
+                key={conversation.conversation_id}
+                conversation={conversation}
+                onClick={() => {
+                  console.log('[ChatList] Selected:', displayName || 'Chat');
+                  onSelectConversation(
+                    conversation.conversation_id, 
+                    displayName || 'Chat',
+                    conversation.other_user_avatar
+                  );
+                }}
+                onDelete={() => setDeleteConfirm(conversation.conversation_id)}
+                index={index}
+              />
+            );
+          })}
         </AnimatePresence>
       )}
 

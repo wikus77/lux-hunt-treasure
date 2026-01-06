@@ -48,11 +48,15 @@ interface OnboardingContextValue extends OnboardingState {
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
-const STORAGE_KEYS = {
-  COMPLETED: 'm1ssion_onboarding_completed',
-  SKIPPED: 'm1ssion_onboarding_skipped',
-  CURRENT_STEP: 'm1ssion_onboarding_step',
-  PAUSED: 'm1ssion_onboarding_paused',
+// 🔐 Chiavi localStorage legate all'utente per persistenza cross-session
+const getStorageKeys = (userId?: string) => {
+  const suffix = userId ? `_${userId}` : '';
+  return {
+    COMPLETED: `m1ssion_onboarding_completed${suffix}`,
+    SKIPPED: `m1ssion_onboarding_skipped${suffix}`,
+    CURRENT_STEP: `m1ssion_onboarding_step${suffix}`,
+    PAUSED: `m1ssion_onboarding_paused${suffix}`,
+  };
 };
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
@@ -68,12 +72,40 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     isSandboxMode: false,
   });
 
-  // Initialize from localStorage
+  // 🔐 Get storage keys based on user ID
+  const STORAGE_KEYS = getStorageKeys(user?.id);
+
+  // Initialize from localStorage (user-specific with legacy fallback)
   useEffect(() => {
-    const completed = localStorage.getItem(STORAGE_KEYS.COMPLETED) === 'true';
-    const skipped = localStorage.getItem(STORAGE_KEYS.SKIPPED) === 'true';
-    const savedStep = parseInt(localStorage.getItem(STORAGE_KEYS.CURRENT_STEP) || '0', 10);
-    const paused = localStorage.getItem(STORAGE_KEYS.PAUSED) === 'true';
+    if (!user?.id) return; // Aspetta che l'utente sia loggato
+    
+    const userStorageKeys = getStorageKeys(user.id);
+    const legacyKeys = getStorageKeys(); // Chiavi senza userId
+    
+    // 🔐 Controlla prima chiavi user-specific, poi fallback a legacy
+    let completed = localStorage.getItem(userStorageKeys.COMPLETED) === 'true';
+    let skipped = localStorage.getItem(userStorageKeys.SKIPPED) === 'true';
+    
+    // 🔄 Fallback: se non trovato in user-specific, controlla legacy
+    if (!completed && !skipped) {
+      const legacyCompleted = localStorage.getItem(legacyKeys.COMPLETED) === 'true';
+      const legacySkipped = localStorage.getItem(legacyKeys.SKIPPED) === 'true';
+      
+      // Se trovato in legacy, migra alla nuova chiave
+      if (legacyCompleted) {
+        localStorage.setItem(userStorageKeys.COMPLETED, 'true');
+        completed = true;
+        console.log('[ONBOARDING] 🔄 Migrated completed status to user-specific key');
+      }
+      if (legacySkipped) {
+        localStorage.setItem(userStorageKeys.SKIPPED, 'true');
+        skipped = true;
+        console.log('[ONBOARDING] 🔄 Migrated skipped status to user-specific key');
+      }
+    }
+    
+    const savedStep = parseInt(localStorage.getItem(userStorageKeys.CURRENT_STEP) || '0', 10);
+    const paused = localStorage.getItem(userStorageKeys.PAUSED) === 'true';
     
     setState(prev => ({
       ...prev,
@@ -84,7 +116,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }));
 
     // Auto-start for new users (only if logged in and not completed/skipped)
-    if (user && !completed && !skipped && !paused) {
+    if (!completed && !skipped && !paused) {
       // Small delay to let the app render first
       const timer = setTimeout(() => {
         setState(prev => ({
@@ -95,7 +127,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [user]);
+  }, [user?.id]); // 🔐 Re-run quando cambia l'utente
 
   // Navigate to correct page when step changes
   useEffect(() => {
@@ -107,14 +139,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }
   }, [state.isActive, state.currentStep, location, navigate]);
 
-  // Save progress
+  // Save progress (user-specific)
   useEffect(() => {
-    if (state.isActive) {
+    if (state.isActive && user?.id) {
       localStorage.setItem(STORAGE_KEYS.CURRENT_STEP, state.currentStepIndex.toString());
     }
-  }, [state.currentStepIndex, state.isActive]);
+  }, [state.currentStepIndex, state.isActive, user?.id, STORAGE_KEYS.CURRENT_STEP]);
 
   const startOnboarding = useCallback(() => {
+    if (!user?.id) return; // Non avviare se non c'è utente
     localStorage.removeItem(STORAGE_KEYS.COMPLETED);
     localStorage.removeItem(STORAGE_KEYS.SKIPPED);
     localStorage.removeItem(STORAGE_KEYS.PAUSED);
@@ -128,7 +161,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       isSkipped: false,
       isSandboxMode: false,
     });
-  }, []);
+  }, [user?.id, STORAGE_KEYS]);
 
   const nextStep = useCallback(() => {
     setState(prev => {
@@ -179,6 +212,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const skipOnboarding = useCallback(() => {
+    if (!user?.id) return;
     localStorage.setItem(STORAGE_KEYS.SKIPPED, 'true');
     localStorage.removeItem(STORAGE_KEYS.CURRENT_STEP);
     
@@ -188,9 +222,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       isSkipped: true,
       currentStep: null,
     }));
-  }, []);
+  }, [user?.id, STORAGE_KEYS]);
 
   const completeOnboarding = useCallback(() => {
+    if (!user?.id) return;
     localStorage.setItem(STORAGE_KEYS.COMPLETED, 'true');
     localStorage.removeItem(STORAGE_KEYS.CURRENT_STEP);
     
@@ -200,9 +235,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       isCompleted: true,
       currentStep: null,
     }));
-  }, []);
+  }, [user?.id, STORAGE_KEYS]);
 
   const resetOnboarding = useCallback(() => {
+    if (!user?.id) return;
     localStorage.removeItem(STORAGE_KEYS.COMPLETED);
     localStorage.removeItem(STORAGE_KEYS.SKIPPED);
     localStorage.removeItem(STORAGE_KEYS.CURRENT_STEP);
@@ -216,21 +252,23 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       isSkipped: false,
       isSandboxMode: false,
     });
-  }, []);
+  }, [user?.id, STORAGE_KEYS]);
 
   const pauseOnboarding = useCallback(() => {
+    if (!user?.id) return;
     localStorage.setItem(STORAGE_KEYS.PAUSED, 'true');
     setState(prev => ({ ...prev, isActive: false }));
-  }, []);
+  }, [user?.id, STORAGE_KEYS]);
 
   const resumeOnboarding = useCallback(() => {
+    if (!user?.id) return;
     localStorage.removeItem(STORAGE_KEYS.PAUSED);
     setState(prev => ({
       ...prev,
       isActive: true,
       currentStep: ACTIVE_STEPS[prev.currentStepIndex],
     }));
-  }, []);
+  }, [user?.id, STORAGE_KEYS]);
 
   const enableSandboxMode = useCallback(() => {
     setState(prev => ({ ...prev, isSandboxMode: true, isActive: true }));

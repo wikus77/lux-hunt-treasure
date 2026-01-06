@@ -10,8 +10,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Target, Star, TrendingUp, TrendingDown,
   Users, ChevronUp, ChevronDown, Globe, MapPin, Map, 
-  Zap, Flame, RefreshCw, AlertTriangle, Circle
+  Zap, Flame, RefreshCw, AlertTriangle, Circle, MessageSquare
 } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 // Custom Icons for M1SSION style
 const TriangleDownIcon = ({ className }: { className?: string }) => (
@@ -40,6 +41,26 @@ import {
 import { useRealtimeLeaderboard, LeaderboardScope } from '@/hooks/useRealtimeLeaderboard';
 import { hapticLight } from '@/utils/haptics';
 import { notifyShadowContext } from '@/stores/entityOverlayStore'; // 🌑 Shadow Protocol v3
+
+// Forum Quick Link Component
+const ForumQuickLink: React.FC = () => {
+  const [, navigate] = useLocation();
+  
+  return (
+    <motion.button
+      onClick={() => {
+        hapticLight();
+        navigate('/forum');
+      }}
+      className="mt-3 flex items-center gap-2 mx-auto px-4 py-2 rounded-full bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-500/40 hover:border-purple-400/60 transition-all"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <MessageSquare className="w-4 h-4 text-purple-400" />
+      <span className="text-sm text-purple-300 font-medium">Entra nel Forum</span>
+    </motion.button>
+  );
+};
 
 export const LeaderboardPage: React.FC = () => {
   const [scope, setScope] = useState<LeaderboardScope>('global');
@@ -191,6 +212,8 @@ export const LeaderboardPage: React.FC = () => {
         <p className="text-gray-400 text-sm">
           Aggiornamenti in tempo reale
         </p>
+        {/* Forum Quick Link */}
+        <ForumQuickLink />
       </motion.div>
 
       {/* Overtake Alert */}

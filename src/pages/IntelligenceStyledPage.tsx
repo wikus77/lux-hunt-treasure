@@ -4,7 +4,7 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,8 @@ import {
   Database
 } from 'lucide-react';
 import { useLocation } from 'wouter';
-import AiOrbStage from '@/components/intel/ui/AiOrbStage';
+// 🔥 CRITICAL: Lazy load AiOrbStage to prevent THREE.js hook errors
+const AiOrbStage = lazy(() => import('@/components/intel/ui/AiOrbStage'));
 import AIAnalystPanel from '@/components/intel/ai-analyst/AIAnalystPanel';
 import { useIntelAnalyst } from '@/hooks/useIntelAnalyst';
 import { useMicLevel } from '@/components/intel/hooks/useMicLevel';
@@ -206,17 +207,19 @@ const IntelligenceStyledPage: React.FC = () => {
   if (aiEnabled) {
     return (
       <>
-        {/* Full Stage when panel closed */}
+        {/* Full Stage when panel closed - Lazy loaded to prevent THREE.js errors */}
         {!panelOpen && (
-          <AiOrbStage
-            status={status}
-            audioLevel={micLevel || audioLevel}
-            onOrbClick={() => setPanelOpen(true)}
-            micEnabled={ttsEnabled}
-            onMicToggle={toggleTTS}
-            onMoreClick={() => setPanelOpen(true)}
-            onFinalShotClick={() => setLocation('/intelligence/final-shot')}
-          />
+          <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><div className="text-white/40">Caricamento...</div></div>}>
+            <AiOrbStage
+              status={status}
+              audioLevel={micLevel || audioLevel}
+              onOrbClick={() => setPanelOpen(true)}
+              micEnabled={ttsEnabled}
+              onMicToggle={toggleTTS}
+              onMoreClick={() => setPanelOpen(true)}
+              onFinalShotClick={() => setLocation('/intelligence/final-shot')}
+            />
+          </Suspense>
         )}
         
         {/* Panel overlays stage when open */}

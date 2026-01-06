@@ -33,6 +33,7 @@ export interface ChatMessage {
   metadata: Record<string, any>;
   created_at: string;
   is_own: boolean;
+  read_by?: string[]; // ✅ Spunte lettura
 }
 
 export function useChat() {
@@ -42,7 +43,7 @@ export function useChat() {
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
-  // Load conversations
+  // Load conversations via RPC
   const loadConversations = useCallback(async () => {
     if (!user?.id) {
       setConversations([]);

@@ -14,7 +14,9 @@ import { sanitizeSearchInput } from '@/utils/inputSanitizer';
 
 interface Agent {
   id: string;
-  username: string;
+  username: string | null;
+  full_name: string | null;
+  nickname: string | null;  // ✅ FIX: nickname è pubblico, full_name è privato (RLS)
   avatar_url: string | null;
   agent_code: string | null;
 }
@@ -33,6 +35,29 @@ export function NewChatModal({ isOpen, onClose, onChatCreated }: NewChatModalPro
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState<string | null>(null);
 
+  // ✅ FIX: Priorità al nome reale (nickname è pubblico, full_name privato per RLS)
+  const getDisplayName = (agent: Agent) => {
+    // nickname è il campo pubblico per i nomi utente
+    if (agent.nickname && agent.nickname.trim()) {
+      return agent.nickname;
+    }
+    // full_name come fallback (potrebbe essere null per RLS)
+    if (agent.full_name && agent.full_name.trim()) {
+      return agent.full_name;
+    }
+    // username se diverso dal codice agente
+    if (agent.username && agent.username.trim() && agent.username !== agent.agent_code) {
+      return agent.username;
+    }
+    // Ultimo fallback: agent_code
+    return agent.agent_code || 'Agente';
+  };
+
+  // ✅ FIX: Mostra SEMPRE il codice agente (se disponibile)
+  const shouldShowAgentCode = (agent: Agent) => {
+    return agent.agent_code && agent.agent_code.trim() !== '';
+  };
+
   // Search agents - Carica TUTTI gli utenti reali dalla tabella profiles
   useEffect(() => {
     if (!isOpen) return;
@@ -42,32 +67,28 @@ export function NewChatModal({ isOpen, onClose, onChatCreated }: NewChatModalPro
       try {
         console.log('[NewChatModal] 🔍 Cercando agenti...');
         
-        // Query diretta senza filtri iniziali per vedere TUTTI gli utenti
+        // ✅ FIX: Aggiungo nickname (pubblico) - full_name può essere null per RLS
         let query = supabase
           .from('profiles')
-          .select('id, username, avatar_url, agent_code')
-          .order('username', { ascending: true })
-          .limit(50); // Aumentato per vedere più utenti
+          .select('id, username, full_name, nickname, avatar_url, agent_code')
+          .order('nickname', { ascending: true, nullsFirst: false })
+          .limit(50);
 
         if (searchQuery.trim()) {
-          // 🔐 Sanitize search input for SQL safety
           const sanitized = sanitizeSearchInput(searchQuery);
           if (sanitized) {
-            query = query.or(`username.ilike.%${sanitized}%,agent_code.ilike.%${sanitized}%`);
+            // ✅ FIX: Ricerca su nickname (pubblico) + agent_code
+            query = query.or(`nickname.ilike.%${sanitized}%,agent_code.ilike.%${sanitized}%,full_name.ilike.%${sanitized}%`);
           }
         }
 
         const { data, error } = await query;
-
-        console.log('[NewChatModal] 📊 Risultato:', { count: data?.length, error, data });
 
         if (error) {
           console.error('[NewChatModal] ❌ Errore query:', error);
           return;
         }
 
-        // MOSTRA TUTTI - anche quelli con solo agent_code
-        console.log('[NewChatModal] ✅ Agenti trovati:', data?.length || 0);
         setAgents((data || []) as Agent[]);
       } catch (err) {
         console.error('[NewChatModal] ❌ Exception:', err);
@@ -195,24 +216,24 @@ export function NewChatModal({ isOpen, onClose, onChatCreated }: NewChatModalPro
                   {agent.avatar_url ? (
                     <img
                       src={agent.avatar_url}
-                      alt={agent.username || agent.agent_code || 'Agent'}
+                      alt={getDisplayName(agent)}
                       className="w-10 h-10 rounded-full object-cover border-2 border-cyan-500/30"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-cyan-500/20 border-2 border-cyan-500/30 flex items-center justify-center">
                       <span className="text-lg font-bold text-cyan-400">
-                        {(agent.username || agent.agent_code || 'A')?.charAt(0).toUpperCase()}
+                        {getDisplayName(agent).charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
 
-                  {/* Info */}
+                  {/* Info - ✅ FIX: Mostra SEMPRE nome E codice agente */}
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-white truncate">
-                      {agent.username || agent.agent_code || 'Agente'}
+                      {agent.nickname || agent.full_name || agent.username || 'Agente'}
                     </p>
-                    {agent.agent_code && agent.username && (
-                      <p className="text-xs text-cyan-400/70">{agent.agent_code}</p>
+                    {agent.agent_code && (
+                      <p className="text-xs text-cyan-400/70 font-mono">{agent.agent_code}</p>
                     )}
                   </div>
 

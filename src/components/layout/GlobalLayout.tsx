@@ -36,7 +36,6 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   ];
   
   // Routes that manage their own layout completely (no header/nav from GlobalLayout)
-  // NOTA: Rimosso /notifications per uniformare la bottom nav
   const selfManagedRoutes: string[] = [];
   
   const shouldHideNavigation = hideNavigationRoutes.includes(location);

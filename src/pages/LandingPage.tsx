@@ -3,31 +3,31 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Info, IdCard, UserCheck, Check, MapPin, Award, X, Sparkles, ArrowDown, Play, ChevronRight } from "lucide-react";
+import { UserPlus, Info, IdCard, Check, MapPin, X, Sparkles, ArrowDown, Play, ChevronRight, ChevronDown } from "lucide-react";
 import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
 import LandingFooter from "@/components/landing/LandingFooter";
+import LandingHeader from "@/components/landing/LandingHeader";
 import AdminEmergencyLogin from "@/components/auth/AdminEmergencyLogin";
 import CookieBanner from "@/components/gdpr/CookieBanner";
 import { MindsetMicroTest } from "@/components/landing/MindsetMicroTest";
-import { PremiumPlansAccordion } from "@/components/landing/PremiumPlansAccordion";
+import LandingMapTiler from "@/components/landing/LandingMapTiler";
 import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useLandingTranslations } from "@/hooks/useLandingTranslations";
 import "../styles/landing-flip-cards.css";
 import "../styles/landing-premium.css";
+import "../styles/landing-effects.css";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Prize images array for carousel
+// Prize images array for carousel - One from each category
 const prizeImages = [
-  "/lovable-uploads/eccb4710-0336-46f8-9137-906f61fbdebd.png", // Main Ferrari/Lambo image
-  "/lovable-uploads/211b98b7-646d-4c40-80d6-416ac71a54fc.png", // Lamborghini Huracán
-  "/lovable-uploads/2f1f79ad-4221-4a49-a188-81e28222514d.png", // Ferrari SF90 Stradale
-  "/lovable-uploads/3b5f5a13-bb71-472b-9348-6e52c12cba7e.png", // Aston Martin DBX
-  "/lovable-uploads/7bda6b4a-6ac6-489d-8b2f-b9a4f9c312a2.png", // Porsche 911 Turbo
-  "/assets/m1ssion-prize/hero-forest-watch.png", // Rolex Watch
-  "/assets/m1ssion-prize/hero-forest-lambo.png", // Lamborghini Forest
+  "/assets/prizes/auto-reali/FERRARI_PUROSANGUE.png", // Auto
+  "/assets/prizes/orologi-reali/ROLEX DAY-DATE.png", // Orologi
+  "/assets/prizes/gioielli-reali/DIAMANTI.png", // Gioielli
+  "/assets/prizes/borse-reali/HERMES_BIRKIN.png", // Borse
+  "/assets/prizes/99premi/IPHONE.png", // 99 Premi
 ];
 
 const LandingPage = () => {
@@ -41,6 +41,11 @@ const LandingPage = () => {
   const [currentPrizeIndex, setCurrentPrizeIndex] = useState(0);
   const [showLearnMore, setShowLearnMore] = useState(false);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [welcomeExpanded, setWelcomeExpanded] = useState(false);
+  
+  // Mouse position for parallax effect
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isHeroHovered, setIsHeroHovered] = useState(false);
   
   // Use landing page translations with device language detection
   const { t } = useLandingTranslations();
@@ -86,6 +91,24 @@ const LandingPage = () => {
     const interval = setInterval(updateCountdown, 1000);
     
     return () => clearInterval(interval);
+  }, []);
+
+  // Mouse tracking for parallax effect (desktop only)
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      // Only track if not on touch device
+      if (window.matchMedia('(hover: hover)').matches) {
+        const { clientX, clientY } = e;
+        const { innerWidth, innerHeight } = window;
+        // Normalize to -1 to 1 range
+        const x = (clientX / innerWidth - 0.5) * 2;
+        const y = (clientY / innerHeight - 0.5) * 2;
+        setMousePosition({ x, y });
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   // Optimized GSAP Animations setup
@@ -200,35 +223,7 @@ const LandingPage = () => {
     );
   };
 
-  // Step data for "Scopri M1SSION" section
-  const steps = [
-    {
-      icon: <UserCheck className="w-8 h-8 text-[#00E5FF]" />,
-      title: "Registrazione",
-      description: "Crea il tuo account su M1SSION e preparati alla sfida",
-      details: "Accesso gratuito con il piano Base. Scegli tra 5 piani di abbonamento per accedere a indizi premium, eventi esclusivi e vantaggi unici. La registrazione include verifica dell'identità per garantire sicurezza e conformità normativa."
-    },
-    {
-      icon: <Check className="w-8 h-8 text-[#00E5FF]" />,
-      title: "Ricevi Indizi", 
-      description: "Ogni settimana ricevi nuovi indizi via app ed email",
-      details: "Gli indizi arrivano attraverso notifiche push, email crittografate e aggiornamenti in-app. Ogni piano offre un numero diverso di indizi settimanali: dal piano Base (1 indizio) al Titanium (8 indizi totali)."
-    },
-    {
-      icon: <MapPin className="w-8 h-8 text-[#FFC107]" />,
-      title: "Risolvi la Missione",
-      description: "Analizza gli indizi e trova la posizione del premio",
-      details: "Usa la mappa interattiva, decrittografa i codici, analizza pattern e coordinate GPS. Gli indizi sono interconnessi e richiedono logica, intuito e capacità di analisi per rivelare la posizione finale del tesoro."
-    },
-    {
-      icon: <Award className="w-8 h-8 text-[#FF00FF]" />,
-      title: "Vinci davvero",
-      description: "Se sei il primo a trovare il premio, diventa tuo!",
-      details: "I premi sono reali: auto di lusso, orologi, gioielli e altri oggetti di valore. Solo il primo che raggiunge la posizione esatta e completa la verifica finale ottiene il premio. Nessuna simulazione, solo vittorie concrete."
-    }
-  ];
-
-  // Subscription plans data - MODIFICATO: adattato per allineamento singola riga
+  // Subscription plans data (used in showLearnMore modal)
   const subscriptions = [
     {
       title: 'Base – Gratis',
@@ -307,6 +302,9 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-black overflow-x-hidden relative ambient-bg">
+      {/* Navigation Header */}
+      <LandingHeader />
+      
       {/* Noise Overlay - Subtle Film Grain */}
       <div className="noise-overlay" />
       
@@ -382,40 +380,103 @@ const LandingPage = () => {
         </motion.button>
       </div>
       
-      {/* HERO SECTION - Premium Cinematic */}
+      {/* HERO SECTION - Premium Cinematic with Parallax */}
       <section 
         ref={heroRef}
-        className="relative w-full flex flex-col items-center justify-start text-center px-4 pt-10 pb-2"
+        className="relative w-full flex flex-col items-center justify-start text-center px-4 pb-2 overflow-hidden"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 100px)' }}
+        onMouseEnter={() => setIsHeroHovered(true)}
+        onMouseLeave={() => setIsHeroHovered(false)}
       >
-        {/* Main Title - Enhanced Glow */}
-        <div className="z-10 max-w-6xl mx-auto">
+        {/* Ambient Background with Parallax */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Noise texture */}
+          <div className="noise-overlay" />
+          
+          {/* Gradient orbs with parallax */}
+          <motion.div 
+            className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full hero-ambient-pulse"
+            style={{ 
+              background: 'radial-gradient(circle, rgba(0,229,255,0.08) 0%, transparent 70%)',
+              x: mousePosition.x * -20,
+              y: mousePosition.y * -20,
+            }}
+          />
+          <motion.div 
+            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full hero-ambient-pulse"
+            style={{ 
+              background: 'radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 70%)',
+              x: mousePosition.x * -15,
+              y: mousePosition.y * -15,
+              animationDelay: '4s'
+            }}
+          />
+          
+          {/* Subtle grid lines */}
+          <div 
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(0,229,255,0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,229,255,0.3) 1px, transparent 1px)
+              `,
+              backgroundSize: '100px 100px',
+            }}
+          />
+        </div>
+
+        {/* Main Title - AAA Animated Glow with Parallax */}
+        <motion.div 
+          className="z-10 max-w-6xl mx-auto hero-hover-glow"
+          style={{
+            x: mousePosition.x * 8,
+            y: mousePosition.y * 8,
+          }}
+          animate={{
+            scale: isHeroHovered ? 1.02 : 1,
+          }}
+          transition={{ 
+            scale: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] },
+            x: { duration: 0.1 },
+            y: { duration: 0.1 },
+          }}
+        >
           <motion.h1 
             ref={titleRef}
-            className="text-6xl md:text-7xl lg:text-[8rem] font-black leading-none mb-6"
-            animate={{ 
-              textShadow: [
-                '0 0 40px rgba(0,229,255,0.4)',
-                '0 0 80px rgba(0,229,255,0.6)',
-                '0 0 40px rgba(0,229,255,0.4)'
-              ]
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="text-6xl md:text-7xl lg:text-[8rem] font-bold leading-none mb-6 relative"
+            initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <div className="overflow-hidden">
-              <motion.span 
-                className="text-cyan-400 block title-glow"
-                style={{ 
-                  textShadow: '0 0 60px rgba(0,229,255,0.8), 0 0 120px rgba(0,229,255,0.4)'
-                }}
-              >
-                M1
-              </motion.span>
-            </div>
-            <div className="overflow-hidden -mt-8">
-              <span className="text-white block" style={{ textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>
-                SSION<span className="text-2xl align-top">™</span>
-              </span>
-            </div>
+            {/* Glow Layer Behind Text - Enhanced */}
+            <motion.span
+              className="absolute inset-0 text-[#00E5FF] blur-2xl"
+              animate={{ 
+                opacity: isHeroHovered ? [0.4, 0.7, 0.4] : [0.2, 0.4, 0.2],
+                scale: [1, 1.03, 1]
+              }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              aria-hidden="true"
+            >
+              M1SSION™
+            </motion.span>
+            {/* Secondary glow layer */}
+            <motion.span
+              className="absolute inset-0 text-purple-500 blur-3xl opacity-20"
+              animate={{ 
+                opacity: [0.1, 0.25, 0.1],
+                scale: [1.02, 1.05, 1.02]
+              }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+              aria-hidden="true"
+            >
+              M1SSION™
+            </motion.span>
+            {/* Main Text */}
+            <span className="relative">
+              <span className="text-[#00E5FF]">M1</span>
+              <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+            </span>
           </motion.h1>
           
           <motion.p 
@@ -436,60 +497,115 @@ const LandingPage = () => {
             La caccia è iniziata. Il premio è reale.
           </motion.p>
           
-          {/* Countdown Timer - NEXT MISSION */}
+          {/* Countdown Timer - AAA Micro-tick */}
           <motion.p
-            className="text-xs md:text-sm text-white/50 uppercase tracking-[0.3em] mb-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 1.8 }}
+            className="text-xs md:text-sm text-white/50 uppercase tracking-[0.3em] mb-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.8, ease: "easeOut" }}
           >
             Prossima Missione tra
           </motion.p>
           <motion.div 
-            className="flex justify-center gap-2 md:gap-3 mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.9 }}
+            className="flex justify-center gap-2 md:gap-4 mb-6"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.8, delay: 1.9, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
+            {/* Days */}
             <motion.div 
-              className="countdown-box text-center"
-              whileHover={{ scale: 1.05, borderColor: 'rgba(0,229,255,0.4)' }}
-            >
-              <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-cyan-400 countdown-number">
-                {String(countdown.days).padStart(2, '0')}
-              </div>
-              <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1">Giorni</div>
-            </motion.div>
-            <div className="text-2xl md:text-3xl font-bold text-white/20 self-center">:</div>
-            <motion.div 
-              className="countdown-box text-center"
-              whileHover={{ scale: 1.05, borderColor: 'rgba(0,229,255,0.4)' }}
-            >
-              <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-cyan-400 countdown-number">
-                {String(countdown.hours).padStart(2, '0')}
-              </div>
-              <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1">Ore</div>
-            </motion.div>
-            <div className="text-2xl md:text-3xl font-bold text-white/20 self-center">:</div>
-            <motion.div 
-              className="countdown-box text-center"
-              whileHover={{ scale: 1.05, borderColor: 'rgba(0,229,255,0.4)' }}
-            >
-              <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-cyan-400 countdown-number">
-                {String(countdown.minutes).padStart(2, '0')}
-              </div>
-              <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1">Minuti</div>
-            </motion.div>
-            <div className="text-2xl md:text-3xl font-bold text-white/20 self-center">:</div>
-            <motion.div 
-              className="countdown-box text-center"
-              style={{ borderColor: 'rgba(168,85,247,0.3)' }}
-              whileHover={{ scale: 1.05, borderColor: 'rgba(168,85,247,0.5)' }}
+              className="countdown-box text-center relative overflow-hidden"
+              whileHover={{ scale: 1.08, borderColor: 'rgba(0,229,255,0.5)' }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
             >
               <motion.div 
-                className="text-3xl md:text-4xl lg:text-5xl font-bold text-purple-400 countdown-number"
-                animate={{ opacity: [1, 0.7, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
+                className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent opacity-0"
+                whileHover={{ opacity: 1 }}
+              />
+              <motion.div 
+                className="text-3xl md:text-4xl lg:text-5xl font-bold text-cyan-400 countdown-number relative"
+                key={countdown.days}
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                {String(countdown.days).padStart(2, '0')}
+              </motion.div>
+              <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1">Giorni</div>
+            </motion.div>
+            <motion.div 
+              className="text-2xl md:text-3xl font-bold text-white/20 self-center"
+              animate={{ opacity: [0.2, 0.5, 0.2] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >:</motion.div>
+            
+            {/* Hours */}
+            <motion.div 
+              className="countdown-box text-center relative overflow-hidden"
+              whileHover={{ scale: 1.08, borderColor: 'rgba(0,229,255,0.5)' }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            >
+              <motion.div 
+                className="text-3xl md:text-4xl lg:text-5xl font-bold text-cyan-400 countdown-number"
+                key={countdown.hours}
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                {String(countdown.hours).padStart(2, '0')}
+              </motion.div>
+              <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1">Ore</div>
+            </motion.div>
+            <motion.div 
+              className="text-2xl md:text-3xl font-bold text-white/20 self-center"
+              animate={{ opacity: [0.2, 0.5, 0.2] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >:</motion.div>
+            
+            {/* Minutes */}
+            <motion.div 
+              className="countdown-box text-center relative overflow-hidden"
+              whileHover={{ scale: 1.08, borderColor: 'rgba(0,229,255,0.5)' }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            >
+              <motion.div 
+                className="text-3xl md:text-4xl lg:text-5xl font-bold text-cyan-400 countdown-number"
+                key={countdown.minutes}
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                {String(countdown.minutes).padStart(2, '0')}
+              </motion.div>
+              <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1">Minuti</div>
+            </motion.div>
+            <motion.div 
+              className="text-2xl md:text-3xl font-bold text-white/20 self-center"
+              animate={{ opacity: [0.2, 0.5, 0.2] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >:</motion.div>
+            
+            {/* Seconds - Micro-tick Animation */}
+            <motion.div 
+              className="countdown-box text-center relative overflow-hidden"
+              style={{ borderColor: 'rgba(168,85,247,0.3)' }}
+              whileHover={{ scale: 1.08, borderColor: 'rgba(168,85,247,0.6)' }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            >
+              {/* Tick Flash */}
+              <motion.div 
+                className="absolute inset-0 bg-purple-500/20"
+                key={countdown.seconds}
+                initial={{ opacity: 0.8 }}
+                animate={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              />
+              <motion.div 
+                className="text-3xl md:text-4xl lg:text-5xl font-bold text-purple-400 countdown-number relative"
+                key={`sec-${countdown.seconds}`}
+                initial={{ scale: 1.1, opacity: 0.7 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.2 }}
               >
                 {String(countdown.seconds).padStart(2, '0')}
               </motion.div>
@@ -535,40 +651,68 @@ const LandingPage = () => {
           
           <motion.div 
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 3 }}
-            style={{ overflow: 'visible' }}
+            initial={{ opacity: 0, y: 30, filter: 'blur(5px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.8, delay: 3, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
+            {/* Primary CTA - Magnetic + Pulse */}
             <motion.button 
-              className="cta-premium px-8 py-4 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-500 to-purple-600 text-black text-base font-black uppercase tracking-wider relative group"
+              className="relative px-10 py-5 rounded-full bg-gradient-to-r from-cyan-400 via-cyan-500 to-purple-600 text-black text-base font-black uppercase tracking-wider overflow-hidden"
               onClick={() => {
-                // Dispatch tracking event
                 window.dispatchEvent(new CustomEvent("m1ssion:landing", { 
                   detail: { action: "landing_cta_primary_click" } 
                 }));
-                // Scroll to mini-test
                 const miniTest = document.getElementById('mission-mini-test');
                 if (miniTest) {
                   miniTest.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
               }}
-              whileHover={{ scale: 1.05, boxShadow: '0 0 60px rgba(34,211,238,0.6), 0 0 100px rgba(34,211,238,0.3)' }}
-              whileTap={{ scale: 0.95 }}
-              style={{ boxShadow: '0 0 30px rgba(34,211,238,0.3)', overflow: 'visible' }}
+              whileHover={{ 
+                scale: 1.05,
+                boxShadow: '0 0 60px rgba(34,211,238,0.6), 0 0 100px rgba(34,211,238,0.3)'
+              }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              style={{ boxShadow: '0 0 30px rgba(34,211,238,0.4)' }}
               aria-label="Vai al test di mentalità"
             >
+              {/* Pulse Ring */}
+              <motion.span
+                className="absolute inset-0 rounded-full border-2 border-cyan-400/50"
+                animate={{ 
+                  scale: [1, 1.15, 1],
+                  opacity: [0.5, 0, 0.5]
+                }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+              />
+              {/* Shimmer Effect */}
+              <motion.span
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                animate={{ x: ['-200%', '200%'] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", repeatDelay: 2 }}
+              />
               <span className="relative z-10">{t('joinTheHunt')}</span>
             </motion.button>
             
+            {/* Secondary CTA - Glass Effect */}
             <motion.button 
-              className="px-8 py-4 rounded-full text-white font-bold uppercase tracking-wider bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-cyan-400/40 hover:text-cyan-400 transition-all duration-500"
+              className="px-10 py-5 rounded-full text-white font-bold uppercase tracking-wider bg-white/5 backdrop-blur-md border border-white/15 relative overflow-hidden"
               onClick={() => setShowLearnMore(true)}
-              whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(0,229,255,0.2)' }}
-              whileTap={{ scale: 0.95 }}
-              style={{ overflow: 'visible' }}
+              whileHover={{ 
+                scale: 1.05, 
+                borderColor: 'rgba(0,229,255,0.5)',
+                backgroundColor: 'rgba(0,229,255,0.1)'
+              }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
             >
-              {t('learnMore')}
+              <motion.span
+                className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/10 to-cyan-500/0"
+                initial={{ x: '-100%' }}
+                whileHover={{ x: '100%' }}
+                transition={{ duration: 0.5 }}
+              />
+              <span className="relative z-10">{t('learnMore')}</span>
             </motion.button>
           </motion.div>
           
@@ -588,7 +732,7 @@ const LandingPage = () => {
             <span>👁️</span>
             <span>GUARDA COME SPETTATORE</span>
           </motion.button>
-        </div>
+        </motion.div>
 
         {/* Scroll Indicator - Minimal */}
         <motion.div 
@@ -600,97 +744,46 @@ const LandingPage = () => {
         </motion.div>
       </section>
 
-      {/* WHY MOST WILL FAIL - Marketing Hook */}
-      <motion.section 
-        className="relative py-8 px-4"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true, margin: "-50px" }}
-      >
-        <div className="max-w-2xl mx-auto">
-          <motion.div
-            className="glass-container p-6 md:p-8 text-center relative overflow-hidden border-l-4 border-red-500/50"
-            whileHover={{ borderColor: 'rgba(239,68,68,0.8)' }}
-          >
-            <motion.h3 
-              className="text-xl md:text-2xl font-bold mb-6 text-white"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              Perché la maggior parte <span className="text-red-400">non vincerà</span>
-            </motion.h3>
-            
-            <div className="space-y-4 text-left mb-6">
-              <motion.div 
-                className="flex items-start gap-3"
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-                <span className="text-white/80">Cercano scorciatoie invece di analizzare i pattern</span>
-              </motion.div>
-              <motion.div 
-                className="flex items-start gap-3"
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-                <span className="text-white/80">Ignorano gli indizi iniziali pensando siano irrilevanti</span>
-              </motion.div>
-              <motion.div 
-                className="flex items-start gap-3"
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-                <span className="text-white/80">Sottovalutano la connessione tra le informazioni</span>
-              </motion.div>
-            </div>
-            
-            <motion.p 
-              className="text-cyan-400 font-semibold text-sm md:text-base"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              M1SSION non premia chi prova.<br/>
-              <span className="text-white">Premia chi capisce.</span>
-            </motion.p>
-            
-            <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-red-500/30 via-transparent to-transparent" />
-          </motion.div>
-        </div>
-      </motion.section>
+      {/* REAL MAPTILER MAP - With Prize Markers */}
+      <LandingMapTiler />
 
-      {/* PREMI IN PALIO SECTION - Premium */}
+      {/* PREMI IN PALIO SECTION - AAA Premium */}
       <section 
         ref={(el) => el && (sectionsRef.current[0] = el)}
-        className="relative py-8 px-4"
+        className="relative py-16 px-4"
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent" />
+        {/* Gradient Background */}
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/15 to-transparent"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1.5 }}
+        />
         
         <div className="max-w-7xl mx-auto relative">
           <motion.div 
-            className="text-center mb-8"
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
-            viewport={{ once: true, margin: "-50px" }}
+            className="text-center mb-10"
+            initial={{ opacity: 0, y: 60, filter: 'blur(10px)' }}
+            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
+            viewport={{ once: true, margin: "-100px" }}
           >
             <motion.h2 
-              className="text-3xl md:text-4xl font-black mb-3 text-white leading-none"
-              style={{ textShadow: '0 0 40px rgba(255,255,255,0.1)' }}
-              whileInView={{ 
-                textShadow: ['0 0 20px rgba(0,229,255,0.3)', '0 0 40px rgba(0,229,255,0.5)', '0 0 20px rgba(0,229,255,0.3)']
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
+              className="text-4xl md:text-5xl font-black mb-4 text-white leading-none relative inline-block"
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
             >
-              {t('realPrizes')}
+              {/* Glow behind text */}
+              <motion.span
+                className="absolute inset-0 text-yellow-400 blur-2xl opacity-30"
+                animate={{ opacity: [0.2, 0.4, 0.2] }}
+                transition={{ duration: 3, repeat: Infinity }}
+                aria-hidden="true"
+              >
+                {t('realPrizes')}
+              </motion.span>
+              <span className="relative">{t('realPrizes')}</span>
             </motion.h2>
             <motion.p 
               className="text-base text-gray-400 max-w-2xl mx-auto subtitle-elegant mb-2"
@@ -719,11 +812,14 @@ const LandingPage = () => {
           </motion.div>
 
           <motion.div 
-            className="image-container-premium relative h-[35vh] md:h-[45vh] lg:h-[50vh] glass-container-glow overflow-hidden"
-            initial={{ opacity: 0, y: 60, rotateX: 10 }}
-            whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-            whileHover={{ scale: 1.02, boxShadow: '0 30px 60px rgba(0,229,255,0.2)' }}
-            transition={{ duration: 0.8, type: "spring", stiffness: 80 }}
+            className="image-container-premium relative h-[40vh] md:h-[50vh] lg:h-[55vh] glass-container-glow overflow-hidden rounded-3xl"
+            initial={{ opacity: 0, y: 80, scale: 0.95, filter: 'blur(10px)' }}
+            whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+            whileHover={{ 
+              scale: 1.02, 
+              boxShadow: '0 40px 80px rgba(0,229,255,0.25), 0 0 100px rgba(168,85,247,0.15)'
+            }}
+            transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
             viewport={{ once: true, margin: "-100px" }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-purple-500/20 opacity-60 z-10" />
@@ -790,60 +886,167 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* MISSION ACTIVE Status Bar */}
+      {/* WHY MOST WILL FAIL - AAA Cinematic */}
       <motion.section 
-        className="relative py-6 px-4"
-        initial={{ opacity: 0, y: 30, scale: 0.98 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
-        viewport={{ once: true, margin: "-50px" }}
+        className="relative py-16 px-4"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true, margin: "-100px" }}
+      >
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            className="glass-container p-8 md:p-10 text-center relative overflow-hidden border-l-4 border-red-500/50 rounded-2xl"
+            initial={{ opacity: 0, x: -40, filter: 'blur(10px)' }}
+            whileInView={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+            whileHover={{ 
+              borderColor: 'rgba(239,68,68,0.8)',
+              boxShadow: '0 20px 60px rgba(239,68,68,0.15)'
+            }}
+            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            {/* Subtle animated background */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-br from-red-900/5 to-transparent"
+              animate={{ opacity: [0.3, 0.5, 0.3] }}
+              transition={{ duration: 4, repeat: Infinity }}
+            />
+            
+            <motion.h3 
+              className="text-xl md:text-2xl font-bold mb-8 text-white relative"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+            >
+              Perché la maggior parte <span className="text-red-400">non vincerà</span>
+            </motion.h3>
+            
+            <div className="space-y-5 text-left mb-8 relative">
+              {[
+                "Cercano scorciatoie invece di analizzare i pattern",
+                "Ignorano gli indizi iniziali pensando siano irrilevanti",
+                "Sottovalutano la connessione tra le informazioni"
+              ].map((text, index) => (
+                <motion.div 
+                  key={index}
+                  className="flex items-start gap-3 group"
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + index * 0.15, duration: 0.5, ease: "easeOut" }}
+                  whileHover={{ x: 5 }}
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.2, rotate: 90 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <X className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                  </motion.div>
+                  <span className="text-white/80 group-hover:text-white transition-colors duration-300">{text}</span>
+                </motion.div>
+              ))}
+            </div>
+            
+            <motion.p 
+              className="text-cyan-400 font-semibold text-sm md:text-base relative"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.6 }}
+            >
+              M1SSION non premia chi prova.<br/>
+              <span className="text-white font-bold">Premia chi capisce.</span>
+            </motion.p>
+            
+            <motion.div 
+              className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-red-500/50 via-transparent to-transparent"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              transition={{ delay: 0.8, duration: 1 }}
+              style={{ transformOrigin: 'left' }}
+            />
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* MISSION ACTIVE Status Bar - AAA Live System */}
+      <motion.section 
+        className="relative py-12 px-4"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true, margin: "-100px" }}
       >
         <div className="max-w-4xl mx-auto text-center">
+          {/* Live Status Badge */}
           <motion.div
-            className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/30"
+            className="inline-flex items-center gap-3 mb-6 px-5 py-2.5 rounded-full bg-green-500/10 border border-green-500/30 backdrop-blur-sm"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
             animate={{ 
               boxShadow: [
-                '0 0 10px rgba(34,197,94,0.2)',
-                '0 0 20px rgba(34,197,94,0.4)',
-                '0 0 10px rgba(34,197,94,0.2)'
+                '0 0 15px rgba(34,197,94,0.2)',
+                '0 0 30px rgba(34,197,94,0.4)',
+                '0 0 15px rgba(34,197,94,0.2)'
               ]
             }}
-            transition={{ duration: 2, repeat: Infinity }}
+            transition={{ 
+              boxShadow: { duration: 2, repeat: Infinity },
+              default: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }
+            }}
           >
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            {/* Pulsing Dot */}
+            <motion.div 
+              className="relative w-3 h-3"
+            >
+              <motion.div 
+                className="absolute inset-0 rounded-full bg-green-500"
+                animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+              <div className="absolute inset-0 rounded-full bg-green-400" />
+            </motion.div>
             <span className="text-green-400 text-sm font-bold uppercase tracking-wider">Missione Attiva</span>
           </motion.div>
           
           <motion.h3 
-            className="text-xl md:text-2xl font-bold mb-4 text-white"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-2xl md:text-3xl font-bold mb-6 text-white"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           >
             La caccia è in corso
           </motion.h3>
           
+          {/* Activity Bar - Living System */}
           <motion.div 
-            className="relative w-full h-2 bg-black/60 rounded-full overflow-hidden border border-cyan-500/30 mb-3"
-            initial={{ scale: 0.8, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            className="relative w-full h-3 bg-black/60 rounded-full overflow-hidden border border-cyan-500/30 mb-4"
+            initial={{ scale: 0.9, opacity: 0, width: '50%', marginLeft: 'auto', marginRight: 'auto' }}
+            whileInView={{ scale: 1, opacity: 1, width: '100%' }}
+            transition={{ duration: 0.8, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            {/* Animated pulse bar - no percentage, just activity indicator */}
+            {/* Background Glow */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-cyan-500/50 via-purple-500/50 to-cyan-500/50"
-              animate={{ 
-                x: ["-100%", "100%"],
-                opacity: [0.5, 1, 0.5]
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 via-purple-500/30 to-cyan-500/30"
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            {/* Animated Pulse Wave */}
+            <motion.div
+              className="absolute inset-y-0 w-32 bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent"
+              animate={{ x: ['-128px', 'calc(100% + 128px)'] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            />
+            {/* Secondary Wave */}
+            <motion.div
+              className="absolute inset-y-0 w-24 bg-gradient-to-r from-transparent via-purple-400/40 to-transparent"
+              animate={{ x: ['-96px', 'calc(100% + 96px)'] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "linear", delay: 0.5 }}
             />
           </motion.div>
           
           <motion.p 
-            className="text-white/60 text-sm mb-6"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            className="text-white/60 text-sm mb-8"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
             Ogni decisione conta. Chi arriva tardi parte svantaggiato.
@@ -903,184 +1106,82 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* WELCOME TO M1SSION™ Text Section - Premium */}
+      {/* WELCOME TO M1SSION™ Text Section - AAA Accordion */}
       <motion.section 
-        className="relative py-6 px-4"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, type: "spring", stiffness: 80 }}
-        viewport={{ once: true, margin: "-80px" }}
+        className="relative py-12 px-4"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true, margin: "-100px" }}
       >
         <div className="max-w-4xl mx-auto">
           <motion.div 
-            className="glass-container p-6 md:p-8 text-center relative overflow-hidden"
-            initial={{ scale: 0.95 }}
-            whileInView={{ scale: 1 }}
-            whileHover={{ borderColor: 'rgba(0,229,255,0.3)', boxShadow: '0 0 60px rgba(0,229,255,0.1)' }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
+            className="glass-container p-8 md:p-10 text-center relative overflow-hidden cursor-pointer rounded-2xl"
+            onClick={() => setWelcomeExpanded(!welcomeExpanded)}
+            initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
+            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            whileHover={{ 
+              borderColor: 'rgba(0,229,255,0.4)', 
+              boxShadow: '0 0 80px rgba(0,229,255,0.15), 0 20px 60px rgba(0,0,0,0.4)'
+            }}
+            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <h2 className="text-2xl md:text-3xl font-orbitron mb-6" style={{ textShadow: '0 0 30px rgba(255,255,255,0.1)' }}>
-              WELCOME TO{" "}
-              <span>
-                <span className="text-[#00E5FF]" style={{ textShadow: '0 0 20px rgba(0,229,255,0.5)' }}>M1</span>
-                <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
-              </span>
-            </h2>
+            {/* Animated Background Gradient */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5"
+              animate={{ opacity: [0.5, 0.8, 0.5] }}
+              transition={{ duration: 4, repeat: Infinity }}
+            />
             
-            <p className="text-base mb-4 max-w-3xl mx-auto text-white font-semibold leading-relaxed">
-              Non stai entrando in un gioco.<br/>
-              Stai entrando in un sistema.
-            </p>
+            <div className="flex items-center justify-center gap-4 relative">
+              <motion.h2 
+                className="text-2xl md:text-3xl font-bold"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                WELCOME TO{" "}
+                <span>
+                  <span className="text-[#00E5FF]">M1</span>
+                  <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+                </span>
+              </motion.h2>
+              <motion.div
+                animate={{ rotate: welcomeExpanded ? 180 : 0 }}
+                transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                <ChevronDown className="w-7 h-7 text-cyan-400" />
+              </motion.div>
+            </div>
             
-            <p className="text-base mb-4 max-w-3xl mx-auto text-gray-300 leading-relaxed">
-              Thousands will try. Only a few will see the pattern. You're not just chasing a prize—you're chasing the proof that you can outthink them all.
-            </p>
+            <motion.div
+              initial={false}
+              animate={{ 
+                height: welcomeExpanded ? 'auto' : 0,
+                opacity: welcomeExpanded ? 1 : 0,
+                marginTop: welcomeExpanded ? 24 : 0
+              }}
+              transition={{ duration: 0.4, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <p className="text-base mb-4 max-w-3xl mx-auto text-white font-semibold leading-relaxed">
+                Non stai entrando in un gioco.<br/>
+                Stai entrando in un sistema.
+              </p>
+              
+              <p className="text-base mb-4 max-w-3xl mx-auto text-gray-300 leading-relaxed">
+                Thousands will try. Only a few will see the pattern. You're not just chasing a prize—you're chasing the proof that you can outthink them all.
+              </p>
 
-            <p className="text-base max-w-3xl mx-auto text-gray-300 leading-relaxed">
-              This is <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>. The countdown has begun. Are you ready?
-            </p>
+              <p className="text-base max-w-3xl mx-auto text-gray-300 leading-relaxed">
+                This is <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>. The countdown has begun. Are you ready?
+              </p>
+            </motion.div>
 
             <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
           </motion.div>
         </div>
       </motion.section>
-
-      {/* REGISTRATION FORM SECTION - Premium Gradient */}
-      <motion.section 
-        className="relative py-8 px-4"
-        initial={{ opacity: 0, y: 60, scale: 0.9 }}
-        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.8, type: "spring", stiffness: 70 }}
-        viewport={{ once: true, margin: "-100px" }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/15 to-transparent"></div>
-        <div className="max-w-lg mx-auto relative z-10">
-          <motion.div 
-            className="relative glass-container-glow overflow-hidden p-6 text-center breathing-glow-purple"
-            whileHover={{ scale: 1.03, boxShadow: '0 0 100px rgba(168,85,247,0.25)' }}
-            transition={{ duration: 0.4 }}
-          >
-            <h2 className="text-xl md:text-2xl font-bold mb-2">
-              Registrati per{" "}
-              <span>
-                <span className="text-[#00E5FF]">M1</span>
-                <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
-              </span>
-            </h2>
-            
-            <p className="text-white/60 mb-6 text-sm subtitle-elegant">
-              Ottieni accesso esclusivo e un codice referral unico. Preparati per l'avventura che cambierà tutto.
-            </p>
-            
-            <div className="space-y-3">
-              <motion.div
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="relative overflow-hidden rounded-xl"
-              >
-                <motion.div
-                  className="absolute inset-0"
-                  style={{
-                    background: "linear-gradient(45deg, #ec4899, #8B5CF6, #ec4899)"
-                  }}
-                  animate={{
-                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-                  }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <Button 
-                  onClick={handleRegisterClick}
-                  className="relative w-full bg-transparent text-white text-lg font-bold py-4 px-12 hover:bg-transparent transition-all duration-500"
-                  style={{
-                    boxShadow: "0 0 30px rgba(236, 72, 153, 0.4)"
-                  }}
-                >
-                  START M1SSION
-                </Button>
-              </motion.div>
-              
-              {/* Trust micro-copy - riduzione frizione */}
-              <p className="text-white/40 text-xs text-center">
-                Accesso gratuito. La verifica serve solo in caso di vittoria.
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      </motion.section>
-
-      {/* SCOPRI M1SSION SECTION - Premium */}
-      <section className="py-10 px-4">
-        <div className="max-w-6xl mx-auto">
-          <motion.h2 
-            className="text-2xl md:text-3xl font-bold mb-8 text-center"
-            style={{ textShadow: '0 0 30px rgba(255,255,255,0.1)' }}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            Scopri <span className="text-[#00E5FF]" style={{ textShadow: '0 0 20px rgba(0,229,255,0.5)' }}>M1</span><span className="text-white">SSION</span>
-          </motion.h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 relative">
-            {/* Linea connettore per desktop */}
-            <div className="hidden lg:block absolute top-16 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-[#00E5FF] via-[#FFC107] to-[#FF00FF] z-0"></div>
-            
-            {steps.map((step, index) => {
-              const isFlipped = flippedCards.includes(index);
-              
-              return (
-                <motion.div
-                  key={index}
-                  className="relative z-10 perspective-1000"
-                  initial={{ y: 30, opacity: 0 }}
-                  whileInView={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <span className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-black border border-white/10 flex items-center justify-center font-bold text-white z-30">
-                    {index + 1}
-                  </span>
-                  
-                  <div 
-                    className={`mission-flip-card h-64 cursor-pointer ${isFlipped ? 'is-flipped' : ''}`}
-                    onClick={() => handleCardClick(index)}
-                  >
-                    {/* Front Side */}
-                    <div className="mission-card-front glass-card">
-                      <div className="mb-4 p-3 rounded-full bg-black/50 border border-white/10">
-                        {step.icon}
-                      </div>
-                      <h3 className="text-xl font-bold mb-2 text-white">{step.title}</h3>
-                      <p className="text-white/70 mb-4 leading-relaxed">{step.description}</p>
-                      <p className="text-cyan-400 text-sm font-medium">Clicca per saperne di più</p>
-                    </div>
-                    
-                    {/* Back Side */}
-                    <div className="mission-card-back glass-card bg-gradient-to-br from-cyan-900/40 to-purple-900/40 border border-cyan-400/30">
-                      <div className="mb-3 p-2 rounded-full bg-cyan-400/20">
-                        {step.icon}
-                      </div>
-                      <h3 className="text-lg font-bold mb-3 text-cyan-300">{step.title}</h3>
-                      <p className="text-white/90 text-sm leading-relaxed mb-4">{step.details}</p>
-                      <p className="text-cyan-300 text-xs font-medium">Clicca per tornare indietro</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          <div className="text-center mt-8 mb-4">
-            <button 
-              onClick={handleRegisterClick}
-              className="text-cyan-400 hover:text-cyan-300 text-sm font-medium underline underline-offset-4 transition-colors"
-            >
-              Pronto? Registrati ora →
-            </button>
-          </div>
-        </div>
-      </section>
 
       {/* STAY UPDATED SECTION - Compact */}
       <motion.section 
@@ -1102,134 +1203,6 @@ const LandingPage = () => {
           <p className="text-white/40 text-xs subtitle-elegant">
             Get the latest updates about M1SSION™ and be the first to know about new challenges.
           </p>
-        </div>
-      </motion.section>
-
-      {/* SUBSCRIPTION SECTION - Premium */}
-      <motion.section 
-        className="py-8 px-4 relative"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true, margin: "-80px" }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-900/5 to-transparent"></div>
-        
-        <div className="relative z-10 max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-6"
-          >
-            <motion.h2 
-              className="text-xl md:text-2xl font-bold inline-block"
-              style={{ textShadow: '0 0 30px rgba(255,255,255,0.1)' }}
-              whileInView={{ scale: [0.95, 1] }}
-              transition={{ duration: 0.5 }}
-            >
-              <span className="text-[#00E5FF]" style={{ textShadow: '0 0 20px rgba(0,229,255,0.5)' }}>M1</span><span className="text-white">SSION</span> Abbonamenti
-            </motion.h2>
-            <p className="mt-2 text-white/40 max-w-2xl mx-auto text-xs subtitle-elegant">
-              Scegli il piano più adatto a te e inizia la tua avventura. Tutti i piani offrono la possibilità di vincere premi reali.
-            </p>
-          </motion.div>
-          
-          {/* Piano Base - Sempre Visibile */}
-          <div className="flex justify-center mb-4">
-            <motion.div
-              className="subscription-card p-4 max-w-sm w-full"
-              initial={{ opacity: 0, y: 40, scale: 0.9 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}
-              transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
-              viewport={{ once: true, margin: "-50px" }}
-            >
-              <div className="mb-4">
-                <h3 className="text-lg font-bold text-white">{subscriptions[0].title}</h3>
-                <div className="mt-2">
-                  <span className="text-xl font-bold text-white">{subscriptions[0].price}</span>
-                  {subscriptions[0].period && <span className="text-white/50 text-xs">{subscriptions[0].period}</span>}
-                </div>
-              </div>
-              
-              <div className="space-y-2 mb-4">
-                {subscriptions[0].features.map((feature, idx) => (
-                  <div key={idx} className="flex items-start">
-                    <Check className="w-4 h-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80 text-sm">{feature}</span>
-                  </div>
-                ))}
-              </div>
-              
-              <Button
-                onClick={handleRegisterClick}
-                className={`w-full text-sm py-2 ${subscriptions[0].buttonColor}`}
-                disabled={false}
-              >
-                {subscriptions[0].buttonText}
-              </Button>
-            </motion.div>
-          </div>
-
-          {/* Piani Premium - Accordion */}
-          <PremiumPlansAccordion>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              {subscriptions.slice(1).map((sub, index) => (
-                <motion.div
-                  key={index}
-                  className={`subscription-card p-3 ${sub.highlight ? 'subscription-card-highlight bg-gradient-to-b from-[#00E5FF]/10 to-black/80' : ''}`}
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}
-                  transition={{ delay: index * 0.1, duration: 0.4, type: "spring", stiffness: 100 }}
-                >
-                  {/* Badge per il piano consigliato */}
-                  {sub.highlight && (
-                    <div className="absolute -top-3 -right-3 bg-[#00E5FF] text-black text-xs font-bold py-1 px-2 rounded-full flex items-center">
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      Top
-                    </div>
-                  )}
-                  
-                  <div className="mb-4">
-                    <h3 className="text-lg font-bold text-white">{sub.title}</h3>
-                    <div className="mt-2">
-                      <span className="text-xl font-bold text-white">{sub.price}</span>
-                      {sub.period && <span className="text-white/50 text-xs">{sub.period}</span>}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 mb-4">
-                    {sub.features.slice(0, 3).map((feature, idx) => (
-                      <div key={idx} className="flex items-start">
-                        <Check className="w-4 h-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                        <span className="text-white/80 text-sm">{feature}</span>
-                      </div>
-                    ))}
-                    {sub.features.length > 3 && (
-                      <p className="text-white/60 text-xs">+{sub.features.length - 3} altri vantaggi</p>
-                    )}
-                  </div>
-                  
-                  <Button
-                    onClick={handleRegisterClick}
-                    className={`w-full text-sm py-2 ${sub.buttonColor}`}
-                    disabled={false}
-                  >
-                    {sub.buttonText}
-                  </Button>
-                </motion.div>
-              ))}
-            </div>
-          </PremiumPlansAccordion>
-
-          <div className="text-center">
-            <p className="text-white/50 text-xs">
-              Tutti i piani sono soggetti ai termini e condizioni di servizio.
-            </p>
-          </div>
         </div>
       </motion.section>
 

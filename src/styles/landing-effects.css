@@ -1,0 +1,219 @@
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED */
+/* Landing Page AAA Effects - Hero & Map */
+
+/* ===== HERO EFFECTS ===== */
+
+/* Ambient pulse background */
+.hero-ambient-pulse {
+  animation: ambientPulse 8s ease-in-out infinite;
+}
+
+@keyframes ambientPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.05);
+  }
+}
+
+/* Hero hover glow effect */
+.hero-hover-glow {
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.hero-hover-glow:hover {
+  filter: brightness(1.05);
+}
+
+/* Noise texture overlay */
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0.02;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Gradient shift animation */
+.gradient-shift {
+  animation: gradientShift 15s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* ===== MAP EFFECTS ===== */
+
+/* Map grid lines animation */
+.map-grid-pulse {
+  animation: gridPulse 4s ease-in-out infinite;
+}
+
+@keyframes gridPulse {
+  0%, 100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Marker active state - green glow */
+.marker-active {
+  box-shadow: 
+    0 0 10px rgba(0, 255, 0, 0.5),
+    0 0 20px rgba(0, 255, 0, 0.3),
+    0 0 40px rgba(0, 255, 0, 0.1);
+}
+
+/* Marker won state - dimmed */
+.marker-won {
+  opacity: 0.3;
+  filter: grayscale(0.8);
+}
+
+/* Marker hover glow */
+.marker-hover-glow {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.marker-hover-glow:hover {
+  box-shadow: 
+    0 0 15px currentColor,
+    0 0 30px currentColor,
+    0 0 45px rgba(255, 255, 255, 0.2);
+  transform: scale(1.15);
+}
+
+/* Scanline effect for map */
+.map-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 229, 255, 0.015) 2px,
+    rgba(0, 229, 255, 0.015) 4px
+  );
+  animation: scanlineMove 10s linear infinite;
+}
+
+@keyframes scanlineMove {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(4px);
+  }
+}
+
+/* Coordinate lines */
+.coord-line {
+  stroke: rgba(0, 229, 255, 0.2);
+  stroke-width: 0.5;
+  stroke-dasharray: 4 4;
+  animation: coordPulse 3s ease-in-out infinite;
+}
+
+@keyframes coordPulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Radar sweep effect */
+.radar-sweep {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(0, 229, 255, 0.1) 30deg,
+    transparent 60deg
+  );
+  animation: radarSweep 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes radarSweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Region glow on map */
+.region-glow {
+  fill: rgba(0, 229, 255, 0.03);
+  stroke: rgba(0, 229, 255, 0.15);
+  stroke-width: 1;
+  transition: all 0.5s ease;
+}
+
+.region-glow:hover {
+  fill: rgba(0, 229, 255, 0.08);
+  stroke: rgba(0, 229, 255, 0.3);
+}
+
+/* Tooltip fade */
+.tooltip-fade {
+  animation: tooltipFade 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes tooltipFade {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Mobile: disable complex hover effects */
+@media (hover: none) and (pointer: coarse) {
+  .hero-hover-glow:hover {
+    filter: none;
+  }
+  
+  .marker-hover-glow:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .radar-sweep {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .hero-ambient-pulse,
+  .gradient-shift,
+  .map-grid-pulse,
+  .map-scanlines,
+  .radar-sweep {
+    animation: none;
+  }
+}
+

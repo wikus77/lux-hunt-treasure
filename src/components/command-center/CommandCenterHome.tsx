@@ -1,9 +1,18 @@
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - Command Center Home Component - RESET COMPLETO 17/07/2025
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PrizeVision } from "./home-sections/PrizeVision";
+
+// 🔥 CRITICAL FIX: Lazy load PrizeVision to prevent THREE.js hook errors during navigation
+const PrizeVision = lazy(() => import("./home-sections/PrizeVision").then(m => ({ default: m.PrizeVision })));
+
+// Fallback component while PrizeVision loads
+const PrizeVisionFallback = () => (
+  <div className="w-full h-48 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-xl animate-pulse flex items-center justify-center">
+    <div className="text-white/40 text-sm">Caricamento...</div>
+  </div>
+);
 import { BattleConsole } from "./home-sections/BattleConsole";
 import { AgentDiary } from "./home-sections/AgentDiary";
 import { BattleArenaOverlay } from "@/components/battle/BattleArenaOverlay";
@@ -201,10 +210,12 @@ export default function CommandCenterHome() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-      <PrizeVision 
-        progress={progress} 
-        status={prizeUnlockStatus} 
-      />
+      <Suspense fallback={<PrizeVisionFallback />}>
+        <PrizeVision 
+          progress={progress} 
+          status={prizeUnlockStatus} 
+        />
+      </Suspense>
     </motion.div>
 
     {/* THE PULSE™ - Re-enabled with original component */}

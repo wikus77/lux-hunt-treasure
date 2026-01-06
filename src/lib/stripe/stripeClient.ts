@@ -19,7 +19,7 @@ export function getStripe(): Promise<Stripe | null> {
       console.warn('⚠️ VITE_STRIPE_PUBLISHABLE_KEY is not a LIVE key:', pk.substring(0, 10) + '...');
     }
     
-    console.debug('🔑 Using Stripe publishable key:', pk.substring(0, 10) + '...');
+    // 🔐 Stripe key log removed for security
     stripePromise = loadStripe(pk as string);
   }
   return stripePromise;

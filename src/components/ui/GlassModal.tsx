@@ -1,12 +1,12 @@
 /**
- * GlassModal v7 - Bottom-Sheet che NON copre Header e BottomNav
- * CRITICAL: Il modal si posiziona TRA header e bottom nav
+ * GlassModal v8 - Bottom-Sheet IDENTICO a ProfileBottomSheet
+ * CRITICAL: Copre la bottom nav, swipe-to-close senza refresh
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { X } from "lucide-react";
 
 export interface GlassModalProps {
@@ -18,17 +18,16 @@ export interface GlassModalProps {
   subtitle?: string;
 }
 
-// Layout constants
-const HEADER_HEIGHT = 72;
-const BOTTOM_NAV_HEIGHT = 64;
-const SAFE_AREA_TOP = 'env(safe-area-inset-top, 0px)';
-const SAFE_AREA_BOTTOM = 'env(safe-area-inset-bottom, 0px)';
-
 export function GlassModal({ isOpen, onClose, children, accentColor, title, subtitle }: GlassModalProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollYRef = useRef(0);
   const touchStartRef = useRef({ y: 0, scrollTop: 0 });
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+  
+  // 🆕 Swipe-to-close
+  const dragY = useMotionValue(0);
+  const dragOpacity = useTransform(dragY, [0, 200], [1, 0.5]);
+  const SWIPE_THRESHOLD = 100; // px per chiudere
 
   // Create portal container on mount
   useEffect(() => {
@@ -101,168 +100,98 @@ export function GlassModal({ isOpen, onClose, children, accentColor, title, subt
     }
   }, []);
 
+  // 🆕 Swipe-to-close handler
+  const handleDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.y > SWIPE_THRESHOLD || info.velocity.y > 500) {
+      onClose();
+    }
+    dragY.set(0);
+  }, [onClose, dragY]);
+
   if (!portalContainer) return null;
 
   const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Overlay - SOLO tra header e bottom nav */}
+          {/* Overlay - COPRE TUTTO come ProfileBottomSheet */}
           <motion.div
-            style={{ 
-              position: 'fixed',
-              top: `calc(${HEADER_HEIGHT}px + ${SAFE_AREA_TOP})`,
-              left: 0,
-              right: 0,
-              bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_AREA_BOTTOM})`,
-              zIndex: 9990,
-              background: 'rgba(0, 0, 0, 0.5)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99998]"
             onClick={onClose}
           />
           
-          {/* Bottom Sheet - Posizionato TRA header e bottom nav */}
+          {/* Bottom Sheet - IDENTICO a ProfileBottomSheet */}
           <motion.div
-            style={{
-              position: 'fixed',
-              left: 0,
-              right: 0,
-              // Bottom: appena sopra la bottom nav
-              bottom: `calc(${BOTTOM_NAV_HEIGHT}px + ${SAFE_AREA_BOTTOM})`,
-              // Max height: spazio disponibile tra header e bottom nav
-              maxHeight: `calc(100dvh - ${HEADER_HEIGHT}px - ${BOTTOM_NAV_HEIGHT}px - ${SAFE_AREA_TOP} - ${SAFE_AREA_BOTTOM} - 16px)`,
-              display: 'flex',
-              flexDirection: 'column',
-              zIndex: 9995,
-              // iOS 26 Glass Effect
-              background: 'linear-gradient(180deg, rgba(28, 32, 52, 0.92) 0%, rgba(20, 24, 44, 0.96) 50%, rgba(14, 18, 38, 0.98) 100%)',
-              backdropFilter: 'blur(40px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-              borderRadius: '24px 24px 0 0',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderBottom: 'none',
-              boxShadow: `
-                0 -20px 60px rgba(0, 0, 0, 0.5),
-                0 -8px 30px ${accentColor}15,
-                inset 0 1px 0 rgba(255, 255, 255, 0.12)
-              `,
-              overflow: 'hidden',
-            }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ 
-              type: 'spring', 
-              damping: 32, 
-              stiffness: 380,
-              mass: 0.8 
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed inset-x-0 bottom-0 z-[99999] max-h-[90vh] overflow-hidden"
+            style={{
+              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+              opacity: dragOpacity,
+              y: dragY,
             }}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.5 }}
+            onDragEnd={handleDragEnd}
           >
-            {/* Header del modal - sticky */}
+            {/* Background container - IDENTICO a ProfileBottomSheet */}
             <div 
+              className="rounded-t-3xl bg-[#0a0a0f]/85 backdrop-blur-xl border-t border-x overflow-hidden"
               style={{
-                flexShrink: 0,
-                padding: '12px 16px 14px 16px',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%)',
-                position: 'relative',
+                borderColor: `${accentColor}30`,
+                boxShadow: `0 -10px 40px ${accentColor}15, 0 0 0 1px ${accentColor}10`,
               }}
             >
-              {/* Handle bar */}
-              <div 
-                style={{
-                  width: '36px',
-                  height: '4px',
-                  borderRadius: '2px',
-                  background: 'rgba(255, 255, 255, 0.3)',
-                  margin: '0 auto 12px auto',
-                }}
-              />
-              
-              {/* Close button */}
-              <button
-                onClick={onClose}
-                aria-label="Chiudi"
-                style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '12px',
-                  zIndex: 10,
-                  width: '40px',
-                  height: '40px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  touchAction: 'manipulation',
-                  cursor: 'pointer',
-                }}
-              >
-                <X className="w-5 h-5 text-white" />
-              </button>
-              
-              {/* Title */}
-              <div style={{ paddingRight: '48px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-2 cursor-grab">
+                <div className="w-12 h-1.5 rounded-full bg-white/30" />
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 pb-3 border-b border-white/10">
+                <div className="flex items-center space-x-2">
                   <div 
+                    className="w-2 h-2 rounded-full"
                     style={{ 
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
                       background: accentColor,
                       boxShadow: `0 0 10px ${accentColor}`,
                     }}
                   />
-                  <h2 
-                    className="font-orbitron"
-                    style={{ 
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      color: 'white',
-                      margin: 0,
-                    }}
-                  >
-                    {title}
-                  </h2>
+                  <h3 className="font-orbitron font-bold text-white text-[15px]">{title}</h3>
                 </div>
-                {subtitle && (
-                  <p style={{ 
-                    fontSize: '13px',
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    margin: 0,
-                    marginLeft: '16px',
-                  }}>
-                    {subtitle}
-                  </p>
-                )}
+                <button
+                  onClick={onClose}
+                  className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center"
+                  style={{ touchAction: 'manipulation' }}
+                >
+                  <X className="w-4 h-4 text-white/70" />
+                </button>
               </div>
-            </div>
-            
-            {/* Scrollable Content */}
-            <div 
-              ref={scrollRef}
-              style={{
-                flex: '1 1 auto',
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                WebkitOverflowScrolling: 'touch',
-                overscrollBehavior: 'contain',
-                touchAction: 'pan-y',
-                padding: '16px',
-                paddingBottom: '24px',
-              }}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-            >
-              {children}
+              
+              {subtitle && (
+                <p className="text-xs text-white/50 px-4 pt-2">{subtitle}</p>
+              )}
+
+              {/* Scrollable Content */}
+              <div 
+                ref={scrollRef}
+                className="overflow-y-auto overscroll-contain px-4 py-4 space-y-4"
+                style={{
+                  maxHeight: 'calc(90vh - 80px - env(safe-area-inset-bottom, 0px))',
+                  WebkitOverflowScrolling: 'touch',
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+              >
+                {children}
+              </div>
             </div>
           </motion.div>
         </>

@@ -225,65 +225,60 @@ const { isConnected } = useRealTimeNotifications();
               )}
 
                   <div className="container mx-auto px-3 pb-20">
-                {/* 🚀 FLOATING PILLS - FIXED POSITIONING */}
-                {/* M1U Pill - Fixed, left side, below header */}
-                <motion.div
-                  id="m1u-pill-home-slot"
-                  data-onboarding="m1u-pill"
-                  className="fixed z-[100] top-[170px] sm:top-[94px] left-3 sm:left-4 md:left-6"
-                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  style={{ pointerEvents: 'auto' }}
-                >
-                  <M1UPill showLabel showPlusButton />
-                </motion.div>
-                
-                {/* Streak Pill - Fixed, left side, below M1U */}
-                <motion.div
-                  data-onboarding="streak-pill"
-                  className="fixed z-[100] top-[218px] sm:top-[142px] left-3 sm:left-4 md:left-6"
-                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.05 }}
-                  style={{ pointerEvents: 'auto' }}
-                >
-                  <StreakPill showLabel />
-                </motion.div>
-                
-                {/* M1SSION Cashback Vault™ Pill - Fixed, right side, below header */}
-                <motion.div
-                  data-onboarding="cashback-pill"
-                  className="fixed z-[100] top-[170px] sm:top-[94px] right-3 sm:right-4 md:right-6"
-                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.05 }}
-                  style={{ pointerEvents: 'auto' }}
-                >
-                  <CashbackVaultPill />
-                </motion.div>
-                
-                {/* Agent Energy Pill (🔺 Triangolo) - Fixed, right side, below Cashback */}
-                {PULSE_ENABLED && (
-                  <motion.div
-                    className="fixed z-[100] top-[218px] sm:top-[142px] right-3 sm:right-4 md:right-6"
-                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.1 }}
-                    style={{ pointerEvents: 'auto' }}
-                  >
-                    <AgentEnergyPill />
-                  </motion.div>
-                )}
+                {/* 🚀 PILLS - Layout flex, scorrono con pagina - +5% margin top per visibilità */}
+                <div className="flex justify-between items-start mb-4 mt-[5%] overflow-visible">
+                  {/* Colonna sinistra - overflow-visible per pill-orb rings */}
+                  <div className="flex flex-col gap-2 overflow-visible">
+                    <motion.div
+                      id="m1u-pill-home-slot"
+                      data-onboarding="m1u-pill"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <M1UPill showLabel showPlusButton />
+                    </motion.div>
+                    
+                    <motion.div
+                      data-onboarding="streak-pill"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, delay: 0.05 }}
+                    >
+                      <StreakPill showLabel />
+                    </motion.div>
+                  </div>
+                  
+                  {/* Colonna destra */}
+                  <div className="flex flex-col gap-2">
+                    <motion.div
+                      data-onboarding="cashback-pill"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, delay: 0.05 }}
+                    >
+                      <CashbackVaultPill />
+                    </motion.div>
+                    
+                    {PULSE_ENABLED && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3, delay: 0.1 }}
+                      >
+                        <AgentEnergyPill />
+                      </motion.div>
+                    )}
+                  </div>
+                </div>
 
                 {/* 🎯 DAILY MISSIONS: Mission Pill - Fixed, bottom, same position as Map */}
                 <MissionPill />
                 
 
-                {/* 🚀 NATIVE: Layout responsive per titolo */}
-                {/* 🎯 CONTENT_BELOW_BLOCK: tutto sotto i pill (badge + contenuti) */}
+                {/* 🎯 CONTENT_BELOW_BLOCK: contenuto sotto i pill */}
                 <motion.div
-                  className="relative my-4 sm:my-6 pt-16 text-center home-content-below-pills"
+                  className="relative text-center home-content-below-pills"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
