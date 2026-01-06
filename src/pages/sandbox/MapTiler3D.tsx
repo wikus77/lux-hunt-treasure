@@ -48,6 +48,7 @@ import { use3DDevMocks } from './hooks/use3DDevMocks';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import DevNotesPanel from './map3d/components/DevNotesPanel';
+import { MotivationalPopup } from '@/components/feedback';
 import DevAreasPanel from './map3d/components/DevAreasPanel';
 import BattleFxLayer from '@/components/map/battle/BattleFxLayer';
 import { MapBattleOverlay } from '@/components/map/battle/MapBattleOverlay';
@@ -1823,6 +1824,9 @@ export default function MapTiler3D() {
       <BuzzHelpPopup mapContainerId="ml-sandbox" />
       {/* 🆕 Hint "Esplora la mappa" per utenti inattivi (1 volta al giorno) */}
       <MapExploreHint mapContainerId="ml-sandbox" />
+      
+      {/* 🎯 Motivational Popup - Shows once per session */}
+      <MotivationalPopup pageType="map" />
     </FinalShootProvider>
   );
 }

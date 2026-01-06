@@ -10,6 +10,7 @@ import { Zap, Trophy, RotateCcw, Target, Bot, Coins, Battery } from 'lucide-reac
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { emitGameEvent } from '@/gameplay/events'; // 🎉 Progress Feedback System
 
 interface PracticeModeProps {
   userId: string;
@@ -20,11 +21,12 @@ type GameState = 'idle' | 'countdown' | 'waiting' | 'flash' | 'result' | 'too_ea
 type StakeCurrency = 'M1U' | 'PE';
 
 // Bot difficulty levels with reaction time ranges (ms)
+// 🎯 REBALANCED: +10% easier (higher reaction times)
 const BOT_LEVELS = {
-  easy: { min: 350, max: 500, name: 'Rookie Bot', color: 'text-green-400' },
-  medium: { min: 250, max: 400, name: 'Agent Bot', color: 'text-yellow-400' },
-  hard: { min: 180, max: 300, name: 'Elite Bot', color: 'text-orange-400' },
-  extreme: { min: 120, max: 220, name: 'TRON Master', color: 'text-red-400' },
+  easy: { min: 385, max: 550, name: 'Rookie Bot', color: 'text-green-400' },
+  medium: { min: 275, max: 440, name: 'Agent Bot', color: 'text-yellow-400' },
+  hard: { min: 200, max: 330, name: 'Elite Bot', color: 'text-orange-400' },
+  extreme: { min: 135, max: 245, name: 'TRON Master', color: 'text-red-400' },
 };
 
 type BotLevel = keyof typeof BOT_LEVELS;
@@ -246,6 +248,26 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
       saveStats(newStats, newTimes);
       
       setGameState('result');
+
+      // 🎉 EMIT GAME EVENT for Progress Feedback System
+      if (playerWon) {
+        emitGameEvent('BATTLE_WIN', {
+          reactionTime: reaction,
+          botReactionTime: botTime,
+          botLevel,
+          stake: stake.amount,
+          currency: stake.currency,
+          payout: stake.amount,
+        });
+      } else {
+        emitGameEvent('BATTLE_LOSE', {
+          reactionTime: reaction,
+          botReactionTime: botTime,
+          botLevel,
+          stake: stake.amount,
+          currency: stake.currency,
+        });
+      }
 
       // Haptic feedback
       if ('vibrate' in navigator) {

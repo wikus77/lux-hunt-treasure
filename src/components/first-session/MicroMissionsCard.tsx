@@ -874,7 +874,7 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
         </div>
       )}
 
-      {/* === POPUP FINALE DI CELEBRAZIONE === */}
+      {/* === POPUP FINALE DI CELEBRAZIONE - GREEN GLASS STYLE === */}
       {showFinalCelebration && (
         <div
           style={{
@@ -888,7 +888,8 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
             justifyContent: 'center',
             padding: '16px',
             zIndex: 900,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(8px)',
             pointerEvents: 'auto',
           }}
         >
@@ -900,15 +901,24 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
             transition={{ duration: 0.5, ease: 'easeOut' }}
             style={{
               width: '100%',
-              maxWidth: '380px',
-              background: 'linear-gradient(145deg, rgba(10, 30, 60, 0.98), rgba(20, 40, 80, 0.95))',
-              borderRadius: '24px',
-              border: '2px solid rgba(255, 215, 0, 0.6)',
-              boxShadow: '0 0 60px rgba(255, 215, 0, 0.4), 0 12px 40px rgba(0, 0, 0, 0.6)',
-              padding: 'clamp(20px, 5vw, 32px)',
+              maxWidth: '480px',
+              background: 'linear-gradient(145deg, rgba(0, 40, 40, 0.98), rgba(0, 60, 60, 0.95))',
+              borderRadius: '28px',
+              border: '2px solid rgba(0, 255, 136, 0.6)',
+              boxShadow: '0 0 60px rgba(0, 255, 136, 0.4), 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1)',
+              padding: 'clamp(24px, 6vw, 40px)',
               textAlign: 'center',
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
+            {/* Ambient glow */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.2) 0%, transparent 60%)',
+              pointerEvents: 'none',
+            }} />
             {/* Emoji celebrativa */}
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
@@ -924,12 +934,11 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               style={{
-                fontSize: 'clamp(22px, 5vw, 28px)',
+                fontSize: 'clamp(26px, 6vw, 34px)',
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: '12px',
+                color: '#00FF88',
+                textShadow: '0 0 30px rgba(0, 255, 136, 0.6)',
+                marginBottom: '16px',
               }}
             >
               DISCOVERY COMPLETE!

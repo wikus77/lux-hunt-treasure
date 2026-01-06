@@ -1,14 +1,18 @@
 /**
- * M1SSION™ Progress Feedback Provider
+ * M1SSION™ Progress Feedback Provider V2
  * Global provider for game event celebrations
- * Mounts globally in App.tsx, listens for events, renders overlays
+ * AAA game-feel with audio feedback
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'wouter';
-import { PROGRESS_FEEDBACK_ENABLED, isUserInProgressFeedbackAllowlist } from '@/config/featureFlags';
+import { 
+  PROGRESS_FEEDBACK_ENABLED, 
+  isUserInProgressFeedbackAllowlist,
+  DEBUG_PANELS_ENABLED 
+} from '@/config/featureFlags';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import {
   GameEvent,
@@ -19,6 +23,7 @@ import {
 } from '@/gameplay/events';
 import { CelebrationModal } from './CelebrationModal';
 import { CelebrationToast } from './CelebrationToast';
+import { unlockAudio, playSound, getSoundForEvent } from './audioFeedback';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PROVIDER COMPONENT
@@ -28,30 +33,50 @@ export const ProgressFeedbackProvider: React.FC<{ children: React.ReactNode }> =
   const [currentEvent, setCurrentEvent] = useState<GameEvent | null>(null);
   const { user, isLoading: authLoading } = useUnifiedAuth();
   const [, navigate] = useLocation();
+  const hasUnlockedAudioRef = useRef(false);
   
   // 🛡️ ALLOWLIST CHECK: Only show celebrations to allowlisted users
   const userEmail = user?.email;
   const isAllowed = isUserInProgressFeedbackAllowlist(userEmail);
   
-  // 🐛 DEBUG: Log state on every render (only for allowlisted users)
+  // Unlock audio on first user interaction (iOS requirement)
   useEffect(() => {
-    console.log('[ProgressFeedback] 🔍 DEBUG STATE:', {
-      PROGRESS_FEEDBACK_ENABLED,
-      authLoading,
-      userEmail: userEmail || 'NOT_AVAILABLE',
-      isAllowed,
-      hasUser: !!user,
-      timestamp: new Date().toISOString()
-    });
-  }, [authLoading, userEmail, isAllowed, user]);
+    if (!isAllowed || hasUnlockedAudioRef.current) return;
+    
+    const handleFirstInteraction = async () => {
+      if (hasUnlockedAudioRef.current) return;
+      
+      const unlocked = await unlockAudio();
+      if (unlocked) {
+        hasUnlockedAudioRef.current = true;
+        // Remove listeners after unlock
+        document.removeEventListener('click', handleFirstInteraction);
+        document.removeEventListener('touchstart', handleFirstInteraction);
+      }
+    };
+    
+    document.addEventListener('click', handleFirstInteraction, { once: true });
+    document.addEventListener('touchstart', handleFirstInteraction, { once: true });
+    
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+    };
+  }, [isAllowed]);
+  
+  // Play sound when event appears
+  useEffect(() => {
+    if (!currentEvent || !isAllowed) return;
+    
+    // Play appropriate sound for event type
+    const soundType = getSoundForEvent(currentEvent.type);
+    playSound(soundType);
+  }, [currentEvent, isAllowed]);
   
   // Subscribe to queue changes
   useEffect(() => {
     // Wait for auth to load before checking
-    if (authLoading) {
-      console.log('[ProgressFeedback] ⏳ Auth still loading, waiting...');
-      return;
-    }
+    if (authLoading) return;
     
     if (!PROGRESS_FEEDBACK_ENABLED) {
       console.log('[ProgressFeedback] ⚠️ Feature disabled via flag');
@@ -60,11 +85,10 @@ export const ProgressFeedbackProvider: React.FC<{ children: React.ReactNode }> =
     
     // 🛡️ ALLOWLIST: Skip if user not in allowlist
     if (!isAllowed) {
-      console.log('[ProgressFeedback] 🔒 User not in allowlist:', { userEmail });
-      return;
+      return; // Silent skip, no console spam
     }
     
-    console.log('[ProgressFeedback] 🚀 Provider mounted for allowlisted user, subscribing to queue');
+    console.log('[ProgressFeedback] 🚀 Provider active for:', userEmail);
     
     const unsubscribe = subscribeToQueue((event) => {
       setCurrentEvent(event);
@@ -78,40 +102,25 @@ export const ProgressFeedbackProvider: React.FC<{ children: React.ReactNode }> =
     return () => {
       unsubscribe();
     };
-  }, [authLoading, isAllowed]);
+  }, [authLoading, isAllowed, userEmail]);
   
   // Listen for global game events
   useEffect(() => {
-    // Wait for auth to finish loading
-    if (authLoading) {
-      console.log('[ProgressFeedback] 📡 Event listener: waiting for auth...');
+    if (authLoading || !PROGRESS_FEEDBACK_ENABLED || !isAllowed) {
       return;
     }
-    
-    if (!PROGRESS_FEEDBACK_ENABLED) {
-      console.log('[ProgressFeedback] 📡 Event listener: feature disabled');
-      return;
-    }
-    
-    if (!isAllowed) {
-      console.log('[ProgressFeedback] 📡 Event listener: user not allowed, skipping');
-      return;
-    }
-    
-    console.log('[ProgressFeedback] 📡 ATTACHING global event listener for:', userEmail);
     
     const handleGameEvent = (e: CustomEvent<GameEvent>) => {
-      console.log('[ProgressFeedback] 📥 RECEIVED event:', e.detail.type, e.detail);
+      console.log('[ProgressFeedback] 📥 Event:', e.detail.type);
       enqueueEvent(e.detail);
     };
     
     window.addEventListener('m1ssion:game-event', handleGameEvent as EventListener);
     
     return () => {
-      console.log('[ProgressFeedback] 📡 REMOVING global event listener');
       window.removeEventListener('m1ssion:game-event', handleGameEvent as EventListener);
     };
-  }, [authLoading, isAllowed, userEmail]);
+  }, [authLoading, isAllowed]);
   
   // Handle dismiss
   const handleDismiss = useCallback(() => {
@@ -159,34 +168,33 @@ export const ProgressFeedbackProvider: React.FC<{ children: React.ReactNode }> =
     return null;
   };
   
-  // 🐛 DEBUG INDICATOR: Only visible to allowlisted users (Joseph)
+  // 🐛 MINIMAL DEBUG: Only in dev mode AND for allowlisted users
   const renderDebugIndicator = () => {
-    if (!isAllowed) return null;
+    // Only show in development AND for allowed users
+    if (!DEBUG_PANELS_ENABLED || !isAllowed) return null;
     
-    return (
+    return createPortal(
       <div 
         style={{
           position: 'fixed',
-          bottom: '100px',
-          right: '10px',
+          bottom: '8px',
+          right: '8px',
           zIndex: 99999,
-          background: 'rgba(0, 255, 136, 0.9)',
-          color: '#000',
-          padding: '8px 12px',
-          borderRadius: '8px',
-          fontSize: '10px',
+          padding: '4px 8px',
+          borderRadius: '4px',
+          fontSize: '9px',
           fontFamily: 'monospace',
-          maxWidth: '200px',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
+          background: currentEvent 
+            ? 'rgba(0, 255, 136, 0.85)' 
+            : 'rgba(0, 209, 255, 0.6)',
+          color: '#000',
+          opacity: 0.7,
+          pointerEvents: 'none',
         }}
       >
-        <div><strong>🎉 PF DEBUG</strong></div>
-        <div>FLAG: {PROGRESS_FEEDBACK_ENABLED ? '✅ ON' : '❌ OFF'}</div>
-        <div>AUTH: {authLoading ? '⏳' : '✅'}</div>
-        <div>EMAIL: {userEmail?.slice(0, 10) || '❌ N/A'}...</div>
-        <div>ALLOWED: {isAllowed ? '✅' : '❌'}</div>
-        <div>EVENT: {currentEvent?.type || 'none'}</div>
-      </div>
+        PF {currentEvent ? `⚡${currentEvent.type.slice(0, 8)}` : '✓'}
+      </div>,
+      document.body
     );
   };
   
@@ -202,4 +210,3 @@ export const ProgressFeedbackProvider: React.FC<{ children: React.ReactNode }> =
 export default ProgressFeedbackProvider;
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-

@@ -32,6 +32,7 @@ import { useMicLevel } from '@/components/intel/hooks/useMicLevel';
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { setupRealtimeSubscriptions } from '@/intelligence/context/realtime';
+import { MotivationalPopup } from '@/components/feedback';
 
 // Keyboard shortcut handler
 const useKeyboardShortcut = (key: string, callback: () => void) => {
@@ -471,6 +472,9 @@ const IntelligenceStyledPage: React.FC = () => {
               </Card>
         </div>
       </main>
+      
+      {/* 🎯 Motivational Popup - Shows once per session */}
+      <MotivationalPopup pageType="aion" />
     </div>
   );
 };

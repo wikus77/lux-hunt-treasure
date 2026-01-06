@@ -1,14 +1,15 @@
 /**
- * M1SSION™ Celebration Modal
- * Major celebration overlay for milestone events
+ * M1SSION™ Celebration Modal V2
+ * AAA game-feel celebration overlay with premium glass design
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import React, { useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, ArrowRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { GameEvent, getEventCopy } from '@/gameplay/events';
+import { GLASS_PRESETS, getGlassVariantForEvent, MOTION_PRESETS, M1SSION_COLORS } from './glassPresets';
 
 interface CelebrationModalProps {
   event: GameEvent;
@@ -16,39 +17,59 @@ interface CelebrationModalProps {
   onCtaClick: (path: string) => void;
 }
 
+// Confetti colors by variant
+const CONFETTI_COLORS: Record<string, string[]> = {
+  success: [M1SSION_COLORS.green, M1SSION_COLORS.cyan, '#FFFFFF'],
+  gold: [M1SSION_COLORS.gold, M1SSION_COLORS.magenta, M1SSION_COLORS.cyan],
+  warning: [M1SSION_COLORS.amber, M1SSION_COLORS.gold, '#FFFFFF'],
+  error: [M1SSION_COLORS.red, M1SSION_COLORS.amber, '#FF8888'],
+  neutral: [M1SSION_COLORS.cyan, M1SSION_COLORS.magenta, '#FFFFFF'],
+};
+
 export const CelebrationModal: React.FC<CelebrationModalProps> = ({
   event,
   onDismiss,
   onCtaClick,
 }) => {
   const copy = getEventCopy(event);
+  const variant = getGlassVariantForEvent(event.type);
+  const preset = GLASS_PRESETS[variant];
   const animationRef = useRef<number | null>(null);
   const isMountedRef = useRef(true);
   
   // Trigger confetti on mount with proper cleanup
   useEffect(() => {
     isMountedRef.current = true;
-    const duration = 2000;
+    const duration = 2500;
     const end = Date.now() + duration;
     
-    const colors = getConfettiColors(event.type);
+    const colors = CONFETTI_COLORS[variant] || CONFETTI_COLORS.neutral;
     
+    // Initial burst
+    confetti({
+      particleCount: 80,
+      spread: 100,
+      origin: { y: 0.6 },
+      colors,
+      scalar: 1.2,
+    });
+    
+    // Continuous rain
     const frame = () => {
-      // 🛡️ Cleanup check: stop if unmounted
       if (!isMountedRef.current) return;
       
       confetti({
-        particleCount: 3,
+        particleCount: 2,
         angle: 60,
         spread: 55,
-        origin: { x: 0, y: 0.7 },
+        origin: { x: 0, y: 0.65 },
         colors,
       });
       confetti({
-        particleCount: 3,
+        particleCount: 2,
         angle: 120,
         spread: 55,
-        origin: { x: 1, y: 0.7 },
+        origin: { x: 1, y: 0.65 },
         colors,
       });
       
@@ -57,21 +78,24 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
       }
     };
     
-    frame();
+    // Start after initial burst
+    setTimeout(() => {
+      if (isMountedRef.current) frame();
+    }, 300);
     
-    // Haptic feedback if available
+    // Haptic feedback pattern
     if (navigator.vibrate) {
-      navigator.vibrate([50, 30, 100]);
+      navigator.vibrate([50, 30, 80, 30, 50]);
     }
     
-    // 🛡️ Cleanup on unmount
+    // Cleanup on unmount
     return () => {
       isMountedRef.current = false;
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [event.type]);
+  }, [variant]);
   
   // Handle ESC key
   useEffect(() => {
@@ -97,15 +121,20 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[9999] flex items-center justify-center"
+        className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={(e) => e.target === e.currentTarget && onDismiss()}
       >
-        {/* Backdrop */}
+        {/* Backdrop with blur */}
         <motion.div
-          className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          className="absolute inset-0 backdrop-blur-md"
+          style={{ background: 'rgba(0, 0, 0, 0.85)' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -113,125 +142,144 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
         
         {/* Modal Content */}
         <motion.div
-          className="relative mx-4 max-w-md w-full rounded-2xl overflow-hidden"
+          className="relative max-w-md w-full rounded-3xl overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%)',
-            border: '2px solid rgba(0, 229, 255, 0.4)',
-            boxShadow: '0 0 60px rgba(0, 229, 255, 0.3), 0 0 120px rgba(123, 92, 255, 0.2)',
+            background: preset.background,
+            border: preset.border,
+            boxShadow: preset.boxShadow,
           }}
-          initial={{ scale: 0.5, y: 50, opacity: 0 }}
-          animate={{ scale: 1, y: 0, opacity: 1 }}
-          exit={{ scale: 0.5, y: 50, opacity: 0 }}
-          transition={{ type: 'spring', damping: 15, stiffness: 300 }}
+          {...MOTION_PRESETS.modalEnter}
         >
+          {/* Ambient glow overlay */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `radial-gradient(ellipse at 50% 0%, ${preset.glowColor} 0%, transparent 50%)`,
+            }}
+          />
+          
+          {/* Animated border glow */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none rounded-3xl"
+            style={{
+              border: `2px solid ${preset.textColor}`,
+              opacity: 0.3,
+            }}
+            animate={{
+              opacity: [0.2, 0.5, 0.2],
+              boxShadow: [
+                `0 0 20px ${preset.glowColor}`,
+                `0 0 40px ${preset.glowColor}`,
+                `0 0 20px ${preset.glowColor}`,
+              ],
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+          
           {/* Close button */}
-          <button
+          <motion.button
             onClick={onDismiss}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
+            className="absolute top-4 right-4 p-2.5 rounded-full z-10 transition-all"
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+            }}
+            whileHover={{ 
+              background: 'rgba(255, 255, 255, 0.2)',
+              scale: 1.1,
+            }}
+            whileTap={{ scale: 0.95 }}
             aria-label="Chiudi"
           >
-            <X className="w-5 h-5 text-white/70" />
-          </button>
+            <X className="w-5 h-5 text-white/80" />
+          </motion.button>
           
           {/* Content */}
-          <div className="p-6 text-center">
-            {/* Icon */}
+          <div className="relative p-8 text-center">
+            {/* Large Icon with glow */}
             <motion.div
-              className="text-6xl mb-4"
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', delay: 0.2 }}
+              className="relative mb-6 inline-block"
+              {...MOTION_PRESETS.iconBounce}
             >
-              {copy.icon}
+              {/* Glow effect */}
+              <div 
+                className="absolute inset-0 blur-2xl opacity-60 text-7xl"
+                style={{ 
+                  filter: `drop-shadow(0 0 30px ${preset.glowColor})`,
+                }}
+              >
+                {copy.icon}
+              </div>
+              {/* Icon */}
+              <span 
+                className="relative z-10 text-7xl block"
+                style={{ 
+                  filter: `drop-shadow(0 0 15px ${preset.glowColor})`,
+                }}
+              >
+                {copy.icon}
+              </span>
             </motion.div>
             
             {/* Title */}
             <motion.h2
-              className="text-2xl font-bold text-white mb-2"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
+              className="text-2xl font-bold mb-3"
               style={{
-                textShadow: '0 0 20px rgba(0, 229, 255, 0.5)',
+                color: preset.textColor,
+                textShadow: `0 0 30px ${preset.glowColor}`,
               }}
+              {...MOTION_PRESETS.textStagger(0.2)}
             >
               {copy.title}
             </motion.h2>
             
             {/* Effect */}
             <motion.p
-              className="text-lg text-cyan-300 mb-4"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
+              className="text-lg mb-6"
+              style={{ color: 'rgba(255, 255, 255, 0.9)' }}
+              {...MOTION_PRESETS.textStagger(0.3)}
             >
               ➜ {copy.effect}
             </motion.p>
             
-            {/* Next Step */}
+            {/* Next Step Card */}
             <motion.div
-              className="bg-white/5 rounded-lg p-4 mb-6"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5 }}
+              className="rounded-xl p-4 mb-6"
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+              {...MOTION_PRESETS.textStagger(0.4)}
             >
-              <p className="text-sm text-white/60 mb-1">🎯 PROSSIMO PASSO</p>
+              <p className="text-xs text-white/50 mb-1 uppercase tracking-wider">
+                🎯 PROSSIMO PASSO
+              </p>
               <p className="text-white font-medium">{copy.nextStep}</p>
             </motion.div>
             
-            {/* CTA */}
+            {/* CTA Button */}
             <motion.button
               onClick={handleCta}
-              className="w-full py-4 px-6 rounded-xl font-bold text-lg text-white"
+              className="w-full py-4 px-6 rounded-xl font-bold text-lg text-white flex items-center justify-center gap-2"
               style={{
-                background: 'linear-gradient(135deg, #00E5FF 0%, #7B5CFF 100%)',
-                boxShadow: '0 4px 20px rgba(0, 229, 255, 0.4)',
+                background: `linear-gradient(135deg, ${preset.textColor} 0%, ${preset.accentColor} 100%)`,
+                boxShadow: `0 4px 25px ${preset.glowColor}`,
               }}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              whileHover={{ scale: 1.02 }}
+              {...MOTION_PRESETS.textStagger(0.5)}
+              whileHover={{ 
+                scale: 1.02,
+                boxShadow: `0 6px 35px ${preset.glowColor}`,
+              }}
               whileTap={{ scale: 0.98 }}
             >
               {copy.cta?.label || 'CONTINUA'}
+              <ArrowRight className="w-5 h-5" />
             </motion.button>
           </div>
-          
-          {/* Decorative glow */}
-          <div 
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 229, 255, 0.15) 0%, transparent 60%)',
-            }}
-          />
         </motion.div>
       </motion.div>
     </AnimatePresence>
   );
 };
 
-// Helper: Get confetti colors based on event type
-function getConfettiColors(type: string): string[] {
-  switch (type) {
-    case 'MILESTONE_REACHED':
-    case 'LEVEL_UP':
-      return ['#00E5FF', '#FFD700', '#FF00FF'];
-    case 'RANK_UP':
-      return ['#FFD700', '#FFFFFF', '#7B5CFF'];
-    case 'BATTLE_WIN':
-      return ['#00FF88', '#00E5FF', '#FFFFFF'];
-    case 'BATTLE_LOSE':
-      return ['#FF4444', '#FF8800', '#FFCC00'];
-    case 'PULSE_BREAKER_CASHOUT':
-      return ['#00FF88', '#00E5FF', '#FFD700'];
-    case 'PULSE_BREAKER_CRASH':
-      return ['#FF4444', '#FF0000', '#FF8800'];
-    case 'MARKER_REWARD_CLAIMED':
-      return ['#FFD700', '#FF00FF', '#00E5FF'];
-    default:
-      return ['#00E5FF', '#7B5CFF', '#FFFFFF'];
-  }
-}
-
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-

@@ -41,6 +41,7 @@ import {
 import { useRealtimeLeaderboard, LeaderboardScope } from '@/hooks/useRealtimeLeaderboard';
 import { hapticLight } from '@/utils/haptics';
 import { notifyShadowContext } from '@/stores/entityOverlayStore'; // 🌑 Shadow Protocol v3
+import { MotivationalPopup } from '@/components/feedback';
 
 // Forum Quick Link Component
 const ForumQuickLink: React.FC = () => {
@@ -526,6 +527,9 @@ export const LeaderboardPage: React.FC = () => {
           Classifica live • Aggiornamento automatico
         </div>
       </motion.div>
+      
+      {/* 🎯 Motivational Popup - Shows once per session */}
+      <MotivationalPopup pageType="leaderboard" />
     </div>
   );
 };

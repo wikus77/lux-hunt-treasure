@@ -58,34 +58,45 @@ export default function MissionBriefingModal({
             onClick={(e) => e.stopPropagation()}
             style={{
               width: '100%',
-              maxWidth: '380px',
+              maxWidth: '480px',
               maxHeight: '85vh',
               overflowY: 'auto',
-              background: 'linear-gradient(145deg, rgba(10, 20, 40, 0.98), rgba(20, 30, 50, 0.95))',
-              borderRadius: '24px',
-              border: '2px solid rgba(0, 209, 255, 0.4)',
-              boxShadow: '0 0 60px rgba(0, 209, 255, 0.2)',
+              background: 'linear-gradient(145deg, rgba(0, 40, 40, 0.98), rgba(0, 60, 60, 0.95))',
+              borderRadius: '28px',
+              border: '2px solid rgba(0, 255, 136, 0.5)',
+              boxShadow: '0 0 60px rgba(0, 255, 136, 0.3), 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
+              position: 'relative',
             }}
           >
+            {/* Ambient glow */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.15) 0%, transparent 60%)',
+              pointerEvents: 'none',
+              borderRadius: '28px',
+            }} />
+            
             {/* Header */}
             <div style={{
-              padding: '20px',
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              padding: '24px',
+              borderBottom: '1px solid rgba(0, 255, 136, 0.2)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               position: 'sticky',
               top: 0,
-              background: 'linear-gradient(145deg, rgba(10, 20, 40, 0.98), rgba(20, 30, 50, 0.95))',
+              background: 'linear-gradient(145deg, rgba(0, 40, 40, 0.98), rgba(0, 60, 60, 0.95))',
               zIndex: 1,
+              borderRadius: '28px 28px 0 0',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '32px' }}>{mission.icon}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <span style={{ fontSize: '40px', filter: 'drop-shadow(0 0 10px rgba(0, 255, 136, 0.5))' }}>{mission.icon}</span>
                 <div>
-                  <p style={{ fontSize: '10px', color: 'rgba(0, 209, 255, 0.7)', fontWeight: 600, margin: 0 }}>
+                  <p style={{ fontSize: '11px', color: '#00FF88', fontWeight: 600, margin: 0, textShadow: '0 0 10px rgba(0, 255, 136, 0.5)' }}>
                     DAILY MISSION
                   </p>
-                  <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#fff', margin: 0 }}>
+                  <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#fff', margin: 0 }}>
                     {mission.title}
                   </h2>
                 </div>
@@ -168,23 +179,25 @@ export default function MissionBriefingModal({
               <motion.button
                 onClick={onStart}
                 whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: 1.02, boxShadow: '0 6px 30px rgba(0, 255, 136, 0.5)' }}
                 style={{
                   width: '100%',
-                  padding: '14px',
-                  borderRadius: '14px',
-                  background: 'linear-gradient(135deg, #00D1FF, #0099CC)',
+                  padding: '16px',
+                  borderRadius: '16px',
+                  background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
                   border: 'none',
-                  color: '#fff',
-                  fontSize: '16px',
+                  color: '#000',
+                  fontSize: '18px',
                   fontWeight: 700,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
+                  gap: '10px',
+                  boxShadow: '0 4px 25px rgba(0, 255, 136, 0.4)',
                 }}
               >
-                <Play size={20} />
+                <Play size={22} />
                 START MISSION
               </motion.button>
 

@@ -171,34 +171,45 @@ export default function MissionActionsModal({
             onClick={(e) => e.stopPropagation()}
             style={{
               width: '100%',
-              maxWidth: '360px',
+              maxWidth: '480px',
               maxHeight: '85vh',
               overflowY: 'auto',
-              background: 'linear-gradient(145deg, rgba(10, 20, 40, 0.98), rgba(20, 30, 50, 0.95))',
-              borderRadius: '24px',
-              border: '2px solid rgba(0, 209, 255, 0.4)',
-              boxShadow: '0 0 40px rgba(0, 209, 255, 0.15)',
+              background: 'linear-gradient(145deg, rgba(0, 40, 40, 0.98), rgba(0, 60, 60, 0.95))',
+              borderRadius: '28px',
+              border: '2px solid rgba(0, 255, 136, 0.5)',
+              boxShadow: '0 0 50px rgba(0, 255, 136, 0.3), 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
+              position: 'relative',
             }}
           >
+            {/* Ambient glow */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.15) 0%, transparent 60%)',
+              pointerEvents: 'none',
+              borderRadius: '28px',
+            }} />
+            
             {/* Header */}
             <div style={{
-              padding: '16px 20px',
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              padding: '20px 24px',
+              borderBottom: '1px solid rgba(0, 255, 136, 0.2)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               position: 'sticky',
               top: 0,
-              background: 'linear-gradient(145deg, rgba(10, 20, 40, 0.98), rgba(20, 30, 50, 0.95))',
+              background: 'linear-gradient(145deg, rgba(0, 40, 40, 0.98), rgba(0, 60, 60, 0.95))',
               zIndex: 1,
+              borderRadius: '28px 28px 0 0',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '28px' }}>{mission.icon}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '36px', filter: 'drop-shadow(0 0 10px rgba(0, 255, 136, 0.5))' }}>{mission.icon}</span>
                 <div>
-                  <p style={{ fontSize: '10px', color: '#00D1FF', fontWeight: 600, margin: 0 }}>
+                  <p style={{ fontSize: '11px', color: '#00FF88', fontWeight: 600, margin: 0, textShadow: '0 0 10px rgba(0, 255, 136, 0.5)' }}>
                     MISSIONE IN CORSO
                   </p>
-                  <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', margin: 0 }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0 }}>
                     {mission.title}
                   </h3>
                 </div>

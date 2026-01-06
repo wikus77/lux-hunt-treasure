@@ -119,10 +119,13 @@ export function getCluesToNextLevel(clueCount: number): number {
 
 export type NextActionType = 
   | 'go_to_map' 
+  | 'go_to_map_rewards'
+  | 'go_to_map_buzz_map'
   | 'do_buzz' 
   | 'check_intelligence' 
   | 'claim_reward' 
   | 'do_battle'
+  | 'do_pulse_breaker'
   | 'none';
 
 export interface NextAction {
@@ -133,9 +136,48 @@ export interface NextAction {
   priority: number; // Higher = more important
 }
 
+// 🎯 ROTATING SUGGESTIONS - Different actions to keep it fresh
+const ROTATING_SUGGESTIONS: NextAction[] = [
+  {
+    type: 'go_to_map_rewards',
+    label: 'CERCA I 99 PREMI',
+    description: 'Trova i marker verdi sulla mappa e riscatta premi esclusivi!',
+    path: '/map-3d-tiler',
+    priority: 75,
+  },
+  {
+    type: 'go_to_map_buzz_map',
+    label: 'ATTIVA BUZZ MAP',
+    description: 'Premi BUZZ MAP per sbloccare l\'area dove si trova il premio',
+    path: '/map-3d-tiler',
+    priority: 75,
+  },
+  {
+    type: 'do_pulse_breaker',
+    label: 'PULSE BREAKER',
+    description: 'Tenta la fortuna e moltiplica i tuoi M1U!',
+    path: '/pulse-breaker',
+    priority: 70,
+  },
+  {
+    type: 'do_battle',
+    label: 'BATTLE ARENA',
+    description: 'Sfida il bot e vinci M1U con i tuoi riflessi!',
+    path: '/battle',
+    priority: 70,
+  },
+];
+
+// Get a rotating suggestion based on time
+function getRotatingSuggestion(): NextAction {
+  // Rotate every 30 seconds based on timestamp
+  const rotationIndex = Math.floor(Date.now() / 30000) % ROTATING_SUGGESTIONS.length;
+  return ROTATING_SUGGESTIONS[rotationIndex];
+}
+
 /**
  * Determine the best next action for the user
- * Based on their current state
+ * Based on their current state - NOW WITH VARIETY!
  */
 export function determineNextAction(params: {
   clueCount: number;
@@ -168,42 +210,80 @@ export function determineNextAction(params: {
     };
   }
   
-  // Priority 3: Low clue count - encourage more
+  // Priority 3: Low clue count - encourage BUZZ
   if (clueCount < 10) {
+    const nextMilestone = getNextMilestone(clueCount);
+    const cluesToNext = nextMilestone ? nextMilestone.threshold - clueCount : 0;
+    
     return {
       type: 'do_buzz',
       label: 'FAI BUZZ',
-      description: `Raccogli ${10 - clueCount} indizi per salire di livello`,
+      description: `Mancano ${cluesToNext} indizi per Agent Level ${calculateAgentLevel(clueCount) + 1}`,
       path: '/buzz',
       priority: 80,
     };
   }
   
-  // Priority 4: Can still do daily buzz
-  if (dailyBuzzCount < maxDailyBuzz) {
-    const remaining = maxDailyBuzz - dailyBuzzCount;
-    const nextMilestone = getNextMilestone(clueCount);
-    const cluesToNext = nextMilestone ? nextMilestone.threshold - clueCount : 0;
-    
-    return {
-      type: 'go_to_map',
-      label: 'VAI ALLA MAPPA',
-      description: cluesToNext > 0 
-        ? `Mancano ${cluesToNext} indizi per ${nextMilestone?.title || 'il prossimo livello'}`
-        : `${remaining} BUZZ disponibili oggi`,
-      path: '/map-3d-tiler',
-      priority: 70,
-    };
-  }
+  // Priority 4: ROTATING SUGGESTIONS based on progress
+  const nextMilestone = getNextMilestone(clueCount);
+  const cluesToNext = nextMilestone ? nextMilestone.threshold - clueCount : 0;
+  const currentLevel = calculateAgentLevel(clueCount);
   
-  // Default: Explore map
-  return {
-    type: 'go_to_map',
-    label: 'ESPLORA LA MAPPA',
-    description: 'Cerca marker e indizi nascosti',
-    path: '/map-3d-tiler',
-    priority: 50,
-  };
+  // Use rotation but also consider specific conditions
+  const rotationIndex = Math.floor(Date.now() / 30000) % 5; // 5 options
+  
+  switch (rotationIndex) {
+    case 0:
+      return {
+        type: 'go_to_map_rewards',
+        label: 'CERCA I 99 PREMI',
+        description: 'Trova i marker verdi e riscatta premi esclusivi!',
+        path: '/map-3d-tiler',
+        priority: 75,
+      };
+    case 1:
+      return {
+        type: 'go_to_map_buzz_map',
+        label: 'ATTIVA BUZZ MAP',
+        description: 'Sblocca l\'area dove si trova il premio!',
+        path: '/map-3d-tiler',
+        priority: 75,
+      };
+    case 2:
+      return {
+        type: 'do_buzz',
+        label: 'VAI IN BUZZ',
+        description: cluesToNext > 0 
+          ? `Mancano ${cluesToNext} indizi per Agent Level ${currentLevel + 1}`
+          : 'Continua a raccogliere indizi!',
+        path: '/buzz',
+        priority: 75,
+      };
+    case 3:
+      return {
+        type: 'do_pulse_breaker',
+        label: 'PULSE BREAKER',
+        description: 'Tenta la vittoria e moltiplica M1U!',
+        path: '/pulse-breaker',
+        priority: 70,
+      };
+    case 4:
+      return {
+        type: 'do_battle',
+        label: 'BATTLE ARENA',
+        description: 'Sfida il bot con i tuoi riflessi!',
+        path: '/battle',
+        priority: 70,
+      };
+    default:
+      return {
+        type: 'go_to_map',
+        label: 'ESPLORA LA MAPPA',
+        description: 'Cerca marker e indizi nascosti',
+        path: '/map-3d-tiler',
+        priority: 50,
+      };
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

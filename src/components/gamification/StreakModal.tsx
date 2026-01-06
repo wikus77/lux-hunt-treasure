@@ -164,29 +164,25 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md p-0 bg-transparent border-0 overflow-hidden">
+      <DialogContent className="max-w-lg p-0 bg-transparent border-0 overflow-hidden">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="relative rounded-2xl overflow-hidden"
+          className="relative rounded-3xl overflow-hidden"
+          style={{
+            background: 'linear-gradient(145deg, rgba(0, 40, 40, 0.98), rgba(0, 60, 60, 0.95))',
+            border: '2px solid rgba(0, 255, 136, 0.5)',
+            boxShadow: '0 0 60px rgba(0, 255, 136, 0.3), 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1)',
+          }}
         >
-          {/* Animated Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0a0b14] via-[#12131f] to-[#0a0b14]" />
-          <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-5" />
-          
-          {/* Animated Glow Effects */}
-          <motion.div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full blur-3xl"
-            style={{ background: 'radial-gradient(circle, rgba(255,107,53,0.3) 0%, transparent 70%)' }}
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-            transition={{ duration: 4, repeat: Infinity }}
-          />
-          <motion.div
-            className="absolute bottom-0 right-0 w-48 h-48 rounded-full blur-3xl"
-            style={{ background: 'radial-gradient(circle, rgba(0,209,255,0.2) 0%, transparent 70%)' }}
-            animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 3, repeat: Infinity, delay: 1 }}
+          {/* Ambient Glow - Green */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.2) 0%, transparent 60%)',
+              borderRadius: '24px',
+            }}
           />
 
           {/* Content */}
@@ -231,23 +227,35 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
               <motion.div
                 animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="relative inline-block mb-3"
+                className="relative inline-block mb-4"
               >
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500/30 to-red-500/30 flex items-center justify-center mx-auto">
-                  <Flame className="w-8 h-8 text-orange-400" />
+                <div 
+                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto"
+                  style={{
+                    background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
+                    boxShadow: '0 8px 30px rgba(0, 255, 136, 0.5)',
+                  }}
+                >
+                  <Flame className="w-10 h-10 text-black" />
                 </div>
                 <motion.div
-                  className="absolute -inset-2 rounded-full"
-                  style={{ border: '2px solid rgba(255,107,53,0.3)' }}
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                  className="absolute -inset-3 rounded-2xl"
+                  style={{ border: '2px solid rgba(0, 255, 136, 0.4)' }}
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.6, 0, 0.6] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
               </motion.div>
               
-              <h2 className="text-2xl font-orbitron font-bold text-white mb-1">
+              <h2 
+                className="text-2xl font-orbitron font-bold mb-2"
+                style={{ 
+                  color: '#00FF88',
+                  textShadow: '0 0 20px rgba(0, 255, 136, 0.6)',
+                }}
+              >
                 🔥 STREAK SYSTEM
               </h2>
-              <p className="text-gray-400 text-sm">Accedi ogni giorno per bonus esclusivi</p>
+              <p className="text-white/70 text-sm">Accedi ogni giorno per bonus esclusivi</p>
             </div>
 
             {loading ? (
@@ -257,14 +265,42 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
             ) : (
               <>
                 {/* Main Stats */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20 text-center">
-                    <p className="text-3xl font-orbitron font-bold text-orange-400">{streak}</p>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider">Giorni Streak</p>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div 
+                    className="p-5 rounded-xl text-center"
+                    style={{
+                      background: 'rgba(0, 255, 136, 0.1)',
+                      border: '1px solid rgba(0, 255, 136, 0.3)',
+                    }}
+                  >
+                    <p 
+                      className="text-4xl font-orbitron font-bold"
+                      style={{ 
+                        color: '#00FF88',
+                        textShadow: '0 0 15px rgba(0, 255, 136, 0.5)',
+                      }}
+                    >
+                      {streak}
+                    </p>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">Giorni Streak</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 text-center">
-                    <p className="text-3xl font-orbitron font-bold text-cyan-400">{streakInfo?.longest_streak || 0}</p>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider">Record</p>
+                  <div 
+                    className="p-5 rounded-xl text-center"
+                    style={{
+                      background: 'rgba(0, 209, 255, 0.1)',
+                      border: '1px solid rgba(0, 209, 255, 0.3)',
+                    }}
+                  >
+                    <p 
+                      className="text-4xl font-orbitron font-bold"
+                      style={{ 
+                        color: '#00D1FF',
+                        textShadow: '0 0 15px rgba(0, 209, 255, 0.5)',
+                      }}
+                    >
+                      {streakInfo?.longest_streak || 0}
+                    </p>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">Record</p>
                   </div>
                 </div>
 
@@ -337,34 +373,41 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                 </div>
 
                 {/* Check-in Button */}
-                <Button
+                <motion.button
                   onClick={handleCheckIn}
                   disabled={!canCheckIn || checkingIn}
-                  className={`w-full h-14 text-lg font-orbitron font-bold rounded-xl transition-all ${
-                    canCheckIn
-                      ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white shadow-lg shadow-orange-500/30'
-                      : 'bg-gray-700 text-gray-400'
-                  }`}
+                  whileHover={canCheckIn ? { scale: 1.02, boxShadow: '0 6px 35px rgba(0, 255, 136, 0.6)' } : {}}
+                  whileTap={canCheckIn ? { scale: 0.98 } : {}}
+                  className="w-full h-14 text-lg font-orbitron font-bold rounded-xl transition-all flex items-center justify-center gap-3"
+                  style={{
+                    background: canCheckIn 
+                      ? 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)' 
+                      : 'rgba(100,100,100,0.3)',
+                    border: 'none',
+                    color: canCheckIn ? '#000' : 'rgba(255,255,255,0.4)',
+                    boxShadow: canCheckIn ? '0 4px 25px rgba(0, 255, 136, 0.4)' : 'none',
+                    cursor: canCheckIn ? 'pointer' : 'not-allowed',
+                  }}
                 >
                   {checkingIn ? (
                     <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}>
                       <Sparkles className="w-5 h-5" />
                     </motion.div>
                   ) : canCheckIn ? (
-                    <span className="flex items-center gap-2">
+                    <>
                       <Flame className="w-5 h-5" />
                       CHECK-IN GIORNALIERO
-                    </span>
+                    </>
                   ) : (
-                    <span className="flex items-center gap-2">
+                    <>
                       <Check className="w-5 h-5" />
                       COMPLETATO OGGI
-                    </span>
+                    </>
                   )}
-                </Button>
+                </motion.button>
 
                 {!canCheckIn && (
-                  <p className="text-center text-xs text-gray-500 mt-3">
+                  <p className="text-center text-xs text-white/50 mt-4">
                     Torna domani per continuare la streak!
                   </p>
                 )}
