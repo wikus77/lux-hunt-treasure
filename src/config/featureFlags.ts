@@ -46,6 +46,11 @@ export const BUZZ_ENABLED = true;
 // Buzz Map (area restriction)
 export const BUZZ_MAP_ENABLED = true;
 
+// ====== PROGRESS FEEDBACK SYSTEM ======
+// Celebration overlays and progress toasts
+// Set to false to disable all celebrations (safe rollback)
+export const PROGRESS_FEEDBACK_ENABLED = true;  // 🎉 Progress & Celebration System
+
 // ====== LAUNCH FLAGS (19 Dec 2025) ======
 // Set to true when ready for production launch
 export const PRODUCTION_LAUNCH_READY = false;
