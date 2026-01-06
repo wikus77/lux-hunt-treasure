@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { emitGameEvent } from '@/gameplay/events';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MILESTONE CONFIGURATION (SINGLE SOURCE OF TRUTH)
@@ -208,6 +209,17 @@ export const useClueMilestones = (): UseClueMilestonesReturn => {
       // after the animation completes (no double dispatch)
 
       console.log('[CLUE_MILESTONE_HOOK] ✅ Milestone claimed successfully:', milestone.key);
+      
+      // 🎉 Progress Feedback - Milestone reached event
+      emitGameEvent('MILESTONE_REACHED', {
+        title: milestone.title,
+        threshold: milestone.threshold,
+        m1u: milestone.m1u,
+        pe: milestone.pe,
+        key: milestone.key,
+        nextThreshold: CLUE_MILESTONES.find(m => m.threshold > milestone.threshold)?.threshold,
+      });
+      
       return { success: true, milestone, newBalance: newM1UBalance };
       
     } catch (err) {
