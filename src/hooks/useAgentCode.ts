@@ -74,11 +74,14 @@ export const useAgentCode = () => {
           return;
         }
 
-        // Special case for admin user - check centralized config
+        // 🔴 ADMIN CHECK FIRST - always use config value, ignore cache
         const adminCode = getAdminCode(user.email);
         
-        // First, check if the user is an admin with special code
         if (adminCode) {
+          // 🔧 FIX: Force update if cached value differs from admin config
+          if (cached?.code !== adminCode) {
+            console.log('[useAgentCode] Admin code changed, updating cache:', adminCode);
+          }
           setAgentCode(adminCode);
           setCachedAgentCode(adminCode, user.id);
           setIsLoading(false);
