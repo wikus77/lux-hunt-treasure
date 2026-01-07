@@ -351,6 +351,18 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
 
   const segmentAngle = 360 / WHEEL_SEGMENTS.length;
 
+  // 🎰 PHOTOREALISTIC 3D WHEEL COLORS - Casino/AAA Style
+  const WHEEL_3D_COLORS = [
+    { bg: 'linear-gradient(180deg, #1a3a4a 0%, #0d2530 50%, #051520 100%)', text: '#00D1FF' },  // Dark Teal
+    { bg: 'linear-gradient(180deg, #2d1f3d 0%, #1a1228 50%, #0f0a18 100%)', text: '#BF00FF' },  // Dark Purple
+    { bg: 'linear-gradient(180deg, #3d2a1a 0%, #2a1d12 50%, #1a100a 100%)', text: '#FFB347' },  // Dark Bronze
+    { bg: 'linear-gradient(180deg, #1a2d3d 0%, #12202a 50%, #0a1520 100%)', text: '#4DA8FF' },  // Dark Blue
+    { bg: 'linear-gradient(180deg, #2d3d1a 0%, #1e2a12 50%, #121a0a 100%)', text: '#8AE65C' },  // Dark Olive
+    { bg: 'linear-gradient(180deg, #3d1a2d 0%, #2a121e 50%, #1a0a12 100%)', text: '#FF6B9D' },  // Dark Rose
+    { bg: 'linear-gradient(180deg, #1a3d3d 0%, #122a2a 50%, #0a1a1a 100%)', text: '#5CE6E6' },  // Dark Cyan
+    { bg: 'linear-gradient(180deg, #3d3d1a 0%, #2a2a12 50%, #1a1a0a 100%)', text: '#FFE066' },  // Dark Gold
+  ];
+
   return createPortal(
     <AnimatePresence>
       {isOpen && (
@@ -359,155 +371,246 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[10003] flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(12px)' }}
           onClick={onClose}
         >
-          <motion.div
-            initial={{ scale: 0.8, y: 50 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.8, y: 50 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative max-w-lg w-full rounded-3xl overflow-hidden"
+          {/* 🌃 CINEMATIC NIGHT BACKGROUND */}
+          <div 
+            className="absolute inset-0"
             style={{
-              background: 'linear-gradient(145deg, rgba(0, 20, 40, 0.98), rgba(0, 40, 60, 0.95))',
-              border: '3px solid rgba(0, 255, 136, 0.6)',
-              boxShadow: '0 0 100px rgba(0, 255, 136, 0.4), 0 0 200px rgba(0, 209, 255, 0.2), inset 0 0 60px rgba(0, 255, 136, 0.1)',
+              background: `
+                radial-gradient(ellipse 120% 80% at 50% 120%, rgba(0, 50, 80, 0.4) 0%, transparent 60%),
+                radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 100, 150, 0.15) 0%, transparent 50%),
+                linear-gradient(180deg, #030810 0%, #0a1525 30%, #051018 70%, #020508 100%)
+              `,
             }}
-          >
-            {/* Animated neon border */}
-            <motion.div
-              className="absolute inset-0 rounded-3xl pointer-events-none"
-              style={{
-                border: '2px solid transparent',
-                background: 'linear-gradient(90deg, #00FF88, #00D1FF, #FF00FF, #FFD700, #00FF88) border-box',
-                WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
-                WebkitMaskComposite: 'xor',
-                maskComposite: 'exclude',
-              }}
-              animate={{
-                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-            />
+          />
+          
+          {/* 🌨️ Particle snow effect */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[...Array(40)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 rounded-full"
+                style={{
+                  background: 'rgba(150, 200, 255, 0.6)',
+                  left: `${Math.random() * 100}%`,
+                  top: `-5%`,
+                  filter: 'blur(0.5px)',
+                }}
+                animate={{
+                  y: ['0vh', '110vh'],
+                  x: [0, Math.random() * 50 - 25],
+                  opacity: [0, 0.8, 0.8, 0],
+                }}
+                transition={{
+                  duration: 8 + Math.random() * 6,
+                  repeat: Infinity,
+                  delay: Math.random() * 5,
+                  ease: 'linear',
+                }}
+              />
+            ))}
+          </div>
 
+          {/* 🏙️ Cityscape silhouette hint */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
+            style={{
+              background: 'linear-gradient(to top, rgba(0,20,40,0.9) 0%, transparent 100%)',
+              maskImage: 'linear-gradient(to top, black 30%, transparent 100%)',
+            }}
+          />
+
+          <motion.div
+            initial={{ scale: 0.8, y: 50, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0.8, y: 50, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-md w-full"
+          >
             {/* Close button */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center z-20"
+              className="absolute top-0 right-0 w-10 h-10 rounded-full flex items-center justify-center z-30"
               style={{ 
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.2)',
+                background: 'rgba(0,0,0,0.6)',
+                border: '1px solid rgba(100, 180, 255, 0.3)',
+                backdropFilter: 'blur(8px)',
               }}
             >
-              <X className="w-6 h-6 text-white/80" />
+              <X className="w-5 h-5 text-white/70" />
             </button>
 
             {/* Content */}
-            <div className="relative p-6">
-              {/* Header */}
-              <div className="text-center mb-4">
-                <motion.h2 
-                  className="text-3xl font-bold mb-1"
+            <div className="relative flex flex-col items-center">
+              
+              {/* ═══════════════════════════════════════════
+                  🎰 PHOTOREALISTIC 3D WHEEL
+                  ═══════════════════════════════════════════ */}
+              <div className="relative w-[340px] h-[340px]">
+                
+                {/* 💫 Outer glow - cold blue neon */}
+                <div 
+                  className="absolute inset-[-20px] rounded-full"
                   style={{
-                    background: 'linear-gradient(135deg, #00FF88, #00D1FF, #FFD700)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    textShadow: '0 0 40px rgba(0, 255, 136, 0.5)',
+                    background: 'radial-gradient(circle, rgba(0, 180, 255, 0.15) 0%, transparent 70%)',
+                    filter: 'blur(20px)',
                   }}
-                  animate={{ textShadow: ['0 0 20px rgba(0, 255, 136, 0.5)', '0 0 40px rgba(0, 255, 136, 0.8)', '0 0 20px rgba(0, 255, 136, 0.5)'] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  🎡 RUOTA DELLA FORTUNA
-                </motion.h2>
-                <p className="text-white/60 text-sm">Gira una volta al giorno e vinci premi!</p>
-              </div>
-
-              {/* Wheel Container */}
-              <div className="relative w-80 h-80 mx-auto mb-6">
-                {/* Outer glow ring */}
-                <motion.div
-                  className="absolute inset-[-10px] rounded-full"
-                  style={{
-                    background: 'conic-gradient(from 0deg, #00FF88, #00D1FF, #FF00FF, #FFD700, #39FF14, #00FF88)',
-                    filter: 'blur(15px)',
-                    opacity: 0.6,
-                  }}
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
                 />
 
-                {/* Pointer */}
+                {/* 🔵 LED Ring - outer decorative lights */}
+                <div className="absolute inset-[-8px]">
+                  {[...Array(24)].map((_, i) => {
+                    const angle = (i * 15) * (Math.PI / 180);
+                    const x = 50 + 50 * Math.cos(angle);
+                    const y = 50 + 50 * Math.sin(angle);
+                    return (
+                      <motion.div
+                        key={i}
+                        className="absolute w-2 h-2 rounded-full"
+                        style={{
+                          left: `${x}%`,
+                          top: `${y}%`,
+                          transform: 'translate(-50%, -50%)',
+                          background: i % 2 === 0 ? '#00D1FF' : '#4DA8FF',
+                          boxShadow: `0 0 8px ${i % 2 === 0 ? '#00D1FF' : '#4DA8FF'}, 0 0 16px ${i % 2 === 0 ? 'rgba(0, 209, 255, 0.6)' : 'rgba(77, 168, 255, 0.6)'}`,
+                        }}
+                        animate={{
+                          opacity: [0.5, 1, 0.5],
+                          scale: [0.8, 1.1, 0.8],
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          delay: i * 0.08,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* 🔘 Chrome outer ring */}
                 <div 
-                  className="absolute top-[-5px] left-1/2 -translate-x-1/2 z-20"
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background: `
+                      linear-gradient(135deg, 
+                        rgba(60, 80, 100, 0.9) 0%,
+                        rgba(30, 45, 60, 0.95) 25%,
+                        rgba(20, 35, 50, 1) 50%,
+                        rgba(40, 60, 80, 0.95) 75%,
+                        rgba(50, 70, 90, 0.9) 100%
+                      )
+                    `,
+                    boxShadow: `
+                      0 0 40px rgba(0, 150, 255, 0.3),
+                      inset 0 2px 4px rgba(255,255,255,0.1),
+                      inset 0 -2px 4px rgba(0,0,0,0.4)
+                    `,
+                    border: '4px solid rgba(100, 150, 200, 0.4)',
+                  }}
+                />
+
+                {/* ⬆️ TOP POINTER - Glowing cyan triangle */}
+                <div 
+                  className="absolute top-[-12px] left-1/2 -translate-x-1/2 z-30"
                   style={{
                     width: 0,
                     height: 0,
-                    borderLeft: '20px solid transparent',
-                    borderRight: '20px solid transparent',
-                    borderTop: '45px solid #00FF88',
-                    filter: 'drop-shadow(0 0 20px rgba(0, 255, 136, 1)) drop-shadow(0 0 40px rgba(0, 255, 136, 0.8))',
+                    borderLeft: '16px solid transparent',
+                    borderRight: '16px solid transparent',
+                    borderTop: '28px solid #00D1FF',
+                    filter: 'drop-shadow(0 0 12px rgba(0, 209, 255, 0.9)) drop-shadow(0 4px 8px rgba(0, 209, 255, 0.6))',
                   }}
                 />
-
-                {/* Wheel */}
-                <motion.div
-                  className="w-full h-full rounded-full relative overflow-hidden"
+                {/* Pointer glow dot */}
+                <motion.div 
+                  className="absolute top-[-4px] left-1/2 -translate-x-1/2 w-3 h-3 rounded-full z-30"
                   style={{
-                    boxShadow: '0 0 50px rgba(0, 255, 136, 0.5), inset 0 0 30px rgba(0,0,0,0.8)',
-                    border: '6px solid rgba(255, 255, 255, 0.3)',
+                    background: '#00FFFF',
+                    boxShadow: '0 0 15px #00FFFF, 0 0 30px rgba(0, 255, 255, 0.5)',
+                  }}
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.8, 1, 0.8] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
+
+                {/* 🎡 THE WHEEL - Rotating part */}
+                <motion.div
+                  className="absolute inset-[8px] rounded-full overflow-hidden"
+                  style={{
+                    boxShadow: `
+                      inset 0 0 60px rgba(0, 0, 0, 0.8),
+                      inset 0 0 20px rgba(0, 100, 150, 0.2)
+                    `,
                   }}
                   animate={{ rotate: rotation }}
                   transition={{ duration: 5.5, ease: [0.2, 0.8, 0.2, 1] }}
                 >
-                  {/* SVG Wheel with segments */}
-                  <svg viewBox="0 0 200 200" className="w-full h-full">
+                  {/* SVG Wheel with 3D-style segments */}
+                  <svg viewBox="0 0 200 200" className="w-full h-full" style={{ filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.5))' }}>
+                    <defs>
+                      {/* Metallic gradients for each segment */}
+                      {WHEEL_SEGMENTS.map((seg, i) => {
+                        const colorSet = WHEEL_3D_COLORS[i % WHEEL_3D_COLORS.length];
+                        return (
+                          <linearGradient key={`grad-${i}`} id={`segment-grad-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor={seg.type === 'nothing' || seg.type === 'retry' ? '#151520' : `${colorSet.text}22`} />
+                            <stop offset="50%" stopColor={seg.type === 'nothing' || seg.type === 'retry' ? '#0a0a12' : '#0a1520'} />
+                            <stop offset="100%" stopColor={seg.type === 'nothing' || seg.type === 'retry' ? '#050508' : '#051015'} />
+                          </linearGradient>
+                        );
+                      })}
+                    </defs>
+                    
                     {WHEEL_SEGMENTS.map((seg, i) => {
                       const startAngle = (i * segmentAngle - 90) * (Math.PI / 180);
                       const endAngle = ((i + 1) * segmentAngle - 90) * (Math.PI / 180);
-                      const x1 = 100 + 100 * Math.cos(startAngle);
-                      const y1 = 100 + 100 * Math.sin(startAngle);
-                      const x2 = 100 + 100 * Math.cos(endAngle);
-                      const y2 = 100 + 100 * Math.sin(endAngle);
+                      const x1 = 100 + 98 * Math.cos(startAngle);
+                      const y1 = 100 + 98 * Math.sin(startAngle);
+                      const x2 = 100 + 98 * Math.cos(endAngle);
+                      const y2 = 100 + 98 * Math.sin(endAngle);
                       
-                      // Text position
+                      // Text position - closer to edge for readability
                       const midAngle = ((i + 0.5) * segmentAngle - 90) * (Math.PI / 180);
-                      const textX = 100 + 60 * Math.cos(midAngle);
-                      const textY = 100 + 60 * Math.sin(midAngle);
+                      const textX = 100 + 68 * Math.cos(midAngle);
+                      const textY = 100 + 68 * Math.sin(midAngle);
                       const textRotation = (i + 0.5) * segmentAngle;
+                      const colorSet = WHEEL_3D_COLORS[i % WHEEL_3D_COLORS.length];
 
                       return (
                         <g key={seg.id}>
-                          {/* Segment */}
+                          {/* Segment with gradient */}
                           <path
-                            d={`M 100 100 L ${x1} ${y1} A 100 100 0 0 1 ${x2} ${y2} Z`}
-                            fill={seg.color}
-                            stroke="rgba(255,255,255,0.3)"
-                            strokeWidth="0.5"
-                            style={{
-                              filter: seg.neonGlow !== 'none' ? `drop-shadow(0 0 5px ${seg.neonGlow})` : 'none',
-                            }}
+                            d={`M 100 100 L ${x1} ${y1} A 98 98 0 0 1 ${x2} ${y2} Z`}
+                            fill={`url(#segment-grad-${i})`}
+                            stroke="rgba(100, 150, 200, 0.3)"
+                            strokeWidth="0.8"
                           />
                           
-                          {/* Icon & Text */}
+                          {/* Segment inner highlight */}
+                          <path
+                            d={`M 100 100 L ${x1} ${y1} A 98 98 0 0 1 ${x2} ${y2} Z`}
+                            fill="transparent"
+                            stroke="rgba(255,255,255,0.05)"
+                            strokeWidth="0.3"
+                          />
+                          
+                          {/* Text label */}
                           <g transform={`rotate(${textRotation}, ${textX}, ${textY})`}>
                             <text
                               x={textX}
-                              y={textY - 8}
+                              y={textY + 2}
                               textAnchor="middle"
-                              className="text-lg"
-                              style={{ fontSize: '16px' }}
-                            >
-                              {seg.icon}
-                            </text>
-                            <text
-                              x={textX}
-                              y={textY + 10}
-                              textAnchor="middle"
-                              fill={seg.type === 'nothing' || seg.type === 'retry' ? '#666' : '#fff'}
-                              fontWeight="bold"
+                              dominantBaseline="middle"
+                              fill={seg.type === 'nothing' || seg.type === 'retry' ? '#4a5568' : colorSet.text}
+                              fontWeight="700"
+                              fontFamily="system-ui, -apple-system, sans-serif"
                               style={{ 
-                                fontSize: '8px',
-                                textShadow: seg.type !== 'nothing' && seg.type !== 'retry' ? '0 0 5px rgba(255,255,255,0.8)' : 'none',
+                                fontSize: '9px',
+                                letterSpacing: '0.5px',
+                                textShadow: seg.type !== 'nothing' && seg.type !== 'retry' 
+                                  ? `0 0 8px ${colorSet.text}, 0 0 16px ${colorSet.text}50` 
+                                  : 'none',
                               }}
                             >
                               {seg.label}
@@ -516,23 +619,55 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                         </g>
                       );
                     })}
+
+                    {/* Radial divider lines */}
+                    {WHEEL_SEGMENTS.map((_, i) => {
+                      const angle = (i * segmentAngle - 90) * (Math.PI / 180);
+                      const x = 100 + 98 * Math.cos(angle);
+                      const y = 100 + 98 * Math.sin(angle);
+                      return (
+                        <line 
+                          key={`line-${i}`}
+                          x1="100" y1="100" x2={x} y2={y}
+                          stroke="rgba(100, 150, 200, 0.25)"
+                          strokeWidth="1"
+                        />
+                      );
+                    })}
                   </svg>
 
-                  {/* Center circle with M1 Logo */}
+                  {/* 🔘 CHROME CENTER HUB */}
                   <div 
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full flex items-center justify-center"
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full flex items-center justify-center"
                     style={{
-                      background: 'linear-gradient(135deg, #00FF88, #00D1FF)',
-                      boxShadow: '0 0 40px rgba(0, 255, 136, 0.8), inset 0 0 20px rgba(255,255,255,0.3)',
-                      border: '4px solid rgba(255,255,255,0.6)',
+                      background: `
+                        radial-gradient(ellipse 80% 50% at 30% 30%, rgba(200, 220, 240, 0.4) 0%, transparent 50%),
+                        radial-gradient(ellipse 60% 40% at 70% 70%, rgba(50, 80, 120, 0.3) 0%, transparent 50%),
+                        linear-gradient(145deg, 
+                          #5a7a9a 0%, 
+                          #3a5570 20%,
+                          #2a4055 40%,
+                          #1a3045 60%,
+                          #2a4560 80%,
+                          #4a6580 100%
+                        )
+                      `,
+                      boxShadow: `
+                        0 0 30px rgba(0, 150, 255, 0.3),
+                        inset 0 2px 6px rgba(255,255,255,0.3),
+                        inset 0 -3px 8px rgba(0,0,0,0.5),
+                        0 4px 12px rgba(0,0,0,0.5)
+                      `,
+                      border: '3px solid rgba(150, 180, 210, 0.4)',
                     }}
                   >
+                    {/* M1 Logo */}
                     <motion.img
                       src="/icons/icon-m1-192x192.png"
                       alt="M1SSION"
-                      className="w-14 h-14 rounded-lg"
+                      className="w-12 h-12 rounded-lg"
                       style={{
-                        filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.5))',
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
                       }}
                       animate={isSpinning ? { rotate: 360 } : {}}
                       transition={{ duration: 1, repeat: isSpinning ? Infinity : 0, ease: 'linear' }}
@@ -541,6 +676,24 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                 </motion.div>
               </div>
 
+              {/* 🏆 WINNER text glow under wheel */}
+              <motion.div 
+                className="mt-4 text-center"
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <span 
+                  className="text-3xl font-black tracking-[0.3em]"
+                  style={{
+                    color: '#00D1FF',
+                    textShadow: '0 0 20px rgba(0, 209, 255, 0.8), 0 0 40px rgba(0, 209, 255, 0.4), 0 2px 4px rgba(0,0,0,0.5)',
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                  }}
+                >
+                  M1SSION
+                </span>
+              </motion.div>
+
               {/* Result */}
               <AnimatePresence>
                 {result && (
@@ -548,13 +701,13 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                     initial={{ opacity: 0, y: 20, scale: 0.8 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0 }}
-                    className="text-center mb-5"
+                    className="text-center mt-4 mb-2"
                   >
                     <p 
-                      className="text-3xl font-bold"
+                      className="text-2xl font-bold"
                       style={{
-                        color: result.type === 'nothing' || result.type === 'retry' ? '#FF6B6B' : '#00FF88',
-                        textShadow: `0 0 30px ${result.type === 'nothing' || result.type === 'retry' ? 'rgba(255, 107, 107, 0.6)' : 'rgba(0, 255, 136, 0.8)'}`,
+                        color: result.type === 'nothing' || result.type === 'retry' ? '#FF6B6B' : '#00FFCC',
+                        textShadow: `0 0 20px ${result.type === 'nothing' || result.type === 'retry' ? 'rgba(255, 107, 107, 0.6)' : 'rgba(0, 255, 204, 0.8)'}`,
                       }}
                     >
                       {getResultMessage()}
@@ -563,45 +716,48 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                 )}
               </AnimatePresence>
 
-              {/* Spin Button */}
+              {/* Spin Button - Premium Style */}
               <motion.button
                 onClick={handleSpin}
                 disabled={isSpinning || !canSpin}
-                whileHover={canSpin && !isSpinning ? { scale: 1.03, boxShadow: '0 0 50px rgba(0, 255, 136, 0.8)' } : {}}
-                whileTap={canSpin && !isSpinning ? { scale: 0.97 } : {}}
-                className="w-full py-5 rounded-2xl font-bold text-xl flex items-center justify-center gap-3"
+                whileHover={canSpin && !isSpinning ? { scale: 1.02, boxShadow: '0 0 40px rgba(0, 209, 255, 0.6)' } : {}}
+                whileTap={canSpin && !isSpinning ? { scale: 0.98 } : {}}
+                className="w-full max-w-xs py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 mt-4"
                 style={{
                   background: canSpin && !isSpinning 
-                    ? 'linear-gradient(135deg, #00FF88 0%, #00D1FF 50%, #39FF14 100%)' 
-                    : 'rgba(50,50,50,0.5)',
-                  color: canSpin && !isSpinning ? '#000' : 'rgba(255,255,255,0.3)',
-                  boxShadow: canSpin && !isSpinning ? '0 0 40px rgba(0, 255, 136, 0.5), inset 0 0 20px rgba(255,255,255,0.2)' : 'none',
+                    ? 'linear-gradient(135deg, #00B4D8 0%, #0077B6 50%, #023E8A 100%)' 
+                    : 'rgba(30,40,50,0.8)',
+                  color: canSpin && !isSpinning ? '#fff' : 'rgba(255,255,255,0.3)',
+                  boxShadow: canSpin && !isSpinning 
+                    ? '0 0 30px rgba(0, 180, 216, 0.4), inset 0 1px 2px rgba(255,255,255,0.2), 0 4px 12px rgba(0,0,0,0.3)' 
+                    : 'none',
                   cursor: canSpin && !isSpinning ? 'pointer' : 'not-allowed',
-                  border: canSpin && !isSpinning ? '2px solid rgba(255,255,255,0.3)' : '2px solid rgba(255,255,255,0.1)',
+                  border: canSpin && !isSpinning ? '1px solid rgba(0, 209, 255, 0.4)' : '1px solid rgba(255,255,255,0.1)',
+                  textShadow: canSpin && !isSpinning ? '0 1px 2px rgba(0,0,0,0.3)' : 'none',
                 }}
               >
                 {isSpinning ? (
                   <>
                     <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.5, repeat: Infinity, ease: 'linear' }}>
-                      <RotateCcw className="w-6 h-6" />
+                      <RotateCcw className="w-5 h-5" />
                     </motion.div>
                     GIRANDO...
                   </>
                 ) : canSpin ? (
                   <>
-                    <Gift className="w-6 h-6" />
-                    GIRA LA RUOTA!
+                    <Gift className="w-5 h-5" />
+                    GIRA LA RUOTA
                   </>
                 ) : (
                   <>
-                    <X className="w-6 h-6" />
+                    <X className="w-5 h-5" />
                     TORNA DOMANI
                   </>
                 )}
               </motion.button>
 
               {!canSpin && !isSpinning && (
-                <p className="text-center text-white/40 text-sm mt-3">
+                <p className="text-center text-white/40 text-xs mt-2">
                   Puoi girare la ruota una volta al giorno
                 </p>
               )}
