@@ -6,7 +6,8 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
 
 // The reserved code specifically for wikus77@hotmail.it
-const RESERVED_ADMIN_CODE = 'AG-X019';
+// 🔴 MCP = Master Control Program (Admin)
+const RESERVED_ADMIN_CODE = 'MCP';
 const RESERVED_ADMIN_EMAIL = 'wikus77@hotmail.it';
 
 // Generate a unique agent code with exclusion for admin code
