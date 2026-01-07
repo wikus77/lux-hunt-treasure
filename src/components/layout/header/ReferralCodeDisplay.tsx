@@ -19,6 +19,9 @@ const ReferralCodeDisplay: React.FC = () => {
     return null;
   }
 
+  // 🔴 MCP = Master Control Program - ROSSO NEON per Admin
+  const isMCP = agentCode === 'MCP';
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -28,9 +31,13 @@ const ReferralCodeDisplay: React.FC = () => {
     >
       {/* Agent Code - 🚀 NATIVE: Font più grande e visibile - Pallino RIMOSSO */}
       <span 
-        className="text-[15px] font-orbitron font-bold text-[#00D1FF] agent-code-badge tracking-wider"
+        className={`text-[15px] font-orbitron font-bold agent-code-badge tracking-wider ${
+          isMCP ? 'text-red-500' : 'text-[#00D1FF]'
+        }`}
         style={{
-          textShadow: "0 0 12px rgba(0, 209, 255, 0.7), 0 0 24px rgba(0, 209, 255, 0.4)"
+          textShadow: isMCP
+            ? "0 0 12px rgba(255, 0, 0, 0.8), 0 0 24px rgba(255, 0, 0, 0.5), 0 0 36px rgba(255, 0, 0, 0.3)"
+            : "0 0 12px rgba(0, 209, 255, 0.7), 0 0 24px rgba(0, 209, 255, 0.4)"
         }}
       >
         {agentCode}
