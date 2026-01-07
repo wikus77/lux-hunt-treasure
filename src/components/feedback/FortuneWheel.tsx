@@ -601,17 +601,25 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                       const y2 = 200 + outerR * Math.sin(endAngle);
                       
                       // TEXT PARALLEL TO DIVIDER LINE (along the radius)
-                      // Position text along a line from center outward, parallel to segment edge
-                      const textAngleRad = (startAngleDeg + segmentAngle * 0.5) * (Math.PI / 180);
+                      // Position text along a line from center outward
+                      const midAngleDeg = startAngleDeg + segmentAngle * 0.5;
+                      const textAngleRad = midAngleDeg * (Math.PI / 180);
                       
-                      // Text positioned at ~65% from center to edge for visibility
-                      const textRadius = 140;
+                      // Text positioned at ~70% from center to edge for visibility
+                      const textRadius = 145;
                       const textX = 200 + textRadius * Math.cos(textAngleRad);
                       const textY = 200 + textRadius * Math.sin(textAngleRad);
                       
-                      // Rotate text to be PARALLEL to the divider (along the radius)
-                      // Text reads from center outward
-                      const textRotation = startAngleDeg + segmentAngle * 0.5 + 90;
+                      // Rotate text to be readable - always pointing outward from center
+                      // For segments on right side (angle 0-180): text reads from center out
+                      // For segments on left side (angle 180-360): flip 180° so text reads from center out
+                      let textRotation = midAngleDeg;
+                      // Normalize angle to 0-360
+                      const normalizedAngle = ((midAngleDeg % 360) + 360) % 360;
+                      // If text would be upside down (pointing down-left), flip it
+                      if (normalizedAngle > 90 && normalizedAngle < 270) {
+                        textRotation += 180;
+                      }
 
                       // Text colors - matching Image B
                       const getTextColor = () => {
@@ -639,7 +647,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                             strokeWidth="1.5"
                           />
                           
-                          {/* TEXT - LARGE, BOLD, PARALLEL TO RADIUS */}
+                          {/* TEXT - LARGE, BOLD, READABLE FROM CENTER OUTWARD */}
                           <text
                             x={textX}
                             y={textY}
@@ -648,13 +656,16 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                             transform={`rotate(${textRotation}, ${textX}, ${textY})`}
                             fill={textColor}
                             fontWeight="900"
-                            fontFamily="'SF Pro Display', 'Inter', system-ui, sans-serif"
-                            fontSize="22"
-                            letterSpacing="1"
+                            fontFamily="'SF Pro Display', 'Inter', -apple-system, sans-serif"
+                            fontSize="20"
+                            letterSpacing="0.5"
                             paintOrder="stroke"
-                            stroke="rgba(0,0,0,0.8)"
-                            strokeWidth="3"
+                            stroke="rgba(0,0,0,0.9)"
+                            strokeWidth="4"
                             strokeLinejoin="round"
+                            style={{
+                              textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(0,0,0,0.5)',
+                            }}
                           >
                             {seg.label}
                           </text>
