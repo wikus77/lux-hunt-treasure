@@ -90,19 +90,36 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   }
 
   // Standard app pages - with header padding
+  // 🔧 FIX v2: iOS overscroll containment applied at layout level
   return (
     <SafeAreaWrapper className="min-h-screen">
-      <div className="relative min-h-screen has-bottom-nav-padding">
+      <div 
+        className="relative has-bottom-nav-padding"
+        style={{
+          height: '100dvh',
+          overflow: 'hidden',
+          position: 'relative',
+          overscrollBehavior: 'none',
+        }}
+      >
         {/* Header - always visible, no transition */}
         <UnifiedHeader />
         
         {/* Main content with header padding - INSTANT RENDER */}
         <main 
           key={location} // Force remount on route change for clean transition
-          className="relative z-10 pt-[80px] pb-20 global-layout-content"
+          className="relative pt-[80px] pb-20 global-layout-content"
           style={{
-            minHeight: 'calc(100vh - 80px - 80px)',
-            paddingTop: isCapacitor ? 'calc(80px + env(safe-area-inset-top, 0px))' : '80px'
+            height: '100dvh',
+            paddingTop: isCapacitor ? 'calc(80px + env(safe-area-inset-top, 0px))' : '80px',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            position: 'relative',
+            zIndex: 0,
+            // 🔧 KEY FIX: Contain scroll, prevent iOS rubber-band
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y',
           }}
         >
           {children}
