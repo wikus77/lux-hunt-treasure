@@ -12,6 +12,7 @@ import IntelChatPanel from '@/pages/intel/IntelChatPanel';
 const M1UPill = lazy(() => import('@/features/m1u/M1UPill'));
 const ShadowIntercepts = lazy(() => import('@/components/intelligence/ShadowIntercepts'));
 import { InactivityHint } from '@/components/first-session';
+import { MotivationalPopup } from '@/components/feedback';
 
 const IntelligencePage: React.FC = () => {
   const aionRef = useRef<AionEntityHandle>(null);
@@ -19,10 +20,12 @@ const IntelligencePage: React.FC = () => {
   return (
     // 🆕 FIX: Layout normale (NO position fixed) - rispetta GlobalLayout
     // La bottom nav rimane sempre nella sua posizione originale
+    // pb-20 = 80px padding bottom per non sovrapporsi alla bottom nav
+    <>
     <div 
-      className="flex flex-col px-4 pb-4"
+      className="flex flex-col px-4 pb-20"
       style={{
-        minHeight: 'calc(100dvh - var(--header-height, 80px) - var(--bottom-nav-height, 80px) - var(--safe-top, 0px) - var(--safe-bottom, 0px))',
+        minHeight: 'calc(100dvh - var(--header-height, 72px) - var(--bottom-nav-height, 64px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
         overflow: 'visible'
       }}
     >
@@ -107,6 +110,10 @@ const IntelligencePage: React.FC = () => {
       {/* 🆕 Hint per utenti inattivi (1 volta al giorno) */}
       <InactivityHint type="aion" />
     </div>
+    
+    {/* 🎯 Motivational Popup - Shows once per session for AION page */}
+    <MotivationalPopup pageType="aion" />
+    </>
   );
 };
 
