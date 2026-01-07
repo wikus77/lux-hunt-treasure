@@ -14,25 +14,26 @@ import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 
-// 🎰 WHEEL SEGMENTS - 16 segments matching Image B design
+// 🎰 WHEEL SEGMENTS - 16 segments with 3 LOSE evenly distributed
 // Order: clockwise from top (where pointer is)
+// LOSE positions: 3, 9, 14 (evenly spaced ~5 segments apart)
 const WHEEL_SEGMENTS = [
   { id: 1, label: '50 M1U', icon: '👑', value: 50, type: 'm1u', color: '#1a2d4a', probability: 2 },   // Dark Navy
   { id: 2, label: '5 M1U', icon: '💰', value: 5, type: 'm1u', color: '#1a1a2e', probability: 15 },    // Dark
-  { id: 3, label: 'LOSE', icon: '❌', value: 0, type: 'nothing', color: '#4a1a1a', probability: 10 }, // Dark Red
-  { id: 4, label: 'LOSE', icon: '❌', value: 0, type: 'nothing', color: '#1a3d3d', probability: 10 }, // Dark Teal
-  { id: 5, label: '50 PE', icon: '⚡', value: 50, type: 'pe', color: '#1a2d4a', probability: 3 },     // Navy Blue
-  { id: 6, label: '50 M1U', icon: '💎', value: 50, type: 'm1u', color: '#1a4a4a', probability: 2 },   // Teal
-  { id: 7, label: '200 PE', icon: '🔥', value: 200, type: 'pe', color: '#4a2a1a', probability: 1 },   // Dark Red/Brown
-  { id: 8, label: '100 PE', icon: '⚡', value: 100, type: 'pe', color: '#3d1a4a', probability: 2 },   // Purple
-  { id: 9, label: '290 PE', icon: '🌟', value: 290, type: 'pe', color: '#1a3d2d', probability: 1 },   // Dark Green
-  { id: 10, label: '50 M1U', icon: '💰', value: 50, type: 'm1u', color: '#4a3d1a', probability: 2 },  // Bronze/Orange
-  { id: 11, label: 'Retry', icon: '🔄', value: 0, type: 'retry', color: '#4a4a1a', probability: 12 }, // Yellow/Olive
-  { id: 12, label: 'CLUE', icon: '🔍', value: 1, type: 'clue', color: '#1a4a2d', probability: 5 },    // Green
-  { id: 13, label: '5 M1U', icon: '💰', value: 5, type: 'm1u', color: '#1a3d5a', probability: 15 },   // Blue
-  { id: 14, label: 'Retry', icon: '🔄', value: 0, type: 'retry', color: '#3d1a3d', probability: 12 }, // Purple
-  { id: 15, label: '3 M1U', icon: '💵', value: 3, type: 'm1u', color: '#2d3d1a', probability: 10 },   // Olive
-  { id: 16, label: '2 M1U', icon: '💵', value: 2, type: 'm1u', color: '#1a2d3d', probability: 8 },    // Steel Blue
+  { id: 3, label: 'LOSE', icon: '❌', value: 0, type: 'nothing', color: '#5a1a1a', probability: 10 }, // Dark Red - LOSE 1
+  { id: 4, label: '50 PE', icon: '⚡', value: 50, type: 'pe', color: '#1a4a4a', probability: 3 },     // Teal
+  { id: 5, label: '50 M1U', icon: '💎', value: 50, type: 'm1u', color: '#1a3d5a', probability: 2 },   // Navy Blue
+  { id: 6, label: '200 PE', icon: '🔥', value: 200, type: 'pe', color: '#5a3a1a', probability: 1 },   // Bronze/Orange
+  { id: 7, label: '100 PE', icon: '⚡', value: 100, type: 'pe', color: '#4a1a5a', probability: 2 },   // Purple
+  { id: 8, label: '50 M1U', icon: '💰', value: 50, type: 'm1u', color: '#1a5a3a', probability: 2 },   // Green
+  { id: 9, label: 'LOSE', icon: '❌', value: 0, type: 'nothing', color: '#5a2020', probability: 10 }, // Dark Red - LOSE 2
+  { id: 10, label: 'Retry', icon: '🔄', value: 0, type: 'retry', color: '#5a5a1a', probability: 12 }, // Yellow/Olive
+  { id: 11, label: 'CLUE', icon: '🔍', value: 1, type: 'clue', color: '#1a5a2a', probability: 5 },    // Green
+  { id: 12, label: '5 M1U', icon: '💰', value: 5, type: 'm1u', color: '#1a4060', probability: 15 },   // Blue
+  { id: 13, label: 'Retry', icon: '🔄', value: 0, type: 'retry', color: '#5a1a5a', probability: 12 }, // Purple
+  { id: 14, label: 'LOSE', icon: '❌', value: 0, type: 'nothing', color: '#5a1a2a', probability: 10 }, // Dark Red - LOSE 3
+  { id: 15, label: '3 M1U', icon: '💵', value: 3, type: 'm1u', color: '#3a5a1a', probability: 10 },   // Olive
+  { id: 16, label: '2 M1U', icon: '💵', value: 2, type: 'm1u', color: '#1a3050', probability: 8 },    // Steel Blue
 ];
 
 // CLUES for instant reveal
@@ -352,22 +353,22 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
 
   const segmentAngle = 360 / WHEEL_SEGMENTS.length;
 
-  // 🎰 SEGMENT COLORS - VIVID AAA QUALITY (matching Image B)
+  // 🎰 SEGMENT COLORS - VIVID AAA QUALITY (3 LOSE evenly distributed)
   const SEGMENT_COLORS = [
     '#1a3554', // 1. 50 M1U - Deep Navy Blue
     '#151825', // 2. 5 M1U - Charcoal Dark
-    '#6a2828', // 3. LOSE - Rich Dark Red
-    '#185858', // 4. LOSE - Deep Teal
-    '#1a3858', // 5. 50 PE - Ocean Blue
-    '#187070', // 6. 50 M1U - Vivid Teal
-    '#7a3525', // 7. 200 PE - Burnt Orange
-    '#5a2875', // 8. 100 PE - Royal Purple
-    '#1a5838', // 9. 290 PE - Forest Green
-    '#8a6520', // 10. 50 M1U - Rich Gold
-    '#a08828', // 11. Retry - Mustard Yellow
-    '#1a6848', // 12. CLUE - Emerald Green
-    '#1a4878', // 13. 5 M1U - Cobalt Blue
-    '#682868', // 14. Retry - Magenta Purple
+    '#7a2828', // 3. LOSE - Rich Dark Red ← LOSE 1
+    '#187070', // 4. 50 PE - Vivid Teal
+    '#1a3858', // 5. 50 M1U - Ocean Blue
+    '#8a5520', // 6. 200 PE - Burnt Orange/Gold
+    '#5a2875', // 7. 100 PE - Royal Purple
+    '#1a5848', // 8. 50 M1U - Forest Green
+    '#7a2030', // 9. LOSE - Dark Red ← LOSE 2
+    '#a08828', // 10. Retry - Mustard Yellow
+    '#1a6848', // 11. CLUE - Emerald Green
+    '#1a4878', // 12. 5 M1U - Cobalt Blue
+    '#682868', // 13. Retry - Magenta Purple
+    '#7a2838', // 14. LOSE - Dark Red ← LOSE 3
     '#4a6828', // 15. 3 M1U - Lime Olive
     '#1a3858', // 16. 2 M1U - Steel Blue
   ];
@@ -467,33 +468,64 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                   }}
                 />
 
-                {/* 🔵 LED Ring - outer decorative lights */}
-                <div className="absolute inset-[-8px]">
+                {/* 🔵 LED Ring - 3D DEPTH outer decorative lights */}
+                <div className="absolute inset-[-10px]">
                   {[...Array(24)].map((_, i) => {
                     const angle = (i * 15) * (Math.PI / 180);
                     const x = 50 + 50 * Math.cos(angle);
                     const y = 50 + 50 * Math.sin(angle);
+                    const isEven = i % 2 === 0;
                     return (
                       <motion.div
                         key={i}
-                        className="absolute w-2 h-2 rounded-full"
+                        className="absolute"
                         style={{
                           left: `${x}%`,
                           top: `${y}%`,
                           transform: 'translate(-50%, -50%)',
-                          background: i % 2 === 0 ? '#00D1FF' : '#4DA8FF',
-                          boxShadow: `0 0 8px ${i % 2 === 0 ? '#00D1FF' : '#4DA8FF'}, 0 0 16px ${i % 2 === 0 ? 'rgba(0, 209, 255, 0.6)' : 'rgba(77, 168, 255, 0.6)'}`,
+                          width: '14px',
+                          height: '14px',
                         }}
-                        animate={{
-                          opacity: [0.5, 1, 0.5],
-                          scale: [0.8, 1.1, 0.8],
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          delay: i * 0.08,
-                        }}
-                      />
+                      >
+                        {/* LED 3D Base/Socket */}
+                        <div 
+                          className="absolute inset-0 rounded-full"
+                          style={{
+                            background: 'linear-gradient(145deg, #4a5a6a 0%, #2a3a4a 50%, #1a2a3a 100%)',
+                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.4)',
+                          }}
+                        />
+                        {/* LED 3D Bulb */}
+                        <motion.div
+                          className="absolute rounded-full"
+                          style={{
+                            top: '2px',
+                            left: '2px',
+                            right: '2px',
+                            bottom: '2px',
+                            background: `radial-gradient(ellipse 80% 60% at 30% 30%, ${isEven ? '#80FFFF' : '#A0D0FF'} 0%, ${isEven ? '#00D1FF' : '#4DA8FF'} 50%, ${isEven ? '#0090B0' : '#3080C0'} 100%)`,
+                            boxShadow: `
+                              0 0 10px ${isEven ? '#00D1FF' : '#4DA8FF'},
+                              0 0 20px ${isEven ? 'rgba(0, 209, 255, 0.6)' : 'rgba(77, 168, 255, 0.6)'},
+                              inset 0 2px 3px rgba(255,255,255,0.6),
+                              inset 0 -1px 3px rgba(0,0,0,0.3)
+                            `,
+                          }}
+                          animate={{
+                            opacity: [0.7, 1, 0.7],
+                            boxShadow: [
+                              `0 0 8px ${isEven ? '#00D1FF' : '#4DA8FF'}, 0 0 16px ${isEven ? 'rgba(0, 209, 255, 0.4)' : 'rgba(77, 168, 255, 0.4)'}, inset 0 2px 3px rgba(255,255,255,0.6)`,
+                              `0 0 15px ${isEven ? '#00D1FF' : '#4DA8FF'}, 0 0 30px ${isEven ? 'rgba(0, 209, 255, 0.8)' : 'rgba(77, 168, 255, 0.8)'}, inset 0 2px 3px rgba(255,255,255,0.8)`,
+                              `0 0 8px ${isEven ? '#00D1FF' : '#4DA8FF'}, 0 0 16px ${isEven ? 'rgba(0, 209, 255, 0.4)' : 'rgba(77, 168, 255, 0.4)'}, inset 0 2px 3px rgba(255,255,255,0.6)`,
+                            ],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            delay: i * 0.08,
+                          }}
+                        />
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -520,28 +552,85 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                   }}
                 />
 
-                {/* ⬆️ TOP POINTER - Glowing cyan triangle */}
-                <div 
-                  className="absolute top-[-12px] left-1/2 -translate-x-1/2 z-30"
-                  style={{
-                    width: 0,
-                    height: 0,
-                    borderLeft: '16px solid transparent',
-                    borderRight: '16px solid transparent',
-                    borderTop: '28px solid #00D1FF',
-                    filter: 'drop-shadow(0 0 12px rgba(0, 209, 255, 0.9)) drop-shadow(0 4px 8px rgba(0, 209, 255, 0.6))',
-                  }}
-                />
-                {/* Pointer glow dot */}
-                <motion.div 
-                  className="absolute top-[-4px] left-1/2 -translate-x-1/2 w-3 h-3 rounded-full z-30"
-                  style={{
-                    background: '#00FFFF',
-                    boxShadow: '0 0 15px #00FFFF, 0 0 30px rgba(0, 255, 255, 0.5)',
-                  }}
-                  animate={{ scale: [1, 1.3, 1], opacity: [0.8, 1, 0.8] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                />
+                {/* ⬆️ TOP POINTER - 3D Glowing cyan triangle */}
+                <div className="absolute top-[-16px] left-1/2 -translate-x-1/2 z-30">
+                  {/* 3D Triangle base/shadow */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '4px',
+                      left: '2px',
+                      width: 0,
+                      height: 0,
+                      borderLeft: '18px solid transparent',
+                      borderRight: '18px solid transparent',
+                      borderTop: '32px solid rgba(0, 50, 80, 0.8)',
+                      filter: 'blur(2px)',
+                    }}
+                  />
+                  {/* 3D Triangle body - dark side */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '0',
+                      left: '0',
+                      width: 0,
+                      height: 0,
+                      borderLeft: '18px solid transparent',
+                      borderRight: '18px solid transparent',
+                      borderTop: '32px solid #006080',
+                    }}
+                  />
+                  {/* 3D Triangle body - light/gradient side */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '0',
+                      left: '2px',
+                      width: 0,
+                      height: 0,
+                      borderLeft: '16px solid transparent',
+                      borderRight: '16px solid transparent',
+                      borderTop: '30px solid #00B8E0',
+                      filter: 'drop-shadow(0 0 15px rgba(0, 209, 255, 0.9))',
+                    }}
+                  />
+                  {/* 3D Triangle highlight */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '2px',
+                      left: '6px',
+                      width: 0,
+                      height: 0,
+                      borderLeft: '12px solid transparent',
+                      borderRight: '12px solid transparent',
+                      borderTop: '22px solid #60E8FF',
+                    }}
+                  />
+                  {/* Top gem/light */}
+                  <motion.div
+                    style={{
+                      position: 'absolute',
+                      top: '-2px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      background: 'radial-gradient(ellipse 60% 40% at 30% 30%, #FFFFFF 0%, #80FFFF 40%, #00D1FF 100%)',
+                      boxShadow: '0 0 10px #00FFFF, 0 0 20px rgba(0, 255, 255, 0.7), inset 0 1px 2px rgba(255,255,255,0.8)',
+                    }}
+                    animate={{ 
+                      boxShadow: [
+                        '0 0 10px #00FFFF, 0 0 20px rgba(0, 255, 255, 0.5)',
+                        '0 0 20px #00FFFF, 0 0 40px rgba(0, 255, 255, 0.8)',
+                        '0 0 10px #00FFFF, 0 0 20px rgba(0, 255, 255, 0.5)',
+                      ]
+                    }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  />
+                </div>
 
                 {/* 🎡 THE WHEEL - AAA Quality Rotating Wheel */}
                 <motion.div
@@ -745,23 +834,35 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                 </motion.div>
               </div>
 
-              {/* 🏆 WINNER text glow under wheel */}
-              <motion.div 
-                className="mt-4 text-center"
-                animate={{ opacity: [0.6, 1, 0.6] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
+              {/* 🏆 M1SSION Logo under wheel - matching official branding */}
+              <div className="mt-5 text-center">
                 <span 
-                  className="text-3xl font-black tracking-[0.3em]"
+                  className="text-4xl font-black tracking-tight"
                   style={{
-                    color: '#00D1FF',
-                    textShadow: '0 0 20px rgba(0, 209, 255, 0.8), 0 0 40px rgba(0, 209, 255, 0.4), 0 2px 4px rgba(0,0,0,0.5)',
-                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                    fontFamily: "'SF Pro Display', 'Inter', -apple-system, system-ui, sans-serif",
+                    letterSpacing: '-0.02em',
                   }}
                 >
-                  M1SSION
+                  {/* M1 in Cyan */}
+                  <span 
+                    style={{
+                      color: '#00D1FF',
+                      textShadow: '0 0 20px rgba(0, 209, 255, 0.6), 0 2px 4px rgba(0,0,0,0.5)',
+                    }}
+                  >
+                    M1
+                  </span>
+                  {/* SSION in White */}
+                  <span 
+                    style={{
+                      color: '#FFFFFF',
+                      textShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 2px 4px rgba(0,0,0,0.5)',
+                    }}
+                  >
+                    SSION
+                  </span>
                 </span>
-              </motion.div>
+              </div>
 
               {/* Result */}
               <AnimatePresence>
