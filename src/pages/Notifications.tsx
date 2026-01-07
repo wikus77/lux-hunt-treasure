@@ -112,7 +112,28 @@ const Notifications = () => {
 
   // Main notifications/messages page - GlobalLayout gestisce Header e BottomNav
   return (
-    <div className="w-full px-3" style={{ paddingTop: '3vh' }}>
+    // 🔧 FIX v2: Outer container blocks iOS bounce scroll
+    <div
+      style={{
+        height: '100dvh',
+        overflow: 'hidden',
+        position: 'relative',
+        overscrollBehavior: 'none',
+      }}
+    >
+    <div 
+      className="w-full px-3" 
+      style={{ 
+        paddingTop: '3vh',
+        height: '100dvh',
+        overflowY: 'auto',
+        position: 'relative',
+        zIndex: 0,
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'pan-y',
+      }}
+    >
         <div className="w-full max-w-3xl mx-auto">
           {/* Tabs - Alzati del 7% */}
           <Tabs 
@@ -189,6 +210,7 @@ const Notifications = () => {
           onGroupCreated={handleGroupCreated}
         />
       </div>
+    </div>
   );
 };
 

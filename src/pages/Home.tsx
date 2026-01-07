@@ -234,7 +234,7 @@ const Home = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 100,
+          zIndex: 0, // 🔧 FIX: Stay below header and bottom nav
           overflowY: 'auto',
           backgroundColor: '#ffffff',
           backgroundImage: `
@@ -243,7 +243,11 @@ const Home = () => {
             radial-gradient(circle at 50% 50%, rgba(240, 89, 255, 0.08), transparent 60%),
             linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)
           `,
-          backgroundAttachment: 'fixed'
+          backgroundAttachment: 'fixed',
+          // 🔧 FIX v2: Block iOS bounce scroll
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch',
+          touchAction: 'pan-y',
         }}
       >
         {/* Texture tramata */}
