@@ -112,7 +112,7 @@ const Notifications = () => {
 
   // Main notifications/messages page - GlobalLayout gestisce Header e BottomNav
   return (
-    <div className="w-full px-3">
+    <div className="w-full px-3" style={{ paddingTop: '10vh' }}>
         <div className="w-full max-w-3xl mx-auto">
           {/* Tabs */}
           <Tabs 
