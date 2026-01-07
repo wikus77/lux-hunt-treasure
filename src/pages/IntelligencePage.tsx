@@ -28,6 +28,9 @@ const IntelligencePage: React.FC = () => {
         minHeight: '100%',
         overflow: 'hidden',
         paddingBottom: '8px',
+        // 🔧 FIX: Prevent iOS bounce scroll within this container
+        overscrollBehavior: 'contain',
+        touchAction: 'pan-y',
       }}
     >
       {/* M1U Pill - Below header - COMPACT */}
@@ -44,12 +47,12 @@ const IntelligencePage: React.FC = () => {
         </Suspense>
       </div>
 
-      {/* AION Entity - REDUCED height for mobile */}
+      {/* AION Entity - REDUCED 10% for mobile */}
       <div 
         style={{ 
-          height: '100px',
-          minHeight: '80px',
-          maxHeight: '120px',
+          height: '90px',      // Ridotto 10% (era 100px)
+          minHeight: '72px',   // Ridotto 10% (era 80px)
+          maxHeight: '108px',  // Ridotto 10% (era 120px)
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
