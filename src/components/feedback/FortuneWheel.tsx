@@ -14,24 +14,25 @@ import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 
-// 🎰 WHEEL SEGMENTS - 16 segments with NEON colors
+// 🎰 WHEEL SEGMENTS - 16 segments matching Image B design
+// Order: clockwise from top (where pointer is)
 const WHEEL_SEGMENTS = [
-  { id: 1, label: '5 M1U', icon: '💰', value: 5, type: 'm1u', color: '#00FF88', neonGlow: 'rgba(0, 255, 136, 0.8)', probability: 15 },
-  { id: 2, label: 'RIPROVA', icon: '🔄', value: 0, type: 'retry', color: '#1a1a2e', neonGlow: 'none', probability: 12 },
-  { id: 3, label: '10 M1U', icon: '💎', value: 10, type: 'm1u', color: '#00D1FF', neonGlow: 'rgba(0, 209, 255, 0.8)', probability: 12 },
-  { id: 4, label: 'NIENTE', icon: '❌', value: 0, type: 'nothing', color: '#0d0d1a', neonGlow: 'none', probability: 10 },
-  { id: 5, label: 'INDIZIO', icon: '🔍', value: 1, type: 'clue', color: '#FFD700', neonGlow: 'rgba(255, 215, 0, 0.8)', probability: 8 },
-  { id: 6, label: 'RIPROVA', icon: '🔄', value: 0, type: 'retry', color: '#1a1a2e', neonGlow: 'none', probability: 10 },
-  { id: 7, label: '20 M1U', icon: '🤑', value: 20, type: 'm1u', color: '#39FF14', neonGlow: 'rgba(57, 255, 20, 0.8)', probability: 6 },
-  { id: 8, label: 'NIENTE', icon: '❌', value: 0, type: 'nothing', color: '#0d0d1a', neonGlow: 'none', probability: 8 },
-  { id: 9, label: '5 PE', icon: '⚡', value: 5, type: 'pe', color: '#BF00FF', neonGlow: 'rgba(191, 0, 255, 0.8)', probability: 10 },
-  { id: 10, label: 'RIPROVA', icon: '🔄', value: 0, type: 'retry', color: '#1a1a2e', neonGlow: 'none', probability: 8 },
-  { id: 11, label: 'MARKER', icon: '📍', value: 1, type: 'marker', color: '#FF6B00', neonGlow: 'rgba(255, 107, 0, 0.8)', probability: 3 },
-  { id: 12, label: 'NIENTE', icon: '❌', value: 0, type: 'nothing', color: '#0d0d1a', neonGlow: 'none', probability: 8 },
-  { id: 13, label: '50 M1U', icon: '👑', value: 50, type: 'm1u', color: '#FFD700', neonGlow: 'rgba(255, 215, 0, 1)', probability: 2 },
-  { id: 14, label: 'INDIZIO', icon: '🔮', value: 1, type: 'clue', color: '#FF00FF', neonGlow: 'rgba(255, 0, 255, 0.8)', probability: 5 },
-  { id: 15, label: '10 PE', icon: '🔥', value: 10, type: 'pe', color: '#8B5CF6', neonGlow: 'rgba(139, 92, 246, 0.8)', probability: 5 },
-  { id: 16, label: 'NIENTE', icon: '❌', value: 0, type: 'nothing', color: '#0d0d1a', neonGlow: 'none', probability: 8 },
+  { id: 1, label: '50 M1U', icon: '👑', value: 50, type: 'm1u', color: '#1a2d4a', probability: 2 },   // Dark Navy
+  { id: 2, label: '5 M1U', icon: '💰', value: 5, type: 'm1u', color: '#1a1a2e', probability: 15 },    // Dark
+  { id: 3, label: 'LOSE', icon: '❌', value: 0, type: 'nothing', color: '#4a1a1a', probability: 10 }, // Dark Red
+  { id: 4, label: 'LOSE', icon: '❌', value: 0, type: 'nothing', color: '#1a3d3d', probability: 10 }, // Dark Teal
+  { id: 5, label: '50 PE', icon: '⚡', value: 50, type: 'pe', color: '#1a2d4a', probability: 3 },     // Navy Blue
+  { id: 6, label: '50 M1U', icon: '💎', value: 50, type: 'm1u', color: '#1a4a4a', probability: 2 },   // Teal
+  { id: 7, label: '200 PE', icon: '🔥', value: 200, type: 'pe', color: '#4a2a1a', probability: 1 },   // Dark Red/Brown
+  { id: 8, label: '100 PE', icon: '⚡', value: 100, type: 'pe', color: '#3d1a4a', probability: 2 },   // Purple
+  { id: 9, label: '290 PE', icon: '🌟', value: 290, type: 'pe', color: '#1a3d2d', probability: 1 },   // Dark Green
+  { id: 10, label: '50 M1U', icon: '💰', value: 50, type: 'm1u', color: '#4a3d1a', probability: 2 },  // Bronze/Orange
+  { id: 11, label: 'Retry', icon: '🔄', value: 0, type: 'retry', color: '#4a4a1a', probability: 12 }, // Yellow/Olive
+  { id: 12, label: 'CLUE', icon: '🔍', value: 1, type: 'clue', color: '#1a4a2d', probability: 5 },    // Green
+  { id: 13, label: '5 M1U', icon: '💰', value: 5, type: 'm1u', color: '#1a3d5a', probability: 15 },   // Blue
+  { id: 14, label: 'Retry', icon: '🔄', value: 0, type: 'retry', color: '#3d1a3d', probability: 12 }, // Purple
+  { id: 15, label: '3 M1U', icon: '💵', value: 3, type: 'm1u', color: '#2d3d1a', probability: 10 },   // Olive
+  { id: 16, label: '2 M1U', icon: '💵', value: 2, type: 'm1u', color: '#1a2d3d', probability: 8 },    // Steel Blue
 ];
 
 // CLUES for instant reveal
@@ -342,7 +343,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
       case 'clue': return '🔍 HAI VINTO UN INDIZIO!';
       case 'marker': return '📍 HAI VINTO UN MARKER!';
       case 'retry': return '🔄 RIPROVA DOMANI!';
-      case 'nothing': return '❌ NIENTE QUESTA VOLTA...';
+      case 'nothing': return '❌ LOSE - RIPROVA DOMANI!';
       default: return '';
     }
   };
@@ -351,24 +352,24 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
 
   const segmentAngle = 360 / WHEEL_SEGMENTS.length;
 
-  // 🎰 VIVID SEGMENT COLORS - Like Image B (16 colors for 16 segments)
+  // 🎰 SEGMENT COLORS - Matching Image B exactly (16 segments clockwise from top)
   const SEGMENT_COLORS = [
-    '#1e3a5f', // Dark Blue
-    '#2d1b4e', // Deep Purple  
-    '#8b6914', // Bronze/Gold
-    '#1a4a4a', // Dark Teal
-    '#3d5a1d', // Olive Green
-    '#5c1a3d', // Dark Magenta
-    '#1a3d5c', // Steel Blue
-    '#4a3d1a', // Brown Gold
-    '#3d1a1a', // Dark Red
-    '#1a4a3d', // Sea Green
-    '#4a1a4a', // Purple
-    '#3d4a1a', // Khaki Dark
-    '#1a2d4a', // Navy
-    '#4a3a1a', // Copper
-    '#2d3d2d', // Forest
-    '#3d2d3d', // Plum
+    '#1a2d4a', // 1. 50 M1U - Dark Navy
+    '#151520', // 2. 5 M1U - Very Dark
+    '#5a2020', // 3. LOSE - Dark Red
+    '#1a4a4a', // 4. LOSE - Teal
+    '#1a3050', // 5. 50 PE - Navy Blue
+    '#206060', // 6. 50 M1U - Cyan Teal
+    '#6a3020', // 7. 200 PE - Dark Orange/Red
+    '#4a2060', // 8. 100 PE - Purple
+    '#204a30', // 9. 290 PE - Dark Green
+    '#6a5020', // 10. 50 M1U - Bronze/Gold
+    '#807020', // 11. Retry - Olive Yellow
+    '#206040', // 12. CLUE - Green
+    '#204060', // 13. 5 M1U - Blue
+    '#502050', // 14. Retry - Purple
+    '#405020', // 15. 3 M1U - Olive Green
+    '#203050', // 16. 2 M1U - Steel Blue
   ];
 
   return createPortal(
@@ -591,10 +592,15 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                         textAngle += 180;
                       }
 
-                      // Color for text - white for most, grey for nothing/retry
-                      const textColor = seg.type === 'nothing' || seg.type === 'retry' 
-                        ? '#666666' 
-                        : '#FFFFFF';
+                      // Color for text - matching Image B style
+                      const getTextColor = () => {
+                        if (seg.type === 'nothing') return '#FF4444'; // LOSE in red
+                        if (seg.type === 'retry') return '#FFD700';   // Retry in yellow/gold
+                        if (seg.type === 'pe') return '#FF8844';      // PE in orange
+                        if (seg.type === 'clue') return '#44FF88';    // CLUE in green
+                        return '#FFFFFF';                              // M1U in white
+                      };
+                      const textColor = getTextColor();
 
                       return (
                         <g key={seg.id}>
