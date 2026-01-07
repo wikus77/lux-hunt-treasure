@@ -237,44 +237,58 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
   const [revealedClue, setRevealedClue] = useState('');
   const tickIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check if user can spin today - FROM DATABASE (not localStorage!)
+  // Check if user can spin today - SECURE: Check localStorage FIRST, then DB
+  // This prevents bypass via hard refresh
   useEffect(() => {
     const checkCanSpin = async () => {
-      if (!isOpen || !user) {
+      if (!isOpen) {
         setIsLoading(false);
         return;
       }
 
-      try {
-        // Check from Supabase profiles.last_fortune_spin
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('last_fortune_spin')
-          .eq('id', user.id)
-          .single();
-
-        if (profile?.last_fortune_spin) {
-          const lastSpinDate = new Date(profile.last_fortune_spin).toDateString();
-          const today = new Date().toDateString();
-          setCanSpin(lastSpinDate !== today);
-        } else {
-          // Never spun before
-          setCanSpin(true);
+      const today = new Date().toDateString();
+      
+      // 🔒 STEP 1: Check localStorage FIRST (immediate, no bypass possible)
+      const localLastSpin = localStorage.getItem(STORAGE_KEY);
+      if (localLastSpin) {
+        const localLastSpinDate = new Date(localLastSpin).toDateString();
+        if (localLastSpinDate === today) {
+          // Already spun today according to localStorage - BLOCK
+          setCanSpin(false);
+          setIsLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error('[FortuneWheel] Error checking spin status:', err);
-        // Fallback to localStorage if DB fails
-        const lastSpin = localStorage.getItem(STORAGE_KEY);
-        if (lastSpin) {
-          const lastSpinDate = new Date(lastSpin).toDateString();
-          const today = new Date().toDateString();
-          setCanSpin(lastSpinDate !== today);
-        } else {
-          setCanSpin(true);
-        }
-      } finally {
-        setIsLoading(false);
       }
+
+      // 🔒 STEP 2: If user logged in, also check DB (for cross-device sync)
+      if (user) {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('last_fortune_spin')
+            .eq('id', user.id)
+            .single();
+
+          // If DB has a spin date for today, block
+          if (!error && profile?.last_fortune_spin) {
+            const dbLastSpinDate = new Date(profile.last_fortune_spin).toDateString();
+            if (dbLastSpinDate === today) {
+              // Also update localStorage to sync
+              localStorage.setItem(STORAGE_KEY, profile.last_fortune_spin);
+              setCanSpin(false);
+              setIsLoading(false);
+              return;
+            }
+          }
+        } catch (err) {
+          console.error('[FortuneWheel] DB check failed:', err);
+          // Continue with localStorage result
+        }
+      }
+
+      // 🎰 If we get here, user can spin
+      setCanSpin(true);
+      setIsLoading(false);
     };
 
     if (isOpen) {
@@ -499,11 +513,16 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
           className="fixed inset-0 z-[10003] flex items-center justify-center p-4"
           onClick={onClose}
         >
-          {/* 🌃 M1SSION APP GRADIENT BACKGROUND - Same as main app */}
+          {/* 🌃 M1SSION APP GRADIENT BACKGROUND - EXACT same as main app */}
           <div 
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(180deg, #0a0b0f 0%, #0c0e14 25%, #0e1118 50%, #0a0c10 75%, #080a0d 100%)`,
+              background: `
+                radial-gradient(ellipse 1200px 800px at 85% -10%, rgba(0, 229, 255, 0.35), transparent 50%),
+                radial-gradient(ellipse 1000px 700px at -15% 25%, rgba(123, 46, 255, 0.30), transparent 50%),
+                radial-gradient(ellipse 800px 500px at 50% 90%, rgba(252, 30, 255, 0.15), transparent 45%),
+                linear-gradient(180deg, #0a0b0f 0%, #0c0e14 25%, #0e1118 50%, #0a0c10 75%, #080a0d 100%)
+              `,
             }}
           />
           
