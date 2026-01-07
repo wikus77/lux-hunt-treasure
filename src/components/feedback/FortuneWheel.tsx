@@ -89,13 +89,44 @@ const playTickSound = () => {
   }
 };
 
-// Play win fanfare
+// 🎵 AAA QUALITY WIN FANFARE - Casino Jackpot Style
 const playWinSound = () => {
   try {
     const ctx = getAudioContext();
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
     
-    notes.forEach((freq, i) => {
+    // Rich chord progression: C major → E major → G major → C octave (victory!)
+    const chords = [
+      { notes: [261.63, 329.63, 392.00], time: 0 },      // C major chord
+      { notes: [329.63, 415.30, 493.88], time: 0.15 },   // E major chord
+      { notes: [392.00, 493.88, 587.33], time: 0.30 },   // G major chord
+      { notes: [523.25, 659.25, 783.99, 1046.50], time: 0.45 }, // C major octave - VICTORY
+    ];
+    
+    chords.forEach(chord => {
+      chord.notes.forEach((freq, noteIndex) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        // Add slight detune for richness
+        osc.detune.value = (noteIndex - 1) * 3;
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.frequency.value = freq;
+        osc.type = 'triangle'; // Warmer tone than sine
+        gain.gain.value = 0;
+        gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + chord.time + 0.02);
+        gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + chord.time + 0.15);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + chord.time + 0.5);
+        
+        osc.start(ctx.currentTime + chord.time);
+        osc.stop(ctx.currentTime + chord.time + 0.6);
+      });
+    });
+    
+    // Add shimmering high notes for sparkle
+    [1318.51, 1567.98, 2093.00].forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       
@@ -105,35 +136,68 @@ const playWinSound = () => {
       osc.frequency.value = freq;
       osc.type = 'sine';
       gain.gain.value = 0;
-      gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + i * 0.15);
-      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + i * 0.15 + 0.4);
+      gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.5 + i * 0.08);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.7 + i * 0.08);
       
-      osc.start(ctx.currentTime + i * 0.15);
-      osc.stop(ctx.currentTime + i * 0.15 + 0.5);
+      osc.start(ctx.currentTime + 0.5 + i * 0.08);
+      osc.stop(ctx.currentTime + 0.9 + i * 0.08);
     });
   } catch (e) {
     // Silent fail
   }
 };
 
-// Play lose sound
+// 🔇 AAA QUALITY LOSE SOUND - Dramatic but not harsh
 const playLoseSound = () => {
   try {
     const ctx = getAudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
     
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+    // Descending notes: dramatic "wah wah wah" effect
+    const notes = [
+      { freq: 350, time: 0 },
+      { freq: 300, time: 0.2 },
+      { freq: 200, time: 0.4 },
+    ];
     
-    osc.frequency.value = 200;
-    osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.3);
-    osc.type = 'sawtooth';
-    gain.gain.value = 0.15;
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+    notes.forEach(({ freq, time }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      
+      // Add filter for "wah" effect
+      filter.type = 'lowpass';
+      filter.frequency.value = 2000;
+      filter.frequency.linearRampToValueAtTime(300, ctx.currentTime + time + 0.15);
+      
+      osc.frequency.value = freq;
+      osc.type = 'triangle';
+      gain.gain.value = 0;
+      gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + time + 0.02);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + time + 0.25);
+      
+      osc.start(ctx.currentTime + time);
+      osc.stop(ctx.currentTime + time + 0.3);
+    });
     
-    osc.start();
-    osc.stop(ctx.currentTime + 0.3);
+    // Add subtle bass thud at the end
+    const bass = ctx.createOscillator();
+    const bassGain = ctx.createGain();
+    
+    bass.connect(bassGain);
+    bassGain.connect(ctx.destination);
+    
+    bass.frequency.value = 80;
+    bass.type = 'sine';
+    bassGain.gain.value = 0;
+    bassGain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.65);
+    bassGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.9);
+    
+    bass.start(ctx.currentTime + 0.6);
+    bass.stop(ctx.currentTime + 1);
   } catch (e) {
     // Silent fail
   }
@@ -294,10 +358,14 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
     const winningSegment = getWeightedResult();
     const segmentIndex = WHEEL_SEGMENTS.findIndex(s => s.id === winningSegment.id);
     
-    // Calculate rotation
+    // Calculate rotation - FIXED: segment center must align with TOP pointer
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
-    const targetAngle = segmentIndex * segmentAngle;
-    const totalRotation = rotation + (360 * 6) + (360 - targetAngle) + (segmentAngle / 2);
+    // Center of segment i is at (i + 0.5) * segmentAngle degrees from top
+    const segmentCenterAngle = (segmentIndex + 0.5) * segmentAngle;
+    // To bring it under the pointer (at top), rotate by: 360 - segmentCenterAngle
+    const rotationToWin = 360 - segmentCenterAngle;
+    // Add multiple full rotations for effect
+    const totalRotation = rotation + (360 * 6) + rotationToWin;
     
     setRotation(totalRotation);
 
@@ -552,46 +620,58 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                   }}
                 />
 
-                {/* ⬆️ TOP POINTER - 3D Glowing cyan triangle */}
-                <div className="absolute top-[-16px] left-1/2 -translate-x-1/2 z-30">
-                  {/* 3D Triangle base/shadow */}
+                {/* ⬆️ TOP POINTER - 3D Glowing cyan triangle - PERFECTLY CENTERED */}
+                <div 
+                  className="absolute z-30"
+                  style={{
+                    top: '-18px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '36px',
+                    height: '36px',
+                  }}
+                >
+                  {/* 3D Triangle shadow */}
                   <div
                     style={{
                       position: 'absolute',
                       top: '4px',
-                      left: '2px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
                       width: 0,
                       height: 0,
                       borderLeft: '18px solid transparent',
                       borderRight: '18px solid transparent',
-                      borderTop: '32px solid rgba(0, 50, 80, 0.8)',
-                      filter: 'blur(2px)',
+                      borderTop: '32px solid rgba(0, 50, 80, 0.7)',
+                      filter: 'blur(3px)',
                     }}
                   />
-                  {/* 3D Triangle body - dark side */}
+                  {/* 3D Triangle body - base layer */}
                   <div
                     style={{
                       position: 'absolute',
                       top: '0',
-                      left: '0',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
                       width: 0,
                       height: 0,
                       borderLeft: '18px solid transparent',
                       borderRight: '18px solid transparent',
-                      borderTop: '32px solid #006080',
+                      borderTop: '32px solid #005070',
                     }}
                   />
-                  {/* 3D Triangle body - light/gradient side */}
+                  {/* 3D Triangle body - main cyan */}
                   <div
                     style={{
                       position: 'absolute',
-                      top: '0',
-                      left: '2px',
+                      top: '1px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
                       width: 0,
                       height: 0,
                       borderLeft: '16px solid transparent',
                       borderRight: '16px solid transparent',
-                      borderTop: '30px solid #00B8E0',
+                      borderTop: '29px solid #00B8E0',
                       filter: 'drop-shadow(0 0 15px rgba(0, 209, 255, 0.9))',
                     }}
                   />
@@ -599,24 +679,25 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                   <div
                     style={{
                       position: 'absolute',
-                      top: '2px',
-                      left: '6px',
+                      top: '3px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
                       width: 0,
                       height: 0,
-                      borderLeft: '12px solid transparent',
-                      borderRight: '12px solid transparent',
-                      borderTop: '22px solid #60E8FF',
+                      borderLeft: '10px solid transparent',
+                      borderRight: '10px solid transparent',
+                      borderTop: '20px solid #60E8FF',
                     }}
                   />
-                  {/* Top gem/light */}
+                  {/* Top gem/light - centered */}
                   <motion.div
                     style={{
                       position: 'absolute',
-                      top: '-2px',
+                      top: '-3px',
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      width: '10px',
-                      height: '10px',
+                      width: '12px',
+                      height: '12px',
                       borderRadius: '50%',
                       background: 'radial-gradient(ellipse 60% 40% at 30% 30%, #FFFFFF 0%, #80FFFF 40%, #00D1FF 100%)',
                       boxShadow: '0 0 10px #00FFFF, 0 0 20px rgba(0, 255, 255, 0.7), inset 0 1px 2px rgba(255,255,255,0.8)',
