@@ -16,8 +16,8 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
   const [isCodeVisible, setIsCodeVisible] = useState(false);
 
   // Special admin constants
-  // Remove hardcoded email check - use role-based authentication
-  const SPECIAL_ADMIN_CODE = 'X0197';
+  // 🔴 MCP = Master Control Program - Admin code
+  const SPECIAL_ADMIN_CODE = 'MCP';
   
   // Helper function to generate a new agent code
   const generateAgentCode = async () => {
@@ -66,7 +66,7 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
             .single();
           
           if (profile?.role === 'admin') {
-            setAgentCode(`AG-${SPECIAL_ADMIN_CODE}`);
+            setAgentCode(SPECIAL_ADMIN_CODE); // MCP senza prefisso AG-
             setIsLoading(false);
             return;
           }
@@ -99,13 +99,23 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
+  // 🔴 MCP = Rosso neon
+  const isMCP = agentCode === 'MCP';
+  
   return (
-    <div className={`bg-[#00E5FF]/20 px-3 py-1 rounded-md inline-flex items-center ${className}`}>
+    <div className={`${isMCP ? 'bg-red-500/20' : 'bg-[#00E5FF]/20'} px-3 py-1 rounded-md inline-flex items-center ${className}`}>
       {showLabel && (
-        <span className="text-cyan-400 font-mono text-sm mr-1">DOSSIER:</span>
+        <span className={`${isMCP ? 'text-red-400' : 'text-cyan-400'} font-mono text-sm mr-1`}>DOSSIER:</span>
       )}
       <motion.span 
-        className="font-mono text-white bg-cyan-900/30 px-2 py-0.5 rounded text-sm"
+        className={`font-mono px-2 py-0.5 rounded text-sm ${
+          isMCP 
+            ? 'text-red-400 bg-red-900/30' 
+            : 'text-white bg-cyan-900/30'
+        }`}
+        style={isMCP ? {
+          textShadow: '0 0 10px rgba(255, 0, 0, 0.8), 0 0 20px rgba(255, 0, 0, 0.5)'
+        } : undefined}
         initial={{ opacity: 0 }}
         animate={{ opacity: isCodeVisible ? 1 : 0 }}
         transition={{ duration: 1.0 }}
