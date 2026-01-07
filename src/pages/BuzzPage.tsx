@@ -162,11 +162,11 @@ export const BuzzPage: React.FC = () => {
         }}
       />
       
-      {/* Main scrollable content */}
+      {/* Main scrollable content - FIX: reduced padding to fit all content */}
       <main
         style={{
-          paddingTop: 'calc(119px + env(safe-area-inset-top, 0px))',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+          paddingTop: 'calc(90px + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'calc(90px + env(safe-area-inset-bottom, 34px))',
           height: '100dvh',
           overflowY: 'auto',
           position: 'relative',
@@ -192,8 +192,8 @@ export const BuzzPage: React.FC = () => {
           </div>
 
 
-          {/* Container centrato verticalmente e orizzontalmente */}
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+          {/* Container centrato - FIX: reduced min-height to show all content */}
+          <div className="flex flex-col items-center justify-center" style={{ minHeight: 'calc(100dvh - 220px)', paddingTop: '50px' }}>
             
             {/* 🚨 START M1SSION GATE: Show overlay when not enrolled (V4: no flash) */}
             <AnimatePresence mode="wait">
