@@ -742,3 +742,29 @@ nav[style*="position: fixed"] {
       0 0 60px rgba(0, 255, 136, 0.3);
   }
 }
+
+/* ==============================================
+   📱 iOS KEYBOARD: Hide Bottom Nav (like Telegram)
+   When keyboard is open, hide bottom navigation
+   ROLLBACK: Remove this section
+   ============================================== */
+.m1-keyboard-open #m1-bottom-nav {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Remove bottom padding when keyboard is open to prevent layout jump */
+.m1-keyboard-open .has-bottom-nav-padding {
+  padding-bottom: 0 !important;
+}
+
+/* Smooth transition for bottom nav appearance */
+#m1-bottom-nav {
+  transition: opacity 0.15s ease-out, visibility 0.15s ease-out;
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
