@@ -13,7 +13,7 @@ import { determineNextAction, NextAction } from '@/gameplay/progress';
 import { useMissionStatus } from '@/hooks/useMissionStatus';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
-import { PROGRESS_FEEDBACK_ENABLED, isUserInProgressFeedbackAllowlist } from '@/config/featureFlags';
+import { PROGRESS_FEEDBACK_ENABLED } from '@/config/featureFlags';
 import { GLASS_PRESETS, M1SSION_COLORS } from './glassPresets';
 
 interface NextActionCardProps {
@@ -26,8 +26,8 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ className = '' }
   const { missionStatus } = useMissionStatus();
   const { dailyBuzzCounter } = useBuzzCounter(user?.id);
   
-  // 🛡️ ALLOWLIST CHECK
-  const isAllowed = isUserInProgressFeedbackAllowlist(user?.email);
+  // ✅ ENABLED FOR ALL USERS (Opzione A - 7 Jan 2025)
+  // const isAllowed = isUserInProgressFeedbackAllowlist(user?.email);
   
   // Use SUCCESS (green) preset
   const preset = GLASS_PRESETS.success;
@@ -52,8 +52,8 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ className = '' }
     });
   }, [missionStatus?.cluesFound, dailyBuzzCounter, refreshKey]);
   
-  // Don't render if feature disabled OR user not in allowlist
-  if (!PROGRESS_FEEDBACK_ENABLED || !isAllowed) return null;
+  // Don't render if feature disabled (now enabled for ALL users)
+  if (!PROGRESS_FEEDBACK_ENABLED) return null;
   
   // Don't render if no action or low priority
   if (!nextAction || nextAction.priority < 50) return null;
