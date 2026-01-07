@@ -234,7 +234,7 @@ const Home = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 0, // 🔧 FIX: Stay below header and bottom nav
+          zIndex: 0, // Stay below header and bottom nav
           overflowY: 'auto',
           backgroundColor: '#ffffff',
           backgroundImage: `
@@ -244,10 +244,9 @@ const Home = () => {
             linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)
           `,
           backgroundAttachment: 'fixed',
-          // 🔧 FIX v2: Block iOS bounce scroll
+          // iOS scroll containment (GlobalLayout handles outer containment)
           overscrollBehavior: 'contain',
           WebkitOverflowScrolling: 'touch',
-          touchAction: 'pan-y',
         }}
       >
         {/* Texture tramata */}
