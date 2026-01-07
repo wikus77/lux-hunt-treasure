@@ -112,16 +112,16 @@ const Notifications = () => {
 
   // Main notifications/messages page - GlobalLayout gestisce Header e BottomNav
   return (
-    <div className="w-full px-3" style={{ paddingTop: '10vh' }}>
+    <div className="w-full px-3" style={{ paddingTop: '3vh' }}>
         <div className="w-full max-w-3xl mx-auto">
-          {/* Tabs */}
+          {/* Tabs - Alzati del 7% */}
           <Tabs 
             value={activeTab} 
             onValueChange={(v) => setActiveTab(v as 'notifications' | 'messages')}
             className="w-full"
           >
-            {/* Tab Buttons */}
-            <TabsList className="grid w-full grid-cols-2 mb-4 bg-gray-900/50 border border-cyan-500/20 rounded-xl p-1">
+            {/* Tab Buttons - posizione alzata */}
+            <TabsList className="grid w-full grid-cols-2 bg-gray-900/50 border border-cyan-500/20 rounded-xl p-1" style={{ marginBottom: '7vh' }}>
               <TabsTrigger 
                 value="notifications"
                 className="relative flex items-center justify-center gap-2 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 rounded-lg py-3 transition-all"
