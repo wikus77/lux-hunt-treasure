@@ -352,24 +352,24 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
 
   const segmentAngle = 360 / WHEEL_SEGMENTS.length;
 
-  // 🎰 SEGMENT COLORS - Matching Image B exactly (16 segments clockwise from top)
+  // 🎰 SEGMENT COLORS - VIVID AAA QUALITY (matching Image B)
   const SEGMENT_COLORS = [
-    '#1a2d4a', // 1. 50 M1U - Dark Navy
-    '#151520', // 2. 5 M1U - Very Dark
-    '#5a2020', // 3. LOSE - Dark Red
-    '#1a4a4a', // 4. LOSE - Teal
-    '#1a3050', // 5. 50 PE - Navy Blue
-    '#206060', // 6. 50 M1U - Cyan Teal
-    '#6a3020', // 7. 200 PE - Dark Orange/Red
-    '#4a2060', // 8. 100 PE - Purple
-    '#204a30', // 9. 290 PE - Dark Green
-    '#6a5020', // 10. 50 M1U - Bronze/Gold
-    '#807020', // 11. Retry - Olive Yellow
-    '#206040', // 12. CLUE - Green
-    '#204060', // 13. 5 M1U - Blue
-    '#502050', // 14. Retry - Purple
-    '#405020', // 15. 3 M1U - Olive Green
-    '#203050', // 16. 2 M1U - Steel Blue
+    '#1a3554', // 1. 50 M1U - Deep Navy Blue
+    '#151825', // 2. 5 M1U - Charcoal Dark
+    '#6a2828', // 3. LOSE - Rich Dark Red
+    '#185858', // 4. LOSE - Deep Teal
+    '#1a3858', // 5. 50 PE - Ocean Blue
+    '#187070', // 6. 50 M1U - Vivid Teal
+    '#7a3525', // 7. 200 PE - Burnt Orange
+    '#5a2875', // 8. 100 PE - Royal Purple
+    '#1a5838', // 9. 290 PE - Forest Green
+    '#8a6520', // 10. 50 M1U - Rich Gold
+    '#a08828', // 11. Retry - Mustard Yellow
+    '#1a6848', // 12. CLUE - Emerald Green
+    '#1a4878', // 13. 5 M1U - Cobalt Blue
+    '#682868', // 14. Retry - Magenta Purple
+    '#4a6828', // 15. 3 M1U - Lime Olive
+    '#1a3858', // 16. 2 M1U - Steel Blue
   ];
 
   return createPortal(
@@ -543,98 +543,118 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                   transition={{ duration: 1, repeat: Infinity }}
                 />
 
-                {/* 🎡 THE WHEEL - Rotating part */}
+                {/* 🎡 THE WHEEL - AAA Quality Rotating Wheel */}
                 <motion.div
-                  className="absolute inset-[8px] rounded-full overflow-hidden"
+                  className="absolute inset-[6px] rounded-full overflow-hidden"
                   style={{
                     boxShadow: `
-                      inset 0 0 40px rgba(0, 0, 0, 0.7),
-                      inset 0 0 15px rgba(0, 100, 150, 0.15)
+                      inset 0 0 50px rgba(0, 0, 0, 0.9),
+                      inset 0 0 20px rgba(0, 50, 100, 0.3),
+                      0 0 30px rgba(0, 100, 200, 0.2)
                     `,
                   }}
                   animate={{ rotate: rotation }}
                   transition={{ duration: 5.5, ease: [0.2, 0.8, 0.2, 1] }}
                 >
-                  {/* SVG Wheel with vivid colored segments */}
-                  <svg viewBox="0 0 200 200" className="w-full h-full">
+                  {/* SVG Wheel - AAA QUALITY with text PARALLEL to dividers */}
+                  <svg viewBox="0 0 400 400" className="w-full h-full">
                     <defs>
-                      {/* Radial gradient for 3D depth effect on each segment */}
-                      {WHEEL_SEGMENTS.map((_, i) => (
-                        <linearGradient key={`grad-${i}`} id={`seg-grad-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor={SEGMENT_COLORS[i]} stopOpacity="1" />
-                          <stop offset="60%" stopColor={SEGMENT_COLORS[i]} stopOpacity="0.85" />
-                          <stop offset="100%" stopColor="#0a0a0f" stopOpacity="0.95" />
-                        </linearGradient>
-                      ))}
+                      {/* 3D Depth gradients for each segment - radial from center */}
+                      {WHEEL_SEGMENTS.map((seg, i) => {
+                        const baseColor = SEGMENT_COLORS[i];
+                        return (
+                          <radialGradient key={`grad-${i}`} id={`seg-grad-${i}`} cx="50%" cy="50%" r="70%" fx="30%" fy="30%">
+                            <stop offset="0%" stopColor={baseColor} stopOpacity="0.95" />
+                            <stop offset="40%" stopColor={baseColor} stopOpacity="1" />
+                            <stop offset="85%" stopColor={baseColor} stopOpacity="0.7" />
+                            <stop offset="100%" stopColor="#050510" stopOpacity="0.9" />
+                          </radialGradient>
+                        );
+                      })}
+                      
+                      {/* Glossy highlight overlay */}
+                      <radialGradient id="wheelGloss" cx="30%" cy="30%" r="60%">
+                        <stop offset="0%" stopColor="rgba(255,255,255,0.15)" />
+                        <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                      </radialGradient>
+                      
+                      {/* Inner shadow */}
+                      <radialGradient id="innerShadow" cx="50%" cy="50%" r="50%">
+                        <stop offset="70%" stopColor="transparent" />
+                        <stop offset="100%" stopColor="rgba(0,0,0,0.5)" />
+                      </radialGradient>
                     </defs>
                     
                     {WHEEL_SEGMENTS.map((seg, i) => {
-                      const startAngle = (i * segmentAngle - 90) * (Math.PI / 180);
-                      const endAngle = ((i + 1) * segmentAngle - 90) * (Math.PI / 180);
-                      const x1 = 100 + 96 * Math.cos(startAngle);
-                      const y1 = 100 + 96 * Math.sin(startAngle);
-                      const x2 = 100 + 96 * Math.cos(endAngle);
-                      const y2 = 100 + 96 * Math.sin(endAngle);
+                      const startAngleDeg = i * segmentAngle - 90;
+                      const endAngleDeg = (i + 1) * segmentAngle - 90;
+                      const startAngle = startAngleDeg * (Math.PI / 180);
+                      const endAngle = endAngleDeg * (Math.PI / 180);
                       
-                      // Text positioned along the radius, readable from center outward
-                      const midAngle = (i + 0.5) * segmentAngle - 90;
-                      const midAngleRad = midAngle * (Math.PI / 180);
-                      // Text at 70% radius for good visibility
-                      const textRadius = 70;
-                      const textX = 100 + textRadius * Math.cos(midAngleRad);
-                      const textY = 100 + textRadius * Math.sin(midAngleRad);
+                      // Outer radius
+                      const outerR = 195;
+                      const innerR = 60;
                       
-                      // Rotate text to be readable (pointing outward from center)
-                      // Add 90 to make text perpendicular to radius
-                      let textAngle = midAngle + 90;
-                      // Flip text on bottom half so it's always readable
-                      if (midAngle > 0 && midAngle < 180) {
-                        textAngle += 180;
-                      }
+                      const x1 = 200 + outerR * Math.cos(startAngle);
+                      const y1 = 200 + outerR * Math.sin(startAngle);
+                      const x2 = 200 + outerR * Math.cos(endAngle);
+                      const y2 = 200 + outerR * Math.sin(endAngle);
+                      
+                      // TEXT PARALLEL TO DIVIDER LINE (along the radius)
+                      // Position text along a line from center outward, parallel to segment edge
+                      const textAngleRad = (startAngleDeg + segmentAngle * 0.5) * (Math.PI / 180);
+                      
+                      // Text positioned at ~65% from center to edge for visibility
+                      const textRadius = 140;
+                      const textX = 200 + textRadius * Math.cos(textAngleRad);
+                      const textY = 200 + textRadius * Math.sin(textAngleRad);
+                      
+                      // Rotate text to be PARALLEL to the divider (along the radius)
+                      // Text reads from center outward
+                      const textRotation = startAngleDeg + segmentAngle * 0.5 + 90;
 
-                      // Color for text - matching Image B style
+                      // Text colors - matching Image B
                       const getTextColor = () => {
-                        if (seg.type === 'nothing') return '#FF4444'; // LOSE in red
-                        if (seg.type === 'retry') return '#FFD700';   // Retry in yellow/gold
-                        if (seg.type === 'pe') return '#FF8844';      // PE in orange
-                        if (seg.type === 'clue') return '#44FF88';    // CLUE in green
-                        return '#FFFFFF';                              // M1U in white
+                        if (seg.type === 'nothing') return '#FF5555';
+                        if (seg.type === 'retry') return '#FFDD44';
+                        if (seg.type === 'pe') return '#FF9944';
+                        if (seg.type === 'clue') return '#44FFAA';
+                        return '#FFFFFF';
                       };
                       const textColor = getTextColor();
 
                       return (
                         <g key={seg.id}>
-                          {/* Segment fill */}
+                          {/* Segment with 3D gradient */}
                           <path
-                            d={`M 100 100 L ${x1} ${y1} A 96 96 0 0 1 ${x2} ${y2} Z`}
+                            d={`M 200 200 L ${x1} ${y1} A ${outerR} ${outerR} 0 0 1 ${x2} ${y2} Z`}
                             fill={`url(#seg-grad-${i})`}
                           />
                           
-                          {/* Segment border/divider */}
+                          {/* Segment edge highlight (3D effect) */}
                           <path
-                            d={`M 100 100 L ${x1} ${y1} A 96 96 0 0 1 ${x2} ${y2} Z`}
+                            d={`M 200 200 L ${x1} ${y1} A ${outerR} ${outerR} 0 0 1 ${x2} ${y2} Z`}
                             fill="none"
-                            stroke="rgba(80, 120, 160, 0.5)"
-                            strokeWidth="1.2"
+                            stroke="rgba(150, 180, 220, 0.4)"
+                            strokeWidth="1.5"
                           />
                           
-                          {/* TEXT LABEL - Large and readable */}
+                          {/* TEXT - LARGE, BOLD, PARALLEL TO RADIUS */}
                           <text
                             x={textX}
                             y={textY}
                             textAnchor="middle"
                             dominantBaseline="middle"
-                            transform={`rotate(${textAngle}, ${textX}, ${textY})`}
+                            transform={`rotate(${textRotation}, ${textX}, ${textY})`}
                             fill={textColor}
-                            fontWeight="800"
-                            fontFamily="'Inter', 'SF Pro Display', system-ui, sans-serif"
-                            fontSize="11"
-                            letterSpacing="0.5"
-                            style={{
-                              textShadow: seg.type !== 'nothing' && seg.type !== 'retry' 
-                                ? '0 0 6px rgba(255,255,255,0.5), 0 1px 2px rgba(0,0,0,0.8)' 
-                                : '0 1px 2px rgba(0,0,0,0.5)',
-                            }}
+                            fontWeight="900"
+                            fontFamily="'SF Pro Display', 'Inter', system-ui, sans-serif"
+                            fontSize="22"
+                            letterSpacing="1"
+                            paintOrder="stroke"
+                            stroke="rgba(0,0,0,0.8)"
+                            strokeWidth="3"
+                            strokeLinejoin="round"
                           >
                             {seg.label}
                           </text>
@@ -642,45 +662,70 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                       );
                     })}
 
-                    {/* Inner circle overlay for depth */}
-                    <circle cx="100" cy="100" r="30" fill="none" stroke="rgba(60, 100, 140, 0.3)" strokeWidth="1" />
+                    {/* Glossy overlay for 3D depth */}
+                    <circle cx="200" cy="200" r="195" fill="url(#wheelGloss)" />
+                    
+                    {/* Inner shadow ring */}
+                    <circle cx="200" cy="200" r="195" fill="url(#innerShadow)" />
+                    
+                    {/* Chrome ring around wheel */}
+                    <circle 
+                      cx="200" cy="200" r="196" 
+                      fill="none" 
+                      stroke="url(#wheelGloss)"
+                      strokeWidth="4"
+                      style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
+                    />
                   </svg>
 
-                  {/* 🔘 CHROME CENTER HUB - Metallic brushed steel look */}
+                  {/* 🔘 CHROME CENTER HUB - Photorealistic Brushed Metal */}
                   <div 
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70px] h-[70px] rounded-full flex items-center justify-center"
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] rounded-full flex items-center justify-center"
                     style={{
                       background: `
-                        radial-gradient(ellipse 100% 60% at 30% 20%, rgba(220, 235, 250, 0.5) 0%, transparent 40%),
-                        radial-gradient(ellipse 80% 50% at 70% 80%, rgba(40, 60, 90, 0.4) 0%, transparent 40%),
-                        conic-gradient(from 0deg, 
-                          #6a8aa8 0deg, 
-                          #4a6a88 45deg,
-                          #3a5a78 90deg,
-                          #5a7a98 135deg,
-                          #7a9ab8 180deg,
-                          #5a7a98 225deg,
-                          #3a5a78 270deg,
-                          #4a6a88 315deg,
-                          #6a8aa8 360deg
+                        radial-gradient(ellipse 120% 80% at 25% 25%, rgba(255, 255, 255, 0.6) 0%, transparent 35%),
+                        radial-gradient(ellipse 100% 60% at 75% 75%, rgba(30, 50, 80, 0.5) 0%, transparent 35%),
+                        conic-gradient(from 0deg at 50% 50%, 
+                          #8aa8c8 0deg, 
+                          #5a7898 30deg,
+                          #4a6888 60deg,
+                          #3a5878 90deg,
+                          #5a7898 120deg,
+                          #7a98b8 150deg,
+                          #9ab8d8 180deg,
+                          #7a98b8 210deg,
+                          #5a7898 240deg,
+                          #3a5878 270deg,
+                          #4a6888 300deg,
+                          #6a88a8 330deg,
+                          #8aa8c8 360deg
                         )
                       `,
                       boxShadow: `
-                        0 0 25px rgba(0, 150, 255, 0.25),
-                        inset 0 3px 8px rgba(255,255,255,0.4),
-                        inset 0 -4px 10px rgba(0,0,0,0.5),
-                        0 6px 20px rgba(0,0,0,0.4)
+                        0 0 40px rgba(0, 150, 255, 0.3),
+                        0 0 80px rgba(0, 100, 200, 0.15),
+                        inset 0 4px 12px rgba(255,255,255,0.5),
+                        inset 0 -6px 16px rgba(0,0,0,0.6),
+                        0 8px 30px rgba(0,0,0,0.5)
                       `,
-                      border: '3px solid rgba(140, 170, 200, 0.5)',
+                      border: '4px solid rgba(160, 190, 220, 0.6)',
                     }}
                   >
+                    {/* Inner ring detail */}
+                    <div 
+                      className="absolute inset-[4px] rounded-full"
+                      style={{
+                        background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.2) 100%)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                      }}
+                    />
                     {/* M1 Logo */}
                     <motion.img
                       src="/icons/icon-m1-192x192.png"
                       alt="M1SSION"
-                      className="w-10 h-10 rounded-md"
+                      className="w-11 h-11 rounded-lg relative z-10"
                       style={{
-                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))',
+                        filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.7))',
                       }}
                       animate={isSpinning ? { rotate: 360 } : {}}
                       transition={{ duration: 1, repeat: isSpinning ? Infinity : 0, ease: 'linear' }}
