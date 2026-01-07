@@ -18,36 +18,39 @@ const IntelligencePage: React.FC = () => {
   const aionRef = useRef<AionEntityHandle>(null);
 
   return (
-    // 🆕 FIX: Layout normale (NO position fixed) - rispetta GlobalLayout
-    // La bottom nav rimane sempre nella sua posizione originale
-    // pb-20 = 80px padding bottom per non sovrapporsi alla bottom nav
+    // 🔧 FIX RESPONSIVE: Contenuto DEVE stare tra header e bottom nav
+    // Usa height fisso invece di minHeight per forzare il contenuto nello spazio
     <>
     <div 
-      className="flex flex-col px-4 pb-20"
+      className="flex flex-col px-4"
       style={{
-        minHeight: 'calc(100dvh - var(--header-height, 72px) - var(--bottom-nav-height, 64px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
-        overflow: 'visible'
+        // Altezza ESATTA disponibile = viewport - header - bottom nav - safe areas - padding GlobalLayout
+        height: 'calc(100dvh - 80px - 80px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+        maxHeight: 'calc(100dvh - 80px - 80px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+        overflow: 'hidden',
+        paddingBottom: '8px'
       }}
     >
-      {/* M1U Pill - Below header */}
+      {/* M1U Pill - Below header - COMPACT */}
       <div 
         data-onboarding="m1u-pill"
         style={{ 
           pointerEvents: 'auto',
-          marginBottom: '8px',
+          marginBottom: '4px',
           flexShrink: 0
         }}
       >
-        <Suspense fallback={<div className="w-28 h-10 bg-gray-800/50 rounded-full animate-pulse" />}>
+        <Suspense fallback={<div className="w-28 h-8 bg-gray-800/50 rounded-full animate-pulse" />}>
           <M1UPill showLabel showPlusButton />
         </Suspense>
       </div>
 
-      {/* AION Entity - Fixed height - Lazy loaded */}
+      {/* AION Entity - REDUCED height for mobile */}
       <div 
         style={{ 
-          height: '25%',
-          minHeight: '120px',
+          height: '100px',
+          minHeight: '80px',
+          maxHeight: '120px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -57,7 +60,7 @@ const IntelligencePage: React.FC = () => {
           zIndex: 1
         }}
       >
-        <Suspense fallback={<div className="w-24 h-24 rounded-full bg-cyan-500/20 animate-pulse" />}>
+        <Suspense fallback={<div className="w-20 h-20 rounded-full bg-cyan-500/20 animate-pulse" />}>
           <AionEntity 
             ref={aionRef}
             intensity={1.0} 
@@ -67,48 +70,53 @@ const IntelligencePage: React.FC = () => {
         </Suspense>
       </div>
       
-      {/* AION Label - Above animation with z-index */}
+      {/* AION Label - COMPACT */}
       <div 
         className="text-center"
         style={{ 
           flexShrink: 0,
-          marginBottom: '20px',
+          marginBottom: '8px',
           position: 'relative',
           zIndex: 10
         }}
       >
-        <h2 className="text-2xl font-bold tracking-wider">
+        <h2 className="text-xl font-bold tracking-wider">
           <span className="text-cyan-400">AI</span>
           <span className="text-white">ON</span>
         </h2>
-        <p className="text-xs text-gray-500 tracking-wide">Adaptive Intelligence ON</p>
+        <p className="text-[10px] text-gray-500 tracking-wide">Adaptive Intelligence ON</p>
       </div>
 
-      {/* Shadow Protocol v2 - Intercepts Panel (collapsible) */}
-      <Suspense fallback={null}>
-        <ShadowIntercepts />
-      </Suspense>
+      {/* Shadow Protocol v2 - Hidden on mobile to save space */}
+      <div className="hidden md:block">
+        <Suspense fallback={null}>
+          <ShadowIntercepts />
+        </Suspense>
+      </div>
 
-      {/* Chat Panel - Takes remaining space */}
+      {/* Chat Panel - Takes ALL remaining space, scrolls internally */}
       <div 
         data-onboarding="ai-chat"
         style={{ 
           flex: 1,
-          minHeight: '220px',
+          minHeight: 0, // CRITICAL: allows flex child to shrink
           maxWidth: '100%', 
           width: '100%', 
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          overflow: 'hidden'
         }}
       >
         <IntelChatPanel 
           aionEntityRef={aionRef}
           className="flex-1"
-          style={{ minHeight: 0 }}
+          style={{ minHeight: 0, maxHeight: '100%', overflow: 'hidden' }}
         />
       </div>
-      {/* 🆕 Hint per utenti inattivi (1 volta al giorno) */}
-      <InactivityHint type="aion" />
+      {/* Hint nascosto su mobile per risparmiare spazio */}
+      <div className="hidden md:block">
+        <InactivityHint type="aion" />
+      </div>
     </div>
     
     {/* 🎯 Motivational Popup - Shows once per session for AION page */}
