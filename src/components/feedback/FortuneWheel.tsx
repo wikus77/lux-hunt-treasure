@@ -231,22 +231,57 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<typeof WHEEL_SEGMENTS[0] | null>(null);
-  const [canSpin, setCanSpin] = useState(true);
+  const [canSpin, setCanSpin] = useState(false); // Default false until verified from DB
+  const [isLoading, setIsLoading] = useState(true);
   const [showClueModal, setShowClueModal] = useState(false);
   const [revealedClue, setRevealedClue] = useState('');
   const tickIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check if user can spin today
+  // Check if user can spin today - FROM DATABASE (not localStorage!)
   useEffect(() => {
-    if (isOpen) {
-      const lastSpin = localStorage.getItem(STORAGE_KEY);
-      if (lastSpin) {
-        const lastSpinDate = new Date(lastSpin).toDateString();
-        const today = new Date().toDateString();
-        setCanSpin(lastSpinDate !== today);
+    const checkCanSpin = async () => {
+      if (!isOpen || !user) {
+        setIsLoading(false);
+        return;
       }
+
+      try {
+        // Check from Supabase profiles.last_fortune_spin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('last_fortune_spin')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.last_fortune_spin) {
+          const lastSpinDate = new Date(profile.last_fortune_spin).toDateString();
+          const today = new Date().toDateString();
+          setCanSpin(lastSpinDate !== today);
+        } else {
+          // Never spun before
+          setCanSpin(true);
+        }
+      } catch (err) {
+        console.error('[FortuneWheel] Error checking spin status:', err);
+        // Fallback to localStorage if DB fails
+        const lastSpin = localStorage.getItem(STORAGE_KEY);
+        if (lastSpin) {
+          const lastSpinDate = new Date(lastSpin).toDateString();
+          const today = new Date().toDateString();
+          setCanSpin(lastSpinDate !== today);
+        } else {
+          setCanSpin(true);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      setIsLoading(true);
+      checkCanSpin();
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
 
   // Cleanup tick interval
   useEffect(() => {
@@ -370,7 +405,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
     setRotation(totalRotation);
 
     // Wait for animation
-    setTimeout(() => {
+    setTimeout(async () => {
       // Clear tick sounds
       if (tickIntervalRef.current) {
         clearInterval(tickIntervalRef.current);
@@ -380,7 +415,20 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
       setIsSpinning(false);
       setResult(winningSegment);
       
-      localStorage.setItem(STORAGE_KEY, new Date().toISOString());
+      // Save to DATABASE (Supabase) - not just localStorage
+      const now = new Date().toISOString();
+      if (user) {
+        try {
+          await supabase
+            .from('profiles')
+            .update({ last_fortune_spin: now })
+            .eq('id', user.id);
+        } catch (err) {
+          console.error('[FortuneWheel] Error saving spin to DB:', err);
+        }
+      }
+      // Also save to localStorage as fallback
+      localStorage.setItem(STORAGE_KEY, now);
       setCanSpin(false);
 
       // Play result sound
@@ -402,7 +450,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
 
       awardPrize(winningSegment);
     }, 5500);
-  }, [isSpinning, canSpin, rotation, getWeightedResult, awardPrize]);
+  }, [isSpinning, canSpin, rotation, getWeightedResult, awardPrize, user]);
 
   const getResultMessage = () => {
     if (!result) return '';
@@ -451,15 +499,11 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
           className="fixed inset-0 z-[10003] flex items-center justify-center p-4"
           onClick={onClose}
         >
-          {/* 🌃 CINEMATIC NIGHT BACKGROUND */}
+          {/* 🌃 M1SSION APP GRADIENT BACKGROUND - Same as main app */}
           <div 
             className="absolute inset-0"
             style={{
-              background: `
-                radial-gradient(ellipse 120% 80% at 50% 120%, rgba(0, 50, 80, 0.4) 0%, transparent 60%),
-                radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 100, 150, 0.15) 0%, transparent 50%),
-                linear-gradient(180deg, #030810 0%, #0a1525 30%, #051018 70%, #020508 100%)
-              `,
+              background: `linear-gradient(180deg, #0a0b0f 0%, #0c0e14 25%, #0e1118 50%, #0a0c10 75%, #080a0d 100%)`,
             }}
           />
           
