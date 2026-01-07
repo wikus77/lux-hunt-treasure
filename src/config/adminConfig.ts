@@ -12,9 +12,10 @@ const ADMIN_EMAILS: string[] = [
 
 /**
  * Special admin codes mapping
+ * 🔴 MCP = Master Control Program (Admin only)
  */
 const ADMIN_CODES: Record<string, string> = {
-  'wikus77@hotmail.it': 'AG-X0197',
+  'wikus77@hotmail.it': 'MCP',
 };
 
 /**

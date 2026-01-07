@@ -106,11 +106,34 @@ export const LeaderboardPage: React.FC = () => {
   };
 
   // Get rank styling with special effects for Top 10 - M1SSION STYLE
+  // 🔧 Numeri 3D per Top 10, senza hashtag
   const getRankStyling = (rank: number, isTop10: boolean) => {
+    // 🏆 Componente numero 3D per Top 10
+    const Rank3DNumber = ({ num, color, shadowColor }: { num: number; color: string; shadowColor: string }) => (
+      <span 
+        className="w-8 h-8 flex items-center justify-center font-black text-xl"
+        style={{
+          color: color,
+          textShadow: `
+            0 1px 0 ${shadowColor},
+            0 2px 0 ${shadowColor},
+            0 3px 0 ${shadowColor},
+            0 4px 0 rgba(0,0,0,0.4),
+            0 0 15px ${color}80,
+            0 0 30px ${color}40
+          `,
+          WebkitTextStroke: `0.5px ${shadowColor}`,
+          fontFamily: 'Orbitron, sans-serif',
+        }}
+      >
+        {num}
+      </span>
+    );
+
     if (rank === 1) {
-      // 1° POSTO: Viola → Rosa + Triangolo Rovesciato
+      // 1° POSTO: Oro/Rosa con numero 3D
       return {
-        icon: <TriangleDownIcon className="w-7 h-7 text-pink-400 drop-shadow-[0_0_12px_rgba(236,72,153,0.9)]" />,
+        icon: <Rank3DNumber num={1} color="#FFD700" shadowColor="#B8860B" />,
         bgClass: 'bg-gradient-to-r from-purple-600/40 to-pink-500/40',
         borderClass: 'border-pink-500/60',
         glowClass: 'shadow-[0_0_25px_rgba(236,72,153,0.5)]',
@@ -118,9 +141,9 @@ export const LeaderboardPage: React.FC = () => {
       };
     }
     if (rank === 2) {
-      // 2° POSTO: Viola → Blu + Triangolo Normale
+      // 2° POSTO: Argento/Blu con numero 3D
       return {
-        icon: <TriangleUpIcon className="w-6 h-6 text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]" />,
+        icon: <Rank3DNumber num={2} color="#C0C0C0" shadowColor="#808080" />,
         bgClass: 'bg-gradient-to-r from-purple-600/35 to-blue-500/35',
         borderClass: 'border-blue-500/50',
         glowClass: 'shadow-[0_0_20px_rgba(59,130,246,0.4)]',
@@ -128,9 +151,9 @@ export const LeaderboardPage: React.FC = () => {
       };
     }
     if (rank === 3) {
-      // 3° POSTO: Viola → Verde + Cerchio
+      // 3° POSTO: Bronzo/Verde con numero 3D
       return {
-        icon: <Circle className="w-6 h-6 text-emerald-400 fill-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]" />,
+        icon: <Rank3DNumber num={3} color="#CD7F32" shadowColor="#8B4513" />,
         bgClass: 'bg-gradient-to-r from-purple-600/30 to-emerald-500/30',
         borderClass: 'border-emerald-500/50',
         glowClass: 'shadow-[0_0_20px_rgba(52,211,153,0.4)]',
@@ -138,16 +161,18 @@ export const LeaderboardPage: React.FC = () => {
       };
     }
     if (isTop10) {
+      // Top 4-10: Cyan 3D
       return {
-        icon: <span className="w-6 h-6 flex items-center justify-center text-cyan-400 font-bold text-lg">#{rank}</span>,
+        icon: <Rank3DNumber num={rank} color="#00D1FF" shadowColor="#0099BB" />,
         bgClass: 'bg-gradient-to-r from-cyan-500/10 to-blue-500/10',
         borderClass: 'border-cyan-500/30',
         glowClass: 'shadow-[0_0_10px_rgba(0,209,255,0.2)]',
         textClass: 'text-cyan-400'
       };
     }
+    // Posizioni 11+: senza 3D, solo numero semplice
     return {
-      icon: <span className="w-6 h-6 flex items-center justify-center text-gray-500 font-bold">#{rank}</span>,
+      icon: <span className="w-8 h-8 flex items-center justify-center text-gray-400 font-bold text-lg">{rank}</span>,
       bgClass: 'bg-gray-800/30',
       borderClass: 'border-gray-700/30',
       glowClass: '',
