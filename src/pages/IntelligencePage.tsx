@@ -19,108 +19,118 @@ const IntelligencePage: React.FC = () => {
 
   return (
     <>
-    {/* 
-      🔧 FIX v4: Single container, no extra wrappers
-      - Uses height: 100% to fill GlobalLayout's main content area
-      - overflow: hidden prevents any scroll at this level
-      - All scroll happens INSIDE IntelChatPanel
-      - Reduced 10% for responsiveness
-    */}
-    <div 
-      className="flex flex-col px-3"
+    {/* 🔧 FIX v5: SAME pattern as LeaderboardPage - double wrapper with 100dvh */}
+    <div
       style={{
-        height: '100%',
-        maxHeight: '100%',
-        overflow: 'hidden', // NO scroll here - prevents bounce
-        paddingBottom: '4px',
+        height: '100dvh',
+        overflow: 'hidden',
+        position: 'relative',
+        overscrollBehavior: 'none', // BLOCK body-level bounce
       }}
     >
-      {/* M1U Pill - COMPACT (-10%) */}
+      {/* Inner scrollable container */}
       <div 
-        data-onboarding="m1u-pill"
-        style={{ 
-          pointerEvents: 'auto',
-          marginBottom: '3px', // Ridotto da 4px
-          flexShrink: 0
-        }}
-      >
-        <Suspense fallback={<div className="w-24 h-7 bg-gray-800/50 rounded-full animate-pulse" />}>
-          <M1UPill showLabel showPlusButton />
-        </Suspense>
-      </div>
-
-      {/* AION Entity - REDUCED 10% */}
-      <div 
-        style={{ 
-          height: '81px',      // Ridotto 10% (era 90px)
-          minHeight: '65px',   // Ridotto 10% (era 72px)
-          maxHeight: '97px',   // Ridotto 10% (era 108px)
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
+        className="flex flex-col px-3"
+        style={{
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)', // Header space
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 90px)', // Bottom nav space
+          height: '100dvh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
           position: 'relative',
-          zIndex: 1
+          zIndex: 0,
+          overscrollBehavior: 'contain', // Contain scroll within this element
+          WebkitOverflowScrolling: 'touch',
+          touchAction: 'pan-y',
         }}
       >
-        <Suspense fallback={<div className="w-18 h-18 rounded-full bg-cyan-500/20 animate-pulse" />}>
-          <AionEntity 
-            ref={aionRef}
-            intensity={1.0} 
-            idleSpeed={0.7}
-            className="mx-auto"
+        {/* M1U Pill - COMPACT */}
+        <div 
+          data-onboarding="m1u-pill"
+          style={{ 
+            pointerEvents: 'auto',
+            marginBottom: '3px',
+            flexShrink: 0
+          }}
+        >
+          <Suspense fallback={<div className="w-24 h-7 bg-gray-800/50 rounded-full animate-pulse" />}>
+            <M1UPill showLabel showPlusButton />
+          </Suspense>
+        </div>
+
+        {/* AION Entity - REDUCED */}
+        <div 
+          style={{ 
+            height: '81px',
+            minHeight: '65px',
+            maxHeight: '97px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            position: 'relative',
+            zIndex: 1
+          }}
+        >
+          <Suspense fallback={<div className="w-18 h-18 rounded-full bg-cyan-500/20 animate-pulse" />}>
+            <AionEntity 
+              ref={aionRef}
+              intensity={1.0} 
+              idleSpeed={0.7}
+              className="mx-auto"
+            />
+          </Suspense>
+        </div>
+        
+        {/* AION Label - COMPACT */}
+        <div 
+          className="text-center"
+          style={{ 
+            flexShrink: 0,
+            marginBottom: '6px',
+            position: 'relative',
+            zIndex: 10
+          }}
+        >
+          <h2 className="text-lg font-bold tracking-wider">
+            <span className="text-cyan-400">AI</span>
+            <span className="text-white">ON</span>
+          </h2>
+          <p className="text-[9px] text-gray-500 tracking-wide">Adaptive Intelligence ON</p>
+        </div>
+
+        {/* Shadow Protocol v2 - Hidden on mobile to save space */}
+        <div className="hidden md:block">
+          <Suspense fallback={null}>
+            <ShadowIntercepts />
+          </Suspense>
+        </div>
+
+        {/* 🔧 Container abbassato del 10% - margin-top per non sovrapporsi ad AION */}
+        <div 
+          data-onboarding="ai-chat"
+          style={{ 
+            flex: 1,
+            minHeight: '200px',
+            maxWidth: '100%', 
+            width: '100%', 
+            display: 'flex',
+            flexDirection: 'column',
+            marginTop: '10%', // 🔧 Abbassato del 10%
+          }}
+        >
+          <IntelChatPanel 
+            aionEntityRef={aionRef}
+            className="flex-1"
+            style={{ minHeight: 0, maxHeight: '100%' }}
           />
-        </Suspense>
-      </div>
-      
-      {/* AION Label - COMPACT (-10%) */}
-      <div 
-        className="text-center"
-        style={{ 
-          flexShrink: 0,
-          marginBottom: '6px', // Ridotto da 8px
-          position: 'relative',
-          zIndex: 10
-        }}
-      >
-        <h2 className="text-lg font-bold tracking-wider"> {/* Ridotto da text-xl */}
-          <span className="text-cyan-400">AI</span>
-          <span className="text-white">ON</span>
-        </h2>
-        <p className="text-[9px] text-gray-500 tracking-wide">Adaptive Intelligence ON</p> {/* Ridotto da 10px */}
-      </div>
-
-      {/* Shadow Protocol v2 - Hidden on mobile to save space */}
-      <div className="hidden md:block">
-        <Suspense fallback={null}>
-          <ShadowIntercepts />
-        </Suspense>
-      </div>
-
-      {/* Chat Panel - Takes ALL remaining space, scrolls internally */}
-      <div 
-        data-onboarding="ai-chat"
-        style={{ 
-          flex: 1,
-          minHeight: 0, // CRITICAL: allows flex child to shrink
-          maxWidth: '100%', 
-          width: '100%', 
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden' // Chat panel handles its own scroll
-        }}
-      >
-        <IntelChatPanel 
-          aionEntityRef={aionRef}
-          className="flex-1"
-          style={{ minHeight: 0, maxHeight: '100%', overflow: 'hidden' }}
-        />
-      </div>
-      
-      {/* Hint nascosto su mobile per risparmiare spazio */}
-      <div className="hidden md:block">
-        <InactivityHint type="aion" />
+        </div>
+        
+        {/* Hint nascosto su mobile per risparmiare spazio */}
+        <div className="hidden md:block">
+          <InactivityHint type="aion" />
+        </div>
       </div>
     </div>
     
