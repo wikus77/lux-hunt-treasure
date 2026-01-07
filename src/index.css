@@ -748,6 +748,8 @@ nav[style*="position: fixed"] {
    When keyboard is open, hide bottom navigation
    ROLLBACK: Remove this section
    ============================================== */
+
+/* Target by ID (GlobalLayout) */
 .m1-keyboard-open #m1-bottom-nav {
   display: none !important;
   visibility: hidden !important;
@@ -757,14 +759,49 @@ nav[style*="position: fixed"] {
   overflow: hidden !important;
 }
 
+/* Target by wrapper class */
+.m1-keyboard-open .m1-bottom-nav-wrapper {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Target by data attribute */
+.m1-keyboard-open [data-bottom-nav-wrapper] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Target BottomNavigation directly by its class (most reliable) */
+.m1-keyboard-open .bottom-navigation-ios,
+.m1-keyboard-open [data-onboarding="bottom-nav"],
+.m1-keyboard-open nav[class*="fixed"][class*="bottom-0"],
+.m1-keyboard-open .bottom-navigation,
+.m1-keyboard-open [data-testid="bottom-navigation"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(100%) !important;
+}
+
 /* Remove bottom padding when keyboard is open to prevent layout jump */
 .m1-keyboard-open .has-bottom-nav-padding {
   padding-bottom: 0 !important;
 }
 
 /* Smooth transition for bottom nav appearance */
-#m1-bottom-nav {
-  transition: opacity 0.15s ease-out, visibility 0.15s ease-out;
+#m1-bottom-nav,
+.m1-bottom-nav-wrapper,
+[data-bottom-nav-wrapper] {
+  transition: opacity 0.15s ease-out, visibility 0.15s ease-out, transform 0.15s ease-out;
 }
 
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
