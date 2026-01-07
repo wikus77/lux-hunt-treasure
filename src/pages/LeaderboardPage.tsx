@@ -180,12 +180,24 @@ export const LeaderboardPage: React.FC = () => {
   };
 
   return (
+    // 🔧 FIX: Outer container blocks iOS bounce scroll (like BuzzPage)
+    <div
+      style={{
+        height: '100dvh',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
     <div 
-      className="min-h-[100dvh] w-full overflow-x-hidden p-4 space-y-4" 
+      className="w-full overflow-x-hidden p-4 space-y-4" 
       data-onboarding="leaderboard"
       style={{
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
+        height: '100dvh',
+        overflowY: 'auto',
+        position: 'relative',
+        zIndex: 0, // Stay below header (z-9999) and bottom nav (z-10000)
       }}
     >
       {/* Header */}
@@ -530,6 +542,7 @@ export const LeaderboardPage: React.FC = () => {
       
       {/* 🎯 Motivational Popup - Shows once per session */}
       <MotivationalPopup pageType="leaderboard" />
+    </div>
     </div>
   );
 };
