@@ -180,12 +180,14 @@ export const LeaderboardPage: React.FC = () => {
   };
 
   return (
-    // 🔧 FIX: Outer container blocks iOS bounce scroll (like BuzzPage)
+    // 🔧 FIX v2: Outer container blocks iOS bounce scroll
     <div
       style={{
         height: '100dvh',
         overflow: 'hidden',
         position: 'relative',
+        // Block body-level overscroll
+        overscrollBehavior: 'none',
       }}
     >
     <div 
@@ -196,8 +198,13 @@ export const LeaderboardPage: React.FC = () => {
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
         height: '100dvh',
         overflowY: 'auto',
+        overflowX: 'hidden',
         position: 'relative',
-        zIndex: 0, // Stay below header (z-9999) and bottom nav (z-10000)
+        zIndex: 0,
+        // 🔧 KEY FIX: Contain scroll within this element, prevent iOS rubber-band
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch', // Smooth iOS scroll
+        touchAction: 'pan-y', // Only vertical scroll allowed
       }}
     >
       {/* Header */}
