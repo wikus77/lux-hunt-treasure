@@ -351,16 +351,24 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
 
   const segmentAngle = 360 / WHEEL_SEGMENTS.length;
 
-  // 🎰 PHOTOREALISTIC 3D WHEEL COLORS - Casino/AAA Style
-  const WHEEL_3D_COLORS = [
-    { bg: 'linear-gradient(180deg, #1a3a4a 0%, #0d2530 50%, #051520 100%)', text: '#00D1FF' },  // Dark Teal
-    { bg: 'linear-gradient(180deg, #2d1f3d 0%, #1a1228 50%, #0f0a18 100%)', text: '#BF00FF' },  // Dark Purple
-    { bg: 'linear-gradient(180deg, #3d2a1a 0%, #2a1d12 50%, #1a100a 100%)', text: '#FFB347' },  // Dark Bronze
-    { bg: 'linear-gradient(180deg, #1a2d3d 0%, #12202a 50%, #0a1520 100%)', text: '#4DA8FF' },  // Dark Blue
-    { bg: 'linear-gradient(180deg, #2d3d1a 0%, #1e2a12 50%, #121a0a 100%)', text: '#8AE65C' },  // Dark Olive
-    { bg: 'linear-gradient(180deg, #3d1a2d 0%, #2a121e 50%, #1a0a12 100%)', text: '#FF6B9D' },  // Dark Rose
-    { bg: 'linear-gradient(180deg, #1a3d3d 0%, #122a2a 50%, #0a1a1a 100%)', text: '#5CE6E6' },  // Dark Cyan
-    { bg: 'linear-gradient(180deg, #3d3d1a 0%, #2a2a12 50%, #1a1a0a 100%)', text: '#FFE066' },  // Dark Gold
+  // 🎰 VIVID SEGMENT COLORS - Like Image B (16 colors for 16 segments)
+  const SEGMENT_COLORS = [
+    '#1e3a5f', // Dark Blue
+    '#2d1b4e', // Deep Purple  
+    '#8b6914', // Bronze/Gold
+    '#1a4a4a', // Dark Teal
+    '#3d5a1d', // Olive Green
+    '#5c1a3d', // Dark Magenta
+    '#1a3d5c', // Steel Blue
+    '#4a3d1a', // Brown Gold
+    '#3d1a1a', // Dark Red
+    '#1a4a3d', // Sea Green
+    '#4a1a4a', // Purple
+    '#3d4a1a', // Khaki Dark
+    '#1a2d4a', // Navy
+    '#4a3a1a', // Copper
+    '#2d3d2d', // Forest
+    '#3d2d3d', // Plum
   ];
 
   return createPortal(
@@ -539,135 +547,134 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                   className="absolute inset-[8px] rounded-full overflow-hidden"
                   style={{
                     boxShadow: `
-                      inset 0 0 60px rgba(0, 0, 0, 0.8),
-                      inset 0 0 20px rgba(0, 100, 150, 0.2)
+                      inset 0 0 40px rgba(0, 0, 0, 0.7),
+                      inset 0 0 15px rgba(0, 100, 150, 0.15)
                     `,
                   }}
                   animate={{ rotate: rotation }}
                   transition={{ duration: 5.5, ease: [0.2, 0.8, 0.2, 1] }}
                 >
-                  {/* SVG Wheel with 3D-style segments */}
-                  <svg viewBox="0 0 200 200" className="w-full h-full" style={{ filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.5))' }}>
+                  {/* SVG Wheel with vivid colored segments */}
+                  <svg viewBox="0 0 200 200" className="w-full h-full">
                     <defs>
-                      {/* Metallic gradients for each segment */}
-                      {WHEEL_SEGMENTS.map((seg, i) => {
-                        const colorSet = WHEEL_3D_COLORS[i % WHEEL_3D_COLORS.length];
-                        return (
-                          <linearGradient key={`grad-${i}`} id={`segment-grad-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor={seg.type === 'nothing' || seg.type === 'retry' ? '#151520' : `${colorSet.text}22`} />
-                            <stop offset="50%" stopColor={seg.type === 'nothing' || seg.type === 'retry' ? '#0a0a12' : '#0a1520'} />
-                            <stop offset="100%" stopColor={seg.type === 'nothing' || seg.type === 'retry' ? '#050508' : '#051015'} />
-                          </linearGradient>
-                        );
-                      })}
+                      {/* Radial gradient for 3D depth effect on each segment */}
+                      {WHEEL_SEGMENTS.map((_, i) => (
+                        <linearGradient key={`grad-${i}`} id={`seg-grad-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor={SEGMENT_COLORS[i]} stopOpacity="1" />
+                          <stop offset="60%" stopColor={SEGMENT_COLORS[i]} stopOpacity="0.85" />
+                          <stop offset="100%" stopColor="#0a0a0f" stopOpacity="0.95" />
+                        </linearGradient>
+                      ))}
                     </defs>
                     
                     {WHEEL_SEGMENTS.map((seg, i) => {
                       const startAngle = (i * segmentAngle - 90) * (Math.PI / 180);
                       const endAngle = ((i + 1) * segmentAngle - 90) * (Math.PI / 180);
-                      const x1 = 100 + 98 * Math.cos(startAngle);
-                      const y1 = 100 + 98 * Math.sin(startAngle);
-                      const x2 = 100 + 98 * Math.cos(endAngle);
-                      const y2 = 100 + 98 * Math.sin(endAngle);
+                      const x1 = 100 + 96 * Math.cos(startAngle);
+                      const y1 = 100 + 96 * Math.sin(startAngle);
+                      const x2 = 100 + 96 * Math.cos(endAngle);
+                      const y2 = 100 + 96 * Math.sin(endAngle);
                       
-                      // Text position - closer to edge for readability
-                      const midAngle = ((i + 0.5) * segmentAngle - 90) * (Math.PI / 180);
-                      const textX = 100 + 68 * Math.cos(midAngle);
-                      const textY = 100 + 68 * Math.sin(midAngle);
-                      const textRotation = (i + 0.5) * segmentAngle;
-                      const colorSet = WHEEL_3D_COLORS[i % WHEEL_3D_COLORS.length];
+                      // Text positioned along the radius, readable from center outward
+                      const midAngle = (i + 0.5) * segmentAngle - 90;
+                      const midAngleRad = midAngle * (Math.PI / 180);
+                      // Text at 70% radius for good visibility
+                      const textRadius = 70;
+                      const textX = 100 + textRadius * Math.cos(midAngleRad);
+                      const textY = 100 + textRadius * Math.sin(midAngleRad);
+                      
+                      // Rotate text to be readable (pointing outward from center)
+                      // Add 90 to make text perpendicular to radius
+                      let textAngle = midAngle + 90;
+                      // Flip text on bottom half so it's always readable
+                      if (midAngle > 0 && midAngle < 180) {
+                        textAngle += 180;
+                      }
+
+                      // Color for text - white for most, grey for nothing/retry
+                      const textColor = seg.type === 'nothing' || seg.type === 'retry' 
+                        ? '#666666' 
+                        : '#FFFFFF';
 
                       return (
                         <g key={seg.id}>
-                          {/* Segment with gradient */}
+                          {/* Segment fill */}
                           <path
-                            d={`M 100 100 L ${x1} ${y1} A 98 98 0 0 1 ${x2} ${y2} Z`}
-                            fill={`url(#segment-grad-${i})`}
-                            stroke="rgba(100, 150, 200, 0.3)"
-                            strokeWidth="0.8"
+                            d={`M 100 100 L ${x1} ${y1} A 96 96 0 0 1 ${x2} ${y2} Z`}
+                            fill={`url(#seg-grad-${i})`}
                           />
                           
-                          {/* Segment inner highlight */}
+                          {/* Segment border/divider */}
                           <path
-                            d={`M 100 100 L ${x1} ${y1} A 98 98 0 0 1 ${x2} ${y2} Z`}
-                            fill="transparent"
-                            stroke="rgba(255,255,255,0.05)"
-                            strokeWidth="0.3"
+                            d={`M 100 100 L ${x1} ${y1} A 96 96 0 0 1 ${x2} ${y2} Z`}
+                            fill="none"
+                            stroke="rgba(80, 120, 160, 0.5)"
+                            strokeWidth="1.2"
                           />
                           
-                          {/* Text label */}
-                          <g transform={`rotate(${textRotation}, ${textX}, ${textY})`}>
-                            <text
-                              x={textX}
-                              y={textY + 2}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              fill={seg.type === 'nothing' || seg.type === 'retry' ? '#4a5568' : colorSet.text}
-                              fontWeight="700"
-                              fontFamily="system-ui, -apple-system, sans-serif"
-                              style={{ 
-                                fontSize: '9px',
-                                letterSpacing: '0.5px',
-                                textShadow: seg.type !== 'nothing' && seg.type !== 'retry' 
-                                  ? `0 0 8px ${colorSet.text}, 0 0 16px ${colorSet.text}50` 
-                                  : 'none',
-                              }}
-                            >
-                              {seg.label}
-                            </text>
-                          </g>
+                          {/* TEXT LABEL - Large and readable */}
+                          <text
+                            x={textX}
+                            y={textY}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            transform={`rotate(${textAngle}, ${textX}, ${textY})`}
+                            fill={textColor}
+                            fontWeight="800"
+                            fontFamily="'Inter', 'SF Pro Display', system-ui, sans-serif"
+                            fontSize="11"
+                            letterSpacing="0.5"
+                            style={{
+                              textShadow: seg.type !== 'nothing' && seg.type !== 'retry' 
+                                ? '0 0 6px rgba(255,255,255,0.5), 0 1px 2px rgba(0,0,0,0.8)' 
+                                : '0 1px 2px rgba(0,0,0,0.5)',
+                            }}
+                          >
+                            {seg.label}
+                          </text>
                         </g>
                       );
                     })}
 
-                    {/* Radial divider lines */}
-                    {WHEEL_SEGMENTS.map((_, i) => {
-                      const angle = (i * segmentAngle - 90) * (Math.PI / 180);
-                      const x = 100 + 98 * Math.cos(angle);
-                      const y = 100 + 98 * Math.sin(angle);
-                      return (
-                        <line 
-                          key={`line-${i}`}
-                          x1="100" y1="100" x2={x} y2={y}
-                          stroke="rgba(100, 150, 200, 0.25)"
-                          strokeWidth="1"
-                        />
-                      );
-                    })}
+                    {/* Inner circle overlay for depth */}
+                    <circle cx="100" cy="100" r="30" fill="none" stroke="rgba(60, 100, 140, 0.3)" strokeWidth="1" />
                   </svg>
 
-                  {/* 🔘 CHROME CENTER HUB */}
+                  {/* 🔘 CHROME CENTER HUB - Metallic brushed steel look */}
                   <div 
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full flex items-center justify-center"
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70px] h-[70px] rounded-full flex items-center justify-center"
                     style={{
                       background: `
-                        radial-gradient(ellipse 80% 50% at 30% 30%, rgba(200, 220, 240, 0.4) 0%, transparent 50%),
-                        radial-gradient(ellipse 60% 40% at 70% 70%, rgba(50, 80, 120, 0.3) 0%, transparent 50%),
-                        linear-gradient(145deg, 
-                          #5a7a9a 0%, 
-                          #3a5570 20%,
-                          #2a4055 40%,
-                          #1a3045 60%,
-                          #2a4560 80%,
-                          #4a6580 100%
+                        radial-gradient(ellipse 100% 60% at 30% 20%, rgba(220, 235, 250, 0.5) 0%, transparent 40%),
+                        radial-gradient(ellipse 80% 50% at 70% 80%, rgba(40, 60, 90, 0.4) 0%, transparent 40%),
+                        conic-gradient(from 0deg, 
+                          #6a8aa8 0deg, 
+                          #4a6a88 45deg,
+                          #3a5a78 90deg,
+                          #5a7a98 135deg,
+                          #7a9ab8 180deg,
+                          #5a7a98 225deg,
+                          #3a5a78 270deg,
+                          #4a6a88 315deg,
+                          #6a8aa8 360deg
                         )
                       `,
                       boxShadow: `
-                        0 0 30px rgba(0, 150, 255, 0.3),
-                        inset 0 2px 6px rgba(255,255,255,0.3),
-                        inset 0 -3px 8px rgba(0,0,0,0.5),
-                        0 4px 12px rgba(0,0,0,0.5)
+                        0 0 25px rgba(0, 150, 255, 0.25),
+                        inset 0 3px 8px rgba(255,255,255,0.4),
+                        inset 0 -4px 10px rgba(0,0,0,0.5),
+                        0 6px 20px rgba(0,0,0,0.4)
                       `,
-                      border: '3px solid rgba(150, 180, 210, 0.4)',
+                      border: '3px solid rgba(140, 170, 200, 0.5)',
                     }}
                   >
                     {/* M1 Logo */}
                     <motion.img
                       src="/icons/icon-m1-192x192.png"
                       alt="M1SSION"
-                      className="w-12 h-12 rounded-lg"
+                      className="w-10 h-10 rounded-md"
                       style={{
-                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))',
                       }}
                       animate={isSpinning ? { rotate: 360 } : {}}
                       transition={{ duration: 1, repeat: isSpinning ? Infinity : 0, ease: 'linear' }}
