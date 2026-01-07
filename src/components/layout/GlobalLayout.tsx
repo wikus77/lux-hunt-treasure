@@ -68,15 +68,37 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   }
 
   // Full screen pages (map, buzz, games) - no header padding
+  // 🔧 FIX v2: iOS overscroll containment applied
   if (isFullScreen) {
     return (
       <SafeAreaWrapper className="min-h-screen">
-        <div className="relative min-h-screen">
+        <div 
+          className="relative"
+          style={{
+            height: '100dvh',
+            overflow: 'hidden',
+            position: 'relative',
+            overscrollBehavior: 'none',
+          }}
+        >
           {/* Header - always visible */}
           <UnifiedHeader />
           
           {/* Main content - INSTANT RENDER */}
-          <main key={location} className="relative z-10 global-layout-content">
+          <main 
+            key={location} 
+            className="relative global-layout-content"
+            style={{
+              height: '100dvh',
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              position: 'relative',
+              zIndex: 0,
+              overscrollBehavior: 'contain',
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-y',
+            }}
+          >
             {children}
           </main>
           

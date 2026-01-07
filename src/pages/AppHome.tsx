@@ -185,7 +185,28 @@ const { isConnected } = useRealTimeNotifications();
   }
 
   return (
-    <div className="min-h-screen m1-app-bg relative">
+    // 🔧 FIX v2: Outer container blocks iOS bounce scroll (like LeaderboardPage)
+    <div
+      style={{
+        height: '100dvh',
+        overflow: 'hidden',
+        position: 'relative',
+        overscrollBehavior: 'none',
+      }}
+    >
+    <div 
+      className="m1-app-bg relative"
+      style={{
+        height: '100dvh',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        position: 'relative',
+        zIndex: 0,
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'pan-y',
+      }}
+    >
       {/* Micro-grain overlay for depth */}
       <div className="m1-grain" />
       
@@ -408,6 +429,7 @@ const { isConnected } = useRealTimeNotifications();
         onClose={() => setShowFortuneWheel(false)} 
       />
       </MissionSync>
+    </div>
     </div>
   );
 };
