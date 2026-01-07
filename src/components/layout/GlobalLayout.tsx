@@ -132,16 +132,13 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
           key={location} // Force remount on route change for clean transition
           className="relative pt-[80px] pb-20 global-layout-content"
           style={{
-            height: '100dvh',
+            // 🔧 FIX v3: Use calc for exact height, NO overflow auto at this level
+            height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
             paddingTop: isCapacitor ? 'calc(80px + env(safe-area-inset-top, 0px))' : '80px',
-            overflowY: 'auto',
-            overflowX: 'hidden',
+            overflow: 'hidden', // 🔧 CRITICAL: No scroll here - pages manage their own
             position: 'relative',
             zIndex: 0,
-            // 🔧 KEY FIX: Contain scroll, prevent iOS rubber-band
-            overscrollBehavior: 'contain',
-            WebkitOverflowScrolling: 'touch',
-            touchAction: 'pan-y',
+            overscrollBehavior: 'none', // Block bounce completely
           }}
         >
           {children}
