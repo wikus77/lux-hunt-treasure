@@ -19,46 +19,42 @@ const IntelligencePage: React.FC = () => {
 
   return (
     <>
-    {/* 🔧 FIX v3: Double containment like LeaderboardPage - outer blocks bounce */}
-    <div
-      style={{
-        // Calcola altezza esatta: viewport - header(80px) - bottomnav(80px) - safe areas
-        height: 'calc(100dvh - 80px - 80px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
-        overflow: 'hidden',
-        position: 'relative',
-        overscrollBehavior: 'none', // BLOCK outer bounce
-      }}
-    >
+    {/* 
+      🔧 FIX v4: Single container, no extra wrappers
+      - Uses height: 100% to fill GlobalLayout's main content area
+      - overflow: hidden prevents any scroll at this level
+      - All scroll happens INSIDE IntelChatPanel
+      - Reduced 10% for responsiveness
+    */}
     <div 
-      className="flex flex-col px-4"
+      className="flex flex-col px-3"
       style={{
         height: '100%',
-        overflow: 'hidden',
-        paddingBottom: '8px',
-        overscrollBehavior: 'contain',
-        touchAction: 'pan-y',
+        maxHeight: '100%',
+        overflow: 'hidden', // NO scroll here - prevents bounce
+        paddingBottom: '4px',
       }}
     >
-      {/* M1U Pill - Below header - COMPACT */}
+      {/* M1U Pill - COMPACT (-10%) */}
       <div 
         data-onboarding="m1u-pill"
         style={{ 
           pointerEvents: 'auto',
-          marginBottom: '4px',
+          marginBottom: '3px', // Ridotto da 4px
           flexShrink: 0
         }}
       >
-        <Suspense fallback={<div className="w-28 h-8 bg-gray-800/50 rounded-full animate-pulse" />}>
+        <Suspense fallback={<div className="w-24 h-7 bg-gray-800/50 rounded-full animate-pulse" />}>
           <M1UPill showLabel showPlusButton />
         </Suspense>
       </div>
 
-      {/* AION Entity - REDUCED 10% for mobile */}
+      {/* AION Entity - REDUCED 10% */}
       <div 
         style={{ 
-          height: '90px',      // Ridotto 10% (era 100px)
-          minHeight: '72px',   // Ridotto 10% (era 80px)
-          maxHeight: '108px',  // Ridotto 10% (era 120px)
+          height: '81px',      // Ridotto 10% (era 90px)
+          minHeight: '65px',   // Ridotto 10% (era 72px)
+          maxHeight: '97px',   // Ridotto 10% (era 108px)
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -68,7 +64,7 @@ const IntelligencePage: React.FC = () => {
           zIndex: 1
         }}
       >
-        <Suspense fallback={<div className="w-20 h-20 rounded-full bg-cyan-500/20 animate-pulse" />}>
+        <Suspense fallback={<div className="w-18 h-18 rounded-full bg-cyan-500/20 animate-pulse" />}>
           <AionEntity 
             ref={aionRef}
             intensity={1.0} 
@@ -78,21 +74,21 @@ const IntelligencePage: React.FC = () => {
         </Suspense>
       </div>
       
-      {/* AION Label - COMPACT */}
+      {/* AION Label - COMPACT (-10%) */}
       <div 
         className="text-center"
         style={{ 
           flexShrink: 0,
-          marginBottom: '8px',
+          marginBottom: '6px', // Ridotto da 8px
           position: 'relative',
           zIndex: 10
         }}
       >
-        <h2 className="text-xl font-bold tracking-wider">
+        <h2 className="text-lg font-bold tracking-wider"> {/* Ridotto da text-xl */}
           <span className="text-cyan-400">AI</span>
           <span className="text-white">ON</span>
         </h2>
-        <p className="text-[10px] text-gray-500 tracking-wide">Adaptive Intelligence ON</p>
+        <p className="text-[9px] text-gray-500 tracking-wide">Adaptive Intelligence ON</p> {/* Ridotto da 10px */}
       </div>
 
       {/* Shadow Protocol v2 - Hidden on mobile to save space */}
@@ -112,7 +108,7 @@ const IntelligencePage: React.FC = () => {
           width: '100%', 
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden'
+          overflow: 'hidden' // Chat panel handles its own scroll
         }}
       >
         <IntelChatPanel 
@@ -121,12 +117,12 @@ const IntelligencePage: React.FC = () => {
           style={{ minHeight: 0, maxHeight: '100%', overflow: 'hidden' }}
         />
       </div>
+      
       {/* Hint nascosto su mobile per risparmiare spazio */}
       <div className="hidden md:block">
         <InactivityHint type="aion" />
       </div>
     </div>
-    </div>{/* Close outer bounce blocker */}
     
     {/* 🎯 Motivational Popup - Shows once per session for AION page */}
     <MotivationalPopup pageType="aion" />
