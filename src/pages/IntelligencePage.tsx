@@ -18,25 +18,16 @@ const IntelligencePage: React.FC = () => {
   const aionRef = useRef<AionEntityHandle>(null);
 
   return (
-    // 🔧 FIX v2: Outer container blocks iOS bounce scroll (like LeaderboardPage)
+    // GlobalLayout handles iOS overscroll - this page uses flex layout
     <>
-    <div
-      style={{
-        height: '100dvh',
-        overflow: 'hidden',
-        position: 'relative',
-        overscrollBehavior: 'none',
-      }}
-    >
     <div 
       className="flex flex-col px-4"
       style={{
-        // Altezza ESATTA disponibile = viewport - header - bottom nav - safe areas
-        height: 'calc(100dvh - 80px - 80px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
-        maxHeight: 'calc(100dvh - 80px - 80px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+        // Altezza disponibile gestita da GlobalLayout - usiamo 100% dello spazio
+        height: '100%',
+        minHeight: '100%',
         overflow: 'hidden',
         paddingBottom: '8px',
-        overscrollBehavior: 'contain',
       }}
     >
       {/* M1U Pill - Below header - COMPACT */}
@@ -125,7 +116,6 @@ const IntelligencePage: React.FC = () => {
       <div className="hidden md:block">
         <InactivityHint type="aion" />
       </div>
-    </div>
     </div>
     
     {/* 🎯 Motivational Popup - Shows once per session for AION page */}
