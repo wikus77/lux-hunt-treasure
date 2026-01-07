@@ -72,6 +72,8 @@ import { MicroMissionsCard } from "./components/first-session";
 import { ClueMilestoneWatcher } from "./components/milestones/ClueMilestoneWatcher";
 // 🎉 PROGRESS FEEDBACK: Celebration overlays and progress toasts
 import { ProgressFeedbackProvider } from "./components/feedback";
+// 📱 iOS KEYBOARD: Hide bottom nav when keyboard is open (like Telegram)
+import { useKeyboardVisible } from "./hooks/useKeyboardVisible";
 
 function App() {
   // 🚀 NATIVE APP FEEL: Show splash on EVERY app launch (but only once per session)
@@ -142,6 +144,13 @@ function App() {
 
   // 🎬 Global Glitch Listener - riceve broadcast da admin
   useGlobalGlitchListener();
+  
+  // 📱 iOS KEYBOARD: Toggle class to hide bottom nav when keyboard is open
+  const keyboardOpen = useKeyboardVisible();
+  useEffect(() => {
+    document.documentElement.classList.toggle("m1-keyboard-open", keyboardOpen);
+    document.body.classList.toggle("m1-keyboard-open", keyboardOpen);
+  }, [keyboardOpen]);
   
   return (
     <div className="app-shell relative">

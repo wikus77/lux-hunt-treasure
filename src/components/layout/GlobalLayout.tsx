@@ -80,8 +80,10 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
             {children}
           </main>
           
-          {/* Bottom Navigation - always visible */}
-          <BottomNavigation />
+          {/* Bottom Navigation - wrapped for keyboard hide (iOS PWA) */}
+          <div id="m1-bottom-nav">
+            <BottomNavigation />
+          </div>
         </div>
       </SafeAreaWrapper>
     );
@@ -90,7 +92,7 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   // Standard app pages - with header padding
   return (
     <SafeAreaWrapper className="min-h-screen">
-      <div className="relative min-h-screen">
+      <div className="relative min-h-screen has-bottom-nav-padding">
         {/* Header - always visible, no transition */}
         <UnifiedHeader />
         
@@ -106,8 +108,10 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
           {children}
         </main>
         
-        {/* Bottom Navigation - always visible, no transition */}
-        <BottomNavigation />
+        {/* Bottom Navigation - wrapped for keyboard hide (iOS PWA) */}
+        <div id="m1-bottom-nav">
+          <BottomNavigation />
+        </div>
       </div>
     </SafeAreaWrapper>
   );
