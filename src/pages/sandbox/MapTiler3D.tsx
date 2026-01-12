@@ -1750,10 +1750,10 @@ export default function MapTiler3D() {
       {/* Battle Pill - Circular floating button */}
       <BattlePill userId={battleUserId} />
 
-      {/* M1SSION WAR Pill - Country domination stats */}
+      {/* M1SSION WAR Pill - Country domination stats - Right side below other pills */}
       <M1ssionWarPill 
         userId={battleUserId} 
-        className="fixed bottom-[140px] left-4 z-[1000]"
+        className="fixed bottom-[200px] right-4 z-[1000]"
       />
 
       {/* Mission Pill - Daily missions */}
