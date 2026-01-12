@@ -26,7 +26,7 @@ import { Swords, Search, Shield, Target, X, Loader2, User } from 'lucide-react';
 import { STAKE_TYPES, STAKE_PERCENTS } from '@/lib/battle/constants';
 import { WeaponDefenseSelector } from './WeaponDefenseSelector';
 import { BattleOverlay } from './BattleOverlay';
-import { sendBattleInvite } from '@/lib/battle/pushNotifications';
+import { sendBattleInvite, checkUserHasPushSubscription } from '@/lib/battle/pushNotifications';
 import { supabase } from '@/integrations/supabase/client';
 
 // Tipo per risultati ricerca
@@ -73,6 +73,10 @@ export function BattleCreationForm({
     preSelectedOpponent ? { id: preSelectedOpponent.id, name: preSelectedOpponent.name } : null
   );
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 🆕 Push notification status
+  const [opponentHasPush, setOpponentHasPush] = useState<boolean | null>(null);
+  const [checkingPush, setCheckingPush] = useState(false);
   
   // Battle phases
   const [showCountdown, setShowCountdown] = useState(false);
@@ -175,6 +179,37 @@ export function BattleCreationForm({
   
   // Check if opponent is a FAKE agent
   const isFakeAgent = effectiveOpponent?.id?.startsWith('fake-agent-');
+  
+  // 🆕 Check push subscription quando cambia l'avversario
+  useEffect(() => {
+    const checkPush = async () => {
+      if (!effectiveOpponent?.id || isFakeAgent) {
+        setOpponentHasPush(null);
+        return;
+      }
+      
+      // Verifica se è un UUID valido (agente reale)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(effectiveOpponent.id);
+      if (!isUUID) {
+        setOpponentHasPush(null);
+        return;
+      }
+      
+      setCheckingPush(true);
+      try {
+        const hasPush = await checkUserHasPushSubscription(effectiveOpponent.id);
+        setOpponentHasPush(hasPush);
+        console.log(`📱 [Battle] ${effectiveOpponent.name} push status:`, hasPush ? '✅ ATTIVE' : '❌ NON ATTIVE');
+      } catch (err) {
+        console.error('[Battle] Push check error:', err);
+        setOpponentHasPush(null);
+      } finally {
+        setCheckingPush(false);
+      }
+    };
+    
+    checkPush();
+  }, [effectiveOpponent?.id, isFakeAgent]);
 
   const handleCreate = async () => {
     if (!effectiveOpponent) {
@@ -239,6 +274,13 @@ export function BattleCreationForm({
           });
         } else {
           console.warn('⚠️ [Battle] Push not delivered:', pushResult.error);
+          // Mostra toast di avviso se push non consegnata
+          toast({
+            title: '⚠️ Notifica non consegnata',
+            description: pushResult.error || `${effectiveOpponent.name} non ha le notifiche push attive. L'attacco procede comunque.`,
+            duration: 4000,
+            variant: 'destructive',
+          });
         }
         
         // 💾 Salva la battaglia nel database (opzionale, non blocca)
@@ -432,6 +474,24 @@ export function BattleCreationForm({
                     ? '🤖 Test Agent - 10s countdown → missile on map!' 
                     : preSelectedOpponent ? 'Pre-selected agent' : '✅ Target selezionato'}
                 </p>
+                {/* 🆕 Indicatore stato notifiche push */}
+                {!isFakeAgent && (
+                  <div className="mt-1.5">
+                    {checkingPush ? (
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" /> Verifica notifiche...
+                      </span>
+                    ) : opponentHasPush === true ? (
+                      <span className="text-[10px] text-green-400 flex items-center gap-1">
+                        🔔 Notifiche attive - riceverà l'attacco
+                      </span>
+                    ) : opponentHasPush === false ? (
+                      <span className="text-[10px] text-amber-400 flex items-center gap-1">
+                        ⚠️ Notifiche disattivate - potrebbe non ricevere l'avviso
+                      </span>
+                    ) : null}
+                  </div>
+                )}
               </div>
             ) : (
               /* Campo di ricerca */
