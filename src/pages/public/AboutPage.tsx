@@ -39,11 +39,11 @@ const staggerContainer = {
 
 const AboutPage: React.FC = () => {
   const [, setLocation] = useLocation();
-  const { scrollYProgress } = useScroll();
   
-  // Parallax transforms
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0.3]);
+  // NOTE: Disabled useScroll to fix React #310 error on SPA navigation from LandingPage
+  // const { scrollYProgress } = useScroll();
+  // const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
+  // const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0.3]);
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
@@ -56,7 +56,6 @@ const AboutPage: React.FC = () => {
         {/* Deep layer - slow movement */}
         <motion.div 
           className="absolute inset-0"
-          style={{ y: backgroundY }}
         >
           <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-[120px]" />
           <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[100px]" />
@@ -75,7 +74,6 @@ const AboutPage: React.FC = () => {
       <section className="relative min-h-[70vh] flex items-center justify-center pt-20 pb-32 px-4 z-10">
         <motion.div 
           className="max-w-4xl mx-auto text-center"
-          style={{ opacity: heroOpacity }}
         >
           <motion.div
             initial="hidden"

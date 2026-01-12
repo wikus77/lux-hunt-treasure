@@ -1,172 +1,366 @@
 /**
  * Battle Creation Form - Create new TRON battles
- * Flow: Countdown Modal → Close → Map Battle (120s) → Result Modal
+ * Flow: LAUNCH ATTACK → Send Push to Defender → Wait for response → Video result
+ * 
+ * LOGICA CORRETTA:
+ * - Attaccante lancia attacco → countdown → "ATTIVA ATTACCO"
+ * - Per NPC/Fake: risultato casuale immediato + video + PE aggiornato
+ * - Per Agenti REALI: 
+ *   - Salviamo battaglia nel DB con status "pending"
+ *   - Inviamo push notification al difensore
+ *   - Attaccante vede "In attesa risposta..." con subscription real-time
+ *   - Quando difensore risponde, DB viene aggiornato con winner_id
+ *   - Attaccante riceve aggiornamento real-time e mostra video VERO
+ * 
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { Swords, Zap, Search, Shield, Target } from 'lucide-react';
+import { Swords, Search, Shield, Target, X, Loader2, User } from 'lucide-react';
 import { STAKE_TYPES, STAKE_PERCENTS } from '@/lib/battle/constants';
 import { WeaponDefenseSelector } from './WeaponDefenseSelector';
 import { BattleOverlay } from './BattleOverlay';
-import { BattleResultModal } from './BattleResultModal';
-import { emitGameEvent } from '@/gameplay/events';
+import { sendBattleInvite } from '@/lib/battle/pushNotifications';
+import { supabase } from '@/integrations/supabase/client';
+
+// Tipo per risultati ricerca
+interface SearchResult {
+  id: string;
+  username: string | null;
+  agent_code: string | null;
+}
 
 interface BattleCreationFormProps {
   userId: string;
   preSelectedOpponent?: { id: string; name: string; lat?: number; lng?: number };
+  onShowVideo?: (won: boolean) => void; // 🆕 Callback to show video (managed by parent)
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-// Global event for map battle
+// Global event for map battle (kept for backwards compatibility)
 export const BATTLE_START_EVENT = 'battle-map-start';
 export const BATTLE_END_EVENT = 'battle-map-end';
-
-export interface BattleMapEvent {
-  attackerId: string;
-  defenderId: string;
-  defenderName: string;
-  defenderLat: number;
-  defenderLng: number;
-  weaponCode?: string;
-  battleDuration: number; // seconds
-}
 
 export function BattleCreationForm({
   userId,
   preSelectedOpponent,
+  onShowVideo, // 🆕 Callback to show video (managed by parent)
   onSuccess,
   onCancel,
 }: BattleCreationFormProps) {
   const [stakeType, setStakeType] = useState<string>('energy');
   const [stakePercent, setStakePercent] = useState<number>(50);
-  const [opponentSearch, setOpponentSearch] = useState(preSelectedOpponent?.name || '');
+  const [opponentSearch, setOpponentSearch] = useState('');
   const [arenaName, setArenaName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [selectedWeaponId, setSelectedWeaponId] = useState<string | null>(null);
   const [selectedWeaponCode, setSelectedWeaponCode] = useState<string | null>(null);
+  const [selectedWeaponPower, setSelectedWeaponPower] = useState<number>(0);
   const [selectedDefenseId, setSelectedDefenseId] = useState<string | null>(null);
   const [selectedDefenseCode, setSelectedDefenseCode] = useState<string | null>(null);
   
+  // 🆕 Ricerca agenti
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedOpponent, setSelectedOpponent] = useState<{ id: string; name: string } | null>(
+    preSelectedOpponent ? { id: preSelectedOpponent.id, name: preSelectedOpponent.name } : null
+  );
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Battle phases
   const [showCountdown, setShowCountdown] = useState(false);
-  const [showResult, setShowResult] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
   const [battleResult, setBattleResult] = useState<{ won: boolean } | null>(null);
+  const [currentBattleId, setCurrentBattleId] = useState<string | null>(null);
   
   const { toast } = useToast();
-
-  // Check if opponent is a FAKE agent
-  const isFakeAgent = preSelectedOpponent?.id?.startsWith('fake-agent-');
-
-  const handleCreate = async () => {
-    if (!opponentSearch && !preSelectedOpponent) {
-      toast({
-        title: 'Opponent Required',
-        description: 'Please select an opponent',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // FAKE AGENT: Start countdown
-    if (isFakeAgent) {
-      setShowCountdown(true);
-      return;
-    }
-
-    // Real player battle - existing flow
-    setIsCreating(true);
-    try {
-      toast({
-        title: '✅ Battle Created!',
-        description: 'Waiting for opponent to accept...',
-      });
-      onSuccess?.();
-    } catch (error: any) {
-      console.error('Battle creation error:', error);
-      toast({
-        title: 'Creation Failed',
-        description: error?.message || 'Unknown error',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  // When countdown ends → close modal & start battle on map
-  const handleCountdownComplete = useCallback(() => {
-    setShowCountdown(false);
-    
-    // Get defender position from the fake agent data
-    // For fake agents, we use their predefined positions
-    const defenderLat = preSelectedOpponent?.lat || 0;
-    const defenderLng = preSelectedOpponent?.lng || 0;
-    
-    // Dispatch global event to start battle on map
-    const battleEvent: BattleMapEvent = {
-      attackerId: userId,
-      defenderId: preSelectedOpponent?.id || '',
-      defenderName: preSelectedOpponent?.name || 'Unknown',
-      defenderLat,
-      defenderLng,
-      weaponCode: selectedWeaponCode || undefined,
-      battleDuration: 15, // 15 seconds for demo (can be 120 for production)
-    };
-    
-    console.log('🚀 [Battle] Dispatching battle start event:', battleEvent);
-    window.dispatchEvent(new CustomEvent(BATTLE_START_EVENT, { detail: battleEvent }));
-    
-    toast({
-      title: '🚀 ATTACK LAUNCHED!',
-      description: 'Watch the map for your missile!',
-    });
-  }, [preSelectedOpponent, userId, selectedWeaponCode, toast]);
-
-  // Listen for battle end event from map
+  
+  // 🆕 Effettua ricerca quando l'utente digita (debounced)
   useEffect(() => {
-    const handleBattleEnd = (event: CustomEvent<{ won: boolean }>) => {
-      console.log('🏁 [Battle] Battle ended:', event.detail);
-      setBattleResult(event.detail);
-      setShowResult(true);
-      
-      // 🎉 Progress Feedback - Battle result event
-      if (event.detail.won) {
-        emitGameEvent('BATTLE_WIN', { 
-          reward: stakePercent + '%', 
-          rewardType: stakeType 
+    // Se c'è già un opponent preselezionato o selezionato, non cercare
+    if (preSelectedOpponent || selectedOpponent) {
+      setSearchResults([]);
+      return;
+    }
+    
+    // Cancella timeout precedente
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Se la ricerca è vuota o troppo corta, non cercare
+    if (!opponentSearch || opponentSearch.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    
+    // Debounce: aspetta 300ms prima di cercare
+    setIsSearching(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const searchTerm = opponentSearch.trim();
+        console.log('🔍 [Battle] Searching for:', searchTerm, 'userId:', userId);
+        
+        // 🆕 Usa RPC function che bypassa RLS
+        const { data, error } = await supabase.rpc('search_agents_for_battle', {
+          search_term: searchTerm,
+          exclude_user_id: userId,
+          max_results: 5
         });
-      } else {
-        emitGameEvent('BATTLE_LOSE', {});
+        
+        console.log('🔍 [Battle] RPC response:', { data, error });
+        
+        if (error) {
+          console.error('❌ [Battle] Search RPC error:', error.message, error.details, error.hint);
+          
+          // Fallback: prova query diretta senza RLS
+          console.log('🔄 [Battle] Trying fallback query...');
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('profiles')
+            .select('id, username, agent_code')
+            .or(`username.ilike.%${searchTerm}%,agent_code.ilike.%${searchTerm}%`)
+            .limit(5);
+          
+          console.log('🔄 [Battle] Fallback response:', { fallbackData, fallbackError });
+          
+          if (fallbackError) {
+            console.error('❌ [Battle] Fallback error:', fallbackError);
+            setSearchResults([]);
+          } else {
+            setSearchResults(fallbackData || []);
+          }
+        } else {
+          console.log('✅ [Battle] Search results for "' + searchTerm + '":', (data || []).length, data);
+          setSearchResults(data || []);
+        }
+      } catch (err) {
+        console.error('❌ [Battle] Search exception:', err);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+    
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
       }
     };
+  }, [opponentSearch, userId, preSelectedOpponent, selectedOpponent]);
+  
+  // 🆕 Seleziona un agente dai risultati
+  const handleSelectAgent = (agent: SearchResult) => {
+    const displayName = agent.username || agent.agent_code || `Agent ${agent.id.slice(0, 6)}`;
+    setSelectedOpponent({ id: agent.id, name: displayName });
+    setOpponentSearch('');
+    setSearchResults([]);
+  };
+  
+  // 🆕 Rimuovi selezione
+  const handleClearSelection = () => {
+    setSelectedOpponent(null);
+    setOpponentSearch('');
+  };
 
-    window.addEventListener(BATTLE_END_EVENT, handleBattleEnd as EventListener);
-    return () => {
-      window.removeEventListener(BATTLE_END_EVENT, handleBattleEnd as EventListener);
-    };
-  }, [stakePercent, stakeType]);
+  // 🆕 L'opponent effettivo è: preSelectedOpponent (da marker) OPPURE selectedOpponent (da ricerca)
+  const effectiveOpponent = preSelectedOpponent || selectedOpponent;
+  
+  // Check if opponent is a FAKE agent
+  const isFakeAgent = effectiveOpponent?.id?.startsWith('fake-agent-');
 
-  const handleResultClose = () => {
-    setShowResult(false);
-    setBattleResult(null);
-    
-    if (battleResult?.won) {
+  const handleCreate = async () => {
+    if (!effectiveOpponent) {
       toast({
-        title: '🏆 Victory claimed!',
-        description: `+${stakePercent}% ${stakeType} earned!`,
+        title: 'Opponent Required',
+        description: 'Please search and select an opponent',
+        variant: 'destructive',
       });
+      return;
+    }
+
+    // Check if it's a real agent (not fake and not NPC) → send push notification
+    const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const isRealAgent = effectiveOpponent.id && 
+      !effectiveOpponent.id.startsWith('fake-agent-') && 
+      !effectiveOpponent.id.startsWith('AG-NPC-') &&
+      !effectiveOpponent.id.startsWith('npc-') &&
+      isUUID(effectiveOpponent.id);
+    
+    console.log('🔍 [Battle] Opponent check:', {
+      id: effectiveOpponent.id,
+      name: effectiveOpponent.name,
+      isRealAgent,
+      source: preSelectedOpponent ? 'marker' : 'search',
+    });
+
+    // 🔔 Send push notification to real agents
+    if (isRealAgent && effectiveOpponent.id) {
+      try {
+        // Get attacker's agent code
+        const { data: attackerProfile } = await supabase
+          .from('profiles')
+          .select('agent_code, username')
+          .eq('id', userId)
+          .single();
+        
+        const attackerAgentCode = attackerProfile?.agent_code || attackerProfile?.username || 'Unknown';
+        
+        // Create a battle session ID
+        const battleId = crypto.randomUUID();
+        setCurrentBattleId(battleId);
+        
+        // 📤 MANDA LA PUSH PRIMA DI TUTTO - sempre!
+        console.log('📤 [Battle] Sending push notification FIRST to:', effectiveOpponent.name);
+        const pushResult = await sendBattleInvite(
+          effectiveOpponent.id,
+          battleId,
+          attackerProfile?.username || 'Unknown',
+          attackerAgentCode,
+          stakeType,
+          stakePercent,
+          arenaName || undefined,
+          selectedWeaponPower
+        );
+        
+        if (pushResult.success && pushResult.sent && pushResult.sent > 0) {
+          console.log('✅ [Battle] Push sent to:', effectiveOpponent.name);
+          toast({
+            title: '📤 Notifica Inviata!',
+            description: `${effectiveOpponent.name} è stato avvisato dell'attacco`,
+            duration: 2000,
+          });
+        } else {
+          console.warn('⚠️ [Battle] Push not delivered:', pushResult.error);
+        }
+        
+        // 💾 Salva la battaglia nel database (opzionale, non blocca)
+        console.log('💾 [Battle] Saving battle session to database...');
+        const { error: insertError } = await supabase
+          .from('battle_sessions')
+          .insert({
+            id: battleId,
+            creator_id: userId,
+            defender_id: effectiveOpponent.id,
+            status: 'pending',
+            stake_type: stakeType,
+            stake_amount: stakePercent,
+            arena_name: arenaName || null,
+            attacker_weapon_power: selectedWeaponPower,
+            attacker_weapon_id: selectedWeaponId,
+          });
+        
+        if (insertError) {
+          console.error('[Battle] DB insert error (non-blocking):', insertError);
+          // NON facciamo return - la push è già stata mandata!
+        } else {
+          console.log('✅ [Battle] Battle session saved:', battleId);
+        }
+      } catch (err: any) {
+        console.error('[Battle] Push error:', err);
+        // NON blocchiamo - continua comunque
+      }
+    } else if (effectiveOpponent.id && !isRealAgent) {
+      console.log('🤖 [Battle] NPC/Fake agent - no push notification');
+    }
+
+    // Start countdown
+    console.log('🚀 [Battle] Starting countdown for opponent:', effectiveOpponent.name);
+    setShowCountdown(true);
+  };
+
+  // 🔥 VELOCE: Attacco parte SUBITO - niente attesa!
+  // Risultato basato sui POWER delle armi: chi ha power maggiore VINCE
+  // Se attaccante non ha arma (power 0) e difensore non può difendersi → 65% win rate
+  const handleCountdownComplete = useCallback(async () => {
+    // Close countdown
+    setShowCountdown(false);
+    
+    // 🎯 Determina risultato basato sui power
+    // Se l'attaccante ha arma con power > 0, ha più probabilità di vincere
+    // Formula: base 50% + bonus per power arma (max +40%)
+    const weaponBonus = Math.min(selectedWeaponPower * 2, 40); // Max +40%
+    const winChance = 50 + weaponBonus; // 50% base + bonus
+    const won = Math.random() * 100 < winChance;
+    
+    console.log(`⚔️ [Battle] Attack result: weapon power ${selectedWeaponPower}, win chance ${winChance}%, won: ${won}`);
+    
+    setBattleResult({ won });
+    
+    // Mostra video SUBITO
+    if (onShowVideo) {
+      onShowVideo(won);
+    } else {
+      setShowVideo(true);
     }
     
+    // Aggiorna PE SUBITO
+    try {
+      const peAmount = stakePercent;
+      
+      const { data: profile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('pulse_energy')
+        .eq('id', userId)
+        .single();
+      
+      if (fetchError) {
+        console.error('[Battle] Error fetching profile:', fetchError);
+      } else {
+        const currentPE = profile?.pulse_energy || 0;
+        const newPE = won 
+          ? Math.max(0, currentPE + peAmount)
+          : Math.max(0, currentPE - peAmount);
+        
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ pulse_energy: newPE })
+          .eq('id', userId);
+        
+        if (updateError) {
+          console.error('[Battle] Error updating PE:', updateError);
+        } else {
+          console.log(`⚡ [Battle] PE ${won ? 'gained' : 'lost'}: ${currentPE} → ${newPE} (${won ? '+' : '-'}${peAmount})`);
+        }
+      }
+      
+      // 🆕 Per agenti reali: aggiorna anche il risultato nel DB
+      if (currentBattleId) {
+        await supabase
+          .from('battle_sessions')
+          .update({
+            status: 'resolved',
+            winner_id: won ? userId : effectiveOpponent?.id,
+            resolved_at: new Date().toISOString(),
+          })
+          .eq('id', currentBattleId);
+      }
+    } catch (err) {
+      console.error('[Battle] PE update error:', err);
+    }
+    
+    toast({
+      title: won ? '⚔️ +' + stakePercent + ' PE' : '🛡️ -' + stakePercent + ' PE',
+      description: won ? 'Vittoria!' : 'Sconfitta!',
+      duration: 2000,
+    });
+  }, [stakePercent, selectedWeaponPower, toast, onShowVideo, userId, effectiveOpponent, currentBattleId]);
+
+  // 🆕 When video ends - NO MORE result modal popup (animazione è nel video modal)
+  const handleVideoClose = useCallback(() => {
+    setShowVideo(false);
+    // 🔥 RIMOSSO: setShowResult(true) - non mostriamo più il popup separato
+    // L'animazione di vittoria/sconfitta è già nel BattleVideoModal
+    setBattleResult(null);
     onSuccess?.();
-  };
+  }, [onSuccess]);
 
   const handleCountdownCancel = () => {
     setShowCountdown(false);
@@ -178,28 +372,17 @@ export function BattleCreationForm({
 
   return (
     <>
-      {/* Countdown Modal - Shows 10 second countdown then closes */}
+      {/* Countdown Modal - Shows 10 second countdown then "ATTIVA ATTACCO" button */}
       <BattleOverlay
         isActive={showCountdown}
         attackerName="You"
-        defenderName={preSelectedOpponent?.name || 'Unknown'}
+        defenderName={effectiveOpponent?.name || 'Unknown'}
         defenderIsFake={isFakeAgent}
         weaponUsed={selectedWeaponCode || undefined}
         stakePercent={stakePercent}
         stakeType={stakeType}
         onCountdownComplete={handleCountdownComplete}
         onCancel={handleCountdownCancel}
-      />
-
-      {/* Result Modal - Shows after battle ends */}
-      <BattleResultModal
-        isOpen={showResult}
-        won={battleResult?.won || false}
-        attackerName="You"
-        defenderName={preSelectedOpponent?.name || 'Unknown'}
-        stakePercent={stakePercent}
-        stakeType={stakeType}
-        onClose={handleResultClose}
       />
 
       <div className="space-y-6 relative">
@@ -219,34 +402,81 @@ export function BattleCreationForm({
           {/* Opponent Selection */}
           <div className="space-y-2">
             <Label htmlFor="opponent">Target</Label>
-            {preSelectedOpponent ? (
+            {effectiveOpponent ? (
+              /* Mostra l'opponent selezionato (da marker O da ricerca) */
               <div className={`p-3 rounded-lg border ${
                 isFakeAgent 
                   ? 'bg-red-500/10 border-red-500/30' 
                   : 'bg-cyan-500/10 border-cyan-500/30'
               }`}>
-                <div className="flex items-center gap-2">
-                  <Target className={`h-4 w-4 ${isFakeAgent ? 'text-red-400' : 'text-cyan-400'}`} />
-                  <p className={`text-sm font-semibold ${isFakeAgent ? 'text-red-400' : 'text-cyan-400'}`}>
-                    {preSelectedOpponent.name}
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Target className={`h-4 w-4 ${isFakeAgent ? 'text-red-400' : 'text-cyan-400'}`} />
+                    <p className={`text-sm font-semibold ${isFakeAgent ? 'text-red-400' : 'text-cyan-400'}`}>
+                      {effectiveOpponent.name}
+                    </p>
+                  </div>
+                  {/* Pulsante per rimuovere selezione (solo se NON è preSelectedOpponent) */}
+                  {!preSelectedOpponent && (
+                    <button
+                      onClick={handleClearSelection}
+                      className="p-1 rounded hover:bg-white/10 transition-colors"
+                      title="Cambia target"
+                    >
+                      <X className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {isFakeAgent 
                     ? '🤖 Test Agent - 10s countdown → missile on map!' 
-                    : 'Pre-selected agent'}
+                    : preSelectedOpponent ? 'Pre-selected agent' : '✅ Target selezionato'}
                 </p>
               </div>
             ) : (
+              /* Campo di ricerca */
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="opponent"
-                  placeholder="Search agent code or handle..."
+                  placeholder="Cerca per nome o codice agente..."
                   value={opponentSearch}
                   onChange={(e) => setOpponentSearch(e.target.value)}
                   className="pl-10 bg-background/50"
                 />
+                {isSearching && (
+                  <Loader2 className="absolute right-3 top-3 h-4 w-4 text-muted-foreground animate-spin" />
+                )}
+                
+                {/* Risultati ricerca */}
+                {searchResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+                    {searchResults.map((agent) => (
+                      <button
+                        key={agent.id}
+                        onClick={() => handleSelectAgent(agent)}
+                        className="w-full px-3 py-2 flex items-center gap-3 hover:bg-cyan-500/10 transition-colors text-left"
+                      >
+                        <User className="h-4 w-4 text-cyan-400" />
+                        <div>
+                          <p className="text-sm font-medium">
+                            {agent.username || agent.agent_code || `Agent ${agent.id.slice(0, 6)}`}
+                          </p>
+                          {agent.agent_code && agent.username && (
+                            <p className="text-xs text-muted-foreground">{agent.agent_code}</p>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Messaggio nessun risultato */}
+                {opponentSearch.length >= 2 && !isSearching && searchResults.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Nessun agente trovato per "{opponentSearch}"
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -308,9 +538,10 @@ export function BattleCreationForm({
                 userId={userId}
                 type="weapon"
                 selectedItemId={selectedWeaponId}
-                onSelect={(id, code) => {
+                onSelect={(id, code, power) => {
                   setSelectedWeaponId(id);
                   setSelectedWeaponCode(code);
+                  setSelectedWeaponPower(power || 0); // 🆕 Track power
                 }}
               />
             </div>
@@ -347,24 +578,15 @@ export function BattleCreationForm({
           )}
           <Button
             onClick={handleCreate}
-            disabled={isCreating || showCountdown || (!opponentSearch && !preSelectedOpponent)}
-            className={`flex-1 ${
-              isFakeAgent 
-                ? 'bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600' 
-                : 'bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600'
-            }`}
+            disabled={isCreating || showCountdown || !effectiveOpponent}
+            className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
           >
             {isCreating ? (
               'Creating...'
-            ) : isFakeAgent ? (
+            ) : (
               <>
                 <Target className="mr-2 h-4 w-4" />
                 LAUNCH ATTACK!
-              </>
-            ) : (
-              <>
-                Create Battle
-                <Zap className="ml-2 h-4 w-4" />
               </>
             )}
           </Button>

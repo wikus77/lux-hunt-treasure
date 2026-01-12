@@ -183,29 +183,29 @@ const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({
 
     // Add layers if not exists
     if (!map.getLayer(AGENTS_GLOW_LAYER_ID)) {
-      // Glow layer for other agents (larger, blurred circle) - REDUCED 30%
+      // Glow layer for other agents (larger, blurred circle) - Used for TOUCH/CLICK detection
       map.addLayer({
         id: AGENTS_GLOW_LAYER_ID,
         type: 'circle',
         source: AGENTS_SOURCE_ID,
         paint: {
-          'circle-radius': 8, // Was 12, now 30% smaller
+          'circle-radius': 20, // Large touch area for mobile (invisible)
           'circle-color': '#FF3B30',
-          'circle-opacity': 0.25,
+          'circle-opacity': 0.2, // Semi-transparent glow
           'circle-blur': 0.8
         }
       });
 
-      // Main layer for other agents - REDUCED 30%
+      // Main layer for other agents - Small visual marker
       map.addLayer({
         id: AGENTS_LAYER_ID,
         type: 'circle',
         source: AGENTS_SOURCE_ID,
         paint: {
-          'circle-radius': 4, // Was 6, now 30% smaller
+          'circle-radius': 5, // Small visual size (original)
           'circle-color': '#FF3B30',
           'circle-opacity': 1,
-          'circle-stroke-width': 0.7,
+          'circle-stroke-width': 2,
           'circle-stroke-color': '#FF6B60'
         }
       });
@@ -281,8 +281,14 @@ const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({
       map.getCanvas().style.cursor = '';
     };
 
+    // 🎯 CLICK on GLOW layer for larger touch area (mobile-friendly)
+    map.on('click', AGENTS_GLOW_LAYER_ID, handleClick);
+    map.on('click', ME_GLOW_LAYER_ID, handleClick);
+    // Also register on main layers as fallback
     map.on('click', AGENTS_LAYER_ID, handleClick);
     map.on('click', ME_LAYER_ID, handleClick);
+    map.on('mouseenter', AGENTS_GLOW_LAYER_ID, handleMouseEnter);
+    map.on('mouseleave', AGENTS_GLOW_LAYER_ID, handleMouseLeave);
     map.on('mouseenter', AGENTS_LAYER_ID, handleMouseEnter);
     map.on('mouseleave', AGENTS_LAYER_ID, handleMouseLeave);
     map.on('mouseenter', ME_LAYER_ID, handleMouseEnter);
@@ -301,6 +307,16 @@ const AgentsLayer3D: React.FC<AgentsLayer3DProps> = ({
           
           // Safe layer checks with try/catch
           try {
+            // Remove click listeners from glow layers
+            if (map.getLayer && map.getLayer(AGENTS_GLOW_LAYER_ID)) {
+              map.off('click', AGENTS_GLOW_LAYER_ID);
+              map.off('mouseenter', AGENTS_GLOW_LAYER_ID);
+              map.off('mouseleave', AGENTS_GLOW_LAYER_ID);
+            }
+            if (map.getLayer && map.getLayer(ME_GLOW_LAYER_ID)) {
+              map.off('click', ME_GLOW_LAYER_ID);
+            }
+            // Remove click listeners from main layers
             if (map.getLayer && map.getLayer(AGENTS_LAYER_ID)) {
               map.off('click', AGENTS_LAYER_ID);
               map.off('mouseenter', AGENTS_LAYER_ID);

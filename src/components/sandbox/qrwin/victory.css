@@ -1,0 +1,692 @@
+/* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED */
+/* Victory Sequence - AAA Cinematic Animations */
+
+/* ============================================================================
+   CONTAINER & BASE
+   ============================================================================ */
+
+.victory-container {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, #000000 0%, #050510 50%, #000000 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 999999;
+}
+
+/* ============================================================================
+   BACKGROUND EFFECTS
+   ============================================================================ */
+
+.victory-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 30%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+  pointer-events: none;
+}
+
+.victory-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 229, 255, 0.015) 2px,
+    rgba(0, 229, 255, 0.015) 4px
+  );
+  animation: scanlines-scroll 8s linear infinite;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+@keyframes scanlines-scroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100px); }
+}
+
+/* Particles */
+.victory-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.victory-particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: rgba(0, 229, 255, 0.6);
+  border-radius: 50%;
+  animation: particle-float 4s ease-in-out infinite;
+}
+
+@keyframes particle-float {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-20px) scale(1.5);
+  }
+}
+
+/* ============================================================================
+   ACT A: LOCK-ON
+   ============================================================================ */
+
+.victory-act-a {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Reticle */
+.victory-reticle {
+  position: relative;
+  width: 160px;
+  height: 160px;
+}
+
+.victory-reticle-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: 50%;
+  animation: reticle-rotate 4s linear infinite;
+}
+
+.victory-reticle-ring.ring-1 {
+  width: 100px;
+  height: 100px;
+  margin: -50px 0 0 -50px;
+  border-color: rgba(0, 229, 255, 0.6);
+  animation-direction: normal;
+}
+
+.victory-reticle-ring.ring-2 {
+  width: 130px;
+  height: 130px;
+  margin: -65px 0 0 -65px;
+  border-style: dashed;
+  animation-direction: reverse;
+  animation-duration: 6s;
+}
+
+.victory-reticle-ring.ring-3 {
+  width: 160px;
+  height: 160px;
+  margin: -80px 0 0 -80px;
+  border-color: rgba(0, 229, 255, 0.2);
+  animation-duration: 8s;
+}
+
+@keyframes reticle-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Crosshair */
+.victory-reticle-crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+}
+
+.victory-reticle-crosshair .h-line,
+.victory-reticle-crosshair .v-line {
+  position: absolute;
+  background: rgba(0, 229, 255, 0.8);
+}
+
+.victory-reticle-crosshair .h-line {
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  margin-top: -0.5px;
+}
+
+.victory-reticle-crosshair .v-line {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  margin-left: -0.5px;
+}
+
+/* Corners */
+.victory-reticle-corners {
+  position: absolute;
+  inset: 30px;
+}
+
+.victory-reticle-corners .corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #00e5ff;
+}
+
+.corner.tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+.corner.tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+.corner.bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+.corner.br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+/* Sonar */
+.victory-sonar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.victory-sonar-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  border: 2px solid rgba(0, 229, 255, 0.6);
+  border-radius: 50%;
+  animation: sonar-expand 1.2s ease-out infinite;
+}
+
+@keyframes sonar-expand {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ACCESS VERIFIED */
+.victory-access-verified {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Orbitron', 'SF Pro Display', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #00e5ff;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  text-shadow:
+    0 0 20px rgba(0, 229, 255, 0.8),
+    0 0 40px rgba(0, 229, 255, 0.4);
+  white-space: nowrap;
+  animation: access-flash 0.15s ease-out;
+}
+
+@keyframes access-flash {
+  0% {
+    filter: brightness(3);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+/* ============================================================================
+   ACT B & C: BURST + REVEAL
+   ============================================================================ */
+
+.victory-act-bc {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+  z-index: 10;
+}
+
+/* Gold Burst */
+.victory-burst {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.victory-burst-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 215, 0, 1) 0%,
+    rgba(255, 180, 0, 0.8) 30%,
+    transparent 70%
+  );
+  animation: burst-core 0.6s ease-out forwards;
+}
+
+@keyframes burst-core {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(8);
+    opacity: 0;
+  }
+}
+
+.victory-burst-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 80px;
+  margin: -40px 0 0 -40px;
+  border: 3px solid rgba(255, 215, 0, 0.8);
+  border-radius: 50%;
+  animation: burst-ring 0.8s ease-out forwards;
+}
+
+@keyframes burst-ring {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(5);
+    opacity: 0;
+  }
+}
+
+/* Gold chips */
+.victory-chip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  border-radius: 1px;
+  animation: chip-fly 1.2s ease-out forwards;
+  animation-delay: var(--delay);
+}
+
+@keyframes chip-fly {
+  0% {
+    transform: rotate(var(--angle)) translateY(0) scale(1);
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--angle)) translateY(var(--distance)) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* SEI DENTRO title */
+.victory-title {
+  font-family: 'Orbitron', 'SF Pro Display', sans-serif;
+  font-size: clamp(36px, 12vw, 56px);
+  font-weight: 900;
+  color: transparent;
+  background: linear-gradient(
+    135deg,
+    #FFD700 0%,
+    #FFFACD 30%,
+    #FFD700 50%,
+    #FF8C00 80%,
+    #FFD700 100%
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-align: center;
+  margin: 0;
+  text-shadow: none;
+  filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.6));
+  animation: title-shimmer 3s ease-in-out infinite;
+  position: relative;
+}
+
+.victory-title::after {
+  content: 'SEI DENTRO';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(0, 229, 255, 0.4);
+  filter: blur(2px);
+  z-index: -1;
+}
+
+@keyframes title-shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Briefing */
+.victory-briefing {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.victory-briefing-title {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #00e5ff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+  animation: briefing-glitch 4s steps(2) infinite;
+}
+
+@keyframes briefing-glitch {
+  0%, 95%, 100% { transform: translateX(0); filter: none; }
+  96% { transform: translateX(-2px); filter: hue-rotate(20deg); }
+  97% { transform: translateX(2px); filter: hue-rotate(-20deg); }
+  98% { transform: translateX(-1px); }
+}
+
+.victory-briefing-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.victory-briefing-line {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.victory-briefing-line.visible {
+  opacity: 1;
+}
+
+/* Prize Card */
+.victory-card {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  background: linear-gradient(
+    145deg,
+    rgba(20, 20, 30, 0.95) 0%,
+    rgba(10, 10, 20, 0.95) 100%
+  );
+  border-radius: 16px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  overflow: hidden;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(255, 215, 0, 0.1);
+  margin-top: 16px;
+}
+
+.victory-card-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 100%
+  );
+  animation: card-shine 2s ease-in-out 0.5s forwards;
+  z-index: 10;
+}
+
+@keyframes card-shine {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+.victory-card-image {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  background: #0a0a14;
+}
+
+.victory-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.victory-card-category {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 10px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #FFD700;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+.victory-card-info {
+  padding: 16px;
+  text-align: center;
+}
+
+.victory-card-info h3 {
+  font-family: 'Orbitron', 'SF Pro Display', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.victory-card-info p {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  font-style: italic;
+}
+
+.victory-card-value {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #FFD700;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+/* Footer */
+.victory-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.victory-tagline {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  font-style: italic;
+}
+
+/* CTA Button */
+.victory-cta {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  padding: 16px 32px;
+  font-family: 'Orbitron', 'SF Pro Display', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: #000;
+  background: linear-gradient(
+    135deg,
+    #FFD700 0%,
+    #FFA500 50%,
+    #FFD700 100%
+  );
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow:
+    0 0 30px rgba(255, 215, 0, 0.4),
+    0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: cta-pulse 2s ease-in-out infinite;
+}
+
+@keyframes cta-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 30px rgba(255, 215, 0, 0.4),
+      0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 50px rgba(255, 215, 0, 0.6),
+      0 4px 30px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.victory-cta:hover {
+  background: linear-gradient(
+    135deg,
+    #FFE55C 0%,
+    #FFB347 50%,
+    #FFE55C 100%
+  );
+}
+
+.victory-cta:active {
+  transform: scale(0.98);
+}
+
+.victory-cta-text {
+  position: relative;
+  z-index: 1;
+}
+
+.victory-cta-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: cta-glow-sweep 3s ease-in-out infinite;
+}
+
+@keyframes cta-glow-sweep {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 480px) {
+  .victory-title {
+    font-size: clamp(28px, 10vw, 40px);
+  }
+  
+  .victory-briefing-line {
+    font-size: 12px;
+  }
+  
+  .victory-card {
+    max-width: 100%;
+  }
+  
+  .victory-card-image {
+    height: 150px;
+  }
+  
+  .victory-cta {
+    padding: 14px 24px;
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .victory-scanlines,
+  .victory-particle,
+  .victory-reticle-ring,
+  .victory-sonar-ring,
+  .victory-burst-core,
+  .victory-burst-ring,
+  .victory-chip,
+  .victory-title,
+  .victory-card-shine,
+  .victory-cta,
+  .victory-cta-glow,
+  .victory-briefing-title {
+    animation: none !important;
+  }
+  
+  .victory-title {
+    background-position: 0% 50%;
+  }
+}
+

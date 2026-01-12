@@ -2,12 +2,19 @@
 // FINAL SHOOT PILL - IDENTICAL to other pills, 1 cyan orbiting dot
 // NOTA: Componente COMPLETAMENTE INDIPENDENTE dalla logica Buzz Map
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crosshair, Target, Trophy, AlertCircle, Lock, X, Zap } from 'lucide-react';
+import { Crosshair, Target, Trophy, AlertCircle, Lock, X, Zap, VolumeX, Volume2 } from 'lucide-react';
 import { useFinalShootContext } from './FinalShootContext';
 import '@/features/m1u/m1u-ui.css';
 import './FinalShootPill.css';
+
+// 🎬 Video e Audio paths
+const FINALSHOT_VIDEO = '/assets/video/FINALSHOT-BRIF-VIDEO.mp4';
+const HEARTBEAT_AUDIO = '/assets/audio/HMNHart-heart_beats-Elevenlabs.mp3';
+const VIDEO_STORAGE_KEY = 'm1_finalshot_video_dismissed';
+const ADMIN_EMAILS = ['wikus77@hotmail.it'];
 
 const FinalShootPill: React.FC = () => {
   const {
@@ -25,6 +32,109 @@ const FinalShootPill: React.FC = () => {
   } = useFinalShootContext();
 
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [videoAudioEnabled, setVideoAudioEnabled] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const heartbeatAudioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // 🎵 Gestione audio battito cardiaco quando Final Shot è attivo
+  useEffect(() => {
+    if (isActive) {
+      // Avvia audio battito cardiaco
+      if (!heartbeatAudioRef.current) {
+        heartbeatAudioRef.current = new Audio(HEARTBEAT_AUDIO);
+        heartbeatAudioRef.current.loop = true;
+        heartbeatAudioRef.current.volume = 0.5;
+      }
+      heartbeatAudioRef.current.play().catch(err => {
+        console.log('[FinalShootPill] Heartbeat audio play failed:', err);
+      });
+    } else {
+      // Ferma audio
+      if (heartbeatAudioRef.current) {
+        heartbeatAudioRef.current.pause();
+        heartbeatAudioRef.current.currentTime = 0;
+      }
+    }
+    
+    return () => {
+      if (heartbeatAudioRef.current) {
+        heartbeatAudioRef.current.pause();
+        heartbeatAudioRef.current.currentTime = 0;
+      }
+    };
+  }, [isActive]);
+  
+  // 🎬 Check se mostrare il video
+  const shouldShowVideo = useCallback((userEmail?: string) => {
+    const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
+    if (isAdmin) {
+      localStorage.removeItem(VIDEO_STORAGE_KEY);
+      return true;
+    }
+    return localStorage.getItem(VIDEO_STORAGE_KEY) !== 'true';
+  }, []);
+  
+  // 🎬 Tap per attivare audio video
+  const handleVideoTapForAudio = useCallback(() => {
+    if (videoRef.current && !videoAudioEnabled) {
+      videoRef.current.muted = false;
+      videoRef.current.play().catch(() => {});
+      setVideoAudioEnabled(true);
+    }
+  }, [videoAudioEnabled]);
+  
+  // 🎬 Video terminato
+  const handleVideoEnd = useCallback(() => {
+    setShowVideoModal(false);
+    setVideoAudioEnabled(false);
+    activateFinalShoot();
+  }, [activateFinalShoot]);
+  
+  // 🎬 Skip video
+  const handleSkipVideo = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setShowVideoModal(false);
+    setVideoAudioEnabled(false);
+    activateFinalShoot();
+  }, [activateFinalShoot]);
+  
+  // 🎬 Non mostrare più
+  const handleDismissVideo = useCallback(() => {
+    localStorage.setItem(VIDEO_STORAGE_KEY, 'true');
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setShowVideoModal(false);
+    setVideoAudioEnabled(false);
+    activateFinalShoot();
+  }, [activateFinalShoot]);
+  
+  // 🎬 Chiudi video senza attivare
+  const handleCloseVideo = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setShowVideoModal(false);
+    setVideoAudioEnabled(false);
+  }, []);
+  
+  // 🎬 Avvia video quando si apre il modal
+  useEffect(() => {
+    if (showVideoModal && videoRef.current) {
+      videoRef.current.muted = false;
+      videoRef.current.play().then(() => {
+        setVideoAudioEnabled(true);
+      }).catch(() => {
+        if (videoRef.current) {
+          videoRef.current.muted = true;
+          videoRef.current.play().catch(() => {});
+        }
+      });
+    }
+  }, [showVideoModal]);
 
   // Don't render while loading
   if (isLoading) {
@@ -63,9 +173,293 @@ const FinalShootPill: React.FC = () => {
     } else if (state === 'locked') {
       setShowInfoModal(true);
     } else {
-      activateFinalShoot();
+      // State è 'available' - mostra video briefing se non dismissato
+      if (shouldShowVideo()) {
+        setShowVideoModal(true);
+      } else {
+        activateFinalShoot();
+      }
     }
   };
+
+  // 🎬 Video Modal Content - renderizzato con createPortal
+  const videoModalContent = (
+    <AnimatePresence>
+      {showVideoModal && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            style={{ zIndex: 999998 }}
+            onClick={handleCloseVideo}
+          />
+          
+          {/* Modal Container Espandibile */}
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed inset-x-0 bottom-0 overflow-hidden"
+            style={{
+              zIndex: 999999,
+              top: 'calc(50px + env(safe-area-inset-top, 0px))',
+              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            }}
+          >
+            <div 
+              className="h-full rounded-t-3xl bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-x overflow-hidden flex flex-col"
+              style={{
+                borderColor: 'rgba(239, 68, 68, 0.3)',
+                boxShadow: '0 -10px 40px rgba(239, 68, 68, 0.15), 0 0 0 1px rgba(239, 68, 68, 0.1)',
+              }}
+            >
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-2 cursor-grab flex-shrink-0">
+                <div className="w-12 h-1.5 rounded-full bg-white/30" />
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 pb-3 border-b border-white/10 flex-shrink-0">
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className="w-2 h-2 rounded-full animate-pulse"
+                    style={{ background: '#EF4444', boxShadow: '0 0 10px #EF4444' }}
+                  />
+                  <h3 className="font-orbitron font-bold text-white text-[15px]">FINAL SHOT</h3>
+                </div>
+                <button
+                  onClick={handleCloseVideo}
+                  className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center"
+                >
+                  <X className="w-4 h-4 text-white/70" />
+                </button>
+              </div>
+              
+              <p className="text-xs text-white/50 px-4 pt-2 flex-shrink-0">Briefing: La tua ultima possibilità di vincere</p>
+
+              {/* Video Container */}
+              <div 
+                className="flex-1 px-3 py-2 overflow-hidden"
+                onClick={handleVideoTapForAudio}
+                onTouchStart={handleVideoTapForAudio}
+              >
+                <div className="relative rounded-2xl overflow-hidden bg-black h-full">
+                  <video
+                    ref={videoRef}
+                    src={FINALSHOT_VIDEO}
+                    className="w-full h-full object-contain"
+                    playsInline
+                    muted={!videoAudioEnabled}
+                    onEnded={handleVideoEnd}
+                    onError={handleSkipVideo}
+                  />
+                  
+                  {/* Audio hint */}
+                  {!videoAudioEnabled && (
+                    <motion.div
+                      className="absolute inset-0 flex items-center justify-center bg-black/30"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      <motion.div
+                        className="flex flex-col items-center gap-2 px-4 py-3 rounded-xl bg-black/60 backdrop-blur-sm"
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      >
+                        <VolumeX className="w-8 h-8 text-white/80" />
+                        <span className="text-white/80 text-xs font-medium">Tocca per l'audio</span>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                  
+                  {/* Audio indicator */}
+                  <div className="absolute bottom-3 left-3">
+                    <div className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                      {videoAudioEnabled ? (
+                        <Volume2 className="w-5 h-5 text-red-400" />
+                      ) : (
+                        <VolumeX className="w-5 h-5 text-white/60" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="px-4 pb-4 flex-shrink-0">
+                <motion.button
+                  className="w-full py-4 px-6 rounded-xl font-orbitron font-bold text-sm uppercase tracking-wider"
+                  style={{
+                    background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+                    color: 'white',
+                    boxShadow: '0 0 20px rgba(239, 68, 68, 0.5)',
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSkipVideo();
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  ATTIVA FINAL SHOT →
+                </motion.button>
+                
+                <button
+                  className="w-full mt-2 text-xs text-white/40 hover:text-white/60 transition-colors py-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDismissVideo();
+                  }}
+                >
+                  Non mostrare più questo video
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+
+  // 📋 Info Modal Content - renderizzato con createPortal
+  const infoModalContent = (
+    <AnimatePresence>
+      {showInfoModal && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-md"
+            style={{ zIndex: 999998 }}
+            onClick={() => setShowInfoModal(false)}
+          />
+          
+          {/* Modal Container */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed left-4 right-4 overflow-hidden"
+            style={{ 
+              zIndex: 999999,
+              top: 'calc(60px + env(safe-area-inset-top, 0px))',
+              bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div 
+              className="h-full w-full max-w-lg mx-auto rounded-2xl bg-gradient-to-b from-gray-900 via-gray-900 to-black border border-cyan-500/30 shadow-2xl overflow-hidden flex flex-col"
+              style={{ boxShadow: '0 0 60px rgba(0, 209, 255, 0.3), 0 25px 50px rgba(0, 0, 0, 0.5)' }}
+            >
+              {/* Header fisso */}
+              <div className="flex-shrink-0 p-4 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-400/30">
+                      <Crosshair className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-white font-orbitron">
+                        FINAL SHOT
+                      </h2>
+                      <p className="text-xs text-cyan-400">La Mossa Finale</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowInfoModal(false)}
+                    className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+                  >
+                    <X className="w-5 h-5 text-white/60" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Contenuto scrollabile */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                  <h3 className="font-bold text-white mb-2 flex items-center gap-2 text-sm">
+                    <Target className="w-4 h-4 text-pink-400" />
+                    Cos'è Final Shot?
+                  </h3>
+                  <p className="text-xs text-white/70 leading-relaxed">
+                    È la tua ultima possibilità di vincere! Negli <span className="text-cyan-400 font-bold">ultimi 7 giorni</span> della missione, 
+                    puoi indicare sulla mappa dove pensi si trovi il premio.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                  <h3 className="font-bold text-white mb-2 flex items-center gap-2 text-sm">
+                    <Zap className="w-4 h-4 text-yellow-400" />
+                    Come Funziona
+                  </h3>
+                  <ul className="text-xs text-white/70 space-y-1.5">
+                    <li className="flex items-start gap-2">
+                      <span className="text-cyan-400 font-bold">1.</span>
+                      Attiva Final Shot toccando questo pulsante
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-cyan-400 font-bold">2.</span>
+                      Tocca sulla mappa dove pensi sia il premio
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-cyan-400 font-bold">3.</span>
+                      Ricevi feedback sulla distanza dal premio
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="p-3 rounded-xl bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-400/20">
+                  <h3 className="font-bold text-red-300 mb-2 flex items-center gap-2 text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    Attenzione
+                  </h3>
+                  <p className="text-xs text-white/70">
+                    Hai solo <span className="text-red-400 font-bold">3 tentativi</span> per l'intera missione. 
+                    Usa gli indizi raccolti per aumentare le tue probabilità!
+                  </p>
+                </div>
+
+                {/* Status */}
+                <div className="p-3 rounded-xl bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-400/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs text-white/60">Si attiva tra</div>
+                      <div className="text-xl font-bold text-cyan-400 font-orbitron">
+                        {daysUntilAvailable} GIORNI
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-white/60">Giorni missione</div>
+                      <div className="text-base font-bold text-white">
+                        {totalMissionDays - daysRemaining}/{totalMissionDays}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer fisso */}
+              <div className="flex-shrink-0 p-4 border-t border-white/10">
+                <button
+                  onClick={() => setShowInfoModal(false)}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-400/30 text-white font-bold hover:border-cyan-400/50 transition-colors text-sm"
+                >
+                  Ho Capito
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
 
   return (
     <>
@@ -99,119 +493,11 @@ const FinalShootPill: React.FC = () => {
         )}
       </motion.button>
 
-      {/* Info Modal */}
-      <AnimatePresence>
-        {showInfoModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-            onClick={() => setShowInfoModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.8, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.8, y: 20 }}
-              className="relative max-w-md w-full p-6 rounded-2xl bg-gradient-to-b from-gray-900 via-gray-900 to-black border border-cyan-500/30 shadow-2xl shadow-cyan-500/20"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close button */}
-              <button
-                onClick={() => setShowInfoModal(false)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
-              >
-                <X className="w-5 h-5 text-white/60" />
-              </button>
-
-              {/* Header */}
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-400/30">
-                  <Crosshair className="w-8 h-8 text-cyan-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white font-orbitron">
-                    FINAL SHOOT
-                  </h2>
-                  <p className="text-sm text-cyan-400">La Mossa Finale</p>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-4 mb-6">
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                  <h3 className="font-bold text-white mb-2 flex items-center gap-2">
-                    <Target className="w-4 h-4 text-pink-400" />
-                    Cos'è Final Shoot?
-                  </h3>
-                  <p className="text-sm text-white/70 leading-relaxed">
-                    È la tua ultima possibilità di vincere! Negli <span className="text-cyan-400 font-bold">ultimi 7 giorni</span> della missione, 
-                    puoi indicare sulla mappa dove pensi si trovi il premio.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                  <h3 className="font-bold text-white mb-2 flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-yellow-400" />
-                    Come Funziona
-                  </h3>
-                  <ul className="text-sm text-white/70 space-y-2">
-                    <li className="flex items-start gap-2">
-                      <span className="text-cyan-400 font-bold">1.</span>
-                      Attiva Final Shoot toccando questo pulsante
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-cyan-400 font-bold">2.</span>
-                      Tocca sulla mappa dove pensi sia il premio
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-cyan-400 font-bold">3.</span>
-                      Ricevi feedback sulla distanza dal premio
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="p-4 rounded-xl bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-400/20">
-                  <h3 className="font-bold text-red-300 mb-2 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" />
-                    Attenzione
-                  </h3>
-                  <p className="text-sm text-white/70">
-                    Hai solo <span className="text-red-400 font-bold">3 tentativi</span> per l'intera missione. 
-                    Usa gli indizi raccolti per aumentare le tue probabilità!
-                  </p>
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="p-4 rounded-xl bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-400/30">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm text-white/60">Si attiva tra</div>
-                    <div className="text-2xl font-bold text-cyan-400 font-orbitron">
-                      {daysUntilAvailable} GIORNI
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-white/60">Giorni missione</div>
-                    <div className="text-lg font-bold text-white">
-                      {totalMissionDays - daysRemaining}/{totalMissionDays}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Close button */}
-              <button
-                onClick={() => setShowInfoModal(false)}
-                className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-400/30 text-white font-bold hover:border-cyan-400/50 transition-colors"
-              >
-                Ho Capito
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* 🎬 Video Briefing Modal - renderizzato nel body con createPortal */}
+      {createPortal(videoModalContent, document.body)}
+      
+      {/* 📋 Info Modal - renderizzato nel body con createPortal */}
+      {createPortal(infoModalContent, document.body)}
     </>
   );
 };

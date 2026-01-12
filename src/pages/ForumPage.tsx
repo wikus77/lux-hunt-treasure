@@ -4,8 +4,9 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import GenericVideoModal from '@/components/shared/GenericVideoModal';
 import { 
   MessageSquare, Plus, ThumbsUp, ThumbsDown, Eye, 
   Clock, User, Send, X, ChevronLeft, Pin, Lock,
@@ -248,6 +249,11 @@ const PostDetail: React.FC<{
   );
 };
 
+// 🎬 Video intro constants
+const FORUM_VIDEO = '/assets/video/FORUM-BRIF-VIDEO.mp4';
+const FORUM_VIDEO_STORAGE_KEY = 'm1_forum_video_dismissed';
+const ADMIN_EMAILS = ['wikus77@hotmail.it'];
+
 // Main Forum Page
 export const ForumPage: React.FC = () => {
   const { user } = useAuthContext();
@@ -259,6 +265,20 @@ export const ForumPage: React.FC = () => {
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostCategory, setNewPostCategory] = useState<string>('');
   const [creating, setCreating] = useState(false);
+  
+  // 🎬 Video intro state
+  const [showVideoModal, setShowVideoModal] = useState(() => {
+    const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+    if (isAdmin) {
+      localStorage.removeItem(FORUM_VIDEO_STORAGE_KEY);
+      return true;
+    }
+    return localStorage.getItem(FORUM_VIDEO_STORAGE_KEY) !== 'true';
+  });
+  
+  const handleVideoContinue = useCallback(() => {
+    // Video finito o skippato, continua con la pagina
+  }, []);
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -596,6 +616,19 @@ export const ForumPage: React.FC = () => {
         </div>
       </motion.div>
       </div>
+      
+      {/* 🎬 Video Intro Modal */}
+      <GenericVideoModal
+        isOpen={showVideoModal}
+        onClose={() => setShowVideoModal(false)}
+        userEmail={user?.email}
+        onContinue={handleVideoContinue}
+        videoSrc={FORUM_VIDEO}
+        storageKey={FORUM_VIDEO_STORAGE_KEY}
+        title="M1SSION FORUM"
+        subtitle="Briefing: Benvenuto nella community degli agenti"
+        accentColor="#00D1FF"
+      />
     </div>
   );
 };

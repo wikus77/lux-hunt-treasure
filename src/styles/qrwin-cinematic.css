@@ -1,0 +1,396 @@
+/* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED */
+
+/**
+ * QR WIN - CINEMATIC VICTORY
+ * FIXED: Layout, responsive, no cut-off
+ */
+
+/* ============================================================================
+   CONTAINER - FULL VIEWPORT, NO SCROLL
+   ============================================================================ */
+
+.cv-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+  z-index: 999999;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================================
+   BACKGROUND
+   ============================================================================ */
+
+.cv-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cv-stars {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 50px 160px, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1px 1px at 160px 120px, rgba(255,255,255,0.4), transparent);
+  background-size: 200px 200px;
+  animation: cv-stars-move 60s linear infinite;
+}
+
+@keyframes cv-stars-move {
+  from { transform: translateY(0); }
+  to { transform: translateY(-200px); }
+}
+
+.cv-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%);
+}
+
+/* ============================================================================
+   PHASES CONTAINER
+   ============================================================================ */
+
+.cv-phase {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================================
+   SCAN PHASE
+   ============================================================================ */
+
+.cv-scan {
+  gap: 24px;
+}
+
+.cv-scan-ring {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 229, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: cv-scan-pulse 1.5s ease-out infinite;
+}
+
+.cv-scan-dot {
+  width: 8px;
+  height: 8px;
+  background: #00E5FF;
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
+}
+
+@keyframes cv-scan-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.cv-scan-text {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ============================================================================
+   PORTAL PHASE
+   ============================================================================ */
+
+.cv-portal {
+  perspective: 1000px;
+}
+
+.cv-portal-rings {
+  position: relative;
+  width: 180px;
+  height: 180px;
+}
+
+.cv-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  animation: cv-ring-expand 1.2s ease-out forwards;
+}
+
+.cv-ring.r1 { animation-delay: 0s; }
+.cv-ring.r2 { 
+  inset: 20%; 
+  border-color: rgba(255, 215, 0, 0.25);
+  animation-delay: 0.15s; 
+}
+.cv-ring.r3 { 
+  inset: 40%; 
+  border-color: rgba(255, 255, 255, 0.2);
+  animation-delay: 0.3s; 
+}
+
+@keyframes cv-ring-expand {
+  0% { transform: scale(0) rotateX(70deg); opacity: 0; }
+  30% { opacity: 0.8; }
+  100% { transform: scale(1.2) rotateX(70deg); opacity: 0; }
+}
+
+.cv-portal-glow {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(0, 229, 255, 0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(20px);
+  animation: cv-glow-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes cv-glow-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.3); opacity: 1; }
+}
+
+/* ============================================================================
+   CONTENT (TITLE + BRIEFING)
+   ============================================================================ */
+
+.cv-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 20px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.cv-title {
+  font-size: clamp(24px, 8vw, 42px);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #fff;
+  margin: 0 0 16px 0;
+  background: linear-gradient(180deg, #fff 0%, #b8b8b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+}
+
+.cv-briefing {
+  margin: 0 0 20px 0;
+}
+
+.cv-briefing p {
+  margin: 4px 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.cv-briefing-1 {
+  color: rgba(0, 229, 255, 0.8);
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-size: 10px !important;
+  letter-spacing: 0.08em;
+}
+
+.cv-briefing-2 {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================================================
+   PARTICLES
+   ============================================================================ */
+
+.cv-particles {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.cv-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* ============================================================================
+   CARD
+   ============================================================================ */
+
+.cv-card-wrap {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 280px;
+  padding: 0 20px;
+  margin-top: 16px;
+}
+
+.cv-card {
+  position: relative;
+  background: linear-gradient(145deg, rgba(25, 25, 35, 0.95) 0%, rgba(15, 15, 22, 0.98) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.cv-card-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.08) 50%, transparent 60%);
+  transform: translateX(-100%);
+  animation: cv-card-shine 2s ease-out 0.3s forwards;
+  pointer-events: none;
+}
+
+@keyframes cv-card-shine {
+  to { transform: translateX(100%); }
+}
+
+.cv-card-img {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  background: linear-gradient(145deg, #1a1a24 0%, #0f0f15 100%);
+  overflow: hidden;
+}
+
+.cv-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+}
+
+.cv-card-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 3px 8px;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #FFD700;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  border-radius: 3px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.cv-card-body {
+  padding: 14px 16px 16px;
+}
+
+.cv-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 4px 0;
+}
+
+.cv-card-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 10px 0;
+  line-height: 1.3;
+}
+
+.cv-card-value {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255, 215, 0, 0.9);
+  background: rgba(255, 215, 0, 0.1);
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+
+/* ============================================================================
+   CTA
+   ============================================================================ */
+
+.cv-cta-wrap {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  padding-bottom: max(env(safe-area-inset-bottom, 16px), 24px);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+  z-index: 100;
+}
+
+.cv-cta {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  display: block;
+  padding: 16px 32px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #000;
+  background: linear-gradient(180deg, #fff 0%, #e0e0e0 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+  transition: transform 0.15s ease;
+}
+
+.cv-cta:active {
+  transform: scale(0.98);
+  background: linear-gradient(180deg, #e0e0e0 0%, #d0d0d0 100%);
+}
+
+/* ============================================================================
+   REDUCED MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .cv-stars,
+  .cv-scan-ring,
+  .cv-ring,
+  .cv-portal-glow,
+  .cv-card-shine {
+    animation: none !important;
+  }
+  
+  .cv-ring {
+    transform: rotateX(70deg);
+    opacity: 0.5;
+  }
+}

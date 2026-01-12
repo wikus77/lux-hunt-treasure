@@ -1,15 +1,190 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT
-import React from "react";
+import React, { useRef, useCallback, useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Home, MessageSquare, Circle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { hapticLight } from "@/utils/haptics";
+import { subscribeAudioEvent } from "@/utils/audioController";
+import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
+import BuzzVideoModal from "@/components/buzz/BuzzVideoModal";
+import GenericVideoModal from "@/components/shared/GenericVideoModal";
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // PWA Navigation Component - Floating Pill Style - SIMPLIFIED
 
+// 🔊 Audio paths for navigation sounds
+const MAP_BOOM_SOUND = '/assets/audio/DSGNBoom-A_fast_6-second_cine-Elevenlabs.mp3';
+const BUZZ_BOOM_SOUND = '/assets/audio/DSGNBoom-Create_an_intense_ci-Elevenlabs.mp3';
+const HOME_SOUND = '/assets/audio/m1-home.mp3';
+
+// 🎬 Video paths for briefing videos
+const HOME_VIDEO = '/assets/video/HOME-BRIF-VIDEO.mp4';
+const MAP_VIDEO = '/assets/video/BUZZ-BRIF-VIDEO.mp4';
+const AION_VIDEO = '/assets/video/AION-BRIF-VIDEO.mp4';
+const CLASSIFICA_VIDEO = '/assets/video/CLASSIFICA-BRIF-VIDEO.mp4';
+const NOTIFICHE_VIDEO = '/assets/video/NOTIFICHE-BRIF-VIDEO.mp4';
+
 const BottomNavigationComponent = () => {
+  // 🎬 State per i modal video
+  const [showBuzzVideoModal, setShowBuzzVideoModal] = useState(false);
+  const [showHomeVideoModal, setShowHomeVideoModal] = useState(false);
+  const [showMapVideoModal, setShowMapVideoModal] = useState(false);
+  const [showAionVideoModal, setShowAionVideoModal] = useState(false);
+  const [showClassificaVideoModal, setShowClassificaVideoModal] = useState(false);
+  const [showNotificheVideoModal, setShowNotificheVideoModal] = useState(false);
+  const { user } = useUnifiedAuth();
+  
+  // 🔊 Audio refs for navigation sounds
+  const mapAudioRef = useRef<HTMLAudioElement | null>(null);
+  const buzzAudioRef = useRef<HTMLAudioElement | null>(null);
+  const homeAudioRef = useRef<HTMLAudioElement | null>(null);
+  const aionAudioRef = useRef<HTMLAudioElement | null>(null);
+  const notificheAudioRef = useRef<HTMLAudioElement | null>(null);
+  const classificaAudioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // 🔇 Stop all sounds before playing a new one
+  const stopAllSounds = useCallback(() => {
+    if (homeAudioRef.current) {
+      homeAudioRef.current.pause();
+      homeAudioRef.current.currentTime = 0;
+    }
+    if (mapAudioRef.current) {
+      mapAudioRef.current.pause();
+      mapAudioRef.current.currentTime = 0;
+    }
+    if (buzzAudioRef.current) {
+      buzzAudioRef.current.pause();
+      buzzAudioRef.current.currentTime = 0;
+    }
+    if (aionAudioRef.current) {
+      aionAudioRef.current.pause();
+      aionAudioRef.current.currentTime = 0;
+    }
+    if (notificheAudioRef.current) {
+      notificheAudioRef.current.pause();
+      notificheAudioRef.current.currentTime = 0;
+    }
+    if (classificaAudioRef.current) {
+      classificaAudioRef.current.pause();
+      classificaAudioRef.current.currentTime = 0;
+    }
+  }, []);
+  
+  // Play sound when clicking home icon
+  const playHomeSound = useCallback(() => {
+    stopAllSounds();
+    if (!homeAudioRef.current) {
+      homeAudioRef.current = new Audio(HOME_SOUND);
+      homeAudioRef.current.volume = 0.7;
+    }
+    homeAudioRef.current.currentTime = 0;
+    homeAudioRef.current.play().catch(err => {
+      console.log('[BottomNav] Home audio play failed:', err);
+    });
+  }, [stopAllSounds]);
+  
+  // Play boom sound when clicking map icon
+  const playMapSound = useCallback(() => {
+    stopAllSounds();
+    if (!mapAudioRef.current) {
+      mapAudioRef.current = new Audio(MAP_BOOM_SOUND);
+      mapAudioRef.current.volume = 0.7;
+    }
+    mapAudioRef.current.currentTime = 0;
+    mapAudioRef.current.play().catch(err => {
+      console.log('[BottomNav] Map audio play failed:', err);
+    });
+  }, [stopAllSounds]);
+  
+  // Play boom sound when clicking buzz icon
+  const playBuzzSound = useCallback(() => {
+    stopAllSounds();
+    if (!buzzAudioRef.current) {
+      buzzAudioRef.current = new Audio(BUZZ_BOOM_SOUND);
+      buzzAudioRef.current.volume = 0.7;
+    }
+    buzzAudioRef.current.currentTime = 0;
+    buzzAudioRef.current.play().catch(err => {
+      console.log('[BottomNav] Buzz audio play failed:', err);
+    });
+  }, [stopAllSounds]);
+  
+  // Play sound when clicking AION icon (same as home)
+  const playAionSound = useCallback(() => {
+    stopAllSounds();
+    if (!aionAudioRef.current) {
+      aionAudioRef.current = new Audio(HOME_SOUND);
+      aionAudioRef.current.volume = 0.7;
+    }
+    aionAudioRef.current.currentTime = 0;
+    aionAudioRef.current.play().catch(err => {
+      console.log('[BottomNav] AION audio play failed:', err);
+    });
+  }, [stopAllSounds]);
+  
+  // Play sound when clicking Notifiche icon (same as home)
+  const playNotificheSound = useCallback(() => {
+    stopAllSounds();
+    if (!notificheAudioRef.current) {
+      notificheAudioRef.current = new Audio(HOME_SOUND);
+      notificheAudioRef.current.volume = 0.7;
+    }
+    notificheAudioRef.current.currentTime = 0;
+    notificheAudioRef.current.play().catch(err => {
+      console.log('[BottomNav] Notifiche audio play failed:', err);
+    });
+  }, [stopAllSounds]);
+  
+  // Play sound when clicking Classifica icon (same as home)
+  const playClassificaSound = useCallback(() => {
+    stopAllSounds();
+    if (!classificaAudioRef.current) {
+      classificaAudioRef.current = new Audio(HOME_SOUND);
+      classificaAudioRef.current.volume = 0.7;
+    }
+    classificaAudioRef.current.currentTime = 0;
+    classificaAudioRef.current.play().catch(err => {
+      console.log('[BottomNav] Classifica audio play failed:', err);
+    });
+  }, [stopAllSounds]);
+  
+  // 🔇 Pause current playing audio (called by buttons via audioController)
+  const pauseCurrentAudio = useCallback(() => {
+    if (buzzAudioRef.current && !buzzAudioRef.current.paused) {
+      buzzAudioRef.current.pause();
+      console.log('[BottomNav] Audio paused by external event');
+    }
+    if (mapAudioRef.current && !mapAudioRef.current.paused) {
+      mapAudioRef.current.pause();
+    }
+    if (homeAudioRef.current && !homeAudioRef.current.paused) {
+      homeAudioRef.current.pause();
+    }
+  }, []);
+  
+  // 🔊 Resume paused audio (called by buttons via audioController when their sound ends)
+  const resumeCurrentAudio = useCallback(() => {
+    // Resume buzz audio if it was playing on the buzz page
+    if (buzzAudioRef.current && buzzAudioRef.current.paused && buzzAudioRef.current.currentTime > 0) {
+      buzzAudioRef.current.play().catch(err => {
+        console.log('[BottomNav] Resume audio failed:', err);
+      });
+      console.log('[BottomNav] Audio resumed');
+    }
+  }, []);
+  
+  // 📡 Subscribe to audio events from other components
+  useEffect(() => {
+    const unsubPause = subscribeAudioEvent('pause-page-audio', pauseCurrentAudio);
+    const unsubResume = subscribeAudioEvent('resume-page-audio', resumeCurrentAudio);
+    
+    return () => {
+      unsubPause();
+      unsubResume();
+    };
+  }, [pauseCurrentAudio, resumeCurrentAudio]);
+  
   const [currentPath] = useLocation();
   const { unreadCount } = useNotifications();
   const { navigate } = useWouterNavigation();
@@ -52,13 +227,72 @@ const BottomNavigationComponent = () => {
     },
   ];
 
+  // 🎬 Callbacks per i video modal
+  const handleHomeVideoContinue = useCallback(() => {
+    playHomeSound();
+    navigate('/home');
+    if (isPWA) setTimeout(() => window.scrollTo(0, 0), 100);
+  }, [playHomeSound, navigate, isPWA]);
+
+  const handleMapVideoContinue = useCallback(() => {
+    playMapSound();
+    navigate('/map-3d-tiler');
+    if (isPWA) setTimeout(() => window.scrollTo(0, 0), 100);
+  }, [playMapSound, navigate, isPWA]);
+
+  const handleBuzzVideoContinue = useCallback(() => {
+    playBuzzSound();
+    navigate('/buzz');
+    if (isPWA) setTimeout(() => window.scrollTo(0, 0), 100);
+  }, [playBuzzSound, navigate, isPWA]);
+
+  const handleAionVideoContinue = useCallback(() => {
+    playAionSound();
+    navigate('/intelligence');
+    if (isPWA) setTimeout(() => window.scrollTo(0, 0), 100);
+  }, [playAionSound, navigate, isPWA]);
+
+  const handleNotificheVideoContinue = useCallback(() => {
+    playNotificheSound();
+    navigate('/notifications');
+    if (isPWA) setTimeout(() => window.scrollTo(0, 0), 100);
+  }, [playNotificheSound, navigate, isPWA]);
+
+  const handleClassificaVideoContinue = useCallback(() => {
+    playClassificaSound();
+    navigate('/leaderboard');
+    if (isPWA) setTimeout(() => window.scrollTo(0, 0), 100);
+  }, [playClassificaSound, navigate, isPWA]);
+
   // PWA compatible navigation handler
   const handleNavigationPWA = async (link: typeof links[0], e: React.MouseEvent) => {
     e.preventDefault();
     hapticLight();
-    navigate(link.path);
-    if (isPWA) {
-      setTimeout(() => window.scrollTo(0, 0), 100);
+    
+    // 🎬 Mostra video modal per ogni pagina
+    switch (link.path) {
+      case '/home':
+        setShowHomeVideoModal(true);
+        return;
+      case '/map-3d-tiler':
+        setShowMapVideoModal(true);
+        return;
+      case '/buzz':
+        setShowBuzzVideoModal(true);
+        return;
+      case '/intelligence':
+        setShowAionVideoModal(true);
+        return;
+      case '/notifications':
+        setShowNotificheVideoModal(true);
+        return;
+      case '/leaderboard':
+        setShowClassificaVideoModal(true);
+        return;
+      default:
+        // Per altre pagine, naviga direttamente
+        navigate(link.path);
+        if (isPWA) setTimeout(() => window.scrollTo(0, 0), 100);
     }
   };
 
@@ -191,6 +425,74 @@ const BottomNavigationComponent = () => {
           );
         })}
       </div>
+      
+      {/* 🎬 Modal Video Briefings */}
+      <BuzzVideoModal
+        isOpen={showBuzzVideoModal}
+        onClose={() => setShowBuzzVideoModal(false)}
+        userEmail={user?.email}
+        onContinue={handleBuzzVideoContinue}
+      />
+      
+      <GenericVideoModal
+        isOpen={showHomeVideoModal}
+        onClose={() => setShowHomeVideoModal(false)}
+        userEmail={user?.email}
+        onContinue={handleHomeVideoContinue}
+        videoSrc={HOME_VIDEO}
+        storageKey="m1_home_video_dismissed"
+        title="M1SSION HOME"
+        subtitle="Briefing: Benvenuto nel tuo quartier generale"
+        accentColor="#00D1FF"
+      />
+      
+      <GenericVideoModal
+        isOpen={showMapVideoModal}
+        onClose={() => setShowMapVideoModal(false)}
+        userEmail={user?.email}
+        onContinue={handleMapVideoContinue}
+        videoSrc={MAP_VIDEO}
+        storageKey="m1_map_video_dismissed"
+        title="BUZZ MAP"
+        subtitle="Briefing: La mappa della missione"
+        accentColor="#00FFAA"
+      />
+      
+      <GenericVideoModal
+        isOpen={showAionVideoModal}
+        onClose={() => setShowAionVideoModal(false)}
+        userEmail={user?.email}
+        onContinue={handleAionVideoContinue}
+        videoSrc={AION_VIDEO}
+        storageKey="m1_aion_video_dismissed"
+        title="AION AI"
+        subtitle="Briefing: L'intelligenza artificiale al tuo servizio"
+        accentColor="#FF6B00"
+      />
+      
+      <GenericVideoModal
+        isOpen={showClassificaVideoModal}
+        onClose={() => setShowClassificaVideoModal(false)}
+        userEmail={user?.email}
+        onContinue={handleClassificaVideoContinue}
+        videoSrc={CLASSIFICA_VIDEO}
+        storageKey="m1_classifica_video_dismissed"
+        title="CLASSIFICA"
+        subtitle="Briefing: La classifica dei migliori agenti"
+        accentColor="#FF59F8"
+      />
+      
+      <GenericVideoModal
+        isOpen={showNotificheVideoModal}
+        onClose={() => setShowNotificheVideoModal(false)}
+        userEmail={user?.email}
+        onContinue={handleNotificheVideoContinue}
+        videoSrc={NOTIFICHE_VIDEO}
+        storageKey="m1_notifiche_video_dismissed"
+        title="NOTIFICHE"
+        subtitle="Briefing: Le notifiche della missione"
+        accentColor="#FFD700"
+      />
     </div>
   );
 };

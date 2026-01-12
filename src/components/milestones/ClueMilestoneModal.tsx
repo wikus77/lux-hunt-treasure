@@ -1,14 +1,17 @@
 /**
- * CLUE MILESTONE MODAL™ — Popup di celebrazione LEVEL UP
- * Stile uguale ai popup delle micro-mission, con barra progressiva
+ * CLUE MILESTONE MODAL™ — Popup di celebrazione LEVEL UP con VIDEO
+ * Prima mostra video briefing, poi animazione LEVEL UP minimale ma scenica
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Sparkles, Zap, Star } from 'lucide-react';
+import { Star, Sparkles, Zap, VolumeX, Volume2, X } from 'lucide-react';
 import type { ClueMilestone } from '@/hooks/useClueMilestones';
+
+// 🎬 Video path
+const LEVELUP_VIDEO = '/assets/video/LEVELUP-BRIF-VIDEO.mp4';
 
 interface ClueMilestoneModalProps {
   milestone: ClueMilestone | null;
@@ -16,48 +19,67 @@ interface ClueMilestoneModalProps {
 }
 
 // Fasi dell'animazione
-type AnimationPhase = 'progress' | 'levelup' | 'rewards' | 'done';
+type AnimationPhase = 'video' | 'levelup' | 'rewards' | 'done';
 
 export const ClueMilestoneModal: React.FC<ClueMilestoneModalProps> = ({ milestone, onClose }) => {
-  const [phase, setPhase] = useState<AnimationPhase>('progress');
-  const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState<AnimationPhase>('video');
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Reset quando cambia milestone
   useEffect(() => {
     if (milestone) {
-      setPhase('progress');
-      setProgress(0);
+      setPhase('video');
+      setAudioEnabled(false);
       
-      // 1️⃣ FASE PROGRESS: Barra si riempie (2 secondi)
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(progressInterval);
-            return 100;
-          }
-          return prev + 2; // Incrementa del 2% ogni 40ms = 2 secondi totali
-        });
-      }, 40);
-
-      return () => clearInterval(progressInterval);
+      // Prova a far partire il video con audio
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.muted = false;
+          videoRef.current.play().then(() => {
+            setAudioEnabled(true);
+          }).catch(() => {
+            // Fallback: video muted
+            if (videoRef.current) {
+              videoRef.current.muted = true;
+              videoRef.current.play().catch(() => {});
+            }
+          });
+        }
+      }, 100);
     }
   }, [milestone]);
 
-  // 2️⃣ Quando progress arriva a 100, passa a LEVEL UP
-  useEffect(() => {
-    if (progress >= 100 && phase === 'progress') {
-      setTimeout(() => setPhase('levelup'), 200);
+  // Tap per attivare audio
+  const handleTapForAudio = useCallback(() => {
+    if (videoRef.current && !audioEnabled) {
+      videoRef.current.muted = false;
+      videoRef.current.play().catch(() => {});
+      setAudioEnabled(true);
     }
-  }, [progress, phase]);
+  }, [audioEnabled]);
 
-  // 3️⃣ Dopo LEVEL UP, mostra rewards
+  // Video terminato -> passa a LEVEL UP
+  const handleVideoEnd = useCallback(() => {
+    setPhase('levelup');
+  }, []);
+
+  // Skip video
+  const handleSkipVideo = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setPhase('levelup');
+  }, []);
+
+  // 2️⃣ Dopo LEVEL UP, mostra rewards
   useEffect(() => {
     if (phase === 'levelup') {
-      setTimeout(() => setPhase('rewards'), 1200);
+      setTimeout(() => setPhase('rewards'), 2000);
     }
   }, [phase]);
 
-  // 4️⃣ Dopo rewards, chiudi e triggera slot machine
+  // 3️⃣ Dopo rewards, chiudi e triggera slot machine
   useEffect(() => {
     if (phase === 'rewards' && milestone) {
       const closeTimer = setTimeout(() => {
@@ -93,267 +115,293 @@ export const ClueMilestoneModal: React.FC<ClueMilestoneModalProps> = ({ mileston
         >
           {/* Backdrop con blur */}
           <motion.div 
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            className="absolute inset-0 bg-black/90 backdrop-blur-xl"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
 
-          {/* Particelle confetti */}
-          {phase === 'levelup' && (
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {[...Array(30)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-3 h-3 rounded-full"
-                  style={{
-                    background: ['#00D1FF', '#D946EF', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6'][i % 6],
-                    left: `${Math.random() * 100}%`,
-                    top: '-5%',
-                  }}
-                  initial={{ y: 0, opacity: 1, rotate: 0, scale: 1 }}
-                  animate={{
-                    y: '120vh',
-                    opacity: [1, 1, 0],
-                    rotate: Math.random() * 720 - 360,
-                    x: Math.random() * 200 - 100,
-                    scale: [1, 1.5, 0.5],
-                  }}
-                  transition={{
-                    duration: 2.5 + Math.random() * 1.5,
-                    delay: Math.random() * 0.3,
-                    ease: 'easeOut',
-                  }}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* ✨ CARD PRINCIPALE - Stile Micro-Mission */}
-          <motion.div
-            className="relative w-full max-w-[340px] rounded-3xl overflow-hidden"
-            style={{
-              background: 'linear-gradient(180deg, rgba(10, 15, 30, 0.98) 0%, rgba(5, 10, 20, 0.99) 100%)',
-              border: '2px solid rgba(0, 209, 255, 0.5)',
-              boxShadow: `
-                0 0 60px rgba(0, 209, 255, 0.4),
-                0 0 120px rgba(217, 70, 239, 0.2),
-                inset 0 1px 0 rgba(255,255,255,0.1),
-                inset 0 -1px 0 rgba(0,0,0,0.3)
-              `,
-            }}
-            initial={{ scale: 0.5, y: 100, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.8, y: -50, opacity: 0 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          >
-            {/* Glow line top */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
-            
-            {/* Content */}
-            <div className="p-6 text-center">
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* FASE 1: VIDEO */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {phase === 'video' && (
+            <motion.div
+              className="relative w-full max-w-[90vw] max-h-[85vh] aspect-video rounded-3xl overflow-hidden"
+              style={{
+                boxShadow: `
+                  0 0 100px rgba(0, 209, 255, 0.4),
+                  0 0 200px rgba(217, 70, 239, 0.2),
+                  0 25px 50px rgba(0, 0, 0, 0.8)
+                `,
+                border: '3px solid rgba(0, 209, 255, 0.4)',
+              }}
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+              onClick={handleTapForAudio}
+              onTouchStart={handleTapForAudio}
+            >
+              {/* Video */}
+              <video
+                ref={videoRef}
+                src={LEVELUP_VIDEO}
+                className="w-full h-full object-cover"
+                playsInline
+                muted={!audioEnabled}
+                onEnded={handleVideoEnd}
+                onError={handleSkipVideo}
+              />
               
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* FASE 1: BARRA PROGRESSIVA */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {phase === 'progress' && (
+              {/* Audio hint overlay */}
+              {!audioEnabled && (
                 <motion.div
+                  className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="space-y-5"
                 >
-                  {/* Icon pulsante */}
                   <motion.div
-                    className="w-20 h-20 mx-auto rounded-full flex items-center justify-center"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.2) 0%, rgba(217, 70, 239, 0.2) 100%)',
-                      border: '2px solid rgba(0, 209, 255, 0.4)',
-                    }}
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      boxShadow: [
-                        '0 0 20px rgba(0, 209, 255, 0.3)',
-                        '0 0 40px rgba(0, 209, 255, 0.6)',
-                        '0 0 20px rgba(0, 209, 255, 0.3)',
-                      ],
-                    }}
-                    transition={{ duration: 1, repeat: Infinity }}
+                    className="flex flex-col items-center gap-2 px-6 py-4 rounded-2xl bg-black/60 backdrop-blur-sm"
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    <Trophy className="w-10 h-10 text-cyan-400" />
+                    <VolumeX className="w-10 h-10 text-white/80" />
+                    <span className="text-white/80 text-sm font-medium">Tocca per l'audio</span>
                   </motion.div>
-
-                  {/* Testo threshold raggiunto */}
-                  <div>
-                    <p className="text-white/60 text-sm mb-1">TRAGUARDO RAGGIUNTO</p>
-                    <p className="text-2xl font-bold text-white">
-                      <span className="text-green-400">{milestone.threshold}</span> INDIZI TROVATI
-                    </p>
-                  </div>
-
-                  {/* BARRA PROGRESSIVA */}
-                  <div className="relative w-full h-4 rounded-full overflow-hidden bg-white/10">
-                    <motion.div
-                      className="absolute inset-y-0 left-0 rounded-full"
-                      style={{
-                        background: 'linear-gradient(90deg, #00D1FF 0%, #D946EF 50%, #22C55E 100%)',
-                        boxShadow: '0 0 20px rgba(0, 209, 255, 0.6)',
-                      }}
-                      initial={{ width: '0%' }}
-                      animate={{ width: `${progress}%` }}
-                      transition={{ duration: 0.05 }}
-                    />
-                    {/* Shimmer effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                      animate={{ x: ['-100%', '200%'] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-                    />
-                  </div>
-
-                  <p className="text-cyan-400 text-sm font-mono">{progress}%</p>
                 </motion.div>
               )}
+              
+              {/* Audio indicator */}
+              <div className="absolute bottom-4 left-4">
+                <div className="w-12 h-12 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                  {audioEnabled ? (
+                    <Volume2 className="w-6 h-6 text-cyan-400" />
+                  ) : (
+                    <VolumeX className="w-6 h-6 text-white/60" />
+                  )}
+                </div>
+              </div>
+              
+              {/* Skip button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSkipVideo();
+                }}
+                className="absolute top-4 right-4 px-4 py-2 rounded-xl bg-black/60 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/80 transition-all text-sm font-medium"
+              >
+                Salta →
+              </button>
+              
+              {/* Glow borders */}
+              <div className="absolute inset-0 pointer-events-none rounded-3xl" 
+                style={{ 
+                  boxShadow: 'inset 0 0 60px rgba(0, 209, 255, 0.2), inset 0 0 120px rgba(217, 70, 239, 0.1)' 
+                }} 
+              />
+            </motion.div>
+          )}
 
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* FASE 2: LEVEL UP! */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {phase === 'levelup' && (
-                <motion.div
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', damping: 15, stiffness: 400 }}
-                  className="space-y-4 py-4"
-                >
-                  {/* Big animated icon */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* FASE 2: LEVEL UP! - Minimale ma scenico */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {phase === 'levelup' && (
+            <>
+              {/* Particelle esplosive */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {[...Array(40)].map((_, i) => (
                   <motion.div
-                    className="w-24 h-24 mx-auto rounded-full flex items-center justify-center"
+                    key={i}
+                    className="absolute w-4 h-4 rounded-full"
                     style={{
-                      background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.3) 0%, rgba(0, 209, 255, 0.3) 100%)',
-                      border: '3px solid rgba(34, 197, 94, 0.6)',
+                      background: ['#00D1FF', '#D946EF', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6', '#FFD700'][i % 7],
+                      left: '50%',
+                      top: '50%',
+                    }}
+                    initial={{ x: 0, y: 0, opacity: 1, scale: 0 }}
+                    animate={{
+                      x: (Math.random() - 0.5) * window.innerWidth * 0.8,
+                      y: (Math.random() - 0.5) * window.innerHeight * 0.8,
+                      opacity: [1, 1, 0],
+                      scale: [0, 2, 0.5],
+                      rotate: Math.random() * 720,
+                    }}
+                    transition={{
+                      duration: 1.5 + Math.random(),
+                      delay: Math.random() * 0.2,
+                      ease: 'easeOut',
+                    }}
+                  />
+                ))}
+              </div>
+              
+              {/* Flash di luce */}
+              <motion.div
+                className="absolute inset-0 bg-white pointer-events-none"
+                initial={{ opacity: 0.8 }}
+                animate={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+              />
+              
+              {/* Contenuto LEVEL UP */}
+              <motion.div
+                className="relative z-10 text-center"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', damping: 12, stiffness: 200, delay: 0.2 }}
+              >
+                {/* Icona stella animata */}
+                <motion.div
+                  className="w-32 h-32 mx-auto mb-6 rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%)',
+                  }}
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    rotate: [0, 15, -15, 0],
+                  }}
+                  transition={{ duration: 0.8, repeat: 2 }}
+                >
+                  <motion.div
+                    animate={{
+                      filter: [
+                        'drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))',
+                        'drop-shadow(0 0 60px rgba(255, 215, 0, 1))',
+                        'drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))',
+                      ],
+                    }}
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                  >
+                    <Star className="w-20 h-20 text-yellow-400" fill="currentColor" />
+                  </motion.div>
+                </motion.div>
+                
+                {/* Testo LEVEL UP */}
+                <motion.div
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4, type: 'spring' }}
+                >
+                  <motion.p 
+                    className="text-lg font-bold tracking-[0.5em] text-cyan-400 mb-3"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    ✦ CONGRATULAZIONI ✦
+                  </motion.p>
+                  
+                  <motion.h1
+                    className="text-6xl sm:text-7xl font-orbitron font-black mb-4"
+                    style={{
+                      background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 25%, #00D1FF 50%, #D946EF 75%, #22C55E 100%)',
+                      backgroundSize: '300% 300%',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      textShadow: '0 0 80px rgba(255, 215, 0, 0.5)',
                     }}
                     animate={{
-                      scale: [1, 1.2, 1],
-                      rotate: [0, 10, -10, 0],
+                      backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
                     }}
-                    transition={{ duration: 0.5, repeat: 2 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
                   >
-                    <Star className="w-14 h-14 text-yellow-400" fill="currentColor" />
-                  </motion.div>
-
-                  {/* LEVEL UP text */}
-                  <motion.div
-                    initial={{ y: 30, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <p className="text-sm font-bold tracking-[0.4em] text-cyan-400 mb-2">
-                      🎉 CONGRATULAZIONI 🎉
-                    </p>
-                    <h2
-                      className="text-4xl font-orbitron font-black"
-                      style={{
-                        background: 'linear-gradient(135deg, #22C55E 0%, #00D1FF 50%, #D946EF 100%)',
-                        backgroundSize: '200% 200%',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        animation: 'gradientShift 2s ease infinite',
-                      }}
-                    >
-                      LEVEL UP!
-                    </h2>
-                  </motion.div>
-
-                  {/* Title */}
+                    LEVEL UP!
+                  </motion.h1>
+                  
                   <motion.p
-                    className="text-xl font-bold text-white/90"
+                    className="text-2xl sm:text-3xl font-bold text-white/90"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
+                    transition={{ delay: 0.6 }}
                   >
                     {milestone.title}
                   </motion.p>
-                </motion.div>
-              )}
-
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* FASE 3: REWARDS */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {phase === 'rewards' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-5 py-2"
-                >
-                  {/* Title recap */}
-                  <div>
-                    <p className="text-sm tracking-[0.3em] text-cyan-400 mb-1">SEI ORA</p>
-                    <h2 className="text-2xl font-orbitron font-bold text-white">
-                      {milestone.title}
-                    </h2>
-                  </div>
-
-                  {/* Rewards cards */}
-                  <div className="flex flex-col gap-3">
-                    {/* M1U Reward */}
-                    <motion.div
-                      className="flex items-center justify-center gap-3 px-5 py-4 rounded-2xl mx-auto"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(0, 209, 255, 0.2) 100%)',
-                        border: '2px solid rgba(34, 197, 94, 0.5)',
-                        boxShadow: '0 0 30px rgba(34, 197, 94, 0.3)',
-                      }}
-                      initial={{ x: -50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <Sparkles className="w-6 h-6 text-green-400" />
-                      <span className="text-3xl font-black text-green-400">+{milestone.m1u} M1U</span>
-                      <Sparkles className="w-6 h-6 text-yellow-400" />
-                    </motion.div>
-
-                    {/* PE Reward */}
-                    <motion.div
-                      className="flex items-center justify-center gap-3 px-5 py-4 rounded-2xl mx-auto"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
-                        border: '2px solid rgba(168, 85, 247, 0.5)',
-                        boxShadow: '0 0 30px rgba(168, 85, 247, 0.3)',
-                      }}
-                      initial={{ x: 50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.4 }}
-                    >
-                      <Zap className="w-6 h-6 text-purple-400" />
-                      <span className="text-3xl font-black text-purple-400">+{milestone.pe} PE</span>
-                      <Zap className="w-6 h-6 text-pink-400" />
-                    </motion.div>
-                  </div>
-
-                  {/* Loading indicator */}
+                  
                   <motion.p
-                    className="text-white/50 text-sm"
+                    className="text-lg text-white/60 mt-2"
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8 }}
                   >
-                    Accredito in corso...
+                    {milestone.threshold} indizi trovati
                   </motion.p>
                 </motion.div>
-              )}
+              </motion.div>
+            </>
+          )}
 
-            </div>
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* FASE 3: REWARDS */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {phase === 'rewards' && (
+            <motion.div
+              className="relative z-10 w-full max-w-md px-4"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', damping: 20 }}
+            >
+              <div 
+                className="rounded-3xl p-8 text-center"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(10, 15, 30, 0.98) 0%, rgba(5, 10, 20, 0.99) 100%)',
+                  border: '2px solid rgba(0, 209, 255, 0.4)',
+                  boxShadow: '0 0 60px rgba(0, 209, 255, 0.3), 0 25px 50px rgba(0, 0, 0, 0.5)',
+                }}
+              >
+                {/* Title */}
+                <p className="text-sm tracking-[0.3em] text-cyan-400 mb-1">SEI ORA</p>
+                <h2 className="text-2xl font-orbitron font-bold text-white mb-6">
+                  {milestone.title}
+                </h2>
 
-            {/* Bottom glow */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-16 bg-gradient-to-t from-cyan-500/20 to-transparent blur-xl pointer-events-none" />
-          </motion.div>
+                {/* Rewards */}
+                <div className="flex flex-col gap-4">
+                  {/* M1U Reward */}
+                  <motion.div
+                    className="flex items-center justify-center gap-3 px-6 py-5 rounded-2xl"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(0, 209, 255, 0.2) 100%)',
+                      border: '2px solid rgba(34, 197, 94, 0.5)',
+                      boxShadow: '0 0 30px rgba(34, 197, 94, 0.3)',
+                    }}
+                    initial={{ x: -100, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.2, type: 'spring' }}
+                  >
+                    <Sparkles className="w-7 h-7 text-green-400" />
+                    <span className="text-4xl font-black text-green-400">+{milestone.m1u} M1U</span>
+                    <Sparkles className="w-7 h-7 text-yellow-400" />
+                  </motion.div>
 
-          {/* CSS Animation */}
-          <style>{`
-            @keyframes gradientShift {
-              0%, 100% { background-position: 0% 50%; }
-              50% { background-position: 100% 50%; }
-            }
-          `}</style>
+                  {/* PE Reward */}
+                  <motion.div
+                    className="flex items-center justify-center gap-3 px-6 py-5 rounded-2xl"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
+                      border: '2px solid rgba(168, 85, 247, 0.5)',
+                      boxShadow: '0 0 30px rgba(168, 85, 247, 0.3)',
+                    }}
+                    initial={{ x: 100, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.4, type: 'spring' }}
+                  >
+                    <Zap className="w-7 h-7 text-purple-400" />
+                    <span className="text-4xl font-black text-purple-400">+{milestone.pe} PE</span>
+                    <Zap className="w-7 h-7 text-pink-400" />
+                  </motion.div>
+                </div>
+
+                {/* Loading */}
+                <motion.p
+                  className="text-white/50 text-sm mt-6"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  Accredito in corso...
+                </motion.p>
+              </div>
+            </motion.div>
+          )}
+
         </motion.div>
       )}
     </AnimatePresence>

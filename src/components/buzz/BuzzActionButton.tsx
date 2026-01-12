@@ -1,7 +1,11 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ - BUZZ Action Button with M1U Payment System
 // PRIORITÀ BUZZ: 1) tierFreeBuzz (settimanali per tier) → 2) buzz_grants (premi) → 3) pricing M1U
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
+import { pausePageAudio, resumePageAudio } from '@/utils/audioController';
+
+// 🔊 Audio path for BUZZ button sound - UNICO SUONO AUTORIZZATO
+const BUZZ_BUTTON_SOUND = '/assets/audio/BUZZMAP.mp3';
 
 // --- BUZZ TOAST GLOBAL LOCK (shared) ---
 const __buzz = (globalThis as any).__buzzToastLock ?? { shown: false, t: 0 };
@@ -14,7 +18,7 @@ import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useBuzzGrants } from '@/hooks/useBuzzGrants';
 import { useTierFreeBuzz } from '@/hooks/useTierFreeBuzz'; // 🆕 BUZZ gratuiti settimanali per tier
 import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION Cashback Vault™
-import { useSoundEffects } from '@/hooks/useSoundEffects';
+// 🔇 RIMOSSO: useSoundEffects - tutti i suoni ora gestiti manualmente con BUZZMAP.mp3
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { toast } from 'sonner';
 import { showInsufficientM1UToast, showM1UDebitSuccessToast } from '@/utils/m1uHelpers';
@@ -38,6 +42,31 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
 }) => {
   const { user } = useUnifiedAuth();
   
+  // 🔊 Audio ref for BUZZ button sound
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  const playBuzzButtonSound = useCallback(() => {
+    // 🔇 Pause page audio before playing button sound
+    pausePageAudio();
+    
+    if (!audioRef.current) {
+      audioRef.current = new Audio(BUZZ_BUTTON_SOUND);
+      audioRef.current.volume = 0.7;
+      
+      // 🔊 Resume page audio when button sound ends
+      audioRef.current.onended = () => {
+        console.log('[BuzzButton] Sound ended, resuming page audio');
+        resumePageAudio();
+      };
+    }
+    audioRef.current.currentTime = 0;
+    audioRef.current.play().catch(err => {
+      console.log('[BuzzButton] Audio play failed:', err);
+      // Resume page audio if play fails
+      resumePageAudio();
+    });
+  }, []);
+  
   // 🆕 PRIORITÀ 1: BUZZ gratuiti settimanali per tier abbonamento
   const { 
     hasFreeBuzz: hasTierFreeBuzz, 
@@ -53,7 +82,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   // 🆕 M1SSION Cashback Vault™
   const { accrueFromBuzz } = useCashbackWallet();
   
-  const { playSound } = useSoundEffects();
+  // 🔇 RIMOSSO: playSound - ora usa solo BUZZMAP.mp3 gestito manualmente
   const { unitsData, refetch: refetchM1U } = useM1UnitsRealtime(user?.id);
   
   // Enhanced BUZZ counter with M1U pricing
@@ -188,8 +217,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   }, [user?.id]);
 
   const handleAction = async () => {
-    // © 2025 Joseph MULÉ – M1SSION™ – Play spacecraft ignition sound on BUZZ click
-    playSound('spacecraftIgnition', 0.6);
+    // 🔊 Play BUZZ button sound on press
+    playBuzzButtonSound();
     
     // 🔍 DEV-ONLY: BUZZ Flow Decision Log
     if (import.meta.env.DEV) {

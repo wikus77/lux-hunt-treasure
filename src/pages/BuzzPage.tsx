@@ -11,8 +11,9 @@ import { BuzzRewardHandler } from '@/components/buzz/BuzzRewardHandler';
 import { useBuzzStats } from '@/hooks/useBuzzStats';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
-import { useSoundEffects } from '@/hooks/useSoundEffects';
-import { createVortexSound } from '@/utils/audioSynthesis';
+// 🔇 RIMOSSO: useSoundEffects - tutti i suoni ora gestiti da BuzzActionButton
+// 🔇 RIMOSSO: createVortexSound - suono vortex eliminato per evitare conflitti con BUZZMAP.mp3
+// import { createVortexSound } from '@/utils/audioSynthesis';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 // BottomNavigation gestita da GlobalLayout
 import M1UPill from '@/features/m1u/M1UPill';
@@ -27,8 +28,8 @@ import { MotivationalPopup } from '@/components/feedback';
 export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
   const { user, isLoading: authLoading } = useUnifiedAuth();
-  const { playSound } = useSoundEffects();
-  const vortexSoundRef = useRef<ReturnType<typeof createVortexSound> | null>(null);
+  // 🔇 RIMOSSO: playSound - ora usa solo BUZZMAP.mp3 gestito da BuzzActionButton
+  // 🔇 RIMOSSO: vortexSoundRef - suono vortex eliminato
   const debugEnabled = useDebugFlag();
   const [forceShow, setForceShow] = React.useState(false);
   const [, setLocation] = useLocation();
@@ -72,42 +73,8 @@ export const BuzzPage: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
-  // Start procedural vortex sound ONLY when on /buzz page
-  useEffect(() => {
-    let mounted = true;
-    
-    // Small delay to ensure user has interacted with page
-    const timer = setTimeout(() => {
-      if (!mounted) return;
-      
-      try {
-        const vortex = createVortexSound();
-        if (!mounted) {
-          vortex.stop();
-          return;
-        }
-        
-        vortexSoundRef.current = vortex;
-        vortex.setVolume(0.25); // Subtle background volume
-        vortex.start();
-        console.log('🌀 Vortex sound active on /buzz page');
-      } catch (error) {
-        console.log('Vortex sound init prevented (autoplay policy):', error);
-      }
-    }, 200);
-    
-    // Cleanup: stop sound immediately when leaving /buzz page
-    return () => {
-      mounted = false;
-      clearTimeout(timer);
-      
-      if (vortexSoundRef.current) {
-        console.log('🌀 Stopping vortex sound (leaving /buzz page)');
-        vortexSoundRef.current.stop();
-        vortexSoundRef.current = null;
-      }
-    };
-  }, []);
+  // 🔇 RIMOSSO: Vortex sound - eliminato per evitare conflitti con BUZZMAP.mp3
+  // L'unico suono autorizzato nella pagina Buzz è BUZZMAP.mp3 quando si preme il tasto
 
   const handleBuzzSuccess = async () => {
     console.log('🎉 BUZZ SUCCESS - Refreshing counters');
