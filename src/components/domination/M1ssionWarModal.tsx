@@ -143,32 +143,92 @@ export const M1ssionWarModal: React.FC<M1ssionWarModalProps> = ({
         
         setBattleHistory(allBattles);
 
-        // 3. Fetch country progress (countries user has attacked)
-        const { data: progressData } = await supabase
-          .from('country_domination')
-          .select('country_code, win_progress, conquest_threshold, status, owner_id');
-
-        // Get unique countries from battle history
-        const attackedCountries = new Set(
-          (historyData || []).map(b => b.country_code)
-        );
-
-        // Map to progress format
-        const mappedProgress: CountryProgress[] = (progressData || [])
-          .filter(p => attackedCountries.has(p.country_code) || p.owner_id === userId)
-          .map(p => ({
-            country_code: p.country_code,
-            country_name: COUNTRY_NAMES[p.country_code] || p.country_code,
-            continent: CONTINENT_NAMES[COUNTRY_TO_CONTINENT[p.country_code]] || 'Unknown',
-            win_progress: p.win_progress,
-            conquest_threshold: p.conquest_threshold,
-            status: p.status as 'neutral' | 'contested' | 'conquered',
-            owner_id: p.owner_id,
-            owner_name: null, // Will be populated below
-            is_mine: p.owner_id === userId,
-            attacks_needed: Math.max(0, p.conquest_threshold - p.win_progress),
-            progress_percent: Math.min(100, (p.win_progress / p.conquest_threshold) * 100)
-          }));
+        // 3. Fetch country progress
+        // Prima conta le vittorie dell'utente da country_battle_wins
+        const { data: userWinsByCountry } = await supabase
+          .from('country_battle_wins')
+          .select('country_code')
+          .eq('winner_id', userId)
+          .eq('is_valid_for_domination', true);
+        
+        // Conta vittorie per paese
+        const winsPerCountry: Record<string, number> = {};
+        (userWinsByCountry || []).forEach(w => {
+          winsPerCountry[w.country_code] = (winsPerCountry[w.country_code] || 0) + 1;
+        });
+        
+        // Se non ci sono vittorie in country_battle_wins, conta da battle_sessions (Italia default)
+        const { count: sessionWinsCount } = await supabase
+          .from('battle_sessions')
+          .select('id', { count: 'exact' })
+          .eq('winner_id', userId)
+          .eq('status', 'resolved');
+        
+        // Se ha vittorie in battle_sessions ma non in country_battle_wins, aggiungi a Italia
+        if (sessionWinsCount && sessionWinsCount > 0 && Object.keys(winsPerCountry).length === 0) {
+          winsPerCountry['IT'] = sessionWinsCount;
+        }
+        
+        // Fetch stato dominio per tutti i paesi dove l'utente ha vinto
+        const countryCodes = Object.keys(winsPerCountry);
+        if (countryCodes.length === 0) {
+          // Aggiungi Italia di default se ha fatto battaglie
+          if (allBattles.length > 0) {
+            countryCodes.push('IT');
+            winsPerCountry['IT'] = allBattles.length;
+          }
+        }
+        
+        let mappedProgress: CountryProgress[] = [];
+        
+        if (countryCodes.length > 0) {
+          const { data: progressData } = await supabase
+            .from('country_domination')
+            .select('country_code, win_progress, conquest_threshold, status, owner_id')
+            .in('country_code', countryCodes);
+          
+          // Map to progress format con vittorie utente
+          mappedProgress = (progressData || []).map(p => {
+            const userWins = winsPerCountry[p.country_code] || 0;
+            return {
+              country_code: p.country_code,
+              country_name: COUNTRY_NAMES[p.country_code] || p.country_code,
+              continent: CONTINENT_NAMES[COUNTRY_TO_CONTINENT[p.country_code]] || 'Unknown',
+              win_progress: userWins, // Vittorie DELL'UTENTE, non globali
+              conquest_threshold: p.conquest_threshold,
+              status: p.status as 'neutral' | 'contested' | 'conquered',
+              owner_id: p.owner_id,
+              owner_name: null,
+              is_mine: p.owner_id === userId,
+              attacks_needed: Math.max(0, p.conquest_threshold - userWins),
+              progress_percent: Math.min(100, (userWins / p.conquest_threshold) * 100)
+            };
+          });
+          
+          // Se un paese non è nel DB, crealo con valori default
+          countryCodes.forEach(code => {
+            if (!mappedProgress.find(p => p.country_code === code)) {
+              const userWins = winsPerCountry[code] || 0;
+              const threshold = code === 'IT' ? 21 : 15; // Default threshold
+              mappedProgress.push({
+                country_code: code,
+                country_name: COUNTRY_NAMES[code] || code,
+                continent: CONTINENT_NAMES[COUNTRY_TO_CONTINENT[code]] || 'Unknown',
+                win_progress: userWins,
+                conquest_threshold: threshold,
+                status: 'neutral',
+                owner_id: null,
+                owner_name: null,
+                is_mine: false,
+                attacks_needed: Math.max(0, threshold - userWins),
+                progress_percent: Math.min(100, (userWins / threshold) * 100)
+              });
+            }
+          });
+        }
+        
+        // Ordina per progresso (più avanzati prima)
+        mappedProgress.sort((a, b) => b.progress_percent - a.progress_percent);
 
         setCountryProgress(mappedProgress);
 
@@ -371,15 +431,20 @@ const CountryProgressTab: React.FC<{ countryProgress: CountryProgress[]; userId:
               </div>
             </div>
             <div className="text-right">
-              {country.status === 'conquered' ? (
+              {country.status === 'conquered' && country.is_mine ? (
                 <span className="text-xs font-bold text-green-400 flex items-center gap-1">
                   <Crown className="w-3 h-3" />
-                  {country.is_mine ? 'TUO' : 'Conquistato'}
+                  TUO!
                 </span>
               ) : (
-                <span className="text-xs text-muted-foreground">
-                  {country.attacks_needed} attacchi
-                </span>
+                <div className="text-right">
+                  <span className="text-sm font-bold text-cyan-400">
+                    {country.win_progress}/{country.conquest_threshold}
+                  </span>
+                  <p className="text-[10px] text-muted-foreground">
+                    {country.attacks_needed > 0 ? `${country.attacks_needed} mancanti` : 'Completato!'}
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -388,14 +453,24 @@ const CountryProgressTab: React.FC<{ countryProgress: CountryProgress[]; userId:
           <div className="space-y-1">
             <Progress 
               value={country.progress_percent} 
-              className={`h-2 ${
+              className={`h-3 ${
                 country.status === 'conquered' ? 'bg-green-950' :
                 country.status === 'contested' ? 'bg-amber-950' : 'bg-gray-800'
               }`}
             />
-            <div className="flex justify-between text-[10px] text-muted-foreground">
-              <span>{country.win_progress} / {country.conquest_threshold}</span>
-              <span>{Math.round(country.progress_percent)}%</span>
+            <div className="flex justify-between text-[10px]">
+              <span className={`font-semibold ${
+                country.progress_percent >= 80 ? 'text-amber-400' :
+                country.progress_percent >= 50 ? 'text-cyan-400' : 'text-muted-foreground'
+              }`}>
+                {country.win_progress} vittorie su {country.conquest_threshold}
+              </span>
+              <span className={`font-bold ${
+                country.progress_percent >= 100 ? 'text-green-400' :
+                country.progress_percent >= 80 ? 'text-amber-400' : 'text-muted-foreground'
+              }`}>
+                {Math.round(country.progress_percent)}%
+              </span>
             </div>
           </div>
 
