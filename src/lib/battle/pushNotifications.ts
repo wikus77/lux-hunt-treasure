@@ -86,4 +86,29 @@ export function handleBattleInviteClick(data: BattleInvitePayload): string {
   return `/map-3d-tiler?battle=${data.battle_id}`;
 }
 
+/**
+ * Check if a user has active push subscriptions
+ * Returns true if user can receive push notifications
+ */
+export async function checkUserHasPushSubscription(userId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('webpush_subscriptions')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .limit(1);
+    
+    if (error) {
+      console.error('[BattlePush] Check subscription error:', error);
+      return false;
+    }
+    
+    return (data && data.length > 0);
+  } catch (err) {
+    console.error('[BattlePush] Check subscription exception:', err);
+    return false;
+  }
+}
+
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
