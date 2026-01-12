@@ -69,12 +69,12 @@ import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SpectatorPage from "@/pages/SpectatorPage";
-// Public info pages
-import AboutPage from "@/pages/public/AboutPage";
-import HowToPlayPage from "@/pages/public/HowToPlayPage";
-import PrizesPage from "@/pages/public/PrizesPage";
-import TeamPage from "@/pages/public/TeamPage";
-import SubscriptionsInfoPage from "@/pages/public/SubscriptionsInfoPage";
+// Public info pages - Lazy loaded to prevent GSAP/Framer conflicts during SPA navigation
+const AboutPage = React.lazy(() => import("@/pages/public/AboutPage"));
+const HowToPlayPage = React.lazy(() => import("@/pages/public/HowToPlayPage"));
+const PrizesPage = React.lazy(() => import("@/pages/public/PrizesPage"));
+const TeamPage = React.lazy(() => import("@/pages/public/TeamPage"));
+const SubscriptionsInfoPage = React.lazy(() => import("@/pages/public/SubscriptionsInfoPage"));
 // © 2025 M1SSION™ – Lazy-loaded Admin/Panel pages for bundle optimization
 const SendNotificationPage = React.lazy(() => import("@/pages/admin/SendNotificationPage"));
 const MissionPanelPage = React.lazy(() => import("@/pages/admin/MissionPanelPage"));
@@ -105,6 +105,7 @@ const PushReport = React.lazy(() => import("@/pages/PushReport").then(m => ({ de
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 const OnboardingSandbox = React.lazy(() => import("@/pages/OnboardingSandbox"));
 const OnboardingTestSandbox = React.lazy(() => import("@/pages/sandbox/OnboardingSandbox"));
+const QrWinSandboxPage = React.lazy(() => import("@/pages/sandbox/QrWinSandboxPage"));
 
 import Terms from "@/pages/Terms";
 import TermsConditions from "@/pages/legal/TermsConditions";
@@ -260,21 +261,31 @@ const WouterRoutes: React.FC = () => {
             <SpectatorPage />
           </Route>
 
-          {/* Public Info Pages (No Auth Required) */}
+          {/* Public Info Pages (No Auth Required) - Using key to force remount on navigation */}
           <Route path="/about">
-            <AboutPage />
+            <React.Suspense fallback={<PageSkeleton variant="page" />}>
+              <AboutPage key="about-page" />
+            </React.Suspense>
           </Route>
           <Route path="/how-to-play">
-            <HowToPlayPage />
+            <React.Suspense fallback={<PageSkeleton variant="page" />}>
+              <HowToPlayPage key="how-to-play-page" />
+            </React.Suspense>
           </Route>
           <Route path="/prizes">
-            <PrizesPage />
+            <React.Suspense fallback={<PageSkeleton variant="page" />}>
+              <PrizesPage key="prizes-page" />
+            </React.Suspense>
           </Route>
           <Route path="/team">
-            <TeamPage />
+            <React.Suspense fallback={<PageSkeleton variant="page" />}>
+              <TeamPage key="team-page" />
+            </React.Suspense>
           </Route>
           <Route path="/subscriptions-info">
-            <SubscriptionsInfoPage />
+            <React.Suspense fallback={<PageSkeleton variant="page" />}>
+              <SubscriptionsInfoPage key="subscriptions-info-page" />
+            </React.Suspense>
           </Route>
 
           {/* Protected routes */}
@@ -860,6 +871,21 @@ const WouterRoutes: React.FC = () => {
           <Route path="/onboarding-test">
             <React.Suspense fallback={<PageSkeleton variant="default" />}>
               <OnboardingTestSandbox />
+            </React.Suspense>
+          </Route>
+
+          {/* QR Win - Gratta e Vinci QR scan - PRODUCTION */}
+          {/* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED */}
+          <Route path="/qr-win">
+            <React.Suspense fallback={<PageSkeleton variant="default" />}>
+              <QrWinSandboxPage />
+            </React.Suspense>
+          </Route>
+
+          {/* QR Win Sandbox - Testing */}
+          <Route path="/sandbox/qr-win">
+            <React.Suspense fallback={<PageSkeleton variant="default" />}>
+              <QrWinSandboxPage />
             </React.Suspense>
           </Route>
 

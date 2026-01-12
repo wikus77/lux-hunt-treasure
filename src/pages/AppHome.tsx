@@ -32,6 +32,7 @@ const AppHome = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showFortuneWheel, setShowFortuneWheel] = useState(false);
+  
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
@@ -185,17 +186,18 @@ const { isConnected } = useRealTimeNotifications();
   }
 
   return (
-    // 🔧 FIX v2: Outer container blocks iOS bounce scroll (like LeaderboardPage)
-    <div
-      style={{
-        height: '100dvh',
-        overflow: 'hidden',
-        position: 'relative',
-        overscrollBehavior: 'none',
-      }}
-    >
-    <div 
-      className="m1-app-bg relative"
+    <>
+      {/* 🔧 FIX v2: Outer container blocks iOS bounce scroll (like LeaderboardPage) */}
+      <div
+        style={{
+          height: '100dvh',
+          overflow: 'hidden',
+          position: 'relative',
+          overscrollBehavior: 'none',
+        }}
+      >
+      <div 
+        className="m1-app-bg relative"
       style={{
         height: '100dvh',
         overflowY: 'auto',
@@ -431,6 +433,7 @@ const { isConnected } = useRealTimeNotifications();
       </MissionSync>
     </div>
     </div>
+    </>
   );
 };
 

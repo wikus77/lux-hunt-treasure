@@ -1,7 +1,10 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // V2: Added START M1SSION gate enforcement
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
+// 🔊 Audio path for BUZZ MAP sound
+const BUZZ_MAP_SOUND = '/assets/audio/BUZZMAP.mp3';
 import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
 import { toast } from 'sonner';
@@ -30,6 +33,20 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
   onAreaGenerated
 }) => {
   const { isAuthenticated, user } = useAuthContext();
+  
+  // 🔊 Audio ref for BUZZ MAP sound
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  const playBuzzMapSound = useCallback(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio(BUZZ_MAP_SOUND);
+      audioRef.current.volume = 0.7;
+    }
+    audioRef.current.currentTime = 0;
+    audioRef.current.play().catch(err => {
+      console.log('[BuzzMap] Audio play failed:', err);
+    });
+  }, []);
   const { callBuzzApi } = useBuzzApi();
   const { accrueFromBuzzMap } = useCashbackWallet(); // 🆕 M1SSION Cashback Vault™
   const { contribute: contributeToPulse } = usePulseContribute(); // 🔋 PULSE
@@ -156,6 +173,9 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
   };
 
   const handleBuzzMapPress = async () => {
+    // 🔊 Play BUZZ MAP sound on press
+    playBuzzMapSound();
+    
     if (!isAuthenticated || !user) {
       toast.error('Devi accedere per usare BUZZ MAP.');
       return;

@@ -1,8 +1,10 @@
 /**
  * Agent Battle Card - Displayed when clicking agent marker
+ * FIXED: createPortal + z-index alto per essere sopra la mappa
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Swords, Shield as ShieldIcon, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -60,23 +62,27 @@ export function AgentBattleCard({
 }: AgentBattleCardProps) {
   const statusConfig = STATUS_CONFIG[status];
 
-  return (
+  const cardContent = (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - z-index altissimo */}
           <motion.div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1200]"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md"
+            style={{ zIndex: 999996 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
 
-          {/* Card */}
+          {/* Card - Centrata e responsive */}
           <motion.div
-            className="fixed left-1/2 top-[20%] z-[1201] w-[90%] max-w-[400px]"
-            style={{ marginLeft: '-45%' }}
+            className="fixed left-4 right-4 w-auto max-w-[400px] mx-auto"
+            style={{ 
+              zIndex: 999997,
+              top: 'calc(80px + env(safe-area-inset-top, 0px))',
+            }}
             initial={{ opacity: 0, scale: 0.9, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -20 }}
@@ -163,6 +169,8 @@ export function AgentBattleCard({
       )}
     </AnimatePresence>
   );
+
+  return createPortal(cardContent, document.body);
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

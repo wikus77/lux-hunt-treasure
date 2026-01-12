@@ -40,6 +40,9 @@ interface MicroMissionsCardProps {
 
 const POPUP_ID = 'micro-missions';
 
+// Routes where Micro-Missions should NOT appear (sandbox, testing, etc.)
+const EXCLUDED_ROUTES = ['/sandbox/', '/onboarding-test', '/landing'];
+
 export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: MicroMissionsCardProps) {
   const [currentMission, setCurrentMission] = useState<MicroMission | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
@@ -48,6 +51,12 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
   const [motivationText, setMotivationText] = useState('');
   const [isReady, setIsReady] = useState(false);
   const [location, setLocation] = useLocation();
+
+  // Don't render on excluded routes (sandbox, testing, etc.)
+  const isExcludedRoute = EXCLUDED_ROUTES.some(route => location.startsWith(route));
+  if (isExcludedRoute) {
+    return null;
+  }
   const lastLocationRef = useRef(location);
   const registerActivePopup = useEntityOverlayStore((s) => s.registerActivePopup);
   const unregisterActivePopup = useEntityOverlayStore((s) => s.unregisterActivePopup);

@@ -78,9 +78,10 @@ const PrizesPage: React.FC = () => {
   const [heroIndex, setHeroIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const { scrollYProgress } = useScroll();
-  const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.9]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.5]);
+  // NOTE: Disabled useScroll to fix React #310 error on SPA navigation from LandingPage
+  // const { scrollYProgress } = useScroll();
+  // const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.9]);
+  // const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.5]);
 
   // Auto-rotate hero
   React.useEffect(() => {
@@ -111,7 +112,6 @@ const PrizesPage: React.FC = () => {
       <section className="relative min-h-screen flex items-center justify-center px-4 z-10 pt-16">
         <motion.div 
           className="max-w-6xl mx-auto w-full"
-          style={{ scale: heroScale, opacity: heroOpacity }}
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             

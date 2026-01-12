@@ -1,6 +1,6 @@
 /**
  * TRON BATTLE - Push Notifications Integration
- * Extends existing push system with battle_invite type
+ * Usa battle-push-send edge function (non richiede admin token)
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
@@ -11,6 +11,7 @@ export interface BattleInvitePayload {
   battle_id: string;
   opponent_name: string;
   opponent_agent_code: string;
+  attacker_weapon_power: number;
   stake_type: string;
   stake_amount: number;
   arena_name?: string;
@@ -18,7 +19,7 @@ export interface BattleInvitePayload {
 
 /**
  * Send battle invite push notification to opponent
- * Uses existing push infrastructure (no modifications to core system)
+ * Usa battle-push-send edge function (verifica JWT, non richiede admin token)
  */
 export async function sendBattleInvite(
   opponentId: string,
@@ -27,46 +28,62 @@ export async function sendBattleInvite(
   creatorAgentCode: string,
   stakeType: string,
   stakeAmount: number,
-  arenaName?: string
-): Promise<void> {
+  arenaName?: string,
+  attackerWeaponPower: number = 0
+): Promise<{ success: boolean; error?: string; sent?: number; details?: any }> {
   try {
-    const payload: BattleInvitePayload = {
-      type: 'battle_invite',
-      battle_id: battleId,
-      opponent_name: creatorName,
-      opponent_agent_code: creatorAgentCode,
-      stake_type: stakeType,
-      stake_amount: stakeAmount,
-      arena_name: arenaName,
-    };
+    console.log('📤 [BattlePush] Sending push to:', opponentId);
 
-    // Use existing push notification function
-    const { error } = await supabase.functions.invoke('webpush-targeted-send', {
+    // Call battle-push-send edge function (no admin token required)
+    const { data, error } = await supabase.functions.invoke('battle-push-send', {
       body: {
-        user_ids: [opponentId],
-        title: '⚔️ TRON Battle Challenge!',
-        body: `${creatorAgentCode} challenges you to battle!`,
-        data: payload,
-        url: `/battle/${battleId}`,
+        defender_id: opponentId,
+        battle_id: battleId,
+        attacker_agent_code: creatorAgentCode,
+        attacker_weapon_power: attackerWeaponPower,
+        stake_type: stakeType,
+        stake_amount: stakeAmount,
+        arena_name: arenaName,
       },
     });
 
     if (error) {
-      console.error('Failed to send battle invite:', error);
-    } else {
-      console.log(`✅ Battle invite sent to ${opponentId}`);
+      console.error('❌ [BattlePush] Edge function error:', error);
+      return { success: false, error: error.message, details: error };
     }
-  } catch (error) {
-    console.error('Battle invite error:', error);
+
+    console.log('✅ [BattlePush] Response:', data);
+
+    if (data?.success && data?.sent > 0) {
+      console.log(`✅ [BattlePush] Successfully sent ${data.sent} notification(s)`);
+      return { success: true, sent: data.sent, details: data };
+    } else if (data?.sent === 0) {
+      console.warn('⚠️ [BattlePush] No active subscriptions for defender');
+      return { 
+        success: false, 
+        error: 'L\'avversario non ha notifiche push attive',
+        sent: 0,
+        details: data 
+      };
+    } else {
+      console.warn('⚠️ [BattlePush] Send failed:', data);
+      return { 
+        success: false, 
+        error: data?.message || 'Invio fallito',
+        details: data 
+      };
+    }
+  } catch (error: any) {
+    console.error('❌ [BattlePush] Exception:', error);
+    return { success: false, error: error.message || 'Unknown error' };
   }
 }
 
 /**
  * Handle battle invite notification click (for service worker)
- * Add this handler to existing SW notification click logic
  */
 export function handleBattleInviteClick(data: BattleInvitePayload): string {
-  return `/battle/${data.battle_id}`;
+  return `/map-3d-tiler?battle=${data.battle_id}`;
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

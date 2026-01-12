@@ -1,22 +1,21 @@
 /**
  * Battle Modal - Full-screen modal for battle management
+ * FIXED: createPortal + responsive positioning between header and bottom nav
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Swords, Clock, Zap, Plus, ShoppingBag, ExternalLink } from 'lucide-react';
+import { X, Swords, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { acceptBattle } from '@/lib/battle/invokeBattle';
 import { useToast } from '@/hooks/use-toast';
-import { useSafeNavigate } from '@/lib/navigation/safeNavigate';
-import type { Battle } from '@/types/battle';
 import { BattleMount } from './BattleMount';
 import { BattleCreationForm } from './BattleCreationForm';
 import { BattleShop } from './BattleShop';
+import { BattleVideoModal } from './BattleVideoModal'; // 🆕 Import video modal
 
 interface BattleModalProps {
   isOpen: boolean;
@@ -25,7 +24,7 @@ interface BattleModalProps {
   activeBattles: Battle[];
   pendingChallenges: Battle[];
   loading: boolean;
-  preSelectedOpponent?: { id: string; name: string }; // For agent marker attack
+  preSelectedOpponent?: { id: string; name: string; lat?: number; lng?: number }; // For agent marker attack
 }
 
 export function BattleModal({
@@ -37,94 +36,59 @@ export function BattleModal({
   loading,
   preSelectedOpponent,
 }: BattleModalProps) {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  // Tab default è sempre "new" (New Battle)
+  const [activeTab, setActiveTab] = useState('new');
   const { toast } = useToast();
-  const navigate = useSafeNavigate();
+
+  // 🆕 State for battle video (managed here to prevent unmounting)
+  const [showBattleVideo, setShowBattleVideo] = useState(false);
+  const [battleVideoResult, setBattleVideoResult] = useState<boolean | null>(null);
 
   const activeBattle = activeBattles[0]; // Show HUD for first active battle
 
-  const handleAcceptChallenge = async (battleId: string) => {
-    setAcceptingId(battleId);
+  // 🆕 Callback to show battle video (called by BattleCreationForm)
+  const handleShowBattleVideo = useCallback((won: boolean) => {
+    setBattleVideoResult(won);
+    setShowBattleVideo(true);
+  }, []);
 
-    try {
-      await acceptBattle(battleId);
-
-      toast({
-        title: '✅ Battle Accepted!',
-        description: 'Prepare for combat...',
-      });
-
-      // Close modal and let HUD handle the battle
-      onClose();
-    } catch (error: any) {
-      console.error('⚠️ Accept error:', error);
-      toast({
-        title: 'Accept Failed',
-        description: error?.message || 'Unknown error',
-        variant: 'destructive',
-      });
-    } finally {
-      setAcceptingId(null);
-    }
-  };
-
-  const formatBattleStatus = (battle: Battle): string => {
-    switch (battle.status) {
-      case 'pending':
-        return 'Awaiting opponent';
-      case 'accepted':
-        return 'Ready to start';
-      case 'ready':
-        return 'Get ready!';
-      case 'countdown':
-        return 'Countdown active';
-      case 'active':
-        return 'Battle in progress';
-      default:
-        return battle.status;
-    }
-  };
-
-  const getTimeRemaining = (battle: Battle): string => {
-    if (battle.expires_at) {
-      const remaining = new Date(battle.expires_at).getTime() - Date.now();
-      if (remaining > 0) {
-        const minutes = Math.floor(remaining / 60000);
-        return `${minutes}m left`;
-      }
-    }
-    return 'Expiring soon';
-  };
+  // 🆕 Callback when video ends
+  const handleBattleVideoClose = useCallback(() => {
+    setShowBattleVideo(false);
+    // Result modal will be handled by BattleCreationForm
+  }, []);
 
   if (!userId) return null;
 
-  return (
-    <>
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1100]"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={onClose}
-            />
+  const modalContent = (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop - z-index altissimo */}
+          <motion.div
+            className="fixed inset-0 bg-black/80 backdrop-blur-md"
+            style={{ zIndex: 999998 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
 
-            {/* Modal Content */}
-            <motion.div
-              className="fixed inset-x-4 top-[10%] bottom-[10%] z-[1101] bg-background/95 backdrop-blur-xl border border-cyan-500/30 rounded-2xl shadow-2xl overflow-hidden"
-              style={{
-                maxWidth: '600px',
-                margin: '0 auto',
-              }}
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            >
+          {/* Modal Content - Posizionato tra header (60px) e bottom nav (90px) */}
+          <motion.div
+            className="fixed left-4 right-4 bg-background/95 backdrop-blur-xl border border-cyan-500/30 rounded-2xl shadow-2xl overflow-hidden"
+            style={{
+              zIndex: 999999,
+              top: 'calc(60px + env(safe-area-inset-top, 0px))',
+              bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))',
+              maxWidth: '600px',
+              margin: '0 auto',
+            }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-cyan-500/30 bg-gradient-to-r from-cyan-950/30 to-purple-950/30">
                 <div className="flex items-center gap-3">
@@ -146,129 +110,15 @@ export function BattleModal({
                 </Button>
               </div>
 
-              {/* Tabs */}
+              {/* Tabs - Solo New Battle e Shop */}
               <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col h-[calc(100%-73px)]">
-                <TabsList className="w-full grid grid-cols-3 bg-muted/30 rounded-none border-b border-border/50">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="new">New Battle</TabsTrigger>
+                <TabsList className="w-full grid grid-cols-2 bg-muted/30 rounded-none border-b border-border/50">
+                  <TabsTrigger value="new">⚔️ New Battle</TabsTrigger>
                   <TabsTrigger value="shop">
                     <ShoppingBag className="h-4 w-4 mr-1" />
                     Shop
                   </TabsTrigger>
                 </TabsList>
-
-                {/* Overview Tab */}
-                <TabsContent value="overview" className="flex-1 overflow-hidden">
-                  <ScrollArea className="h-full">
-                    <div className="p-4 space-y-4">
-                      {/* Loading State */}
-                      {loading && (
-                        <div className="text-center py-8 text-sm text-muted-foreground">
-                          Loading battles...
-                        </div>
-                      )}
-
-                      {/* Empty State */}
-                      {!loading && pendingChallenges.length === 0 && activeBattles.length === 0 && (
-                        <div className="text-center py-12 space-y-4">
-                          <Swords className="h-16 w-16 mx-auto text-muted-foreground opacity-30" />
-                          <p className="text-sm text-muted-foreground">No active battles</p>
-                          <Button
-                            onClick={() => setActiveTab('new')}
-                            size="sm"
-                            className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600"
-                          >
-                            <Swords className="mr-2 h-4 w-4" />
-                            Create Battle
-                          </Button>
-                        </div>
-                      )}
-
-                      {/* Pending Challenges */}
-                      {pendingChallenges.length > 0 && (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 text-sm font-semibold text-yellow-400">
-                            <Zap className="h-4 w-4" />
-                            Challenges ({pendingChallenges.length})
-                          </div>
-                          {pendingChallenges.map((battle) => (
-                            <motion.div
-                              key={battle.id}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 space-y-2"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-semibold text-sm">
-                                    {battle.arena_name || 'Battle Arena'}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {battle.stake_amount} {battle.stake_type} • {getTimeRemaining(battle)}
-                                  </p>
-                                </div>
-                                <Button
-                                  onClick={() => handleAcceptChallenge(battle.id)}
-                                  disabled={acceptingId === battle.id}
-                                  size="sm"
-                                  className="bg-green-600 hover:bg-green-700"
-                                >
-                                  {acceptingId === battle.id ? 'Accepting...' : 'Accept'}
-                                </Button>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Active Battles */}
-                      {activeBattles.length > 0 && (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 text-sm font-semibold text-cyan-400">
-                            <Clock className="h-4 w-4 animate-pulse" />
-                            Active Battles ({activeBattles.length})
-                          </div>
-                          {activeBattles.map((battle) => (
-                            <motion.div
-                              key={battle.id}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              className="p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/30 cursor-pointer hover:bg-cyan-500/20 transition-colors"
-                              onClick={() => navigate(`/battle/${battle.id}`)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-semibold text-sm">
-                                    {battle.arena_name || 'Battle Arena'}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatBattleStatus(battle)} • {battle.stake_amount} {battle.stake_type}
-                                  </p>
-                                </div>
-                                <Badge variant="outline" className="border-cyan-500/50 text-cyan-400">
-                                  {battle.status}
-                                </Badge>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Link to full arena */}
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          navigate('/battle');
-                          onClose();
-                        }}
-                        className="w-full text-sm text-muted-foreground hover:text-foreground"
-                      >
-                        <ExternalLink className="mr-2 h-3 w-3" />
-                        Open full Battle Arena
-                      </Button>
-                    </div>
-                  </ScrollArea>
-                </TabsContent>
 
                 {/* New Battle Tab */}
                 <TabsContent value="new" className="flex-1 overflow-hidden">
@@ -277,6 +127,7 @@ export function BattleModal({
                       <BattleCreationForm
                         userId={userId}
                         preSelectedOpponent={preSelectedOpponent}
+                        onShowVideo={handleShowBattleVideo} // 🆕 Pass callback to show video
                         onSuccess={() => {
                           toast({
                             title: '✅ Battle Created!',
@@ -309,7 +160,20 @@ export function BattleModal({
           </>
         )}
       </AnimatePresence>
+  );
 
+  return (
+    <>
+      {/* Modal renderizzato nel body con createPortal */}
+      {createPortal(modalContent, document.body)}
+      
+      {/* 🆕 Battle Video Modal - Managed at this level to prevent unmounting */}
+      <BattleVideoModal
+        isOpen={showBattleVideo}
+        won={battleVideoResult ?? false}
+        onClose={handleBattleVideoClose}
+      />
+      
       {/* Battle HUD (for active battle) */}
       {activeBattle && (
         <BattleMount

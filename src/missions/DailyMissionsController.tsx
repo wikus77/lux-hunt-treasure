@@ -7,9 +7,13 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'wouter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useEntityOverlayStore } from '@/stores/entityOverlayStore';
 import { MISSIONS_ENABLED } from './missionsRegistry';
+
+// Routes where Daily Missions should NOT appear (sandbox, testing, etc.)
+const EXCLUDED_ROUTES = ['/sandbox/', '/onboarding-test', '/landing'];
 import { areMissionsCompleted as areMicroMissionsCompleted } from '@/config/firstSessionConfig';
 import { 
   getMissionState, 
@@ -35,9 +39,16 @@ import MissionActionsModal from './ui/MissionActionsModal';
 // ═══════════════════════════════════════════════════════════════
 
 export default function DailyMissionsController() {
+  const [location] = useLocation();
   const { isAuthenticated } = useUnifiedAuth();
   const registerActivePopup = useEntityOverlayStore((s) => s.registerActivePopup);
   const unregisterActivePopup = useEntityOverlayStore((s) => s.unregisterActivePopup);
+
+  // Don't render on excluded routes (sandbox, testing, etc.)
+  const isExcludedRoute = EXCLUDED_ROUTES.some(route => location.startsWith(route));
+  if (isExcludedRoute) {
+    return null;
+  }
 
   // Modal states
   const [showBriefing, setShowBriefing] = useState(false);

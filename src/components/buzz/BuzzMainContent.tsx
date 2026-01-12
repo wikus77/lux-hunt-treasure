@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
-import { useSoundEffects } from '@/hooks/use-sound-effects';
+// 🔇 RIMOSSO: useSoundEffects - tutti i suoni ora gestiti da BuzzActionButton
 import BuzzPulseAnimation from './BuzzPulseAnimation';
 import BuzzCountDisplay from './BuzzCountDisplay';
 import BuzzInfoCard from './BuzzInfoCard';
@@ -32,7 +32,7 @@ const BuzzMainContent: React.FC<BuzzMainContentProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [showPulse, setShowPulse] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { playSound } = useSoundEffects();
+  // Sound effects removed - now handled by individual buttons
   const { navigate } = useWouterNavigation();
 
   const handleBuzzPress = async () => {
@@ -53,7 +53,7 @@ const BuzzMainContent: React.FC<BuzzMainContentProps> = ({
 
     setIsLoading(true);
     setIsAnimating(true);
-    playSound('buzz');
+    // 🔊 Sound now plays from BuzzActionButton
 
     try {
       await onBuzzPress();
@@ -76,7 +76,7 @@ const BuzzMainContent: React.FC<BuzzMainContentProps> = ({
   };
 
   const handleMapNavigation = () => {
-    playSound('buzz'); // Using 'buzz' instead of 'click' as it's a valid SoundType
+    // 🔊 Sound now plays from BottomNavigation
     onNavigateToMap();
   };
 

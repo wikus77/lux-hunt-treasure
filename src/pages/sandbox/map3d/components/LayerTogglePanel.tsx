@@ -37,10 +37,11 @@ const LayerTogglePanel: React.FC<LayerTogglePanelProps> = ({ layers, onToggle, m
 
   return (
     <div
-      className="fixed right-4 z-[100]"
+      className="fixed right-4"
       style={{ 
         top: 'calc(env(safe-area-inset-top, 0px) + 96px)',
-        pointerEvents: 'auto' 
+        pointerEvents: 'auto',
+        zIndex: 50000,
       }}
     >
       {/* Collapsed state - Pill button */}

@@ -67,7 +67,8 @@ export const LandingHeader: React.FC = () => {
                 onMouseEnter={() => setHoveredLink(link.href)}
                 onMouseLeave={() => setHoveredLink(null)}
               >
-                <Link
+                {/* FIX: Use native anchor to force full page reload and avoid GSAP/Framer conflict */}
+                <a
                   href={link.href}
                   className="relative z-10 block"
                 >
@@ -130,7 +131,7 @@ export const LandingHeader: React.FC = () => {
                       {link.label}
                     </motion.span>
                   </motion.div>
-                </Link>
+                </a>
                 
                 {/* Floating glow indicator */}
                 <AnimatePresence>
@@ -226,7 +227,8 @@ export const LandingHeader: React.FC = () => {
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Link
+                  {/* FIX: Use native anchor for mobile menu to force full page reload */}
+                  <a
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
                     className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-3 rounded-xl ${
@@ -237,7 +239,7 @@ export const LandingHeader: React.FC = () => {
                   >
                     {link.icon && <link.icon className="w-4 h-4" />}
                     {link.label}
-                  </Link>
+                  </a>
                 </motion.div>
               ))}
             </nav>

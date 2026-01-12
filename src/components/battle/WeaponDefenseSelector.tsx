@@ -28,7 +28,7 @@ interface WeaponDefenseSelectorProps {
   userId: string;
   type: 'weapon' | 'defense';
   selectedItemId: string | null;
-  onSelect: (itemId: string | null, itemCode: string | null) => void;
+  onSelect: (itemId: string | null, itemCode: string | null, power?: number) => void; // 🆕 Added power
   onOpenShop?: () => void;
 }
 
@@ -122,7 +122,7 @@ export function WeaponDefenseSelector({
       <div className="space-y-2">
         {/* None option */}
         <button
-          onClick={() => onSelect(null, null)}
+          onClick={() => onSelect(null, null, 0)}
           className={`
             w-full p-2 rounded-lg border text-left transition-all
             ${
@@ -140,7 +140,7 @@ export function WeaponDefenseSelector({
         {items.map((item) => (
           <button
             key={item.inventory_id}
-            onClick={() => onSelect(item.item_id, item.code)}
+            onClick={() => onSelect(item.item_id, item.code, item.power)}
             className={`
               w-full p-2 rounded-lg border text-left transition-all
               ${RARITY_COLORS[item.rarity as keyof typeof RARITY_COLORS] || 'border-border/50'}

@@ -62,6 +62,8 @@ import { ShadowBehaviorsLayer } from "./components/overlay/ShadowBehaviorsLayer"
 import { MissionIntroOverlay } from "./components/overlay/MissionIntroOverlay";
 // 🎁 Prize Intro Cinematic System
 import { MissionPrizeIntroOverlay } from "./components/overlay/MissionPrizeIntroOverlay";
+// ⚔️ TRON Battle Defense Manager - Global listener for incoming attacks
+import { BattleDefenseManager } from "./components/battle/BattleDefenseManager";
 // 📱 Native Safe Area Provider - Cross-device layout adaptation
 import { NativeSafeAreaProvider } from "./components/layout/NativeSafeAreaProvider";
 // 🎯 Daily Missions System
@@ -266,6 +268,8 @@ function App() {
                     <MissionIntroOverlay />
                     {/* 🎁 Prize Intro Cinematic (shows after onboarding, before gameplay) */}
                     <MissionPrizeIntroOverlay />
+                    {/* ⚔️ TRON Battle Defense - Global listener for incoming attacks */}
+                    <BattleDefenseManager />
                     <BadgeAuditReport />
                     {/* M1UnitsDebugPanel nascosto per il lancio - rimuovere in produzione */}
                     {/* <M1UnitsDebugPanel /> */}

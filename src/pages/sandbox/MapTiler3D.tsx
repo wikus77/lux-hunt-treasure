@@ -68,6 +68,7 @@ import { MapHUD, BuzzHelpPopup, MapExploreHint } from '@/components/first-sessio
 // MicroMissionsCard ora è globale in App.tsx
 // 🎯 DAILY MISSIONS: Mission pill
 import { MissionPill } from '@/missions/ui/MissionPill';
+// 🎬 Video intro now handled by BottomNavigation GenericVideoModal
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
 const DEV_MOCKS = import.meta.env.VITE_MAP3D_DEV_MOCKS === 'true';
@@ -86,7 +87,7 @@ export default function MapTiler3D() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MLMap | null>(null);
   const debugEnabled = useDebugFlag();
-
+  
   // 🆕 v5: Shadow Protocol Map Glitch Effect
   useMapGlitchEffect();
   const [diag, setDiag] = useState<DiagState>({ 

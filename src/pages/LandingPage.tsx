@@ -8,7 +8,7 @@ import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
 import LandingFooter from "@/components/landing/LandingFooter";
 import LandingHeader from "@/components/landing/LandingHeader";
 import AdminEmergencyLogin from "@/components/auth/AdminEmergencyLogin";
-import CookieBanner from "@/components/gdpr/CookieBanner";
+// CookieBanner rimosso - gestito globalmente da CookieConsentManager in App.tsx
 import { MindsetMicroTest } from "@/components/landing/MindsetMicroTest";
 import LandingMapTiler from "@/components/landing/LandingMapTiler";
 import { motion } from "framer-motion";
@@ -57,6 +57,31 @@ const LandingPage = () => {
   const [isTypingComplete, setIsTypingComplete] = useState(false);
 
   console.log('🌟 M1SSION™ LANDING PAGE - Xavier Cusso Style - Showing to anonymous user');
+
+  // 🔄 CRITICAL: Cleanup GSAP on route change and component unmount
+  const [currentLocation] = useLocation();
+  const isOnLanding = currentLocation === '/landing' || currentLocation === '/';
+  
+  // Immediate cleanup when navigating away
+  useEffect(() => {
+    if (!isOnLanding) {
+      // Kill ALL ScrollTriggers when leaving LandingPage
+      ScrollTrigger.getAll().forEach(st => st.kill());
+      gsap.killTweensOf('*');
+      ScrollTrigger.clearMatchMedia();
+      console.log('🧹 [LandingPage] GSAP cleanup on route change');
+    }
+  }, [isOnLanding]);
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      ScrollTrigger.getAll().forEach(st => st.kill());
+      gsap.killTweensOf('*');
+      ScrollTrigger.clearMatchMedia();
+      console.log('🧹 [LandingPage] GSAP cleanup on unmount');
+    };
+  }, []);
 
   // Prize carousel auto-advance
   useEffect(() => {
@@ -143,7 +168,17 @@ const LandingPage = () => {
     });
 
     return () => {
+      // 🔄 CLEANUP AGGRESSIVO: Kill all ScrollTriggers e gsap tweens per evitare conflitti con altre pagine
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+      
+      // Kill tutte le tweens su elementi specifici
+      if (heroRef.current) gsap.killTweensOf(heroRef.current);
+      sectionsRef.current.forEach(section => {
+        if (section) gsap.killTweensOf(section);
+      });
+      
+      // Kill any floating tweens
+      gsap.globalTimeline.clear();
     };
   }, []);
 
@@ -1266,8 +1301,7 @@ const LandingPage = () => {
       {/* Footer */}
       <LandingFooter />
       
-      {/* GDPR Cookie Banner */}
-      <CookieBanner />
+      {/* GDPR Cookie Banner - Gestito globalmente da CookieConsentManager in App.tsx */}
 
       {/* Emergency Admin Login Modal */}
       {showEmergencyLogin && (
