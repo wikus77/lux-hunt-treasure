@@ -68,23 +68,80 @@ export const M1ssionWarModal: React.FC<M1ssionWarModalProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // 1. Fetch user stats
-        const { data: statsData } = await supabase.rpc('get_user_domination_stats', {
-          p_user_id: userId
-        });
-        if (statsData && statsData.length > 0) {
-          setUserStats(statsData[0]);
+        // 1. Fetch user stats (from RPC + battle_sessions fallback)
+        let finalStats: UserStats = {
+          countries_owned: 0,
+          countries_contested: 0,
+          total_wins: 0,
+          continents_owned: []
+        };
+        
+        // Prova RPC (nuovo sistema)
+        try {
+          const { data: statsData } = await supabase.rpc('get_user_domination_stats', {
+            p_user_id: userId
+          });
+          if (statsData && statsData.length > 0) {
+            finalStats = statsData[0];
+          }
+        } catch (rpcErr) {
+          console.log('[M1ssionWar] RPC not available, using fallback');
         }
+        
+        // Aggiungi vittorie da battle_sessions (vecchio Tron Battle)
+        const { data: sessionWins, count: sessionCount } = await supabase
+          .from('battle_sessions')
+          .select('id', { count: 'exact' })
+          .eq('winner_id', userId)
+          .eq('status', 'resolved');
+        
+        if (sessionCount && sessionCount > 0) {
+          finalStats.total_wins += sessionCount;
+        }
+        
+        setUserStats(finalStats);
 
-        // 2. Fetch battle history (last 20)
-        const { data: historyData } = await supabase
+        // 2. Fetch battle history (from country_battle_wins + battle_sessions)
+        let allBattles: BattleHistory[] = [];
+        
+        // Prima prova country_battle_wins (nuovo sistema)
+        const { data: domBattles } = await supabase
           .from('country_battle_wins')
           .select('id, country_code, won_at, is_pvp')
           .eq('winner_id', userId)
           .order('won_at', { ascending: false })
           .limit(20);
         
-        setBattleHistory(historyData || []);
+        if (domBattles && domBattles.length > 0) {
+          allBattles = domBattles;
+        }
+        
+        // Poi aggiungi da battle_sessions (vecchio sistema Tron Battle)
+        const { data: sessionBattles } = await supabase
+          .from('battle_sessions')
+          .select('id, status, resolved_at, creator_id, defender_id')
+          .or(`creator_id.eq.${userId},defender_id.eq.${userId}`)
+          .eq('status', 'resolved')
+          .not('resolved_at', 'is', null)
+          .order('resolved_at', { ascending: false })
+          .limit(20);
+        
+        if (sessionBattles && sessionBattles.length > 0) {
+          // Converti in formato BattleHistory
+          const sessionHistory: BattleHistory[] = sessionBattles.map(b => ({
+            id: b.id,
+            country_code: 'IT', // Default Italy se non abbiamo coordinate
+            won_at: b.resolved_at || new Date().toISOString(),
+            is_pvp: true
+          }));
+          
+          // Combina e ordina per data
+          allBattles = [...allBattles, ...sessionHistory]
+            .sort((a, b) => new Date(b.won_at).getTime() - new Date(a.won_at).getTime())
+            .slice(0, 20);
+        }
+        
+        setBattleHistory(allBattles);
 
         // 3. Fetch country progress (countries user has attacked)
         const { data: progressData } = await supabase
