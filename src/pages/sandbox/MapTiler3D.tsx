@@ -27,6 +27,7 @@ import PortalsLayer3D from './map3d/layers/PortalsLayer3D';
 import RewardsLayer3D from './map3d/layers/RewardsLayer3D';
 import AreasLayer3D from './map3d/layers/AreasLayer3D';
 import RewardZoneLayer3D from './map3d/layers/RewardZoneLayer3D';
+import CountryDominationLayer3D from './map3d/layers/CountryDominationLayer3D'; // 🏴 Risiko Domination
 import BuzzDiagnosticPanel from './map3d/components/BuzzDiagnosticPanel';
 import BuzzDebugBadge from './map3d/components/BuzzDebugBadge';
 import MapVerificationPanel from './map3d/components/MapVerificationPanel';
@@ -1636,6 +1637,13 @@ export default function MapTiler3D() {
         onDelete={() => setRewardZoneArea(null)}
       />
       <NotesLayer3D map={mapRef.current} enabled={layerVisibility.notes} />
+      
+      {/* 🏴 RISIKO DOMINATION: Country overlay for conquered/contested territories */}
+      <CountryDominationLayer3D 
+        map={mapRef.current} 
+        enabled={true}
+        minZoom={4}
+      />
 
       {/* Battle FX Layer - Visual effects for battle events */}
       {mapRef.current && (
