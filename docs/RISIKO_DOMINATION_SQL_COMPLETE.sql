@@ -1,5 +1,5 @@
 -- ============================================================================
--- RISIKO DOMINATION — COMPLETE SQL SETUP
+-- RISIKO DOMINATION — COMPLETE SQL SETUP (FIXED)
 -- © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 -- 
 -- ISTRUZIONI: Copia ed esegui TUTTO questo SQL nel Supabase SQL Editor
@@ -103,7 +103,7 @@ INSERT INTO public.country_domination (country_code, conquest_threshold) VALUES
 ON CONFLICT (country_code) DO NOTHING;
 
 -- ============================================================================
--- STEP 3: domination_rewards (rewards idempotenti)
+-- STEP 3: domination_rewards (rewards idempotenti) - FIXED INDEXES
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.domination_rewards (
@@ -114,19 +114,25 @@ CREATE TABLE IF NOT EXISTS public.domination_rewards (
   continent_code TEXT,
   pe_amount INTEGER NOT NULL,
   awarded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  awarded_date DATE NOT NULL DEFAULT CURRENT_DATE,
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_domination_rewards_country_unique
-  ON public.domination_rewards(user_id, reward_type, country_code, DATE_TRUNC('day', awarded_at))
+-- Indici UNIQUE semplificati usando colonna DATE dedicata
+DROP INDEX IF EXISTS idx_domination_rewards_country_unique;
+DROP INDEX IF EXISTS idx_domination_rewards_three_unique;
+DROP INDEX IF EXISTS idx_domination_rewards_continent_unique;
+
+CREATE UNIQUE INDEX idx_domination_rewards_country_unique
+  ON public.domination_rewards(user_id, reward_type, country_code, awarded_date)
   WHERE reward_type = 'country' AND country_code IS NOT NULL;
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_domination_rewards_three_unique
-  ON public.domination_rewards(user_id, reward_type, DATE_TRUNC('day', awarded_at))
+CREATE UNIQUE INDEX idx_domination_rewards_three_unique
+  ON public.domination_rewards(user_id, reward_type, awarded_date)
   WHERE reward_type = 'three_countries';
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_domination_rewards_continent_unique
-  ON public.domination_rewards(user_id, reward_type, continent_code, DATE_TRUNC('day', awarded_at))
+CREATE UNIQUE INDEX idx_domination_rewards_continent_unique
+  ON public.domination_rewards(user_id, reward_type, continent_code, awarded_date)
   WHERE reward_type = 'continent' AND continent_code IS NOT NULL;
 
 ALTER TABLE public.domination_rewards ENABLE ROW LEVEL SECURITY;
@@ -266,11 +272,20 @@ $$;
 -- STEP 7: Abilita realtime
 -- ============================================================================
 
-ALTER PUBLICATION supabase_realtime ADD TABLE country_domination;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' 
+    AND tablename = 'country_domination'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE country_domination;
+  END IF;
+END;
+$$;
 
 -- ============================================================================
 -- ✅ SETUP COMPLETATO!
 -- ============================================================================
 
 SELECT 'Risiko Domination setup completed!' AS status;
-

@@ -56,6 +56,7 @@ import { MapBattleOverlay } from '@/components/map/battle/MapBattleOverlay';
 import { usePerformanceSettings } from '@/hooks/usePerformanceSettings';
 import { BattlePill } from '@/components/battle/BattlePill';
 import { BattleShopPill } from '@/components/battle/BattleShopPill';
+import { M1ssionWarPill } from '@/components/domination/M1ssionWarPill'; // 🏴 M1SSION WAR
 import { AgentBattleCard } from '@/components/battle/AgentBattleCard';
 import { BattleModal } from '@/components/battle/BattleModal';
 import { RewardCounterPill } from '@/components/map/RewardCounterPill';
@@ -1748,6 +1749,12 @@ export default function MapTiler3D() {
 
       {/* Battle Pill - Circular floating button */}
       <BattlePill userId={battleUserId} />
+
+      {/* M1SSION WAR Pill - Country domination stats */}
+      <M1ssionWarPill 
+        userId={battleUserId} 
+        className="fixed bottom-[140px] left-4 z-[1000]"
+      />
 
       {/* Mission Pill - Daily missions */}
       <MissionPill />
