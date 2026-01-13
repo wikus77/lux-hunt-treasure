@@ -18,6 +18,7 @@ export type { PEActionType, AwardPEResult, UseAwardPEReturn } from './hooks/useA
 
 // Components
 export { PulseBar } from './components/PulseBar';
+export { PulseBarPersonal } from './components/PulseBarPersonal';
 export { AgentEnergyPill } from './components/AgentEnergyPill';
 export { PulsePanel } from './components/PulsePanel';
 export { PulseLeaderboard } from './components/PulseLeaderboard';
