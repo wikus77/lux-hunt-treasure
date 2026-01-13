@@ -6,6 +6,7 @@ import { getAgentContext as getOldContext } from '@/intelligence/context/aiConte
 import { getAgentContext, refreshContext, type AgentContextData } from '@/intel/ai/context/agentContext';
 import { useRealtimeIntel } from '@/intel/ai/context/realtimeClues';
 import { composeReply } from '@/intel/ai/ui/aiPanelBehavior';
+import { useAwardPE } from '@/features/pulse'; // ⚡ PE personali
 
 export type { AnalystMode };
 export type AnalystStatus = 'idle' | 'thinking' | 'speaking';
@@ -28,6 +29,7 @@ interface Clue {
 }
 
 export const useIntelAnalyst = () => {
+  const { awardPE } = useAwardPE(); // ⚡ PE personali
   const [messages, setMessages] = useState<AnalystMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [status, setStatus] = useState<AnalystStatus>('idle');
@@ -278,6 +280,11 @@ export const useIntelAnalyst = () => {
       return newMessages.slice(-12); // Keep last 6 turns
     });
     
+    // ⚡ PE: Assegna PE per conversazione AION (async, non bloccante)
+    awardPE('AION_CHAT', undefined, { mode, cluesAnalyzed: clues.length }).catch(err => {
+      console.warn('[PE] AION chat award failed (non-blocking):', err);
+    });
+    
     // TTS if enabled
     if (ttsEnabled) {
       speakText(response);
@@ -285,7 +292,7 @@ export const useIntelAnalyst = () => {
     
     setStatus('idle');
     setIsProcessing(false);
-  }, [realtimeClues, isProcessing, ttsEnabled, speakText, agentContext]);
+  }, [realtimeClues, isProcessing, ttsEnabled, speakText, agentContext, awardPE]);
 
   const toggleTTS = useCallback(() => {
     const newEnabled = !ttsEnabled;
