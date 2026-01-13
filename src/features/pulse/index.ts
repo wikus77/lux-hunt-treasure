@@ -13,6 +13,8 @@ export { useMilestones } from './hooks/useMilestones';
 export type { Milestone, NextMilestone, MilestoneStatus } from './hooks/useMilestones';
 export { usePulseContribute } from './hooks/usePulseContribute';
 export type { PulseEventType, PulseContributionResult, UsePulseContributeReturn } from './hooks/usePulseContribute';
+export { useAwardPE, PE_VALUES, PE_DAILY_LIMITS } from './hooks/useAwardPE';
+export type { PEActionType, AwardPEResult, UseAwardPEReturn } from './hooks/useAwardPE';
 
 // Components
 export { PulseBar } from './components/PulseBar';
