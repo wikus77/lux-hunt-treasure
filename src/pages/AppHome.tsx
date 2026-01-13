@@ -24,6 +24,7 @@ import FortuneWheelPill from "@/components/home/FortuneWheelPill";
 import MissionSync from "@/components/home/MissionSync";
 import { InactivityHint } from "@/components/first-session";
 import { NextActionCard, DailyMissionCard, MotivationalPopup, FortuneWheel } from "@/components/feedback";
+import { SectionErrorBoundary } from "@/components/error/SectionErrorBoundary";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -307,9 +308,14 @@ const { isConnected } = useRealTimeNotifications();
                 </div>
 
                 {/* 🎯 ACTION CARDS ROW: Prossimo Passo + Daily Mission affiancati */}
+                {/* 🔧 FIX: Wrapped con SectionErrorBoundary per prevenire crash globali */}
                 <div className="flex gap-3 mb-4">
-                  <NextActionCard />
-                  <DailyMissionCard />
+                  <SectionErrorBoundary section="Prossimo Passo" fallbackHeight="80px">
+                    <NextActionCard />
+                  </SectionErrorBoundary>
+                  <SectionErrorBoundary section="Missione Giornaliera" fallbackHeight="80px">
+                    <DailyMissionCard />
+                  </SectionErrorBoundary>
                 </div>
 
                 {/* 🎯 CONTENT_BELOW_BLOCK: contenuto sotto i pill */}
@@ -347,9 +353,12 @@ const { isConnected } = useRealTimeNotifications();
                   aria-label="Contenuto principale"
                 >
                   {/* 🔥 CONTAINER OTTIMIZZATO: Eliminato min-h per evitare overflow */}
-                  <div>
-                    <CommandCenterHome />
-                  </div>
+                  {/* 🔧 FIX: Error boundary per CommandCenter - sezione critica */}
+                  <SectionErrorBoundary section="Centro Comando" fallbackHeight="400px">
+                    <div>
+                      <CommandCenterHome />
+                    </div>
+                  </SectionErrorBoundary>
                   
                   {/* M1SSION PANEL™ Button - Only for Admin/Developer - SENZA MARGINI */}
                   {showPanelButton && (
