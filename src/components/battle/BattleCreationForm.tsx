@@ -28,6 +28,7 @@ import { WeaponDefenseSelector } from './WeaponDefenseSelector';
 import { BattleOverlay } from './BattleOverlay';
 import { sendBattleInvite, checkUserHasPushSubscription } from '@/lib/battle/pushNotifications';
 import { supabase } from '@/integrations/supabase/client';
+import { useAwardPE } from '@/features/pulse/hooks/useAwardPE';
 
 // Tipo per risultati ricerca
 interface SearchResult {
@@ -85,6 +86,9 @@ export function BattleCreationForm({
   const [currentBattleId, setCurrentBattleId] = useState<string | null>(null);
   
   const { toast } = useToast();
+  
+  // 🔋 PE System Hook
+  const { awardPE } = useAwardPE();
   
   // 🆕 Effettua ricerca quando l'utente digita (debounced)
   useEffect(() => {
@@ -393,7 +397,22 @@ export function BattleCreationForm({
       description: won ? 'Vittoria!' : 'Sconfitta!',
       duration: 2000,
     });
-  }, [stakePercent, selectedWeaponPower, toast, onShowVideo, userId, effectiveOpponent, currentBattleId]);
+
+    // 🔋 Award PE for Tron Battle (Win: +50, Lose: -100)
+    if (won) {
+      awardPE('BATTLE_WIN', undefined, {
+        battleId: currentBattleId,
+        opponentId: effectiveOpponent?.id,
+        weaponPower: selectedWeaponPower,
+      }).catch(err => console.warn('[PE] Battle win award failed:', err));
+    } else {
+      awardPE('BATTLE_LOSE', undefined, {
+        battleId: currentBattleId,
+        opponentId: effectiveOpponent?.id,
+        weaponPower: selectedWeaponPower,
+      }).catch(err => console.warn('[PE] Battle lose award failed:', err));
+    }
+  }, [stakePercent, selectedWeaponPower, toast, onShowVideo, userId, effectiveOpponent, currentBattleId, awardPE]);
 
   // 🆕 When video ends - NO MORE result modal popup (animazione è nel video modal)
   const handleVideoClose = useCallback(() => {

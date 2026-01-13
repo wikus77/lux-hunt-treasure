@@ -14,6 +14,7 @@ import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import { AudioManager } from '@/lib/audio/AudioManager'; // 🔧 FIX: Singleton Audio
+import { useAwardPE } from '@/features/pulse/hooks/useAwardPE';
 
 // 🎰 WHEEL SEGMENTS - 16 segments with 3 LOSE evenly distributed
 // Order: clockwise from top (where pointer is)
@@ -198,6 +199,9 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<typeof WHEEL_SEGMENTS[0] | null>(null);
   const [canSpin, setCanSpin] = useState(false); // Default false until verified from DB
+  
+  // 🔋 PE System Hook
+  const { awardPE } = useAwardPE();
   const [isLoading, setIsLoading] = useState(true);
   const [showClueModal, setShowClueModal] = useState(false);
   const [revealedClue, setRevealedClue] = useState('');
@@ -429,8 +433,15 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
       }
 
       awardPrize(winningSegment);
+
+      // 🔋 Award PE for Fortune Wheel Spin (+10 PE fisso per ogni spin)
+      awardPE('FORTUNE_WHEEL', 10, {
+        prizeType: winningSegment.type,
+        prizeValue: winningSegment.value,
+        prizeLabel: winningSegment.label,
+      }).catch(err => console.warn('[PE] Fortune Wheel award failed:', err));
     }, 5500);
-  }, [isSpinning, canSpin, rotation, getWeightedResult, awardPrize, user]);
+  }, [isSpinning, canSpin, rotation, getWeightedResult, awardPrize, user, awardPE]);
 
   const getResultMessage = () => {
     if (!result) return '';
