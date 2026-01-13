@@ -126,7 +126,7 @@ const BottomNavigationComponent = () => {
       isSpecial: true,
     },
     { 
-      icon: <span className="text-lg font-semibold">AI</span>,
+      icon: <span className="text-lg font-semibold">AIᴼᴺ</span>,
       path: "/intelligence",
     },
     {
