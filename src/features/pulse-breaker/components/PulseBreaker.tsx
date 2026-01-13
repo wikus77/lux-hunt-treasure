@@ -9,6 +9,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Zap, TrendingUp, AlertTriangle, Coins, Info } from 'lucide-react';
 import { usePulseBreaker, BetCurrency } from '../hooks/usePulseBreaker';
+import { useAwardPE } from '../../pulse/hooks/useAwardPE';
 import './PulseBreaker.css';
 
 interface PulseBreakerProps {
@@ -46,6 +47,10 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose }) =
   const starsInitialized = useRef(false);
 
   const balance = betCurrency === 'M1U' ? userBalance.m1u : userBalance.pe;
+  
+  // 🔋 PE System Hook
+  const { awardPE } = useAwardPE();
+  const peAwardedRef = useRef<string | null>(null); // Track awarded round to prevent duplicates
   
   // Track speed zone changes and trigger effects
   useEffect(() => {
@@ -100,6 +105,33 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose }) =
       setTimeout(() => setShowCrashEffect(false), 1500);
     }
   }, [gameState.status]);
+
+  // 🔋 PE System: Award PE on game end
+  useEffect(() => {
+    // Only award PE when game ends (cashed_out or crashed)
+    if ((gameState.status === 'cashed_out' || gameState.status === 'crashed') && gameState.roundId) {
+      // Prevent duplicate awards for same round
+      if (peAwardedRef.current === gameState.roundId) return;
+      peAwardedRef.current = gameState.roundId;
+
+      // Partecipazione: +5 PE (per ogni partita giocata)
+      awardPE('PULSE_BREAKER_PLAY', undefined, {
+        roundId: gameState.roundId,
+        betAmount: gameState.betAmount,
+        betCurrency: gameState.betCurrency,
+        crashPoint: gameState.crashPoint,
+      }).catch(err => console.warn('[PE] Participation award failed:', err));
+
+      // Vittoria: +10 PE (solo se cashout)
+      if (gameState.status === 'cashed_out') {
+        awardPE('PULSE_BREAKER_WIN', undefined, {
+          roundId: gameState.roundId,
+          payout: gameState.payout,
+          multiplier: gameState.cashoutMultiplier,
+        }).catch(err => console.warn('[PE] Win award failed:', err));
+      }
+    }
+  }, [gameState.status, gameState.roundId, gameState.betAmount, gameState.betCurrency, gameState.crashPoint, gameState.payout, gameState.cashoutMultiplier, awardPE]);
 
   // Canvas drawing - COSMIC WARP STYLE with Stars
   const drawCanvas = useCallback(() => {

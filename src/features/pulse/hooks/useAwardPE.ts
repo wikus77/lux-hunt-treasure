@@ -41,13 +41,13 @@ export type PEActionType =
 export const PE_VALUES: Record<Exclude<PEActionType, 'CUSTOM' | 'FORTUNE_WHEEL'>, number> = {
   BUZZ_CLICK: 10,
   BUZZ_MAP_CLICK: 15,
-  PULSE_BREAKER_WIN: 50,
-  PULSE_BREAKER_PLAY: 5,
+  PULSE_BREAKER_WIN: 10,    // Vittoria Pulse Breaker
+  PULSE_BREAKER_PLAY: 5,    // Partecipazione Pulse Breaker
   AION_CHAT: 20,
   FORUM_POST: 25,
   FORUM_COMMENT: 10,
-  MAP_TIME_240S: 30,
-  MAP_TIME_600S: 50,
+  MAP_TIME_240S: 15,        // 4 minuti in mappa
+  MAP_TIME_600S: 30,        // 10 minuti in mappa (bonus)
   MARKER_CLAIM: 100,
   BATTLE_WIN: 100,
   BATTLE_LOSE: -50,
