@@ -17,7 +17,7 @@ import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION C
 import { notifyShadowContext } from '@/stores/entityOverlayStore'; // 🌑 Shadow Protocol v3
 import { useActiveMissionEnrollment } from '@/hooks/useActiveMissionEnrollment'; // 🚨 START M1SSION GATE
 import { BuzzMapLockedModal } from './BuzzMapLockedModal'; // 🚨 Modal clone from BuzzPage
-import { usePulseContribute } from '@/features/pulse'; // 🔋 PULSE: Contribuzione energia collettiva
+import { usePulseContribute, useAwardPE } from '@/features/pulse'; // 🔋 PULSE + ⚡ PE
 import { emitGameEvent } from '@/gameplay/events'; // 🎉 Progress Feedback System
 import '@/styles/buzz/BuzzTronDisc.css';
 
@@ -50,6 +50,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
   const { callBuzzApi } = useBuzzApi();
   const { accrueFromBuzzMap } = useCashbackWallet(); // 🆕 M1SSION Cashback Vault™
   const { contribute: contributeToPulse } = usePulseContribute(); // 🔋 PULSE
+  const { awardPE } = useAwardPE(); // ⚡ PE personali
   
   // 🚨 START M1SSION GATE: Check if user is enrolled in mission
   const { isEnrolled, isLoading: enrollmentLoading } = useActiveMissionEnrollment();
@@ -330,6 +331,15 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         cost_m1u: costM1U 
       }).catch(err => {
         console.warn('[PULSE] BUZZ MAP contribution failed (non-blocking):', err);
+      });
+      
+      // ⚡ PE: Assegna PE personali (async, non bloccante)
+      awardPE('BUZZ_MAP_CLICK', undefined, { 
+        level: actualLevel, 
+        radius_km: actualRadius,
+        cost_m1u: costM1U 
+      }).catch(err => {
+        console.warn('[PE] BUZZ MAP award failed (non-blocking):', err);
       });
 
       // 🔥 FIX: Update agent location immediately after BUZZ (geolocation sync)

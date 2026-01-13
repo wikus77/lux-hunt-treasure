@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
+import { useAwardPE } from '@/features/pulse'; // ⚡ PE personali
 
 export interface ForumCategory {
   id: string;
@@ -57,6 +58,7 @@ export interface ForumComment {
 
 export function useForum() {
   const { user } = useAuthContext();
+  const { awardPE } = useAwardPE(); // ⚡ PE personali
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -253,6 +255,12 @@ export function useForum() {
       if (insertError) throw insertError;
 
       toast.success('Post pubblicato!');
+      
+      // ⚡ PE: Assegna PE per nuovo post (async, non bloccante)
+      awardPE('FORUM_POST', undefined, { postId: data?.id }).catch(err => {
+        console.warn('[PE] Forum post award failed (non-blocking):', err);
+      });
+      
       await fetchPosts();
       return data?.id || null;
     } catch (err: any) {
@@ -329,6 +337,12 @@ export function useForum() {
       if (insertError) throw insertError;
 
       toast.success('Commento aggiunto!');
+      
+      // ⚡ PE: Assegna PE per nuovo commento (async, non bloccante)
+      awardPE('FORUM_COMMENT', undefined, { postId, parentId }).catch(err => {
+        console.warn('[PE] Forum comment award failed (non-blocking):', err);
+      });
+      
       return true;
     } catch (err: any) {
       console.error('[Forum] Error adding comment:', err);

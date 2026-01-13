@@ -11,7 +11,7 @@ import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { useAbuseProtection } from './useAbuseProtection';
 import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';
 import { HapticType } from '@/utils/haptics';
-import { usePulseContribute } from '@/features/pulse';
+import { usePulseContribute, useAwardPE } from '@/features/pulse';
 
 // --- BUZZ TOAST GLOBAL LOCK (shared) ---
 const __buzz = (globalThis as any).__buzzToastLock ?? { shown: false, t: 0 };
@@ -53,6 +53,9 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
   
   // 🔋 PULSE: Hook per contribuzione energia collettiva
   const { contribute: contributeToPulse } = usePulseContribute();
+  
+  // ⚡ PE: Hook per assegnare Pulse Energy personali
+  const { awardPE } = useAwardPE();
 
   const handleBuzz = async () => {
     // 🔥 FIX: Use refs to get LATEST values at call time (not stale closure values)
@@ -185,6 +188,11 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         // 🔋 PULSE: Contribuisci energia collettiva (async, non bloccante)
         contributeToPulse('BUZZ_COMPLETED', { price: latestPrice }).catch(err => {
           console.warn('[PULSE] Contribution failed (non-blocking):', err);
+        });
+        
+        // ⚡ PE: Assegna PE personali (async, non bloccante)
+        awardPE('BUZZ_CLICK', undefined, { price: latestPrice }).catch(err => {
+          console.warn('[PE] Award failed (non-blocking):', err);
         });
         
       } else {
