@@ -11,8 +11,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useEntityOverlayStore } from '@/stores/entityOverlayStore';
 
-const STORAGE_KEY = 'm1ssion_reward_popup_dismissed';
+const STORAGE_KEY = 'm1ssion_reward_popup_dismissed'; // 'true' = non mostrare mai più
+const STORAGE_KEY_SHOWN_COUNT = 'm1ssion_reward_popup_shown_count'; // Conta quante volte è stato mostrato
+const STORAGE_KEY_LAST_SHOWN = 'm1ssion_reward_popup_last_shown'; // Timestamp ultimo show
 const POPUP_ID = 'reward-zone';
+const REPEAT_DELAY_SECONDS = 420; // 420 secondi = 7 minuti tra una visualizzazione e l'altra
 
 interface MarkerData {
   id: string;
@@ -85,26 +88,60 @@ export const RewardZonePopup: React.FC = () => {
       return;
     }
     
+    // ❌ Se l'utente ha cliccato "Non mostrare più", NON mostrare MAI
     const dismissed = localStorage.getItem(STORAGE_KEY);
-    console.log('[RewardZonePopup] 🎯 Dismissed status:', dismissed);
-    
     if (dismissed === 'true') {
-      console.log('[RewardZonePopup] ❌ Already dismissed, skipping popup');
+      console.log('[RewardZonePopup] ❌ Permanently dismissed, never showing again');
       setIsVisible(false);
       return;
     }
 
-    // Show popup after 1 minute
-    console.log('[RewardZonePopup] ⏰ Popup will show in 1 minute...');
+    // 📊 Controlla quante volte è stato mostrato e quando
+    const shownCount = parseInt(localStorage.getItem(STORAGE_KEY_SHOWN_COUNT) || '0', 10);
+    const lastShown = parseInt(localStorage.getItem(STORAGE_KEY_LAST_SHOWN) || '0', 10);
+    const now = Date.now();
+    const secondsSinceLastShown = (now - lastShown) / 1000;
+    
+    console.log('[RewardZonePopup] 📊 Shown count:', shownCount, 'Seconds since last shown:', Math.round(secondsSinceLastShown));
+
+    // 🕐 Calcola il delay appropriato
+    let delayMs: number;
+    
+    if (shownCount === 0) {
+      // Prima volta: mostra subito (dopo 2 secondi per permettere il caricamento)
+      delayMs = 2000;
+      console.log('[RewardZonePopup] 🆕 First time - showing in 2 seconds');
+    } else {
+      // Dalla seconda volta in poi: controlla se sono passati 420 secondi
+      const remainingSeconds = REPEAT_DELAY_SECONDS - secondsSinceLastShown;
+      
+      if (remainingSeconds > 0) {
+        // Non sono ancora passati 420 secondi, aspetta il tempo rimanente
+        delayMs = remainingSeconds * 1000;
+        console.log('[RewardZonePopup] ⏰ Waiting', Math.round(remainingSeconds), 'more seconds...');
+      } else {
+        // Sono passati più di 420 secondi, mostra subito
+        delayMs = 2000;
+        console.log('[RewardZonePopup] ⏰ 420s passed - showing in 2 seconds');
+      }
+    }
+
     const timer = setTimeout(() => {
-      // ✅ FIX 23/12/2025: Non mostrare se ci sono micro-missions o altri popup attivi
+      // ✅ Non mostrare se ci sono micro-missions o altri popup attivi
       if (isPopupInteractionActive) {
-        console.log('[RewardZonePopup] ⏸️ Skipped - other popup active');
+        console.log('[RewardZonePopup] ⏸️ Skipped - other popup active, will retry...');
         return;
       }
+      
+      // ✅ Mostra il popup
       console.log('[RewardZonePopup] ✅ Showing popup NOW!');
+      
+      // 📝 Aggiorna i contatori
+      localStorage.setItem(STORAGE_KEY_SHOWN_COUNT, String(shownCount + 1));
+      localStorage.setItem(STORAGE_KEY_LAST_SHOWN, String(Date.now()));
+      
       setIsVisible(true);
-    }, 60000); // 60 seconds = 1 minuto
+    }, delayMs);
 
     return () => clearTimeout(timer);
   }, [isAuthenticated, isPopupInteractionActive]);
