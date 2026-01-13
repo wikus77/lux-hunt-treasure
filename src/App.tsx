@@ -8,7 +8,8 @@ import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import { XpSystemManager } from "./components/xp/XpSystemManager";
-import DynamicIslandAutoActivator from "./components/dynamic-island/DynamicIslandAutoActivator";
+// DynamicIslandAutoActivator RIMOSSO - ora solo su IntelligencePage quando AION parla
+// import DynamicIslandAutoActivator from "./components/dynamic-island/DynamicIslandAutoActivator";
 import DynamicIslandContextManager from "./components/dynamic-island/DynamicIslandContextManager";
 import { DynamicIslandProvider } from "./contexts/DynamicIslandContext";
 import { HelmetProvider } from "./components/helmet/HelmetProvider";
@@ -244,7 +245,8 @@ function App() {
                     <PushNotificationSetup className="hidden" />
                     <XpSystemManager />
                     <DynamicIslandProvider>
-                      <DynamicIslandAutoActivator />
+                      {/* DynamicIslandAutoActivator RIMOSSO per risparmio batteria */}
+                      {/* Ora si attiva SOLO su IntelligencePage quando AION parla */}
                       <DynamicIslandContextManager />
                     </DynamicIslandProvider>
                     <NorahProactiveManager />

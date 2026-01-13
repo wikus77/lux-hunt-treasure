@@ -3,26 +3,25 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  * 
  * Renderizza:
- * - Fill verde neon per paesi conquistati
+ * - Fill verde neon per paesi conquistati (su TUTTE le mappe)
  * - Fill ambra per paesi contested
  * - Label con nome owner
- * 
- * NOTA: Visibile solo da zoom ≥ 4
  */
 
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';
-import { useCountryDomination, CountryDominationState } from '../hooks/useCountryDomination';
+import { useCountryDomination } from '../hooks/useCountryDomination';
 import { COUNTRY_NAMES } from '@/lib/domination/continentMapping';
 
 // Layer IDs
 const SOURCE_ID = 'country-domination-source';
+const LABEL_SOURCE_ID = 'domination-labels-source';
 const CONQUERED_FILL_LAYER = 'country-domination-conquered-fill';
 const CONTESTED_FILL_LAYER = 'country-domination-contested-fill';
 const CONQUERED_LINE_LAYER = 'country-domination-conquered-line';
 const LABEL_LAYER = 'country-domination-label';
 
-// Country centroids for labels (approximate)
+// Country centroids for labels
 const COUNTRY_CENTROIDS: Record<string, [number, number]> = {
   IT: [12.5, 42.5], FR: [2.2, 46.2], DE: [10.4, 51.2], ES: [-3.7, 40.4],
   PT: [-8.2, 39.4], GB: [-1.2, 52.4], NL: [5.3, 52.1], BE: [4.5, 50.5],
@@ -40,7 +39,7 @@ const COUNTRY_CENTROIDS: Record<string, [number, number]> = {
 interface CountryDominationLayer3DProps {
   map: MLMap | null;
   enabled?: boolean;
-  minZoom?: number; // Default 4 - visibile solo da questo zoom in poi
+  minZoom?: number;
 }
 
 const CountryDominationLayer3D: React.FC<CountryDominationLayer3DProps> = ({
@@ -48,245 +47,228 @@ const CountryDominationLayer3D: React.FC<CountryDominationLayer3DProps> = ({
   enabled = true,
   minZoom = 4
 }) => {
-  const { dominationStates, conqueredCountries, contestedCountries, loading } = useCountryDomination();
-  const layersAddedRef = useRef(false);
-  const geoJsonLoadedRef = useRef(false);
+  const { dominationStates, conqueredCountries, contestedCountries } = useCountryDomination();
+  const geoJsonCacheRef = useRef<any>(null);
+  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Generate GeoJSON features for labels
-  const labelFeatures = useMemo(() => {
-    return dominationStates
-      .filter(state => state.status === 'conquered' && state.owner_name)
-      .map(state => {
-        const centroid = COUNTRY_CENTROIDS[state.country_code];
-        if (!centroid) return null;
-        
-        return {
-          type: 'Feature' as const,
-          properties: {
-            country_code: state.country_code,
-            country_name: COUNTRY_NAMES[state.country_code] || state.country_code,
-            owner_name: state.owner_name,
-            owner_agent_code: state.owner_agent_code
-          },
-          geometry: {
-            type: 'Point' as const,
-            coordinates: centroid
-          }
-        };
-      })
-      .filter(Boolean);
-  }, [dominationStates]);
+  // Create filter for country matching
+  const createCountryFilter = useCallback((countryCodes: string[]): any => {
+    if (countryCodes.length === 0) {
+      return ['==', ['get', 'ISO_A2'], '__NONE__'];
+    }
+    
+    const countryNames: Record<string, string[]> = {
+      'IT': ['Italy', 'ITALY', 'Italia'],
+      'FR': ['France', 'FRANCE', 'Francia'],
+      'DE': ['Germany', 'GERMANY', 'Deutschland'],
+      'ES': ['Spain', 'SPAIN', 'España'],
+      'GB': ['United Kingdom', 'UK', 'Great Britain'],
+      'US': ['United States', 'USA'],
+    };
+    
+    const filters: any[] = [
+      ['in', ['get', 'ISO_A2'], ['literal', countryCodes]],
+      ['in', ['get', 'ISO_A2_EH'], ['literal', countryCodes]],
+      ['in', ['get', 'iso_a2'], ['literal', countryCodes]],
+      ['in', ['get', 'ISO'], ['literal', countryCodes]],
+    ];
+    
+    countryCodes.forEach(code => {
+      const names = countryNames[code] || [];
+      names.forEach(name => {
+        filters.push(['==', ['get', 'ADMIN'], name]);
+        filters.push(['==', ['get', 'name'], name]);
+        filters.push(['==', ['get', 'NAME'], name]);
+      });
+    });
+    
+    return ['any', ...filters] as any;
+  }, []);
 
-  // Load country boundaries GeoJSON
-  useEffect(() => {
-    if (!map || !enabled || geoJsonLoadedRef.current) return;
-
-    const loadGeoJson = async () => {
-      try {
-        // Check if Natural Earth source already exists in map style
-        if (map.getSource('countries')) {
-          console.log('[Domination] Using existing countries source');
-          geoJsonLoadedRef.current = true;
-          return;
-        }
-
-        // Load Natural Earth 110m countries (simplified)
-        // Using a CDN hosted version for simplicity
+  // Add all domination layers
+  const addDominationLayers = useCallback(async (mapInstance: MLMap) => {
+    try {
+      // 1. Get or fetch GeoJSON
+      let geoJson = geoJsonCacheRef.current;
+      if (!geoJson) {
         const response = await fetch(
           'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson'
         );
-        
-        if (!response.ok) {
-          throw new Error('Failed to load countries GeoJSON');
-        }
-
-        const countriesGeoJson = await response.json();
-        console.log('[Domination] Loaded countries GeoJSON:', countriesGeoJson.features?.length, 'countries');
-
-        // Add source if map is still valid
-        if (map && !map.getSource(SOURCE_ID)) {
-          map.addSource(SOURCE_ID, {
-            type: 'geojson',
-            data: countriesGeoJson
-          });
-          geoJsonLoadedRef.current = true;
-        }
-      } catch (err) {
-        console.error('[Domination] GeoJSON load error:', err);
+        if (!response.ok) throw new Error('Failed to fetch GeoJSON');
+        geoJson = await response.json();
+        geoJsonCacheRef.current = geoJson;
       }
-    };
 
-    if (map.isStyleLoaded()) {
-      loadGeoJson();
-    } else {
-      map.once('styledata', loadGeoJson);
-    }
-  }, [map, enabled]);
+      // 2. Check if style is loaded
+      if (!mapInstance.isStyleLoaded()) {
+        return false;
+      }
 
-  // Add/update layers
-  useEffect(() => {
-    if (!map || !enabled || !geoJsonLoadedRef.current) return;
+      // 3. Add source if missing
+      if (!mapInstance.getSource(SOURCE_ID)) {
+        mapInstance.addSource(SOURCE_ID, {
+          type: 'geojson',
+          data: geoJson
+        });
+      }
 
-    const setupLayers = () => {
-      const source = map.getSource(SOURCE_ID);
-      if (!source) return;
-
-      // Conquered fill layer (neon green)
-      if (!map.getLayer(CONQUERED_FILL_LAYER)) {
-        map.addLayer({
+      // 4. Add layers if missing
+      if (!mapInstance.getLayer(CONQUERED_FILL_LAYER)) {
+        mapInstance.addLayer({
           id: CONQUERED_FILL_LAYER,
           type: 'fill',
           source: SOURCE_ID,
           minzoom: minZoom,
           paint: {
-            'fill-color': '#00FF00', // Neon green
-            'fill-opacity': [
-              'case',
-              ['in', ['get', 'ISO_A2'], ['literal', conqueredCountries]],
-              0.25,
-              0
-            ]
+            'fill-color': '#00FF00',
+            'fill-opacity': 0.11
           },
-          filter: ['in', ['get', 'ISO_A2'], ['literal', conqueredCountries.length > 0 ? conqueredCountries : ['']]]
-        });
-        console.log('[Domination] Added conquered fill layer');
+          filter: createCountryFilter(conqueredCountries)
+        } as any);
       }
 
-      // Contested fill layer (amber)
-      if (!map.getLayer(CONTESTED_FILL_LAYER)) {
-        map.addLayer({
+      if (!mapInstance.getLayer(CONTESTED_FILL_LAYER)) {
+        mapInstance.addLayer({
           id: CONTESTED_FILL_LAYER,
           type: 'fill',
           source: SOURCE_ID,
           minzoom: minZoom,
           paint: {
-            'fill-color': '#FFA500', // Amber
-            'fill-opacity': 0.18
+            'fill-color': '#FFAA00',
+            'fill-opacity': 0.25
           },
-          filter: ['in', ['get', 'ISO_A2'], ['literal', contestedCountries.length > 0 ? contestedCountries : ['']]]
-        });
-        console.log('[Domination] Added contested fill layer');
+          filter: createCountryFilter(contestedCountries)
+        } as any);
       }
 
-      // Conquered outline layer
-      if (!map.getLayer(CONQUERED_LINE_LAYER)) {
-        map.addLayer({
+      if (!mapInstance.getLayer(CONQUERED_LINE_LAYER)) {
+        mapInstance.addLayer({
           id: CONQUERED_LINE_LAYER,
           type: 'line',
           source: SOURCE_ID,
           minzoom: minZoom,
           paint: {
             'line-color': '#00FF00',
-            'line-width': 2,
+            'line-width': 3,
             'line-opacity': 0.8
           },
-          filter: ['in', ['get', 'ISO_A2'], ['literal', conqueredCountries.length > 0 ? conqueredCountries : ['']]]
-        });
-        console.log('[Domination] Added conquered line layer');
+          filter: createCountryFilter(conqueredCountries)
+        } as any);
       }
 
-      layersAddedRef.current = true;
+      // 5. Add labels
+      const labelFeatures = dominationStates
+        .filter(s => s.status === 'conquered' && s.owner_name && COUNTRY_CENTROIDS[s.country_code])
+        .map(s => ({
+          type: 'Feature' as const,
+          properties: { owner_name: s.owner_name },
+          geometry: { type: 'Point' as const, coordinates: COUNTRY_CENTROIDS[s.country_code] }
+        }));
+
+      if (labelFeatures.length > 0) {
+        if (!mapInstance.getSource(LABEL_SOURCE_ID)) {
+          mapInstance.addSource(LABEL_SOURCE_ID, {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: labelFeatures }
+          });
+        }
+
+        if (!mapInstance.getLayer(LABEL_LAYER)) {
+          mapInstance.addLayer({
+            id: LABEL_LAYER,
+            type: 'symbol',
+            source: LABEL_SOURCE_ID,
+            minzoom: minZoom,
+            layout: {
+              'text-field': ['concat', '👑 ', ['get', 'owner_name']],
+              'text-size': 12,
+              'text-anchor': 'center',
+              'text-allow-overlap': true
+            },
+            paint: {
+              'text-color': '#00FF00',
+              'text-halo-color': '#000000',
+              'text-halo-width': 2
+            }
+          });
+        }
+      }
+
+      return true;
+    } catch (err) {
+      // Silent fail - layers will be retried on next interval
+      return false;
+    }
+  }, [minZoom, conqueredCountries, contestedCountries, dominationStates, createCountryFilter]);
+
+  // Main effect: continuously check and add layers if missing
+  useEffect(() => {
+    if (!map || !enabled) return;
+
+    // Function to check and add layers
+    const checkAndAddLayers = () => {
+      if (!map || !map.isStyleLoaded()) return;
+      
+      // Check if source is missing (means style changed)
+      const sourceExists = map.getSource(SOURCE_ID);
+      const layerExists = map.getLayer(CONQUERED_FILL_LAYER);
+      
+      if (!sourceExists || !layerExists) {
+        addDominationLayers(map);
+      }
     };
 
+    // Initial setup
     if (map.isStyleLoaded()) {
-      setupLayers();
+      addDominationLayers(map);
     } else {
-      map.once('styledata', setupLayers);
+      map.once('load', () => addDominationLayers(map));
     }
+
+    // Periodic check every 500ms to detect style changes
+    checkIntervalRef.current = setInterval(checkAndAddLayers, 500);
+
+    // Also listen for style.load event
+    const handleStyleLoad = () => {
+      setTimeout(() => addDominationLayers(map), 200);
+    };
+    map.on('style.load', handleStyleLoad);
+
+    // Also listen for idle event after style change
+    const handleIdle = () => {
+      checkAndAddLayers();
+    };
+    map.on('idle', handleIdle);
 
     return () => {
-      // Cleanup on unmount (optional - layers will persist)
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+      }
+      map.off('style.load', handleStyleLoad);
+      map.off('idle', handleIdle);
     };
-  }, [map, enabled, geoJsonLoadedRef.current, minZoom]);
+  }, [map, enabled, addDominationLayers]);
 
-  // Update filters when domination states change
+  // Update filters when data changes
   useEffect(() => {
-    if (!map || !layersAddedRef.current) return;
+    if (!map || !enabled) return;
 
     try {
-      // Update conquered filter
       if (map.getLayer(CONQUERED_FILL_LAYER)) {
-        const conqueredFilter = conqueredCountries.length > 0 
-          ? ['in', ['get', 'ISO_A2'], ['literal', conqueredCountries]]
-          : ['==', ['get', 'ISO_A2'], ''];
-        
-        map.setFilter(CONQUERED_FILL_LAYER, conqueredFilter);
-        map.setFilter(CONQUERED_LINE_LAYER, conqueredFilter);
+        map.setFilter(CONQUERED_FILL_LAYER, createCountryFilter(conqueredCountries));
       }
-
-      // Update contested filter
+      if (map.getLayer(CONQUERED_LINE_LAYER)) {
+        map.setFilter(CONQUERED_LINE_LAYER, createCountryFilter(conqueredCountries));
+      }
       if (map.getLayer(CONTESTED_FILL_LAYER)) {
-        const contestedFilter = contestedCountries.length > 0
-          ? ['in', ['get', 'ISO_A2'], ['literal', contestedCountries]]
-          : ['==', ['get', 'ISO_A2'], ''];
-        
-        map.setFilter(CONTESTED_FILL_LAYER, contestedFilter);
+        map.setFilter(CONTESTED_FILL_LAYER, createCountryFilter(contestedCountries));
       }
-
-      console.log('[Domination] Updated filters:', {
-        conquered: conqueredCountries.length,
-        contested: contestedCountries.length
-      });
-    } catch (err) {
-      console.error('[Domination] Filter update error:', err);
+    } catch (e) {
+      // Ignore - layers might not exist
     }
-  }, [map, conqueredCountries, contestedCountries]);
+  }, [map, enabled, conqueredCountries, contestedCountries, createCountryFilter]);
 
-  // Add label source and layer
-  useEffect(() => {
-    if (!map || !enabled || labelFeatures.length === 0) return;
-
-    const labelSourceId = 'domination-labels-source';
-
-    const setupLabels = () => {
-      // Add/update label source
-      const labelGeoJson: GeoJSON.FeatureCollection = {
-        type: 'FeatureCollection',
-        features: labelFeatures as any[]
-      };
-
-      if (map.getSource(labelSourceId)) {
-        (map.getSource(labelSourceId) as any).setData(labelGeoJson);
-      } else {
-        map.addSource(labelSourceId, {
-          type: 'geojson',
-          data: labelGeoJson
-        });
-      }
-
-      // Add label layer
-      if (!map.getLayer(LABEL_LAYER)) {
-        map.addLayer({
-          id: LABEL_LAYER,
-          type: 'symbol',
-          source: labelSourceId,
-          minzoom: minZoom,
-          layout: {
-            'text-field': ['concat', '👑 ', ['get', 'owner_name']],
-            'text-size': 12,
-            'text-anchor': 'center',
-            'text-allow-overlap': true
-          },
-          paint: {
-            'text-color': '#00FF00',
-            'text-halo-color': '#000000',
-            'text-halo-width': 2
-          }
-        });
-        console.log('[Domination] Added label layer');
-      }
-    };
-
-    if (map.isStyleLoaded()) {
-      setupLabels();
-    } else {
-      map.once('styledata', setupLabels);
-    }
-  }, [map, enabled, labelFeatures, minZoom]);
-
-  // Component doesn't render visible DOM
   return null;
 };
 
 export default CountryDominationLayer3D;
-

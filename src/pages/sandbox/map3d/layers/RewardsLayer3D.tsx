@@ -1,6 +1,11 @@
-// Rewards Layer for MapLibre 3D - Reward markers overlay
-import React, { useEffect, useState } from 'react';
+// @ts-nocheck
+// Rewards Layer for MapLibre 3D - Reward markers using NATIVE MapLibre markers
+// 🔥 FIX: Converted from HTML overlay to native markers for perfect map sync (no floating!)
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
+import React, { useEffect, useState, useRef } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';
+import maplibregl from 'maplibre-gl';
 import { useMarkerRewards } from '@/hooks/useMarkerRewards';
 import ClaimRewardModal from '@/components/marker-rewards/ClaimRewardModal';
 
@@ -18,128 +23,173 @@ interface RewardsLayer3DProps {
   enabled: boolean;
   markers?: RewardMarker[];
   userPosition?: { lat: number; lng: number };
-  isAdmin?: boolean; // Admin vede SEMPRE tutti i marker
+  isAdmin?: boolean;
 }
 
 // 🎯 ZOOM DEFAULT per marker senza min_zoom configurato
 const DEFAULT_MIN_ZOOM = 17;
 
 const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers = [], userPosition, isAdmin = false }) => {
-  const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
   const [currentZoom, setCurrentZoom] = useState(0);
   const { rewards } = useMarkerRewards(selectedMarker);
-  const rafRef = React.useRef<number | null>(null);
+  
+  // 🔥 Native MapLibre markers ref for cleanup
+  const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
 
+  // 🔥 ZOOM CONTROL: Update zoom state for visibility logic
   useEffect(() => {
-    if (!map || !enabled) return;
+    if (!map) return;
 
-    const updatePositions = () => {
-      const newPositions = new Map<string, { x: number; y: number }>();
-      markers.forEach(marker => {
-        const point = map.project([marker.lng, marker.lat]);
-        newPositions.set(marker.id, { x: point.x, y: point.y });
-      });
-      setPositions(newPositions);
+    const updateZoom = () => {
       setCurrentZoom(map.getZoom());
     };
 
-    const updateOnRender = () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(updatePositions);
-    };
+    // Initial check
+    updateZoom();
 
-    updatePositions();
-    map.on('move', updatePositions);
-    map.on('zoom', updatePositions);
-    map.on('resize', updatePositions);
-    map.on('render', updateOnRender);
+    // Listen to zoom changes
+    map.on('zoom', updateZoom);
 
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      map.off('move', updatePositions);
-      map.off('zoom', updatePositions);
-      map.off('resize', updatePositions);
-      map.off('render', updateOnRender);
+      try {
+        map.off('zoom', updateZoom);
+      } catch (e) {
+        // Map may be destroyed
+      }
     };
-  }, [map, markers, enabled]);
+  }, [map]);
+
+  // 🔥 FIX: Use native MapLibre markers for perfect map sync (no floating!)
+  useEffect(() => {
+    if (!map || !enabled) return;
+
+    const currentMarkerIds = new Set(markers.map(m => m.id));
+    
+    // Remove markers that no longer exist
+    markersRef.current.forEach((marker, id) => {
+      if (!currentMarkerIds.has(id)) {
+        marker.remove();
+        markersRef.current.delete(id);
+      }
+    });
+
+    // Add or update markers
+    markers.forEach(rewardMarker => {
+      const markerMinZoom = rewardMarker.min_zoom || DEFAULT_MIN_ZOOM;
+      const isVisible = rewardMarker.claimed || currentZoom >= markerMinZoom;
+      
+      const existingMarker = markersRef.current.get(rewardMarker.id);
+      
+      // Colors: 🟢 GREEN = non claimed, 🟣 PURPLE = claimed
+      const markerColor = rewardMarker.claimed ? '#8B5CF6' : '#10b981';
+      const markerSize = rewardMarker.claimed ? 18 : 22;
+      
+      if (existingMarker) {
+        // Update visibility and position of existing marker
+        existingMarker.setLngLat([rewardMarker.lng, rewardMarker.lat]);
+        existingMarker.getElement().style.display = isVisible ? 'block' : 'none';
+      } else {
+        // Create new marker element
+        const el = document.createElement('div');
+        el.className = 'maplibre-reward-marker';
+        el.style.cssText = `
+          cursor: pointer;
+          width: ${markerSize}px;
+          height: ${markerSize}px;
+          border-radius: 50%;
+          background: ${markerColor};
+          border: 3px solid rgba(255, 255, 255, 0.9);
+          box-shadow: 0 0 12px 4px ${markerColor}ee, 0 0 24px 8px ${markerColor}88;
+          display: ${isVisible ? 'block' : 'none'};
+          ${!rewardMarker.claimed ? 'animation: rewardPulse 1.5s ease-in-out infinite;' : ''}
+        `;
+        el.title = rewardMarker.claimed ? `${rewardMarker.title || 'Reward'} (Riscattato)` : rewardMarker.title || 'Reward';
+        
+        // 🎯 Click handler - must be on touch-friendly wrapper
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          touch-action: manipulation;
+        `;
+        wrapper.appendChild(el);
+        
+        wrapper.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelectedMarker(rewardMarker.id);
+        });
+        
+        wrapper.addEventListener('touchend', (e) => {
+          e.stopPropagation();
+          setSelectedMarker(rewardMarker.id);
+        });
+        
+        // Create native MapLibre marker
+        const marker = new maplibregl.Marker({ 
+          element: wrapper,
+          anchor: 'center'
+        })
+          .setLngLat([rewardMarker.lng, rewardMarker.lat])
+          .addTo(map);
+        
+        markersRef.current.set(rewardMarker.id, marker);
+      }
+    });
+
+    // Update visibility on zoom change for existing markers
+    markersRef.current.forEach((marker, id) => {
+      const rewardMarker = markers.find(m => m.id === id);
+      if (rewardMarker) {
+        const markerMinZoom = rewardMarker.min_zoom || DEFAULT_MIN_ZOOM;
+        const isVisible = rewardMarker.claimed || currentZoom >= markerMinZoom;
+        marker.getElement().style.display = isVisible ? 'block' : 'none';
+      }
+    });
+
+  }, [map, markers, enabled, currentZoom]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      try {
+        markersRef.current.forEach(marker => {
+          try {
+            marker.remove();
+          } catch (e) {
+            // Marker already removed
+          }
+        });
+        markersRef.current.clear();
+      } catch (e) {
+        // Silent cleanup
+      }
+    };
+  }, []);
 
   // 🎯 Non mostrare nulla se layer disabilitato
-  if (!enabled || markers.length === 0) return null;
-  
-  // 🟣 Marker VIOLA (riscattati) → SEMPRE visibili a qualsiasi zoom
-  // 🟢 Marker VERDI (non riscattati) → solo con zoom >= min_zoom del marker
-  const visibleMarkers = markers.filter(m => {
-    const markerMinZoom = m.min_zoom || DEFAULT_MIN_ZOOM;
-    return m.claimed || currentZoom >= markerMinZoom;
-  });
-  
-  if (visibleMarkers.length === 0) return null;
+  if (!enabled) return null;
 
   return (
     <>
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 660 }}>
-        {visibleMarkers // 🎯 VIOLA sempre visibili, VERDI solo da vicino
-          .map((marker) => {
-            const pos = positions.get(marker.id);
-            if (!pos) return null;
+      {/* CSS Animation for pulsing effect */}
+      <style>{`
+        @keyframes rewardPulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.2); opacity: 0.8; }
+        }
+      `}</style>
 
-            return (
-              <div
-                key={marker.id}
-                className="absolute pointer-events-auto cursor-pointer"
-                style={{
-                  left: `${pos.x}px`,
-                  top: `${pos.y}px`,
-                  transform: 'translate(-50%, -50%)',
-                  // 🎯 AREA CLICCABILE GRANDE per mobile (44x44 minimo per touch)
-                  width: '48px',
-                  height: '48px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  touchAction: 'manipulation'
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  console.log('🎯 Marker reward clicked:', marker.id, marker.title);
-                  setSelectedMarker(marker.id);
-                }}
-                onTouchEnd={(e) => {
-                  e.stopPropagation();
-                  console.log('🎯 Marker reward touched:', marker.id, marker.title);
-                  setSelectedMarker(marker.id);
-                }}
-              >
-                <div
-                  className="m1-reward-marker"
-                  style={{
-                    // 🎯 Marker PIÙ GRANDE e visibile
-                    width: marker.claimed ? 20 : 24,
-                    height: marker.claimed ? 20 : 24,
-                    borderRadius: '50%',
-                    // 🎯 VERDE = non riscattato, VIOLA = riscattato
-                    background: marker.claimed ? '#8B5CF6' : '#10b981',
-                    border: '3px solid rgba(255, 255, 255, 0.9)',
-                    boxShadow: marker.claimed 
-                      ? '0 0 12px 4px rgba(139, 92, 246, 0.9), 0 0 24px 8px rgba(139, 92, 246, 0.5)'
-                      : '0 0 12px 4px rgba(16, 185, 129, 0.9), 0 0 24px 8px rgba(16, 185, 129, 0.5)',
-                    animation: marker.claimed ? 'none' : 'rewardPulse 1.5s ease-in-out infinite'
-                  }}
-                  title={marker.claimed ? `${marker.title || 'Reward'} (Riscattato)` : marker.title || 'Reward'}
-                />
-              </div>
-            );
-          })}
-      </div>
-
-      {/* 🎯 Modal SEMPRE visibile quando marker selezionato (anche se rewards vuoto) */}
+      {/* 🎯 Modal SEMPRE visibile quando marker selezionato */}
       {selectedMarker && (
         <ClaimRewardModal
           isOpen={true}
           onClose={() => setSelectedMarker(null)}
           markerId={selectedMarker}
-          rewards={rewards || []} // 🛡️ Guardia: sempre array
+          rewards={rewards || []}
         />
       )}
     </>
