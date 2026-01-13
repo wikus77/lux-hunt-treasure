@@ -4,10 +4,13 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Gift, Sparkles } from 'lucide-react';
-import { FortuneWheel } from '@/components/feedback';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { motion } from 'framer-motion';
+import { Gift } from 'lucide-react';
+import { SectionErrorBoundary } from '@/components/error/SectionErrorBoundary';
+
+// 🔧 FIX: Lazy load FortuneWheel per ridurre memory footprint iniziale
+const FortuneWheel = lazy(() => import('@/components/feedback/FortuneWheel'));
 
 const STORAGE_KEY = 'm1_fortune_wheel_last_spin';
 
@@ -78,19 +81,24 @@ export const FortuneWheelPill: React.FC = () => {
         />
       </motion.button>
 
-      <FortuneWheel 
-        isOpen={showWheel} 
-        onClose={() => {
-          setShowWheel(false);
-          // Recheck visibility after closing
-          const lastSpin = localStorage.getItem(STORAGE_KEY);
-          if (lastSpin) {
-            const lastSpinDate = new Date(lastSpin).toDateString();
-            const today = new Date().toDateString();
-            setIsVisible(lastSpinDate !== today);
-          }
-        }} 
-      />
+      {/* 🔧 FIX: Wrap FortuneWheel con ErrorBoundary + Suspense per prevenire crash globali */}
+      <SectionErrorBoundary section="Ruota della Fortuna" fallbackHeight="0px" showRetry={false}>
+        <Suspense fallback={null}>
+          <FortuneWheel 
+            isOpen={showWheel} 
+            onClose={() => {
+              setShowWheel(false);
+              // Recheck visibility after closing
+              const lastSpin = localStorage.getItem(STORAGE_KEY);
+              if (lastSpin) {
+                const lastSpinDate = new Date(lastSpin).toDateString();
+                const today = new Date().toDateString();
+                setIsVisible(lastSpinDate !== today);
+              }
+            }} 
+          />
+        </Suspense>
+      </SectionErrorBoundary>
     </>
   );
 };

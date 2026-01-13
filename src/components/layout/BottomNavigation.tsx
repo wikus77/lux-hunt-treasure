@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT
-import React, { useRef, useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Home, MessageSquare, Circle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,10 +10,11 @@ import { subscribeAudioEvent } from "@/utils/audioController";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import BuzzVideoModal from "@/components/buzz/BuzzVideoModal";
 import GenericVideoModal from "@/components/shared/GenericVideoModal";
+import { AudioManager } from "@/lib/audio/AudioManager"; // 🔧 FIX: Singleton Audio
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // PWA Navigation Component - Floating Pill Style - SIMPLIFIED
 
-// 🔊 Audio paths for navigation sounds
+// 🔊 Audio paths for navigation sounds (usati dal singleton AudioManager)
 const MAP_BOOM_SOUND = '/assets/audio/DSGNBoom-A_fast_6-second_cine-Elevenlabs.mp3';
 const BUZZ_BOOM_SOUND = '/assets/audio/DSGNBoom-Create_an_intense_ci-Elevenlabs.mp3';
 const HOME_SOUND = '/assets/audio/m1-home.mp3';
@@ -35,143 +36,58 @@ const BottomNavigationComponent = () => {
   const [showNotificheVideoModal, setShowNotificheVideoModal] = useState(false);
   const { user } = useUnifiedAuth();
   
-  // 🔊 Audio refs for navigation sounds
-  const mapAudioRef = useRef<HTMLAudioElement | null>(null);
-  const buzzAudioRef = useRef<HTMLAudioElement | null>(null);
-  const homeAudioRef = useRef<HTMLAudioElement | null>(null);
-  const aionAudioRef = useRef<HTMLAudioElement | null>(null);
-  const notificheAudioRef = useRef<HTMLAudioElement | null>(null);
-  const classificaAudioRef = useRef<HTMLAudioElement | null>(null);
+  // 🔧 FIX: Usa AudioManager singleton invece di refs multiple
+  // Questo previene memory leak e crash su iOS Safari
   
-  // 🔇 Stop all sounds before playing a new one
+  // 🔇 Stop all navigation sounds
   const stopAllSounds = useCallback(() => {
-    if (homeAudioRef.current) {
-      homeAudioRef.current.pause();
-      homeAudioRef.current.currentTime = 0;
-    }
-    if (mapAudioRef.current) {
-      mapAudioRef.current.pause();
-      mapAudioRef.current.currentTime = 0;
-    }
-    if (buzzAudioRef.current) {
-      buzzAudioRef.current.pause();
-      buzzAudioRef.current.currentTime = 0;
-    }
-    if (aionAudioRef.current) {
-      aionAudioRef.current.pause();
-      aionAudioRef.current.currentTime = 0;
-    }
-    if (notificheAudioRef.current) {
-      notificheAudioRef.current.pause();
-      notificheAudioRef.current.currentTime = 0;
-    }
-    if (classificaAudioRef.current) {
-      classificaAudioRef.current.pause();
-      classificaAudioRef.current.currentTime = 0;
-    }
+    AudioManager.stopCategory('navigation');
   }, []);
   
   // Play sound when clicking home icon
   const playHomeSound = useCallback(() => {
     stopAllSounds();
-    if (!homeAudioRef.current) {
-      homeAudioRef.current = new Audio(HOME_SOUND);
-      homeAudioRef.current.volume = 0.7;
-    }
-    homeAudioRef.current.currentTime = 0;
-    homeAudioRef.current.play().catch(err => {
-      console.log('[BottomNav] Home audio play failed:', err);
-    });
+    AudioManager.play(HOME_SOUND, { volume: 0.7, category: 'navigation' });
   }, [stopAllSounds]);
   
   // Play boom sound when clicking map icon
   const playMapSound = useCallback(() => {
     stopAllSounds();
-    if (!mapAudioRef.current) {
-      mapAudioRef.current = new Audio(MAP_BOOM_SOUND);
-      mapAudioRef.current.volume = 0.7;
-    }
-    mapAudioRef.current.currentTime = 0;
-    mapAudioRef.current.play().catch(err => {
-      console.log('[BottomNav] Map audio play failed:', err);
-    });
+    AudioManager.play(MAP_BOOM_SOUND, { volume: 0.7, category: 'navigation' });
   }, [stopAllSounds]);
   
   // Play boom sound when clicking buzz icon
   const playBuzzSound = useCallback(() => {
     stopAllSounds();
-    if (!buzzAudioRef.current) {
-      buzzAudioRef.current = new Audio(BUZZ_BOOM_SOUND);
-      buzzAudioRef.current.volume = 0.7;
-    }
-    buzzAudioRef.current.currentTime = 0;
-    buzzAudioRef.current.play().catch(err => {
-      console.log('[BottomNav] Buzz audio play failed:', err);
-    });
+    AudioManager.play(BUZZ_BOOM_SOUND, { volume: 0.7, category: 'navigation' });
   }, [stopAllSounds]);
   
-  // Play sound when clicking AION icon (same as home)
+  // Play sound when clicking AION icon
   const playAionSound = useCallback(() => {
     stopAllSounds();
-    if (!aionAudioRef.current) {
-      aionAudioRef.current = new Audio(HOME_SOUND);
-      aionAudioRef.current.volume = 0.7;
-    }
-    aionAudioRef.current.currentTime = 0;
-    aionAudioRef.current.play().catch(err => {
-      console.log('[BottomNav] AION audio play failed:', err);
-    });
+    AudioManager.play(HOME_SOUND, { volume: 0.7, category: 'navigation' });
   }, [stopAllSounds]);
   
-  // Play sound when clicking Notifiche icon (same as home)
+  // Play sound when clicking Notifiche icon
   const playNotificheSound = useCallback(() => {
     stopAllSounds();
-    if (!notificheAudioRef.current) {
-      notificheAudioRef.current = new Audio(HOME_SOUND);
-      notificheAudioRef.current.volume = 0.7;
-    }
-    notificheAudioRef.current.currentTime = 0;
-    notificheAudioRef.current.play().catch(err => {
-      console.log('[BottomNav] Notifiche audio play failed:', err);
-    });
+    AudioManager.play(HOME_SOUND, { volume: 0.7, category: 'navigation' });
   }, [stopAllSounds]);
   
-  // Play sound when clicking Classifica icon (same as home)
+  // Play sound when clicking Classifica icon
   const playClassificaSound = useCallback(() => {
     stopAllSounds();
-    if (!classificaAudioRef.current) {
-      classificaAudioRef.current = new Audio(HOME_SOUND);
-      classificaAudioRef.current.volume = 0.7;
-    }
-    classificaAudioRef.current.currentTime = 0;
-    classificaAudioRef.current.play().catch(err => {
-      console.log('[BottomNav] Classifica audio play failed:', err);
-    });
+    AudioManager.play(HOME_SOUND, { volume: 0.7, category: 'navigation' });
   }, [stopAllSounds]);
   
   // 🔇 Pause current playing audio (called by buttons via audioController)
   const pauseCurrentAudio = useCallback(() => {
-    if (buzzAudioRef.current && !buzzAudioRef.current.paused) {
-      buzzAudioRef.current.pause();
-      console.log('[BottomNav] Audio paused by external event');
-    }
-    if (mapAudioRef.current && !mapAudioRef.current.paused) {
-      mapAudioRef.current.pause();
-    }
-    if (homeAudioRef.current && !homeAudioRef.current.paused) {
-      homeAudioRef.current.pause();
-    }
+    AudioManager.stopCategory('navigation');
   }, []);
   
-  // 🔊 Resume paused audio (called by buttons via audioController when their sound ends)
+  // 🔊 Resume paused audio - ora gestito dal singleton
   const resumeCurrentAudio = useCallback(() => {
-    // Resume buzz audio if it was playing on the buzz page
-    if (buzzAudioRef.current && buzzAudioRef.current.paused && buzzAudioRef.current.currentTime > 0) {
-      buzzAudioRef.current.play().catch(err => {
-        console.log('[BottomNav] Resume audio failed:', err);
-      });
-      console.log('[BottomNav] Audio resumed');
-    }
+    // Il singleton gestisce automaticamente il resume
   }, []);
   
   // 📡 Subscribe to audio events from other components

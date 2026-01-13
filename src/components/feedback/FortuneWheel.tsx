@@ -8,11 +8,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Gift, RotateCcw, Sparkles, Volume2 } from 'lucide-react';
+import { X, Gift, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import { AudioManager } from '@/lib/audio/AudioManager'; // 🔧 FIX: Singleton Audio
 
 // 🎰 WHEEL SEGMENTS - 16 segments with 3 LOSE evenly distributed
 // Order: clockwise from top (where pointer is)
@@ -57,88 +58,62 @@ interface FortuneWheelProps {
 
 const STORAGE_KEY = 'm1_fortune_wheel_last_spin';
 
-// 🔊 AUDIO CONTEXT for immersive sounds
-let audioContext: AudioContext | null = null;
-
-const getAudioContext = () => {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  }
-  return audioContext;
-};
+// 🔧 FIX: Usa AudioManager singleton invece di AudioContext locale
+// Questo previene crash su iOS Safari e memory leak
 
 // Play tick sound during spin
 const playTickSound = () => {
   try {
-    const ctx = getAudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    
-    osc.frequency.value = 800 + Math.random() * 400;
-    osc.type = 'sine';
-    gain.gain.value = 0.15;
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
-    
-    osc.start();
-    osc.stop(ctx.currentTime + 0.05);
+    // Usa AudioManager per generare tick con tono randomico
+    AudioManager.playTone(800 + Math.random() * 400, 0.05, { type: 'sine', volume: 0.15 });
   } catch (e) {
     // Silent fail
   }
 };
 
-// 🎵 AAA QUALITY WIN FANFARE - Casino Jackpot Style
+// 🎵 AAA QUALITY WIN FANFARE - Casino Jackpot Style (uses AudioManager)
 const playWinSound = () => {
   try {
-    const ctx = getAudioContext();
+    const ctx = AudioManager.getAudioContext();
+    if (!ctx) return;
     
     // Rich chord progression: C major → E major → G major → C octave (victory!)
     const chords = [
-      { notes: [261.63, 329.63, 392.00], time: 0 },      // C major chord
-      { notes: [329.63, 415.30, 493.88], time: 0.15 },   // E major chord
-      { notes: [392.00, 493.88, 587.33], time: 0.30 },   // G major chord
-      { notes: [523.25, 659.25, 783.99, 1046.50], time: 0.45 }, // C major octave - VICTORY
+      { notes: [261.63, 329.63, 392.00], time: 0 },
+      { notes: [329.63, 415.30, 493.88], time: 0.15 },
+      { notes: [392.00, 493.88, 587.33], time: 0.30 },
+      { notes: [523.25, 659.25, 783.99, 1046.50], time: 0.45 },
     ];
     
     chords.forEach(chord => {
       chord.notes.forEach((freq, noteIndex) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        
-        // Add slight detune for richness
         osc.detune.value = (noteIndex - 1) * 3;
-        
         osc.connect(gain);
         gain.connect(ctx.destination);
-        
         osc.frequency.value = freq;
-        osc.type = 'triangle'; // Warmer tone than sine
+        osc.type = 'triangle';
         gain.gain.value = 0;
         gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + chord.time + 0.02);
         gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + chord.time + 0.15);
         gain.gain.linearRampToValueAtTime(0, ctx.currentTime + chord.time + 0.5);
-        
         osc.start(ctx.currentTime + chord.time);
         osc.stop(ctx.currentTime + chord.time + 0.6);
       });
     });
     
-    // Add shimmering high notes for sparkle
+    // Shimmering high notes
     [1318.51, 1567.98, 2093.00].forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      
       osc.connect(gain);
       gain.connect(ctx.destination);
-      
       osc.frequency.value = freq;
       osc.type = 'sine';
       gain.gain.value = 0;
       gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.5 + i * 0.08);
       gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.7 + i * 0.08);
-      
       osc.start(ctx.currentTime + 0.5 + i * 0.08);
       osc.stop(ctx.currentTime + 0.9 + i * 0.08);
     });
@@ -147,12 +122,12 @@ const playWinSound = () => {
   }
 };
 
-// 🔇 AAA QUALITY LOSE SOUND - Dramatic but not harsh
+// 🔇 AAA QUALITY LOSE SOUND - Dramatic but not harsh (uses AudioManager)
 const playLoseSound = () => {
   try {
-    const ctx = getAudioContext();
+    const ctx = AudioManager.getAudioContext();
+    if (!ctx) return;
     
-    // Descending notes: dramatic "wah wah wah" effect
     const notes = [
       { freq: 350, time: 0 },
       { freq: 300, time: 0.2 },
@@ -163,39 +138,31 @@ const playLoseSound = () => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       const filter = ctx.createBiquadFilter();
-      
       osc.connect(filter);
       filter.connect(gain);
       gain.connect(ctx.destination);
-      
-      // Add filter for "wah" effect
       filter.type = 'lowpass';
       filter.frequency.value = 2000;
       filter.frequency.linearRampToValueAtTime(300, ctx.currentTime + time + 0.15);
-      
       osc.frequency.value = freq;
       osc.type = 'triangle';
       gain.gain.value = 0;
       gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + time + 0.02);
       gain.gain.linearRampToValueAtTime(0, ctx.currentTime + time + 0.25);
-      
       osc.start(ctx.currentTime + time);
       osc.stop(ctx.currentTime + time + 0.3);
     });
     
-    // Add subtle bass thud at the end
+    // Bass thud
     const bass = ctx.createOscillator();
     const bassGain = ctx.createGain();
-    
     bass.connect(bassGain);
     bassGain.connect(ctx.destination);
-    
     bass.frequency.value = 80;
     bass.type = 'sine';
     bassGain.gain.value = 0;
     bassGain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.65);
     bassGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.9);
-    
     bass.start(ctx.currentTime + 0.6);
     bass.stop(ctx.currentTime + 1);
   } catch (e) {
@@ -203,22 +170,21 @@ const playLoseSound = () => {
   }
 };
 
-// Play spinning whoosh
+// Play spinning whoosh (uses AudioManager)
 const playSpinStartSound = () => {
   try {
-    const ctx = getAudioContext();
+    const ctx = AudioManager.getAudioContext();
+    if (!ctx) return;
+    
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    
     osc.connect(gain);
     gain.connect(ctx.destination);
-    
     osc.frequency.value = 100;
     osc.frequency.exponentialRampToValueAtTime(2000, ctx.currentTime + 0.5);
     osc.type = 'sawtooth';
     gain.gain.value = 0.1;
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-    
     osc.start();
     osc.stop(ctx.currentTime + 0.5);
   } catch (e) {
