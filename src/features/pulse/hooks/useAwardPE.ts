@@ -49,8 +49,8 @@ export const PE_VALUES: Record<Exclude<PEActionType, 'CUSTOM' | 'FORTUNE_WHEEL'>
   MAP_TIME_240S: 15,        // 4 minuti in mappa
   MAP_TIME_600S: 30,        // 10 minuti in mappa (bonus)
   MARKER_CLAIM: 100,
-  BATTLE_WIN: 100,
-  BATTLE_LOSE: -50,
+  BATTLE_WIN: 50,           // Vittoria Tron Battle
+  BATTLE_LOSE: -100,        // Sconfitta Tron Battle
   COUNTRY_CONQUEST: 1000,
   DAILY_LOGIN: 5,
   DAILY_MISSION: 50,
