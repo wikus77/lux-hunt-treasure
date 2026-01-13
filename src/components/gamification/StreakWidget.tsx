@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
+import { useAwardPE } from '@/features/pulse/hooks/useAwardPE';
 
 interface StreakInfo {
   current_streak: number;
@@ -42,6 +43,9 @@ export function StreakWidget({ compact = false, onCheckIn }: StreakWidgetProps) 
   const [streakInfo, setStreakInfo] = useState<StreakInfo | null>(null);
   const [canCheckIn, setCanCheckIn] = useState(true);
   const [showBadgeAnimation, setShowBadgeAnimation] = useState<typeof MILESTONES[0] | null>(null);
+  
+  // 🔋 PE System Hook
+  const { awardPE } = useAwardPE();
 
   useEffect(() => {
     if (user) {
@@ -145,6 +149,12 @@ export function StreakWidget({ compact = false, onCheckIn }: StreakWidgetProps) 
         p_xp_amount: xpAwarded,
         p_source: 'daily_checkin'
       });
+
+      // 🔋 Award PE for Daily Login (+5 PE)
+      awardPE('DAILY_LOGIN', undefined, {
+        streakDays: newStreak,
+        streakBroken,
+      }).catch(err => console.warn('[PE] Daily login award failed:', err));
 
       hapticSuccess();
       

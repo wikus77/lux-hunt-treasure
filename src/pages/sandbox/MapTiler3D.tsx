@@ -65,6 +65,7 @@ import '@/features/m1u/m1u-ui.css'; // For pill-orb style
 import { useDebugFlag } from '@/debug/useDebugFlag';
 import { DebugMapPanel } from '@/debug/DebugMapPanel';
 import { useMapGlitchEffect } from '@/hooks/useMapGlitchEffect';
+import { useMapTimeTracking } from '@/hooks/useMapTimeTracking'; // 🔋 PE: Tempo in Mappa
 // 🎯 FIRST SESSION: Guided discovery components
 import { MapHUD, BuzzHelpPopup, MapExploreHint } from '@/components/first-session';
 // MicroMissionsCard ora è globale in App.tsx
@@ -92,6 +93,10 @@ export default function MapTiler3D() {
   
   // 🆕 v5: Shadow Protocol Map Glitch Effect
   useMapGlitchEffect();
+  
+  // 🔋 PE: Track time spent on map (+15 PE at 4min, +30 PE at 10min)
+  useMapTimeTracking({ enabled: true });
+  
   const [diag, setDiag] = useState<DiagState>({ 
     keyMode: '?', 
     tiles: '?', 
