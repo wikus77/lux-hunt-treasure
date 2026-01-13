@@ -2,6 +2,8 @@
 import React from 'react';
 import { Router } from 'wouter';
 import { Toaster } from "./components/ui/sonner";
+// 🛡️ MediaSession Blocker - DEVE essere importato PRIMA di tutto per bloccare la Dynamic Island
+import '@/lib/media/MediaSessionBlocker';
 import { BadgeAuditReport } from "./components/debug/BadgeAuditReport";
 import PushFrozenNotice from "./banners/PushFrozenNotice";
 import { AuthProvider } from "./contexts/auth/AuthProvider";

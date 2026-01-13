@@ -16,6 +16,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useDynamicIsland } from '@/contexts/DynamicIslandContext';
+import { unblockMediaSessionForAion, blockMediaSession } from '@/lib/media/MediaSessionBlocker';
 
 interface UseAionDynamicIslandOptions {
   /** True quando AION sta parlando (da useTTS o useIntelAnalyst) */
@@ -60,8 +61,9 @@ export const useAionDynamicIsland = ({
     const isAionTalking = isSpeaking || status === 'speaking';
     
     if (isAionTalking && isPanelOpen && !isActive) {
-      // AION sta parlando - attiva DI
-      console.log('[AION-DI] 🎙️ AION sta parlando - Attivo Dynamic Island');
+      // AION sta parlando - SBLOCCA MediaSession e attiva DI
+      console.log('[AION-DI] 🎙️ AION sta parlando - Sblocco MediaSession e attivo Dynamic Island');
+      unblockMediaSessionForAion(); // 🔓 Sblocca MediaSession SOLO per AION
       activate({
         aionStatus: 'active'
       }).then(() => {
@@ -69,10 +71,12 @@ export const useAionDynamicIsland = ({
         setPage('intelligence', { aionStatus: 'active' });
       }).catch(err => {
         console.warn('[AION-DI] Activation failed:', err);
+        blockMediaSession(); // 🔒 Ri-blocca se fallisce
       });
     } else if (!isAionTalking && wasActivatedByAionRef.current && isActive) {
-      // AION ha smesso di parlare - disattiva DI
-      console.log('[AION-DI] 🔇 AION ha smesso di parlare - Disattivo Dynamic Island');
+      // AION ha smesso di parlare - BLOCCA MediaSession e disattiva DI
+      console.log('[AION-DI] 🔇 AION ha smesso di parlare - Blocco MediaSession e disattivo Dynamic Island');
+      blockMediaSession(); // 🔒 Ri-blocca MediaSession
       deactivate();
       wasActivatedByAionRef.current = false;
     }
@@ -90,7 +94,8 @@ export const useAionDynamicIsland = ({
   useEffect(() => {
     return () => {
       if (wasActivatedByAionRef.current) {
-        console.log('[AION-DI] 🚪 Leaving page - Disattivo Dynamic Island');
+        console.log('[AION-DI] 🚪 Leaving page - Blocco MediaSession e disattivo Dynamic Island');
+        blockMediaSession(); // 🔒 Ri-blocca MediaSession
         deactivate();
         wasActivatedByAionRef.current = false;
       }
@@ -100,7 +105,8 @@ export const useAionDynamicIsland = ({
   // Disattiva se il pannello viene chiuso
   useEffect(() => {
     if (!isPanelOpen && wasActivatedByAionRef.current && isActive) {
-      console.log('[AION-DI] 📴 Pannello chiuso - Disattivo Dynamic Island');
+      console.log('[AION-DI] 📴 Pannello chiuso - Blocco MediaSession e disattivo Dynamic Island');
+      blockMediaSession(); // 🔒 Ri-blocca MediaSession
       deactivate();
       wasActivatedByAionRef.current = false;
     }
