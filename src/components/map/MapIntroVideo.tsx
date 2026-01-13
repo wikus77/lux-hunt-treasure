@@ -152,6 +152,10 @@ const MapIntroVideo: React.FC<MapIntroVideoProps> = ({ onComplete, userEmail }) 
           muted
           onEnded={handleVideoEnd}
           onError={handleVideoError}
+          // 🛡️ Impedisce attivazione Dynamic Island su iOS
+          disablePictureInPicture
+          disableRemotePlayback
+          controlsList="nodownload noremoteplayback"
         />
 
         {/* Audio indicator (discreto in basso a sinistra) */}

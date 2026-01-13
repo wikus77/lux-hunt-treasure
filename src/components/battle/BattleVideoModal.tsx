@@ -63,6 +63,14 @@ export function BattleVideoModal({
 
   // When video ends, show result animation
   const handleVideoEnd = useCallback(() => {
+    // 🛡️ Resetta MediaSession per impedire Dynamic Island
+    if ('mediaSession' in navigator) {
+      try {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.playbackState = 'none';
+      } catch (e) { /* ignore */ }
+    }
+    
     setPhase('result');
     // Auto close after result animation
     setTimeout(() => {
@@ -168,6 +176,10 @@ export function BattleVideoModal({
                       muted={!videoAudioEnabled}
                       onEnded={handleVideoEnd}
                       onError={handleSkipVideo}
+                      // 🛡️ Impedisce attivazione Dynamic Island su iOS
+                      disablePictureInPicture
+                      disableRemotePlayback
+                      controlsList="nodownload noremoteplayback"
                     />
 
                     {/* Audio hint overlay */}

@@ -168,6 +168,10 @@ const QrWinFlow: React.FC = () => {
             playsInline
             onEnded={handleVideoEnd}
             onError={handleVideoError}
+            // 🛡️ Impedisce attivazione Dynamic Island su iOS
+            disablePictureInPicture
+            disableRemotePlayback
+            controlsList="nodownload noremoteplayback"
           />
           {/* Minimal audio icon - bottom left, very subtle */}
           {!audioEnabled && (

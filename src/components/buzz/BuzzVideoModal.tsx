@@ -220,6 +220,10 @@ export function BuzzVideoModal({ isOpen, onClose, userEmail, onContinue }: BuzzV
                     muted={!audioEnabled}
                     onEnded={handleVideoEnd}
                     onError={handleClose}
+                    // 🛡️ Impedisce attivazione Dynamic Island su iOS
+                    disablePictureInPicture
+                    disableRemotePlayback
+                    controlsList="nodownload noremoteplayback"
                   />
                   
                   {/* Audio indicator overlay */}

@@ -151,6 +151,10 @@ export const ClueMilestoneModal: React.FC<ClueMilestoneModalProps> = ({ mileston
                 muted={!audioEnabled}
                 onEnded={handleVideoEnd}
                 onError={handleSkipVideo}
+                // 🛡️ Impedisce attivazione Dynamic Island su iOS
+                disablePictureInPicture
+                disableRemotePlayback
+                controlsList="nodownload noremoteplayback"
               />
               
               {/* Audio hint overlay */}

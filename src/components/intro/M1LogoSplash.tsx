@@ -89,6 +89,10 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
                 onEnded={handleVideoEnded}
                 onError={handleVideoError}
                 preload="auto"
+                // 🛡️ Impedisce attivazione Dynamic Island su iOS
+                disablePictureInPicture
+                disableRemotePlayback
+                controlsList="nodownload noremoteplayback"
                 style={{
                   position: 'absolute',
                   top: '50%',
