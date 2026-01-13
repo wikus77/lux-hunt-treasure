@@ -11,6 +11,7 @@ import { buildNorahContext } from '@/intel/norah/engine/contextBuilder';
 import { logPillClick } from '@/intel/norah/utils/telemetry';
 import { Celebrations, celebrateMilestone } from '@/intel/norah/ui/Celebrations';
 import { useTranslation } from 'react-i18next';
+import { useAionDynamicIsland } from '@/hooks/useAionDynamicIsland'; // 🎙️ DI SOLO per AION
 
 export interface AIAnalystPanelProps {
   // Support both 'open' and 'isOpen' for compatibility
@@ -65,6 +66,14 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
     onToggleTTS,
     agentContext
   } = props;
+  
+  // 🎙️ Dynamic Island SOLO quando AION parla
+  // status === 'speaking' indica che AION sta parlando
+  useAionDynamicIsland({
+    isSpeaking: status === 'speaking',
+    status,
+    isPanelOpen: isOpen
+  });
   
   const [input, setInput] = useState('');
   const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);

@@ -7,6 +7,7 @@ import { Send, Mic, MicOff, RotateCw, MoreHorizontal, Loader2, Brain, Zap } from
 import { supabase } from '@/integrations/supabase/client';
 import { useTTS } from '@/components/intel/hooks/useTTS';
 import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION Cashback Vault™
+import { useAionDynamicIsland } from '@/hooks/useAionDynamicIsland'; // 🎙️ DI SOLO per AION
 import type { AionEntityHandle, Viseme } from '@/components/aion/AionEntity';
 
 interface Message {
@@ -69,6 +70,13 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   
   const { speak, stop: stopTTS, isSpeaking, unlockAudio } = useTTS();
   const { accrueFromAion } = useCashbackWallet(); // 🆕 M1SSION Cashback Vault™
+  
+  // 🎙️ Dynamic Island SOLO quando AION parla (non per video/suoni)
+  useAionDynamicIsland({
+    isSpeaking,
+    status,
+    isPanelOpen: true // Questo pannello è sempre "open" quando visibile
+  });
 
   // 🍎 iOS: Unlock audio on first user interaction with chat
   useEffect(() => {
