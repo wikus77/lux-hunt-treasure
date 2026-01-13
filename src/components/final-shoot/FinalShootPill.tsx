@@ -256,6 +256,10 @@ const FinalShootPill: React.FC = () => {
                     muted={!videoAudioEnabled}
                     onEnded={handleVideoEnd}
                     onError={handleSkipVideo}
+                    // 🛡️ Impedisce attivazione Dynamic Island su iOS
+                    disablePictureInPicture
+                    disableRemotePlayback
+                    controlsList="nodownload noremoteplayback"
                   />
                   
                   {/* Audio hint */}

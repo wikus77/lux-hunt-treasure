@@ -213,6 +213,10 @@ export function GenericVideoModal({
                     muted={!audioEnabled}
                     onEnded={handleVideoEnd}
                     onError={handleClose}
+                    // 🛡️ Impedisce attivazione Dynamic Island su iOS
+                    disablePictureInPicture
+                    disableRemotePlayback
+                    controlsList="nodownload noremoteplayback"
                   />
                   
                   {!audioEnabled && (

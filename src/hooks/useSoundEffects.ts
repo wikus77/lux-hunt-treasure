@@ -92,14 +92,32 @@ export const useSoundEffects = () => {
       audio.currentTime = 0;
       audio.volume = volume;
       
+      // 🛡️ Resetta MediaSession PRIMA del play per impedire Dynamic Island
+      if ('mediaSession' in navigator) {
+        try {
+          navigator.mediaSession.metadata = null;
+          navigator.mediaSession.playbackState = 'none';
+        } catch (e) { /* ignore */ }
+      }
+      
       // Play the sound
       const playPromise = audio.play();
       
       // Handle promise to catch any autoplay restrictions
       if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error(`Error playing sound: ${sound}`, error);
-        });
+        playPromise
+          .then(() => {
+            // 🛡️ Resetta MediaSession anche dopo il play
+            if ('mediaSession' in navigator) {
+              try {
+                navigator.mediaSession.metadata = null;
+                navigator.mediaSession.playbackState = 'none';
+              } catch (e) { /* ignore */ }
+            }
+          })
+          .catch(error => {
+            console.error(`Error playing sound: ${sound}`, error);
+          });
       }
     } catch (error) {
       console.error(`Error playing sound: ${sound}`, error);

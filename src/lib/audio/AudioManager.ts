@@ -101,15 +101,34 @@ class AudioManagerSingleton {
       audio.currentTime = 0;
       instance.lastUsed = Date.now();
       
+      // 🛡️ Impedisce attivazione Dynamic Island su iOS
+      // Resetta MediaSession metadata prima del play per evitare che appaia
+      if ('mediaSession' in navigator) {
+        try {
+          navigator.mediaSession.metadata = null;
+          navigator.mediaSession.playbackState = 'none';
+        } catch (e) { /* ignore */ }
+      }
+      
       // Play con gestione errori
       const playPromise = audio.play();
       if (playPromise) {
-        playPromise.catch(err => {
-          // Ignora errori di autoplay - normali su iOS
-          if (err.name !== 'NotAllowedError') {
-            console.warn('[AudioManager] Play failed:', err.message);
-          }
-        });
+        playPromise
+          .then(() => {
+            // 🛡️ Resetta MediaSession anche dopo il play
+            if ('mediaSession' in navigator) {
+              try {
+                navigator.mediaSession.metadata = null;
+                navigator.mediaSession.playbackState = 'none';
+              } catch (e) { /* ignore */ }
+            }
+          })
+          .catch(err => {
+            // Ignora errori di autoplay - normali su iOS
+            if (err.name !== 'NotAllowedError') {
+              console.warn('[AudioManager] Play failed:', err.message);
+            }
+          });
       }
       
       return audio;

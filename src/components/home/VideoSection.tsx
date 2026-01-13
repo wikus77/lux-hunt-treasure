@@ -55,6 +55,10 @@ const VideoSection = () => {
               muted
               loop
               playsInline
+              // 🛡️ Impedisce attivazione Dynamic Island su iOS
+              disablePictureInPicture
+              disableRemotePlayback
+              controlsList="nodownload noremoteplayback"
             >
               <source src={videoUrl} type="video/mp4" />
               Your browser does not support the video tag.
