@@ -28,7 +28,7 @@ import { useAuth } from "@/hooks/use-auth";
 import InviteFloatingButton from "@/components/home/InviteFloatingButton";
 import DNAQuickAction from "@/components/dna/DNAQuickAction";
 import { PULSE_ENABLED } from "@/config/featureFlags";
-import { AgentEnergyPill } from "@/features/pulse";
+import { PulseBarPersonal } from "@/features/pulse";
 
 export default function CommandCenterHome() {
   // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
@@ -218,15 +218,15 @@ export default function CommandCenterHome() {
       </Suspense>
     </motion.div>
 
-    {/* THE PULSE™ - Agent Energy Pill (PE per utente) */}
+    {/* THE PULSE™ - Personal Energy Bar (PE per utente) */}
     {PULSE_ENABLED && (
       <motion.div 
-        className="mb-6 flex justify-center"
+        className="mb-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.05 }}
       >
-        <AgentEnergyPill />
+        <PulseBarPersonal variant="inline" />
       </motion.div>
     )}
 
