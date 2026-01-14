@@ -26,7 +26,7 @@ import { useBuzzPricing } from "@/hooks/useBuzzPricing";
 import { useMissionStatus } from "@/hooks/useMissionStatus";
 import { useAuth } from "@/hooks/use-auth";
 import InviteFloatingButton from "@/components/home/InviteFloatingButton";
-import DNAQuickAction from "@/components/dna/DNAQuickAction";
+// DNAQuickAction RIMOSSO - sostituito con AgentEnergyPill migliorato
 import { PULSE_ENABLED } from "@/config/featureFlags";
 import { PulseBarPersonal } from "@/features/pulse";
 
@@ -232,11 +232,6 @@ export default function CommandCenterHome() {
 
 {/* Floating Invite circle button in top-right */}
 <InviteFloatingButton />
-
-{/* DNA Quick Action below Invite */}
-<div data-onboarding="dna-hub">
-  <DNAQuickAction />
-</div>
 
 
     {/* M1SSION AGENT - Moved ABOVE Indizi trovati */}
