@@ -75,6 +75,8 @@ import { DailyMissionsController } from "./missions";
 import { MicroMissionsCard } from "./components/first-session";
 // 🏆 CLUE MILESTONES: Global watcher for level-up rewards
 import { ClueMilestoneWatcher } from "./components/milestones/ClueMilestoneWatcher";
+// 🎖️ HIERARCHY RANK: Global watcher for rank-up video popups
+import { RankUpWatcher } from "./components/rank/RankUpWatcher";
 // 🎉 PROGRESS FEEDBACK: Celebration overlays and progress toasts
 import { ProgressFeedbackProvider } from "./components/feedback";
 // 📱 iOS KEYBOARD: Hide bottom nav when keyboard is open (like Telegram)
@@ -237,6 +239,8 @@ function App() {
                     <MicroMissionsCard />
                     {/* 🏆 CLUE MILESTONES: Global watcher for level-up rewards */}
                     <ClueMilestoneWatcher />
+                    {/* 🎖️ HIERARCHY RANK: Global watcher for rank-up video popups */}
+                    <RankUpWatcher />
                     <CookieConsentManager />
                     {/* Onboarding Tutorial Interattivo */}
                     <OnboardingOverlay />
