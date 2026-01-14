@@ -186,17 +186,24 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
     
     if (!locError && locations && locations.length > 0) {
       // Get user profiles for usernames, agent_code, and rank_id
+      // 🔧 FIX: Use public_profiles VIEW instead of profiles table
+      // The profiles table has RLS that blocks users from seeing other profiles!
       const userIds = locations.map((l: any) => l.user_id);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, agent_code, rank_id')
+      const { data: profiles, error: profileError } = await supabase
+        .from('public_profiles')  // 🔧 Changed from 'profiles' - public_profiles VIEW is accessible to all
+        .select('id, agent_code, nickname, rank_id')
         .in('id', userIds);
+      
+      if (profileError) {
+        console.warn('[LiveAgents] public_profiles query error:', profileError.message);
+      }
       
       const profileMap = new Map(
         profiles?.map(p => [
           p.id, 
           { 
-            full_name: p.full_name, 
+            // 🔧 FIX: Use nickname from public_profiles (full_name is not exposed)
+            nickname: (p as any).nickname,
             agent_code: (p as any).agent_code, 
             rank_id: (p as any).rank_id 
           }
@@ -214,7 +221,8 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
           id: row.user_id,
           lat: row.lat,
           lng: row.lng,
-          username: profile?.full_name || profile?.agent_code || 'Agent',
+          // 🔧 FIX: Use nickname from public_profiles (full_name not exposed in VIEW)
+          username: profile?.nickname || profile?.agent_code || 'Agent',
           status: isRecent ? 'online' : 'offline',
           lastSeen: row.updated_at,
           agent_code: profile?.agent_code,
