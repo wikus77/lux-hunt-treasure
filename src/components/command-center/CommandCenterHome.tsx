@@ -28,7 +28,7 @@ import { useAuth } from "@/hooks/use-auth";
 import InviteFloatingButton from "@/components/home/InviteFloatingButton";
 // DNAQuickAction RIMOSSO - sostituito con AgentEnergyPill migliorato
 import { PULSE_ENABLED } from "@/config/featureFlags";
-import { PulseBarPersonal } from "@/features/pulse";
+import { PulseBarPersonal, AgentEnergyPill } from "@/features/pulse";
 
 export default function CommandCenterHome() {
   // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
@@ -232,6 +232,13 @@ export default function CommandCenterHome() {
 
 {/* Floating Invite circle button in top-right */}
 <InviteFloatingButton />
+
+{/* 🎖️ Rank Pill - Posizione esatta dove era DNA Hub */}
+{PULSE_ENABLED && (
+  <div data-onboarding="rank-pill" className="fixed z-[70] bottom-24 right-4 md:bottom-28 md:right-8">
+    <AgentEnergyPill />
+  </div>
+)}
 
 
     {/* M1SSION AGENT - Moved ABOVE Indizi trovati */}
