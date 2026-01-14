@@ -325,18 +325,30 @@ export function BattleCreationForm({
   // 🔥 VELOCE: Attacco parte SUBITO - niente attesa!
   // Risultato basato sui POWER delle armi: chi ha power maggiore VINCE
   // Se attaccante non ha arma (power 0) e difensore non può difendersi → 65% win rate
+  // 🤖 FAKE AGENTS: Vincono ~33% delle volte (attaccante vince ~67%)
   const handleCountdownComplete = useCallback(async () => {
     // Close countdown
     setShowCountdown(false);
     
-    // 🎯 Determina risultato basato sui power
-    // Se l'attaccante ha arma con power > 0, ha più probabilità di vincere
-    // Formula: base 50% + bonus per power arma (max +40%)
-    const weaponBonus = Math.min(selectedWeaponPower * 2, 40); // Max +40%
-    const winChance = 50 + weaponBonus; // 50% base + bonus
+    // 🎯 Determina risultato basato sui power E tipo avversario
+    let winChance: number;
+    
+    if (isFakeAgent) {
+      // 🤖 Fake Agent: Attaccante vince ~67%, Fake Agent vince ~33%
+      // Con bonus arma: max +15% (quindi 67-82% per attaccante)
+      const weaponBonus = Math.min(selectedWeaponPower, 15);
+      winChance = 67 + weaponBonus;
+    } else {
+      // 👤 Real Agent: Formula originale
+      // Se l'attaccante ha arma con power > 0, ha più probabilità di vincere
+      // Formula: base 50% + bonus per power arma (max +40%)
+      const weaponBonus = Math.min(selectedWeaponPower * 2, 40);
+      winChance = 50 + weaponBonus;
+    }
+    
     const won = Math.random() * 100 < winChance;
     
-    console.log(`⚔️ [Battle] Attack result: weapon power ${selectedWeaponPower}, win chance ${winChance}%, won: ${won}`);
+    console.log(`⚔️ [Battle] Attack result: ${isFakeAgent ? '🤖 Fake Agent' : '👤 Real Agent'}, weapon power ${selectedWeaponPower}, win chance ${winChance}%, won: ${won}`);
     
     setBattleResult({ won });
     
@@ -412,7 +424,7 @@ export function BattleCreationForm({
         weaponPower: selectedWeaponPower,
       }).catch(err => console.warn('[PE] Battle lose award failed:', err));
     }
-  }, [stakePercent, selectedWeaponPower, toast, onShowVideo, userId, effectiveOpponent, currentBattleId, awardPE]);
+  }, [stakePercent, selectedWeaponPower, toast, onShowVideo, userId, effectiveOpponent, currentBattleId, awardPE, isFakeAgent]);
 
   // 🆕 When video ends - NO MORE result modal popup (animazione è nel video modal)
   const handleVideoClose = useCallback(() => {
