@@ -6,12 +6,14 @@ import { getAdminCode } from "@/config/adminConfig";
 
 // Cache key for localStorage
 const AGENT_CODE_CACHE_KEY = 'm1ssion_agent_code';
+const AGENT_CODE_CACHE_VERSION = 'v2'; // 🔄 BUMP THIS to force cache refresh
 const AGENT_CODE_CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
 interface CachedAgentCode {
   code: string;
   timestamp: number;
   userId: string;
+  version?: string; // 🔄 Cache version for forced refresh
 }
 
 // Get cached agent code from localStorage (instant)
@@ -20,6 +22,12 @@ const getCachedAgentCode = (): CachedAgentCode | null => {
     const cached = localStorage.getItem(AGENT_CODE_CACHE_KEY);
     if (cached) {
       const parsed = JSON.parse(cached) as CachedAgentCode;
+      // 🔄 FORCE REFRESH: Se versione diversa, invalida cache
+      if (parsed.version !== AGENT_CODE_CACHE_VERSION) {
+        console.log('[AgentCode] Cache version mismatch, forcing refresh');
+        localStorage.removeItem(AGENT_CODE_CACHE_KEY);
+        return null;
+      }
       // Check if cache is still valid (24 hours)
       if (Date.now() - parsed.timestamp < AGENT_CODE_CACHE_EXPIRY) {
         return parsed;
@@ -37,7 +45,8 @@ const setCachedAgentCode = (code: string, userId: string) => {
     const cached: CachedAgentCode = {
       code,
       timestamp: Date.now(),
-      userId
+      userId,
+      version: AGENT_CODE_CACHE_VERSION // 🔄 Include version
     };
     localStorage.setItem(AGENT_CODE_CACHE_KEY, JSON.stringify(cached));
   } catch {
