@@ -422,6 +422,44 @@ export function BattleCreationForm({
       duration: 2000,
     });
 
+    // 🏴 DOMINATION: Registra vittoria per conquista territorio
+    if (won && preSelectedOpponent?.lat && preSelectedOpponent?.lng) {
+      console.log('🏴 [Battle] Logging win for domination...', {
+        lat: preSelectedOpponent.lat,
+        lng: preSelectedOpponent.lng,
+        opponent: effectiveOpponent?.id,
+        isFakeAgent
+      });
+      
+      try {
+        const { data: logResult, error: logError } = await (supabase as any).rpc('log_battle_win', {
+          p_winner_id: userId,
+          p_opponent_id: effectiveOpponent?.id || 'unknown',
+          p_lat: preSelectedOpponent.lat,
+          p_lng: preSelectedOpponent.lng,
+          p_is_pvp: !isFakeAgent
+        });
+        
+        if (logError) {
+          console.error('🏴 [Battle] log_battle_win error:', logError);
+        } else {
+          console.log('🏴 [Battle] Victory logged for domination:', logResult);
+          const result = logResult as { country_name?: string; country_code?: string } | null;
+          if (result?.country_name) {
+            toast({
+              title: `🏴 ${result.country_name}`,
+              description: '+1 conquista!',
+              duration: 3000,
+            });
+          }
+        }
+      } catch (err) {
+        console.error('🏴 [Battle] Domination log error:', err);
+      }
+    } else if (won) {
+      console.warn('🏴 [Battle] Cannot log win - no coordinates available');
+    }
+
     // 🔋 Award PE for Tron Battle (Win: +50, Lose: -100)
     if (won) {
       awardPE('BATTLE_WIN', undefined, {
@@ -436,7 +474,7 @@ export function BattleCreationForm({
         weaponPower: selectedWeaponPower,
       }).catch(err => console.warn('[PE] Battle lose award failed:', err));
     }
-  }, [stakePercent, selectedWeaponPower, toast, onShowVideo, userId, effectiveOpponent, currentBattleId, awardPE, isFakeAgent]);
+  }, [stakePercent, selectedWeaponPower, toast, onShowVideo, userId, effectiveOpponent, currentBattleId, awardPE, isFakeAgent, preSelectedOpponent]);
 
   // 🆕 When video ends - NO MORE result modal popup (animazione è nel video modal)
   const handleVideoClose = useCallback(() => {
