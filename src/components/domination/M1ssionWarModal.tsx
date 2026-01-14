@@ -546,26 +546,41 @@ const LeaderboardTab: React.FC = () => {
   useEffect(() => {
     const fetchLeaders = async () => {
       try {
-        const { data } = await supabase
+        // Query country_domination (no join per evitare RLS issues)
+        const { data: conquests } = await supabase
           .from('country_domination')
-          .select('owner_id, profiles(id, full_name, agent_code)')
+          .select('owner_id')
           .eq('status', 'conquered')
           .not('owner_id', 'is', null);
 
-        // Group by owner
+        // Conta paesi per owner
+        const ownerIds = [...new Set((conquests || []).map(c => c.owner_id))];
         const ownerCounts: Record<string, { full_name: string; agent_code: string; count: number }> = {};
-        (data || []).forEach((d: any) => {
-          if (d.owner_id && d.profiles) {
-            if (!ownerCounts[d.owner_id]) {
-              ownerCounts[d.owner_id] = {
-                full_name: d.profiles.full_name || 'Agent',
-                agent_code: d.profiles.agent_code || '',
-                count: 0
-              };
+        
+        // Conta per ogni owner
+        (conquests || []).forEach((c: any) => {
+          if (c.owner_id) {
+            if (!ownerCounts[c.owner_id]) {
+              ownerCounts[c.owner_id] = { full_name: 'Agent', agent_code: '', count: 0 };
             }
-            ownerCounts[d.owner_id].count++;
+            ownerCounts[c.owner_id].count++;
           }
         });
+        
+        // Fetch profile info separatamente da public_profiles
+        if (ownerIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('public_profiles')
+            .select('id, full_name, agent_code, nickname')
+            .in('id', ownerIds);
+          
+          (profiles || []).forEach((p: any) => {
+            if (ownerCounts[p.id]) {
+              ownerCounts[p.id].full_name = p.full_name || p.nickname || 'Agent';
+              ownerCounts[p.id].agent_code = p.agent_code || '';
+            }
+          });
+        }
 
         const sorted = Object.entries(ownerCounts)
           .map(([id, data]) => ({

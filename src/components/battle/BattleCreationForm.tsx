@@ -118,7 +118,7 @@ export function BattleCreationForm({
         console.log('🔍 [Battle] Searching for:', searchTerm, 'userId:', userId);
         
         // 🆕 Usa RPC function che bypassa RLS
-        const { data, error } = await supabase.rpc('search_agents_for_battle', {
+        const { data, error } = await (supabase as any).rpc('search_agents_for_battle', {
           search_term: searchTerm,
           exclude_user_id: userId,
           max_results: 5
@@ -129,12 +129,12 @@ export function BattleCreationForm({
         if (error) {
           console.error('❌ [Battle] Search RPC error:', error.message, error.details, error.hint);
           
-          // Fallback: prova query diretta senza RLS
+          // Fallback: prova query diretta su public_profiles
           console.log('🔄 [Battle] Trying fallback query...');
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from('profiles')
-            .select('id, username, agent_code')
-            .or(`username.ilike.%${searchTerm}%,agent_code.ilike.%${searchTerm}%`)
+          const { data: fallbackData, error: fallbackError } = await (supabase as any)
+            .from('public_profiles')
+            .select('id, nickname, agent_code')
+            .or(`nickname.ilike.%${searchTerm}%,agent_code.ilike.%${searchTerm}%`)
             .limit(5);
           
           console.log('🔄 [Battle] Fallback response:', { fallbackData, fallbackError });
@@ -143,7 +143,13 @@ export function BattleCreationForm({
             console.error('❌ [Battle] Fallback error:', fallbackError);
             setSearchResults([]);
           } else {
-            setSearchResults(fallbackData || []);
+            // Map nickname → username per compatibilità
+            const mapped = (fallbackData || []).map((r: any) => ({
+              id: r.id,
+              username: r.nickname || r.agent_code,
+              agent_code: r.agent_code
+            }));
+            setSearchResults(mapped);
           }
         } else {
           console.log('✅ [Battle] Search results for "' + searchTerm + '":', (data || []).length, data);
@@ -250,20 +256,21 @@ export function BattleCreationForm({
     if (isRealAgent && effectiveOpponent.id) {
       try {
         // Get attacker's agent code
-        const { data: attackerProfile } = await supabase
+        const { data: attackerProfile } = await (supabase as any)
           .from('profiles')
-          .select('agent_code, username')
+          .select('agent_code, nickname, full_name')
           .eq('id', userId)
           .single();
         
-        const attackerAgentCode = attackerProfile?.agent_code || attackerProfile?.username || 'Unknown';
+        const attackerName = attackerProfile?.nickname || attackerProfile?.full_name || 'Unknown';
+        const attackerAgentCode = attackerProfile?.agent_code || attackerName;
         
         // 📤 MANDA LA PUSH PRIMA DI TUTTO - sempre!
         console.log('📤 [Battle] Sending push notification FIRST to:', effectiveOpponent.name);
         const pushResult = await sendBattleInvite(
           effectiveOpponent.id,
           battleId,
-          attackerProfile?.username || 'Unknown',
+          attackerName,
           attackerAgentCode,
           stakeType,
           stakePercent,
@@ -294,41 +301,41 @@ export function BattleCreationForm({
       console.log('🤖 [Battle] NPC/Fake agent - no push notification needed');
     }
     
-    // 💾 SEMPRE salva la battaglia nel database (per tracciare paese/dominio)
-    // Include le coordinate GPS dell'avversario per tracciare il paese
-    console.log('💾 [Battle] Saving battle session to database...', {
-      battleId,
-      isRealAgent,
-      hasCoords: !!(preSelectedOpponent?.lat && preSelectedOpponent?.lng),
-      lat: preSelectedOpponent?.lat,
-      lng: preSelectedOpponent?.lng
-    });
-    
-    try {
-      const { error: insertError } = await supabase
-        .from('battle_sessions')
-        .insert({
-          id: battleId,
-          creator_id: userId,
-          defender_id: effectiveOpponent.id,
-          status: 'pending',
-          stake_type: stakeType,
-          stake_amount: stakePercent,
-          arena_name: arenaName || null,
-          attacker_weapon_power: selectedWeaponPower,
-          attacker_weapon_id: selectedWeaponId,
-          // 🆕 Coordinate GPS per tracciare il paese della battaglia
-          arena_lat: preSelectedOpponent?.lat || null,
-          arena_lng: preSelectedOpponent?.lng || null,
-        });
+    // 💾 Salva in battle_sessions SOLO per agenti REALI (defender_id deve essere UUID valido!)
+    // Per Fake Agents, la registrazione avviene SOLO tramite RPC log_battle_result
+    if (isRealAgent) {
+      console.log('💾 [Battle] Saving battle session for REAL agent...', {
+        battleId,
+        defenderId: effectiveOpponent.id,
+      });
       
-      if (insertError) {
-        console.error('[Battle] DB insert error (non-blocking):', insertError);
-      } else {
-        console.log('✅ [Battle] Battle session saved:', battleId);
+      try {
+        const { error: insertError } = await (supabase as any)
+          .from('battle_sessions')
+          .insert({
+            id: battleId,
+            creator_id: userId,
+            defender_id: effectiveOpponent.id,
+            status: 'pending',
+            stake_type: stakeType,
+            stake_amount: stakePercent,
+            arena_name: arenaName || null,
+            attacker_weapon_power: selectedWeaponPower,
+            attacker_weapon_id: selectedWeaponId,
+            arena_lat: preSelectedOpponent?.lat || null,
+            arena_lng: preSelectedOpponent?.lng || null,
+          });
+        
+        if (insertError) {
+          console.error('[Battle] DB insert error (non-blocking):', insertError);
+        } else {
+          console.log('✅ [Battle] Battle session saved:', battleId);
+        }
+      } catch (err: any) {
+        console.error('[Battle] DB save error:', err);
       }
-    } catch (err: any) {
-      console.error('[Battle] DB save error:', err);
+    } else {
+      console.log('🤖 [Battle] Fake Agent - skipping battle_sessions (no valid UUID)');
     }
 
     // Start countdown
@@ -403,9 +410,10 @@ export function BattleCreationForm({
         }
       }
       
-      // 🆕 Per agenti reali: aggiorna anche il risultato nel DB
-      if (currentBattleId) {
-        await supabase
+      // 🆕 Per agenti REALI: aggiorna anche il risultato nel DB
+      // Skip per Fake Agents (non hanno record in battle_sessions)
+      if (currentBattleId && !isFakeAgent) {
+        await (supabase as any)
           .from('battle_sessions')
           .update({
             status: 'resolved',
