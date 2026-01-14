@@ -1,15 +1,15 @@
 /**
  * THE PULSE™ — Personal Energy Bar (PER UTENTE)
- * Design identico alla PulseBar originale ma con dati PE per utente
- * Mostra il progresso verso il prossimo rank
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * Design migliorato con info complete: Rank, Livello, PE, Badge prossimo livello
+ * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import { useAgentEnergy } from '../hooks/useAgentEnergy';
+import { useHierarchyRank } from '@/hooks/useHierarchyRank';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { PULSE_ENABLED } from '@/config/featureFlags';
 import { PulseBreaker } from '@/features/pulse-breaker';
+import { ChevronUp } from 'lucide-react';
 
 interface PulseBarPersonalProps {
   onTap?: () => void;
@@ -17,17 +17,21 @@ interface PulseBarPersonalProps {
 }
 
 export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
-  const { energy, refetch, lastDelta } = useAgentEnergy();
+  const { state, refetch } = useHierarchyRank();
   const [displayValue, setDisplayValue] = useState(0);
   const [isGameOpen, setIsGameOpen] = useState(false);
   const [showPEGain, setShowPEGain] = useState(false);
+  const [lastPE, setLastPE] = useState(0);
 
-  // Valori dall'hook
-  const progressPercent = energy?.progressToNextRank ?? 0;
-  const pulseEnergy = energy?.pulseEnergy ?? 0;
-  const rank = energy?.rank;
-  const nextRank = energy?.nextRank;
-  const peToNext = energy?.peToNextRank ?? 0;
+  // Valori dallo stato
+  const progressPercent = state?.progressPercent ?? 0;
+  const pulseEnergy = state?.pulseEnergy ?? 0;
+  const currentLevel = state?.currentLevel;
+  const nextLevel = state?.nextLevel;
+  const peInCurrentLevel = state?.peInCurrentLevel ?? 0;
+  const peNeededForLevel = state?.peNeededForLevel ?? 0;
+  const peToNextLevel = state?.peToNextLevel ?? 0;
+  const isMaxLevel = state?.isMaxLevel ?? false;
 
   // Refetch on PE award
   useEffect(() => {
@@ -43,11 +47,12 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
 
   // Show PE gain animation
   useEffect(() => {
-    if (lastDelta && lastDelta > 0) {
+    if (pulseEnergy > lastPE && lastPE > 0) {
       setShowPEGain(true);
       setTimeout(() => setShowPEGain(false), 2500);
     }
-  }, [lastDelta]);
+    setLastPE(pulseEnergy);
+  }, [pulseEnergy, lastPE]);
 
   // Smooth counter animation
   useEffect(() => {
@@ -65,9 +70,8 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
   const totalSegments = 24;
   const filledSegments = Math.floor((progressPercent / 100) * totalSegments);
   
-  // Colore basato sul rank (o cyan di default)
-  const rankColor = rank?.color || '#00e7ff';
-  const cyan = rankColor;
+  // Colore basato sul rank
+  const rankColor = currentLevel?.color || '#00e7ff';
 
   // Handler per aprire il gioco quando si clicca sulla barra
   const handleBarClick = () => {
@@ -87,47 +91,47 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
 
   return (
     <motion.div
-      className="relative w-full flex items-center gap-2 cursor-pointer"
+      className="relative w-full flex items-center gap-3 cursor-pointer"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       onClick={handleBarClick}
     >
-      {/* === CIRCULAR GAUGE (Left) - Con Rank Symbol === */}
-      <div className="relative flex-shrink-0" style={{ width: 56, height: 56 }}>
-        {/* Outer double ring */}
-        <svg width="56" height="56" viewBox="0 0 56 56">
+      {/* === CIRCULAR GAUGE (Left) - Con Rank Icon === */}
+      <div className="relative flex-shrink-0" style={{ width: 64, height: 64 }}>
+        <svg width="64" height="64" viewBox="0 0 64 64">
           {/* Outermost ring */}
-          <circle cx="28" cy="28" r="27" fill="none" stroke={cyan} strokeWidth="1" opacity="0.4" />
+          <circle cx="32" cy="32" r="31" fill="none" stroke={rankColor} strokeWidth="1" opacity="0.3" />
           {/* Second ring */}
-          <circle cx="28" cy="28" r="24" fill="none" stroke={cyan} strokeWidth="1" opacity="0.6" />
-          {/* Main progress ring background */}
-          <circle cx="28" cy="28" r="20" fill="none" stroke="rgba(0,231,255,0.15)" strokeWidth="3" />
+          <circle cx="32" cy="32" r="28" fill="none" stroke={rankColor} strokeWidth="1" opacity="0.5" />
+          {/* Progress ring background */}
+          <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
           {/* Progress arc */}
           <motion.circle
-            cx="28" cy="28" r="20"
+            cx="32" cy="32" r="24"
             fill="none"
-            stroke={cyan}
-            strokeWidth="3"
+            stroke={rankColor}
+            strokeWidth="4"
             strokeLinecap="round"
-            strokeDasharray={2 * Math.PI * 20}
-            strokeDashoffset={2 * Math.PI * 20 * (1 - progressPercent / 100)}
-            transform="rotate(-90 28 28)"
-            style={{ filter: `drop-shadow(0 0 4px ${cyan})` }}
+            strokeDasharray={2 * Math.PI * 24}
+            strokeDashoffset={2 * Math.PI * 24 * (1 - progressPercent / 100)}
+            transform="rotate(-90 32 32)"
+            style={{ filter: `drop-shadow(0 0 6px ${rankColor})` }}
+            initial={false}
+            animate={{ strokeDashoffset: 2 * Math.PI * 24 * (1 - progressPercent / 100) }}
             transition={{ duration: 0.5 }}
           />
           {/* Inner ring */}
-          <circle cx="28" cy="28" r="16" fill="none" stroke={cyan} strokeWidth="1" opacity="0.3" />
+          <circle cx="32" cy="32" r="19" fill="none" stroke={rankColor} strokeWidth="1" opacity="0.3" />
         </svg>
         
-        {/* Rank Symbol + Percentage */}
+        {/* Rank Icon + Percentage */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-lg leading-none">{rank?.symbol || '🔰'}</span>
+          <span className="text-2xl leading-none">{currentLevel?.icon || '❓'}</span>
           <span 
-            className="font-bold font-mono text-[10px]"
+            className="font-bold font-mono text-[10px] mt-0.5"
             style={{ 
-              color: cyan,
-              textShadow: `0 0 8px ${cyan}`,
-              letterSpacing: '-0.5px'
+              color: rankColor,
+              textShadow: `0 0 8px ${rankColor}`,
             }}
           >
             {displayValue}%
@@ -138,13 +142,13 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
         <motion.div
           className="absolute inset-0"
           animate={{ rotate: 360 }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
         >
           <div 
             className="absolute w-2 h-2 rounded-full"
             style={{
-              background: cyan,
-              boxShadow: `0 0 6px ${cyan}, 0 0 12px ${cyan}`,
+              background: rankColor,
+              boxShadow: `0 0 6px ${rankColor}, 0 0 12px ${rankColor}`,
               top: 0,
               left: '50%',
               transform: 'translateX(-50%)',
@@ -153,129 +157,106 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
         </motion.div>
       </div>
 
-      {/* === SEGMENTED BAR (Right) === */}
-      <div className="flex-1 relative">
-        {/* Label con PE totali e rank */}
-        <div className="flex items-center justify-between mb-0.5">
-          <div className="flex items-center gap-1">
+      {/* === INFO + SEGMENTED BAR (Right) === */}
+      <div className="flex-1 min-w-0">
+        {/* Header: Rank + Level */}
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
             <span 
-              className="text-[9px] font-bold tracking-[0.15em]"
-              style={{ color: cyan, textShadow: `0 0 6px ${cyan}` }}
+              className="text-xs font-black uppercase tracking-wider"
+              style={{ color: rankColor, textShadow: `0 0 8px ${rankColor}` }}
             >
-              PE
+              {currentLevel?.name || 'Unranked'}
             </span>
+            <span className="text-[10px] text-white/50 font-mono">
+              LVL {currentLevel?.level || 0}
+            </span>
+          </div>
+          
+          {/* PE Totali */}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-white/40">PE:</span>
             <span 
-              className="text-[10px] font-mono font-bold"
-              style={{ color: cyan }}
+              className="text-xs font-bold font-mono"
+              style={{ color: rankColor }}
             >
               {formatPE(pulseEnergy)}
             </span>
-            <motion.span
-              style={{ color: cyan }}
-              className="text-[8px]"
-              animate={{ opacity: [1, 0.3, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              ●
-            </motion.span>
           </div>
-          
-          {/* Next rank info */}
-          {nextRank && (
-            <span className="text-[8px] text-white/40 font-mono">
-              → {nextRank.symbol} {formatPE(peToNext)}
-            </span>
-          )}
         </div>
 
-        {/* Bar container - trapezoid shape */}
+        {/* Segmented Bar */}
         <div 
-          className="relative h-[16px]"
+          className="relative h-[18px] rounded-lg overflow-hidden"
           style={{
             background: 'rgba(0,20,30,0.9)',
-            clipPath: 'polygon(0 0, 100% 0, 96% 100%, 0 100%)',
-            border: `1px solid ${cyan}33`,
+            border: `1px solid ${rankColor}33`,
           }}
         >
-          {/* Segments container */}
-          <div className="absolute inset-[2px] flex gap-[2px]" style={{ clipPath: 'polygon(0 0, 100% 0, 97% 100%, 0 100%)' }}>
+          {/* Segments */}
+          <div className="absolute inset-1 flex gap-[2px]">
             {[...Array(totalSegments)].map((_, i) => {
               const isFilled = i < filledSegments;
               return (
                 <motion.div
                   key={i}
-                  className="flex-1 relative"
+                  className="flex-1 rounded-sm"
                   style={{
                     background: isFilled 
-                      ? `linear-gradient(180deg, ${cyan} 0%, ${cyan}99 50%, ${cyan}66 100%)`
-                      : 'rgba(0,231,255,0.08)',
-                    transform: 'skewX(-20deg)',
-                    transformOrigin: 'bottom',
-                    boxShadow: isFilled ? `0 0 4px ${cyan}` : 'none',
+                      ? `linear-gradient(180deg, ${rankColor} 0%, ${rankColor}99 50%, ${rankColor}66 100%)`
+                      : 'rgba(255,255,255,0.05)',
+                    boxShadow: isFilled ? `0 0 6px ${rankColor}` : 'none',
                   }}
                   initial={false}
-                  animate={{ 
-                    opacity: isFilled ? 1 : 0.4,
-                  }}
-                  transition={{ duration: 0.2, delay: i * 0.01 }}
-                >
-                  {/* Shine effect */}
-                  {isFilled && (
-                    <motion.div
-                      className="absolute inset-0"
-                      style={{
-                        background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%)',
-                      }}
-                      animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.05 }}
-                    />
-                  )}
-                </motion.div>
+                  animate={{ opacity: isFilled ? 1 : 0.3 }}
+                  transition={{ duration: 0.2 }}
+                />
               );
             })}
           </div>
 
-          {/* Scanning line */}
+          {/* Scanning effect */}
           <motion.div
-            className="absolute top-0 bottom-0 w-8 pointer-events-none"
+            className="absolute top-0 bottom-0 w-10 pointer-events-none"
             style={{
-              background: `linear-gradient(90deg, transparent, ${cyan}44, transparent)`,
+              background: `linear-gradient(90deg, transparent, ${rankColor}44, transparent)`,
             }}
-            animate={{ left: ['-10%', '110%'] }}
+            animate={{ left: ['-15%', '115%'] }}
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          />
-
-          {/* Top edge highlight */}
-          <div 
-            className="absolute top-0 left-0 right-0 h-[1px]"
-            style={{ background: `linear-gradient(90deg, ${cyan}66, ${cyan}22)` }}
           />
         </div>
 
-        {/* Right decorative bracket */}
-        <div 
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1"
-          style={{ 
-            width: 6, 
-            height: 20,
-            borderRight: `2px solid ${cyan}`,
-            borderTop: `2px solid ${cyan}`,
-            borderBottom: `2px solid ${cyan}`,
-            opacity: 0.5,
-          }}
-        />
+        {/* Footer: PE in questo livello + Next Rank Badge */}
+        <div className="flex items-center justify-between mt-1">
+          {/* PE nel livello corrente */}
+          <span className="text-[10px] text-white/50 font-mono">
+            {formatPE(peInCurrentLevel)} / {formatPE(peNeededForLevel)} PE
+          </span>
+          
+          {/* Next rank badge */}
+          {nextLevel && !isMaxLevel ? (
+            <div className="flex items-center gap-1 text-white/40">
+              <ChevronUp className="w-3 h-3" />
+              <span className="text-[10px]">
+                {nextLevel.icon} {formatPE(peToNextLevel)}
+              </span>
+            </div>
+          ) : (
+            <span className="text-[10px] text-yellow-400/70">👑 MAX</span>
+          )}
+        </div>
       </div>
 
       {/* PE Gain Animation */}
-      {showPEGain && lastDelta && lastDelta > 0 && (
+      {showPEGain && pulseEnergy > lastPE && (
         <motion.div
-          className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap z-20"
+          className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap z-20"
           initial={{ opacity: 0, y: 5, scale: 0.8 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.8 }}
         >
-          <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-emerald-500/20 border border-emerald-400/50 text-emerald-400">
-            ⚡ +{lastDelta} PE
+          <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-500/20 border border-emerald-400/50 text-emerald-400">
+            ⚡ +{pulseEnergy - lastPE} PE
           </div>
         </motion.div>
       )}
@@ -289,5 +270,4 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
   );
 };
 
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-
+// © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
