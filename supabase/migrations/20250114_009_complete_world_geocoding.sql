@@ -86,7 +86,11 @@ BEGIN
   -- SVIZZERA
   IF p_lat BETWEEN 45.8 AND 47.8 AND p_lng BETWEEN 5.9 AND 10.5 THEN RETURN 'CH'; END IF;
   
-  -- AUSTRIA
+  -- BAVIERA/SUD GERMANIA (Monaco Bavaria: 48.13, 11.58 - PRIMA di Austria!)
+  -- lng < 13.5 per escludere zona confine Austria
+  IF p_lat BETWEEN 47.3 AND 50.6 AND p_lng BETWEEN 9.0 AND 13.5 THEN RETURN 'DE'; END IF;
+  
+  -- AUSTRIA (Vienna: 48.21, 16.37 - lng > 13.5)
   IF p_lat BETWEEN 46.4 AND 49.0 AND p_lng BETWEEN 9.5 AND 17.2 THEN RETURN 'AT'; END IF;
   
   -- SLOVENIA
@@ -290,17 +294,17 @@ BEGIN
   IF p_lat BETWEEN -33.8 AND 5.3 AND p_lng BETWEEN -73.9 AND -34.8 THEN RETURN 'BR'; END IF;
   
   -- ═══════════════════════════════════════════════════════════════════════════
-  -- 7. ASIA
+  -- 7. ASIA (ORDINE: paesi piccoli PRIMA di quelli grandi!)
   -- ═══════════════════════════════════════════════════════════════════════════
   
-  -- GIAPPONE
-  IF p_lat BETWEEN 24.0 AND 46.0 AND p_lng BETWEEN 123.0 AND 146.0 THEN RETURN 'JP'; END IF;
-  
-  -- COREA DEL SUD
+  -- COREA DEL SUD (PRIMA di Giappone! Seoul: 37.57, 126.98)
   IF p_lat BETWEEN 33.1 AND 38.6 AND p_lng BETWEEN 124.6 AND 131.9 THEN RETURN 'KR'; END IF;
   
   -- COREA DEL NORD
   IF p_lat BETWEEN 37.7 AND 43.0 AND p_lng BETWEEN 124.2 AND 130.7 THEN RETURN 'KP'; END IF;
+  
+  -- GIAPPONE (dopo Coree!)
+  IF p_lat BETWEEN 24.0 AND 46.0 AND p_lng BETWEEN 123.0 AND 146.0 THEN RETURN 'JP'; END IF;
   
   -- TAIWAN
   IF p_lat BETWEEN 21.9 AND 25.3 AND p_lng BETWEEN 120.0 AND 122.0 THEN RETURN 'TW'; END IF;
@@ -348,7 +352,7 @@ BEGIN
   IF p_lat BETWEEN 40.6 AND 55.4 AND p_lng BETWEEN 46.5 AND 87.3 THEN RETURN 'KZ'; END IF;
   
   -- ═══════════════════════════════════════════════════════════════════════════
-  -- 8. MEDIO ORIENTE
+  -- 8. MEDIO ORIENTE (ORDINE: paesi piccoli PRIMA di quelli grandi!)
   -- ═══════════════════════════════════════════════════════════════════════════
   
   -- ISRAELE
@@ -360,29 +364,29 @@ BEGIN
   -- GIORDANIA
   IF p_lat BETWEEN 29.2 AND 33.4 AND p_lng BETWEEN 34.9 AND 39.3 THEN RETURN 'JO'; END IF;
   
+  -- QATAR (piccolo, prima!)
+  IF p_lat BETWEEN 24.5 AND 26.2 AND p_lng BETWEEN 50.7 AND 51.7 THEN RETURN 'QA'; END IF;
+  
+  -- KUWAIT (piccolo, prima!)
+  IF p_lat BETWEEN 28.5 AND 30.1 AND p_lng BETWEEN 46.5 AND 48.4 THEN RETURN 'KW'; END IF;
+  
+  -- EMIRATI ARABI (Dubai: 25.2, 55.3 - PRIMA di Iran!)
+  IF p_lat BETWEEN 22.6 AND 26.1 AND p_lng BETWEEN 51.5 AND 56.4 THEN RETURN 'AE'; END IF;
+  
+  -- OMAN
+  IF p_lat BETWEEN 16.6 AND 26.4 AND p_lng BETWEEN 52.0 AND 59.8 THEN RETURN 'OM'; END IF;
+  
   -- SIRIA
   IF p_lat BETWEEN 32.3 AND 37.3 AND p_lng BETWEEN 35.7 AND 42.4 THEN RETURN 'SY'; END IF;
   
   -- IRAQ
   IF p_lat BETWEEN 29.1 AND 37.4 AND p_lng BETWEEN 38.8 AND 48.6 THEN RETURN 'IQ'; END IF;
   
-  -- IRAN
-  IF p_lat BETWEEN 25.1 AND 39.8 AND p_lng BETWEEN 44.0 AND 63.3 THEN RETURN 'IR'; END IF;
-  
-  -- ARABIA SAUDITA
+  -- ARABIA SAUDITA (grande, dopo i piccoli!)
   IF p_lat BETWEEN 16.4 AND 32.2 AND p_lng BETWEEN 34.5 AND 55.7 THEN RETURN 'SA'; END IF;
   
-  -- EMIRATI ARABI
-  IF p_lat BETWEEN 22.6 AND 26.1 AND p_lng BETWEEN 51.5 AND 56.4 THEN RETURN 'AE'; END IF;
-  
-  -- QATAR
-  IF p_lat BETWEEN 24.5 AND 26.2 AND p_lng BETWEEN 50.7 AND 51.7 THEN RETURN 'QA'; END IF;
-  
-  -- KUWAIT
-  IF p_lat BETWEEN 28.5 AND 30.1 AND p_lng BETWEEN 46.5 AND 48.4 THEN RETURN 'KW'; END IF;
-  
-  -- OMAN
-  IF p_lat BETWEEN 16.6 AND 26.4 AND p_lng BETWEEN 52.0 AND 59.8 THEN RETURN 'OM'; END IF;
+  -- IRAN (grande, dopo i piccoli!)
+  IF p_lat BETWEEN 25.1 AND 39.8 AND p_lng BETWEEN 44.0 AND 63.3 THEN RETURN 'IR'; END IF;
   
   -- YEMEN
   IF p_lat BETWEEN 12.1 AND 19.0 AND p_lng BETWEEN 42.5 AND 54.5 THEN RETURN 'YE'; END IF;
