@@ -103,11 +103,11 @@ export const M1ssionWarModal: React.FC<M1ssionWarModalProps> = ({
         setUserStats(finalStats);
 
         // 2. Fetch battle history da country_battle_wins (ha country_code corretto!)
-        // Include sia vittorie (winner_id) che sconfitte (loser_id)
+        // Include sia vittorie che sconfitte (campo is_win)
         const { data: allBattlesData } = await supabase
           .from('country_battle_wins')
-          .select('id, country_code, won_at, is_pvp, winner_id, loser_id')
-          .or(`winner_id.eq.${userId},loser_id.eq.${userId}`)
+          .select('id, country_code, won_at, is_pvp, winner_id, is_win')
+          .eq('winner_id', userId)  // winner_id è sempre chi ha combattuto
           .order('won_at', { ascending: false })
           .limit(50);
         
@@ -116,7 +116,8 @@ export const M1ssionWarModal: React.FC<M1ssionWarModalProps> = ({
           country_code: b.country_code,
           won_at: b.won_at,
           is_pvp: b.is_pvp,
-          is_win: b.winner_id === userId // true se ha vinto, false se ha perso
+          // is_win viene dal DB (nuova colonna), fallback a winner_id check per vecchi record
+          is_win: b.is_win !== undefined ? b.is_win : (b.winner_id === userId)
         }));
         
         setBattleHistory(allBattles);

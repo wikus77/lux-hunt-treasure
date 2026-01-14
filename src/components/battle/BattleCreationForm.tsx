@@ -181,8 +181,10 @@ export function BattleCreationForm({
   // 🆕 L'opponent effettivo è: preSelectedOpponent (da marker) OPPURE selectedOpponent (da ricerca)
   const effectiveOpponent = preSelectedOpponent || selectedOpponent;
   
-  // Check if opponent is a FAKE agent
-  const isFakeAgent = effectiveOpponent?.id?.startsWith('fake-agent-');
+  // Check if opponent is a FAKE agent (include ALL fake types: fake-agent-X, AG-NPC-XXXX, npc-X)
+  const isFakeAgent = effectiveOpponent?.id?.startsWith('fake-agent-') || 
+                      effectiveOpponent?.id?.startsWith('AG-NPC-') ||
+                      effectiveOpponent?.id?.startsWith('npc-');
   
   // 🆕 Check push subscription quando cambia l'avversario
   useEffect(() => {
@@ -422,33 +424,35 @@ export function BattleCreationForm({
       duration: 2000,
     });
 
-    // 🏴 DOMINATION: Registra vittoria per conquista territorio
-    if (won && preSelectedOpponent?.lat && preSelectedOpponent?.lng) {
-      console.log('🏴 [Battle] Logging win for domination...', {
+    // 🏴 DOMINATION: Registra TUTTE le battaglie (vittorie E sconfitte) per territorio
+    if (preSelectedOpponent?.lat && preSelectedOpponent?.lng) {
+      console.log('🏴 [Battle] Logging battle for domination...', {
         lat: preSelectedOpponent.lat,
         lng: preSelectedOpponent.lng,
         opponent: effectiveOpponent?.id,
-        isFakeAgent
+        isFakeAgent,
+        won
       });
       
       try {
-        const { data: logResult, error: logError } = await (supabase as any).rpc('log_battle_win', {
-          p_winner_id: userId,
+        const { data: logResult, error: logError } = await (supabase as any).rpc('log_battle_result', {
+          p_user_id: userId,
           p_opponent_id: effectiveOpponent?.id || 'unknown',
           p_lat: preSelectedOpponent.lat,
           p_lng: preSelectedOpponent.lng,
-          p_is_pvp: !isFakeAgent
+          p_is_pvp: !isFakeAgent,
+          p_won: won
         });
         
         if (logError) {
-          console.error('🏴 [Battle] log_battle_win error:', logError);
+          console.error('🏴 [Battle] log_battle_result error:', logError);
         } else {
-          console.log('🏴 [Battle] Victory logged for domination:', logResult);
-          const result = logResult as { country_name?: string; country_code?: string } | null;
+          console.log('🏴 [Battle] Battle logged for domination:', logResult);
+          const result = logResult as { country_name?: string; country_code?: string; is_win?: boolean } | null;
           if (result?.country_name) {
             toast({
-              title: `🏴 ${result.country_name}`,
-              description: '+1 conquista!',
+              title: result.is_win ? `🏴 ${result.country_name}` : `⚔️ ${result.country_name}`,
+              description: result.is_win ? '+1 conquista!' : 'Sconfitta registrata',
               duration: 3000,
             });
           }
@@ -456,8 +460,8 @@ export function BattleCreationForm({
       } catch (err) {
         console.error('🏴 [Battle] Domination log error:', err);
       }
-    } else if (won) {
-      console.warn('🏴 [Battle] Cannot log win - no coordinates available');
+    } else {
+      console.warn('🏴 [Battle] Cannot log battle - no coordinates available');
     }
 
     // 🔋 Award PE for Tron Battle (Win: +50, Lose: -100)
