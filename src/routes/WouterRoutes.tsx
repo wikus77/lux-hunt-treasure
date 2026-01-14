@@ -350,6 +350,15 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          {/* Pulse Bar Test Page - Test progressione gerarchia */}
+          <Route path="/pulse-bar-test">
+            <ProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                {React.createElement(React.lazy(() => import('@/pages/sandbox/PulseBarTest')))}
+              </React.Suspense>
+            </ProtectedRoute>
+          </Route>
+
           <Route path="/buzz">
             <ProtectedRoute>
               <GlobalLayout><BuzzPage /></GlobalLayout>
