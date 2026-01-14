@@ -60,6 +60,8 @@ import { useGlobalGlitchListener } from "./hooks/useGlobalGlitch";
 // 🌑 M1SSION™ SHADOW PROTOCOL™
 import { EntityOverlay } from "./components/overlay/EntityOverlay";
 import { ShadowProtocolEngine } from "./components/overlay/ShadowProtocolEngine";
+// 🔄 Cache Buster - Forza refresh cache quando necessario
+import { checkAndClearCache } from "./lib/cache/cacheBuster";
 import { ShadowBehaviorsLayer } from "./components/overlay/ShadowBehaviorsLayer";
 // 🎬 Mission Start Sequence (fullscreen, fuori dal portal)
 import { MissionIntroOverlay } from "./components/overlay/MissionIntroOverlay";
@@ -92,6 +94,14 @@ function App() {
   // SW registration now handled by swControl utils - no duplicate registration
   const [location] = useLocation();
   
+  // 🔄 Cache Buster - Check and clear stale caches on app start
+  useEffect(() => {
+    const cacheCleared = checkAndClearCache();
+    if (cacheCleared) {
+      console.log('🔄 [App] Cache cleared, app will reload fresh data');
+    }
+  }, []);
+
   // Initialize GA4 once on mount
   useEffect(() => {
     initGA4();
