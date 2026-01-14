@@ -8,7 +8,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Volume2 } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { HierarchyLevel } from '@/config/hierarchyConfig';
 
 interface RankUpVideoModalProps {
@@ -27,41 +27,27 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
   const [showAnimation, setShowAnimation] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
   const [videoError, setVideoError] = useState(false);
-  const [waitingForUserAction, setWaitingForUserAction] = useState(true); // Aspetta click utente per audio
+  const [videoStarted, setVideoStarted] = useState(false);
 
-  // 🔒 Blocca scroll e touch quando il modal è aperto
+  // 🔒 Blocca scroll SOLO durante il video (non durante l'attesa del pulsante)
   useEffect(() => {
-    if (isOpen) {
-      // Blocca scroll
+    if (isOpen && videoStarted) {
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-      document.body.style.userSelect = 'none';
       
-      // Blocca eventi touch/mouse (ma non il pulsante di attivazione)
-      const preventInteraction = (e: Event) => {
-        const target = e.target as HTMLElement;
-        // Permetti click sul pulsante di attivazione
-        if (target.closest('[data-activate-button]')) {
-          return;
-        }
-        if (!videoEnded && !waitingForUserAction) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
+      const preventScroll = (e: Event) => {
+        e.preventDefault();
       };
       
-      document.addEventListener('touchmove', preventInteraction, { passive: false });
-      document.addEventListener('wheel', preventInteraction, { passive: false });
+      document.addEventListener('touchmove', preventScroll, { passive: false });
+      document.addEventListener('wheel', preventScroll, { passive: false });
       
       return () => {
         document.body.style.overflow = '';
-        document.body.style.touchAction = '';
-        document.body.style.userSelect = '';
-        document.removeEventListener('touchmove', preventInteraction);
-        document.removeEventListener('wheel', preventInteraction);
+        document.removeEventListener('touchmove', preventScroll);
+        document.removeEventListener('wheel', preventScroll);
       };
     }
-  }, [isOpen, videoEnded, waitingForUserAction]);
+  }, [isOpen, videoStarted]);
 
   // Reset state quando si apre
   useEffect(() => {
@@ -70,26 +56,38 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
       setShowAnimation(false);
       setFadeOut(false);
       setVideoError(false);
-      setWaitingForUserAction(true); // Aspetta click per audio
+      setVideoStarted(false);
     }
   }, [isOpen]);
 
   // 🔊 Attiva video CON AUDIO quando l'utente clicca
-  const handleActivateVideo = useCallback(() => {
-    setWaitingForUserAction(false);
+  const handleRankUp = useCallback(() => {
+    console.log('[RankUp] Button clicked, starting video...');
+    setVideoStarted(true);
     
-    if (videoRef.current && newRank.videoPath) {
-      videoRef.current.muted = false;
-      videoRef.current.volume = 1;
-      videoRef.current.play().catch(err => {
-        console.warn('[RankUpVideo] Play failed:', err);
+    // Piccolo delay per assicurare che il video element sia renderizzato
+    setTimeout(() => {
+      if (videoRef.current && newRank.videoPath) {
+        videoRef.current.muted = false;
+        videoRef.current.volume = 1;
+        videoRef.current.play()
+          .then(() => {
+            console.log('[RankUp] Video started successfully');
+          })
+          .catch(err => {
+            console.warn('[RankUp] Play failed:', err);
+            setVideoError(true);
+          });
+      } else if (!newRank.videoPath) {
+        // Se non c'è video, mostra direttamente l'animazione
         setVideoError(true);
-      });
-    }
+      }
+    }, 100);
   }, [newRank.videoPath]);
 
   // Quando il video finisce
   const handleVideoEnd = useCallback(() => {
+    console.log('[RankUp] Video ended, showing animation');
     setVideoEnded(true);
     setShowAnimation(true);
     
@@ -98,13 +96,14 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
       setFadeOut(true);
       setTimeout(() => {
         onComplete();
-      }, 1000); // Durata dissolvenza
+      }, 1000);
     }, 4000);
   }, [onComplete]);
 
-  // Se non c'è video, mostra solo l'animazione (dopo click)
+  // Se non c'è video o errore, mostra solo l'animazione
   useEffect(() => {
-    if (isOpen && !waitingForUserAction && (!newRank.videoPath || videoError)) {
+    if (isOpen && videoStarted && (!newRank.videoPath || videoError)) {
+      console.log('[RankUp] No video or error, showing animation directly');
       setVideoEnded(true);
       setShowAnimation(true);
       
@@ -115,7 +114,7 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
         }, 1000);
       }, 4000);
     }
-  }, [isOpen, waitingForUserAction, newRank.videoPath, videoError, onComplete]);
+  }, [isOpen, videoStarted, newRank.videoPath, videoError, onComplete]);
 
   if (!isOpen) return null;
 
@@ -124,17 +123,15 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
       <motion.div
         className="fixed inset-0 flex items-center justify-center"
         style={{
-          zIndex: 999999999, // Massimo z-index possibile
+          zIndex: 999999999,
           background: '#000',
-          touchAction: 'none',
-          userSelect: 'none',
         }}
         initial={{ opacity: 0 }}
         animate={{ opacity: fadeOut ? 0 : 1 }}
         transition={{ duration: fadeOut ? 1 : 0.3 }}
       >
-        {/* PULSANTE ATTIVAZIONE AUDIO/VIDEO */}
-        {waitingForUserAction && (
+        {/* PULSANTE RANK UP - Prima del video */}
+        {!videoStarted && (
           <motion.div
             className="absolute inset-0 flex flex-col items-center justify-center z-50"
             initial={{ opacity: 0 }}
@@ -142,7 +139,7 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
           >
             {/* Background gradient */}
             <div 
-              className="absolute inset-0"
+              className="absolute inset-0 pointer-events-none"
               style={{
                 background: `radial-gradient(circle at center, ${newRank.color}30 0%, #000 70%)`,
               }}
@@ -150,18 +147,20 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
             
             {/* Icona rank */}
             <motion.div
-              className="text-[80px] mb-6"
+              className="text-[80px] mb-6 relative z-10"
               animate={{
                 scale: [1, 1.1, 1],
-                filter: [`drop-shadow(0 0 20px ${newRank.color})`, `drop-shadow(0 0 40px ${newRank.color})`, `drop-shadow(0 0 20px ${newRank.color})`],
               }}
               transition={{ duration: 2, repeat: Infinity }}
+              style={{
+                filter: `drop-shadow(0 0 30px ${newRank.color})`,
+              }}
             >
               {newRank.icon}
             </motion.div>
             
             <motion.p
-              className="text-white/70 text-lg font-medium tracking-[0.3em] uppercase mb-2"
+              className="text-white/70 text-lg font-medium tracking-[0.3em] uppercase mb-2 relative z-10"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -170,7 +169,7 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
             </motion.p>
             
             <motion.h2
-              className="text-4xl font-black uppercase mb-8"
+              className="text-4xl font-black uppercase mb-8 relative z-10"
               style={{ color: newRank.color }}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -179,11 +178,11 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
               {newRank.name}
             </motion.h2>
             
-            {/* Pulsante attivazione */}
+            {/* Pulsante RANK UP */}
             <motion.button
-              data-activate-button
-              onClick={handleActivateVideo}
-              className="flex items-center gap-3 px-8 py-4 rounded-full font-bold text-xl uppercase tracking-wider transition-all"
+              type="button"
+              onClick={handleRankUp}
+              className="relative z-50 flex items-center gap-3 px-10 py-5 rounded-full font-bold text-2xl uppercase tracking-wider cursor-pointer"
               style={{
                 background: `linear-gradient(135deg, ${newRank.color}, ${newRank.color}99)`,
                 color: '#000',
@@ -195,24 +194,14 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Play className="w-6 h-6 fill-current" />
-              <span>ATTIVA PROMOZIONE</span>
-              <Volume2 className="w-6 h-6" />
+              <Play className="w-7 h-7 fill-current" />
+              <span>RANK UP</span>
             </motion.button>
-            
-            <motion.p
-              className="text-white/40 text-sm mt-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-            >
-              Premi per vedere il video con audio
-            </motion.p>
           </motion.div>
         )}
 
         {/* VIDEO FULL SCREEN */}
-        {newRank.videoPath && !videoError && !videoEnded && !waitingForUserAction && (
+        {videoStarted && newRank.videoPath && !videoError && !videoEnded && (
           <video
             ref={videoRef}
             src={newRank.videoPath}
@@ -220,7 +209,10 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
             playsInline
             muted={false}
             onEnded={handleVideoEnd}
-            onError={() => setVideoError(true)}
+            onError={() => {
+              console.warn('[RankUp] Video error');
+              setVideoError(true);
+            }}
             disablePictureInPicture
             disableRemotePlayback
             controlsList="nodownload noremoteplayback"
@@ -379,11 +371,9 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
     </AnimatePresence>
   );
 
-  // Renderizza nel body per massima priorità z-index
   return createPortal(modalContent, document.body);
 };
 
 export default RankUpVideoModal;
 
 // © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-
