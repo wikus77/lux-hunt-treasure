@@ -27,6 +27,7 @@ interface BattleHistory {
   country_code: string;
   won_at: string;
   is_pvp: boolean;
+  is_win: boolean; // true = vittoria, false = sconfitta
 }
 
 interface CountryProgress {
@@ -101,45 +102,22 @@ export const M1ssionWarModal: React.FC<M1ssionWarModalProps> = ({
         
         setUserStats(finalStats);
 
-        // 2. Fetch battle history (from country_battle_wins + battle_sessions)
-        let allBattles: BattleHistory[] = [];
-        
-        // Prima prova country_battle_wins (nuovo sistema)
-        const { data: domBattles } = await supabase
+        // 2. Fetch battle history da country_battle_wins (ha country_code corretto!)
+        // Include sia vittorie (winner_id) che sconfitte (loser_id)
+        const { data: allBattlesData } = await supabase
           .from('country_battle_wins')
-          .select('id, country_code, won_at, is_pvp')
-          .eq('winner_id', userId)
+          .select('id, country_code, won_at, is_pvp, winner_id, loser_id')
+          .or(`winner_id.eq.${userId},loser_id.eq.${userId}`)
           .order('won_at', { ascending: false })
-          .limit(20);
+          .limit(50);
         
-        if (domBattles && domBattles.length > 0) {
-          allBattles = domBattles;
-        }
-        
-        // Poi aggiungi da battle_sessions (vecchio sistema Tron Battle)
-        const { data: sessionBattles } = await supabase
-          .from('battle_sessions')
-          .select('id, status, resolved_at, creator_id, defender_id')
-          .or(`creator_id.eq.${userId},defender_id.eq.${userId}`)
-          .eq('status', 'resolved')
-          .not('resolved_at', 'is', null)
-          .order('resolved_at', { ascending: false })
-          .limit(20);
-        
-        if (sessionBattles && sessionBattles.length > 0) {
-          // Converti in formato BattleHistory
-          const sessionHistory: BattleHistory[] = sessionBattles.map(b => ({
-            id: b.id,
-            country_code: 'IT', // Default Italy se non abbiamo coordinate
-            won_at: b.resolved_at || new Date().toISOString(),
-            is_pvp: true
-          }));
-          
-          // Combina e ordina per data
-          allBattles = [...allBattles, ...sessionHistory]
-            .sort((a, b) => new Date(b.won_at).getTime() - new Date(a.won_at).getTime())
-            .slice(0, 20);
-        }
+        const allBattles: BattleHistory[] = (allBattlesData || []).map(b => ({
+          id: b.id,
+          country_code: b.country_code,
+          won_at: b.won_at,
+          is_pvp: b.is_pvp,
+          is_win: b.winner_id === userId // true se ha vinto, false se ha perso
+        }));
         
         setBattleHistory(allBattles);
 
@@ -502,7 +480,7 @@ const BattleHistoryTab: React.FC<{ battleHistory: BattleHistory[] }> = ({ battle
           Nessuna battaglia registrata.
         </p>
         <p className="text-xs text-muted-foreground/70 mt-1">
-          Le tue vittorie appariranno qui!
+          Le tue battaglie appariranno qui!
         </p>
       </div>
     );
@@ -513,13 +491,17 @@ const BattleHistoryTab: React.FC<{ battleHistory: BattleHistory[] }> = ({ battle
       {battleHistory.map((battle) => (
         <div
           key={battle.id}
-          className="flex items-center justify-between p-3 rounded-lg bg-gray-900/50 border border-gray-700/30"
+          className={`flex items-center justify-between p-3 rounded-lg border ${
+            battle.is_win 
+              ? 'bg-green-950/20 border-green-500/30' 
+              : 'bg-red-950/20 border-red-500/30'
+          }`}
         >
           <div className="flex items-center gap-3">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              battle.is_pvp ? 'bg-red-500/20' : 'bg-gray-500/20'
+              battle.is_win ? 'bg-green-500/20' : 'bg-red-500/20'
             }`}>
-              <Swords className={`w-4 h-4 ${battle.is_pvp ? 'text-red-400' : 'text-gray-400'}`} />
+              <Swords className={`w-4 h-4 ${battle.is_win ? 'text-green-400' : 'text-red-400'}`} />
             </div>
             <div>
               <p className="text-sm font-medium">
@@ -531,7 +513,9 @@ const BattleHistoryTab: React.FC<{ battleHistory: BattleHistory[] }> = ({ battle
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs text-green-400 font-medium">+1 conquista</p>
+            <p className={`text-xs font-medium ${battle.is_win ? 'text-green-400' : 'text-red-400'}`}>
+              {battle.is_win ? '+1 conquista' : 'Sconfitta'}
+            </p>
             <p className="text-[10px] text-muted-foreground">
               {new Date(battle.won_at).toLocaleDateString('it-IT', {
                 day: '2-digit',
