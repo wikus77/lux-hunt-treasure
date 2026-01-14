@@ -86,9 +86,24 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
       const markerSize = rewardMarker.claimed ? 18 : 22;
       
       if (existingMarker) {
-        // Update visibility and position of existing marker
+        // 🔧 FIX: Update visibility, position AND COLOR when marker state changes
         existingMarker.setLngLat([rewardMarker.lng, rewardMarker.lat]);
-        existingMarker.getElement().style.display = isVisible ? 'block' : 'none';
+        
+        // Get the inner marker element (inside the wrapper)
+        const wrapper = existingMarker.getElement();
+        const el = wrapper.querySelector('.maplibre-reward-marker') as HTMLElement;
+        
+        if (el) {
+          // Update color and style based on claimed status
+          el.style.width = `${markerSize}px`;
+          el.style.height = `${markerSize}px`;
+          el.style.background = markerColor;
+          el.style.boxShadow = `0 0 12px 4px ${markerColor}ee, 0 0 24px 8px ${markerColor}88`;
+          el.style.animation = rewardMarker.claimed ? 'none' : 'rewardPulse 1.5s ease-in-out infinite';
+          el.title = rewardMarker.claimed ? `${rewardMarker.title || 'Reward'} (Riscattato)` : rewardMarker.title || 'Reward';
+        }
+        
+        wrapper.style.display = isVisible ? 'flex' : 'none';
       } else {
         // Create new marker element
         const el = document.createElement('div');
