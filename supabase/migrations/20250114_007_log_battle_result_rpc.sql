@@ -74,6 +74,7 @@ BEGIN
   -- REGISTRA IN country_battle_wins (per TUTTE le battaglie)
   INSERT INTO country_battle_wins (
     id,
+    battle_id,  -- REQUIRED: UNIQUE identifier
     winner_id,  -- Chi ha combattuto (vincitore o perdente)
     loser_id,   -- NULL per sconfitte, l'ID per vittorie
     country_code,
@@ -84,8 +85,9 @@ BEGIN
     is_win      -- NUOVO: true = vittoria, false = sconfitta
   ) VALUES (
     v_battle_id,
+    v_battle_id,  -- battle_id = id
     p_user_id,
-    CASE WHEN p_won THEN p_opponent_id::TEXT ELSE NULL END,  -- loser_id solo per vittorie
+    CASE WHEN p_won THEN NULL ELSE NULL END,  -- loser_id è UUID, non text
     v_country_code,
     p_is_pvp,
     NOW(),
