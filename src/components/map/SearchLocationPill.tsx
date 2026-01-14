@@ -87,12 +87,21 @@ export const SearchLocationPill: React.FC<SearchLocationPillProps> = ({ map }) =
     }
   };
 
+  // Stop all events from propagating to the map
+  const stopAllPropagation = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <motion.div
       className="relative"
       initial={false}
       animate={{ width: isExpanded ? 260 : 48 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      onClick={stopAllPropagation}
+      onTouchStart={stopAllPropagation}
+      onTouchEnd={stopAllPropagation}
+      onMouseDown={stopAllPropagation}
     >
       <div
         className="flex items-center gap-1 rounded-full overflow-visible"
@@ -146,10 +155,18 @@ export const SearchLocationPill: React.FC<SearchLocationPillProps> = ({ map }) =
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onClick={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                onFocus={(e) => e.stopPropagation()}
                 placeholder="Cerca..."
                 className="flex-1 bg-transparent border-none outline-none text-white text-sm placeholder-gray-500"
                 style={{ minWidth: 80, width: '100%' }}
                 disabled={isLoading}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
               />
               
               {/* Go Button - Compact for mobile */}
