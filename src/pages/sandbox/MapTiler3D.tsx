@@ -1386,6 +1386,18 @@ export default function MapTiler3D() {
   }, [selectedAgent?.rank_id]);
 
   const handleAgentClick = (agent: any) => {
+    // 🔍 FORENSE: Log completo dell'agente cliccato
+    console.log('🔍 [MapTiler3D] AGENT CLICKED - Full data:', {
+      id: agent.id,
+      username: agent.username,
+      agent_code: agent.agent_code,
+      rank_id: agent.rank_id,
+      status: agent.status,
+      lat: agent.lat,
+      lng: agent.lng,
+      isNPC: agent.id?.startsWith('npc-'),
+      allKeys: Object.keys(agent)
+    });
     setSelectedAgent(agent);
     setShowAgentCard(true);
   };
@@ -1394,7 +1406,8 @@ export default function MapTiler3D() {
     setShowAgentCard(false);
     setPreSelectedOpponent({
       id: selectedAgent.id,
-      name: selectedAgent.username || selectedAgent.agent_code || `Agent ${selectedAgent.id.slice(0, 6)}`,
+      // 🔧 FIX: NON usare UUID troncato come nome
+      name: selectedAgent.username || selectedAgent.agent_code || 'Unknown Agent',
       lat: selectedAgent.lat,
       lng: selectedAgent.lng,
     });
@@ -1769,7 +1782,8 @@ export default function MapTiler3D() {
         <AgentBattleCard
           isOpen={showAgentCard}
           onClose={() => setShowAgentCard(false)}
-          agentCode={selectedAgent.agent_code || `AG-${selectedAgent.id.slice(0, 6).toUpperCase()}`}
+          // 🔧 FIX: Se agent_code manca, usa username o "Unknown Agent" - NON generare codici falsi da UUID
+          agentCode={selectedAgent.agent_code || selectedAgent.username || 'Unknown Agent'}
           displayName={selectedAgent.username}
           rank={selectedAgentRank}
           isAttackable={true}
