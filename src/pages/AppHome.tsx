@@ -16,7 +16,7 @@ import { Cpu } from "lucide-react";
 import { useDeepLinkQR } from "@/hooks/useDeepLinkQR";
 import M1UPill from "@/features/m1u/M1UPill";
 import { PageSkeleton } from "@/components/ui/skeleton-loader";
-import { AgentEnergyPill } from "@/features/pulse";
+// AgentEnergyPill ora in CommandCenterHome (posizione floating)
 import { PULSE_ENABLED } from "@/config/featureFlags";
 import StreakPill from "@/components/gamification/StreakPill";
 import CashbackVaultPill from "@/components/home/CashbackVaultPill";
@@ -294,16 +294,7 @@ const { isConnected } = useRealTimeNotifications();
                     >
                       <FortuneWheelPill />
                     </motion.div>
-                    
-                    {PULSE_ENABLED && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3, delay: 0.1 }}
-                      >
-                        <AgentEnergyPill />
-                      </motion.div>
-                    )}
+                    {/* AgentEnergyPill spostato in CommandCenterHome - posizione floating come DNA Hub */}
                   </div>
                 </div>
 
