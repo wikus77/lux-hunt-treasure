@@ -240,7 +240,11 @@ export function BattleCreationForm({
       source: preSelectedOpponent ? 'marker' : 'search',
     });
 
-    // 🔔 Send push notification to real agents
+    // 🆕 SEMPRE crea un battleId e salva nel DB (per tracciare paese)
+    const battleId = crypto.randomUUID();
+    setCurrentBattleId(battleId);
+    
+    // 🔔 Send push notification ONLY to real agents
     if (isRealAgent && effectiveOpponent.id) {
       try {
         // Get attacker's agent code
@@ -251,10 +255,6 @@ export function BattleCreationForm({
           .single();
         
         const attackerAgentCode = attackerProfile?.agent_code || attackerProfile?.username || 'Unknown';
-        
-        // Create a battle session ID
-        const battleId = crypto.randomUUID();
-        setCurrentBattleId(battleId);
         
         // 📤 MANDA LA PUSH PRIMA DI TUTTO - sempre!
         console.log('📤 [Battle] Sending push notification FIRST to:', effectiveOpponent.name);
@@ -278,7 +278,6 @@ export function BattleCreationForm({
           });
         } else {
           console.warn('⚠️ [Battle] Push not delivered:', pushResult.error);
-          // Mostra toast di avviso se push non consegnata
           toast({
             title: '⚠️ Notifica non consegnata',
             description: pushResult.error || `${effectiveOpponent.name} non ha le notifiche push attive. L'attacco procede comunque.`,
@@ -286,43 +285,48 @@ export function BattleCreationForm({
             variant: 'destructive',
           });
         }
-        
-        // 💾 Salva la battaglia nel database (opzionale, non blocca)
-        // 🆕 Include le coordinate GPS dell'avversario per tracciare il paese
-        console.log('💾 [Battle] Saving battle session to database...', {
-          hasCoords: !!(preSelectedOpponent?.lat && preSelectedOpponent?.lng),
-          lat: preSelectedOpponent?.lat,
-          lng: preSelectedOpponent?.lng
-        });
-        const { error: insertError } = await supabase
-          .from('battle_sessions')
-          .insert({
-            id: battleId,
-            creator_id: userId,
-            defender_id: effectiveOpponent.id,
-            status: 'pending',
-            stake_type: stakeType,
-            stake_amount: stakePercent,
-            arena_name: arenaName || null,
-            attacker_weapon_power: selectedWeaponPower,
-            attacker_weapon_id: selectedWeaponId,
-            // 🆕 Coordinate GPS per tracciare il paese della battaglia
-            arena_lat: preSelectedOpponent?.lat || null,
-            arena_lng: preSelectedOpponent?.lng || null,
-          });
-        
-        if (insertError) {
-          console.error('[Battle] DB insert error (non-blocking):', insertError);
-          // NON facciamo return - la push è già stata mandata!
-        } else {
-          console.log('✅ [Battle] Battle session saved:', battleId);
-        }
       } catch (err: any) {
         console.error('[Battle] Push error:', err);
-        // NON blocchiamo - continua comunque
       }
-    } else if (effectiveOpponent.id && !isRealAgent) {
-      console.log('🤖 [Battle] NPC/Fake agent - no push notification');
+    } else {
+      console.log('🤖 [Battle] NPC/Fake agent - no push notification needed');
+    }
+    
+    // 💾 SEMPRE salva la battaglia nel database (per tracciare paese/dominio)
+    // Include le coordinate GPS dell'avversario per tracciare il paese
+    console.log('💾 [Battle] Saving battle session to database...', {
+      battleId,
+      isRealAgent,
+      hasCoords: !!(preSelectedOpponent?.lat && preSelectedOpponent?.lng),
+      lat: preSelectedOpponent?.lat,
+      lng: preSelectedOpponent?.lng
+    });
+    
+    try {
+      const { error: insertError } = await supabase
+        .from('battle_sessions')
+        .insert({
+          id: battleId,
+          creator_id: userId,
+          defender_id: effectiveOpponent.id,
+          status: 'pending',
+          stake_type: stakeType,
+          stake_amount: stakePercent,
+          arena_name: arenaName || null,
+          attacker_weapon_power: selectedWeaponPower,
+          attacker_weapon_id: selectedWeaponId,
+          // 🆕 Coordinate GPS per tracciare il paese della battaglia
+          arena_lat: preSelectedOpponent?.lat || null,
+          arena_lng: preSelectedOpponent?.lng || null,
+        });
+      
+      if (insertError) {
+        console.error('[Battle] DB insert error (non-blocking):', insertError);
+      } else {
+        console.log('✅ [Battle] Battle session saved:', battleId);
+      }
+    } catch (err: any) {
+      console.error('[Battle] DB save error:', err);
     }
 
     // Start countdown
