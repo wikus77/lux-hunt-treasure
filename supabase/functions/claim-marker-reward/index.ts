@@ -36,16 +36,21 @@ serve(withCors(async (req) => {
 
     console.log(`M1QR-TRACE: claim-marker-reward start - user:...${user_id.slice(-8)} marker:${markerId}`);
 
-    // Check if already claimed
-    const { data: existingClaim } = await userClient
+    // 🔧 FIX: Check if already claimed using ADMIN client (bypasses RLS)
+    // This ensures we ALWAYS see the claim even if RLS causes issues
+    const { data: existingClaim, error: checkError } = await admin
       .from("marker_claims")
       .select("id")
       .eq("user_id", user_id)
       .eq("marker_id", markerId)
       .maybeSingle();
 
+    if (checkError) {
+      console.error(`M1QR-TRACE: claim check error:`, checkError);
+    }
+
     if (existingClaim) {
-      console.log(`M1QR-TRACE: already claimed - user:...${user_id.slice(-8)} marker:${markerId}`);
+      console.log(`M1QR-TRACE: already claimed - user:...${user_id.slice(-8)} marker:${markerId} claim_id:${existingClaim.id}`);
       return jsonResponse({ ok: false, code: "ALREADY_CLAIMED" }, 200);
     }
 
