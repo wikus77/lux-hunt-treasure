@@ -20,18 +20,21 @@ export interface ClueMilestone {
   key: string;
 }
 
+// ⚠️ NOTA: I titoli sono stati rimossi (title: null)
+// L'avanzamento di grado ora avviene SOLO tramite il sistema PE (Pulse Energy)
+// Queste milestone premiano SOLO M1U, senza popup di livello
 export const CLUE_MILESTONES: ClueMilestone[] = [
-  { threshold: 10,  m1u: 10,   pe: 10,  title: 'AGENT LEVEL 1',  key: 'clues_10' },
-  { threshold: 25,  m1u: 25,   pe: 10,  title: 'AGENT LEVEL 2',  key: 'clues_25' },
-  { threshold: 50,  m1u: 50,   pe: 15,  title: 'AGENT LEVEL 3',  key: 'clues_50' },
-  { threshold: 75,  m1u: 75,   pe: 15,  title: 'WRESTLER',       key: 'clues_75' },
-  { threshold: 100, m1u: 100,  pe: 20,  title: 'FIGHTER',        key: 'clues_100' },
-  { threshold: 125, m1u: 125,  pe: 20,  title: 'HUNTER',         key: 'clues_125' },
-  { threshold: 150, m1u: 150,  pe: 25,  title: 'WARRIOR',        key: 'clues_150' },
-  { threshold: 175, m1u: 175,  pe: 25,  title: 'ELITE',          key: 'clues_175' },
-  { threshold: 200, m1u: 200,  pe: 30,  title: 'CHAMPION',       key: 'clues_200' },
-  { threshold: 225, m1u: 250,  pe: 35,  title: 'MASTER',         key: 'clues_225' },
-  { threshold: 250, m1u: 500,  pe: 50,  title: 'LEGEND',         key: 'clues_250' },
+  { threshold: 10,  m1u: 10,   pe: 10,  title: null,  key: 'clues_10' },
+  { threshold: 25,  m1u: 25,   pe: 10,  title: null,  key: 'clues_25' },
+  { threshold: 50,  m1u: 50,   pe: 15,  title: null,  key: 'clues_50' },
+  { threshold: 75,  m1u: 75,   pe: 15,  title: null,  key: 'clues_75' },
+  { threshold: 100, m1u: 100,  pe: 20,  title: null,  key: 'clues_100' },
+  { threshold: 125, m1u: 125,  pe: 20,  title: null,  key: 'clues_125' },
+  { threshold: 150, m1u: 150,  pe: 25,  title: null,  key: 'clues_150' },
+  { threshold: 175, m1u: 175,  pe: 25,  title: null,  key: 'clues_175' },
+  { threshold: 200, m1u: 200,  pe: 30,  title: null,  key: 'clues_200' },
+  { threshold: 225, m1u: 250,  pe: 35,  title: null,  key: 'clues_225' },
+  { threshold: 250, m1u: 500,  pe: 50,  title: null,  key: 'clues_250' },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
