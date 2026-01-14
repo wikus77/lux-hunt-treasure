@@ -8,6 +8,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Volume2 } from 'lucide-react';
 import { HierarchyLevel } from '@/config/hierarchyConfig';
 
 interface RankUpVideoModalProps {
@@ -26,6 +27,7 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
   const [showAnimation, setShowAnimation] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [waitingForUserAction, setWaitingForUserAction] = useState(true); // Aspetta click utente per audio
 
   // 🔒 Blocca scroll e touch quando il modal è aperto
   useEffect(() => {
@@ -35,9 +37,14 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
       document.body.style.touchAction = 'none';
       document.body.style.userSelect = 'none';
       
-      // Blocca eventi touch/mouse
+      // Blocca eventi touch/mouse (ma non il pulsante di attivazione)
       const preventInteraction = (e: Event) => {
-        if (!videoEnded) {
+        const target = e.target as HTMLElement;
+        // Permetti click sul pulsante di attivazione
+        if (target.closest('[data-activate-button]')) {
+          return;
+        }
+        if (!videoEnded && !waitingForUserAction) {
           e.preventDefault();
           e.stopPropagation();
         }
@@ -54,7 +61,7 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
         document.removeEventListener('wheel', preventInteraction);
       };
     }
-  }, [isOpen, videoEnded]);
+  }, [isOpen, videoEnded, waitingForUserAction]);
 
   // Reset state quando si apre
   useEffect(() => {
@@ -63,18 +70,23 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
       setShowAnimation(false);
       setFadeOut(false);
       setVideoError(false);
+      setWaitingForUserAction(true); // Aspetta click per audio
     }
   }, [isOpen]);
 
-  // Auto-play video quando si apre
-  useEffect(() => {
-    if (isOpen && videoRef.current && newRank.videoPath) {
+  // 🔊 Attiva video CON AUDIO quando l'utente clicca
+  const handleActivateVideo = useCallback(() => {
+    setWaitingForUserAction(false);
+    
+    if (videoRef.current && newRank.videoPath) {
+      videoRef.current.muted = false;
+      videoRef.current.volume = 1;
       videoRef.current.play().catch(err => {
-        console.warn('[RankUpVideo] Autoplay failed:', err);
+        console.warn('[RankUpVideo] Play failed:', err);
         setVideoError(true);
       });
     }
-  }, [isOpen, newRank.videoPath]);
+  }, [newRank.videoPath]);
 
   // Quando il video finisce
   const handleVideoEnd = useCallback(() => {
@@ -90,9 +102,9 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
     }, 4000);
   }, [onComplete]);
 
-  // Se non c'è video, mostra solo l'animazione
+  // Se non c'è video, mostra solo l'animazione (dopo click)
   useEffect(() => {
-    if (isOpen && (!newRank.videoPath || videoError)) {
+    if (isOpen && !waitingForUserAction && (!newRank.videoPath || videoError)) {
       setVideoEnded(true);
       setShowAnimation(true);
       
@@ -103,7 +115,7 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
         }, 1000);
       }, 4000);
     }
-  }, [isOpen, newRank.videoPath, videoError, onComplete]);
+  }, [isOpen, waitingForUserAction, newRank.videoPath, videoError, onComplete]);
 
   if (!isOpen) return null;
 
@@ -121,14 +133,91 @@ export const RankUpVideoModal: React.FC<RankUpVideoModalProps> = ({
         animate={{ opacity: fadeOut ? 0 : 1 }}
         transition={{ duration: fadeOut ? 1 : 0.3 }}
       >
+        {/* PULSANTE ATTIVAZIONE AUDIO/VIDEO */}
+        {waitingForUserAction && (
+          <motion.div
+            className="absolute inset-0 flex flex-col items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            {/* Background gradient */}
+            <div 
+              className="absolute inset-0"
+              style={{
+                background: `radial-gradient(circle at center, ${newRank.color}30 0%, #000 70%)`,
+              }}
+            />
+            
+            {/* Icona rank */}
+            <motion.div
+              className="text-[80px] mb-6"
+              animate={{
+                scale: [1, 1.1, 1],
+                filter: [`drop-shadow(0 0 20px ${newRank.color})`, `drop-shadow(0 0 40px ${newRank.color})`, `drop-shadow(0 0 20px ${newRank.color})`],
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              {newRank.icon}
+            </motion.div>
+            
+            <motion.p
+              className="text-white/70 text-lg font-medium tracking-[0.3em] uppercase mb-2"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              NUOVO GRADO SBLOCCATO
+            </motion.p>
+            
+            <motion.h2
+              className="text-4xl font-black uppercase mb-8"
+              style={{ color: newRank.color }}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              {newRank.name}
+            </motion.h2>
+            
+            {/* Pulsante attivazione */}
+            <motion.button
+              data-activate-button
+              onClick={handleActivateVideo}
+              className="flex items-center gap-3 px-8 py-4 rounded-full font-bold text-xl uppercase tracking-wider transition-all"
+              style={{
+                background: `linear-gradient(135deg, ${newRank.color}, ${newRank.color}99)`,
+                color: '#000',
+                boxShadow: `0 0 30px ${newRank.color}80, 0 0 60px ${newRank.color}40`,
+              }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5, type: 'spring' }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Play className="w-6 h-6 fill-current" />
+              <span>ATTIVA PROMOZIONE</span>
+              <Volume2 className="w-6 h-6" />
+            </motion.button>
+            
+            <motion.p
+              className="text-white/40 text-sm mt-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+            >
+              Premi per vedere il video con audio
+            </motion.p>
+          </motion.div>
+        )}
+
         {/* VIDEO FULL SCREEN */}
-        {newRank.videoPath && !videoError && !videoEnded && (
+        {newRank.videoPath && !videoError && !videoEnded && !waitingForUserAction && (
           <video
             ref={videoRef}
             src={newRank.videoPath}
             className="absolute inset-0 w-full h-full object-cover"
             playsInline
-            autoPlay
             muted={false}
             onEnded={handleVideoEnd}
             onError={() => setVideoError(true)}
