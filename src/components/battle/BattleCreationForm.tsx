@@ -288,7 +288,12 @@ export function BattleCreationForm({
         }
         
         // 💾 Salva la battaglia nel database (opzionale, non blocca)
-        console.log('💾 [Battle] Saving battle session to database...');
+        // 🆕 Include le coordinate GPS dell'avversario per tracciare il paese
+        console.log('💾 [Battle] Saving battle session to database...', {
+          hasCoords: !!(preSelectedOpponent?.lat && preSelectedOpponent?.lng),
+          lat: preSelectedOpponent?.lat,
+          lng: preSelectedOpponent?.lng
+        });
         const { error: insertError } = await supabase
           .from('battle_sessions')
           .insert({
@@ -301,6 +306,9 @@ export function BattleCreationForm({
             arena_name: arenaName || null,
             attacker_weapon_power: selectedWeaponPower,
             attacker_weapon_id: selectedWeaponId,
+            // 🆕 Coordinate GPS per tracciare il paese della battaglia
+            arena_lat: preSelectedOpponent?.lat || null,
+            arena_lng: preSelectedOpponent?.lng || null,
           });
         
         if (insertError) {
