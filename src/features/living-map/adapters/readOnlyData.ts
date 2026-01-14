@@ -189,21 +189,55 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
       // 🔧 FIX: Use public_profiles VIEW instead of profiles table
       // The profiles table has RLS that blocks users from seeing other profiles!
       const userIds = locations.map((l: any) => l.user_id);
-      const { data: profiles, error: profileError } = await supabase
-        .from('public_profiles')  // 🔧 Changed from 'profiles' - public_profiles VIEW is accessible to all
+      
+      // 🔍 FORENSE: Log userIds being queried
+      console.log('[LiveAgents] 🔍 FORENSE: Querying profiles for', userIds.length, 'users:', userIds);
+      
+      // Try public_profiles first, fallback to profiles if view doesn't exist
+      let profiles: any[] | null = null;
+      let profileError: any = null;
+      
+      // First try public_profiles VIEW
+      const { data: viewData, error: viewError } = await supabase
+        .from('public_profiles')
         .select('id, agent_code, nickname, rank_id')
         .in('id', userIds);
       
-      if (profileError) {
-        console.warn('[LiveAgents] public_profiles query error:', profileError.message);
+      if (viewError) {
+        console.warn('[LiveAgents] 🔴 public_profiles VIEW error:', viewError.message, viewError.code);
+        
+        // Fallback: Try profiles table directly (may fail due to RLS)
+        console.log('[LiveAgents] 🔄 Fallback: trying profiles table...');
+        const { data: tableData, error: tableError } = await supabase
+          .from('profiles')
+          .select('id, agent_code, nickname, full_name, rank_id')
+          .in('id', userIds);
+        
+        if (tableError) {
+          console.error('[LiveAgents] 🔴 profiles table ALSO failed:', tableError.message);
+        } else {
+          profiles = tableData;
+          console.log('[LiveAgents] ✅ Fallback profiles loaded:', profiles?.length);
+        }
+      } else {
+        profiles = viewData;
+        console.log('[LiveAgents] ✅ public_profiles VIEW loaded:', profiles?.length);
       }
+      
+      // 🔍 FORENSE: Log what we got back
+      console.log('[LiveAgents] 🔍 FORENSE: Profiles received:', profiles?.map(p => ({
+        id: p.id?.slice(0, 8),
+        agent_code: p.agent_code,
+        nickname: p.nickname,
+        full_name: (p as any).full_name
+      })));
       
       const profileMap = new Map(
         profiles?.map(p => [
           p.id, 
           { 
-            // 🔧 FIX: Use nickname from public_profiles (full_name is not exposed)
-            nickname: (p as any).nickname,
+            // 🔧 FIX: Use nickname OR full_name from profiles
+            nickname: (p as any).nickname || (p as any).full_name,
             agent_code: (p as any).agent_code, 
             rank_id: (p as any).rank_id 
           }
@@ -217,12 +251,22 @@ export async function getLiveAgents(): Promise<AgentDTO[]> {
         const profile = profileMap.get(row.user_id);
         const isRecent = row.updated_at && row.updated_at > fifteenMinutesAgo;
         
+        // 🔍 FORENSE: Log what we're using for each agent
+        const finalUsername = profile?.nickname || profile?.agent_code || 'Agent';
+        console.log('[LiveAgents] 🔍 Agent mapping:', {
+          user_id: row.user_id?.slice(0, 8),
+          hasProfile: !!profile,
+          nickname: profile?.nickname,
+          agent_code: profile?.agent_code,
+          finalUsername
+        });
+        
         return {
           id: row.user_id,
           lat: row.lat,
           lng: row.lng,
           // 🔧 FIX: Use nickname from public_profiles (full_name not exposed in VIEW)
-          username: profile?.nickname || profile?.agent_code || 'Agent',
+          username: finalUsername,
           status: isRecent ? 'online' : 'offline',
           lastSeen: row.updated_at,
           agent_code: profile?.agent_code,
