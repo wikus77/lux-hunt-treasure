@@ -1427,6 +1427,32 @@ export default function MapTiler3D() {
     setShowBattleModal(true);
   };
   
+  // 🎯 DISABLE MAP INTERACTIONS when BattleModal is open (prevents iOS keyboard conflicts)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    
+    if (showBattleModal) {
+      // Disable all map interactions to prevent conflicts with modal inputs
+      map.keyboard?.disable();
+      map.dragPan?.disable();
+      map.dragRotate?.disable();
+      map.scrollZoom?.disable();
+      map.touchZoomRotate?.disable();
+      map.doubleClickZoom?.disable();
+      console.log('🔒 [Map3D] Map interactions DISABLED (BattleModal open)');
+    } else {
+      // Re-enable all map interactions
+      map.keyboard?.enable();
+      map.dragPan?.enable();
+      map.dragRotate?.enable();
+      map.scrollZoom?.enable();
+      map.touchZoomRotate?.enable();
+      map.doubleClickZoom?.enable();
+      console.log('🔓 [Map3D] Map interactions ENABLED (BattleModal closed)');
+    }
+  }, [showBattleModal]);
+  
   // 🔥 BATTLE ON MAP: Listen for battle start event
   useEffect(() => {
     const handleBattleStart = (event: CustomEvent) => {
