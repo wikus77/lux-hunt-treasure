@@ -3,12 +3,12 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  * 
  * Renderizza:
- * - Fill verde neon per paesi conquistati (su TUTTE le mappe)
+ * - Fill colorato per paesi conquistati (colore UNICO per ogni owner!)
  * - Fill ambra per paesi contested
  * - Label con nome owner
  */
 
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';
 import { useCountryDomination } from '../hooks/useCountryDomination';
 import { COUNTRY_NAMES } from '@/lib/domination/continentMapping';
@@ -16,10 +16,11 @@ import { COUNTRY_NAMES } from '@/lib/domination/continentMapping';
 // Layer IDs
 const SOURCE_ID = 'country-domination-source';
 const LABEL_SOURCE_ID = 'domination-labels-source';
-const CONQUERED_FILL_LAYER = 'country-domination-conquered-fill';
 const CONTESTED_FILL_LAYER = 'country-domination-contested-fill';
-const CONQUERED_LINE_LAYER = 'country-domination-conquered-line';
 const LABEL_LAYER = 'country-domination-label';
+
+// 🎨 ID ADMIN (MCP) - Colore verde fisso
+const ADMIN_OWNER_ID = '495246c1-9154-4f01-a428-7f37fe230180';
 
 // Country centroids for labels
 const COUNTRY_CENTROIDS: Record<string, [number, number]> = {
@@ -36,6 +37,28 @@ const COUNTRY_CENTROIDS: Record<string, [number, number]> = {
   TR: [35.2, 38.9], AE: [53.8, 23.4], SA: [45.1, 23.9]
 };
 
+// 🎨 Genera colore unico dall'owner_id usando HSL
+function generateOwnerColor(ownerId: string | null): string {
+  // Admin (MCP) = sempre VERDE
+  if (!ownerId || ownerId === ADMIN_OWNER_ID) {
+    return '#00FF00';
+  }
+  
+  // Genera hue dall'hash dell'UUID
+  let hash = 0;
+  for (let i = 0; i < ownerId.length; i++) {
+    hash = ((hash << 5) - hash) + ownerId.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Hue: 0-360, evita il verde (100-140) che è riservato all'admin
+  let hue = Math.abs(hash) % 320; // 320 valori possibili
+  if (hue >= 100) hue += 40; // Salta il range verde
+  
+  // Saturation 100%, Lightness 50% per colori vivaci
+  return `hsl(${hue}, 100%, 50%)`;
+}
+
 interface CountryDominationLayer3DProps {
   map: MLMap | null;
   enabled?: boolean;
@@ -47,9 +70,30 @@ const CountryDominationLayer3D: React.FC<CountryDominationLayer3DProps> = ({
   enabled = true,
   minZoom = 4
 }) => {
-  const { dominationStates, conqueredCountries, contestedCountries } = useCountryDomination();
+  const { dominationStates, contestedCountries } = useCountryDomination();
   const geoJsonCacheRef = useRef<any>(null);
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const addedLayersRef = useRef<Set<string>>(new Set());
+
+  // 🎨 Raggruppa paesi conquistati per owner
+  const conqueredByOwner = useMemo(() => {
+    const grouped: Record<string, { countries: string[], color: string }> = {};
+    
+    dominationStates
+      .filter(s => s.status === 'conquered')
+      .forEach(s => {
+        const ownerId = s.owner_id || 'unknown';
+        if (!grouped[ownerId]) {
+          grouped[ownerId] = {
+            countries: [],
+            color: generateOwnerColor(s.owner_id)
+          };
+        }
+        grouped[ownerId].countries.push(s.country_code);
+      });
+    
+    return grouped;
+  }, [dominationStates]);
 
   // Create filter for country matching
   const createCountryFilter = useCallback((countryCodes: string[]): any => {
@@ -85,6 +129,20 @@ const CountryDominationLayer3D: React.FC<CountryDominationLayer3DProps> = ({
     return ['any', ...filters] as any;
   }, []);
 
+  // Clean up old owner layers
+  const cleanupOwnerLayers = useCallback((mapInstance: MLMap) => {
+    addedLayersRef.current.forEach(layerId => {
+      try {
+        if (mapInstance.getLayer(layerId)) {
+          mapInstance.removeLayer(layerId);
+        }
+      } catch (e) {
+        // Ignore
+      }
+    });
+    addedLayersRef.current.clear();
+  }, []);
+
   // Add all domination layers
   const addDominationLayers = useCallback(async (mapInstance: MLMap) => {
     try {
@@ -112,22 +170,50 @@ const CountryDominationLayer3D: React.FC<CountryDominationLayer3DProps> = ({
         });
       }
 
-      // 4. Add layers if missing
-      if (!mapInstance.getLayer(CONQUERED_FILL_LAYER)) {
-        mapInstance.addLayer({
-          id: CONQUERED_FILL_LAYER,
-          type: 'fill',
-          source: SOURCE_ID,
-          minzoom: minZoom,
-          paint: {
-            'fill-color': '#00FF00',
-            'fill-opacity': 0.11
-          },
-          filter: createCountryFilter(conqueredCountries)
-        } as any);
-      }
+      // 4. Clean up old owner layers before adding new ones
+      cleanupOwnerLayers(mapInstance);
 
-      if (!mapInstance.getLayer(CONTESTED_FILL_LAYER)) {
+      // 5. 🎨 Add SEPARATE layer for EACH owner with UNIQUE color!
+      Object.entries(conqueredByOwner).forEach(([ownerId, data]) => {
+        const fillLayerId = `country-domination-fill-${ownerId.slice(0, 8)}`;
+        const lineLayerId = `country-domination-line-${ownerId.slice(0, 8)}`;
+        
+        // Fill layer
+        if (!mapInstance.getLayer(fillLayerId)) {
+          mapInstance.addLayer({
+            id: fillLayerId,
+            type: 'fill',
+            source: SOURCE_ID,
+            minzoom: minZoom,
+            paint: {
+              'fill-color': data.color,
+              'fill-opacity': 0.15
+            },
+            filter: createCountryFilter(data.countries)
+          } as any);
+          addedLayersRef.current.add(fillLayerId);
+        }
+
+        // Line layer (border)
+        if (!mapInstance.getLayer(lineLayerId)) {
+          mapInstance.addLayer({
+            id: lineLayerId,
+            type: 'line',
+            source: SOURCE_ID,
+            minzoom: minZoom,
+            paint: {
+              'line-color': data.color,
+              'line-width': 3,
+              'line-opacity': 0.8
+            },
+            filter: createCountryFilter(data.countries)
+          } as any);
+          addedLayersRef.current.add(lineLayerId);
+        }
+      });
+
+      // 6. Contested layer (always amber)
+      if (!mapInstance.getLayer(CONTESTED_FILL_LAYER) && contestedCountries.length > 0) {
         mapInstance.addLayer({
           id: CONTESTED_FILL_LAYER,
           type: 'fill',
@@ -141,32 +227,25 @@ const CountryDominationLayer3D: React.FC<CountryDominationLayer3DProps> = ({
         } as any);
       }
 
-      if (!mapInstance.getLayer(CONQUERED_LINE_LAYER)) {
-        mapInstance.addLayer({
-          id: CONQUERED_LINE_LAYER,
-          type: 'line',
-          source: SOURCE_ID,
-          minzoom: minZoom,
-          paint: {
-            'line-color': '#00FF00',
-            'line-width': 3,
-            'line-opacity': 0.8
-          },
-          filter: createCountryFilter(conqueredCountries)
-        } as any);
-      }
-
-      // 5. Add labels
+      // 7. Add labels with owner color
       const labelFeatures = dominationStates
         .filter(s => s.status === 'conquered' && s.owner_name && COUNTRY_CENTROIDS[s.country_code])
         .map(s => ({
           type: 'Feature' as const,
-          properties: { owner_name: s.owner_name },
+          properties: { 
+            owner_name: s.owner_name,
+            color: generateOwnerColor(s.owner_id)
+          },
           geometry: { type: 'Point' as const, coordinates: COUNTRY_CENTROIDS[s.country_code] }
         }));
 
       if (labelFeatures.length > 0) {
-        if (!mapInstance.getSource(LABEL_SOURCE_ID)) {
+        if (mapInstance.getSource(LABEL_SOURCE_ID)) {
+          (mapInstance.getSource(LABEL_SOURCE_ID) as any).setData({ 
+            type: 'FeatureCollection', 
+            features: labelFeatures 
+          });
+        } else {
           mapInstance.addSource(LABEL_SOURCE_ID, {
             type: 'geojson',
             data: { type: 'FeatureCollection', features: labelFeatures }
@@ -186,7 +265,7 @@ const CountryDominationLayer3D: React.FC<CountryDominationLayer3DProps> = ({
               'text-allow-overlap': true
             },
             paint: {
-              'text-color': '#00FF00',
+              'text-color': ['get', 'color'],
               'text-halo-color': '#000000',
               'text-halo-width': 2
             }
@@ -199,7 +278,7 @@ const CountryDominationLayer3D: React.FC<CountryDominationLayer3DProps> = ({
       // Silent fail - layers will be retried on next interval
       return false;
     }
-  }, [minZoom, conqueredCountries, contestedCountries, dominationStates, createCountryFilter]);
+  }, [minZoom, conqueredByOwner, contestedCountries, dominationStates, createCountryFilter, cleanupOwnerLayers]);
 
   // Main effect: continuously check and add layers if missing
   useEffect(() => {
@@ -211,9 +290,8 @@ const CountryDominationLayer3D: React.FC<CountryDominationLayer3DProps> = ({
       
       // Check if source is missing (means style changed)
       const sourceExists = map.getSource(SOURCE_ID);
-      const layerExists = map.getLayer(CONQUERED_FILL_LAYER);
       
-      if (!sourceExists || !layerExists) {
+      if (!sourceExists) {
         addDominationLayers(map);
       }
     };
@@ -249,24 +327,13 @@ const CountryDominationLayer3D: React.FC<CountryDominationLayer3DProps> = ({
     };
   }, [map, enabled, addDominationLayers]);
 
-  // Update filters when data changes
+  // Update layers when domination data changes
   useEffect(() => {
-    if (!map || !enabled) return;
-
-    try {
-      if (map.getLayer(CONQUERED_FILL_LAYER)) {
-        map.setFilter(CONQUERED_FILL_LAYER, createCountryFilter(conqueredCountries));
-      }
-      if (map.getLayer(CONQUERED_LINE_LAYER)) {
-        map.setFilter(CONQUERED_LINE_LAYER, createCountryFilter(conqueredCountries));
-      }
-      if (map.getLayer(CONTESTED_FILL_LAYER)) {
-        map.setFilter(CONTESTED_FILL_LAYER, createCountryFilter(contestedCountries));
-      }
-    } catch (e) {
-      // Ignore - layers might not exist
-    }
-  }, [map, enabled, conqueredCountries, contestedCountries, createCountryFilter]);
+    if (!map || !enabled || !map.isStyleLoaded()) return;
+    
+    // Re-add all layers with new data
+    addDominationLayers(map);
+  }, [map, enabled, conqueredByOwner, addDominationLayers]);
 
   return null;
 };
