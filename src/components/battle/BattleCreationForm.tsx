@@ -590,6 +590,10 @@ export function BattleCreationForm({
               onKeyDown={(e) => e.stopPropagation()}
               onKeyUp={(e) => e.stopPropagation()}
               onKeyPress={(e) => e.stopPropagation()}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
             />
           </div>
 
@@ -662,6 +666,11 @@ export function BattleCreationForm({
                   onKeyDown={(e) => e.stopPropagation()}
                   onKeyUp={(e) => e.stopPropagation()}
                   onKeyPress={(e) => e.stopPropagation()}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  enterKeyHint="search"
                 />
                 {isSearching && (
                   <Loader2 className="absolute right-3 top-3 h-4 w-4 text-muted-foreground animate-spin" />
