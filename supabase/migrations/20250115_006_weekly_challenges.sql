@@ -24,6 +24,10 @@ CREATE INDEX IF NOT EXISTS idx_weekly_challenge_user ON weekly_challenge_complet
 CREATE INDEX IF NOT EXISTS idx_weekly_challenge_week ON weekly_challenge_completions(week_start);
 
 -- 2. Funzione per ottenere il lunedì della settimana corrente
+-- DROP prima per evitare conflitti con parametri diversi
+DROP FUNCTION IF EXISTS get_week_start(DATE);
+DROP FUNCTION IF EXISTS get_week_start();
+
 CREATE OR REPLACE FUNCTION get_week_start(p_date DATE DEFAULT CURRENT_DATE)
 RETURNS DATE
 LANGUAGE sql
