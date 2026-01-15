@@ -581,12 +581,15 @@ export function BattleCreationForm({
               id="arena-name"
               placeholder="e.g., Downtown Showdown"
               value={arenaName}
-              onChange={(e) => setArenaName(e.target.value)}
+              onChange={(e) => { e.stopPropagation(); setArenaName(e.target.value); }}
               className="bg-background/50"
               onClick={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
               onFocus={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              onKeyUp={(e) => e.stopPropagation()}
+              onKeyPress={(e) => e.stopPropagation()}
             />
           </div>
 
@@ -644,18 +647,21 @@ export function BattleCreationForm({
               </div>
             ) : (
               /* Campo di ricerca */
-              <div className="relative" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+              <div className="relative" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="opponent"
                   placeholder="Cerca per nome o codice agente..."
                   value={opponentSearch}
-                  onChange={(e) => setOpponentSearch(e.target.value)}
+                  onChange={(e) => { e.stopPropagation(); setOpponentSearch(e.target.value); }}
                   className="pl-10 bg-background/50"
                   onClick={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
                   onTouchStart={(e) => e.stopPropagation()}
                   onFocus={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  onKeyUp={(e) => e.stopPropagation()}
+                  onKeyPress={(e) => e.stopPropagation()}
                 />
                 {isSearching && (
                   <Loader2 className="absolute right-3 top-3 h-4 w-4 text-muted-foreground animate-spin" />
