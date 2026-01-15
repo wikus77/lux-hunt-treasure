@@ -26,15 +26,19 @@ interface StreakWidgetProps {
   onCheckIn?: () => void;
 }
 
+// 🆕 M1U REWARDS per milestone
 const MILESTONES = [
-  { days: 5, icon: '🔥', name: 'Fiamma Nascente', color: '#FF6B35' },
-  { days: 10, icon: '🔥', name: 'Fiamma Ardente', color: '#FF4500' },
-  { days: 15, icon: '🌋', name: 'Inferno', color: '#DC143C' },
-  { days: 25, icon: '⚡', name: 'Leggenda Streak', color: '#FFD700' },
-  { days: 30, icon: '🏆', name: 'Campione Missione', color: '#00D1FF' },
-  { days: 50, icon: '💎', name: 'Diamante', color: '#00BFFF' },
-  { days: 100, icon: '👑', name: 'Re della Streak', color: '#9B59B6' },
+  { days: 5, icon: '🔥', name: 'Fiamma Nascente', color: '#FF6B35', m1uReward: 25 },
+  { days: 10, icon: '🔥', name: 'Fiamma Ardente', color: '#FF4500', m1uReward: 25 },
+  { days: 15, icon: '🌋', name: 'Inferno', color: '#DC143C', m1uReward: 50 },
+  { days: 25, icon: '⚡', name: 'Leggenda Streak', color: '#FFD700', m1uReward: 75 },
+  { days: 30, icon: '🏆', name: 'Campione Missione', color: '#00D1FF', m1uReward: 100 },
+  { days: 50, icon: '💎', name: 'Diamante', color: '#00BFFF', m1uReward: 150 },
+  { days: 100, icon: '👑', name: 'Re della Streak', color: '#9B59B6', m1uReward: 300 },
 ];
+
+// 🆕 M1U giornalieri per check-in
+const DAILY_M1U_REWARD = 2;
 
 export function StreakWidget({ compact = false, onCheckIn }: StreakWidgetProps) {
   const { user } = useAuthContext();
@@ -43,9 +47,34 @@ export function StreakWidget({ compact = false, onCheckIn }: StreakWidgetProps) 
   const [streakInfo, setStreakInfo] = useState<StreakInfo | null>(null);
   const [canCheckIn, setCanCheckIn] = useState(true);
   const [showBadgeAnimation, setShowBadgeAnimation] = useState<typeof MILESTONES[0] | null>(null);
+  const [showM1UReward, setShowM1UReward] = useState<{ amount: number; isMilestone: boolean } | null>(null);
   
   // 🔋 PE System Hook
   const { awardPE } = useAwardPE();
+  
+  // 🆕 Award M1U function
+  const awardM1U = async (amount: number, source: string) => {
+    if (!user || amount <= 0) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('admin_credit_m1u', {
+        p_user_id: user.id,
+        p_amount: amount,
+        p_source: source
+      });
+      
+      if (error) {
+        console.warn('[Streak] M1U award failed:', error);
+        return false;
+      }
+      
+      console.log(`[Streak] ✅ +${amount} M1U awarded (${source})`);
+      return true;
+    } catch (err) {
+      console.error('[Streak] M1U award error:', err);
+      return false;
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -156,18 +185,47 @@ export function StreakWidget({ compact = false, onCheckIn }: StreakWidgetProps) 
         streakBroken,
       }).catch(err => console.warn('[PE] Daily login award failed:', err));
 
+      // 🆕 Award daily M1U (+2 M1U)
+      await awardM1U(DAILY_M1U_REWARD, 'streak_daily_checkin');
+      
       hapticSuccess();
       
       // Check if milestone reached
       const milestone = MILESTONES.find(m => m.days === newStreak);
       if (milestone) {
+        // 🆕 Award milestone M1U bonus!
+        const milestoneAwarded = await awardM1U(milestone.m1uReward, `streak_milestone_${milestone.days}`);
+        
         setShowBadgeAnimation(milestone);
         setTimeout(() => setShowBadgeAnimation(null), 3000);
-        toast.success(`🎉 Nuovo badge sbloccato: ${milestone.name}!`);
+        
+        // 🆕 Show M1U reward popup
+        if (milestoneAwarded) {
+          setShowM1UReward({ amount: milestone.m1uReward, isMilestone: true });
+          setTimeout(() => setShowM1UReward(null), 4000);
+          toast.success(`🎉 ${milestone.name}! +${milestone.m1uReward} M1U!`, { duration: 5000 });
+        } else {
+          toast.success(`🎉 Nuovo badge sbloccato: ${milestone.name}!`);
+        }
+        
+        // 🆕 Dispatch event for M1U pill slot machine animation
+        window.dispatchEvent(new CustomEvent('m1u-credited', { 
+          detail: { amount: milestone.m1uReward + DAILY_M1U_REWARD } 
+        }));
       } else if (streakBroken) {
         toast.warning('⚠️ Streak resettata! Ricomincia da 1 giorno');
+        // Still give daily M1U
+        setShowM1UReward({ amount: DAILY_M1U_REWARD, isMilestone: false });
+        setTimeout(() => setShowM1UReward(null), 3000);
       } else {
-        toast.success(`🔥 Streak: ${newStreak} giorni! +${xpAwarded} PE`);
+        toast.success(`🔥 Streak: ${newStreak} giorni! +${DAILY_M1U_REWARD} M1U`, { duration: 3000 });
+        setShowM1UReward({ amount: DAILY_M1U_REWARD, isMilestone: false });
+        setTimeout(() => setShowM1UReward(null), 3000);
+        
+        // 🆕 Dispatch event for M1U pill slot machine animation
+        window.dispatchEvent(new CustomEvent('m1u-credited', { 
+          detail: { amount: DAILY_M1U_REWARD } 
+        }));
       }
 
       setCanCheckIn(false);
@@ -251,6 +309,42 @@ export function StreakWidget({ compact = false, onCheckIn }: StreakWidgetProps) 
               </motion.div>
               <p className="text-xl font-bold text-white">{showBadgeAnimation.name}</p>
               <p className="text-sm text-gray-400">Badge Sbloccato!</p>
+              {/* 🆕 M1U Reward display */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="mt-3 px-4 py-2 bg-green-500/20 border border-green-500/50 rounded-lg"
+              >
+                <p className="text-lg font-bold text-green-400">+{showBadgeAnimation.m1uReward} M1U</p>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* 🆕 M1U Reward Popup (Green style) */}
+      <AnimatePresence>
+        {showM1UReward && !showBadgeAnimation && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            className="absolute top-0 left-0 right-0 z-40 flex justify-center"
+          >
+            <div className={`px-4 py-2 rounded-xl border ${
+              showM1UReward.isMilestone 
+                ? 'bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-green-500/50'
+                : 'bg-green-500/20 border-green-500/40'
+            } backdrop-blur-sm shadow-lg shadow-green-500/20`}>
+              <motion.p
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.5, repeat: 2 }}
+                className="text-lg font-bold text-green-400 flex items-center gap-2"
+              >
+                💰 +{showM1UReward.amount} M1U
+                {showM1UReward.isMilestone && <span className="text-yellow-400">🎉</span>}
+              </motion.p>
             </div>
           </motion.div>
         )}
