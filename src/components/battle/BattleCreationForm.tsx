@@ -583,6 +583,10 @@ export function BattleCreationForm({
               value={arenaName}
               onChange={(e) => setArenaName(e.target.value)}
               className="bg-background/50"
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onFocus={(e) => e.stopPropagation()}
             />
           </div>
 
@@ -640,7 +644,7 @@ export function BattleCreationForm({
               </div>
             ) : (
               /* Campo di ricerca */
-              <div className="relative">
+              <div className="relative" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="opponent"
@@ -648,6 +652,10 @@ export function BattleCreationForm({
                   value={opponentSearch}
                   onChange={(e) => setOpponentSearch(e.target.value)}
                   className="pl-10 bg-background/50"
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onFocus={(e) => e.stopPropagation()}
                 />
                 {isSearching && (
                   <Loader2 className="absolute right-3 top-3 h-4 w-4 text-muted-foreground animate-spin" />
@@ -687,7 +695,7 @@ export function BattleCreationForm({
           </div>
 
           {/* Stake Type */}
-          <div className="space-y-2">
+          <div className="space-y-2" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
             <Label htmlFor="stake-type">Stake Type</Label>
             <Select value={stakeType} onValueChange={setStakeType}>
               <SelectTrigger id="stake-type" className="bg-background/50">
@@ -707,7 +715,7 @@ export function BattleCreationForm({
           </div>
 
           {/* Stake Percentage */}
-          <div className="space-y-3">
+          <div className="space-y-3" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
             <Label>Stake: {stakePercent}%</Label>
             <Slider
               value={[stakePercent]}
