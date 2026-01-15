@@ -88,6 +88,10 @@ export function BattleModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
           >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-cyan-500/30 bg-gradient-to-r from-cyan-950/30 to-purple-950/30">
@@ -123,7 +127,7 @@ export function BattleModal({
                 {/* New Battle Tab */}
                 <TabsContent value="new" className="flex-1 overflow-hidden">
                   <ScrollArea className="h-full">
-                    <div className="p-4">
+                    <div className="p-4" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
                       <BattleCreationForm
                         userId={userId}
                         preSelectedOpponent={preSelectedOpponent}
@@ -144,7 +148,7 @@ export function BattleModal({
                 {/* Shop Tab */}
                 <TabsContent value="shop" className="flex-1 overflow-hidden">
                   <ScrollArea className="h-full">
-                    <div className="p-4">
+                    <div className="p-4" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
                       {userId ? (
                         <BattleShop userId={userId} />
                       ) : (
