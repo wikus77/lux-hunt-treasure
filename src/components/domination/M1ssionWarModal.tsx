@@ -123,13 +123,13 @@ export const M1ssionWarModal: React.FC<M1ssionWarModalProps> = ({
         setBattleHistory(allBattles);
 
         // 3. Fetch country progress
-        // Prima conta le VITTORIE dell'utente da country_battle_wins (is_win = true!)
+        // Conta le VITTORIE dell'utente da country_battle_wins (is_win = true!)
+        // RIMOSSO filtro is_valid_for_domination - tutte le vittorie contano
         const { data: userWinsByCountry } = await supabase
           .from('country_battle_wins')
           .select('country_code')
           .eq('winner_id', userId)
-          .eq('is_win', true)  // SOLO VITTORIE!
-          .eq('is_valid_for_domination', true);
+          .eq('is_win', true);  // SOLO VITTORIE!
         
         // Conta vittorie per paese
         const winsPerCountry: Record<string, number> = {};
