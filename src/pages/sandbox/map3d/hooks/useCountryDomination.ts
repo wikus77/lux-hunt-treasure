@@ -66,13 +66,17 @@ export function useCountryDomination(): UseCountryDominationReturn {
         let ownerMap: Record<string, { full_name: string; agent_code: string }> = {};
         
         if (ownerIds.length > 0) {
+          // 🔧 FIX: Usa public_profiles invece di profiles (bypass RLS)
           const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, full_name, agent_code')
+            .from('public_profiles')
+            .select('id, full_name, agent_code, nickname')
             .in('id', ownerIds);
           
-          profiles?.forEach(p => {
-            ownerMap[p.id] = { full_name: p.full_name, agent_code: p.agent_code };
+          profiles?.forEach((p: any) => {
+            ownerMap[p.id] = { 
+              full_name: p.full_name || p.nickname || 'Unknown', 
+              agent_code: p.agent_code 
+            };
           });
         }
 
