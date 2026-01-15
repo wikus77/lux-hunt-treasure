@@ -1403,14 +1403,27 @@ export default function MapTiler3D() {
   };
 
   const handleAttackAgent = () => {
-    setShowAgentCard(false);
-    setPreSelectedOpponent({
+    // 🔍 FORENSE: Log DETTAGLIATO delle coordinate passate
+    console.log('🎯🎯🎯 [MapTiler3D] handleAttackAgent CALLED!');
+    console.log('🎯 [MapTiler3D] selectedAgent FULL:', JSON.stringify(selectedAgent));
+    console.log('🎯 [MapTiler3D] selectedAgent.lat:', selectedAgent?.lat, 'typeof:', typeof selectedAgent?.lat);
+    console.log('🎯 [MapTiler3D] selectedAgent.lng:', selectedAgent?.lng, 'typeof:', typeof selectedAgent?.lng);
+    
+    const opponent = {
       id: selectedAgent.id,
-      // 🔧 FIX: NON usare UUID troncato come nome
       name: selectedAgent.username || selectedAgent.agent_code || 'Unknown Agent',
       lat: selectedAgent.lat,
       lng: selectedAgent.lng,
-    });
+    };
+    
+    console.log('🎯 [MapTiler3D] preSelectedOpponent TO SET:', JSON.stringify(opponent));
+    
+    if (!opponent.lat || !opponent.lng) {
+      console.error('🚨🚨🚨 [MapTiler3D] COORDINATE MANCANTI! lat:', opponent.lat, 'lng:', opponent.lng);
+    }
+    
+    setShowAgentCard(false);
+    setPreSelectedOpponent(opponent);
     setShowBattleModal(true);
   };
   
