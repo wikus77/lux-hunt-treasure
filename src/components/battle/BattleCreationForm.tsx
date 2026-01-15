@@ -433,8 +433,11 @@ export function BattleCreationForm({
     });
 
     // 🏴 DOMINATION: Registra TUTTE le battaglie (vittorie E sconfitte) per territorio
+    console.log('🏴 [Battle] FORENSE - preSelectedOpponent:', JSON.stringify(preSelectedOpponent));
+    console.log('🏴 [Battle] FORENSE - has lat/lng:', !!preSelectedOpponent?.lat, !!preSelectedOpponent?.lng);
+    
     if (preSelectedOpponent?.lat && preSelectedOpponent?.lng) {
-      console.log('🏴 [Battle] Logging battle for domination...', {
+      console.log('🏴 [Battle] ✅ Calling log_battle_result RPC...', {
         lat: preSelectedOpponent.lat,
         lng: preSelectedOpponent.lng,
         opponent: effectiveOpponent?.id,
@@ -443,21 +446,42 @@ export function BattleCreationForm({
       });
       
       try {
-        const { data: logResult, error: logError } = await (supabase as any).rpc('log_battle_result', {
+        const rpcParams = {
           p_user_id: userId,
           p_opponent_id: effectiveOpponent?.id || 'unknown',
           p_lat: preSelectedOpponent.lat,
           p_lng: preSelectedOpponent.lng,
           p_is_pvp: !isFakeAgent,
           p_won: won
-        });
+        };
+        console.log('🏴 [Battle] RPC params:', JSON.stringify(rpcParams));
+        
+        const { data: logResult, error: logError } = await (supabase as any).rpc('log_battle_result', rpcParams);
+        
+        console.log('🏴 [Battle] RPC response - data:', JSON.stringify(logResult));
+        console.log('🏴 [Battle] RPC response - error:', logError ? JSON.stringify(logError) : 'null');
         
         if (logError) {
-          console.error('🏴 [Battle] log_battle_result error:', logError);
+          console.error('🏴 [Battle] ❌ log_battle_result error:', logError);
+          toast({
+            title: '⚠️ Errore registrazione',
+            description: logError.message || 'Battaglia non registrata',
+            duration: 4000,
+            variant: 'destructive',
+          });
         } else {
-          console.log('🏴 [Battle] Battle logged for domination:', logResult);
-          const result = logResult as { country_name?: string; country_code?: string; is_win?: boolean } | null;
-          if (result?.country_name) {
+          console.log('🏴 [Battle] ✅ Battle logged for domination:', logResult);
+          const result = logResult as { success?: boolean; country_name?: string; country_code?: string; is_win?: boolean; error?: string } | null;
+          
+          if (result?.success === false) {
+            console.error('🏴 [Battle] ❌ RPC returned success=false:', result.error);
+            toast({
+              title: '⚠️ Errore DB',
+              description: result.error || 'Errore sconosciuto',
+              duration: 4000,
+              variant: 'destructive',
+            });
+          } else if (result?.country_name) {
             toast({
               title: result.is_win ? `🏴 ${result.country_name}` : `⚔️ ${result.country_name}`,
               description: result.is_win ? '+1 conquista!' : 'Sconfitta registrata',
@@ -465,11 +489,27 @@ export function BattleCreationForm({
             });
           }
         }
-      } catch (err) {
-        console.error('🏴 [Battle] Domination log error:', err);
+      } catch (err: any) {
+        console.error('🏴 [Battle] ❌ Domination log exception:', err);
+        toast({
+          title: '⚠️ Errore',
+          description: err?.message || 'Eccezione durante registrazione',
+          duration: 4000,
+          variant: 'destructive',
+        });
       }
     } else {
-      console.warn('🏴 [Battle] Cannot log battle - no coordinates available');
+      console.error('🏴 [Battle] ❌ Cannot log battle - NO COORDINATES!', {
+        preSelectedOpponent,
+        hasLat: !!preSelectedOpponent?.lat,
+        hasLng: !!preSelectedOpponent?.lng
+      });
+      toast({
+        title: '⚠️ Coordinate mancanti',
+        description: 'Battaglia non registrata per dominio',
+        duration: 4000,
+        variant: 'destructive',
+      });
     }
 
     // 🔋 Award PE for Tron Battle (Win: +50, Lose: -100)
