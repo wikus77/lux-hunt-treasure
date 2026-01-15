@@ -348,6 +348,10 @@ export function BattleCreationForm({
   // Se attaccante non ha arma (power 0) e difensore non può difendersi → 65% win rate
   // 🤖 FAKE AGENTS: Vincono ~33% delle volte (attaccante vince ~67%)
   const handleCountdownComplete = useCallback(async () => {
+    // 🔍 DEBUG LOG IMMEDIATO
+    console.log('🚀🚀🚀 [Battle] handleCountdownComplete CALLED! 🚀🚀🚀');
+    console.log('🔍 [Battle] preSelectedOpponent at start:', JSON.stringify(preSelectedOpponent));
+    
     // Close countdown
     setShowCountdown(false);
     
