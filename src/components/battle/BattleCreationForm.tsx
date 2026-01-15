@@ -466,7 +466,8 @@ export function BattleCreationForm({
         console.log('🏴 [Battle] RPC response - error:', logError ? JSON.stringify(logError) : 'null');
         
         if (logError) {
-          console.error('🏴 [Battle] ❌ log_battle_result error:', logError);
+          console.error('🚨🚨🚨 [Battle] log_battle_result SUPABASE ERROR:', logError);
+          alert(`❌ ERRORE RPC: ${JSON.stringify(logError)}`);  // DEBUG VISIVO
           toast({
             title: '⚠️ Errore registrazione',
             description: logError.message || 'Battaglia non registrata',
@@ -474,11 +475,18 @@ export function BattleCreationForm({
             variant: 'destructive',
           });
         } else {
-          console.log('🏴 [Battle] ✅ Battle logged for domination:', logResult);
+          console.log('🏴 [Battle] ✅ Battle logged - FULL RESPONSE:', JSON.stringify(logResult, null, 2));
           const result = logResult as { success?: boolean; country_name?: string; country_code?: string; is_win?: boolean; error?: string } | null;
           
+          // 🔔 DEBUG: ALERT per vedere il risultato
+          if (result?.success === true) {
+            console.log(`✅✅✅ BATTAGLIA SALVATA! Paese: ${result.country_name} (${result.country_code})`);
+          } else if (result?.success === false) {
+            alert(`❌ RPC success=false: ${result.error}`);  // DEBUG VISIVO
+          }
+          
           if (result?.success === false) {
-            console.error('🏴 [Battle] ❌ RPC returned success=false:', result.error);
+            console.error('🚨🚨🚨 [Battle] RPC returned success=false:', result.error);
             toast({
               title: '⚠️ Errore DB',
               description: result.error || 'Errore sconosciuto',
