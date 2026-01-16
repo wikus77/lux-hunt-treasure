@@ -146,8 +146,15 @@ export const ClueMilestoneWatcher: React.FC = () => {
       isLoading,
       clueCount,
       prevCount: prevClueCountRef.current,
-      hasInitialized: hasInitializedRef.current
+      hasInitialized: hasInitializedRef.current,
+      userId: user?.id
     });
+    
+    // 🔥 FIX 16/01/2026: NON processare se non c'è user.id!
+    if (!user?.id) {
+      console.log('[ClueMilestoneWatcher] ⏳ No user ID, skipping check');
+      return;
+    }
     
     if (isLoading) {
       console.log('[ClueMilestoneWatcher] ⏳ Still loading, skipping check');
@@ -184,7 +191,7 @@ export const ClueMilestoneWatcher: React.FC = () => {
     prevClueCountRef.current = clueCount;
     hasInitializedRef.current = true;
 
-  }, [clueCount, checkAndClaimMilestones, claimedKeys, isLoading]);
+  }, [clueCount, checkAndClaimMilestones, claimedKeys, isLoading, user?.id]);
 
   // 🔥 LOG finale prima del render
   console.log('[ClueMilestoneWatcher] 🎬 RENDER - pendingMilestone:', pendingMilestone?.key || 'none');

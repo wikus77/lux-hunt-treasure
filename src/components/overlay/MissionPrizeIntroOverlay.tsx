@@ -371,44 +371,71 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
       return;
     }
 
-    // 🆕 LOGICA SEMPLIFICATA:
-    // 1. Se MAI visto (hasSeenPrizeIntro === false) → mostra
-    // 2. Se già visto E stessa missione → NON mostrare
-    // 3. Se già visto E missione diversa → mostra (nuova missione!)
+    // 🔥 FIX 16/01/2026: LEGGI DIRETTAMENTE DAL LOCALSTORAGE
+    // Lo store potrebbe non essere ancora sincronizzato a causa del race condition
+    const directHasSeenKey = `m1ssion_hasSeenPrizeIntro_${user.id}`;
+    const directLastMissionKey = `m1ssion_lastPrizeIntroMissionId_${user.id}`;
+    const legacyHasSeenKey = 'm1ssion_hasSeenPrizeIntro';
     
+    let directHasSeen = false;
+    let directLastMissionId: string | null = null;
+    
+    try {
+      // Prima prova chiave user-specific
+      const userSpecific = localStorage.getItem(directHasSeenKey);
+      if (userSpecific) {
+        directHasSeen = JSON.parse(userSpecific);
+      } else {
+        // Fallback a chiave legacy
+        const legacy = localStorage.getItem(legacyHasSeenKey);
+        if (legacy) {
+          directHasSeen = JSON.parse(legacy);
+        }
+      }
+      
+      // Leggi last mission ID
+      const lastMission = localStorage.getItem(directLastMissionKey);
+      if (lastMission) {
+        directLastMissionId = JSON.parse(lastMission);
+      }
+    } catch (e) {
+      // Ignore parsing errors
+    }
+
     if (PRIZE_INTRO_DEBUG) {
-      console.log('[PRIZE INTRO] 🔍 Check:', {
-        hasSeenPrizeIntro,
-        lastSeenMissionId,
+      console.log('[PRIZE INTRO] 🔍 DIRECT localStorage check:', {
+        directHasSeen,
+        directLastMissionId,
         currentMissionId,
-        missionLoading
+        storeHasSeen: hasSeenPrizeIntro,
+        storeLastMission: lastSeenMissionId
       });
     }
 
     // Caso 1: Mai visto → mostra
-    if (!hasSeenPrizeIntro) {
+    if (!directHasSeen) {
       if (PRIZE_INTRO_DEBUG) {
-        console.log('[PRIZE INTRO] ✅ Never seen - will show');
+        console.log('[PRIZE INTRO] ✅ Never seen (localStorage) - will show');
       }
       // Continua sotto per mostrare
     }
     // Caso 2: Già visto per questa missione → NON mostrare
-    else if (currentMissionId && lastSeenMissionId === currentMissionId) {
+    else if (currentMissionId && directLastMissionId === currentMissionId) {
       if (PRIZE_INTRO_DEBUG) {
-        console.log('[PRIZE INTRO] ⏭️ Already seen for this mission - skipping');
+        console.log('[PRIZE INTRO] ⏭️ Already seen for this mission (localStorage) - skipping');
       }
       setIsVisible(false);
       return;
     }
     // Caso 3: Già visto ma missione diversa → mostra (nuova missione)
-    else if (currentMissionId && lastSeenMissionId !== currentMissionId) {
+    else if (currentMissionId && directLastMissionId !== currentMissionId) {
       if (PRIZE_INTRO_DEBUG) {
-        console.log('[PRIZE INTRO] 🆕 New mission detected - will show');
+        console.log('[PRIZE INTRO] 🆕 New mission detected (localStorage) - will show');
       }
       // Continua sotto per mostrare
     }
     // Caso 4: Già visto ma nessuna missione attiva → NON mostrare
-    else if (hasSeenPrizeIntro && !currentMissionId) {
+    else if (directHasSeen && !currentMissionId) {
       if (PRIZE_INTRO_DEBUG) {
         console.log('[PRIZE INTRO] ⏭️ Already seen and no active mission - skipping');
       }
@@ -479,15 +506,41 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
     if (!canDismiss && PRIZE_INTRO_MODE === 'cinematic') return;
 
     if (PRIZE_INTRO_DEBUG) {
-      console.log('[PRIZE INTRO] 🎯 User clicked CTA - entering hunt, missionId:', currentMissionId);
+      console.log('[PRIZE INTRO] 🎯 User clicked CTA - entering hunt, missionId:', currentMissionId, 'userId:', user?.id);
     }
 
-    // 🆕 FIX: Pass missionId to mark as seen for THIS specific mission
+    // 🔥 FIX 16/01/2026: Salva DIRETTAMENTE nel localStorage con user.id
+    // per evitare problemi di race condition con lo store
+    if (user?.id) {
+      try {
+        const keyHasSeen = `m1ssion_hasSeenPrizeIntro_${user.id}`;
+        const keySeenAt = `m1ssion_prizeIntroSeenAt_${user.id}`;
+        const keyLastMissionId = `m1ssion_lastPrizeIntroMissionId_${user.id}`;
+        
+        localStorage.setItem(keyHasSeen, JSON.stringify(true));
+        localStorage.setItem(keySeenAt, JSON.stringify(Date.now()));
+        if (currentMissionId) {
+          localStorage.setItem(keyLastMissionId, JSON.stringify(currentMissionId));
+        }
+        
+        if (PRIZE_INTRO_DEBUG) {
+          console.log('[PRIZE INTRO] 💾 Saved directly to localStorage:', {
+            keyHasSeen,
+            keyLastMissionId,
+            currentMissionId
+          });
+        }
+      } catch (e) {
+        console.error('[PRIZE INTRO] ❌ Failed to save to localStorage:', e);
+      }
+    }
+
+    // Also update store (for consistency)
     if (currentMissionId) {
       markPrizeIntroSeen(currentMissionId);
     }
     setIsVisible(false);
-  }, [canDismiss, markPrizeIntroSeen, currentMissionId]);
+  }, [canDismiss, markPrizeIntroSeen, currentMissionId, user?.id]);
 
   // Don't render if not visible
   if (!isVisible) return null;

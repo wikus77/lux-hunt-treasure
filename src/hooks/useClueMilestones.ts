@@ -83,8 +83,9 @@ export const useClueMilestones = (): UseClueMilestonesReturn => {
     console.log('[CLUE_MILESTONE_HOOK] 📥 fetchClaimedMilestones called');
     
     if (!user?.id) {
-      console.log('[CLUE_MILESTONE_HOOK] ⚠️ No user, setting isLoading=false');
-      setIsLoading(false);
+      console.log('[CLUE_MILESTONE_HOOK] ⚠️ No user, keeping isLoading=true (waiting for auth)');
+      // 🔥 FIX 16/01/2026: NON settare isLoading=false se non c'è user!
+      // Altrimenti il ClueMilestoneWatcher farà il check con claimedKeys vuoto
       return;
     }
 
@@ -214,14 +215,19 @@ export const useClueMilestones = (): UseClueMilestonesReturn => {
       console.log('[CLUE_MILESTONE_HOOK] ✅ Milestone claimed successfully:', milestone.key);
       
       // 🎉 Progress Feedback - Milestone reached event
-      emitGameEvent('MILESTONE_REACHED', {
-        title: milestone.title,
-        threshold: milestone.threshold,
-        m1u: milestone.m1u,
-        pe: milestone.pe,
-        key: milestone.key,
-        nextThreshold: CLUE_MILESTONES.find(m => m.threshold > milestone.threshold)?.threshold,
-      });
+      // ⚠️ FIX 16/01/2026: SOLO emette evento se title NON è null (per evitare popup spam)
+      if (milestone.title) {
+        emitGameEvent('MILESTONE_REACHED', {
+          title: milestone.title,
+          threshold: milestone.threshold,
+          m1u: milestone.m1u,
+          pe: milestone.pe,
+          key: milestone.key,
+          nextThreshold: CLUE_MILESTONES.find(m => m.threshold > milestone.threshold)?.threshold,
+        });
+      } else {
+        console.log('[CLUE_MILESTONE_HOOK] ⏭️ Skipping popup (title is null):', milestone.key);
+      }
       
       return { success: true, milestone, newBalance: newM1UBalance };
       
