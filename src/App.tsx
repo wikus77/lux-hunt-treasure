@@ -252,8 +252,8 @@ function App() {
                     {/* 🎖️ HIERARCHY RANK: Global watcher for rank-up video popups */}
                     <RankUpWatcher />
                     <CookieConsentManager />
-                    {/* Onboarding Tutorial Interattivo */}
-                    <OnboardingOverlay />
+                    {/* 🚫 DISABILITATO 16/01/2026: Onboarding LITE rimosso (appariva ogni login) */}
+                    {/* <OnboardingOverlay /> */}
                     <WouterRoutes />
                     <InstallPrompt />
                     <IOSPermissionManager />
