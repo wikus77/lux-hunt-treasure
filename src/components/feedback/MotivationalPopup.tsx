@@ -170,121 +170,160 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
 
   if (!message || typeof document === 'undefined') return null;
 
+  // 🆕 FIX 16/01/2026: Handle swipe up to dismiss
+  const handleDragEnd = useCallback((_: any, info: { offset: { y: number }; velocity: { y: number } }) => {
+    // Se l'utente fa swipe verso l'alto (y negativo) con velocità o distanza sufficiente
+    if (info.offset.y < -50 || info.velocity.y < -300) {
+      setIsVisible(false);
+    }
+  }, []);
+
   return createPortal(
     <AnimatePresence>
       {isVisible && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[10002] flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
-          onClick={handleClose}
-        >
+        <>
+          {/* 🆕 FIX 16/01/2026: Sfondo semi-trasparente (opzionale, tap per chiudere) */}
           <motion.div
-            initial={{ scale: 0.8, y: 50, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.8, y: 50, opacity: 0 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative max-w-md w-full rounded-3xl overflow-hidden"
-            style={{
-              background: 'linear-gradient(145deg, rgba(0, 40, 40, 0.98), rgba(0, 60, 60, 0.95))',
-              border: '2px solid rgba(0, 255, 136, 0.5)',
-              boxShadow: '0 0 60px rgba(0, 255, 136, 0.3), 0 12px 40px rgba(0, 0, 0, 0.6)',
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[10001]"
+            style={{ background: 'rgba(0,0,0,0.3)' }}
+            onClick={handleClose}
+          />
+          
+          {/* 🆕 FIX 16/01/2026: Container che scende dall'alto con swipe up */}
+          <motion.div
+            initial={{ y: '-100%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '-100%', opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            drag="y"
+            dragConstraints={{ top: -200, bottom: 0 }}
+            dragElastic={0.2}
+            onDragEnd={handleDragEnd}
+            className="fixed top-0 left-0 right-0 z-[10002] mx-auto max-w-lg"
+            style={{ touchAction: 'none' }}
           >
-            {/* Ambient glow */}
             <div 
-              className="absolute inset-0 pointer-events-none"
+              className="mx-4 mt-4 rounded-3xl overflow-hidden relative"
               style={{
-                background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.2) 0%, transparent 60%)',
+                background: 'linear-gradient(145deg, rgba(0, 40, 40, 0.98), rgba(0, 60, 60, 0.95))',
+                border: '2px solid rgba(0, 255, 136, 0.5)',
+                boxShadow: '0 0 60px rgba(0, 255, 136, 0.3), 0 12px 40px rgba(0, 0, 0, 0.6)',
               }}
-            />
-
-            {/* Close button */}
-            <button
-              onClick={handleClose}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center z-10"
-              style={{ background: 'rgba(255,255,255,0.1)' }}
             >
-              <X className="w-4 h-4 text-white/70" />
-            </button>
-
-            {/* Content */}
-            <div className="relative p-8 text-center">
-              {/* Icon */}
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', delay: 0.1 }}
-                className="w-20 h-20 rounded-2xl mx-auto mb-5 flex items-center justify-center"
+              {/* Ambient glow */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
                 style={{
-                  background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
-                  boxShadow: '0 8px 30px rgba(0, 255, 136, 0.5)',
+                  background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.2) 0%, transparent 60%)',
                 }}
-              >
-                <span className="text-black">{getIcon()}</span>
-              </motion.div>
+              />
 
-              {/* Title */}
-              <motion.h2
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="text-2xl font-bold mb-3"
-                style={{
-                  color: '#00FF88',
-                  textShadow: '0 0 20px rgba(0, 255, 136, 0.6)',
-                }}
-              >
-                {message.title}
-              </motion.h2>
-
-              {/* Description */}
-              <motion.p
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-white/80 text-lg mb-6"
-              >
-                {message.description}
-              </motion.p>
-
-              {/* CTA Button */}
-              <motion.button
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                onClick={handleClose}
-                whileHover={{ scale: 1.02, boxShadow: '0 6px 35px rgba(0, 255, 136, 0.6)' }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2"
-                style={{
-                  background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
-                  color: '#000',
-                  boxShadow: '0 4px 25px rgba(0, 255, 136, 0.4)',
-                }}
-              >
-                CONTINUA <ChevronRight className="w-5 h-5" />
-              </motion.button>
-
-              {/* Progress bar for auto-dismiss */}
-              <motion.div
-                className="absolute bottom-0 left-0 right-0 h-1"
-                style={{ background: 'rgba(0, 255, 136, 0.3)' }}
-              >
-                <motion.div
-                  initial={{ scaleX: 1 }}
-                  animate={{ scaleX: 0 }}
-                  transition={{ duration: 5, ease: 'linear' }}
-                  className="h-full origin-left"
-                  style={{ background: '#00FF88' }}
+              {/* 🆕 Swipe indicator (drag handle) */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div 
+                  className="w-12 h-1.5 rounded-full"
+                  style={{ background: 'rgba(255,255,255,0.3)' }}
                 />
-              </motion.div>
+              </div>
+
+              {/* Close button */}
+              <button
+                onClick={handleClose}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center z-10"
+                style={{ background: 'rgba(255,255,255,0.1)' }}
+              >
+                <X className="w-4 h-4 text-white/70" />
+              </button>
+
+              {/* Content - layout orizzontale compatto */}
+              <div className="relative px-4 pb-4 pt-2">
+                <div className="flex items-center gap-4">
+                  {/* Icon */}
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', delay: 0.1 }}
+                    className="w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
+                      boxShadow: '0 4px 20px rgba(0, 255, 136, 0.5)',
+                    }}
+                  >
+                    <span className="text-black">{getIcon()}</span>
+                  </motion.div>
+
+                  {/* Text content */}
+                  <div className="flex-1 min-w-0">
+                    <motion.h2
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.15 }}
+                      className="text-base font-bold truncate"
+                      style={{
+                        color: '#00FF88',
+                        textShadow: '0 0 15px rgba(0, 255, 136, 0.5)',
+                      }}
+                    >
+                      {message.title}
+                    </motion.h2>
+
+                    <motion.p
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="text-white/70 text-sm line-clamp-2"
+                    >
+                      {message.description}
+                    </motion.p>
+                  </div>
+
+                  {/* Arrow/CTA */}
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    onClick={handleClose}
+                    whileTap={{ scale: 0.9 }}
+                    className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
+                      boxShadow: '0 2px 15px rgba(0, 255, 136, 0.4)',
+                    }}
+                  >
+                    <ChevronRight className="w-5 h-5 text-black" />
+                  </motion.button>
+                </div>
+
+                {/* Progress bar for auto-dismiss */}
+                <motion.div
+                  className="absolute bottom-0 left-0 right-0 h-1 rounded-b-3xl overflow-hidden"
+                  style={{ background: 'rgba(0, 255, 136, 0.2)' }}
+                >
+                  <motion.div
+                    initial={{ scaleX: 1 }}
+                    animate={{ scaleX: 0 }}
+                    transition={{ duration: 5, ease: 'linear' }}
+                    className="h-full origin-left"
+                    style={{ background: '#00FF88' }}
+                  />
+                </motion.div>
+              </div>
             </div>
+
+            {/* 🆕 Swipe hint text */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              transition={{ delay: 1 }}
+              className="text-center text-white/40 text-xs mt-2"
+            >
+              ↑ Swipe up per chiudere
+            </motion.p>
           </motion.div>
-        </motion.div>
+        </>
       )}
     </AnimatePresence>,
     document.body
