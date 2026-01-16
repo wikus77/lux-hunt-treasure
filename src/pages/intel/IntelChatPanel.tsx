@@ -507,6 +507,13 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
             placeholder="Scrivi un messaggio..."
             disabled={isLoading}
             rows={1}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="sentences"
+            spellCheck={false}
+            inputMode="text"
+            data-form-type="other"
+            data-lpignore="true"
             className="flex-1 bg-gray-800/50 border border-cyan-500/20 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors disabled:opacity-50 resize-none overflow-y-auto"
             style={{ maxHeight: '120px', minHeight: '40px' }}
           />
