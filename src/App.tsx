@@ -233,7 +233,8 @@ function App() {
               <Router>
               <SoundProvider>
                 <AuthProvider>
-                  <OnboardingProvider>
+                  {/* 🚫 DISABILITATO 16/01/2026: OnboardingProvider rimosso (forzava navigazione) */}
+                  {/* <OnboardingProvider> */}
                   <InterestSignalsProvider>
                     {/* OneSignal rimosso - usando solo FCM */}
                     {/* © 2025 M1SSION™ - Conditional render to prevent loop */}
@@ -294,7 +295,7 @@ function App() {
                     {/* 🎉 PROGRESS FEEDBACK: Celebration overlays and progress toasts */}
                     <ProgressFeedbackProvider children={null} />
                   </InterestSignalsProvider>
-                  </OnboardingProvider>
+                  {/* </OnboardingProvider> */}
                 </AuthProvider>
               </SoundProvider>
             </Router>
