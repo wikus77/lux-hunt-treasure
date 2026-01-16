@@ -247,7 +247,7 @@ const BottomNavigationComponent = () => {
           width: "100%",
           maxWidth: "400px",
           height: "64px",
-          background: "rgba(15, 20, 30, 0.65)",
+          background: "rgba(15, 20, 30, 0.45)",
           backdropFilter: "blur(20px) saturate(180%)",
           WebkitBackdropFilter: "blur(20px) saturate(180%)",
           borderRadius: "32px",
