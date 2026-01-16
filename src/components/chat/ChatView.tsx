@@ -39,7 +39,7 @@ export function ChatView({
   const [inputValue, setInputValue] = useState('');
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const { position } = useGeolocation();
 
   // Scroll to bottom on new messages
@@ -94,7 +94,7 @@ export function ChatView({
     await sendMessage(content);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -248,15 +248,21 @@ export function ChatView({
             <MapPin className="w-5 h-5 text-cyan-400" />
           </Button>
           
-          <input
+          <textarea
             ref={inputRef}
-            type="text"
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              // Auto-resize: reset height then set to scrollHeight
+              e.target.style.height = 'auto';
+              e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+            }}
+            onKeyDown={handleKeyPress}
             placeholder="Scrivi un messaggio..."
             disabled={isSending}
-            className="flex-1 bg-gray-800/60 border border-white/10 rounded-full px-4 py-2 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors disabled:opacity-50"
+            rows={1}
+            className="flex-1 bg-gray-800/60 border border-white/10 rounded-2xl px-4 py-2 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors disabled:opacity-50 resize-none overflow-y-auto"
+            style={{ maxHeight: '120px', minHeight: '36px' }}
           />
           
           <Button

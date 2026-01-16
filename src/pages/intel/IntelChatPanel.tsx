@@ -65,7 +65,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   const MAX_RETRY_COUNT = 3;
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const sessionIdRef = useRef<string>(`session_${Date.now()}`);
   
   const { speak, stop: stopTTS, isSpeaking, unlockAudio } = useTTS();
@@ -343,7 +343,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   };
 
   // Handle key press
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -492,15 +492,21 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
       {/* Input */}
       <div className="p-4 border-t border-cyan-500/20">
         <div className="flex items-center gap-2">
-          <input
+          <textarea
             ref={inputRef}
-            type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onChange={(e) => {
+              setInput(e.target.value);
+              // Auto-resize: reset height then set to scrollHeight
+              e.target.style.height = 'auto';
+              e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+            }}
+            onKeyDown={handleKeyPress}
             placeholder="Scrivi un messaggio..."
             disabled={isLoading}
-            className="flex-1 bg-gray-800/50 border border-cyan-500/20 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors disabled:opacity-50"
+            rows={1}
+            className="flex-1 bg-gray-800/50 border border-cyan-500/20 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors disabled:opacity-50 resize-none overflow-y-auto"
+            style={{ maxHeight: '120px', minHeight: '40px' }}
           />
           <button
             onClick={sendMessage}
