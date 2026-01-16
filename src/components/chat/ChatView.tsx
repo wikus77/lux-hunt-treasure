@@ -250,12 +250,12 @@ export function ChatView({
         </div>
       </div>
 
-      {/* Input Bar - RESPONSIVE: sopra bottom nav quando tastiera chiusa, sopra tastiera quando aperta */}
+      {/* Input Bar - SEMPRE VISIBILE sopra bottom nav */}
       <div 
-        className="fixed left-0 right-0 border-t border-white/10 bg-gray-900/95 backdrop-blur-sm transition-[bottom] duration-150"
+        className="fixed left-0 right-0 border-t border-white/10 bg-gray-900/95 backdrop-blur-sm"
         style={{ 
-          bottom: isKeyboardOpen ? '0px' : 'calc(100px + env(safe-area-inset-bottom, 0px))', // ✅ 100px + safe area
-          paddingBottom: isKeyboardOpen ? 'env(safe-area-inset-bottom, 0px)' : '0px',
+          bottom: isKeyboardOpen ? '0px' : '80px', // ✅ 80px sopra il fondo (bottom nav è ~70px)
+          paddingBottom: isKeyboardOpen ? 'env(safe-area-inset-bottom, 0px)' : '8px',
           minHeight: `${inputHeight}px`,
           zIndex: 60000,
         }}
