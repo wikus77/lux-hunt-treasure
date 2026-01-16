@@ -412,35 +412,44 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
       });
     }
 
-    // Caso 1: Mai visto → mostra
-    if (!directHasSeen) {
-      if (PRIZE_INTRO_DEBUG) {
-        console.log('[PRIZE INTRO] ✅ Never seen (localStorage) - will show');
+    // ✅ FIX 16/01/2026: LOGICA SEMPLIFICATA
+    // Se l'utente ha già visto il Briefing Prize per QUALSIASI missione, NON mostrarlo di nuovo
+    // a meno che non sia una NUOVA missione DIVERSA da quella già vista
+    
+    if (directHasSeen) {
+      // Già visto almeno una volta
+      
+      // Se abbiamo sia un missionId corrente che un lastSeen, confrontiamoli
+      if (currentMissionId && directLastMissionId) {
+        if (directLastMissionId === currentMissionId) {
+          // Caso A: Stessa missione → NON mostrare
+          if (PRIZE_INTRO_DEBUG) {
+            console.log('[PRIZE INTRO] ⏭️ Already seen for this mission - skipping');
+          }
+          setIsVisible(false);
+          return;
+        } else {
+          // Caso B: Missione DIVERSA → MOSTRA (nuova missione!)
+          if (PRIZE_INTRO_DEBUG) {
+            console.log('[PRIZE INTRO] 🆕 New mission detected - will show');
+          }
+          // Continua per mostrare
+        }
+      } else {
+        // Caso C: Già visto ma manca uno dei due ID → NON mostrare (default sicuro)
+        // Questo evita di mostrare il popup ad ogni login se missionId non è disponibile
+        if (PRIZE_INTRO_DEBUG) {
+          console.log('[PRIZE INTRO] ⏭️ Already seen (missing mission context) - skipping');
+        }
+        setIsVisible(false);
+        return;
       }
-      // Continua sotto per mostrare
-    }
-    // Caso 2: Già visto per questa missione → NON mostrare
-    else if (currentMissionId && directLastMissionId === currentMissionId) {
+    } else {
+      // Mai visto → MOSTRA
       if (PRIZE_INTRO_DEBUG) {
-        console.log('[PRIZE INTRO] ⏭️ Already seen for this mission (localStorage) - skipping');
+        console.log('[PRIZE INTRO] ✅ Never seen - will show');
       }
-      setIsVisible(false);
-      return;
-    }
-    // Caso 3: Già visto ma missione diversa → mostra (nuova missione)
-    else if (currentMissionId && directLastMissionId !== currentMissionId) {
-      if (PRIZE_INTRO_DEBUG) {
-        console.log('[PRIZE INTRO] 🆕 New mission detected (localStorage) - will show');
-      }
-      // Continua sotto per mostrare
-    }
-    // Caso 4: Già visto ma nessuna missione attiva → NON mostrare
-    else if (directHasSeen && !currentMissionId) {
-      if (PRIZE_INTRO_DEBUG) {
-        console.log('[PRIZE INTRO] ⏭️ Already seen and no active mission - skipping');
-      }
-      setIsVisible(false);
-      return;
+      // Continua per mostrare
     }
 
     // Don't show if other overlays are active
@@ -517,17 +526,19 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
         const keySeenAt = `m1ssion_prizeIntroSeenAt_${user.id}`;
         const keyLastMissionId = `m1ssion_lastPrizeIntroMissionId_${user.id}`;
         
+        // ✅ FIX 16/01/2026: Salva SEMPRE sia hasSeen che lastMissionId
+        // Se currentMissionId è null, usa un placeholder che corrisponderà a "no mission"
+        const missionIdToSave = currentMissionId || '__NO_MISSION__';
+        
         localStorage.setItem(keyHasSeen, JSON.stringify(true));
         localStorage.setItem(keySeenAt, JSON.stringify(Date.now()));
-        if (currentMissionId) {
-          localStorage.setItem(keyLastMissionId, JSON.stringify(currentMissionId));
-        }
+        localStorage.setItem(keyLastMissionId, JSON.stringify(missionIdToSave));
         
         if (PRIZE_INTRO_DEBUG) {
           console.log('[PRIZE INTRO] 💾 Saved directly to localStorage:', {
             keyHasSeen,
             keyLastMissionId,
-            currentMissionId
+            missionIdToSave
           });
         }
       } catch (e) {
@@ -536,9 +547,7 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
     }
 
     // Also update store (for consistency)
-    if (currentMissionId) {
-      markPrizeIntroSeen(currentMissionId);
-    }
+    markPrizeIntroSeen(currentMissionId || '__NO_MISSION__');
     setIsVisible(false);
   }, [canDismiss, markPrizeIntroSeen, currentMissionId, user?.id]);
 

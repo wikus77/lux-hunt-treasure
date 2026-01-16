@@ -135,14 +135,24 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
       if (isOnMapPage) {
         const mapTriggers = ['map_pan', 'map_zoom', 'map_tap', 'buzz_open', 'nav_home'];
         if (mission && mapTriggers.includes(mission.trigger)) {
-          if (isHudDismissed()) {
-            console.log('[MicroMissions] 🗺️ Map ready - showing mission:', mission?.id);
-            setTimeout(() => {
-              setIsReady(true);
-              setCurrentMission(mission);
-            }, TIMING.FIRST_MISSION_DELAY_MS);
-            return true;
+          // ✅ FIX 16/01/2026: Se l'HUD non è dismissed, lo dismissiamo automaticamente
+          // Questo può succedere se l'utente non è un "nuovo utente" (isFirstSession=false)
+          // ma le MicroMissions non sono ancora completate
+          if (!isHudDismissed()) {
+            console.log('[MicroMissions] 🔧 Auto-dismissing HUD (was never shown)');
+            try {
+              localStorage.setItem('m1_map_hud_dismissed', 'true');
+            } catch (e) {
+              console.error('[MicroMissions] Failed to auto-dismiss HUD:', e);
+            }
           }
+          
+          console.log('[MicroMissions] 🗺️ Map ready - showing mission:', mission?.id);
+          setTimeout(() => {
+            setIsReady(true);
+            setCurrentMission(mission);
+          }, TIMING.FIRST_MISSION_DELAY_MS);
+          return true;
         }
       }
 
