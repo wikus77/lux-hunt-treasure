@@ -20,7 +20,7 @@ import {
   MicroMission,
   isFirstSession,
   isHudDismissed,
-  isOnboardingCompleted,
+  // isOnboardingCompleted, // ❌ RIMOSSO 16/01/2026 - OnboardingOverlay disabilitato
   getCurrentMission,
   getMissionIndex,
   advanceMission,
@@ -86,13 +86,9 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
       return;
     }
 
-    // ✅ FIX: Aspetta onboarding completato
+    // ✅ FIX 16/01/2026: Rimosso check isOnboardingCompleted() 
+    // L'OnboardingOverlay è stato disabilitato, quindi MicroMissions può partire subito
     const checkOnboardingAndInit = () => {
-      if (!isOnboardingCompleted()) {
-        console.log('[MicroMissions] ⏳ Waiting for onboarding to complete...');
-        return false;
-      }
-
       const mission = getCurrentMission();
       const isOnHomePage = location === '/home';
       const isOnMapPage = location.includes('/map');
@@ -105,8 +101,7 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
         isOnBuzzPage,
         missionId: mission?.id,
         missionTrigger: mission?.trigger,
-        missionIndex: getMissionIndex(),
-        onboardingCompleted: true
+        missionIndex: getMissionIndex()
       });
 
       // HOME PAGE: diventa ready
