@@ -362,9 +362,18 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
       return;
     }
 
+    // 🆕 FIX 16/01/2026: Aspetta che missionId sia caricato prima di decidere
+    // Se currentMissionId è null, l'hook sta ancora caricando - NON mostrare nulla
+    if (currentMissionId === null) {
+      if (PRIZE_INTRO_DEBUG) {
+        console.log('[PRIZE INTRO] ⏳ Waiting for missionId to load...');
+      }
+      return; // Non impostare isVisible, aspetta
+    }
+
     // 🆕 FIX: Check per-mission visibility (only show once per mission)
     // Pass currentMissionId to check if already seen for THIS mission
-    if (!shouldShowPrizeIntro(currentMissionId || undefined)) {
+    if (!shouldShowPrizeIntro(currentMissionId)) {
       if (PRIZE_INTRO_DEBUG) {
         console.log('[PRIZE INTRO] ⏭️ Already seen for mission:', currentMissionId);
       }
@@ -439,7 +448,9 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
     }
 
     // 🆕 FIX: Pass missionId to mark as seen for THIS specific mission
-    markPrizeIntroSeen(currentMissionId || undefined);
+    if (currentMissionId) {
+      markPrizeIntroSeen(currentMissionId);
+    }
     setIsVisible(false);
   }, [canDismiss, markPrizeIntroSeen, currentMissionId]);
 

@@ -109,8 +109,13 @@ export const useHierarchyRank = (): UseHierarchyRankReturn => {
         
         console.log(`[HierarchyRank] Check rank up: currentLevel=${currentLevel.level}, lastSeen=${lastSeenLevel}`);
         
-        if (currentLevel.level > lastSeenLevel) {
-          // L'utente ha raggiunto un nuovo livello che non ha ancora visto!
+        // 🆕 FIX 16/01/2026: Se lastSeenLevel è 0 (mai salvato), salva il livello corrente
+        // senza mostrare il popup. Questo evita che utenti esistenti vedano il popup ogni login.
+        if (lastSeenLevel === 0 && currentLevel.level > 0) {
+          console.log(`[HierarchyRank] 🔧 First time check - saving current level ${currentLevel.level} without popup`);
+          saveLastSeenLevel(currentLevel.level);
+        } else if (currentLevel.level > lastSeenLevel) {
+          // L'utente ha VERAMENTE raggiunto un nuovo livello (non è il primo check)
           console.log(`🎖️ [HierarchyRank] NEW RANK DETECTED! ${currentLevel.name} (level ${currentLevel.level})`);
           setPendingRankUp(currentLevel);
         }
