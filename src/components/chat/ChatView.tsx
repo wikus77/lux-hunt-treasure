@@ -54,22 +54,44 @@ export function ChatView({
     setTimeout(() => inputRef.current?.focus(), 100);
   }, []);
 
-  // ✅ Detect keyboard open/close using visualViewport API
+  // ✅ Detect keyboard open/close using focus/blur + visualViewport
   useEffect(() => {
+    const input = inputRef.current;
+    
+    // Focus = tastiera aperta (immediato!)
+    const handleFocus = () => setIsKeyboardOpen(true);
+    // Blur = tastiera chiusa
+    const handleBlur = () => {
+      // Piccolo delay per evitare flickering se l'utente tocca altrove e ritorna
+      setTimeout(() => {
+        if (document.activeElement !== inputRef.current) {
+          setIsKeyboardOpen(false);
+        }
+      }, 100);
+    };
+    
+    // Backup: visualViewport per casi edge
     const handleResize = () => {
-      if (window.visualViewport) {
-        // Se l'altezza del viewport è significativamente minore dello schermo, la tastiera è aperta
+      if (window.visualViewport && document.activeElement === inputRef.current) {
         const keyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
         setIsKeyboardOpen(keyboardOpen);
       }
     };
 
+    if (input) {
+      input.addEventListener('focus', handleFocus);
+      input.addEventListener('blur', handleBlur);
+    }
+    
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleResize);
-      handleResize(); // Check initial state
     }
 
     return () => {
+      if (input) {
+        input.removeEventListener('focus', handleFocus);
+        input.removeEventListener('blur', handleBlur);
+      }
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleResize);
       }
@@ -263,6 +285,13 @@ export function ChatView({
             placeholder="Scrivi un messaggio..."
             disabled={isSending}
             rows={1}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="sentences"
+            spellCheck={false}
+            inputMode="text"
+            data-form-type="other"
+            data-lpignore="true"
             className="flex-1 bg-gray-800/60 border border-white/10 rounded-2xl px-4 py-2 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors disabled:opacity-50 resize-none overflow-y-auto"
             style={{ maxHeight: '120px', minHeight: '36px' }}
           />
