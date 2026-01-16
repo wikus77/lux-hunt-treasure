@@ -146,6 +146,14 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
     setIsVisible(false);
   }, []);
 
+  // 🆕 FIX 16/01/2026: Handle swipe up to dismiss (MUST be before early return!)
+  const handleDragEnd = useCallback((_: any, info: { offset: { y: number }; velocity: { y: number } }) => {
+    // Se l'utente fa swipe verso l'alto (y negativo) con velocità o distanza sufficiente
+    if (info.offset.y < -50 || info.velocity.y < -300) {
+      setIsVisible(false);
+    }
+  }, []);
+
   // Auto-dismiss after 5 seconds
   useEffect(() => {
     if (isVisible) {
@@ -169,14 +177,6 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
   };
 
   if (!message || typeof document === 'undefined') return null;
-
-  // 🆕 FIX 16/01/2026: Handle swipe up to dismiss
-  const handleDragEnd = useCallback((_: any, info: { offset: { y: number }; velocity: { y: number } }) => {
-    // Se l'utente fa swipe verso l'alto (y negativo) con velocità o distanza sufficiente
-    if (info.offset.y < -50 || info.velocity.y < -300) {
-      setIsVisible(false);
-    }
-  }, []);
 
   return createPortal(
     <AnimatePresence>
