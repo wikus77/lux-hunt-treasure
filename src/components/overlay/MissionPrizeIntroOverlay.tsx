@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { usePrizeIntroStore, PRIZE_INTRO_DEBUG } from '@/stores/prizeIntroStore';
 import { useEntityOverlayStore } from '@/stores/entityOverlayStore';
+import { useActiveMissionEnrollment } from '@/hooks/useActiveMissionEnrollment'; // 🆕 FIX: Per collegare al missionId
 import {
   CURRENT_MISSION_PRIZES,
   PRIZE_INTRO_MODE,
@@ -314,8 +315,11 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
   // Auth state
   const { isAuthenticated, user } = useUnifiedAuth();
   
+  // 🆕 FIX: Get current mission ID to track per-mission visibility
+  const { missionId: currentMissionId } = useActiveMissionEnrollment();
+  
   // Store state
-  const hasSeenPrizeIntro = usePrizeIntroStore((s) => s.hasSeenPrizeIntro);
+  const shouldShowPrizeIntro = usePrizeIntroStore((s) => s.shouldShowPrizeIntro);
   const markPrizeIntroSeen = usePrizeIntroStore((s) => s.markPrizeIntroSeen);
   const isSequenceComplete = usePrizeIntroStore((s) => s.isSequenceComplete);
   const markSequenceComplete = usePrizeIntroStore((s) => s.markSequenceComplete);
@@ -358,8 +362,12 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
       return;
     }
 
-    // Don't show if already seen
-    if (hasSeenPrizeIntro) {
+    // 🆕 FIX: Check per-mission visibility (only show once per mission)
+    // Pass currentMissionId to check if already seen for THIS mission
+    if (!shouldShowPrizeIntro(currentMissionId || undefined)) {
+      if (PRIZE_INTRO_DEBUG) {
+        console.log('[PRIZE INTRO] ⏭️ Already seen for mission:', currentMissionId);
+      }
       setIsVisible(false);
       return;
     }
@@ -381,7 +389,7 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
     }, PRIZE_INTRO_TIMING.INITIAL_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [isAuthenticated, user, hasSeenPrizeIntro, isShadowOverlayVisible, isMissionIntroActive, isIntroActive]);
+  }, [isAuthenticated, user, shouldShowPrizeIntro, currentMissionId, isShadowOverlayVisible, isMissionIntroActive, isIntroActive]);
 
   // Cinematic mode: Auto-advance prizes
   useEffect(() => {
@@ -427,12 +435,13 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
     if (!canDismiss && PRIZE_INTRO_MODE === 'cinematic') return;
 
     if (PRIZE_INTRO_DEBUG) {
-      console.log('[PRIZE INTRO] 🎯 User clicked CTA - entering hunt');
+      console.log('[PRIZE INTRO] 🎯 User clicked CTA - entering hunt, missionId:', currentMissionId);
     }
 
-    markPrizeIntroSeen();
+    // 🆕 FIX: Pass missionId to mark as seen for THIS specific mission
+    markPrizeIntroSeen(currentMissionId || undefined);
     setIsVisible(false);
-  }, [canDismiss, markPrizeIntroSeen]);
+  }, [canDismiss, markPrizeIntroSeen, currentMissionId]);
 
   // Don't render if not visible
   if (!isVisible) return null;
