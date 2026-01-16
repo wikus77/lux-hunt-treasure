@@ -355,6 +355,10 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
 
+  // 🔥 FIX 16/01/2026: State per DB check
+  const [dbCheckDone, setDbCheckDone] = useState(false);
+  const [alreadySeenInDb, setAlreadySeenInDb] = useState(false);
+
   // Determine if we should show the overlay
   useEffect(() => {
     // Don't show if not authenticated
@@ -363,7 +367,7 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
       return;
     }
 
-    // 🆕 FIX 16/01/2026: Aspetta che la missione sia caricata
+    // Aspetta che la missione sia caricata
     if (missionLoading) {
       if (PRIZE_INTRO_DEBUG) {
         console.log('[PRIZE INTRO] ⏳ Mission still loading...');
@@ -371,85 +375,70 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
       return;
     }
 
-    // 🔥 FIX 16/01/2026: LEGGI DIRETTAMENTE DAL LOCALSTORAGE
-    // Lo store potrebbe non essere ancora sincronizzato a causa del race condition
-    const directHasSeenKey = `m1ssion_hasSeenPrizeIntro_${user.id}`;
-    const directLastMissionKey = `m1ssion_lastPrizeIntroMissionId_${user.id}`;
-    const legacyHasSeenKey = 'm1ssion_hasSeenPrizeIntro';
-    
-    let directHasSeen = false;
-    let directLastMissionId: string | null = null;
-    
-    try {
-      // Prima prova chiave user-specific
-      const userSpecific = localStorage.getItem(directHasSeenKey);
-      if (userSpecific) {
-        directHasSeen = JSON.parse(userSpecific);
-      } else {
-        // Fallback a chiave legacy
-        const legacy = localStorage.getItem(legacyHasSeenKey);
-        if (legacy) {
-          directHasSeen = JSON.parse(legacy);
-        }
-      }
-      
-      // Leggi last mission ID
-      const lastMission = localStorage.getItem(directLastMissionKey);
-      if (lastMission) {
-        directLastMissionId = JSON.parse(lastMission);
-      }
-    } catch (e) {
-      // Ignore parsing errors
-    }
-
-    if (PRIZE_INTRO_DEBUG) {
-      console.log('[PRIZE INTRO] 🔍 DIRECT localStorage check:', {
-        directHasSeen,
-        directLastMissionId,
-        currentMissionId,
-        storeHasSeen: hasSeenPrizeIntro,
-        storeLastMission: lastSeenMissionId
-      });
-    }
-
-    // ✅ FIX 16/01/2026: LOGICA SEMPLIFICATA
-    // Se l'utente ha già visto il Briefing Prize per QUALSIASI missione, NON mostrarlo di nuovo
-    // a meno che non sia una NUOVA missione DIVERSA da quella già vista
-    
-    if (directHasSeen) {
-      // Già visto almeno una volta
-      
-      // Se abbiamo sia un missionId corrente che un lastSeen, confrontiamoli
-      if (currentMissionId && directLastMissionId) {
-        if (directLastMissionId === currentMissionId) {
-          // Caso A: Stessa missione → NON mostrare
-          if (PRIZE_INTRO_DEBUG) {
-            console.log('[PRIZE INTRO] ⏭️ Already seen for this mission - skipping');
-          }
-          setIsVisible(false);
-          return;
-        } else {
-          // Caso B: Missione DIVERSA → MOSTRA (nuova missione!)
-          if (PRIZE_INTRO_DEBUG) {
-            console.log('[PRIZE INTRO] 🆕 New mission detected - will show');
-          }
-          // Continua per mostrare
-        }
-      } else {
-        // Caso C: Già visto ma manca uno dei due ID → NON mostrare (default sicuro)
-        // Questo evita di mostrare il popup ad ogni login se missionId non è disponibile
+    // 🔥 FIX 16/01/2026: CHECK DAL DATABASE (persiste anche dopo reinstallazione!)
+    // Importa supabase inline per evitare problemi di dipendenze circolari
+    const checkDatabase = async () => {
+      if (!currentMissionId) {
         if (PRIZE_INTRO_DEBUG) {
-          console.log('[PRIZE INTRO] ⏭️ Already seen (missing mission context) - skipping');
+          console.log('[PRIZE INTRO] ⚠️ No mission ID available, skipping DB check');
         }
-        setIsVisible(false);
+        // Se non c'è missione, non mostrare
+        setDbCheckDone(true);
+        setAlreadySeenInDb(true); // Default sicuro: non mostrare
         return;
       }
-    } else {
-      // Mai visto → MOSTRA
-      if (PRIZE_INTRO_DEBUG) {
-        console.log('[PRIZE INTRO] ✅ Never seen - will show');
+
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        
+        // Chiama la RPC per verificare se già visto per questa missione
+        const { data, error } = await supabase.rpc('check_prize_intro_seen', {
+          p_mission_id: currentMissionId
+        });
+
+        if (error) {
+          console.error('[PRIZE INTRO] ❌ DB check error:', error);
+          // In caso di errore, fallback al localStorage
+          const localKey = `m1ssion_hasSeenPrizeIntro_${user.id}`;
+          const localLastMission = `m1ssion_lastPrizeIntroMissionId_${user.id}`;
+          try {
+            const hasSeen = localStorage.getItem(localKey) === 'true';
+            const lastMission = localStorage.getItem(localLastMission);
+            setAlreadySeenInDb(hasSeen && lastMission === currentMissionId);
+          } catch {
+            setAlreadySeenInDb(false);
+          }
+        } else {
+          // data = true se già visto, false se non visto
+          setAlreadySeenInDb(!!data);
+          if (PRIZE_INTRO_DEBUG) {
+            console.log('[PRIZE INTRO] 🔍 DB check result:', { 
+              missionId: currentMissionId, 
+              alreadySeen: !!data 
+            });
+          }
+        }
+      } catch (err) {
+        console.error('[PRIZE INTRO] ❌ DB check exception:', err);
+        setAlreadySeenInDb(false); // In caso di errore, mostra
       }
-      // Continua per mostrare
+      
+      setDbCheckDone(true);
+    };
+
+    checkDatabase();
+  }, [isAuthenticated, user, currentMissionId, missionLoading]);
+
+  // Mostra overlay dopo che il DB check è completato
+  useEffect(() => {
+    if (!dbCheckDone) return;
+    
+    if (alreadySeenInDb) {
+      if (PRIZE_INTRO_DEBUG) {
+        console.log('[PRIZE INTRO] ⏭️ Already seen in DB - skipping');
+      }
+      setIsVisible(false);
+      return;
     }
 
     // Don't show if other overlays are active
@@ -469,7 +458,7 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
     }, PRIZE_INTRO_TIMING.INITIAL_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [isAuthenticated, user, hasSeenPrizeIntro, lastSeenMissionId, currentMissionId, missionLoading, isShadowOverlayVisible, isMissionIntroActive, isIntroActive]);
+  }, [dbCheckDone, alreadySeenInDb, currentMissionId, isShadowOverlayVisible, isMissionIntroActive, isIntroActive]);
 
   // Cinematic mode: Auto-advance prizes
   useEffect(() => {
@@ -511,42 +500,46 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
   }, []);
 
   // Handle CTA click
-  const handleEnterHunt = useCallback(() => {
+  const handleEnterHunt = useCallback(async () => {
     if (!canDismiss && PRIZE_INTRO_MODE === 'cinematic') return;
 
     if (PRIZE_INTRO_DEBUG) {
       console.log('[PRIZE INTRO] 🎯 User clicked CTA - entering hunt, missionId:', currentMissionId, 'userId:', user?.id);
     }
 
-    // 🔥 FIX 16/01/2026: Salva DIRETTAMENTE nel localStorage con user.id
-    // per evitare problemi di race condition con lo store
-    if (user?.id) {
+    // 🔥 FIX 16/01/2026: SALVA NEL DATABASE (persiste dopo reinstallazione!)
+    if (user?.id && currentMissionId) {
       try {
-        const keyHasSeen = `m1ssion_hasSeenPrizeIntro_${user.id}`;
-        const keySeenAt = `m1ssion_prizeIntroSeenAt_${user.id}`;
-        const keyLastMissionId = `m1ssion_lastPrizeIntroMissionId_${user.id}`;
+        const { supabase } = await import('@/integrations/supabase/client');
         
-        // ✅ FIX 16/01/2026: Salva SEMPRE sia hasSeen che lastMissionId
-        // Se currentMissionId è null, usa un placeholder che corrisponderà a "no mission"
-        const missionIdToSave = currentMissionId || '__NO_MISSION__';
-        
-        localStorage.setItem(keyHasSeen, JSON.stringify(true));
-        localStorage.setItem(keySeenAt, JSON.stringify(Date.now()));
-        localStorage.setItem(keyLastMissionId, JSON.stringify(missionIdToSave));
-        
-        if (PRIZE_INTRO_DEBUG) {
-          console.log('[PRIZE INTRO] 💾 Saved directly to localStorage:', {
-            keyHasSeen,
-            keyLastMissionId,
-            missionIdToSave
-          });
+        // Chiama la RPC per segnare come visto nel DB
+        const { error } = await supabase.rpc('mark_prize_intro_seen', {
+          p_mission_id: currentMissionId
+        });
+
+        if (error) {
+          console.error('[PRIZE INTRO] ❌ DB save error:', error);
+        } else {
+          if (PRIZE_INTRO_DEBUG) {
+            console.log('[PRIZE INTRO] 💾 Saved to DATABASE for mission:', currentMissionId);
+          }
         }
       } catch (e) {
-        console.error('[PRIZE INTRO] ❌ Failed to save to localStorage:', e);
+        console.error('[PRIZE INTRO] ❌ Failed to save to DB:', e);
+      }
+      
+      // Salva anche nel localStorage come cache (per velocità al prossimo accesso)
+      try {
+        const keyHasSeen = `m1ssion_hasSeenPrizeIntro_${user.id}`;
+        const keyLastMissionId = `m1ssion_lastPrizeIntroMissionId_${user.id}`;
+        localStorage.setItem(keyHasSeen, 'true');
+        localStorage.setItem(keyLastMissionId, currentMissionId);
+      } catch (e) {
+        // Ignore localStorage errors
       }
     }
 
-    // Also update store (for consistency)
+    // Update store (for consistency)
     markPrizeIntroSeen(currentMissionId || '__NO_MISSION__');
     setIsVisible(false);
   }, [canDismiss, markPrizeIntroSeen, currentMissionId, user?.id]);

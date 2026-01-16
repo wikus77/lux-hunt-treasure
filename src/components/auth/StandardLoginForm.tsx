@@ -80,8 +80,9 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         } catch {}
       }
       
-      // If no specific redirect, go to home
-      const finalTarget = target || '/home';
+      // 🔥 FIX 16/01/2026: Redirect alla MAPPA invece che alla Home
+      // Così le MicroMissions partono subito dopo il login
+      const finalTarget = target || '/map-3d-tiler';
       console.log('🚀 [StandardLoginForm] REDIRECTING TO:', finalTarget);
       
       navigate(finalTarget);
