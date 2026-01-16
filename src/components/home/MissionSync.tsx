@@ -1,7 +1,9 @@
 // © 2025 M1SSION™ – Mission Sync Pull-to-Refresh
 import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw } from 'lucide-react';
+
+// Logo M1 ufficiale
+const M1_LOGO_URL = '/icons/icon-m1-512x512.png';
 
 interface MissionSyncProps {
   onRefresh: () => Promise<void>;
@@ -96,46 +98,37 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
             transition={{ duration: 0.2 }}
             style={{ top: 0 }}
           >
-            <div 
+            {/* M1 Logo - Solo logo, nessun testo */}
+            <motion.div
               className={`
-                flex flex-col items-center justify-center p-3 rounded-full
-                ${shouldTrigger || isRefreshing ? 'bg-cyan-500/20' : 'bg-white/10'}
-                backdrop-blur-md border border-white/20
-                transition-colors duration-200
+                flex items-center justify-center rounded-full overflow-hidden
+                ${shouldTrigger || isRefreshing ? 'ring-2 ring-cyan-400/60' : ''}
+                transition-all duration-200
               `}
+              animate={{ 
+                scale: isRefreshing ? [1, 1.1, 1] : shouldTrigger ? 1.1 : 0.9 + progress * 0.2,
+                rotate: isRefreshing ? 360 : 0
+              }}
+              transition={{ 
+                scale: isRefreshing 
+                  ? { duration: 0.8, repeat: Infinity, ease: 'easeInOut' } 
+                  : { duration: 0.2 },
+                rotate: isRefreshing 
+                  ? { duration: 1.5, repeat: Infinity, ease: 'linear' } 
+                  : { duration: 0 }
+              }}
             >
-              <motion.div
-                animate={{ 
-                  rotate: isRefreshing ? 360 : progress * 180,
-                  scale: shouldTrigger || isRefreshing ? 1.1 : 1
+              <img 
+                src={M1_LOGO_URL} 
+                alt="M1" 
+                className="w-12 h-12 object-contain"
+                style={{
+                  filter: shouldTrigger || isRefreshing 
+                    ? 'drop-shadow(0 0 10px rgba(0, 209, 255, 0.8))' 
+                    : 'none'
                 }}
-                transition={{ 
-                  rotate: isRefreshing 
-                    ? { duration: 1, repeat: Infinity, ease: 'linear' } 
-                    : { duration: 0.1 },
-                  scale: { duration: 0.2 }
-                }}
-              >
-                <RefreshCw 
-                  className={`w-6 h-6 ${shouldTrigger || isRefreshing ? 'text-cyan-400' : 'text-white/60'}`} 
-                />
-              </motion.div>
-            </div>
-            
-            <motion.span 
-              className={`
-                mt-2 text-xs font-medium tracking-wider
-                ${shouldTrigger || isRefreshing ? 'text-cyan-400' : 'text-white/50'}
-              `}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: progress > 0.3 ? 1 : 0 }}
-            >
-              {isRefreshing 
-                ? 'SYNCING...' 
-                : shouldTrigger 
-                  ? 'RELEASE' 
-                  : 'MISSION SYNC'}
-            </motion.span>
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -229,39 +229,30 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
                 />
               </div>
 
-              {/* Close button */}
-              <button
-                onClick={handleClose}
-                className="absolute top-5 right-5 w-12 h-12 rounded-full flex items-center justify-center z-10"
-                style={{ background: 'rgba(255,255,255,0.15)' }}
-              >
-                <X className="w-6 h-6 text-white/80" />
-              </button>
-
-              {/* Content - layout 50% più grande del precedente */}
-              <div className="relative px-6 pb-8 pt-4">
-                <div className="flex items-center gap-6">
-                  {/* Icon - ancora 50% più grande */}
+              {/* Content - GRANDE + TESTI PRIORITARI */}
+              <div className="relative px-6 pb-8 pt-2">
+                <div className="flex items-start gap-5">
+                  {/* Icon - media, bilanciata */}
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', delay: 0.1 }}
-                    className="w-28 h-28 rounded-3xl flex-shrink-0 flex items-center justify-center"
+                    className="w-16 h-16 rounded-2xl flex-shrink-0 flex items-center justify-center"
                     style={{
                       background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
-                      boxShadow: '0 8px 40px rgba(0, 255, 136, 0.6)',
+                      boxShadow: '0 6px 25px rgba(0, 255, 136, 0.5)',
                     }}
                   >
-                    <span className="text-black scale-150">{getIcon()}</span>
+                    <span className="text-black scale-110">{getIcon()}</span>
                   </motion.div>
 
-                  {/* Text content - testo ancora più grande */}
-                  <div className="flex-1 min-w-0">
+                  {/* Text content - PRIORITÀ MASSIMA, testi grandi e completi */}
+                  <div className="flex-1 pr-2">
                     <motion.h2
-                      initial={{ x: 20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
+                      initial={{ y: 10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.15 }}
-                      className="text-2xl font-bold"
+                      className="text-2xl font-bold leading-tight"
                       style={{
                         color: '#00FF88',
                         textShadow: '0 0 20px rgba(0, 255, 136, 0.6)',
@@ -271,30 +262,14 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
                     </motion.h2>
 
                     <motion.p
-                      initial={{ x: 20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
+                      initial={{ y: 10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.2 }}
-                      className="text-white/80 text-lg mt-2 line-clamp-2"
+                      className="text-white/90 text-lg mt-3 leading-relaxed"
                     >
                       {message.description}
                     </motion.p>
                   </div>
-
-                  {/* Arrow/CTA - 50% più grande */}
-                  <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    onClick={handleClose}
-                    whileTap={{ scale: 0.9 }}
-                    className="w-20 h-20 rounded-full flex-shrink-0 flex items-center justify-center"
-                    style={{
-                      background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
-                      boxShadow: '0 6px 30px rgba(0, 255, 136, 0.5)',
-                    }}
-                  >
-                    <ChevronRight className="w-10 h-10 text-black" />
-                  </motion.button>
                 </div>
 
                 {/* Progress bar for auto-dismiss */}
