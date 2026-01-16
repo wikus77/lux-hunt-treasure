@@ -74,15 +74,69 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
     };
   }, [isMissionVisible, registerActivePopup, unregisterActivePopup]);
 
+  // 🔥 FIX 16/01/2026: State per DB check (anti-exploit!)
+  const [dbCheckDone, setDbCheckDone] = useState(false);
+  const [alreadyCompletedInDb, setAlreadyCompletedInDb] = useState(false);
+
+  // 🔥 FIX 16/01/2026: CHECK DAL DATABASE se MicroMissions già completate
+  useEffect(() => {
+    const checkDatabase = async () => {
+      try {
+        const { data, error } = await supabase.rpc('check_micro_missions_completed');
+        
+        if (error) {
+          console.error('[MicroMissions] ❌ DB check error:', error);
+          // Fallback al localStorage
+          const localCompleted = localStorage.getItem('m1_micro_missions_completed') === 'true';
+          setAlreadyCompletedInDb(localCompleted);
+        } else {
+          const completed = data?.completed === true;
+          const rewarded = data?.rewarded === true;
+          setAlreadyCompletedInDb(completed || rewarded);
+          
+          if (completed || rewarded) {
+            console.log('[MicroMissions] ✅ Already completed in DB - skipping');
+            // Sincronizza localStorage con DB
+            localStorage.setItem('m1_micro_missions_completed', 'true');
+            localStorage.setItem('m1_micro_missions_rewarded', 'true');
+          }
+        }
+      } catch (err) {
+        console.error('[MicroMissions] ❌ DB check exception:', err);
+        setAlreadyCompletedInDb(false);
+      }
+      setDbCheckDone(true);
+    };
+
+    if (MICRO_MISSIONS_ENABLED) {
+      checkDatabase();
+    } else {
+      setDbCheckDone(true);
+      setAlreadyCompletedInDb(true);
+    }
+  }, []);
+
   // ✅ INIT: Carica missione e diventa ready in base alla pagina
-  // ✅ FIX 23/12/2025: Aspetta che l'onboarding sia completato
   useEffect(() => {
     if (!MICRO_MISSIONS_ENABLED) {
       console.log('[MicroMissions] ❌ Disabled');
       return;
     }
+    
+    // 🔥 FIX 16/01/2026: Aspetta DB check
+    if (!dbCheckDone) {
+      console.log('[MicroMissions] ⏳ Waiting for DB check...');
+      return;
+    }
+    
+    // 🔥 FIX 16/01/2026: Se già completate nel DB, non mostrare
+    if (alreadyCompletedInDb) {
+      console.log('[MicroMissions] ✅ Already completed in DB - not showing');
+      return;
+    }
+    
     if (areMissionsCompleted()) {
-      console.log('[MicroMissions] ✅ All missions completed');
+      console.log('[MicroMissions] ✅ All missions completed (localStorage)');
       return;
     }
 
@@ -170,7 +224,7 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
     }, 500);
 
     return () => clearInterval(interval);
-  }, [location]);
+  }, [location, dbCheckDone, alreadyCompletedInDb]);
 
   // ✅ FIX 23/12/2025: Funzione per evidenziare elemento E scrollare verso di esso
   // ✅ FIX: Scroll in modo che l'elemento sia visibile SOTTO il popup
@@ -1053,57 +1107,45 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
               onClick={async () => {
-                // ✅ FIX 23/12/2025: Accredita 50 M1U SOLO UNA VOLTA per utente
-                const alreadyRewarded = localStorage.getItem(MICRO_MISSIONS_REWARDED_KEY) === 'true';
+                // 🔥 FIX 16/01/2026: Usa RPC per dare ricompensa (ANTI-EXPLOIT!)
+                // La RPC controlla nel DB se già premiato, impossibile aggirare!
+                console.log('[MicroMissions] 🎰 Calling RPC to complete and reward...');
                 
-                if (!alreadyRewarded) {
-                  console.log('[MicroMissions] 🎰 Crediting reward (first time):', MICRO_MISSIONS_REWARD_M1U, 'M1U');
+                try {
+                  const { data, error } = await supabase.rpc('complete_micro_missions_and_reward');
                   
-                  try {
-                    // ✅ FIX: Accredita REALMENTE i M1U nel database
-                    const { data: authData } = await supabase.auth.getUser();
-                    if (authData?.user?.id) {
-                      // Leggi saldo attuale
-                      const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('m1_units')
-                        .eq('id', authData.user.id)
-                        .single();
+                  if (error) {
+                    console.error('[MicroMissions] ❌ RPC error:', error);
+                    // In caso di errore, segna comunque come completato in localStorage
+                    localStorage.setItem(MICRO_MISSIONS_REWARDED_KEY, 'true');
+                    localStorage.setItem('m1_micro_missions_completed', 'true');
+                  } else {
+                    const result = data as { success: boolean; reason?: string; reward?: number; message?: string };
+                    
+                    if (result.success) {
+                      console.log('[MicroMissions] ✅ Reward credited via RPC:', result);
                       
-                      const currentBalance = profile?.m1_units || 0;
-                      const newBalance = currentBalance + MICRO_MISSIONS_REWARD_M1U;
-                      
-                      // Aggiorna saldo
-                      const { error: updateError } = await supabase
-                        .from('profiles')
-                        .update({ 
-                          m1_units: newBalance,
-                          updated_at: new Date().toISOString()
-                        })
-                        .eq('id', authData.user.id);
-                      
-                      if (!updateError) {
-                        console.log('[MicroMissions] ✅ M1U credited successfully:', { oldBalance: currentBalance, newBalance });
-                        
-                        // ✅ FIX: Dispatch evento m1u-credited per animazione slot machine
-                        window.dispatchEvent(new CustomEvent('m1u-credited', {
-                          detail: { amount: MICRO_MISSIONS_REWARD_M1U }
-                        }));
-                        
-                        // Segna come già premiato
-                        localStorage.setItem(MICRO_MISSIONS_REWARDED_KEY, 'true');
-                      } else {
-                        console.error('[MicroMissions] ❌ Failed to credit M1U:', updateError);
-                      }
+                      // Dispatch evento per animazione slot machine
+                      window.dispatchEvent(new CustomEvent('m1u-credited', {
+                        detail: { amount: result.reward || MICRO_MISSIONS_REWARD_M1U }
+                      }));
+                    } else {
+                      console.log('[MicroMissions] ℹ️ RPC returned success=false:', result.reason, result.message);
+                      // Già premiato in precedenza - va bene, non è un errore
                     }
-                  } catch (err) {
-                    console.error('[MicroMissions] ❌ Error crediting M1U:', err);
+                    
+                    // Sincronizza localStorage con DB
+                    localStorage.setItem(MICRO_MISSIONS_REWARDED_KEY, 'true');
+                    localStorage.setItem('m1_micro_missions_completed', 'true');
                   }
-                } else {
-                  console.log('[MicroMissions] ℹ️ User already rewarded, skipping credit');
+                } catch (err) {
+                  console.error('[MicroMissions] ❌ Exception calling RPC:', err);
+                  // Fallback: segna come completato in localStorage
+                  localStorage.setItem(MICRO_MISSIONS_REWARDED_KEY, 'true');
+                  localStorage.setItem('m1_micro_missions_completed', 'true');
                 }
                 
-                // ✅ FIX 23/12/2025: Scroll in alto della pagina Home
+                // Scroll in alto della pagina Home
                 setTimeout(() => {
                   window.scrollTo({
                     top: 0,
