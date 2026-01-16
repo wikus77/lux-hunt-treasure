@@ -14,7 +14,9 @@ export function consumePostLoginRedirect(): string | null {
 }
 
 export function postLoginRedirectFixed(navigate: (path: string) => void) {
-  const target = consumePostLoginRedirect() || '/home';
+  // 🔥 FIX 16/01/2026: Redirect alla MAPPA invece che alla Home
+  // Così le MicroMissions partono subito dopo il login
+  const target = consumePostLoginRedirect() || '/map-3d-tiler';
   console.log('🚀 postLoginRedirectFixed →', target);
   try {
     navigate(target);
