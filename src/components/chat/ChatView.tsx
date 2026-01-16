@@ -158,16 +158,19 @@ export function ChatView({
 
   return (
     <div 
-      className="fixed inset-0 bg-[#070818] flex flex-col"
+      className="fixed inset-0 bg-[#070818] overflow-hidden"
       style={{
-        paddingTop: `calc(72px + ${safeAreaTop})`, // UnifiedHeader height
-        zIndex: 50000, // ✅ Sopra TUTTO inclusa bottom nav
+        zIndex: 50000,
       }}
     >
-      {/* Chat Header - FIXED */}
+      {/* Chat Header - FIXED ASSOLUTO (non si muove MAI) */}
       <div 
-        className="flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-gray-900/95 backdrop-blur-sm shrink-0"
-        style={{ height: `${headerHeight}px` }}
+        className="fixed left-0 right-0 flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-gray-900/95 backdrop-blur-sm"
+        style={{ 
+          top: `calc(72px + ${safeAreaTop})`,
+          height: `${headerHeight}px`,
+          zIndex: 60001,
+        }}
       >
         <Button
           variant="ghost"
@@ -201,10 +204,12 @@ export function ChatView({
 
       {/* Messages Container - SCROLLABLE ONLY THIS PART */}
       <div 
-        className="flex-1 overflow-y-auto overscroll-contain"
+        className="absolute left-0 right-0 overflow-y-auto overscroll-contain"
         style={{
-          paddingBottom: `calc(${inputHeight}px + 100px + env(safe-area-inset-bottom, 0px) + 16px)`, // Input + bottom nav + safe area + margin
+          top: `calc(72px + ${safeAreaTop} + ${headerHeight}px)`, // Sotto UnifiedHeader + Chat Header
+          bottom: `calc(${inputHeight}px + 80px + env(safe-area-inset-bottom, 34px))`, // Sopra input bar + bottom nav
           paddingTop: '8px',
+          paddingBottom: '16px',
         }}
       >
         <div className="px-4 space-y-1">
@@ -250,11 +255,11 @@ export function ChatView({
         </div>
       </div>
 
-      {/* Input Bar - SEMPRE VISIBILE sopra bottom nav */}
+      {/* Input Bar - SEMPRE VISIBILE sopra bottom nav (64px + safe-area + 8px padding) */}
       <div 
         className="fixed left-0 right-0 border-t border-white/10 bg-gray-900/95 backdrop-blur-sm"
         style={{ 
-          bottom: isKeyboardOpen ? '0px' : '80px', // ✅ 80px sopra il fondo (bottom nav è ~70px)
+          bottom: isKeyboardOpen ? '0px' : 'calc(72px + env(safe-area-inset-bottom, 34px))',
           paddingBottom: isKeyboardOpen ? 'env(safe-area-inset-bottom, 0px)' : '8px',
           minHeight: `${inputHeight}px`,
           zIndex: 60000,
