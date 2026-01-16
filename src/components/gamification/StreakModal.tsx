@@ -27,15 +27,19 @@ interface StreakInfo {
   days_to_next_milestone: number;
 }
 
+// 🆕 FIX 16/01/2026: Aggiunto m1uReward per ogni milestone
 const MILESTONES = [
-  { days: 5, icon: '🔥', name: 'Fiamma Nascente', color: '#FF6B35' },
-  { days: 10, icon: '🔥', name: 'Fiamma Ardente', color: '#FF4500' },
-  { days: 15, icon: '🌋', name: 'Inferno', color: '#DC143C' },
-  { days: 25, icon: '⚡', name: 'Leggenda Streak', color: '#FFD700' },
-  { days: 30, icon: '🏆', name: 'Campione Missione', color: '#00D1FF' },
-  { days: 50, icon: '💎', name: 'Diamante', color: '#00BFFF' },
-  { days: 100, icon: '👑', name: 'Re della Streak', color: '#9B59B6' },
+  { days: 5, icon: '🔥', name: 'Fiamma Nascente', color: '#FF6B35', m1uReward: 25 },
+  { days: 10, icon: '🔥', name: 'Fiamma Ardente', color: '#FF4500', m1uReward: 25 },
+  { days: 15, icon: '🌋', name: 'Inferno', color: '#DC143C', m1uReward: 50 },
+  { days: 25, icon: '⚡', name: 'Leggenda Streak', color: '#FFD700', m1uReward: 75 },
+  { days: 30, icon: '🏆', name: 'Campione Missione', color: '#00D1FF', m1uReward: 100 },
+  { days: 50, icon: '💎', name: 'Diamante', color: '#00BFFF', m1uReward: 150 },
+  { days: 100, icon: '👑', name: 'Re della Streak', color: '#9B59B6', m1uReward: 300 },
 ];
+
+// 🆕 FIX 16/01/2026: M1U giornalieri per check-in
+const DAILY_M1U_REWARD = 2;
 
 export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalProps) {
   const { user } = useAuthContext();
@@ -44,6 +48,30 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
   const [streakInfo, setStreakInfo] = useState<StreakInfo | null>(null);
   const [canCheckIn, setCanCheckIn] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // 🆕 FIX 16/01/2026: Funzione per award M1U
+  const awardM1U = async (amount: number, source: string): Promise<boolean> => {
+    if (!user || amount <= 0) return false;
+    
+    try {
+      const { error } = await supabase.rpc('admin_credit_m1u', {
+        p_user_id: user.id,
+        p_amount: amount,
+        p_source: source
+      });
+      
+      if (error) {
+        console.warn('[StreakModal] M1U award failed:', error);
+        return false;
+      }
+      
+      console.log(`[StreakModal] ✅ +${amount} M1U awarded (${source})`);
+      return true;
+    } catch (err) {
+      console.error('[StreakModal] M1U award error:', err);
+      return false;
+    }
+  };
 
   useEffect(() => {
     if (isOpen && user) loadStreakInfo();
@@ -126,26 +154,41 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
         p_source: 'daily_checkin'
       });
 
+      // 🆕 FIX 16/01/2026: Award daily M1U (+2 M1U)
+      await awardM1U(DAILY_M1U_REWARD, 'streak_daily_checkin');
+      
       hapticSuccess();
       setShowSuccess(true);
       setCanCheckIn(false);
+      
+      // 🆕 FIX 16/01/2026: Check milestone e award M1U bonus
+      const milestone = MILESTONES.find(m => m.days === newStreak);
+      let totalM1U = DAILY_M1U_REWARD;
+      
+      if (milestone) {
+        const milestoneAwarded = await awardM1U(milestone.m1uReward, `streak_milestone_${milestone.days}`);
+        if (milestoneAwarded) {
+          totalM1U += milestone.m1uReward;
+          toast.success(`🎉 ${milestone.name}! +${milestone.m1uReward} M1U!`, { duration: 5000 });
+        } else {
+          toast.success(`🎉 Nuovo badge sbloccato: ${milestone.name}!`);
+        }
+      } else if (streakBroken) {
+        toast.warning('⚠️ Streak resettata! Ricomincia da 1');
+      } else {
+        toast.success(`🔥 Streak: ${newStreak} giorni! +${DAILY_M1U_REWARD} M1U`, { duration: 3000 });
+      }
+      
+      // 🆕 FIX 16/01/2026: Dispatch evento per animazione slot machine M1UPill
+      window.dispatchEvent(new CustomEvent('m1u-credited', { 
+        detail: { amount: totalM1U } 
+      }));
       
       setTimeout(() => {
         setShowSuccess(false);
         onCheckInComplete?.();
         loadStreakInfo();
       }, 2000);
-
-      if (streakBroken) {
-        toast.warning('⚠️ Streak resettata! Ricomincia da 1');
-      } else {
-        const milestone = MILESTONES.find(m => m.days === newStreak);
-        if (milestone) {
-          toast.success(`🎉 Badge sbloccato: ${milestone.name}!`);
-        } else {
-          toast.success(`🔥 Streak: ${newStreak} giorni! +${peAwarded} PE`);
-        }
-      }
 
     } catch (err) {
       console.error('Check-in error:', err);
