@@ -206,7 +206,7 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
             style={{ touchAction: 'none' }}
           >
             <div 
-              className="mx-4 mt-4 rounded-3xl overflow-hidden relative"
+              className="mx-3 mt-3 rounded-3xl overflow-hidden relative"
               style={{
                 background: 'linear-gradient(145deg, rgba(0, 40, 40, 0.98), rgba(0, 60, 60, 0.95))',
                 border: '2px solid rgba(0, 255, 136, 0.5)',
@@ -222,9 +222,9 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
               />
 
               {/* 🆕 Swipe indicator (drag handle) */}
-              <div className="flex justify-center pt-3 pb-1">
+              <div className="flex justify-center pt-4 pb-2">
                 <div 
-                  className="w-12 h-1.5 rounded-full"
+                  className="w-16 h-2 rounded-full"
                   style={{ background: 'rgba(255,255,255,0.3)' }}
                 />
               </div>
@@ -232,36 +232,36 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
               {/* Close button */}
               <button
                 onClick={handleClose}
-                className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center z-10"
+                className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center z-10"
                 style={{ background: 'rgba(255,255,255,0.1)' }}
               >
-                <X className="w-4 h-4 text-white/70" />
+                <X className="w-5 h-5 text-white/70" />
               </button>
 
-              {/* Content - layout orizzontale compatto */}
-              <div className="relative px-4 pb-4 pt-2">
-                <div className="flex items-center gap-4">
-                  {/* Icon */}
+              {/* Content - layout orizzontale 50% più grande */}
+              <div className="relative px-5 pb-6 pt-3">
+                <div className="flex items-center gap-5">
+                  {/* Icon - 50% più grande: da 14 a 21 (w-[21] non esiste, uso w-20) */}
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', delay: 0.1 }}
-                    className="w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center"
+                    className="w-20 h-20 rounded-2xl flex-shrink-0 flex items-center justify-center"
                     style={{
                       background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
-                      boxShadow: '0 4px 20px rgba(0, 255, 136, 0.5)',
+                      boxShadow: '0 6px 30px rgba(0, 255, 136, 0.5)',
                     }}
                   >
-                    <span className="text-black">{getIcon()}</span>
+                    <span className="text-black scale-125">{getIcon()}</span>
                   </motion.div>
 
-                  {/* Text content */}
+                  {/* Text content - testo più grande */}
                   <div className="flex-1 min-w-0">
                     <motion.h2
                       initial={{ x: 20, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
                       transition={{ delay: 0.15 }}
-                      className="text-base font-bold truncate"
+                      className="text-xl font-bold truncate"
                       style={{
                         color: '#00FF88',
                         textShadow: '0 0 15px rgba(0, 255, 136, 0.5)',
@@ -274,32 +274,32 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
                       initial={{ x: 20, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
                       transition={{ delay: 0.2 }}
-                      className="text-white/70 text-sm line-clamp-2"
+                      className="text-white/70 text-base mt-1 line-clamp-2"
                     >
                       {message.description}
                     </motion.p>
                   </div>
 
-                  {/* Arrow/CTA */}
+                  {/* Arrow/CTA - 50% più grande */}
                   <motion.button
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
                     onClick={handleClose}
                     whileTap={{ scale: 0.9 }}
-                    className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center"
+                    className="w-14 h-14 rounded-full flex-shrink-0 flex items-center justify-center"
                     style={{
                       background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
-                      boxShadow: '0 2px 15px rgba(0, 255, 136, 0.4)',
+                      boxShadow: '0 4px 20px rgba(0, 255, 136, 0.4)',
                     }}
                   >
-                    <ChevronRight className="w-5 h-5 text-black" />
+                    <ChevronRight className="w-7 h-7 text-black" />
                   </motion.button>
                 </div>
 
                 {/* Progress bar for auto-dismiss */}
                 <motion.div
-                  className="absolute bottom-0 left-0 right-0 h-1 rounded-b-3xl overflow-hidden"
+                  className="absolute bottom-0 left-0 right-0 h-1.5 rounded-b-3xl overflow-hidden"
                   style={{ background: 'rgba(0, 255, 136, 0.2)' }}
                 >
                   <motion.div
