@@ -285,8 +285,8 @@ function App() {
                     <ShadowBehaviorsLayer />
                     {/* 🎬 Mission Start Sequence (fullscreen, fuori dal portal) */}
                     <MissionIntroOverlay />
-                    {/* 🚫 DISABILITATO 16/01/2026: MissionPrizeIntroOverlay causa popup ogni login */}
-                    {/* <MissionPrizeIntroOverlay /> */}
+                    {/* 🎁 Prize Intro Cinematic (shows after onboarding, before gameplay) */}
+                    <MissionPrizeIntroOverlay />
                     {/* ⚔️ TRON Battle Defense - Global listener for incoming attacks */}
                     <BattleDefenseManager />
                     <BadgeAuditReport />
