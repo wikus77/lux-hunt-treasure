@@ -316,10 +316,11 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
   const { isAuthenticated, user } = useUnifiedAuth();
   
   // 🆕 FIX: Get current mission ID to track per-mission visibility
-  const { missionId: currentMissionId } = useActiveMissionEnrollment();
+  const { missionId: currentMissionId, isLoading: missionLoading } = useActiveMissionEnrollment();
   
-  // Store state
-  const shouldShowPrizeIntro = usePrizeIntroStore((s) => s.shouldShowPrizeIntro);
+  // Store state - leggi direttamente hasSeenPrizeIntro e lastSeenMissionId
+  const hasSeenPrizeIntro = usePrizeIntroStore((s) => s.hasSeenPrizeIntro);
+  const lastSeenMissionId = usePrizeIntroStore((s) => s.lastSeenMissionId);
   const markPrizeIntroSeen = usePrizeIntroStore((s) => s.markPrizeIntroSeen);
   const isSequenceComplete = usePrizeIntroStore((s) => s.isSequenceComplete);
   const markSequenceComplete = usePrizeIntroStore((s) => s.markSequenceComplete);
@@ -362,20 +363,54 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
       return;
     }
 
-    // 🆕 FIX 16/01/2026: Aspetta che missionId sia caricato prima di decidere
-    // Se currentMissionId è null, l'hook sta ancora caricando - NON mostrare nulla
-    if (currentMissionId === null) {
+    // 🆕 FIX 16/01/2026: Aspetta che la missione sia caricata
+    if (missionLoading) {
       if (PRIZE_INTRO_DEBUG) {
-        console.log('[PRIZE INTRO] ⏳ Waiting for missionId to load...');
+        console.log('[PRIZE INTRO] ⏳ Mission still loading...');
       }
-      return; // Non impostare isVisible, aspetta
+      return;
     }
 
-    // 🆕 FIX: Check per-mission visibility (only show once per mission)
-    // Pass currentMissionId to check if already seen for THIS mission
-    if (!shouldShowPrizeIntro(currentMissionId)) {
+    // 🆕 LOGICA SEMPLIFICATA:
+    // 1. Se MAI visto (hasSeenPrizeIntro === false) → mostra
+    // 2. Se già visto E stessa missione → NON mostrare
+    // 3. Se già visto E missione diversa → mostra (nuova missione!)
+    
+    if (PRIZE_INTRO_DEBUG) {
+      console.log('[PRIZE INTRO] 🔍 Check:', {
+        hasSeenPrizeIntro,
+        lastSeenMissionId,
+        currentMissionId,
+        missionLoading
+      });
+    }
+
+    // Caso 1: Mai visto → mostra
+    if (!hasSeenPrizeIntro) {
       if (PRIZE_INTRO_DEBUG) {
-        console.log('[PRIZE INTRO] ⏭️ Already seen for mission:', currentMissionId);
+        console.log('[PRIZE INTRO] ✅ Never seen - will show');
+      }
+      // Continua sotto per mostrare
+    }
+    // Caso 2: Già visto per questa missione → NON mostrare
+    else if (currentMissionId && lastSeenMissionId === currentMissionId) {
+      if (PRIZE_INTRO_DEBUG) {
+        console.log('[PRIZE INTRO] ⏭️ Already seen for this mission - skipping');
+      }
+      setIsVisible(false);
+      return;
+    }
+    // Caso 3: Già visto ma missione diversa → mostra (nuova missione)
+    else if (currentMissionId && lastSeenMissionId !== currentMissionId) {
+      if (PRIZE_INTRO_DEBUG) {
+        console.log('[PRIZE INTRO] 🆕 New mission detected - will show');
+      }
+      // Continua sotto per mostrare
+    }
+    // Caso 4: Già visto ma nessuna missione attiva → NON mostrare
+    else if (hasSeenPrizeIntro && !currentMissionId) {
+      if (PRIZE_INTRO_DEBUG) {
+        console.log('[PRIZE INTRO] ⏭️ Already seen and no active mission - skipping');
       }
       setIsVisible(false);
       return;
@@ -389,7 +424,7 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
     // Show the overlay after a short delay
     const timer = setTimeout(() => {
       if (PRIZE_INTRO_DEBUG) {
-        console.log('[PRIZE INTRO] 🎬 Showing prize intro overlay');
+        console.log('[PRIZE INTRO] 🎬 Showing prize intro overlay for mission:', currentMissionId);
       }
       setIsVisible(true);
       
@@ -398,7 +433,7 @@ export const MissionPrizeIntroOverlay: React.FC = () => {
     }, PRIZE_INTRO_TIMING.INITIAL_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [isAuthenticated, user, shouldShowPrizeIntro, currentMissionId, isShadowOverlayVisible, isMissionIntroActive, isIntroActive]);
+  }, [isAuthenticated, user, hasSeenPrizeIntro, lastSeenMissionId, currentMissionId, missionLoading, isShadowOverlayVisible, isMissionIntroActive, isIntroActive]);
 
   // Cinematic mode: Auto-advance prizes
   useEffect(() => {
