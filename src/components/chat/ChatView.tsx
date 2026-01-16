@@ -49,51 +49,25 @@ export function ChatView({
     }
   }, [messages]);
 
-  // Focus input on mount
+  // ✅ Detect keyboard using visualViewport ONLY (no auto-focus!)
   useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 100);
-  }, []);
-
-  // ✅ Detect keyboard open/close using focus/blur + visualViewport
-  useEffect(() => {
-    const input = inputRef.current;
-    
-    // Focus = tastiera aperta (immediato!)
-    const handleFocus = () => setIsKeyboardOpen(true);
-    // Blur = tastiera chiusa
-    const handleBlur = () => {
-      // Piccolo delay per evitare flickering se l'utente tocca altrove e ritorna
-      setTimeout(() => {
-        if (document.activeElement !== inputRef.current) {
-          setIsKeyboardOpen(false);
-        }
-      }, 100);
-    };
-    
-    // Backup: visualViewport per casi edge
     const handleResize = () => {
-      if (window.visualViewport && document.activeElement === inputRef.current) {
+      if (window.visualViewport) {
         const keyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
         setIsKeyboardOpen(keyboardOpen);
       }
     };
 
-    if (input) {
-      input.addEventListener('focus', handleFocus);
-      input.addEventListener('blur', handleBlur);
-    }
-    
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleResize);
+      window.visualViewport.addEventListener('scroll', handleResize);
+      handleResize(); // Check initial state
     }
 
     return () => {
-      if (input) {
-        input.removeEventListener('focus', handleFocus);
-        input.removeEventListener('blur', handleBlur);
-      }
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleResize);
+        window.visualViewport.removeEventListener('scroll', handleResize);
       }
     };
   }, []);
@@ -207,7 +181,7 @@ export function ChatView({
         className="absolute left-0 right-0 overflow-y-auto overscroll-contain"
         style={{
           top: `calc(72px + ${safeAreaTop} + ${headerHeight}px)`, // Sotto UnifiedHeader + Chat Header
-          bottom: `calc(${inputHeight}px + 80px + env(safe-area-inset-bottom, 34px))`, // Sopra input bar + bottom nav
+          bottom: isKeyboardOpen ? `${inputHeight + 8}px` : `${inputHeight + 108}px`, // Sopra input bar (+ bottom nav se visibile)
           paddingTop: '8px',
           paddingBottom: '16px',
         }}
@@ -255,12 +229,13 @@ export function ChatView({
         </div>
       </div>
 
-      {/* Input Bar - SEMPRE VISIBILE sopra bottom nav (64px + safe-area + 8px padding) */}
+      {/* Input Bar - SEMPRE VISIBILE sopra bottom nav */}
       <div 
         className="fixed left-0 right-0 border-t border-white/10 bg-gray-900/95 backdrop-blur-sm"
         style={{ 
-          bottom: isKeyboardOpen ? '0px' : 'calc(72px + env(safe-area-inset-bottom, 34px))',
-          paddingBottom: isKeyboardOpen ? 'env(safe-area-inset-bottom, 0px)' : '8px',
+          // Bottom nav: 64px pill + padding. Su iPhone: ~100px totali
+          bottom: isKeyboardOpen ? '0px' : '100px',
+          paddingBottom: isKeyboardOpen ? 'env(safe-area-inset-bottom, 8px)' : '8px',
           minHeight: `${inputHeight}px`,
           zIndex: 60000,
         }}
