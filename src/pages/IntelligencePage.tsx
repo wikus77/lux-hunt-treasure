@@ -44,13 +44,15 @@ const IntelligencePage: React.FC = () => {
           touchAction: 'pan-y',
         }}
       >
-        {/* M1U Pill - COMPACT */}
+        {/* M1U Pill - COMPACT - z-index alto per non essere coperto da AION */}
         <div 
           data-onboarding="m1u-pill"
           style={{ 
             pointerEvents: 'auto',
             marginBottom: '3px',
-            flexShrink: 0
+            flexShrink: 0,
+            position: 'relative',
+            zIndex: 50
           }}
         >
           <Suspense fallback={<div className="w-24 h-7 bg-gray-800/50 rounded-full animate-pulse" />}>
