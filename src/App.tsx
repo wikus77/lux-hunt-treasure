@@ -54,6 +54,7 @@ import { useRouteAnnouncements } from "./hooks/useRouteAnnouncements";
 import { ReconnectBadge } from "./components/net/ReconnectBadge";
 import { M1UnitsDebugPanel } from "./components/debug/M1UnitsDebugPanel";
 import { initGA4, trackPageView } from './lib/analytics/ga4';
+import { initAnalytics, track } from './lib/analytics';
 import { useLocation } from 'wouter';
 import M1LogoSplash from "./components/intro/M1LogoSplash";
 import { useGlobalGlitchListener } from "./hooks/useGlobalGlitch";
@@ -102,9 +103,10 @@ function App() {
     }
   }, []);
 
-  // Initialize GA4 once on mount
+  // Initialize GA4 and M1SSION Analytics once on mount
   useEffect(() => {
     initGA4();
+    initAnalytics(); // M1SSION internal analytics with batching
   }, []);
 
   // Preload heavy components in background for smoother navigation
@@ -120,6 +122,7 @@ function App() {
   useEffect(() => {
     if (location) {
       trackPageView(location);
+      track('route_viewed', { route: location });
     }
   }, [location]);
   

@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import { notifyShadowContext } from '@/stores/entityOverlayStore'; // 🌑 Shadow Protocol v3
+import { track } from '@/lib/analytics'; // M1SSION Analytics
 
 interface MarkerReward {
   reward_type: string;
@@ -124,6 +125,13 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
         import('@/lib/analytics/ga4').then(({ trackMarkerRewardClaimed }) => {
           trackMarkerRewardClaimed(markerId, rewardType);
         }).catch(() => {});
+        
+        // 📊 M1SSION Analytics - Track secondary reward won
+        track('secondary_reward_won', {
+          marker_id: markerId,
+          reward_type: rewardType,
+          amount: serverM1U || rewards[0]?.payload?.amount,
+        }, { immediate: true }); // Send immediately
 
         // ⏰ Chiudi dopo 2.5 secondi e POI aggiorna il Pill M1U
         setTimeout(() => {

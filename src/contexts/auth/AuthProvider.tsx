@@ -19,6 +19,8 @@ import { logAuditEvent } from '@/utils/auditLog';
 import { isAdminEmail } from '@/config/adminConfig';
 // 🔐 Sync prize intro state with user
 import { setPrizeIntroUserId } from '@/stores/prizeIntroStore';
+// 📊 M1SSION Analytics
+import { track, setAnalyticsUserId } from '@/lib/analytics';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -183,6 +185,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (event === 'SIGNED_IN' && newSession) {
           log("Utente autenticato", newSession.user.email);
           
+          // 📊 M1SSION Analytics - Set user ID and track login
+          setAnalyticsUserId(newSession.user.id);
+          track('login_success', {
+            provider: newSession.user.app_metadata?.provider || 'email',
+          });
+          
           // 🔐 Audit log for login
           logAuditEvent({
             event_type: 'LOGIN_SUCCESS',
@@ -219,6 +227,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // }
         } else if (event === 'SIGNED_OUT') {
           log("Utente disconnesso");
+          
+          // 📊 M1SSION Analytics - Track logout
+          track('logout', {});
+          setAnalyticsUserId(null);
           
           // 🔐 Audit log for logout
           logAuditEvent({

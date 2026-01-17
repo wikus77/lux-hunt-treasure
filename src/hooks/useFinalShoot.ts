@@ -1,10 +1,30 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // FINAL SHOOT - Hook for the endgame precision shot feature
-// NOTA: Questo hook è COMPLETAMENTE INDIPENDENTE dalle logiche BUZZ/Map esistenti
+// 
+// ⚠️ SECURITY NOTE (2025-01-17):
+// - Vittoria determinata SOLO server-side via RPC `execute_final_shoot`
+// - Nessun INSERT diretto dal client
+// - Lock atomico "first winner" garantito da PK su `final_shoot_winners`
+// - Il client NON conosce le coordinate del premio e NON può manipolare is_winner
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { track } from '@/lib/analytics';
+
+// Tipi per la risposta RPC
+interface ExecuteFinalShootResponse {
+  success: boolean;
+  status: 'winner' | 'missed' | 'already_won' | 'already_claimed' | 'not_available' | 'no_attempts' | 'config_error';
+  winner?: boolean;
+  distance_meters?: number;
+  attempts_remaining?: number;
+  hint?: string;
+  message?: string;
+  error?: string;
+  won_at?: string;
+  winner_claimed_at?: string;
+}
 
 interface FinalShootState {
   isAvailable: boolean;       // True se siamo negli ultimi 7 giorni
@@ -13,6 +33,7 @@ interface FinalShootState {
   daysRemaining: number;      // Giorni rimasti della missione
   hasWon: boolean;            // True se l'utente ha già vinto
   isLoading: boolean;
+  alreadyClaimed: boolean;    // True se un altro utente ha già vinto il premio
   lastAttempt: {
     distance: number;
     hint: string;
@@ -21,7 +42,7 @@ interface FinalShootState {
 
 interface MissionData {
   missionId: string | null;
-  prizeLocation: { lat: number; lng: number } | null;
+  // ⚠️ prizeLocation RIMOSSO - il client NON deve conoscere le coordinate del premio!
   endsAt: Date | null;
 }
 
@@ -32,9 +53,6 @@ const isTestMode = () => {
   return params.get('test-final-shoot') === 'true';
 };
 
-// Test coordinates (Piazza Duomo, Milano) - used in test mode
-const TEST_COORDINATES = { lat: 45.4642, lng: 9.1900 };
-
 export function useFinalShoot() {
   const [state, setState] = useState<FinalShootState>({
     isAvailable: false,
@@ -42,13 +60,13 @@ export function useFinalShoot() {
     remainingAttempts: 3,
     daysRemaining: 0,
     hasWon: false,
+    alreadyClaimed: false,
     isLoading: true,
     lastAttempt: null,
   });
 
   const [missionData, setMissionData] = useState<MissionData>({
     missionId: null,
-    prizeLocation: null,
     endsAt: null,
   });
 
@@ -67,7 +85,6 @@ export function useFinalShoot() {
           console.log('🎯 [FINAL-SHOOT] TEST MODE ENABLED');
           setMissionData({
             missionId: 'test-mission-id',
-            prizeLocation: TEST_COORDINATES,
             endsAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
           });
           setIsLocked(false);
@@ -77,6 +94,7 @@ export function useFinalShoot() {
             remainingAttempts: 3,
             daysRemaining: 3,
             hasWon: false,
+            alreadyClaimed: false,
             isLoading: false,
             lastAttempt: null,
           });
@@ -85,9 +103,10 @@ export function useFinalShoot() {
         }
 
         // Get current mission data
+        // ⚠️ NON selezioniamo prize_lat/prize_lng - il client non deve conoscere le coordinate!
         const { data: mission, error: missionError } = await supabase
           .from('current_mission_data')
-          .select('id, prize_lat, prize_lng, mission_ends_at, mission_started_at, mission_status, linked_mission_id')
+          .select('id, mission_ends_at, mission_started_at, mission_status, linked_mission_id')
           .eq('mission_status', 'active')
           .order('created_at', { ascending: false })
           .limit(1)
@@ -99,6 +118,8 @@ export function useFinalShoot() {
           setIsLocked(true);
           return;
         }
+
+        const missionId = mission.linked_mission_id || mission.id;
 
         // Calculate total mission days
         const startedAt = mission.mission_started_at ? new Date(mission.mission_started_at) : null;
@@ -119,12 +140,9 @@ export function useFinalShoot() {
         const locked = !isAvailable;
         setIsLocked(locked);
 
-        // Set mission data even if locked (for display purposes)
+        // Set mission data (senza coordinate premio!)
         setMissionData({
-          missionId: mission.linked_mission_id || mission.id,
-          prizeLocation: (mission.prize_lat && mission.prize_lng) 
-            ? { lat: mission.prize_lat, lng: mission.prize_lng }
-            : null,
+          missionId,
           endsAt,
         });
 
@@ -135,11 +153,22 @@ export function useFinalShoot() {
           return;
         }
 
+        // Check if prize already claimed by someone else
+        const { data: winner } = await supabase
+          .from('final_shoot_winners')
+          .select('winner_user_id, won_at')
+          .eq('mission_id', missionId)
+          .maybeSingle();
+
+        const alreadyClaimed = winner !== null && winner.winner_user_id !== user.id;
+        const hasWonByMe = winner !== null && winner.winner_user_id === user.id;
+
+        // Get user's attempts
         const { data: attempts, error: attemptsError } = await supabase
           .from('final_shoot_attempts')
-          .select('*')
+          .select('id, distance_meters, is_winner, created_at')
           .eq('user_id', user.id)
-          .eq('mission_id', mission.linked_mission_id || mission.id)
+          .eq('mission_id', missionId)
           .order('created_at', { ascending: false });
 
         if (attemptsError) {
@@ -147,7 +176,6 @@ export function useFinalShoot() {
         }
 
         const attemptsCount = attempts?.length || 0;
-        const hasWon = attempts?.some(a => a.is_winner) || false;
         const remainingAttempts = Math.max(0, 3 - attemptsCount);
 
         // Get last attempt hint
@@ -156,11 +184,12 @@ export function useFinalShoot() {
           : null;
 
         setState({
-          isAvailable,
+          isAvailable: isAvailable && !alreadyClaimed,
           isActive: false,
           remainingAttempts,
           daysRemaining,
-          hasWon,
+          hasWon: hasWonByMe,
+          alreadyClaimed,
           isLoading: false,
           lastAttempt,
         });
@@ -170,7 +199,8 @@ export function useFinalShoot() {
           isLocked: locked,
           daysRemaining,
           remainingAttempts,
-          hasWon,
+          hasWon: hasWonByMe,
+          alreadyClaimed,
         });
 
       } catch (error) {
@@ -181,18 +211,6 @@ export function useFinalShoot() {
 
     checkAvailability();
   }, []);
-
-  // Generate hint based on distance (senza rivelare la tolleranza esatta)
-  const getHintFromDistance = (distanceMeters: number): string => {
-    if (distanceMeters <= 19) return '🎯 PERFETTO! HAI VINTO!';
-    if (distanceMeters <= 50) return '🔥 Caldissimo! Sei vicinissimo!';
-    if (distanceMeters <= 100) return '🌡️ Molto caldo! Quasi ci sei!';
-    if (distanceMeters <= 250) return '☀️ Caldo! Stai andando bene!';
-    if (distanceMeters <= 500) return '😊 Tiepido. Direzione giusta!';
-    if (distanceMeters <= 1000) return '😐 Freddo. Riprova!';
-    if (distanceMeters <= 2000) return '❄️ Molto freddo. Sei lontano.';
-    return '🥶 Freddissimo! Sei molto lontano.';
-  };
 
   // Activate Final Shoot mode
   const activateFinalShoot = useCallback(() => {
@@ -212,8 +230,9 @@ export function useFinalShoot() {
   }, []);
 
   // Execute a Final Shoot attempt
+  // ⚠️ SECURITY: Usa ESCLUSIVAMENTE la RPC server-side, nessun calcolo client-side!
   const executeShoot = useCallback(async (lat: number, lng: number): Promise<boolean> => {
-    if (!missionData.missionId || !missionData.prizeLocation) {
+    if (!missionData.missionId) {
       toast.error('Errore: Missione non trovata');
       return false;
     }
@@ -228,21 +247,12 @@ export function useFinalShoot() {
       return false;
     }
 
+    if (state.alreadyClaimed) {
+      toast.error('Il premio è già stato vinto da un altro agente.');
+      return false;
+    }
+
     try {
-      // Calculate distance using Haversine formula
-      const R = 6371000; // Earth radius in meters
-      const dLat = (missionData.prizeLocation.lat - lat) * Math.PI / 180;
-      const dLng = (missionData.prizeLocation.lng - lng) * Math.PI / 180;
-      const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat * Math.PI / 180) * Math.cos(missionData.prizeLocation.lat * Math.PI / 180) * 
-        Math.sin(dLng/2) * Math.sin(dLng/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      const distance = R * c;
-
-      const isWinner = distance <= 19; // 19 meters tolerance
-      const hint = getHintFromDistance(distance);
-
       // Get user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -250,63 +260,132 @@ export function useFinalShoot() {
         return false;
       }
 
-      // Save attempt to database
-      const { error: insertError } = await supabase
-        .from('final_shoot_attempts')
-        .insert({
-          user_id: user.id,
-          mission_id: missionData.missionId,
-          attempt_lat: lat,
-          attempt_lng: lng,
-          distance_meters: distance,
-          is_winner: isWinner,
-          attempt_number: 4 - state.remainingAttempts,
-        });
+      console.log('🎯 [FINAL-SHOOT] Executing via RPC...', { lat, lng, missionId: missionData.missionId });
 
-      if (insertError) {
-        console.error('🎯 [FINAL-SHOOT] Error saving attempt:', insertError);
-        toast.error('Errore nel salvataggio del tentativo');
+      // ═══════════════════════════════════════════════════════════════════════════
+      // ⚠️ SECURITY: Chiamata RPC server-side - la vittoria è determinata dal server!
+      // Il client NON calcola la distanza e NON decide se ha vinto.
+      // ═══════════════════════════════════════════════════════════════════════════
+      const { data: result, error: rpcError } = await supabase.rpc('execute_final_shoot', {
+        p_user_id: user.id,
+        p_mission_id: missionData.missionId,
+        p_lat: lat,
+        p_lng: lng,
+      });
+
+      if (rpcError) {
+        console.error('🎯 [FINAL-SHOOT] RPC Error:', rpcError);
+        toast.error('Errore durante il tentativo. Riprova.');
         return false;
       }
 
-      // Update state
-      setState(prev => ({
-        ...prev,
-        remainingAttempts: prev.remainingAttempts - 1,
-        hasWon: isWinner,
-        isActive: isWinner ? false : prev.isActive,
-        lastAttempt: { distance, hint },
-      }));
+      const response = result as ExecuteFinalShootResponse;
+      console.log('🎯 [FINAL-SHOOT] RPC Response:', response);
 
-      if (isWinner) {
-        // Winner animation and notification
-        toast.success('🎉 HAI VINTO IL FINAL SHOOT!', {
-          description: 'Complimenti! Hai trovato la posizione esatta del premio!',
-          duration: 10000,
-        });
-        
-        // Trigger haptic feedback
-        if ('vibrate' in navigator) {
-          navigator.vibrate([500, 200, 500, 200, 500]);
-        }
+      // 📊 Track attempt (sempre, indipendentemente dal risultato)
+      track('final_shot_attempted', {
+        mission_id: missionData.missionId,
+        status: response.status,
+        distance_meters: response.distance_meters,
+        attempts_remaining: response.attempts_remaining,
+      });
 
-        // Deactivate mode
-        deactivateFinalShoot();
-      } else {
-        toast.info(hint, {
-          description: `Tentativi rimasti: ${state.remainingAttempts - 1}`,
-          duration: 5000,
-        });
+      // Gestisci i vari status della risposta
+      switch (response.status) {
+        case 'winner':
+          // 🎉 L'utente ha VINTO! (determinato dal server)
+          
+          // 📊 Track WINNER EVENT (critical)
+          track('final_shot_won', {
+            mission_id: missionData.missionId,
+            distance_meters: response.distance_meters,
+            won_at: response.won_at || new Date().toISOString(),
+          }, { immediate: true }); // Send immediately, don't batch
+          
+          setState(prev => ({
+            ...prev,
+            remainingAttempts: response.attempts_remaining ?? prev.remainingAttempts - 1,
+            hasWon: true,
+            isActive: false,
+            lastAttempt: { 
+              distance: response.distance_meters ?? 0, 
+              hint: '🎯 PERFETTO! HAI VINTO!' 
+            },
+          }));
+
+          toast.success('🎉 HAI VINTO IL FINAL SHOOT!', {
+            description: response.message || 'Complimenti! Hai trovato la posizione esatta del premio!',
+            duration: 10000,
+          });
+          
+          // Trigger haptic feedback
+          if ('vibrate' in navigator) {
+            navigator.vibrate([500, 200, 500, 200, 500]);
+          }
+
+          deactivateFinalShoot();
+          return true;
+
+        case 'missed':
+          // Non vincitore, mostra hint dal server
+          const hint = response.hint || getHintFromDistance(response.distance_meters ?? 9999);
+          
+          setState(prev => ({
+            ...prev,
+            remainingAttempts: response.attempts_remaining ?? prev.remainingAttempts - 1,
+            lastAttempt: { 
+              distance: response.distance_meters ?? 0, 
+              hint 
+            },
+          }));
+
+          toast.info(hint, {
+            description: `Tentativi rimasti: ${response.attempts_remaining ?? 0}`,
+            duration: 5000,
+          });
+          return false;
+
+        case 'already_won':
+          // L'utente ha già vinto questa missione
+          setState(prev => ({ ...prev, hasWon: true, isActive: false }));
+          toast.success(response.message || 'Hai già vinto il Final Shoot!');
+          return false;
+
+        case 'already_claimed':
+          // Un altro utente ha già vinto
+          setState(prev => ({ ...prev, alreadyClaimed: true, isAvailable: false, isActive: false }));
+          toast.error(response.error || 'Il premio è già stato vinto da un altro agente.');
+          return false;
+
+        case 'not_available':
+          setState(prev => ({ ...prev, isAvailable: false }));
+          toast.error(response.error || 'Final Shoot non disponibile.');
+          return false;
+
+        case 'no_attempts':
+          setState(prev => ({ ...prev, remainingAttempts: 0 }));
+          toast.error(response.error || 'Hai esaurito tutti i tentativi.');
+          return false;
+
+        case 'config_error':
+          toast.error('Errore di configurazione. Contatta il supporto.');
+          return false;
+
+        default:
+          // Fallback per status non gestiti
+          if (!response.success) {
+            toast.error(response.error || 'Errore sconosciuto. Riprova.');
+            return false;
+          }
+          return false;
       }
-
-      return isWinner;
 
     } catch (error) {
       console.error('🎯 [FINAL-SHOOT] Error executing shoot:', error);
-      toast.error('Errore durante il tentativo');
+      toast.error('Errore durante il tentativo. Riprova.');
       return false;
     }
-  }, [missionData, state.remainingAttempts, state.hasWon, deactivateFinalShoot]);
+  }, [missionData.missionId, state.remainingAttempts, state.hasWon, state.alreadyClaimed, deactivateFinalShoot]);
 
   return {
     ...state,
@@ -318,5 +397,17 @@ export function useFinalShoot() {
     deactivateFinalShoot,
     executeShoot,
   };
+}
+
+// Helper per generare hint (usato solo per display, mai per logica di vittoria)
+function getHintFromDistance(distanceMeters: number): string {
+  if (distanceMeters <= 19) return '🎯 PERFETTO! HAI VINTO!';
+  if (distanceMeters <= 50) return '🔥 Caldissimo! Sei vicinissimo!';
+  if (distanceMeters <= 100) return '🌡️ Molto caldo! Quasi ci sei!';
+  if (distanceMeters <= 250) return '☀️ Caldo! Stai andando bene!';
+  if (distanceMeters <= 500) return '😊 Tiepido. Direzione giusta!';
+  if (distanceMeters <= 1000) return '😐 Freddo. Riprova!';
+  if (distanceMeters <= 2000) return '❄️ Molto freddo. Sei lontano.';
+  return '🥶 Freddissimo! Sei molto lontano.';
 }
 
