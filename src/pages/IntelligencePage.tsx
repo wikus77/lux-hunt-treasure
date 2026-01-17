@@ -2,7 +2,7 @@
 // M1SSION Intelligence Page - AION Entity + Chat Panel
 // Includes Shadow Protocol v2 Intercepts panel
 
-import React, { useRef, Suspense, lazy } from 'react';
+import React, { useRef, useEffect, Suspense, lazy } from 'react';
 // 🔥 CRITICAL: Lazy load AionEntity to prevent THREE.js hook errors during initial load
 const AionEntity = lazy(() => import('@/components/aion/AionEntity'));
 import type { AionEntityHandle } from '@/components/aion/AionEntity';
@@ -17,6 +17,17 @@ import { MotivationalPopup } from '@/components/feedback';
 
 const IntelligencePage: React.FC = () => {
   const aionRef = useRef<AionEntityHandle>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll al fondo quando la pagina si apre (input vicino a bottom nav)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <>
@@ -31,6 +42,7 @@ const IntelligencePage: React.FC = () => {
     >
       {/* Inner scrollable container */}
       <div 
+        ref={scrollContainerRef}
         className="flex flex-col px-3"
         style={{
           paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)', // Header space
@@ -59,11 +71,12 @@ const IntelligencePage: React.FC = () => {
           <M1UPill showLabel showPlusButton />
         </div>
 
-        {/* AION Entity - dimensione fissa per evitare jump */}
+        {/* AION Entity - REDUCED */}
         <div 
           style={{ 
-            height: '140px',
-            minHeight: '140px',
+            height: '81px',
+            minHeight: '65px',
+            maxHeight: '97px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
