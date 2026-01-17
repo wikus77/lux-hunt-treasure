@@ -1,13 +1,14 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
 // About Page - Cos'è M1SSION - CINEMATIC STYLE (slow fade + vertical drift)
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Search, Puzzle, Trophy, ChevronRight, MapPin, Zap, Target, Info, Sparkles } from 'lucide-react';
 import LandingHeader from '@/components/landing/LandingHeader';
 import LandingFooter from '@/components/landing/LandingFooter';
+import { trackScreen } from '@/lib/analytics';
 
 // Cinematic animation variants - slower, more dramatic
 const cinematicFade = {
@@ -39,6 +40,11 @@ const staggerContainer = {
 
 const AboutPage: React.FC = () => {
   const [, setLocation] = useLocation();
+  
+  // 📊 Analytics: Track about page view
+  useEffect(() => {
+    trackScreen('about', { source: 'direct' });
+  }, []);
   
   // NOTE: Disabled useScroll to fix React #310 error on SPA navigation from LandingPage
   // const { scrollYProgress } = useScroll();

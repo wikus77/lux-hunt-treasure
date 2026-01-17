@@ -15,6 +15,7 @@ import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useLandingTranslations } from "@/hooks/useLandingTranslations";
+import { trackScreen } from "@/lib/analytics";
 import "../styles/landing-flip-cards.css";
 import "../styles/landing-premium.css";
 import "../styles/landing-effects.css";
@@ -57,6 +58,11 @@ const LandingPage = () => {
   const [isTypingComplete, setIsTypingComplete] = useState(false);
 
   console.log('🌟 M1SSION™ LANDING PAGE - Xavier Cusso Style - Showing to anonymous user');
+
+  // 📊 Analytics: Track landing page view
+  useEffect(() => {
+    trackScreen('landing', { source: 'direct' });
+  }, []);
 
   // 🔄 CRITICAL: Cleanup GSAP on route change and component unmount
   const [currentLocation] = useLocation();

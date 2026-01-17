@@ -8,8 +8,19 @@
 // - Automatic retry with exponential backoff
 // - Session and anonymous ID management
 // - PWA / Safari iOS compatible
+// - Event versioning for schema evolution
+//
+// ⚠️ EVENT VERSIONING:
+// - Current version: 1
+// - Do NOT bump without coordinating with backend schema migration
+// - All events are immutable after insertion (DB trigger blocks UPDATE/DELETE)
 
 import { supabase } from '@/integrations/supabase/client';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EVENT VERSION - Do NOT change without migration plan
+// ═══════════════════════════════════════════════════════════════════════════
+export const EVENT_VERSION = 1;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -289,6 +300,7 @@ async function sendBatch(events: AnalyticsEvent[], retryCount = 0): Promise<bool
         app_version: getAppVersion(),
         locale: navigator.language,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        event_version: EVENT_VERSION, // Schema version - do NOT bump without migration
       }),
     });
     
@@ -404,6 +416,7 @@ export function initAnalytics(): void {
             app_version: getAppVersion(),
             locale: navigator.language,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            event_version: EVENT_VERSION,
           })], { type: 'application/json' });
           
           navigator.sendBeacon(`${supabaseUrl}${CONFIG.SUPABASE_FUNCTION_URL}`, blob);
@@ -501,6 +514,26 @@ export function getSessionId(): string {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// SCREEN VIEW HELPER (for landing pages tracking)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Track a screen/page view
+ * Use this for landing pages and public pages tracking
+ */
+export function trackScreen(
+  screenName: string,
+  props: Record<string, unknown> = {}
+): void {
+  track('screen_viewed', {
+    screen: screenName,
+    route: typeof window !== 'undefined' ? window.location.pathname : undefined,
+    referrer: typeof document !== 'undefined' ? document.referrer : undefined,
+    ...props,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // CONVENIENCE HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -508,10 +541,12 @@ export const Analytics = {
   init: initAnalytics,
   track,
   trackOnce,
+  trackScreen,
   flush: flushAnalytics,
   setUserId: setAnalyticsUserId,
   getAnonId,
   getSessionId,
+  EVENT_VERSION, // Expose for debugging
 };
 
 export default Analytics;

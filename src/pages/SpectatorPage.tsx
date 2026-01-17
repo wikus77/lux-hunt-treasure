@@ -9,6 +9,7 @@ import {
   Activity, Radio, TrendingUp, RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { trackScreen } from '@/lib/analytics';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 
@@ -77,6 +78,11 @@ const SpectatorPage: React.FC = () => {
     const interval = setInterval(fetchData, 15000); // Poll every 15s
     return () => clearInterval(interval);
   }, [fetchData]);
+
+  // 📊 Analytics: Track spectator page view
+  useEffect(() => {
+    trackScreen('spectator', { source: 'direct' });
+  }, []);
 
   // Countdown timer
   useEffect(() => {
