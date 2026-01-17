@@ -1,5 +1,6 @@
 // FILE CREATO O MODIFICATO — BY JOSEPH MULE
-import React, { useState, useEffect } from 'react';
+// 🔒 AAA+ Analytics Integration (17/01/2026)
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { GameCard } from '@/components/games/GameCard';
 import { gameData, GameType } from '@/components/games/memory-hack/gameData';
@@ -18,6 +19,20 @@ import SatelliteTrackingGame from '@/components/games/SatelliteTrackingGame';
 import FindMapPointGame from '@/components/games/FindMapPointGame';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import { trackMinigame, GameId } from '@/lib/analytics';
+
+// 🔒 Convert GameType to GameId for analytics
+const gameTypeToGameId = (gameType: GameType): GameId => {
+  const mapping: Record<GameType, GameId> = {
+    'memory-hack': 'memory_hack',
+    'disarm-bomb': 'bomb_defuse',
+    'flash-interrogation': 'flash_interrogation',
+    'crack-combination': 'crack_combination',
+    'satellite-tracking': 'satellite_tracking',
+    'find-map-point': 'find_map_point',
+  };
+  return mapping[gameType];
+};
 
 const Games = () => {
   const [selectedGame, setSelectedGame] = useState<GameType | null>(null);
@@ -36,8 +51,44 @@ const Games = () => {
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
 
+  // 🔒 AAA+ Analytics: Track game session
+  const currentRunIdRef = useRef<string | null>(null);
+  const gameStartTimeRef = useRef<number | null>(null);
+
   // Attiva il sistema di sicurezza Dynamic Island
   useDynamicIslandSafety();
+
+  // 🔒 AAA+ Analytics: Track when a game is opened/started
+  useEffect(() => {
+    if (selectedGame) {
+      const runId = `run_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      currentRunIdRef.current = runId;
+      gameStartTimeRef.current = Date.now();
+      
+      // Track game opened
+      trackMinigame('minigame_opened', {
+        game_id: gameTypeToGameId(selectedGame),
+        run_id: runId,
+      });
+      
+      // Track game started (after brief delay for "actual start")
+      setTimeout(() => {
+        trackMinigame('minigame_started', {
+          game_id: gameTypeToGameId(selectedGame),
+          run_id: runId,
+        });
+      }, 500);
+    } else if (currentRunIdRef.current && gameStartTimeRef.current) {
+      // Game was abandoned (user clicked back without completing)
+      const duration = Date.now() - gameStartTimeRef.current;
+      if (duration > 2000) { // Only track if played for at least 2 seconds
+        // Note: We can't know which game was abandoned after state reset
+        // This is handled by the back button click
+      }
+      currentRunIdRef.current = null;
+      gameStartTimeRef.current = null;
+    }
+  }, [selectedGame]);
 
   // Dynamic Island integration for GAMES - New minigame unlocked con logging avanzato
   useEffect(() => {
@@ -87,6 +138,44 @@ const Games = () => {
       status: `${gameData[gameType].title} completato`,
       progress: 100,
     });
+
+    // 🔒 AAA+ Analytics: Track game completed
+    const duration = gameStartTimeRef.current 
+      ? Date.now() - gameStartTimeRef.current 
+      : undefined;
+    
+    trackMinigame('minigame_completed', {
+      game_id: gameTypeToGameId(gameType),
+      run_id: currentRunIdRef.current || undefined,
+      score: points,
+      duration_ms: duration,
+      result: 'win',
+    });
+    
+    // Reset tracking refs
+    currentRunIdRef.current = null;
+    gameStartTimeRef.current = null;
+  };
+
+  // 🔒 AAA+ Analytics: Handle game abandonment
+  const handleBackToGames = () => {
+    if (selectedGame && currentRunIdRef.current && gameStartTimeRef.current) {
+      const duration = Date.now() - gameStartTimeRef.current;
+      
+      // Only track abandon if played for at least 2 seconds
+      if (duration > 2000) {
+        trackMinigame('minigame_abandoned', {
+          game_id: gameTypeToGameId(selectedGame),
+          run_id: currentRunIdRef.current,
+          duration_ms: duration,
+          result: 'quit',
+        });
+      }
+    }
+    
+    currentRunIdRef.current = null;
+    gameStartTimeRef.current = null;
+    setSelectedGame(null);
   };
 
   const renderGame = () => {
@@ -155,7 +244,7 @@ const Games = () => {
         >
           <div className="container mx-auto px-3">
             <button
-              onClick={() => setSelectedGame(null)}
+              onClick={handleBackToGames}
               className="mb-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
             >
               ← Torna ai giochi

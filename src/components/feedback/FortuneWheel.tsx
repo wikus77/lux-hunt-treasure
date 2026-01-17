@@ -2,6 +2,13 @@
  * M1SSION™ Fortune Wheel - Daily Spin for Rewards
  * 16 segments with casino-style probabilities
  * NEON STYLE - AAA Game Feel
+ * 
+ * 🔒 AAA+ SECURITY FIX (17/01/2026):
+ * - Outcome e reward ora determinati SERVER-SIDE via RPC execute_wheel_spin
+ * - Nessuna logica vincita client-side (getWeightedResult rimosso)
+ * - Nessun UPDATE diretto su profiles dal client
+ * - Risultato immutabile su wheel_spins table
+ * 
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
@@ -13,8 +20,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
-import { AudioManager } from '@/lib/audio/AudioManager'; // 🔧 FIX: Singleton Audio
-import { useAwardPE } from '@/features/pulse/hooks/useAwardPE';
+import { AudioManager } from '@/lib/audio/AudioManager';
+import Analytics from '@/lib/analytics';
 
 // 🎰 WHEEL SEGMENTS - 16 segments with 3 LOSE evenly distributed
 // Order: clockwise from top (where pointer is)
@@ -193,22 +200,32 @@ const playSpinStartSound = () => {
   }
 };
 
+// 🔒 Server-side spin result interface
+interface SpinResult {
+  status: 'success' | 'already_spun_today' | 'error';
+  spin_id?: string;
+  segment_id?: number;
+  reward_type?: string;
+  reward_value?: number;
+  reward_label?: string;
+  message?: string;
+}
+
 export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) => {
   const { user } = useAuthContext();
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<typeof WHEEL_SEGMENTS[0] | null>(null);
-  const [canSpin, setCanSpin] = useState(false); // Default false until verified from DB
-  
-  // 🔋 PE System Hook
-  const { awardPE } = useAwardPE();
+  const [canSpin, setCanSpin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showClueModal, setShowClueModal] = useState(false);
   const [revealedClue, setRevealedClue] = useState('');
   const tickIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 🔒 Store server spin result for tracking
+  const spinResultRef = useRef<SpinResult | null>(null);
 
-  // Check if user can spin today - SECURE: Check localStorage FIRST, then DB
-  // This prevents bypass via hard refresh
+  // 🔒 AAA+ SECURE: Check via server-side RPC (no client-side bypass possible)
   useEffect(() => {
     const checkCanSpin = async () => {
       if (!isOpen) {
@@ -216,48 +233,49 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
         return;
       }
 
-      const today = new Date().toDateString();
-      
-      // 🔒 STEP 1: Check localStorage FIRST (immediate, no bypass possible)
-      const localLastSpin = localStorage.getItem(STORAGE_KEY);
-      if (localLastSpin) {
-        const localLastSpinDate = new Date(localLastSpin).toDateString();
-        if (localLastSpinDate === today) {
-          // Already spun today according to localStorage - BLOCK
-          setCanSpin(false);
-          setIsLoading(false);
-          return;
-        }
-      }
+      // Track wheel viewed
+      Analytics.track('wheel_viewed', { user_logged_in: !!user });
 
-      // 🔒 STEP 2: If user logged in, also check DB (for cross-device sync)
+      // 🔒 SERVER-SIDE CHECK via RPC (cannot be bypassed)
       if (user) {
         try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('last_fortune_spin')
-            .eq('id', user.id)
-            .single();
-
-          // If DB has a spin date for today, block
-          if (!error && profile?.last_fortune_spin) {
-            const dbLastSpinDate = new Date(profile.last_fortune_spin).toDateString();
-            if (dbLastSpinDate === today) {
-              // Also update localStorage to sync
-              localStorage.setItem(STORAGE_KEY, profile.last_fortune_spin);
-              setCanSpin(false);
-              setIsLoading(false);
-              return;
+          const { data, error } = await supabase.rpc('check_can_spin_today');
+          
+          if (error) {
+            console.error('[FortuneWheel] RPC check failed:', error);
+            // Fallback to localStorage for UX
+            const today = new Date().toDateString();
+            const localLastSpin = localStorage.getItem(STORAGE_KEY);
+            if (localLastSpin) {
+              const localLastSpinDate = new Date(localLastSpin).toDateString();
+              setCanSpin(localLastSpinDate !== today);
+            } else {
+              setCanSpin(true);
+            }
+          } else {
+            setCanSpin(data?.can_spin === true);
+            
+            // Sync localStorage with server state
+            if (!data?.can_spin) {
+              localStorage.setItem(STORAGE_KEY, new Date().toISOString());
             }
           }
         } catch (err) {
-          console.error('[FortuneWheel] DB check failed:', err);
-          // Continue with localStorage result
+          console.error('[FortuneWheel] Check failed:', err);
+          setCanSpin(false);
+        }
+      } else {
+        // Non-authenticated: use localStorage only
+        const today = new Date().toDateString();
+        const localLastSpin = localStorage.getItem(STORAGE_KEY);
+        if (localLastSpin) {
+          const localLastSpinDate = new Date(localLastSpin).toDateString();
+          setCanSpin(localLastSpinDate !== today);
+        } else {
+          setCanSpin(true);
         }
       }
-
-      // 🎰 If we get here, user can spin
-      setCanSpin(true);
+      
       setIsLoading(false);
     };
 
@@ -276,76 +294,25 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
     };
   }, []);
 
-  // Weighted random selection
-  const getWeightedResult = useCallback(() => {
-    const totalWeight = WHEEL_SEGMENTS.reduce((sum, seg) => sum + seg.probability, 0);
-    let random = Math.random() * totalWeight;
-    
-    for (const segment of WHEEL_SEGMENTS) {
-      random -= segment.probability;
-      if (random <= 0) return segment;
-    }
-    return WHEEL_SEGMENTS[0];
+  // 🔒 REMOVED: getWeightedResult (now server-side only)
+  // 🔒 REMOVED: awardPrize (now server-side only via RPC)
+
+  // Handle CLUE reward display (server determined this was a clue win)
+  const showClueReward = useCallback(() => {
+    const randomClue = INSTANT_CLUES[Math.floor(Math.random() * INSTANT_CLUES.length)];
+    setRevealedClue(randomClue);
+    setTimeout(() => setShowClueModal(true), 500);
   }, []);
 
-  // Award the prize
-  const awardPrize = useCallback(async (segment: typeof WHEEL_SEGMENTS[0]) => {
-    if (!user) return;
-
-    try {
-      switch (segment.type) {
-        case 'm1u':
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('m1_units')
-            .eq('id', user.id)
-            .single();
-          
-          if (profile) {
-            await supabase
-              .from('profiles')
-              .update({ m1_units: (profile.m1_units || 0) + segment.value })
-              .eq('id', user.id);
-            
-            window.dispatchEvent(new CustomEvent('m1u-credited', {
-              detail: { amount: segment.value }
-            }));
-          }
-          break;
-
-        case 'pe':
-          const { data: peProfile } = await supabase
-            .from('profiles')
-            .select('pulse_energy')
-            .eq('id', user.id)
-            .single();
-          
-          if (peProfile) {
-            await supabase
-              .from('profiles')
-              .update({ pulse_energy: (peProfile.pulse_energy || 0) + segment.value })
-              .eq('id', user.id);
-          }
-          break;
-
-        case 'clue':
-          const randomClue = INSTANT_CLUES[Math.floor(Math.random() * INSTANT_CLUES.length)];
-          setRevealedClue(randomClue);
-          setTimeout(() => setShowClueModal(true), 500);
-          break;
-
-        case 'marker':
-          toast.success('📍 Un marker speciale è stato aggiunto alla tua mappa!');
-          break;
-      }
-    } catch (err) {
-      console.error('[FortuneWheel] Error awarding prize:', err);
-    }
-  }, [user]);
-
-  // Spin the wheel
+  // 🔒 AAA+ SECURE: Spin the wheel via server-side RPC
   const handleSpin = useCallback(async () => {
-    if (isSpinning || !canSpin) return;
+    if (isSpinning || !canSpin || !user) return;
+
+    // Track spin started
+    const spinId = `spin_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    Analytics.track('wheel_spin_started', { 
+      spin_id: spinId 
+    }, { dedupe_key: `wheel:spin:${spinId}` });
 
     setIsSpinning(true);
     setResult(null);
@@ -373,22 +340,65 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
       }
     }, 500);
 
-    // Get result
-    const winningSegment = getWeightedResult();
-    const segmentIndex = WHEEL_SEGMENTS.findIndex(s => s.id === winningSegment.id);
+    // 🔒 CALL SERVER-SIDE RPC - Outcome determined server-side
+    let serverResult: SpinResult | null = null;
+    try {
+      const { data, error } = await supabase.rpc('execute_wheel_spin');
+      
+      if (error) {
+        console.error('[FortuneWheel] RPC execute_wheel_spin failed:', error);
+        toast.error('Errore durante lo spin. Riprova.');
+        setIsSpinning(false);
+        if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
+        clearInterval(slowDownInterval);
+        return;
+      }
+      
+      serverResult = data as SpinResult;
+      spinResultRef.current = serverResult;
+      
+      // Handle already spun today (race condition protection)
+      if (serverResult.status === 'already_spun_today') {
+        toast.info('Hai già girato la ruota oggi. Torna domani!');
+        setCanSpin(false);
+        setIsSpinning(false);
+        localStorage.setItem(STORAGE_KEY, new Date().toISOString());
+        if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
+        clearInterval(slowDownInterval);
+        return;
+      }
+      
+      if (serverResult.status !== 'success' || !serverResult.segment_id) {
+        console.error('[FortuneWheel] Unexpected server response:', serverResult);
+        toast.error('Errore imprevisto. Riprova.');
+        setIsSpinning(false);
+        if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
+        clearInterval(slowDownInterval);
+        return;
+      }
+      
+    } catch (err) {
+      console.error('[FortuneWheel] RPC call failed:', err);
+      toast.error('Errore di connessione. Riprova.');
+      setIsSpinning(false);
+      if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
+      clearInterval(slowDownInterval);
+      return;
+    }
+
+    // 🎡 Animate wheel to server-determined segment
+    const segmentIndex = serverResult.segment_id - 1; // segment_id is 1-based
+    const winningSegment = WHEEL_SEGMENTS[segmentIndex] || WHEEL_SEGMENTS[0];
     
-    // Calculate rotation - FIXED: segment center must align with TOP pointer
+    // Calculate rotation
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
-    // Center of segment i is at (i + 0.5) * segmentAngle degrees from top
     const segmentCenterAngle = (segmentIndex + 0.5) * segmentAngle;
-    // To bring it under the pointer (at top), rotate by: 360 - segmentCenterAngle
     const rotationToWin = 360 - segmentCenterAngle;
-    // Add multiple full rotations for effect
     const totalRotation = rotation + (360 * 6) + rotationToWin;
     
     setRotation(totalRotation);
 
-    // Wait for animation
+    // Wait for animation to complete
     setTimeout(async () => {
       // Clear tick sounds
       if (tickIntervalRef.current) {
@@ -399,24 +409,21 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
       setIsSpinning(false);
       setResult(winningSegment);
       
-      // Save to DATABASE (Supabase) - not just localStorage
-      const now = new Date().toISOString();
-      if (user) {
-        try {
-          await supabase
-            .from('profiles')
-            .update({ last_fortune_spin: now })
-            .eq('id', user.id);
-        } catch (err) {
-          console.error('[FortuneWheel] Error saving spin to DB:', err);
-        }
-      }
-      // Also save to localStorage as fallback
-      localStorage.setItem(STORAGE_KEY, now);
+      // Sync localStorage
+      localStorage.setItem(STORAGE_KEY, new Date().toISOString());
       setCanSpin(false);
 
-      // Play result sound
-      if (winningSegment.type !== 'nothing' && winningSegment.type !== 'retry') {
+      // Track spin completed with server result
+      Analytics.track('wheel_spin_completed', {
+        spin_id: serverResult!.spin_id,
+        segment_id: serverResult!.segment_id,
+        reward_type: serverResult!.reward_type,
+        reward_value: serverResult!.reward_value,
+        reward_label: serverResult!.reward_label,
+      }, { dedupe_key: `wheel:complete:${serverResult!.spin_id}` });
+
+      // Play result sound based on server-determined outcome
+      if (serverResult!.reward_type !== 'nothing' && serverResult!.reward_type !== 'retry') {
         playWinSound();
         confetti({
           particleCount: 150,
@@ -428,20 +435,33 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
         if (navigator.vibrate) {
           navigator.vibrate([100, 50, 100, 50, 200]);
         }
+
+        // 🔒 Reward already assigned server-side - just notify UI
+        if (serverResult!.reward_type === 'm1u' && serverResult!.reward_value) {
+          window.dispatchEvent(new CustomEvent('m1u-credited', {
+            detail: { amount: serverResult!.reward_value }
+          }));
+        }
+        
+        // Track reward assigned (server-side confirmed)
+        if (serverResult!.reward_value && serverResult!.reward_value > 0) {
+          Analytics.track('wheel_reward_assigned', {
+            spin_id: serverResult!.spin_id,
+            reward_type: serverResult!.reward_type,
+            reward_value: serverResult!.reward_value,
+          }, { dedupe_key: `wheel:reward:${serverResult!.spin_id}` });
+        }
       } else {
         playLoseSound();
       }
 
-      awardPrize(winningSegment);
+      // Handle CLUE display (server already recorded the win)
+      if (serverResult!.reward_type === 'clue') {
+        showClueReward();
+      }
 
-      // 🔋 Award PE for Fortune Wheel Spin (+10 PE fisso per ogni spin)
-      awardPE('FORTUNE_WHEEL', 10, {
-        prizeType: winningSegment.type,
-        prizeValue: winningSegment.value,
-        prizeLabel: winningSegment.label,
-      }).catch(err => console.warn('[PE] Fortune Wheel award failed:', err));
     }, 5500);
-  }, [isSpinning, canSpin, rotation, getWeightedResult, awardPrize, user, awardPE]);
+  }, [isSpinning, canSpin, rotation, user, showClueReward]);
 
   const getResultMessage = () => {
     if (!result) return '';

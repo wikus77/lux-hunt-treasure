@@ -88,7 +88,32 @@ export type AnalyticsEventName =
   | 'final_shot_attempted'
   // Navigation
   | 'route_viewed'
-  | 'screen_viewed';
+  | 'screen_viewed'
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 DAILY STREAK (Retention core) - Added 17/01/2026
+  // ═══════════════════════════════════════════════════════════════
+  | 'daily_streak_viewed'
+  | 'daily_streak_started'
+  | 'daily_streak_incremented'
+  | 'daily_streak_broken'
+  | 'daily_streak_reset'
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 FORTUNE WHEEL (1/day spin) - Added 17/01/2026
+  // ═══════════════════════════════════════════════════════════════
+  | 'wheel_viewed'
+  | 'wheel_spin_started'
+  | 'wheel_spin_completed'
+  | 'wheel_reward_assigned'
+  | 'wheel_reward_claimed'
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 MINIGAMES (framework unified) - Added 17/01/2026
+  // ═══════════════════════════════════════════════════════════════
+  | 'minigame_opened'
+  | 'minigame_started'
+  | 'minigame_completed'
+  | 'minigame_abandoned'
+  | 'minigame_reward_assigned'
+  | 'minigame_reward_claimed';
 
 interface AnalyticsEvent {
   event_name: AnalyticsEventName;
@@ -534,6 +559,134 @@ export function trackScreen(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// STREAK TRACKING HELPERS (Daily retention loop)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface StreakTrackingProps {
+  streak_day: number;
+  source?: 'home' | 'daily_panel' | 'wheel' | 'minigame' | 'login' | 'widget';
+  last_completed_at?: string;
+  milestone_name?: string;
+  milestone_reward?: number;
+}
+
+/**
+ * Track streak events with proper deduplication
+ * @param event - The streak event type
+ * @param props - Streak-specific properties
+ */
+export function trackStreak(
+  event: 'daily_streak_viewed' | 'daily_streak_started' | 'daily_streak_incremented' | 'daily_streak_broken' | 'daily_streak_reset',
+  props: StreakTrackingProps
+): void {
+  const today = new Date().toISOString().split('T')[0];
+  const dedupeKey = `streak:${event}:${today}`;
+  
+  track(event, {
+    streak_day: props.streak_day,
+    source: props.source || 'widget',
+    last_completed_at: props.last_completed_at,
+    milestone_name: props.milestone_name,
+    milestone_reward: props.milestone_reward,
+  }, { dedupe_key: dedupeKey });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WHEEL TRACKING HELPERS (Fortune Wheel)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface WheelTrackingProps {
+  wheel_id?: string;
+  spin_id?: string;
+  is_daily_free?: boolean;
+  reward_type?: 'm1u' | 'pe' | 'clue' | 'marker' | 'retry' | 'nothing';
+  reward_id?: string;
+  reward_value?: number;
+  duration_ms?: number;
+  segment_id?: number;
+  reward_label?: string;
+}
+
+/**
+ * Track wheel events with proper deduplication
+ * @param event - The wheel event type
+ * @param props - Wheel-specific properties
+ */
+export function trackWheel(
+  event: 'wheel_viewed' | 'wheel_spin_started' | 'wheel_spin_completed' | 'wheel_reward_assigned' | 'wheel_reward_claimed',
+  props: WheelTrackingProps = {}
+): void {
+  const wheelId = props.wheel_id || 'daily_wheel_v1';
+  const spinId = props.spin_id || `spin_${Date.now()}`;
+  const dedupeKey = `wheel:${wheelId}:${spinId}:${event}`;
+  
+  track(event, {
+    wheel_id: wheelId,
+    spin_id: spinId,
+    is_daily_free: props.is_daily_free ?? true,
+    reward_type: props.reward_type,
+    reward_id: props.reward_id,
+    reward_value: props.reward_value,
+    duration_ms: props.duration_ms,
+    segment_id: props.segment_id,
+    reward_label: props.reward_label,
+  }, { dedupe_key: dedupeKey });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MINIGAME TRACKING HELPERS (Unified framework)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type GameId = 
+  | 'memory_hack' 
+  | 'bomb_defuse' 
+  | 'crack_combination' 
+  | 'find_map_point' 
+  | 'satellite_tracking' 
+  | 'flash_interrogation';
+
+export interface MinigameTrackingProps {
+  game_id: GameId | string;
+  run_id?: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  score?: number;
+  duration_ms?: number;
+  result?: 'win' | 'lose' | 'timeout' | 'quit';
+  reward_type?: string;
+  reward_id?: string;
+  reward_value?: number;
+  level?: number;
+  moves?: number;
+}
+
+/**
+ * Track minigame events with proper deduplication
+ * @param event - The minigame event type
+ * @param props - Game-specific properties
+ */
+export function trackMinigame(
+  event: 'minigame_opened' | 'minigame_started' | 'minigame_completed' | 'minigame_abandoned' | 'minigame_reward_assigned' | 'minigame_reward_claimed',
+  props: MinigameTrackingProps
+): void {
+  const runId = props.run_id || `run_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const dedupeKey = `game:${props.game_id}:${runId}:${event}`;
+  
+  track(event, {
+    game_id: props.game_id,
+    run_id: runId,
+    difficulty: props.difficulty,
+    score: props.score,
+    duration_ms: props.duration_ms,
+    result: props.result,
+    reward_type: props.reward_type,
+    reward_id: props.reward_id,
+    reward_value: props.reward_value,
+    level: props.level,
+    moves: props.moves,
+  }, { dedupe_key: dedupeKey });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // CONVENIENCE HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -542,6 +695,9 @@ export const Analytics = {
   track,
   trackOnce,
   trackScreen,
+  trackStreak,
+  trackWheel,
+  trackMinigame,
   flush: flushAnalytics,
   setUserId: setAnalyticsUserId,
   getAnonId,
