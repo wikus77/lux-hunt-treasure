@@ -7,9 +7,10 @@ import React, { useRef, Suspense, lazy } from 'react';
 const AionEntity = lazy(() => import('@/components/aion/AionEntity'));
 import type { AionEntityHandle } from '@/components/aion/AionEntity';
 import IntelChatPanel from '@/pages/intel/IntelChatPanel';
+// M1UPill caricato subito (non lazy) per evitare flash al caricamento
+import M1UPill from '@/features/m1u/M1UPill';
 
-// Lazy load components for performance
-const M1UPill = lazy(() => import('@/features/m1u/M1UPill'));
+// Lazy load solo componenti pesanti
 const ShadowIntercepts = lazy(() => import('@/components/intelligence/ShadowIntercepts'));
 import { InactivityHint } from '@/components/first-session';
 import { MotivationalPopup } from '@/components/feedback';
@@ -44,7 +45,7 @@ const IntelligencePage: React.FC = () => {
           touchAction: 'pan-y',
         }}
       >
-        {/* M1U Pill - COMPACT - z-index alto per non essere coperto da AION */}
+        {/* M1U Pill - SEMPRE VISIBILE subito - z-index alto */}
         <div 
           data-onboarding="m1u-pill"
           style={{ 
@@ -55,17 +56,14 @@ const IntelligencePage: React.FC = () => {
             zIndex: 50
           }}
         >
-          <Suspense fallback={<div className="w-24 h-7 bg-gray-800/50 rounded-full animate-pulse" />}>
-            <M1UPill showLabel showPlusButton />
-          </Suspense>
+          <M1UPill showLabel showPlusButton />
         </div>
 
-        {/* AION Entity - REDUCED */}
+        {/* AION Entity - dimensione fissa per evitare jump */}
         <div 
           style={{ 
-            height: '81px',
-            minHeight: '65px',
-            maxHeight: '97px',
+            height: '140px',
+            minHeight: '140px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
