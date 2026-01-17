@@ -1,13 +1,14 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
 // Prizes Page - VISUAL ANCHORS, IMAGERY FOCUSED
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, ChevronLeft, Check, Trophy, Car, Watch, Gem, ShoppingBag, Package, ArrowRight } from 'lucide-react';
 import LandingHeader from '@/components/landing/LandingHeader';
 import LandingFooter from '@/components/landing/LandingFooter';
+import { trackScreen } from '@/lib/analytics';
 
 // Prize categories
 const categories = [
@@ -77,6 +78,11 @@ const PrizesPage: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('auto');
   const [heroIndex, setHeroIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // 📊 Analytics: Track prizes page view
+  useEffect(() => {
+    trackScreen('prizes', { source: 'direct' });
+  }, []);
   
   // NOTE: Disabled useScroll to fix React #310 error on SPA navigation from LandingPage
   // const { scrollYProgress } = useScroll();

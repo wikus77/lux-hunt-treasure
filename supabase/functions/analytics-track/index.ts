@@ -200,6 +200,7 @@ interface AnalyticsEvent {
   props?: Record<string, unknown>;
   dedupe_key?: string;
   route?: string;
+  event_version?: number; // Schema version, default 1
 }
 
 interface TrackRequest {
@@ -211,6 +212,7 @@ interface TrackRequest {
   app_version?: string;
   locale?: string;
   timezone?: string;
+  event_version?: number; // Global version for all events in batch
 }
 
 serve(async (req) => {
@@ -297,7 +299,11 @@ serve(async (req) => {
       city: string | null;
       props: Record<string, unknown>;
       dedupe_key: string | null;
+      event_version: number;
     }> = [];
+    
+    // Global event version (default 1) - Do NOT bump without schema migration
+    const globalEventVersion = body.event_version ?? 1;
 
     const skippedEvents: Array<{ event_name: string; reason: string }> = [];
     const serverTs = new Date().toISOString();
@@ -315,6 +321,11 @@ serve(async (req) => {
         continue;
       }
 
+      // Per-event version overrides global, must be positive integer
+      const eventVersion = (typeof event.event_version === 'number' && event.event_version > 0)
+        ? event.event_version
+        : globalEventVersion;
+      
       eventsToInsert.push({
         event_name: event.event_name,
         server_ts: serverTs,
@@ -330,6 +341,7 @@ serve(async (req) => {
         country,
         city,
         props: sanitizeProps(event.props || {}),
+        event_version: eventVersion,
         dedupe_key: event.dedupe_key || null,
       });
     }

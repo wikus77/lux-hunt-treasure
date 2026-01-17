@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GenericVideoModal from '@/components/shared/GenericVideoModal';
+import { trackScreen } from '@/lib/analytics';
 import { 
   MessageSquare, Plus, ThumbsUp, ThumbsDown, Eye, 
   Clock, User, Send, X, ChevronLeft, Pin, Lock,
@@ -265,6 +266,11 @@ export const ForumPage: React.FC = () => {
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostCategory, setNewPostCategory] = useState<string>('');
   const [creating, setCreating] = useState(false);
+  
+  // 📊 Analytics: Track forum page view
+  useEffect(() => {
+    trackScreen('forum', { source: 'direct' });
+  }, []);
   
   // 🎬 Video intro state
   const [showVideoModal, setShowVideoModal] = useState(() => {

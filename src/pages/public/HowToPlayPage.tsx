@@ -1,13 +1,14 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
 // How To Play Page - STEP-BASED PROGRESSIVE REVEAL
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, UserCheck, MapPin, Zap, Target, Check, Gamepad2, ArrowRight, Lock } from 'lucide-react';
 import LandingHeader from '@/components/landing/LandingHeader';
 import LandingFooter from '@/components/landing/LandingFooter';
+import { trackScreen } from '@/lib/analytics';
 
 const steps = [
   {
@@ -48,6 +49,11 @@ const HowToPlayPage: React.FC = () => {
   const [, setLocation] = useLocation();
   const [activeStep, setActiveStep] = useState(0);
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
+
+  // 📊 Analytics: Track how-to-play page view
+  useEffect(() => {
+    trackScreen('how_to_play', { source: 'direct' });
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#030308] text-white overflow-x-hidden">
