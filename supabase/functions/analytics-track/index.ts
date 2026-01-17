@@ -105,6 +105,34 @@ const ALLOWED_EVENTS = new Set([
   "spectator_page_view",
   "spectator_locked_click",
   "spectator_join_click",
+  
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 DAILY STREAK (Retention core) - Added 17/01/2026
+  // ═══════════════════════════════════════════════════════════════
+  "daily_streak_viewed",
+  "daily_streak_started",
+  "daily_streak_incremented",
+  "daily_streak_broken",
+  "daily_streak_reset",
+  
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 FORTUNE WHEEL (1/day spin) - Added 17/01/2026
+  // ═══════════════════════════════════════════════════════════════
+  "wheel_viewed",
+  "wheel_spin_started",
+  "wheel_spin_completed",
+  "wheel_reward_assigned",
+  "wheel_reward_claimed",
+  
+  // ═══════════════════════════════════════════════════════════════
+  // 🆕 MINIGAMES (framework unified) - Added 17/01/2026
+  // ═══════════════════════════════════════════════════════════════
+  "minigame_opened",
+  "minigame_started",
+  "minigame_completed",
+  "minigame_abandoned",
+  "minigame_reward_assigned",
+  "minigame_reward_claimed",
 ]);
 
 // ═══════════════════════════════════════════════════════════════════════════

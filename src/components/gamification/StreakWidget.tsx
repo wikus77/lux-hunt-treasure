@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Enhanced Streak Widget with M1SSION Premium Design
+// 🔒 AAA+ Analytics Integration (17/01/2026)
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +11,7 @@ import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
 import { useAwardPE } from '@/features/pulse/hooks/useAwardPE';
+import { trackStreak } from '@/lib/analytics';
 
 interface StreakInfo {
   current_streak: number;
@@ -81,6 +83,17 @@ export function StreakWidget({ compact = false, onCheckIn }: StreakWidgetProps) 
       loadStreakInfo();
     }
   }, [user]);
+
+  // 🔒 Track streak viewed when widget mounts with data
+  useEffect(() => {
+    if (streakInfo && user) {
+      trackStreak('daily_streak_viewed', {
+        streak_day: streakInfo.current_streak,
+        source: 'widget',
+        last_completed_at: streakInfo.last_check_in || undefined,
+      });
+    }
+  }, [streakInfo, user]);
 
   const loadStreakInfo = async () => {
     if (!user) return;
@@ -185,6 +198,26 @@ export function StreakWidget({ compact = false, onCheckIn }: StreakWidgetProps) 
         streakBroken,
       }).catch(err => console.warn('[PE] Daily login award failed:', err));
 
+      // 🔒 AAA+ Analytics: Track streak event
+      if (streakBroken) {
+        trackStreak('daily_streak_broken', {
+          streak_day: newStreak,
+          source: 'widget',
+          last_completed_at: lastCheckIn || undefined,
+        });
+      } else if (newStreak === 1) {
+        trackStreak('daily_streak_started', {
+          streak_day: 1,
+          source: 'widget',
+        });
+      } else {
+        trackStreak('daily_streak_incremented', {
+          streak_day: newStreak,
+          source: 'widget',
+          last_completed_at: yesterday,
+        });
+      }
+
       // 🆕 Award daily M1U (+2 M1U)
       await awardM1U(DAILY_M1U_REWARD, 'streak_daily_checkin');
       
@@ -212,6 +245,14 @@ export function StreakWidget({ compact = false, onCheckIn }: StreakWidgetProps) 
         window.dispatchEvent(new CustomEvent('m1u-credited', { 
           detail: { amount: milestone.m1uReward + DAILY_M1U_REWARD } 
         }));
+
+        // 🔒 AAA+ Analytics: Track milestone reached
+        trackStreak('daily_streak_incremented', {
+          streak_day: newStreak,
+          source: 'widget',
+          milestone_name: milestone.name,
+          milestone_reward: milestone.m1uReward,
+        });
       } else if (streakBroken) {
         toast.warning('⚠️ Streak resettata! Ricomincia da 1 giorno');
         // Still give daily M1U
