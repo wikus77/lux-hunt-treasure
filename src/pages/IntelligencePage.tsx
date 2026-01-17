@@ -2,7 +2,7 @@
 // M1SSION Intelligence Page - AION Entity + Chat Panel
 // Includes Shadow Protocol v2 Intercepts panel
 
-import React, { useRef, useEffect, Suspense, lazy } from 'react';
+import React, { useRef, Suspense, lazy } from 'react';
 // 🔥 CRITICAL: Lazy load AionEntity to prevent THREE.js hook errors during initial load
 const AionEntity = lazy(() => import('@/components/aion/AionEntity'));
 import type { AionEntityHandle } from '@/components/aion/AionEntity';
@@ -17,17 +17,6 @@ import { MotivationalPopup } from '@/components/feedback';
 
 const IntelligencePage: React.FC = () => {
   const aionRef = useRef<AionEntityHandle>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // Scroll al fondo quando la pagina si apre (input vicino a bottom nav)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <>
@@ -40,21 +29,16 @@ const IntelligencePage: React.FC = () => {
         overscrollBehavior: 'none', // BLOCK body-level bounce
       }}
     >
-      {/* Inner scrollable container */}
+      {/* Inner container - NO SCROLL, flex fills space */}
       <div 
-        ref={scrollContainerRef}
         className="flex flex-col px-3"
         style={{
           paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)', // Header space
-          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 90px)', // Bottom nav space
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 64px)', // Bottom nav height only
           height: '100dvh',
-          overflowY: 'auto',
-          overflowX: 'hidden',
+          overflow: 'hidden', // NO scroll - flex distributes space
           position: 'relative',
           zIndex: 0,
-          overscrollBehavior: 'contain', // Contain scroll within this element
-          WebkitOverflowScrolling: 'touch',
-          touchAction: 'pan-y',
         }}
       >
         {/* M1U Pill - SEMPRE VISIBILE subito - z-index alto */}
