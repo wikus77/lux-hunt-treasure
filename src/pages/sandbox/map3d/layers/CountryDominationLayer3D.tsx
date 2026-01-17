@@ -22,19 +22,48 @@ const LABEL_LAYER = 'country-domination-label';
 // 🎨 ID ADMIN (MCP) - Colore verde fisso
 const ADMIN_OWNER_ID = '495246c1-9154-4f01-a428-7f37fe230180';
 
-// Country centroids for labels
+// Country centroids for labels - COMPLETE per tutti i paesi
 const COUNTRY_CENTROIDS: Record<string, [number, number]> = {
+  // MICROSTATI
+  MC: [7.4, 43.7], VA: [12.5, 41.9], SM: [12.4, 43.9], LI: [9.5, 47.2], AD: [1.5, 42.5],
+  MT: [14.4, 35.9], LU: [6.1, 49.8], SG: [103.8, 1.4], HK: [114.2, 22.3], MO: [113.5, 22.2],
+  // EUROPA
   IT: [12.5, 42.5], FR: [2.2, 46.2], DE: [10.4, 51.2], ES: [-3.7, 40.4],
   PT: [-8.2, 39.4], GB: [-1.2, 52.4], NL: [5.3, 52.1], BE: [4.5, 50.5],
   AT: [14.6, 47.5], CH: [8.2, 46.8], PL: [19.1, 51.9], CZ: [15.5, 49.8],
   HU: [19.5, 47.2], RO: [25.0, 46.0], GR: [21.8, 39.1], SE: [18.6, 60.1],
   NO: [8.5, 60.5], DK: [9.5, 56.3], FI: [26.0, 64.0], IE: [-8.2, 53.4],
+  SI: [14.8, 46.1], HR: [15.5, 45.2], BA: [17.8, 43.9], RS: [21.0, 44.0],
+  ME: [19.3, 42.7], XK: [20.9, 42.6], AL: [20.0, 41.0], MK: [21.7, 41.5],
+  EE: [25.0, 59.0], LV: [24.6, 57.0], LT: [24.0, 55.2], CY: [33.4, 35.1],
+  SK: [19.5, 48.7], IS: [-19.0, 65.0], MD: [28.8, 47.0], BY: [27.9, 53.7],
+  BG: [25.5, 42.7], UA: [31.2, 48.4], RU: [105.3, 61.5],
+  // AMERICHE
   US: [-98.6, 39.8], CA: [-106.3, 56.1], MX: [-102.5, 23.6],
   BR: [-51.9, -14.2], AR: [-63.6, -38.4], CL: [-71.5, -35.7],
-  CN: [104.2, 35.9], JP: [138.3, 36.2], KR: [128.0, 36.0], IN: [78.9, 20.6],
-  AU: [133.8, -25.3], NZ: [174.9, -40.9],
-  ZA: [22.9, -30.6], EG: [30.8, 26.8], NG: [8.7, 9.1],
-  TR: [35.2, 38.9], AE: [53.8, 23.4], SA: [45.1, 23.9]
+  CO: [-74.3, 4.6], VE: [-66.6, 6.4], PE: [-75.0, -9.2],
+  EC: [-78.2, -1.8], BO: [-65.0, -17.0], PY: [-58.4, -23.4], UY: [-55.8, -32.5],
+  CU: [-77.8, 21.5], DO: [-70.2, 18.7], HT: [-72.3, 19.0], JM: [-77.3, 18.1],
+  PR: [-66.6, 18.2], GT: [-90.2, 15.8], BZ: [-88.5, 17.2], HN: [-86.2, 15.0],
+  SV: [-88.9, 13.8], NI: [-85.2, 12.9], CR: [-84.0, 9.7], PA: [-80.8, 8.4],
+  // ASIA
+  CN: [104.2, 35.9], JP: [138.3, 36.2], KR: [128.0, 36.0], KP: [127.5, 40.3],
+  TW: [121.0, 23.7], IN: [78.9, 20.6], PK: [69.3, 30.4], BD: [90.4, 23.7],
+  NP: [84.1, 28.4], LK: [80.8, 7.9], MM: [96.0, 21.9], TH: [100.5, 15.9],
+  VN: [108.3, 14.1], MY: [101.7, 4.2], ID: [113.9, -0.8], PH: [121.8, 12.9],
+  MN: [103.8, 46.9], KZ: [66.9, 48.0],
+  // MEDIO ORIENTE
+  IL: [35.0, 31.5], LB: [35.8, 33.9], JO: [36.2, 31.2], QA: [51.2, 25.4],
+  KW: [47.5, 29.3], AE: [53.8, 23.4], OM: [55.9, 21.5], SA: [45.1, 23.9],
+  IR: [53.7, 32.4], IQ: [43.7, 33.2], SY: [38.9, 35.0], YE: [48.5, 15.6],
+  AF: [67.7, 33.9], TR: [35.2, 38.9],
+  // AFRICA
+  MA: [-7.1, 31.8], DZ: [1.7, 28.0], TN: [9.5, 34.0], LY: [17.2, 26.3],
+  EG: [30.8, 26.8], ZA: [22.9, -30.6], NG: [8.7, 9.1], KE: [38.0, -0.0],
+  ET: [40.5, 9.1], TZ: [34.9, -6.4], GH: [-1.0, 7.9], SN: [-14.5, 14.5],
+  CI: [-5.5, 7.5], CM: [12.4, 6.0],
+  // OCEANIA
+  AU: [133.8, -25.3], NZ: [174.9, -40.9]
 };
 
 // 🎨 Genera colore unico dall'owner_id usando HSL
@@ -95,19 +124,66 @@ const CountryDominationLayer3D: React.FC<CountryDominationLayer3DProps> = ({
     return grouped;
   }, [dominationStates]);
 
-  // Create filter for country matching
+  // Create filter for country matching - COMPLETE mappature
   const createCountryFilter = useCallback((countryCodes: string[]): any => {
     if (countryCodes.length === 0) {
       return ['==', ['get', 'ISO_A2'], '__NONE__'];
     }
     
+    // Mappatura ISO -> nomi GeoJSON (inglese + varianti)
     const countryNames: Record<string, string[]> = {
-      'IT': ['Italy', 'ITALY', 'Italia'],
-      'FR': ['France', 'FRANCE', 'Francia'],
-      'DE': ['Germany', 'GERMANY', 'Deutschland'],
-      'ES': ['Spain', 'SPAIN', 'España'],
-      'GB': ['United Kingdom', 'UK', 'Great Britain'],
-      'US': ['United States', 'USA'],
+      // MICROSTATI
+      'MC': ['Monaco'], 'VA': ['Vatican', 'Holy See'], 'SM': ['San Marino'],
+      'LI': ['Liechtenstein'], 'AD': ['Andorra'], 'MT': ['Malta'],
+      'LU': ['Luxembourg'], 'SG': ['Singapore'], 'HK': ['Hong Kong'],
+      // EUROPA
+      'IT': ['Italy'], 'FR': ['France'], 'DE': ['Germany'],
+      'ES': ['Spain'], 'PT': ['Portugal'], 'GB': ['United Kingdom'],
+      'NL': ['Netherlands'], 'BE': ['Belgium'], 'AT': ['Austria'],
+      'CH': ['Switzerland'], 'PL': ['Poland'], 'CZ': ['Czech Republic', 'Czechia'],
+      'HU': ['Hungary'], 'RO': ['Romania'], 'GR': ['Greece'],
+      'SE': ['Sweden'], 'NO': ['Norway'], 'DK': ['Denmark'],
+      'FI': ['Finland'], 'IE': ['Ireland'], 'SI': ['Slovenia'],
+      'HR': ['Croatia'], 'BA': ['Bosnia and Herzegovina', 'Bosnia'],
+      'RS': ['Serbia'], 'ME': ['Montenegro'], 'XK': ['Kosovo'],
+      'AL': ['Albania'], 'MK': ['North Macedonia', 'Macedonia'],
+      'EE': ['Estonia'], 'LV': ['Latvia'], 'LT': ['Lithuania'],
+      'CY': ['Cyprus'], 'SK': ['Slovakia'], 'IS': ['Iceland'],
+      'MD': ['Moldova'], 'BY': ['Belarus'], 'BG': ['Bulgaria'],
+      'UA': ['Ukraine'], 'RU': ['Russia', 'Russian Federation'],
+      // AMERICHE
+      'US': ['United States of America', 'United States'],
+      'CA': ['Canada'], 'MX': ['Mexico'], 'BR': ['Brazil'],
+      'AR': ['Argentina'], 'CL': ['Chile'], 'CO': ['Colombia'],
+      'VE': ['Venezuela'], 'PE': ['Peru'], 'EC': ['Ecuador'],
+      'BO': ['Bolivia'], 'PY': ['Paraguay'], 'UY': ['Uruguay'],
+      'CU': ['Cuba'], 'DO': ['Dominican Republic'], 'HT': ['Haiti'],
+      'JM': ['Jamaica'], 'PR': ['Puerto Rico'], 'GT': ['Guatemala'],
+      'BZ': ['Belize'], 'HN': ['Honduras'], 'SV': ['El Salvador'],
+      'NI': ['Nicaragua'], 'CR': ['Costa Rica'], 'PA': ['Panama'],
+      // ASIA
+      'CN': ['China'], 'JP': ['Japan'], 'KR': ['South Korea', 'Korea, Republic of'],
+      'KP': ['North Korea', 'Korea, Dem. Rep.'], 'TW': ['Taiwan'],
+      'IN': ['India'], 'PK': ['Pakistan'], 'BD': ['Bangladesh'],
+      'NP': ['Nepal'], 'LK': ['Sri Lanka'], 'MM': ['Myanmar', 'Burma'],
+      'TH': ['Thailand'], 'VN': ['Vietnam', 'Viet Nam'], 'MY': ['Malaysia'],
+      'ID': ['Indonesia'], 'PH': ['Philippines'], 'MN': ['Mongolia'],
+      'KZ': ['Kazakhstan'],
+      // MEDIO ORIENTE
+      'IL': ['Israel'], 'LB': ['Lebanon'], 'JO': ['Jordan'],
+      'QA': ['Qatar'], 'KW': ['Kuwait'], 'AE': ['United Arab Emirates'],
+      'OM': ['Oman'], 'SA': ['Saudi Arabia'], 'IR': ['Iran'],
+      'IQ': ['Iraq'], 'SY': ['Syria', 'Syrian Arab Republic'],
+      'YE': ['Yemen'], 'AF': ['Afghanistan'], 'TR': ['Turkey'],
+      // AFRICA
+      'MA': ['Morocco'], 'DZ': ['Algeria'], 'TN': ['Tunisia'],
+      'LY': ['Libya'], 'EG': ['Egypt'], 'ZA': ['South Africa'],
+      'NG': ['Nigeria'], 'KE': ['Kenya'], 'ET': ['Ethiopia'],
+      'TZ': ['Tanzania', 'United Republic of Tanzania'],
+      'GH': ['Ghana'], 'SN': ['Senegal'], 'CI': ["Côte d'Ivoire", 'Ivory Coast'],
+      'CM': ['Cameroon'],
+      // OCEANIA
+      'AU': ['Australia'], 'NZ': ['New Zealand']
     };
     
     const filters: any[] = [

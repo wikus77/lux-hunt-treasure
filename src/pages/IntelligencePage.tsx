@@ -109,7 +109,7 @@ const IntelligencePage: React.FC = () => {
           </Suspense>
         </div>
 
-        {/* 🔧 Container abbassato del 10% - margin-top per non sovrapporsi ad AION */}
+        {/* Chat Panel - si estende fino alla bottom nav */}
         <div 
           data-onboarding="ai-chat"
           style={{ 
@@ -119,7 +119,6 @@ const IntelligencePage: React.FC = () => {
             width: '100%', 
             display: 'flex',
             flexDirection: 'column',
-            marginTop: '10%', // 🔧 Abbassato del 10%
           }}
         >
           <IntelChatPanel 
