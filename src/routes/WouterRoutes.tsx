@@ -351,6 +351,15 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          {/* Scratch & Win Test Page - PRODUCTION ACCESSIBLE */}
+          <Route path="/dev/scratch-win">
+            <ProtectedRoute>
+              <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                <ScratchWinTest />
+              </React.Suspense>
+            </ProtectedRoute>
+          </Route>
+
           {/* Pulse Bar Test Page - Test progressione gerarchia */}
           <Route path="/pulse-bar-test">
             <ProtectedRoute>
@@ -691,15 +700,6 @@ const WouterRoutes: React.FC = () => {
                     <MarkersHealthcheck />
                   </React.Suspense>
                 </AdminProtectedRoute>
-              </Route>
-
-              {/* Scratch & Win Test Page */}
-              <Route path="/dev/scratch-win">
-                <ProtectedRoute>
-                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
-                    <ScratchWinTest />
-                  </React.Suspense>
-                </ProtectedRoute>
               </Route>
 
               {/* Dev Push Test Panel */}
