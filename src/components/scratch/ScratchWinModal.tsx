@@ -80,14 +80,16 @@ const SCRATCH_THRESHOLD = 60; // % required to reveal
 const GRID_COLS = 4;
 const GRID_ROWS = 3;
 
-// Posizioni relative dei rettangoli nell'immagine (rispetto all'immagine 1024x1536)
-// I 12 rettangoli da grattare sono nella sezione "I TUOI ACCESSI" 
-// Iniziano SOTTO la scritta "I TUOI ACCESSI" e finiscono PRIMA di "Scratch&Win!"
-// NOTA: Calibrato visivamente - questi sono solo i 12 rettangoli
-const GRID_TOP_PERCENT = 54;  // Appena sotto "I TUOI ACCESSI"
-const GRID_BOTTOM_PERCENT = 73; // Prima di "Scratch&Win!"
-const GRID_LEFT_PERCENT = 6;
-const GRID_RIGHT_PERCENT = 94;
+// ═══════════════════════════════════════════════════════════════════════════
+// POSIZIONI CALIBRATE CHIRURGICAMENTE sui 12 rettangoli
+// Immagine biglietto: 1024x1536 pixels
+// I 12 rettangoli "I TUOI ACCESSI" sono in una griglia 4x3
+// Misurati pixel per pixel dall'immagine originale
+// ═══════════════════════════════════════════════════════════════════════════
+const GRID_TOP_PERCENT = 55.5;    // Inizio primi rettangoli (dopo scritta "I TUOI ACCESSI")
+const GRID_BOTTOM_PERCENT = 71.5; // Fine ultimi rettangoli (prima di "Scratch&Win!")
+const GRID_LEFT_PERCENT = 7.5;    // Margine sinistro rettangoli
+const GRID_RIGHT_PERCENT = 92.5;  // Margine destro rettangoli
 
 export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
   isOpen,
@@ -155,36 +157,58 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
     canvas.style.height = `${rect.height}px`;
     ctx.scale(dpr, dpr);
     
-    // Draw golden metallic scratch overlay
+    // ═══════════════════════════════════════════════════════════════════════
+    // OVERLAY DORATO REALISTICO - Simula vernice metallizzata da grattare
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // Layer 1: Base dorata con gradiente metallico
     const gradient = ctx.createLinearGradient(0, 0, rect.width, rect.height);
-    gradient.addColorStop(0, '#B8860B'); // Dark gold
-    gradient.addColorStop(0.25, '#DAA520'); // Goldenrod
-    gradient.addColorStop(0.5, '#FFD700'); // Gold
-    gradient.addColorStop(0.75, '#DAA520');
-    gradient.addColorStop(1, '#B8860B');
+    gradient.addColorStop(0, '#8B7500');    // Oro scuro
+    gradient.addColorStop(0.2, '#B8860B');  // DarkGoldenrod
+    gradient.addColorStop(0.4, '#DAA520');  // Goldenrod
+    gradient.addColorStop(0.5, '#FFD700');  // Gold puro
+    gradient.addColorStop(0.6, '#DAA520');
+    gradient.addColorStop(0.8, '#B8860B');
+    gradient.addColorStop(1, '#8B7500');
     
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, rect.width, rect.height);
     
-    // Add sparkle texture
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-    for (let i = 0; i < 100; i++) {
+    // Layer 2: Texture granulosa (simula vernice grattabile)
+    for (let i = 0; i < 2000; i++) {
       const x = Math.random() * rect.width;
       const y = Math.random() * rect.height;
-      const size = Math.random() * 3 + 1;
+      const alpha = Math.random() * 0.15;
+      ctx.fillStyle = Math.random() > 0.5 
+        ? `rgba(255, 255, 255, ${alpha})` 
+        : `rgba(0, 0, 0, ${alpha * 0.5})`;
+      ctx.fillRect(x, y, 2, 2);
+    }
+    
+    // Layer 3: Highlights metallici
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    for (let i = 0; i < 50; i++) {
+      const x = Math.random() * rect.width;
+      const y = Math.random() * rect.height;
+      const size = Math.random() * 2 + 0.5;
       ctx.beginPath();
       ctx.arc(x, y, size, 0, Math.PI * 2);
       ctx.fill();
     }
     
-    // Add "GRATTA QUI" text
-    ctx.fillStyle = '#8B4513'; // SaddleBrown
-    ctx.font = 'bold 18px Arial';
+    // Layer 4: Bordo interno sottile
+    ctx.strokeStyle = 'rgba(139, 69, 19, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(2, 2, rect.width - 4, rect.height - 4);
+    
+    // Testo centrale
+    ctx.fillStyle = 'rgba(101, 67, 33, 0.9)'; // Marrone scuro
+    ctx.font = `bold ${Math.min(rect.width / 12, 16)}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('✨ GRATTA QUI ✨', rect.width / 2, rect.height / 2 - 10);
-    ctx.font = '12px Arial';
-    ctx.fillText('Usa il dito o il mouse', rect.width / 2, rect.height / 2 + 15);
+    ctx.fillText('GRATTA', rect.width / 2, rect.height / 2 - 8);
+    ctx.font = `${Math.min(rect.width / 16, 12)}px Arial`;
+    ctx.fillText('con il dito', rect.width / 2, rect.height / 2 + 10);
     
     // Set composite mode for scratching
     ctx.globalCompositeOperation = 'destination-out';
@@ -212,7 +236,7 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
     return Math.round((transparent / total) * 100);
   }, []);
   
-  // Scratch handler
+  // Scratch handler - EFFETTO REALISTICO
   const scratch = useCallback((clientX: number, clientY: number) => {
     if (!canvasRef.current || !containerRef.current || isRevealed) return;
     
@@ -221,18 +245,27 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
     if (!ctx) return;
     
     const canvasRect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
     
     const x = (clientX - canvasRect.left);
     const y = (clientY - canvasRect.top);
     
-    // Draw scratch circle
-    ctx.beginPath();
-    ctx.arc(x, y, 30, 0, Math.PI * 2);
-    ctx.fill();
+    // EFFETTO REALISTICO: Raggio più piccolo = più difficile da grattare
+    // + Forma irregolare per simulare una moneta vera
+    const baseRadius = 18; // Più piccolo = più passaggi necessari
     
-    // Update progress periodically (every few scratches to save performance)
-    if (Math.random() < 0.2) {
+    // Disegna più cerchi sovrapposti per effetto "grattato a mano"
+    for (let i = 0; i < 3; i++) {
+      const offsetX = (Math.random() - 0.5) * 8;
+      const offsetY = (Math.random() - 0.5) * 8;
+      const radius = baseRadius + (Math.random() - 0.5) * 6;
+      
+      ctx.beginPath();
+      ctx.arc(x + offsetX, y + offsetY, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Update progress periodically (ogni 10% circa)
+    if (Math.random() < 0.15) {
       const progress = calculateProgress();
       setScratchProgress(progress);
       
