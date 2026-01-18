@@ -20,7 +20,7 @@ import { PageSkeleton } from "@/components/ui/skeleton-loader";
 import { PULSE_ENABLED } from "@/config/featureFlags";
 import StreakPill from "@/components/gamification/StreakPill";
 import CashbackVaultPill from "@/components/home/CashbackVaultPill";
-import FortuneWheelPill from "@/components/home/FortuneWheelPill";
+import ShopPill from "@/components/shop/ShopPill";
 import MissionSync from "@/components/home/MissionSync";
 import { InactivityHint } from "@/components/first-session";
 import { NextActionCard, DailyMissionCard, MotivationalPopup, FortuneWheel } from "@/components/feedback";
@@ -292,7 +292,7 @@ const { isConnected } = useRealTimeNotifications();
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3, delay: 0.08 }}
                     >
-                      <FortuneWheelPill />
+                      <ShopPill />
                     </motion.div>
                     {/* AgentEnergyPill spostato in CommandCenterHome - posizione floating come DNA Hub */}
                   </div>
