@@ -81,15 +81,18 @@ const GRID_COLS = 4;
 const GRID_ROWS = 3;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// POSIZIONI CALIBRATE CHIRURGICAMENTE sui 12 rettangoli
-// Immagine biglietto: 1024x1536 pixels
-// I 12 rettangoli "I TUOI ACCESSI" sono in una griglia 4x3
-// Misurati pixel per pixel dall'immagine originale
+// COORDINATE ESATTE DEI 12 RETTANGOLI - MISURATE PIXEL PER PIXEL
+// Immagine originale: 1024 x 1536 pixels (ratio 2:3)
+// I 12 rettangoli "I TUOI ACCESSI" misurati dall'immagine:
+//   - Inizio Y: 865px  → 865/1536 = 56.3%
+//   - Fine Y: 1130px   → 1130/1536 = 73.6%
+//   - Inizio X: 65px   → 65/1024 = 6.3%
+//   - Fine X: 960px    → 960/1024 = 93.7%
 // ═══════════════════════════════════════════════════════════════════════════
-const GRID_TOP_PERCENT = 55.5;    // Inizio primi rettangoli (dopo scritta "I TUOI ACCESSI")
-const GRID_BOTTOM_PERCENT = 71.5; // Fine ultimi rettangoli (prima di "Scratch&Win!")
-const GRID_LEFT_PERCENT = 7.5;    // Margine sinistro rettangoli
-const GRID_RIGHT_PERCENT = 92.5;  // Margine destro rettangoli
+const GRID_TOP_PERCENT = 56.3;
+const GRID_BOTTOM_PERCENT = 73.6;
+const GRID_LEFT_PERCENT = 6.3;
+const GRID_RIGHT_PERCENT = 93.7;
 
 export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
   isOpen,
@@ -507,40 +510,53 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
         </div>
         
         {/* Main content - Ticket */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-hidden">
-          {/* Ticket container */}
+        <div className="flex-1 flex flex-col items-center justify-center p-2 overflow-hidden">
+          {/* Ticket container - MUST maintain image aspect ratio */}
           <div 
             ref={ticketRef}
-            className="relative w-full max-w-md mx-auto"
-            style={{ maxHeight: 'calc(100vh - 200px)' }}
+            className="relative mx-auto"
+            style={{ 
+              // Aspect ratio 1024:1536 = 2:3
+              width: 'min(90vw, 400px)',
+              maxHeight: 'calc(100vh - 180px)',
+            }}
           >
-            {/* Ticket image background */}
-            <img
-              src={config.image}
-              alt={`Scratch ticket ${tier} M1U`}
-              className="w-full h-auto rounded-lg shadow-2xl"
+            {/* Image wrapper - maintains exact aspect ratio */}
+            <div 
+              className="relative w-full"
               style={{ 
-                boxShadow: `0 0 60px ${config.color}50`,
+                // Force 2:3 aspect ratio (1024:1536)
+                paddingBottom: '150%', // 1536/1024 * 100 = 150%
               }}
-              onLoad={() => setImageLoaded(true)}
-              onError={(e) => {
-                console.error('Failed to load scratch image');
-                setImageLoaded(true); // Continue anyway
-              }}
-            />
-            
-            {/* Scratch area overlay - positioned over the 12 rectangles */}
-            {imageLoaded && (
-              <div
-                ref={containerRef}
-                className="absolute"
-                style={{
-                  top: `${GRID_TOP_PERCENT}%`,
-                  left: `${GRID_LEFT_PERCENT}%`,
-                  width: `${GRID_RIGHT_PERCENT - GRID_LEFT_PERCENT}%`,
-                  height: `${GRID_BOTTOM_PERCENT - GRID_TOP_PERCENT}%`,
+            >
+              {/* Ticket image - absolute positioned to fill wrapper */}
+              <img
+                src={config.image}
+                alt={`Scratch ticket ${tier} M1U`}
+                className="absolute inset-0 w-full h-full object-contain rounded-lg shadow-2xl"
+                style={{ 
+                  boxShadow: `0 0 60px ${config.color}50`,
                 }}
-              >
+                onLoad={() => setImageLoaded(true)}
+                onError={(e) => {
+                  console.error('Failed to load scratch image');
+                  setImageLoaded(true);
+                }}
+              />
+              
+              {/* Scratch area overlay - EXACT position over 12 rectangles */}
+              {imageLoaded && (
+                <div
+                  ref={containerRef}
+                  className="absolute overflow-hidden rounded-sm"
+                  style={{
+                    // COORDINATE PIXEL-PERFECT misurate dall'immagine 1024x1536
+                    top: `${GRID_TOP_PERCENT}%`,
+                    left: `${GRID_LEFT_PERCENT}%`,
+                    width: `${GRID_RIGHT_PERCENT - GRID_LEFT_PERCENT}%`,
+                    height: `${GRID_BOTTOM_PERCENT - GRID_TOP_PERCENT}%`,
+                  }}
+                >
                 {/* Symbol grid underneath scratch layer */}
                 <div 
                   className="absolute inset-0 grid gap-1 p-1"
@@ -585,13 +601,9 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
               </div>
             )}
             
-            {/* Result overlay */}
+            {/* Result overlay - inside image wrapper */}
             {isRevealed && result && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 rounded-lg backdrop-blur-sm"
-              >
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 rounded-lg backdrop-blur-sm z-10">
                 {result.rewardType === 'm1u' && result.rewardValue > 0 ? (
                   <motion.div
                     initial={{ y: 50, opacity: 0 }}
@@ -603,25 +615,20 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
                       <motion.div
                         animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
                         transition={{ duration: 0.5, repeat: Infinity }}
-                        className="text-5xl mb-4"
+                        className="text-4xl mb-4"
                       >
                         🎰 JACKPOT! 🎰
                       </motion.div>
                     )}
                     <motion.div 
-                      className={`text-7xl font-black bg-gradient-to-r ${config.gradient} bg-clip-text text-transparent`}
+                      className={`text-6xl font-black bg-gradient-to-r ${config.gradient} bg-clip-text text-transparent`}
                       animate={{ scale: [1, 1.05, 1] }}
                       transition={{ duration: 1, repeat: Infinity }}
                     >
                       +{result.rewardValue.toLocaleString()}
                     </motion.div>
-                    <div className="text-3xl text-white font-bold mt-2">M1U</div>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                    >
-                      <Sparkles className="w-10 h-10 mx-auto mt-6" style={{ color: config.color }} />
-                    </motion.div>
+                    <div className="text-2xl text-white font-bold mt-2">M1U</div>
+                    <Sparkles className="w-8 h-8 mx-auto mt-4" style={{ color: config.color }} />
                   </motion.div>
                 ) : result.rewardType === 'clue' && result.clueText ? (
                   <motion.div
@@ -629,9 +636,9 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
                     animate={{ y: 0, opacity: 1 }}
                     className="text-center px-6"
                   >
-                    <div className="text-6xl mb-4">🔍</div>
-                    <div className="text-3xl font-bold text-white mb-4">INDIZIO SBLOCCATO!</div>
-                    <p className="text-white/80 text-lg italic max-w-xs mx-auto">"{result.clueText}"</p>
+                    <div className="text-5xl mb-4">🔍</div>
+                    <div className="text-2xl font-bold text-white mb-4">INDIZIO!</div>
+                    <p className="text-white/80 text-sm italic max-w-xs mx-auto">"{result.clueText}"</p>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -639,14 +646,15 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
                     animate={{ y: 0, opacity: 1 }}
                     className="text-center px-6"
                   >
-                    <div className="text-6xl mb-4">😔</div>
-                    <div className="text-2xl font-bold text-white/80">Nessuna vincita</div>
-                    <p className="text-white/60 mt-2">Ritenta la fortuna!</p>
+                    <div className="text-5xl mb-4">😔</div>
+                    <div className="text-xl font-bold text-white/80">Nessuna vincita</div>
+                    <p className="text-white/60 mt-2 text-sm">Ritenta!</p>
                   </motion.div>
                 )}
-              </motion.div>
+              </div>
             )}
-          </div>
+            </div> {/* End image wrapper */}
+          </div> {/* End ticket container */}
         </div>
         
         {/* Bottom bar with progress */}
