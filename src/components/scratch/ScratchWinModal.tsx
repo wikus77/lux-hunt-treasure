@@ -81,11 +81,13 @@ const GRID_COLS = 4;
 const GRID_ROWS = 3;
 
 // Posizioni relative dei rettangoli nell'immagine (rispetto all'immagine 1024x1536)
-// I rettangoli "I TUOI ACCESSI" iniziano circa al 58% dall'alto e finiscono al 82%
-const GRID_TOP_PERCENT = 58;
-const GRID_BOTTOM_PERCENT = 82;
-const GRID_LEFT_PERCENT = 4;
-const GRID_RIGHT_PERCENT = 96;
+// I 12 rettangoli da grattare sono nella sezione "I TUOI ACCESSI" 
+// Iniziano SOTTO la scritta "I TUOI ACCESSI" e finiscono PRIMA di "Scratch&Win!"
+// NOTA: Calibrato visivamente - questi sono solo i 12 rettangoli
+const GRID_TOP_PERCENT = 54;  // Appena sotto "I TUOI ACCESSI"
+const GRID_BOTTOM_PERCENT = 73; // Prima di "Scratch&Win!"
+const GRID_LEFT_PERCENT = 6;
+const GRID_RIGHT_PERCENT = 94;
 
 export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
   isOpen,
