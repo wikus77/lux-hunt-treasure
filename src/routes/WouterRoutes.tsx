@@ -7,6 +7,7 @@ import { Route, Switch, useLocation, Redirect } from "wouter";
 
 // Dev tools (conditionally loaded)
 const MarkersHealthcheck = React.lazy(() => import('../pages/dev/MarkersHealthcheck'));
+const ScratchWinTest = React.lazy(() => import('../pages/dev/ScratchWinTest'));
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Database-based plan choice tracking instead of localStorage
@@ -690,6 +691,15 @@ const WouterRoutes: React.FC = () => {
                     <MarkersHealthcheck />
                   </React.Suspense>
                 </AdminProtectedRoute>
+              </Route>
+
+              {/* Scratch & Win Test Page */}
+              <Route path="/dev/scratch-win">
+                <ProtectedRoute>
+                  <React.Suspense fallback={<PageSkeleton variant="default" />}>
+                    <ScratchWinTest />
+                  </React.Suspense>
+                </ProtectedRoute>
               </Route>
 
               {/* Dev Push Test Panel */}
