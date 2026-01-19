@@ -26,7 +26,10 @@ import {
   Play,
   Ban,
   BarChart3,
-  Shield
+  Shield,
+  Gift,
+  Sparkles,
+  X as XIcon
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
@@ -76,6 +79,19 @@ interface UserTicket {
   prize_amount: number | null;
 }
 
+interface UserWin {
+  id: string;
+  cycle_id: string;
+  rank: number;
+  prize_m1u: number;
+  prize_label: string;
+  claim_status: 'pending' | 'claimed' | 'expired';
+  claim_deadline: string;
+  claimed_at: string | null;
+  time_remaining_seconds: number;
+  created_at: string;
+}
+
 // Format time remaining
 const formatTimeRemaining = (seconds: number): string => {
   if (seconds <= 0) return 'Scaduto';
@@ -105,6 +121,13 @@ const LotteryTest: React.FC = () => {
   const [showAdmin, setShowAdmin] = useState(false);
   const [adminAnalytics, setAdminAnalytics] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  
+  // Wins & Claim state
+  const [myWins, setMyWins] = useState<UserWin[]>([]);
+  const [pendingWins, setPendingWins] = useState<UserWin[]>([]);
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [selectedWin, setSelectedWin] = useState<UserWin | null>(null);
+  const [isClaiming, setIsClaiming] = useState(false);
   
   // Check user role
   useEffect(() => {
@@ -177,6 +200,71 @@ const LotteryTest: React.FC = () => {
     }
   }, [isAdmin]);
   
+  // Load user wins
+  const loadWins = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('get_my_lottery_wins');
+      
+      if (error) throw error;
+      
+      if (data?.wins) {
+        setMyWins(data.wins);
+        const pending = data.wins.filter((w: UserWin) => w.claim_status === 'pending');
+        setPendingWins(pending);
+        
+        // Auto-show claim modal if there are pending wins
+        if (pending.length > 0 && !showClaimModal) {
+          setSelectedWin(pending[0]);
+          setShowClaimModal(true);
+        }
+      }
+    } catch (err: any) {
+      console.error('Failed to load wins:', err);
+    }
+  }, [user, showClaimModal]);
+  
+  // Claim prize
+  const handleClaimPrize = async (win: UserWin) => {
+    if (isClaiming) return;
+    
+    setIsClaiming(true);
+    
+    try {
+      const { data, error } = await supabase.rpc('claim_lottery_prize', {
+        p_winner_id: win.id
+      });
+      
+      if (error) throw error;
+      
+      if (data?.status === 'success') {
+        toast.success('🎉 Premio riscosso!', {
+          description: `+${data.prize_m1u} M1U accreditati!`
+        });
+        
+        // Dispatch event for M1U animation
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('m1u-credited', {
+            detail: { amount: data.prize_m1u }
+          }));
+        }, 500);
+        
+        // Refresh data
+        refetchBalance();
+        loadWins();
+        setShowClaimModal(false);
+        setSelectedWin(null);
+      } else {
+        toast.error('Errore', { description: data?.message || 'Impossibile riscuotere il premio' });
+      }
+    } catch (err: any) {
+      toast.error('Errore', { description: err.message });
+    } finally {
+      setIsClaiming(false);
+    }
+  };
+  
   // Initial load
   useEffect(() => {
     loadStatus();
@@ -204,6 +292,19 @@ const LotteryTest: React.FC = () => {
     
     return () => clearInterval(interval);
   }, [loadStatus]);
+  
+  // Load wins on mount and when user changes
+  useEffect(() => {
+    loadWins();
+  }, [loadWins]);
+  
+  // Check URL params for claim=true
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('claim') === 'true') {
+      loadWins();
+    }
+  }, [loadWins]);
   
   // Generate request ID for idempotency
   const generateRequestId = () => crypto.randomUUID();
@@ -328,8 +429,138 @@ const LotteryTest: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 p-4 pb-24">
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* CLAIM PRIZE MODAL */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showClaimModal && selectedWin && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setShowClaimModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="w-full max-w-md bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl border border-yellow-500/30 overflow-hidden shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header with sparkles animation */}
+              <div className="relative bg-gradient-to-r from-yellow-500/20 to-amber-600/20 p-6 text-center overflow-hidden">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                  className="absolute inset-0 opacity-20"
+                  style={{
+                    background: 'conic-gradient(from 0deg, transparent, gold, transparent, gold, transparent)'
+                  }}
+                />
+                
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="relative"
+                >
+                  <Trophy className="w-20 h-20 text-yellow-400 mx-auto mb-4" />
+                </motion.div>
+                
+                <h2 className="text-3xl font-bold text-white relative">
+                  🎉 HAI VINTO! 🎉
+                </h2>
+                <p className="text-yellow-400/80 relative mt-2">
+                  {selectedWin.prize_label}
+                </p>
+                
+                <button
+                  onClick={() => setShowClaimModal(false)}
+                  className="absolute top-4 right-4 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  <XIcon className="w-5 h-5 text-white/70" />
+                </button>
+              </div>
+              
+              {/* Prize Details */}
+              <div className="p-6 space-y-6">
+                <div className="text-center">
+                  <p className="text-white/60 text-sm mb-2">Premio</p>
+                  <motion.p
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="text-5xl font-bold text-yellow-400"
+                  >
+                    +{selectedWin.prize_m1u.toLocaleString()}
+                  </motion.p>
+                  <p className="text-yellow-400/60 text-lg">M1U</p>
+                </div>
+                
+                {/* Deadline warning */}
+                <div className="flex items-center justify-center gap-2 text-orange-400 bg-orange-500/10 rounded-lg p-3">
+                  <Clock className="w-5 h-5" />
+                  <span className="text-sm">
+                    Riscuoti entro: <strong>{formatTimeRemaining(selectedWin.time_remaining_seconds)}</strong>
+                  </span>
+                </div>
+                
+                {/* Claim Button */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleClaimPrize(selectedWin)}
+                  disabled={isClaiming}
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-600 text-white font-bold text-lg shadow-lg shadow-yellow-500/30 hover:shadow-yellow-500/50 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                >
+                  {isClaiming ? (
+                    <>
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                      Riscuotendo...
+                    </>
+                  ) : (
+                    <>
+                      <Gift className="w-6 h-6" />
+                      RISCUOTI VINCITA
+                      <Sparkles className="w-6 h-6" />
+                    </>
+                  )}
+                </motion.button>
+                
+                <p className="text-center text-white/40 text-xs">
+                  Il premio verrà accreditato immediatamente sul tuo saldo M1U
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       {/* Header */}
       <div className="max-w-lg mx-auto">
+        {/* Pending Wins Banner */}
+        {pendingWins.length > 0 && !showClaimModal && (
+          <motion.button
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            onClick={() => {
+              setSelectedWin(pendingWins[0]);
+              setShowClaimModal(true);
+            }}
+            className="w-full mb-4 p-4 rounded-xl bg-gradient-to-r from-yellow-500/20 to-amber-600/20 border border-yellow-500/50 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-yellow-500/20">
+                <Trophy className="w-6 h-6 text-yellow-400" />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-yellow-400">Hai {pendingWins.length} vincita da riscuotere!</p>
+                <p className="text-sm text-white/60">Clicca per riscuotere</p>
+              </div>
+            </div>
+            <Gift className="w-6 h-6 text-yellow-400 animate-pulse" />
+          </motion.button>
+        )}
+        
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30">
@@ -344,6 +575,7 @@ const LotteryTest: React.FC = () => {
           <button
             onClick={() => {
               loadStatus();
+              loadWins();
               refetchBalance();
             }}
             className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
