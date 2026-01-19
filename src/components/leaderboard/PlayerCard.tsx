@@ -96,9 +96,11 @@ export function PlayerCard({ player, onInvite, onCreateTeam }: PlayerCardProps) 
       transition={{ duration: 0.2 }}
       {...longPressHandlers}
     >
-      <div className={`glass-card mb-2 overflow-hidden relative transition-all duration-300
+      <div 
+        className={`glass-card mb-2 overflow-hidden relative transition-all duration-300
                     border ${isTopPlayer ? 'border-cyan-500/50 hover:border-cyan-400/70' : 'border-white/10 hover:border-white/20'} 
-                    ${player.rank <= 10 ? 'group-hover:shadow-[0_0_20px_rgba(0,255,255,0.2)]' : ''}`}>
+                    ${player.rank <= 10 ? 'group-hover:shadow-[0_0_20px_rgba(0,255,255,0.2)]' : ''}`}
+      >
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent 
                       translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"/>
         <div className="flex items-center gap-4 p-4">
