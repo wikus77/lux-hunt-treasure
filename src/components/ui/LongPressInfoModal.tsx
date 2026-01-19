@@ -24,7 +24,9 @@ interface LongPressInfoModalProps {
   subtitle?: string;
   icon?: React.ReactNode;
   accentColor?: string;
-  items: InfoItem[];
+  // Support either items array OR custom content
+  items?: InfoItem[];
+  content?: React.ReactNode;
   footer?: React.ReactNode;
 }
 
@@ -36,9 +38,12 @@ export const LongPressInfoModal: React.FC<LongPressInfoModalProps> = ({
   icon,
   accentColor = '#00D1FF',
   items,
+  content,
   footer
 }) => {
+  // Server-side rendering guard
   if (typeof document === 'undefined') return null;
+  if (!isOpen) return null;
 
   return createPortal(
     <AnimatePresence>
@@ -110,34 +115,45 @@ export const LongPressInfoModal: React.FC<LongPressInfoModalProps> = ({
               </button>
             </div>
 
-            {/* Content */}
-            <div className="px-4 pb-4 space-y-2">
-              {items.map((item, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center justify-between py-2 px-3 rounded-lg"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    {item.icon && (
-                      <span className="text-white/40">{item.icon}</span>
-                    )}
-                    <span className="text-sm text-white/60">{item.label}</span>
-                  </div>
-                  <span 
-                    className="text-sm font-bold"
-                    style={{ color: item.color || accentColor }}
-                  >
-                    {item.value}
-                  </span>
-                </motion.div>
-              ))}
+            {/* Content - Support both items array and custom content */}
+            <div className="px-4 pb-4">
+              {content ? (
+                // Custom content mode
+                <div>{content}</div>
+              ) : items && items.length > 0 ? (
+                // Items array mode
+                <div className="space-y-2">
+                  {items.map((item, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="flex items-center justify-between py-2 px-3 rounded-lg"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        {item.icon && (
+                          <span className="text-white/40">{item.icon}</span>
+                        )}
+                        <span className="text-sm text-white/60">{item.label}</span>
+                      </div>
+                      <span 
+                        className="text-sm font-bold"
+                        style={{ color: item.color || accentColor }}
+                      >
+                        {item.value}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                // No content fallback
+                <p className="text-center text-white/40 text-sm">Nessuna informazione disponibile</p>
+              )}
             </div>
 
             {/* Footer */}
@@ -166,4 +182,3 @@ export const LongPressInfoModal: React.FC<LongPressInfoModalProps> = ({
 };
 
 export default LongPressInfoModal;
-
