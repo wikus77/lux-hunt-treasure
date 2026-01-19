@@ -202,7 +202,7 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
         p_cycle_id: status.cycle_id,
         p_quantity: quantity,
         p_request_id: requestId,
-        p_source: 'shop'
+        p_source: 'app_web'
       });
       
       if (error) throw error;
