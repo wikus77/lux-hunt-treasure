@@ -31,6 +31,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { toast } from 'sonner';
+import { getMissionDeadline } from '@/utils/countdownDate';
 
 interface LotteryStatus {
   cycle_id: string;
@@ -64,7 +65,29 @@ interface UserWin {
   time_remaining_seconds: number;
 }
 
-// Format time remaining
+// Calculate time remaining from mission deadline (single source of truth)
+const calculateMissionTimeRemaining = (): { seconds: number; formatted: string } => {
+  const deadline = getMissionDeadline();
+  const now = new Date();
+  const diff = deadline.getTime() - now.getTime();
+  
+  if (diff <= 0) return { seconds: 0, formatted: 'Scaduto' };
+  
+  const totalSeconds = Math.floor(diff / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  
+  const formatted = days > 0 
+    ? `${days}g ${hours}h ${mins}m` 
+    : hours > 0 
+      ? `${hours}h ${mins}m` 
+      : `${mins}m`;
+  
+  return { seconds: totalSeconds, formatted };
+};
+
+// Format time remaining (for claim deadline)
 const formatTimeRemaining = (seconds: number): string => {
   if (seconds <= 0) return 'Scaduto';
   
@@ -90,6 +113,9 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  
+  // Mission countdown (synced with home)
+  const [missionCountdown, setMissionCountdown] = useState(calculateMissionTimeRemaining());
   
   // Wins & Claim state
   const [pendingWins, setPendingWins] = useState<UserWin[]>([]);
@@ -146,7 +172,7 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
     loadWins();
   }, [loadStatus, loadWins]);
   
-  // Auto-refresh ogni 30 secondi
+  // Auto-refresh status ogni 30 secondi
   useEffect(() => {
     const interval = setInterval(() => {
       loadStatus();
@@ -154,6 +180,15 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
     
     return () => clearInterval(interval);
   }, [loadStatus]);
+  
+  // Update mission countdown ogni secondo (synced with home timer)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setMissionCountdown(calculateMissionTimeRemaining());
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
   
   // Buy tickets
   const handleBuyTickets = async () => {
@@ -385,10 +420,10 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
           </span>
         </div>
         
-        {/* Countdown */}
+        {/* Countdown - SYNCED with Mission Timer */}
         <div className="text-center">
-          <p className="text-white/60 text-xs">Tempo rimanente</p>
-          <p className="text-xl font-bold text-white">{formatTimeRemaining(status.time_remaining_seconds)}</p>
+          <p className="text-white/60 text-xs">Tempo rimanente alla missione</p>
+          <p className="text-xl font-bold text-white">{missionCountdown.formatted}</p>
         </div>
         
         {/* Progress */}

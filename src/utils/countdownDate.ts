@@ -1,18 +1,16 @@
 
-// © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
-// M1SSION™ - Countdown Date Utilities - RESET COMPLETO 17/07/2025
+// © 2026 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
+// M1SSION™ - Countdown Date Utilities - MISSION GENNAIO 2026
 
 export const getMissionDeadline = (): Date => {
-  // MISSION START: 17 July 2025 - 30 days duration
-  const missionStart = new Date('2025-07-17T00:00:00.000Z');
-  const missionEnd = new Date(missionStart);
-  missionEnd.setDate(missionStart.getDate() + 30); // 30 days total
-  
-  return missionEnd;
+  // MISSION END: 30 Gennaio 2026 alle 23:59:59 UTC
+  // Questa è la data di fine della missione corrente
+  return new Date('2026-01-30T23:59:59.000Z');
 };
 
 export const getMissionStartDate = (): Date => {
-  return new Date('2025-07-17T00:00:00.000Z');
+  // MISSION START: 1 Gennaio 2026
+  return new Date('2026-01-01T00:00:00.000Z');
 };
 
 export const calculateRemainingDays = (): number => {
