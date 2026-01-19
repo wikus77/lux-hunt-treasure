@@ -12,7 +12,8 @@ import M1UPill from '@/features/m1u/M1UPill';
 
 // Lazy load solo componenti pesanti
 const ShadowIntercepts = lazy(() => import('@/components/intelligence/ShadowIntercepts'));
-import { InactivityHint } from '@/components/first-session';
+// STANDBY: Sistema hint inattività disabilitato - riattivare se necessario
+// import { InactivityHint } from '@/components/first-session';
 import { MotivationalPopup } from '@/components/feedback';
 
 const IntelligencePage: React.FC = () => {
@@ -123,10 +124,11 @@ const IntelligencePage: React.FC = () => {
           />
         </div>
         
-        {/* Hint nascosto su mobile per risparmiare spazio */}
+        {/* STANDBY: Hint per utenti inattivi disabilitato
         <div className="hidden md:block">
           <InactivityHint type="aion" />
         </div>
+        */}
       </div>
     </div>
     

@@ -22,7 +22,8 @@ import { DebugBuzzPanel } from '@/debug/DebugBuzzPanel';
 import { useActiveMissionEnrollment } from '@/hooks/useActiveMissionEnrollment';
 import { Rocket, Lock, AlertCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { InactivityHint } from '@/components/first-session';
+// STANDBY: Sistema hint inattività disabilitato - riattivare se necessario
+// import { InactivityHint } from '@/components/first-session';
 import { MotivationalPopup } from '@/components/feedback';
 
 export const BuzzPage: React.FC = () => {
@@ -316,8 +317,9 @@ export const BuzzPage: React.FC = () => {
 
       {/* Debug Panel (only if enabled) */}
       {debugEnabled && <DebugBuzzPanel />}
-      {/* 🆕 Hint per utenti inattivi (1 volta al giorno) */}
+      {/* 🆕 STANDBY: Hint per utenti inattivi disabilitato
       <InactivityHint type="buzz" />
+      */}
       
       {/* 🎯 Motivational Popup - Shows once per session */}
       <MotivationalPopup pageType="buzz" />

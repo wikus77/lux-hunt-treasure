@@ -67,7 +67,9 @@ import { DebugMapPanel } from '@/debug/DebugMapPanel';
 import { useMapGlitchEffect } from '@/hooks/useMapGlitchEffect';
 import { useMapTimeTracking } from '@/hooks/useMapTimeTracking'; // 🔋 PE: Tempo in Mappa
 // 🎯 FIRST SESSION: Guided discovery components
-import { MapHUD, BuzzHelpPopup, MapExploreHint } from '@/components/first-session';
+import { MapHUD } from '@/components/first-session';
+// STANDBY: Sistema hint inattività disabilitato - riattivare se necessario
+// import { BuzzHelpPopup, MapExploreHint } from '@/components/first-session';
 // MicroMissionsCard ora è globale in App.tsx
 // 🎯 DAILY MISSIONS: Mission pill
 import { MissionPill } from '@/missions/ui/MissionPill';
@@ -1895,9 +1897,10 @@ export default function MapTiler3D() {
       {/* 🎯 FIRST SESSION: Guided Discovery System (feature-flagged) */}
       <MapHUD mapContainerId="ml-sandbox" />
       {/* MicroMissionsCard ora è globale in App.tsx */}
+      {/* STANDBY: Sistema hint inattività disabilitato
       <BuzzHelpPopup mapContainerId="ml-sandbox" />
-      {/* 🆕 Hint "Esplora la mappa" per utenti inattivi (1 volta al giorno) */}
       <MapExploreHint mapContainerId="ml-sandbox" />
+      */}
       
       {/* 🎯 Motivational Popup - Shows once per session */}
       <MotivationalPopup pageType="map" />
