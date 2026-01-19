@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 // Lazy load components
 const FortuneWheel = lazy(() => import('@/components/feedback/FortuneWheel'));
 const ScratchWinModal = lazy(() => import('@/components/scratch/ScratchWinModal'));
+const LotteryContent = lazy(() => import('@/components/shop/LotteryContent'));
 
 interface ShopModalProps {
   isOpen: boolean;
@@ -202,7 +203,7 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
             {[
               { id: 'scratch' as ShopTab, label: 'Scratch & Win', color: 'from-yellow-500 to-amber-600' },
               { id: 'wheel' as ShopTab, label: 'Gira la Ruota', color: 'from-green-500 to-emerald-600', badge: canSpinWheel },
-              { id: 'lottery' as ShopTab, label: 'Lotteria', color: 'from-blue-500 to-cyan-600', coming: true },
+              { id: 'lottery' as ShopTab, label: 'Lotteria', color: 'from-blue-500 to-cyan-600' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -226,11 +227,6 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
                 {/* Badge for available actions */}
                 {tab.badge && (
                   <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-                )}
-                
-                {/* Coming soon badge */}
-                {tab.coming && (
-                  <span className="absolute -top-1 right-0 px-1 py-0.5 text-[8px] font-bold bg-blue-500 text-white rounded">SOON</span>
                 )}
               </button>
             ))}
@@ -373,25 +369,16 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
 
             {/* LOTTERIA TAB */}
             {activeTab === 'lottery' && (
-              <div className="space-y-4 text-center py-12">
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30"
-                >
-                  <Ticket className="w-10 h-10 text-blue-400" />
-                </motion.div>
-                
-                <h3 className="text-xl font-bold text-white">Lotteria M1SSION</h3>
-                <p className="text-white/60 max-w-xs mx-auto">
-                  Acquista biglietti della lotteria e partecipa all'estrazione settimanale di <span className="text-cyan-400 font-bold">MEGA PREMI</span>!
-                </p>
-                
-                <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/30">
-                  <p className="text-sm text-blue-300 font-medium">🚧 In arrivo...</p>
-                  <p className="text-xs text-white/50 mt-1">Questa funzione sarà disponibile a breve!</p>
+              <Suspense fallback={
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
                 </div>
-              </div>
+              }>
+                <LotteryContent 
+                  balance={balance}
+                  onBalanceUpdate={refetch}
+                />
+              </Suspense>
             )}
           </div>
         </motion.div>
