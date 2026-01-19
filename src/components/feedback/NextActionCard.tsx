@@ -7,7 +7,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, Map, Zap, Gift, Brain, Swords, Target, Sparkles } from 'lucide-react';
+import { ChevronRight, Map, Zap, Gift, Brain, Swords, Target, Sparkles, Info } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { determineNextAction, NextAction } from '@/gameplay/progress';
 import { useMissionStatus } from '@/hooks/useMissionStatus';
@@ -15,6 +15,8 @@ import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { PROGRESS_FEEDBACK_ENABLED } from '@/config/featureFlags';
 import { GLASS_PRESETS, M1SSION_COLORS } from './glassPresets';
+import { useLongPress } from '@/hooks/useLongPress';
+import { LongPressInfoModal, InfoItem } from '@/components/ui/LongPressInfoModal';
 
 interface NextActionCardProps {
   className?: string;
@@ -25,6 +27,12 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ className = '' }
   const { user } = useUnifiedAuth();
   const { missionStatus } = useMissionStatus();
   const { dailyBuzzCounter } = useBuzzCounter(user?.id);
+  const [showLongPressInfo, setShowLongPressInfo] = useState(false);
+  
+  // Long press handler - shows info instead of navigating
+  const longPressHandlers = useLongPress(() => {
+    setShowLongPressInfo(true);
+  }, { threshold: 500 });
   
   // ✅ ENABLED FOR ALL USERS (Opzione A - 7 Jan 2025)
   // const isAllowed = isUserInProgressFeedbackAllowlist(user?.email);
@@ -96,6 +104,7 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ className = '' }
     >
       <motion.button
         onClick={handleClick}
+        {...longPressHandlers}
         className="w-full rounded-2xl overflow-hidden relative backdrop-blur-xl"
         style={{
           background: preset.background,
@@ -170,6 +179,28 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ className = '' }
           </div>
         </div>
       </motion.button>
+      
+      {/* Long Press Info Modal */}
+      <LongPressInfoModal
+        isOpen={showLongPressInfo}
+        onClose={() => setShowLongPressInfo(false)}
+        title="PROSSIMO PASSO"
+        subtitle="Azione consigliata"
+        icon={getIcon()}
+        accentColor="#00FF88"
+        items={[
+          { label: 'Azione', value: nextAction.label, color: '#00FF88', icon: <Target className="w-4 h-4" /> },
+          { label: 'Descrizione', value: nextAction.description, color: '#fff' },
+          { label: 'Tipo', value: nextAction.type.replace(/_/g, ' ').toUpperCase(), color: '#00D1FF' },
+          { label: 'Priorità', value: `${nextAction.priority}/100`, color: nextAction.priority >= 80 ? '#FF4444' : nextAction.priority >= 50 ? '#FFD700' : '#22C55E' },
+          { label: 'Destinazione', value: nextAction.path, color: '#A855F7' },
+        ]}
+        footer={
+          <p className="text-xs text-white/50 text-center">
+            Tocca la card per andare a questa sezione
+          </p>
+        }
+      />
     </motion.div>
   );
 };

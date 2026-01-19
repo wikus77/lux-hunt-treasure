@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Target, Clock, Play, X, Check } from 'lucide-react';
+import { ChevronRight, Target, Clock, Play, X, Check, Info, Gift } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { 
   MISSIONS_ENABLED, 
@@ -26,6 +26,8 @@ import {
 } from '@/missions/missionState';
 import { creditM1USafe } from '@/missions/rewards/creditM1U';
 import { GLASS_PRESETS, M1SSION_COLORS } from './glassPresets';
+import { useLongPress } from '@/hooks/useLongPress';
+import { LongPressInfoModal, InfoItem } from '@/components/ui/LongPressInfoModal';
 
 interface DailyMissionCardProps {
   className?: string;
@@ -43,6 +45,7 @@ const CYAN_PRESET = {
 export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = '' }) => {
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
+  const [showLongPressInfo, setShowLongPressInfo] = useState(false);
   const [phase, setPhase] = useState(0);
   const [showCompletion, setShowCompletion] = useState(false);
   const [completedReward, setCompletedReward] = useState(0);
@@ -51,6 +54,11 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
 
   const mission = getMissionOfTheDay();
   const { phase1: phase1Reward, phase2: phase2Reward } = calculatePhaseRewards(mission.totalRewardM1U);
+  
+  // Long press handler - shows brief info
+  const longPressHandlers = useLongPress(() => {
+    setShowLongPressInfo(true);
+  }, { threshold: 500 });
 
   // Refresh state
   const refreshState = useCallback(() => {
@@ -137,6 +145,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
       >
         <motion.button
           onClick={() => setShowModal(true)}
+          {...longPressHandlers}
           className="w-full rounded-2xl overflow-hidden relative backdrop-blur-xl"
           style={{
             background: CYAN_PRESET.background,
@@ -529,6 +538,29 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
         </AnimatePresence>,
         document.body
       )}
+      
+      {/* Long Press Info Modal - Versione Breve */}
+      <LongPressInfoModal
+        isOpen={showLongPressInfo}
+        onClose={() => setShowLongPressInfo(false)}
+        title="DAILY MISSION"
+        subtitle={mission.title}
+        icon={<span className="text-2xl">{mission.icon}</span>}
+        accentColor="#00D1FF"
+        items={[
+          { label: 'Missione', value: mission.title, color: '#fff', icon: <Target className="w-4 h-4" /> },
+          { label: 'Fase attuale', value: phase === 0 ? 'Non iniziata' : phase === 1 ? 'Phase 1' : phase === 2 ? 'Phase 2' : 'Completata', color: phase === 0 ? '#FFD700' : phase === 3 ? '#22C55E' : '#00D1FF' },
+          { label: 'Reward P1', value: `+${phase1Reward} M1U`, color: '#00FF88', icon: <Gift className="w-4 h-4" /> },
+          { label: 'Reward P2', value: `+${phase2Reward} M1U`, color: '#FFD700', icon: <Gift className="w-4 h-4" /> },
+          { label: 'Reward Totale', value: `+${mission.totalRewardM1U} M1U`, color: '#A855F7' },
+          { label: 'Status', value: isPhase2Available() ? '⚡ Phase 2 Pronta!' : phase === 0 ? '🆕 Nuova' : '⏳ In corso', color: isPhase2Available() ? '#FFD700' : '#00D1FF' },
+        ]}
+        footer={
+          <p className="text-xs text-white/50 text-center">
+            Tocca la card per vedere i dettagli completi
+          </p>
+        }
+      />
     </>
   );
 };
