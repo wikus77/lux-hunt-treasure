@@ -3,7 +3,7 @@ import { UserRankBadge } from './UserRankBadge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, TrendingUp, TrendingDown, Users, Plus } from 'lucide-react';
+import { MoreHorizontal, TrendingUp, TrendingDown, Users, Plus, Trophy, Target, MapPin, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { 
   DropdownMenu,
@@ -13,6 +13,8 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import BriefProfileModal from '@/components/profile/BriefProfileModal';
+import { useLongPress } from '@/hooks/useLongPress';
+import { LongPressInfoModal, InfoItem } from '@/components/ui/LongPressInfoModal';
 
 interface PlayerCardProps {
   player: {
@@ -35,6 +37,23 @@ interface PlayerCardProps {
 export function PlayerCard({ player, onInvite, onCreateTeam }: PlayerCardProps) {
   const isTopPlayer = player.rank <= 10;
   const [showProfile, setShowProfile] = useState(false);
+  const [showLongPressInfo, setShowLongPressInfo] = useState(false);
+  
+  // Long press handler
+  const longPressHandlers = useLongPress(() => {
+    setShowLongPressInfo(true);
+  }, { threshold: 500 });
+  
+  // Info items for long press modal
+  const infoItems: InfoItem[] = [
+    { label: 'Posizione', value: `#${player.rank}`, color: player.rank <= 3 ? '#FFD700' : '#00D1FF', icon: <Trophy className="w-4 h-4" /> },
+    { label: 'Punti', value: player.points.toLocaleString(), color: '#A855F7', icon: <Award className="w-4 h-4" /> },
+    { label: 'Indizi trovati', value: player.cluesFound, color: '#22C55E', icon: <Target className="w-4 h-4" /> },
+    { label: 'Aree esplorate', value: player.areasExplored, color: '#00D1FF', icon: <MapPin className="w-4 h-4" /> },
+    { label: 'Paese', value: player.country, color: '#fff' },
+    ...(player.team ? [{ label: 'Squadra', value: player.team, color: '#00D1FF', icon: <Users className="w-4 h-4" /> }] : []),
+    { label: 'Variazione oggi', value: player.dailyChange > 0 ? `+${player.dailyChange}` : player.dailyChange.toString(), color: player.dailyChange > 0 ? '#22C55E' : player.dailyChange < 0 ? '#EF4444' : '#fff' },
+  ];
   
   const getBadgeElement = (badge: string) => {
     switch (badge) {
@@ -75,6 +94,7 @@ export function PlayerCard({ player, onInvite, onCreateTeam }: PlayerCardProps) 
       className="relative group"
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
+      {...longPressHandlers}
     >
       <div className={`glass-card mb-2 overflow-hidden relative transition-all duration-300
                     border ${isTopPlayer ? 'border-cyan-500/50 hover:border-cyan-400/70' : 'border-white/10 hover:border-white/20'} 
@@ -188,6 +208,24 @@ export function PlayerCard({ player, onInvite, onCreateTeam }: PlayerCardProps) 
         open={showProfile}
         onClose={() => setShowProfile(false)}
         profileImage={player.avatar}
+      />
+      
+      {/* Long Press Info Modal */}
+      <LongPressInfoModal
+        isOpen={showLongPressInfo}
+        onClose={() => setShowLongPressInfo(false)}
+        title={player.name}
+        subtitle={`Rank #${player.rank} • ${player.country}`}
+        icon={<Trophy className="w-5 h-5" style={{ color: player.rank <= 3 ? '#FFD700' : '#00D1FF' }} />}
+        accentColor={player.rank <= 3 ? '#FFD700' : '#00D1FF'}
+        items={infoItems}
+        footer={
+          player.badges.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {player.badges.map(badge => getBadgeElement(badge))}
+            </div>
+          )
+        }
       />
     </motion.div>
   );

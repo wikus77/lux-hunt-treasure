@@ -1,11 +1,13 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Clock, Target, ChevronDown, Bell, Calendar, Hourglass, AlertTriangle } from "lucide-react";
+import { Search, Clock, Target, ChevronDown, Bell, Calendar, Hourglass, AlertTriangle, CheckCircle, XCircle, Zap } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { GlassModal } from "@/components/ui/GlassModal";
 import { useClueMilestones, CLUE_MILESTONES } from "@/hooks/useClueMilestones";
 import { ClueMilestoneModal } from "@/components/milestones/ClueMilestoneModal";
+import { useLongPress } from "@/hooks/useLongPress";
+import { LongPressInfoModal, InfoItem } from "@/components/ui/LongPressInfoModal";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PULSE INTENSITY CALCULATOR (Day -10 to Day 0)
@@ -418,8 +420,19 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [levelUpAnimation, setLevelUpAnimation] = useState(false);
   const [showEndWarningModal, setShowEndWarningModal] = useState(false);
+  
+  // Long press info states
+  const [showCluesLongPress, setShowCluesLongPress] = useState(false);
+  const [showTimeLongPress, setShowTimeLongPress] = useState(false);
+  const [showStatusLongPress, setShowStatusLongPress] = useState(false);
+  
   const prevClueCount = useRef<number>(0);
   const warningChecked = useRef<boolean>(false);
+  
+  // Long press handlers
+  const cluesLongPress = useLongPress(() => setShowCluesLongPress(true), { threshold: 500 });
+  const timeLongPress = useLongPress(() => setShowTimeLongPress(true), { threshold: 500 });
+  const statusLongPress = useLongPress(() => setShowStatusLongPress(true), { threshold: 500 });
   
   // 🏆 MILESTONE SYSTEM
   const { 
@@ -541,6 +554,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           className="m1-relief-sm rounded-2xl p-4 cursor-pointer hover:border-green-500/30 transition-colors overflow-hidden relative"
           data-section="clues"
           onClick={() => setIsCluesModalOpen(true)}
+          {...cluesLongPress}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -616,6 +630,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             'hover:border-amber-500/30'
           }`}
           onClick={() => setIsTimeModalOpen(true)}
+          {...timeLongPress}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -717,6 +732,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
         <motion.div
           className="m1-relief-sm rounded-2xl p-4 cursor-pointer hover:border-[#00D1FF]/30 transition-colors overflow-hidden relative"
           onClick={() => setIsStatusModalOpen(true)}
+          {...statusLongPress}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -851,6 +867,76 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           </motion.button>
         </div>
       </GlassModal>
+      
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* LONG PRESS INFO MODALS - Versione Breve */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      
+      {/* INDIZI TROVATI - Long Press */}
+      <LongPressInfoModal
+        isOpen={showCluesLongPress}
+        onClose={() => setShowCluesLongPress(false)}
+        title="INDIZI TROVATI"
+        subtitle="Progressi caccia al tesoro"
+        icon={<Search className="w-5 h-5 text-green-400" />}
+        accentColor="#22C55E"
+        items={[
+          { label: 'Trovati', value: `${displayCluesFound}/${totalClues}`, color: '#22C55E', icon: <Target className="w-4 h-4" /> },
+          { label: 'Completamento', value: `${Math.round((displayCluesFound / totalClues) * 100)}%`, color: '#00D1FF' },
+          { label: 'Rimanenti', value: totalClues - displayCluesFound, color: '#FFD700' },
+          { label: 'Prossimo traguardo', value: nextMilestone ? `${nextMilestone.threshold} indizi` : 'Completato!', color: '#A855F7' },
+        ]}
+        footer={
+          <p className="text-xs text-white/50 text-center">
+            Tocca per vedere tutti i dettagli
+          </p>
+        }
+      />
+      
+      {/* TEMPO RIMASTO - Long Press */}
+      <LongPressInfoModal
+        isOpen={showTimeLongPress}
+        onClose={() => setShowTimeLongPress(false)}
+        title="TEMPO RIMASTO"
+        subtitle="Countdown missione"
+        icon={<Clock className="w-5 h-5" style={{ color: isFinalDay ? '#EF4444' : isUrgent ? '#F97316' : '#FBBF24' }} />}
+        accentColor={isFinalDay ? '#EF4444' : isUrgent ? '#F97316' : '#FBBF24'}
+        items={[
+          { label: 'Giorni rimasti', value: mission.remainingDays, color: isFinalDay ? '#EF4444' : isUrgent ? '#F97316' : '#FBBF24', icon: <Hourglass className="w-4 h-4" /> },
+          { label: 'Giorni trascorsi', value: mission.totalDays - mission.remainingDays, color: '#22C55E' },
+          { label: 'Durata totale', value: `${mission.totalDays} giorni`, color: '#00D1FF' },
+          { label: 'Progresso tempo', value: `${Math.round(((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100)}%`, color: '#A855F7' },
+          { label: 'Inizio missione', value: new Date(mission.startTime).toLocaleDateString('it-IT'), color: '#fff' },
+        ]}
+        footer={
+          <p className="text-xs text-white/50 text-center">
+            {isFinalDay ? '⚠️ ULTIMO GIORNO!' : isUrgent ? '⏰ Affrettati!' : 'Tocca per dettagli'}
+          </p>
+        }
+      />
+      
+      {/* STATO MISSIONE - Long Press */}
+      <LongPressInfoModal
+        isOpen={showStatusLongPress}
+        onClose={() => setShowStatusLongPress(false)}
+        title="STATO MISSIONE"
+        subtitle={mission.title}
+        icon={mission.remainingDays > 0 ? <CheckCircle className="w-5 h-5 text-green-400" /> : <XCircle className="w-5 h-5 text-red-400" />}
+        accentColor="#00D1FF"
+        items={[
+          { label: 'Status', value: mission.remainingDays > 0 ? 'ATTIVA' : 'SCADUTA', color: mission.remainingDays > 0 ? '#22C55E' : '#EF4444', icon: <Zap className="w-4 h-4" /> },
+          { label: 'ID Missione', value: mission.id, color: '#00D1FF' },
+          { label: 'Titolo', value: mission.title, color: '#fff' },
+          { label: 'Indizi trovati', value: `${displayCluesFound}/${totalClues}`, color: '#22C55E' },
+          { label: 'Tempo rimasto', value: `${mission.remainingDays} giorni`, color: mission.remainingDays <= 5 ? '#F97316' : '#FBBF24' },
+          { label: 'Avanzamento', value: `${Math.round(((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100)}%`, color: '#A855F7' },
+        ]}
+        footer={
+          <p className="text-xs text-white/50 text-center">
+            Tocca per vedere la timeline completa
+          </p>
+        }
+      />
     </div>
   );
 }
