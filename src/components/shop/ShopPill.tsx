@@ -9,27 +9,44 @@
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Sparkles } from 'lucide-react';
+import { ShoppingBag, Sparkles, Trophy } from 'lucide-react';
 import { SectionErrorBoundary } from '@/components/error/SectionErrorBoundary';
+import { supabase } from '@/integrations/supabase/client';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 // Lazy load ShopModal per ridurre memory footprint iniziale
 const ShopModal = lazy(() => import('@/components/shop/ShopModal'));
 
 const WHEEL_STORAGE_KEY = 'm1_fortune_wheel_last_spin';
-const SCRATCH_STORAGE_KEY = 'm1_scratch_last_purchase';
 
 export const ShopPill: React.FC = () => {
+  const { user } = useUnifiedAuth();
   const [showShop, setShowShop] = useState(false);
   const [hasNotification, setHasNotification] = useState(false);
+  const [hasPendingWins, setHasPendingWins] = useState(false);
 
-  // Check if user has pending actions (wheel spin available, etc.)
+  // Check if user has pending actions (wheel spin available, lottery wins, etc.)
   useEffect(() => {
-    const checkNotifications = () => {
+    const checkNotifications = async () => {
       // Check wheel availability
       const lastSpin = localStorage.getItem(WHEEL_STORAGE_KEY);
       const canSpin = !lastSpin || new Date(lastSpin).toDateString() !== new Date().toDateString();
       
-      setHasNotification(canSpin);
+      // Check lottery pending wins
+      let pendingWins = false;
+      if (user) {
+        try {
+          const { data } = await supabase.rpc('get_my_lottery_wins');
+          if (data?.wins) {
+            pendingWins = data.wins.some((w: any) => w.claim_status === 'pending');
+          }
+        } catch (err) {
+          console.error('Failed to check lottery wins:', err);
+        }
+      }
+      
+      setHasPendingWins(pendingWins);
+      setHasNotification(canSpin || pendingWins);
     };
 
     checkNotifications();
@@ -37,12 +54,14 @@ export const ShopPill: React.FC = () => {
     // Listen for storage changes
     window.addEventListener('storage', checkNotifications);
     window.addEventListener('wheel-spun', checkNotifications);
+    window.addEventListener('lottery-prize-claimed', checkNotifications);
     
     return () => {
       window.removeEventListener('storage', checkNotifications);
       window.removeEventListener('wheel-spun', checkNotifications);
+      window.removeEventListener('lottery-prize-claimed', checkNotifications);
     };
-  }, []);
+  }, [user]);
 
   return (
     <>
@@ -82,7 +101,23 @@ export const ShopPill: React.FC = () => {
 
         {/* Notification badge */}
         <AnimatePresence>
-          {hasNotification && (
+          {hasPendingWins ? (
+            /* Gold badge for lottery wins */
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 flex items-center justify-center"
+              style={{ boxShadow: '0 0 12px rgba(255, 215, 0, 0.9)' }}
+            >
+              <Trophy className="w-3 h-3 text-white" />
+              <motion.div
+                className="absolute inset-0 rounded-full bg-yellow-400"
+                animate={{ scale: [1, 1.8, 1], opacity: [0.5, 0, 0.5] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+              />
+            </motion.div>
+          ) : hasNotification && (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
