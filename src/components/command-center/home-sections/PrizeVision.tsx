@@ -9,6 +9,9 @@ import "@/styles/landing-flip-cards.css";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getAgentById, getDefaultAgent } from "@/components/agent/agentCatalog";
+import { useLongPress } from "@/hooks/useLongPress";
+import { LongPressInfoModal } from "@/components/ui/LongPressInfoModal";
+import { Gift, Trophy, Car, Diamond } from "lucide-react";
 
 // M1SSION PRIZE - real assets from public/assets/prizes (percorsi reali)
 const missionPrizeImages = [
@@ -77,6 +80,14 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
   const [selectedAgentGlb, setSelectedAgentGlb] = useState<string | null>(null);
   const [agentName, setAgentName] = useState<string>('');
   const [agentCode, setAgentCode] = useState<string>('AG-XXXX');
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  
+  // Long press handler for info modal
+  const longPressHandlers = useLongPress(() => setShowInfoModal(true), {
+    threshold: 500,
+    hapticFeedback: true,
+    hapticPattern: [50]
+  });
 
   // Load selected agent for Decryption Room
   useEffect(() => {
@@ -191,10 +202,11 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
 
   return (
     <div className="w-full">
-      {/* 3D Flip Wrapper */}
+      {/* 3D Flip Wrapper with Long Press for Info */}
       <div 
         className="m1-prize-flip-wrapper"
         style={{ perspective: '1200px' }}
+        {...longPressHandlers}
       >
         <div 
           className={`m1-prize-flip-inner ${isDecryptionMode ? 'is-flipped' : ''}`}
@@ -634,6 +646,51 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
           </div>
         </div>
       </div>
+      
+      {/* Long Press Info Modal */}
+      <LongPressInfoModal
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+        title="M1SSION PRIZE"
+        subtitle="Il tuo tesoro ti aspetta!"
+        accentColor="#FFD700"
+        content={
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Trophy className="w-5 h-5 text-yellow-400" />
+              <div>
+                <p className="font-semibold text-yellow-400">Monte Premi</p>
+                <p className="text-white/70 text-xs">Oltre 99 premi esclusivi da vincere</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Car className="w-5 h-5 text-cyan-400" />
+              <div>
+                <p className="font-semibold text-cyan-400">Auto di Lusso</p>
+                <p className="text-white/70 text-xs">Porsche, Ferrari, e altre supercar</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Diamond className="w-5 h-5 text-purple-400" />
+              <div>
+                <p className="font-semibold text-purple-400">Gioielli & Orologi</p>
+                <p className="text-white/70 text-xs">Rolex, Cartier, e pietre preziose</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Gift className="w-5 h-5 text-emerald-400" />
+              <div>
+                <p className="font-semibold text-emerald-400">Come Vincere</p>
+                <p className="text-white/70 text-xs">Completa M1SSION e sblocca i premi</p>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-white/10 text-center">
+              <p className="text-xs text-white/50">Progresso attuale: <span className="text-yellow-400 font-bold">{progress}%</span></p>
+              <p className="text-[10px] text-white/40 mt-1">Scorri per vedere tutti i premi disponibili</p>
+            </div>
+          </div>
+        }
+      />
     </div>
   );
 }

@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect, useCallback, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Plus, RefreshCw, Sparkles, User } from "lucide-react";
+import { ChevronDown, Plus, RefreshCw, Sparkles, User, Activity, Target, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 // 🔥 CRITICAL: Lazy load AgentLabModal to prevent THREE.js hook errors
@@ -14,6 +14,8 @@ const AgentLabModal = lazy(() => import("@/components/agent/AgentLabModal").then
 import { GlassModal } from "@/components/ui/GlassModal";
 import { useAgentCode } from "@/hooks/useAgentCode";
 import { useAgentEnergy } from "@/features/pulse/hooks/useAgentEnergy";
+import { useLongPress } from "@/hooks/useLongPress";
+import { LongPressInfoModal } from "@/components/ui/LongPressInfoModal";
 
 interface DiaryEntry {
   type: "purchase" | "note" | "achievement" | "clue" | "buzz";
@@ -297,6 +299,14 @@ export function AgentDiary() {
   });
   const [loading, setLoading] = useState(true);
   const [localNotes, setLocalNotes] = useState<DiaryEntry[]>([]);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  
+  // Long press handler for quick info modal
+  const longPressHandlers = useLongPress(() => setShowInfoModal(true), {
+    threshold: 500,
+    hapticFeedback: true,
+    hapticPattern: [50]
+  });
 
   useEffect(() => {
     if (user?.id) {
@@ -588,12 +598,13 @@ export function AgentDiary() {
 
   return (
     <>
-      {/* Compact Card - Tap to open modal */}
+      {/* Compact Card - Tap to open modal, Long press for quick info */}
       <motion.div 
         className="m1-relief rounded-[20px] overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 mb-4 relative"
         onClick={handleOpenModal}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
+        {...longPressHandlers}
       >
         {/* Animated glow strip */}
         <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
@@ -693,6 +704,50 @@ export function AgentDiary() {
           onClose={() => setShowAgentLab(false)} 
         />
       </Suspense>
+      
+      {/* Long Press Info Modal */}
+      <LongPressInfoModal
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+        title="M1SSION AGENT"
+        subtitle="Il tuo profilo operativo"
+        accentColor="#00D1FF"
+        content={
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <User className="w-5 h-5 text-cyan-400" />
+              <div>
+                <p className="font-semibold text-cyan-400">Codice Agente</p>
+                <p className="text-white/70 text-xs">{agentCode || 'Non assegnato'} • Rango: {energy?.rank?.code || 'AG-01'}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Activity className="w-5 h-5 text-blue-400" />
+              <div>
+                <p className="font-semibold text-blue-400">Attività Totali</p>
+                <p className="text-white/70 text-xs">{stats.totalActivities} azioni completate nella missione</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Target className="w-5 h-5 text-purple-400" />
+              <div>
+                <p className="font-semibold text-purple-400">Indizi Trovati</p>
+                <p className="text-white/70 text-xs">{stats.cluesCount} indizi scoperti tramite BUZZ</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-5 h-5 text-green-400" />
+              <div>
+                <p className="font-semibold text-green-400">Note Personali</p>
+                <p className="text-white/70 text-xs">{stats.notesCount} note salvate nel diario</p>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-white/10 text-center">
+              <p className="text-[10px] text-white/40">Tocca la card per aprire il diario completo</p>
+            </div>
+          </div>
+        }
+      />
     </>
   );
 }
