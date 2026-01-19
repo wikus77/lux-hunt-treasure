@@ -22,7 +22,8 @@ import StreakPill from "@/components/gamification/StreakPill";
 import CashbackVaultPill from "@/components/home/CashbackVaultPill";
 import ShopPill from "@/components/shop/ShopPill";
 import MissionSync from "@/components/home/MissionSync";
-import { InactivityHint } from "@/components/first-session";
+// STANDBY: Sistema hint inattività disabilitato - riattivare se necessario
+// import { InactivityHint } from "@/components/first-session";
 import { NextActionCard, DailyMissionCard, MotivationalPopup, FortuneWheel } from "@/components/feedback";
 import { SectionErrorBoundary } from "@/components/error/SectionErrorBoundary";
 
@@ -419,8 +420,9 @@ const { isConnected } = useRealTimeNotifications();
           )}
         </AnimatePresence>
       </div>
-      {/* 🆕 Hint per utenti inattivi (1 volta al giorno) */}
+      {/* 🆕 STANDBY: Hint per utenti inattivi disabilitato
       <InactivityHint type="home" />
+      */}
       
       {/* 🎯 Motivational Popup - Shows once per session */}
       <MotivationalPopup pageType="home" />
