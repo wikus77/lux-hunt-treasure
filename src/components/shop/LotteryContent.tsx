@@ -32,6 +32,7 @@ import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { toast } from 'sonner';
 import { getMissionDeadline } from '@/utils/countdownDate';
+import LotteryTicketCard from './LotteryTicketCard';
 
 interface LotteryStatus {
   cycle_id: string;
@@ -63,6 +64,16 @@ interface UserWin {
   claim_status: 'pending' | 'claimed' | 'expired';
   claim_deadline: string;
   time_remaining_seconds: number;
+}
+
+interface UserTicket {
+  id: string;
+  ticket_code: string;
+  status: 'active' | 'winner' | 'void';
+  created_at: string;
+  draw_rank: number | null;
+  prize_amount: number | null;
+  cycle_id: string;
 }
 
 // Calculate time remaining from mission deadline (single source of truth)
@@ -123,6 +134,12 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
   const [selectedWin, setSelectedWin] = useState<UserWin | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
   
+  // My Tickets state
+  const [myTickets, setMyTickets] = useState<UserTicket[]>([]);
+  const [showMyTickets, setShowMyTickets] = useState(false);
+  const [newTicketCodes, setNewTicketCodes] = useState<string[]>([]);
+  const [showNewTicketModal, setShowNewTicketModal] = useState(false);
+  
   // Load lottery status
   const loadStatus = useCallback(async () => {
     try {
@@ -166,11 +183,37 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
     }
   }, [user, showClaimModal]);
   
+  // Load my tickets
+  const loadMyTickets = useCallback(async () => {
+    if (!user || !status?.cycle_id) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('get_user_lottery_tickets', {
+        p_cycle_id: status.cycle_id
+      });
+      
+      if (error) throw error;
+      
+      if (data?.tickets) {
+        setMyTickets(data.tickets);
+      }
+    } catch (err: any) {
+      console.error('Failed to load tickets:', err);
+    }
+  }, [user, status?.cycle_id]);
+  
   // Initial load
   useEffect(() => {
     loadStatus();
     loadWins();
   }, [loadStatus, loadWins]);
+  
+  // Load tickets when status is available
+  useEffect(() => {
+    if (status?.cycle_id) {
+      loadMyTickets();
+    }
+  }, [status?.cycle_id, loadMyTickets]);
   
   // Auto-refresh status ogni 30 secondi
   useEffect(() => {
@@ -208,6 +251,12 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
       if (error) throw error;
       
       if (data.status === 'success') {
+        // Show new tickets modal
+        if (data.ticket_codes && data.ticket_codes.length > 0) {
+          setNewTicketCodes(data.ticket_codes);
+          setShowNewTicketModal(true);
+        }
+        
         toast.success(`🎫 Acquistati ${quantity} biglietti!`, {
           description: `Totale: ${data.total_cost} M1U`
         });
@@ -215,6 +264,7 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
         // Refresh
         onBalanceUpdate();
         loadStatus();
+        loadMyTickets();
         setQuantity(1);
       } else {
         toast.error('Errore', {
@@ -387,6 +437,66 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
       </AnimatePresence>
       
       {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* NEW TICKETS MODAL */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showNewTicketModal && newTicketCodes.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+            onClick={() => setShowNewTicketModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 50 }}
+              className="w-full max-w-sm max-h-[80vh] overflow-y-auto"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="text-center mb-4">
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Sparkles className="w-12 h-12 text-yellow-400 mx-auto mb-2" />
+                </motion.div>
+                <h2 className="text-xl font-bold text-white">
+                  🎫 {newTicketCodes.length === 1 ? 'NUOVO BIGLIETTO!' : `${newTicketCodes.length} NUOVI BIGLIETTI!`}
+                </h2>
+                <p className="text-white/60 text-sm mt-1">Buona fortuna!</p>
+              </div>
+              
+              {/* Tickets */}
+              <div className="space-y-3">
+                {newTicketCodes.map((code, index) => (
+                  <LotteryTicketCard
+                    key={code}
+                    ticketCode={code}
+                    status="active"
+                    createdAt={new Date().toISOString()}
+                    isNew={true}
+                  />
+                ))}
+              </div>
+              
+              {/* Close Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowNewTicketModal(false)}
+                className="w-full mt-4 py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-colors"
+              >
+                CHIUDI
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* MAIN CONTENT */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       <div className="space-y-4">
@@ -552,6 +662,56 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
                 Hai raggiunto il limite di {status.max_tickets_per_user} biglietti
               </p>
             )}
+          </div>
+        )}
+        
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        {/* I MIEI BIGLIETTI */}
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        {myTickets.length > 0 && (
+          <div className="bg-white/5 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setShowMyTickets(!showMyTickets)}
+              className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Ticket className="w-5 h-5 text-cyan-400" />
+                <span className="font-bold text-white text-sm">I MIEI BIGLIETTI</span>
+                <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold">
+                  {myTickets.length}
+                </span>
+              </div>
+              <motion.div
+                animate={{ rotate: showMyTickets ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Plus className={`w-5 h-5 text-white/50 transition-transform ${showMyTickets ? 'rotate-45' : ''}`} />
+              </motion.div>
+            </button>
+            
+            <AnimatePresence>
+              {showMyTickets && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="p-3 pt-0 space-y-2 max-h-60 overflow-y-auto">
+                    {myTickets.map((ticket) => (
+                      <LotteryTicketCard
+                        key={ticket.id}
+                        ticketCode={ticket.ticket_code}
+                        status={ticket.status}
+                        createdAt={ticket.created_at}
+                        drawRank={ticket.draw_rank}
+                        prizeAmount={ticket.prize_amount}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
         
