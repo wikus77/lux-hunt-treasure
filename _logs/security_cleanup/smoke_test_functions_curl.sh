@@ -74,7 +74,7 @@ check() {
   fi
   
   # Check allowed alternate codes
-  if [[ "$mode" == "allow401" && "$code" == "401" ]]; then
+    if [[ "$mode" == "allow401" && "$code" == "401" ]]; then
     echo "Testing $fn... ⚠️  WARN (HTTP 401 - user auth required)" | tee -a "$LOG"
     echo "   Response: $response_body" | tee -a "$LOG"
     return 0  # Warn but don't fail
@@ -87,9 +87,9 @@ check() {
   fi
   
   # Actual failure
-  echo "Testing $fn... ❌ FAIL (HTTP $code, expected $expect)" | tee -a "$LOG"
+      echo "Testing $fn... ❌ FAIL (HTTP $code, expected $expect)" | tee -a "$LOG"
   echo "   Response: $response_body" | tee -a "$LOG"
-  return 1
+      return 1
 }
 
 pass=0

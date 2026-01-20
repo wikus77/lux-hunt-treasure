@@ -22,7 +22,7 @@ serve(async (req) => {
 
   const results: Record<string, any> = {
     timestamp: new Date().toISOString(),
-    version: '2026-01-20-v1',
+    version: '2026-01-20-v2-USER-CHECK',
     checks: {}
   };
 
@@ -80,6 +80,30 @@ serve(async (req) => {
       results.checks.vapid_config = { valid: false, error: vapidError.message };
     }
 
+    // 5b. CHECK SPECIFIC USER SUBSCRIPTIONS (if user_id provided)
+    const body = await req.json().catch(() => ({}));
+    const targetUserId = body.user_id || body.target_user;
+    
+    if (targetUserId) {
+      const { data: userSubs, error: userSubsError } = await supabase
+        .from('webpush_subscriptions')
+        .select('id, endpoint, is_active, created_at')
+        .eq('user_id', targetUserId);
+      
+      results.checks.target_user = {
+        user_id: targetUserId,
+        subscriptions_count: userSubs?.length || 0,
+        active_count: userSubs?.filter((s: any) => s.is_active).length || 0,
+        subscriptions: userSubs?.map((s: any) => ({
+          id: s.id,
+          endpoint_tail: s.endpoint?.substring(s.endpoint.length - 40),
+          is_active: s.is_active,
+          created_at: s.created_at
+        })) || [],
+        error: userSubsError?.message || null
+      };
+    }
+
     // 6. GET SAMPLE SUBSCRIPTION (if any)
     const { data: sampleSub } = await supabase
       .from('webpush_subscriptions')
@@ -97,14 +121,14 @@ serve(async (req) => {
       };
 
       // 7. TRY SENDING TEST PUSH (if subscription exists and test=true in body)
-      const body = await req.json().catch(() => ({}));
       if (body.test_send === true) {
         try {
-          const { data: fullSub } = await supabase
-            .from('webpush_subscriptions')
-            .select('endpoint, keys')
-            .eq('id', sampleSub.id)
-            .single();
+          // Use target user's subscription if specified, otherwise use sample
+          const subQuery = targetUserId 
+            ? supabase.from('webpush_subscriptions').select('id, endpoint, keys').eq('user_id', targetUserId).eq('is_active', true).limit(1).single()
+            : supabase.from('webpush_subscriptions').select('endpoint, keys').eq('id', sampleSub.id).single();
+          
+          const { data: fullSub } = await subQuery;
 
           if (fullSub?.endpoint && fullSub?.keys) {
             const pushPayload = JSON.stringify({

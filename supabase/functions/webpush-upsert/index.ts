@@ -33,13 +33,18 @@ function getCorsHeaders(request: Request): Record<string, string> {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('origin') || 'no-origin';
+  console.log(`[WEBPUSH-UPSERT] 🔵 Request received from origin: ${origin}, method: ${req.method}`);
+  
   const corsHeaders = getCorsHeaders(req);
   
   if (req.method === 'OPTIONS') {
+    console.log(`[WEBPUSH-UPSERT] ✅ CORS preflight OK for origin: ${origin}`);
     return new Response(null, { status: 204, headers: corsHeaders });
   }
   
   if (req.method !== 'POST') {
+    console.log(`[WEBPUSH-UPSERT] ❌ Method not allowed: ${req.method}`);
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { 
       status: 405, 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -141,13 +146,7 @@ serve(async (req) => {
     const userId = user.id;
     const endpointTail = endpoint.substring(endpoint.length - 12);
 
-    console.log('[WEBPUSH-UPSERT]', {
-      hasAuth: true,
-      userId,
-      endpointTail,
-      provider: validProvider,
-      platform: platform || 'web'
-    });
+    console.log(`[WEBPUSH-UPSERT] ✅ User authenticated: ${userId.substring(0, 8)}..., endpoint: ...${endpointTail}, platform: ${platform || 'web'}`);
 
     // Prepare keys JSONB
     const keysJsonb = { p256dh, auth };
@@ -176,7 +175,7 @@ serve(async (req) => {
       .single();
 
     if (error) {
-      console.error('[WEBPUSH-UPSERT] Database error:', error);
+      console.error('[WEBPUSH-UPSERT] ❌ Database error:', error);
       return new Response(JSON.stringify({ 
         error: 'Database error',
         reason: 'database_error',
@@ -186,6 +185,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       });
     }
+
+    console.log(`[WEBPUSH-UPSERT] ✅ SUBSCRIPTION SAVED! id=${data?.id}, user=${userId.substring(0, 8)}...`);
 
     // M1SSION™ Soft-cleanup: deactivate other endpoints for same user+platform
     try {
