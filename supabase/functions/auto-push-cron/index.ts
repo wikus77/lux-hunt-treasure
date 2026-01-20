@@ -60,6 +60,9 @@ Deno.serve(async (req) => {
     const dryRun = body.dryRun === true || body.dry_run === true;
     const bypassQuietHours = body.bypassQuietHours === true || body.bypass_quiet_hours === true;
     const forceUserId = body.force_user_id || body.forceUserId;
+    
+    // 🆕 FORCE MODE: bypassa time slots (admin-only)
+    const forceMode = body.force === true || req.headers.get("x-m1-force") === "1";
 
     // 🔒 SECURITY: Verify internal secret for cron/trigger calls
     const CRON_SECRET = Deno.env.get("CRON_SECRET") || Deno.env.get("INTERNAL_SECRET");
@@ -68,17 +71,25 @@ Deno.serve(async (req) => {
     // Allow if: secret matches OR if called from Supabase internal (service role in auth header)
     const authHeader = req.headers.get("authorization");
     const isServiceRole = authHeader?.includes(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.slice(0, 20) || "NONE");
+    const isAdminAuth = (CRON_SECRET && providedSecret === CRON_SECRET) || isServiceRole;
     
-    if (CRON_SECRET && providedSecret !== CRON_SECRET && !isServiceRole) {
+    if (!isAdminAuth) {
       console.warn("[AUTO-PUSH-CRON] ⚠️ Missing or invalid cron secret - allowing for backwards compatibility");
       // NOTE: Enable this block to enforce strict auth:
       // return json({ error: "Unauthorized - invalid cron secret" }, 401);
     }
     
+    // 🔐 FORCE MODE requires admin auth
+    if (forceMode && !isAdminAuth) {
+      console.warn("[AUTO-PUSH-CRON] ❌ Force mode rejected - requires admin auth");
+      return json({ error: "Unauthorized - force mode requires admin auth" }, 401);
+    }
+    
+    const runId = `run_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     console.log("[AUTO-PUSH-CRON] ✅ Auth check passed (internal CRON)");
-
-    console.log(`[AUTO-PUSH-CRON] ✅ Cron authenticated (dry-run: ${dryRun}, bypass-quiet: ${bypassQuietHours}, force-user: ${forceUserId || 'none'})`);
-    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2025-12-18-v5-TIME-SLOTS`);
+    console.log(`[AUTO-PUSH-CRON] 🆔 Run ID: ${runId}`);
+    console.log(`[AUTO-PUSH-CRON] ✅ Params: dry-run=${dryRun}, bypass-quiet=${bypassQuietHours}, force=${forceMode}, force-user=${forceUserId || 'none'}`);
+    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2026-01-20-v6-FORCE-MODE`);
 
     // 2. Load config
     const supabase = createClient(SB_URL, SERVICE_ROLE_KEY);
@@ -104,18 +115,23 @@ Deno.serve(async (req) => {
     const now = new Date();
     const romeTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Rome' }));
     const hour = romeTime.getHours();
+    
+    // 🆕 FORCE MODE or bypassQuietHours → skip time slot check
+    const skipTimeSlot = forceMode || bypassQuietHours;
 
-    // Check if current hour is in allowed slots (bypass for tests)
-    if (!bypassQuietHours && !ALLOWED_HOURS.includes(hour)) {
+    // Check if current hour is in allowed slots (bypass for force/tests)
+    if (!skipTimeSlot && !ALLOWED_HOURS.includes(hour)) {
       console.log(`[AUTO-PUSH-CRON] ⏸️ Not in allowed time slot (${hour}:00 Rome time). Allowed: ${ALLOWED_HOURS.join(', ')}`);
       return json({ ok: true, message: `Not in time slot. Current: ${hour}:00, Allowed: ${ALLOWED_HOURS.join(', ')}` }, 200);
     }
 
-    if (bypassQuietHours) {
-      console.log(`[AUTO-PUSH-CRON] ⚡ Time slot check bypassed for testing`);
+    if (forceMode) {
+      console.log(`[AUTO-PUSH-CRON] ⚡ FORCE MODE: Time slot bypassed (admin override) - run_id: ${runId}`);
+    } else if (bypassQuietHours) {
+      console.log(`[AUTO-PUSH-CRON] ⚡ Time slot check bypassed (legacy param)`);
     }
 
-    console.log(`[AUTO-PUSH-CRON] ✅ Active time slot confirmed (${hour}:00 Rome time)`);
+    console.log(`[AUTO-PUSH-CRON] ✅ Time check passed (${hour}:00 Rome time, force=${forceMode})`);
 
     // 4. Load active templates
     const { data: allTemplates, error: tplError } = await supabase
@@ -407,15 +423,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`[AUTO-PUSH-CRON] ✅ Complete: sent=${sentCount}, skipped=${skippedCount}`);
+    console.log(`[AUTO-PUSH-CRON] ✅ Complete: run_id=${runId}, sent=${sentCount}, skipped=${skippedCount}`);
 
     return json({
       ok: true,
-      version: '2025-12-18-v5-TIME-SLOTS',
+      run_id: runId,
+      version: '2026-01-20-v6-FORCE-MODE',
       users_processed: shuffledUsers.length,
       sent: sentCount,
       skipped: skippedCount,
-      dry_run: dryRun
+      dry_run: dryRun,
+      force_mode: forceMode,
+      time_slot_bypassed: skipTimeSlot
     }, 200);
 
   } catch (error: any) {
