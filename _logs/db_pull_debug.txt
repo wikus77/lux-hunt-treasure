@@ -1,0 +1,50 @@
+open supabase/.temp/profile: no such file or directory
+Loading project ref from file: supabase/.temp/project-ref
+Using connection pooler: postgresql://postgres.vkjrqirvdvjbemsfzxof@aws-0-eu-central-1.pooler.supabase.com:5432/postgres
+Initialising login role...
+Using access token for profile: supabase
+Supabase CLI 2.72.7
+Using profile: supabase (supabase.co)
+Connecting to remote database...
+2026/01/20 06:34:47 HTTP GET: https://1.1.1.1/dns-query?name=aws-0-eu-central-1.pooler.supabase.com
+2026/01/20 06:34:47 HTTP GET: https://1.1.1.1/dns-query?name=aws-0-eu-central-1.pooler.supabase.com
+2026/01/20 06:34:47 PG Send: {"Type":"StartupMessage","ProtocolVersion":196608,"Parameters":{"database":"postgres","user":"cli_login_postgres.vkjrqirvdvjbemsfzxof"}}
+2026/01/20 06:34:47 PG Recv: {"Type":"AuthenticationSASL","AuthMechanisms":["SCRAM-SHA-256"]}
+2026/01/20 06:34:47 PG Send: {"Type":"SASLInitialResponse","AuthMechanism":"SCRAM-SHA-256","Data":"n,,n=,r=qZ/8VJEcF2fvh3ehVmURTNvB"}
+2026/01/20 06:34:47 PG Recv: {"Type":"AuthenticationSASLContinue","Data":"r=qZ/8VJEcF2fvh3ehVmURTNvBRUxQQmNjTU1yZktCSHk2K2VyR0JmQ0FFcXdLY0NBPT0=,s=Jy9m9eQTbioGqFNMItUlzw==,i=4096"}
+2026/01/20 06:34:47 PG Send: {"Type":"SASLResponse","Data":"c=biws,r=qZ/8VJEcF2fvh3ehVmURTNvBRUxQQmNjTU1yZktCSHk2K2VyR0JmQ0FFcXdLY0NBPT0=,p=qEXDtB49x1SZkdRL21Vt2GMrr8NJIh/BGT9XiWkyeW0="}
+2026/01/20 06:34:47 PG Recv: {"Type":"AuthenticationSASLFinal","Data":"e=Wrong password"}
+2026/01/20 06:34:47 PG Send: {"Type":"StartupMessage","ProtocolVersion":196608,"Parameters":{"database":"postgres","user":"cli_login_postgres.vkjrqirvdvjbemsfzxof"}}
+2026/01/20 06:34:47 PG Recv: {"Type":"AuthenticationSASL","AuthMechanisms":["SCRAM-SHA-256"]}
+2026/01/20 06:34:47 PG Send: {"Type":"SASLInitialResponse","AuthMechanism":"SCRAM-SHA-256","Data":"n,,n=,r=RhNTjUTITjy+gVbsvF++t+Rl"}
+2026/01/20 06:34:48 PG Recv: {"Type":"AuthenticationSASLContinue","Data":"r=RhNTjUTITjy+gVbsvF++t+RlRUViZlp3NjFiRDA2RkhVdUlxdXFxS29Jb1EwcUNBPT0=,s=sclzn4G1W87wSy/64Y2zgw==,i=4096"}
+2026/01/20 06:34:48 PG Send: {"Type":"SASLResponse","Data":"c=biws,r=RhNTjUTITjy+gVbsvF++t+RlRUViZlp3NjFiRDA2RkhVdUlxdXFxS29Jb1EwcUNBPT0=,p=4DmMNd2NlPTKdSI6ziIz1wPJVs6ChiTmFAYFgG0fBcs="}
+2026/01/20 06:34:48 PG Recv: {"Type":"AuthenticationSASLFinal","Data":"v=B3nCbu4b56DU2ZS2LFZaJ3RdZne7EHA8CU0OxT48KTg="}
+2026/01/20 06:34:48 PG Recv: {"Type":"AuthenticationOK"}
+2026/01/20 06:34:57 PG Send: {"Type":"StartupMessage","ProtocolVersion":196608,"Parameters":{"database":"postgres","user":"cli_login_postgres.vkjrqirvdvjbemsfzxof"}}
+2026/01/20 06:34:57 PG Recv: {"Type":"AuthenticationSASL","AuthMechanisms":["SCRAM-SHA-256"]}
+2026/01/20 06:34:57 PG Send: {"Type":"SASLInitialResponse","AuthMechanism":"SCRAM-SHA-256","Data":"n,,n=,r=JrmwA5Y7vn8QbuwFzmt1OcOd"}
+2026/01/20 06:34:58 PG Recv: {"Type":"AuthenticationSASLContinue","Data":"r=JrmwA5Y7vn8QbuwFzmt1OcOdRUFpTTA3ZTl0aFhBNlAvMW0zV1pLd2NMNGRITXhnPT0=,s=sclzn4G1W87wSy/64Y2zgw==,i=4096"}
+2026/01/20 06:34:58 PG Send: {"Type":"SASLResponse","Data":"c=biws,r=JrmwA5Y7vn8QbuwFzmt1OcOdRUFpTTA3ZTl0aFhBNlAvMW0zV1pLd2NMNGRITXhnPT0=,p=o4YqqrtU8AOeFMjcJujemMXSljKcPQ3HNGjqPSns5i4="}
+2026/01/20 06:34:58 PG Recv: {"Type":"AuthenticationSASLFinal","Data":"v=tey8+/YTHof/4QG9T17rqEaAbvJeNerQ2pbp1xwv2kM="}
+2026/01/20 06:34:58 PG Recv: {"Type":"AuthenticationOK"}
+2026/01/20 06:34:58 PG Recv: {"Type":"ParameterStatus","Name":"server_version","Value":"15.8"}
+2026/01/20 06:35:07 PG Send: {"Type":"StartupMessage","ProtocolVersion":196608,"Parameters":{"database":"postgres","user":"cli_login_postgres.vkjrqirvdvjbemsfzxof"}}
+2026/01/20 06:35:08 PG Recv: {"Type":"ParameterStatus","Name":"server_version","Value":"15.8"}
+2026/01/20 06:35:17 PG Send: {"Type":"StartupMessage","ProtocolVersion":196608,"Parameters":{"database":"postgres","user":"cli_login_postgres.vkjrqirvdvjbemsfzxof"}}
+2026/01/20 06:35:17 PG Recv: {"Type":"AuthenticationSASL","AuthMechanisms":["SCRAM-SHA-256"]}
+2026/01/20 06:35:17 PG Send: {"Type":"SASLInitialResponse","AuthMechanism":"SCRAM-SHA-256","Data":"n,,n=,r=+hNKvZHzTd6PZo9n62MJfla4"}
+2026/01/20 06:35:17 PG Recv: {"Type":"AuthenticationSASLContinue","Data":"r=+hNKvZHzTd6PZo9n62MJfla4RUpGMVNsYlZjbnpUVEs1ZVVkU3h1aTBKQldTTkFnPT0=,s=sclzn4G1W87wSy/64Y2zgw==,i=4096"}
+2026/01/20 06:35:17 PG Send: {"Type":"SASLResponse","Data":"c=biws,r=+hNKvZHzTd6PZo9n62MJfla4RUpGMVNsYlZjbnpUVEs1ZVVkU3h1aTBKQldTTkFnPT0=,p=4Go4viQ2dQ4koKZH5/TVws5raaR3WOa0WpqJ8scNRqE="}
+2026/01/20 06:35:17 PG Recv: {"Type":"ErrorResponse","Severity":"FATAL","SeverityUnlocalized":"FATAL","Code":"XX000","Message":"Authentication error, reason: \"Authentication query failed: %DBConnection.ConnectionError{message: \\\"connection not available and request was dropped from queue after 10000ms. This means requests are coming in and your connection pool cannot serve them fast enough. You can address this by:\\\\n\\\\n  1. Ensuring your database is available and that you can connect to it\\\\n  2. Tracking down slow queries and making sure they are running fast enough\\\\n  3. Increasing the pool_size (although this increases resource consumption)\\\\n  4. Allowing requests to wait longer by increasing :queue_target and :queue_interval\\\\n\\\\nSee DBConnection.start_link/2 for more information\\\\n\\\", severity: :error, reason: :queue_timeout}\"","Detail":"","Hint":"","Position":0,"InternalPosition":0,"InternalQuery":"","Where":"","SchemaName":"","TableName":"","ColumnName":"","DataTypeName":"","ConstraintName":"","File":"","Line":0,"Routine":"","UnknownFields":null}
+2026/01/20 06:35:17 PG Recv: {"Type":"AuthenticationSASLFinal","Data":"v=NfKwvHW22vw3qRlNAypT+tc/UAaQCWZ33pNfIT0yMHQ="}
+2026/01/20 06:35:17 PG Recv: {"Type":"AuthenticationOK"}
+2026/01/20 06:35:27 PG Send: {"Type":"StartupMessage","ProtocolVersion":196608,"Parameters":{"database":"postgres","user":"cli_login_postgres.vkjrqirvdvjbemsfzxof"}}
+2026/01/20 06:35:27 PG Recv: {"Type":"AuthenticationSASL","AuthMechanisms":["SCRAM-SHA-256"]}
+2026/01/20 06:35:27 PG Send: {"Type":"SASLInitialResponse","AuthMechanism":"SCRAM-SHA-256","Data":"n,,n=,r=B17dQGsipHL0ap4daiCnCkoO"}
+2026/01/20 06:35:27 PG Recv: {"Type":"AuthenticationSASLContinue","Data":"r=B17dQGsipHL0ap4daiCnCkoORU4vdjlPWEdkc1FpNURncFE4UUV5L0VJc0tQUGlnPT0=,s=sclzn4G1W87wSy/64Y2zgw==,i=4096"}
+2026/01/20 06:35:27 PG Send: {"Type":"SASLResponse","Data":"c=biws,r=B17dQGsipHL0ap4daiCnCkoORU4vdjlPWEdkc1FpNURncFE4UUV5L0VJc0tQUGlnPT0=,p=fggAEFlsfFA2efglPzGNb6vkvEe21CwN2kNReIX2ViY="}
+2026/01/20 06:35:27 PG Recv: {"Type":"AuthenticationSASLFinal","Data":"v=JdCqprElhSPx5R1YInazaX7IoXil6vmabOW+Ev0YK48="}
+2026/01/20 06:35:27 PG Recv: {"Type":"AuthenticationOK"}
+2026/01/20 06:35:27 PG Recv: {"Type":"ParameterStatus","Name":"server_version","Value":"15.8"}
+failed to connect to postgres: failed to connect to `host=aws-0-eu-central-1.pooler.supabase.com user=cli_login_postgres.vkjrqirvdvjbemsfzxof database=postgres`: failed to receive message (timeout: context deadline exceeded)

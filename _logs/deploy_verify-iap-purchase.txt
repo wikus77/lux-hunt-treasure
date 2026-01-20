@@ -1,0 +1,5 @@
+WARNING: Docker is not running
+Uploading asset (verify-iap-purchase): supabase/functions/verify-iap-purchase/index.ts
+Uploading asset (verify-iap-purchase): supabase/functions/_shared/rateLimit.ts
+Deployed Functions on project vkjrqirvdvjbemsfzxof: verify-iap-purchase
+You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/vkjrqirvdvjbemsfzxof/functions

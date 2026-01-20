@@ -1,158 +1,198 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Rate Limiting Utility for Edge Functions
+/**
+ * M1SSION™ Rate Limiting & Replay Defense
+ * Shared helpers for Edge Functions
+ * 
+ * © 2026 Joseph MULÉ – NIYVORA KFT™ – ALL RIGHTS RESERVED
+ */
 
-import { createClient } from 'jsr:@supabase/supabase-js@2.49.8';
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+export interface RateLimitConfig {
+  maxRequests: number;
+  windowSeconds: number;
+}
 
-// Rate limit configurations per action type
-const RATE_LIMITS: Record<string, { maxRequests: number; windowSeconds: number }> = {
-  // Public endpoints
-  'claim-marker-reward': { maxRequests: 10, windowSeconds: 60 },     // 10 claims per minute
-  'buzz-map': { maxRequests: 5, windowSeconds: 60 },                  // 5 buzz per minute
-  'final-shoot': { maxRequests: 2, windowSeconds: 86400 },            // 2 per day
+export interface RateLimitResult {
+  allowed: boolean;
+  currentCount: number;
+  maxRequests: number;
+  remaining: number;
+  resetAt: string;
+}
+
+export interface RateLimitHeaders {
+  'X-RateLimit-Limit': string;
+  'X-RateLimit-Remaining': string;
+  'X-RateLimit-Reset': string;
+}
+
+// Default configurations
+export const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
+  // User-based endpoints
+  'verify-iap-purchase': { maxRequests: 5, windowSeconds: 60 },
+  'restore-iap-subscription': { maxRequests: 3, windowSeconds: 60 },
   
-  // Auth endpoints
-  'login': { maxRequests: 5, windowSeconds: 300 },                    // 5 per 5 minutes
-  'password-reset': { maxRequests: 3, windowSeconds: 3600 },          // 3 per hour
+  // User hourly limits
+  'verify-iap-purchase-hourly': { maxRequests: 20, windowSeconds: 3600 },
+  'restore-iap-subscription-hourly': { maxRequests: 10, windowSeconds: 3600 },
   
-  // Payment endpoints
-  'create-checkout': { maxRequests: 10, windowSeconds: 60 },          // 10 per minute
-  'create-payment-intent': { maxRequests: 10, windowSeconds: 60 },    // 10 per minute
+  // Webhook endpoints (IP-based, more lenient)
+  'iap-apple-notifications': { maxRequests: 60, windowSeconds: 60 },
+  'iap-google-rtdn': { maxRequests: 60, windowSeconds: 60 },
   
-  // Push notifications
-  'push-send': { maxRequests: 100, windowSeconds: 60 },               // 100 per minute (admin)
-  
-  // Default for unknown actions
-  'default': { maxRequests: 30, windowSeconds: 60 },                  // 30 per minute
+  // Sync endpoint (service/cron only)
+  'sync-subscription-status': { maxRequests: 10, windowSeconds: 60 },
 };
 
 /**
- * Check if a request should be rate limited
- * 
- * @param userId - User ID or IP address for anonymous requests
- * @param action - Action type (e.g., 'claim-marker-reward', 'login')
- * @returns { allowed: boolean, remaining: number, resetAt: Date }
+ * Check rate limit via Supabase RPC
  */
 export async function checkRateLimit(
-  userId: string,
-  action: string
-): Promise<{ allowed: boolean; remaining: number; resetAt: Date; error?: string }> {
-  try {
-    const admin = createClient(SB_URL, SERVICE_KEY, {
-      auth: { persistSession: false }
-    });
-    
-    const config = RATE_LIMITS[action] || RATE_LIMITS['default'];
-    const windowStart = new Date(Date.now() - config.windowSeconds * 1000);
-    const resetAt = new Date(Date.now() + config.windowSeconds * 1000);
-    
-    // Check existing requests in time window
-    const { count, error } = await admin
-      .from('rate_limit_log')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('action', action)
-      .gte('created_at', windowStart.toISOString());
-    
-    if (error) {
-      // If table doesn't exist or other error, allow request but log
-      console.warn(`[RATE-LIMIT] Check failed for ${action}:`, error.message);
-      return { allowed: true, remaining: config.maxRequests, resetAt };
-    }
-    
-    const currentCount = count || 0;
-    const remaining = Math.max(0, config.maxRequests - currentCount);
-    const allowed = currentCount < config.maxRequests;
-    
-    // Log this request
-    if (allowed) {
-      await admin
-        .from('rate_limit_log')
-        .insert({
-          user_id: userId,
-          action,
-          ip_address: null, // Could be passed from request headers
-          created_at: new Date().toISOString()
-        })
-        .then(() => {})
-        .catch((e) => console.warn('[RATE-LIMIT] Log insert failed:', e));
-    }
-    
-    return { allowed, remaining: remaining - (allowed ? 1 : 0), resetAt };
-    
-  } catch (err) {
-    console.error('[RATE-LIMIT] Exception:', err);
-    // On error, allow request but log
-    return { 
-      allowed: true, 
-      remaining: 0, 
-      resetAt: new Date(Date.now() + 60000),
-      error: 'Rate limit check failed'
+  supabase: SupabaseClient,
+  limitKey: string,
+  limitType: 'user' | 'ip' | 'endpoint' | 'transaction',
+  endpoint: string,
+  config?: RateLimitConfig
+): Promise<RateLimitResult> {
+  const cfg = config || RATE_LIMIT_CONFIGS[endpoint] || { maxRequests: 10, windowSeconds: 60 };
+  
+  const { data, error } = await supabase.rpc('check_rate_limit', {
+    p_limit_key: limitKey,
+    p_limit_type: limitType,
+    p_endpoint: endpoint,
+    p_max_requests: cfg.maxRequests,
+    p_window_seconds: cfg.windowSeconds,
+  });
+  
+  if (error) {
+    console.error('[RateLimit] Error checking rate limit:', error);
+    // Fail open - allow request if rate limit check fails
+    return {
+      allowed: true,
+      currentCount: 0,
+      maxRequests: cfg.maxRequests,
+      remaining: cfg.maxRequests,
+      resetAt: new Date(Date.now() + cfg.windowSeconds * 1000).toISOString(),
     };
   }
-}
-
-/**
- * Create rate limit response headers
- */
-export function rateLimitHeaders(
-  remaining: number, 
-  resetAt: Date, 
-  limit: number
-): Record<string, string> {
+  
   return {
-    'X-RateLimit-Limit': String(limit),
-    'X-RateLimit-Remaining': String(Math.max(0, remaining)),
-    'X-RateLimit-Reset': String(Math.floor(resetAt.getTime() / 1000)),
+    allowed: data.allowed,
+    currentCount: data.current_count,
+    maxRequests: data.max_requests,
+    remaining: data.remaining,
+    resetAt: data.reset_at,
   };
 }
 
 /**
- * Create rate limit exceeded response
+ * Generate rate limit response headers
  */
-export function rateLimitExceeded(resetAt: Date): Response {
+export function getRateLimitHeaders(result: RateLimitResult): RateLimitHeaders {
+  return {
+    'X-RateLimit-Limit': result.maxRequests.toString(),
+    'X-RateLimit-Remaining': result.remaining.toString(),
+    'X-RateLimit-Reset': result.resetAt,
+  };
+}
+
+/**
+ * Check for replay attack via Supabase RPC
+ */
+export async function checkReplay(
+  supabase: SupabaseClient,
+  userId: string | null,
+  transactionId: string | null,
+  purchaseToken: string | null,
+  endpoint: string,
+  ttlMinutes: number = 10
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc('check_replay', {
+    p_user_id: userId,
+    p_transaction_id: transactionId,
+    p_purchase_token: purchaseToken,
+    p_endpoint: endpoint,
+    p_ttl_minutes: ttlMinutes,
+  });
+  
+  if (error) {
+    console.error('[ReplayDefense] Error checking replay:', error);
+    // Fail closed - treat as potential replay if check fails
+    return true;
+  }
+  
+  return data === true;  // True means it's a replay
+}
+
+/**
+ * Create 429 Too Many Requests response
+ */
+export function rateLimitResponse(result: RateLimitResult, correlationId: string): Response {
   return new Response(
     JSON.stringify({
+      success: false,
       error: 'Rate limit exceeded',
-      message: 'Troppe richieste. Riprova più tardi.',
-      retry_after: Math.ceil((resetAt.getTime() - Date.now()) / 1000)
+      retry_after_seconds: Math.ceil((new Date(result.resetAt).getTime() - Date.now()) / 1000),
+      correlation_id: correlationId,
     }),
     {
       status: 429,
       headers: {
         'Content-Type': 'application/json',
-        'Retry-After': String(Math.ceil((resetAt.getTime() - Date.now()) / 1000)),
-        ...rateLimitHeaders(0, resetAt, 0)
-      }
+        ...getRateLimitHeaders(result),
+        'Retry-After': Math.ceil((new Date(result.resetAt).getTime() - Date.now()) / 1000).toString(),
+      },
     }
   );
 }
 
 /**
- * Wrapper function to apply rate limiting to an Edge Function
- * 
- * Usage:
- * ```
- * const rateLimited = await applyRateLimit(req, 'claim-marker-reward', userId);
- * if (rateLimited) return rateLimited;
- * // Continue with normal function logic
- * ```
+ * Create 409 Conflict response for replay detection
  */
-export async function applyRateLimit(
-  _req: Request,
-  action: string,
-  userId: string
-): Promise<Response | null> {
-  const { allowed, remaining, resetAt } = await checkRateLimit(userId, action);
-  
-  if (!allowed) {
-    console.log(`[RATE-LIMIT] Blocked ${action} for user ${userId.slice(-8)}`);
-    return rateLimitExceeded(resetAt);
-  }
-  
-  // Add rate limit headers to successful requests
-  // This will be handled by the caller
-  return null;
+export function replayResponse(correlationId: string): Response {
+  return new Response(
+    JSON.stringify({
+      success: false,
+      error: 'Duplicate request detected',
+      correlation_id: correlationId,
+    }),
+    {
+      status: 409,
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
 }
+
+/**
+ * Generate correlation ID for request tracking
+ */
+export function generateCorrelationId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+}
+
+/**
+ * Structured log helper
+ */
+export function structuredLog(
+  level: 'info' | 'warn' | 'error',
+  message: string,
+  correlationId: string,
+  data?: Record<string, any>
+): void {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    level,
+    message,
+    correlation_id: correlationId,
+    ...data,
+  };
+  
+  if (level === 'error') {
+    console.error(JSON.stringify(logEntry));
+  } else if (level === 'warn') {
+    console.warn(JSON.stringify(logEntry));
+  } else {
+    console.log(JSON.stringify(logEntry));
+  }
+}
+
