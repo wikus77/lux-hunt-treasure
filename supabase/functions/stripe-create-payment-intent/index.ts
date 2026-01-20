@@ -15,6 +15,7 @@ const allowedOrigins = [
   'https://m1ssion.eu',
   'https://www.m1ssion.eu', 
   'https://m1ssion.pages.dev',
+  'https://m1ssion-launch.pages.dev',
   'http://localhost:5173'
 ];
 

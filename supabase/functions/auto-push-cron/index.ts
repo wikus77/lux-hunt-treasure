@@ -116,7 +116,8 @@ Deno.serve(async (req) => {
     console.log("[AUTO-PUSH-CRON] ✅ Auth check passed (internal CRON)");
     console.log(`[AUTO-PUSH-CRON] 🆔 Run ID: ${runId}`);
     console.log(`[AUTO-PUSH-CRON] ✅ Params: dry-run=${dryRun}, bypass-quiet=${bypassQuietHours}, force=${forceMode}, reset=${resetLogs}, force-user=${forceUserId || 'none'}`);
-    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2026-01-20-v8-FIX-NO-SUBS`);
+    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2026-01-20-v10-DEBUG-TOKEN`);
+    console.log(`[AUTO-PUSH-CRON] 🔑 PUSH_ADMIN_TOKEN defined: ${!!PUSH_ADMIN_TOKEN}, length: ${PUSH_ADMIN_TOKEN?.length || 0}`);
 
     // 2. Load config
     const supabase = createClient(SB_URL, SERVICE_ROLE_KEY);
@@ -399,7 +400,10 @@ Deno.serve(async (req) => {
             })
           });
 
-          const pushResult = await pushResponse.json();
+          const pushResult = await pushResponse.json().catch(() => ({ error: 'Invalid JSON response' }));
+
+          // 🔍 DEBUG: Log full response
+          console.log(`[AUTO-PUSH-CRON] 📡 Response for ${user.agent_code}: status=${pushResponse.status}, ok=${pushResponse.ok}, body=${JSON.stringify(pushResult).substring(0, 200)}`);
 
           // 🔧 FIX: Verifico ANCHE che almeno una push sia stata effettivamente inviata
           const actualSent = pushResult.sent ?? 0;
@@ -476,7 +480,7 @@ Deno.serve(async (req) => {
     return json({
       ok: true,
       run_id: runId,
-      version: '2026-01-20-v8-FIX-NO-SUBS',
+      version: '2026-01-20-v10-DEBUG-TOKEN',
       users_processed: shuffledUsers.length,
       sent: sentCount,
       skipped: skippedCount,
