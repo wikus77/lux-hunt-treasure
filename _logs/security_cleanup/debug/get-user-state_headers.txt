@@ -1,0 +1,20 @@
+HTTP/2 200 
+date: Tue, 20 Jan 2026 08:38:23 GMT
+content-type: application/json
+server: cloudflare
+cf-ray: 9c0d415cd9340e0b-MXP
+cf-cache-status: DYNAMIC
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+vary: Accept-Encoding, Origin, Access-Control-Request-Method, Access-Control-Request-Headers
+access-control-allow-credentials: true
+access-control-allow-headers: authorization, apikey, content-type, x-client-info, x-m1-debug, x-debug
+access-control-allow-methods: POST, OPTIONS
+access-control-max-age: 600
+sb-project-ref: vkjrqirvdvjbemsfzxof
+sb-request-id: 019bda8e-160d-7f63-87b5-d3d283c070e4
+x-deno-execution-id: d101a273-5858-4fc6-9762-533389b01005
+x-sb-edge-region: eu-central-1
+x-served-by: supabase-edge-runtime
+set-cookie: __cf_bm=Qndy3rpcAl3bxNeQqMiTI8ujSfymly_ot4SQnIhSNtU-1768898303-1.0.1.1-3Co4p7k4BizBFwaZrNI8EepsEByYJrVybP3cQJsTL_hD8x1vk8Rrb4ftFOswITOaQunpr2Vkm1vaOI9rAOjzJ3ShKrjDYXEUKsJhnAccch0; path=/; expires=Tue, 20-Jan-26 09:08:23 GMT; domain=.supabase.co; HttpOnly; Secure; SameSite=None
+alt-svc: h3=":443"; ma=86400
+

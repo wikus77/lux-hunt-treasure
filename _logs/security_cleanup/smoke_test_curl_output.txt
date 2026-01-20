@@ -3,7 +3,7 @@ M1SSION SMOKE TEST (CURL)
 ========================================
 Project: vkjrqirvdvjbemsfzxof
 URL:     https://vkjrqirvdvjbemsfzxof.supabase.co
-Date:    Tue Jan 20 09:46:20 CET 2026
+Date:    Mar 20 Gen 2026 10:11:25 CET
 
 [PUBLIC-ish] (anon jwt)
 Testing get-firebase-config... ✅ PASS (HTTP 200)

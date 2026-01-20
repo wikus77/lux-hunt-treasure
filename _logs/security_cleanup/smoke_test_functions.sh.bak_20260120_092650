@@ -1,0 +1,103 @@
+#!/bin/bash
+# © 2026 M1SSION Security Cleanup - SMOKE TEST
+#
+# Tests critical Edge Functions after secrets cleanup
+
+PROJECT_REF="vkjrqirvdvjbemsfzxof"
+BASE_URL="https://${PROJECT_REF}.supabase.co/functions/v1"
+ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk"
+
+PASSED=0
+FAILED=0
+
+echo "========================================"
+echo "M1SSION SMOKE TEST"
+echo "========================================"
+echo "Project: $PROJECT_REF"
+echo "Date: $(date)"
+echo ""
+
+test_function() {
+  local name=$1
+  local method=${2:-GET}
+  local data=${3:-}
+  
+  echo -n "Testing $name... "
+  
+  if [ "$method" = "POST" ]; then
+    response=$(curl -s -w "\n%{http_code}" \
+      -H "Authorization: Bearer $ANON_KEY" \
+      -H "apikey: $ANON_KEY" \
+      -H "Content-Type: application/json" \
+      -X POST \
+      -d "$data" \
+      "$BASE_URL/$name" 2>/dev/null)
+  else
+    response=$(curl -s -w "\n%{http_code}" \
+      -H "Authorization: Bearer $ANON_KEY" \
+      -H "apikey: $ANON_KEY" \
+      -H "Origin: https://m1ssion.eu" \
+      "$BASE_URL/$name" 2>/dev/null)
+  fi
+  
+  http_code=$(echo "$response" | tail -1)
+  body=$(echo "$response" | head -n -1)
+  
+  if [ "$http_code" = "200" ] || [ "$http_code" = "403" ]; then
+    echo "✅ PASS (HTTP $http_code)"
+    ((PASSED++))
+  else
+    echo "❌ FAIL (HTTP $http_code)"
+    echo "   Response: $body"
+    ((FAILED++))
+  fi
+}
+
+# ========================================
+# CRITICAL FUNCTIONS (use Supabase keys)
+# ========================================
+echo "[CRITICAL] Testing functions that use SUPABASE_SERVICE_ROLE_KEY..."
+test_function "get-firebase-config"
+test_function "fcm-config"
+test_function "get-vapid"
+test_function "stripe-mode"
+test_function "auto-push-cron"
+test_function "push-broadcast" "POST" '{"title":"test","body":"smoke test"}'
+
+# ========================================
+# PUSH NOTIFICATION FUNCTIONS
+# ========================================
+echo ""
+echo "[PUSH] Testing push notification functions..."
+test_function "webpush-self-test"
+
+# ========================================
+# DATABASE FUNCTIONS
+# ========================================
+echo ""
+echo "[DB] Testing database functions..."
+test_function "get-user-state"
+test_function "analytics-track" "POST" '{"event":"smoke_test","properties":{}}'
+
+# ========================================
+# SUMMARY
+# ========================================
+echo ""
+echo "========================================"
+echo "SUMMARY"
+echo "========================================"
+echo "Passed: $PASSED"
+echo "Failed: $FAILED"
+echo ""
+
+if [ $FAILED -eq 0 ]; then
+  echo "✅ ALL TESTS PASSED"
+  exit 0
+else
+  echo "❌ SOME TESTS FAILED"
+  echo ""
+  echo "Rollback command:"
+  echo "  git reset --hard 011df48f80ffc2992370c817b105cd900630637d"
+  exit 1
+fi
+

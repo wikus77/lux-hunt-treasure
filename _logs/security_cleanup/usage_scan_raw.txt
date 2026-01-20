@@ -1,0 +1,389 @@
+  42 SUPABASE_URL
+  41 SUPABASE_SERVICE_ROLE_KEY
+   7 VAPID_PUBLIC_KEY
+   7 SUPABASE_ANON_KEY
+   7 STRIPE_SECRET_KEY
+   6 CLOUDFLARE_API_TOKEN
+   6 CLOUDFLARE_ACCOUNT_ID
+   5 VAPID_PRIVATE_KEY
+   5 VAPID_CONTACT
+   5 PUSH_ADMIN_TOKEN
+   5 CF_EMBEDDING_MODEL
+   4 MJ_APIKEY_PUBLIC
+   4 MJ_APIKEY_PRIVATE
+   3 SMTP_USER
+   3 SMTP_PORT
+   3 SMTP_PASSWORD
+   3 SMTP_HOST
+   3 INTERNAL_SECRET
+   2 RESEND_API_KEY
+   2 LOVABLE_API_KEY
+   2 IP_HASH_SALT
+   2 CONTACT_EMAIL
+   1 USE_IONOS_ONLY
+   1 supabase/functions/weekly-reset-cron/index.ts:18:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/weekly-reset-cron/index.ts:17:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/webpush-upsert/index.ts:123:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY')!
+   1 supabase/functions/webpush-upsert/index.ts:122:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/webpush-self-test/index.ts:83:    const VAPID_CONTACT = Deno.env.get('VAPID_CONTACT') ?? 'mailto:admin@m1ssion.eu';
+   1 supabase/functions/webpush-self-test/index.ts:82:    const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') ?? '';
+   1 supabase/functions/webpush-self-test/index.ts:81:    const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') ?? '';
+   1 supabase/functions/webpush-self-test/index.ts:33:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/webpush-self-test/index.ts:32:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/verify-iap-purchase/index.ts:551:    return Deno.env.get('IAP_SANDBOX') === 'true';
+   1 supabase/functions/verify-iap-purchase/index.ts:485:    return Deno.env.get('IAP_SANDBOX') === 'true';
+   1 supabase/functions/verify-iap-purchase/index.ts:32:const GOOGLE_SERVICE_ACCOUNT_KEY = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY') || '';
+   1 supabase/functions/verify-iap-purchase/index.ts:31:const APPLE_SHARED_SECRET = Deno.env.get('APPLE_SHARED_SECRET') || '';
+   1 supabase/functions/verify-iap-purchase/index.ts:30:const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/verify-iap-purchase/index.ts:29:const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/upsert_fcm_subscription/index.ts:32:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/upsert_fcm_subscription/index.ts:31:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/update-mission/index.ts:21:    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/update-mission/index.ts:20:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/tts-openai/index.ts:27:    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+   1 supabase/functions/tts-google/index.ts:27:    const GOOGLE_API_KEY = Deno.env.get('GEMINI_API_KEY');
+   1 supabase/functions/tts-elevenlabs/index.ts:42:    const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
+   1 supabase/functions/test-notifications/index.ts:22:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/test-notifications/index.ts:21:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/sync-weekly-leaderboard/index.ts:18:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/sync-weekly-leaderboard/index.ts:17:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/sync-subscription-status/index.ts:26:const CRON_SECRET = Deno.env.get('CRON_SECRET') || '';
+   1 supabase/functions/sync-subscription-status/index.ts:25:const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/sync-subscription-status/index.ts:24:const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/stripe-webhook-secure/index.ts:32:    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+   1 supabase/functions/stripe-webhook-secure/index.ts:31:    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+   1 supabase/functions/stripe-webhook-secure/index.ts:30:    const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+   1 supabase/functions/stripe-webhook-secure/index.ts:29:    const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
+   1 supabase/functions/stripe-create-payment-intent/index.ts:103:    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+   1 supabase/functions/store-fcm-token/index.ts:28:      Deno.env.get('SUPABASE_ANON_KEY')!
+   1 supabase/functions/store-fcm-token/index.ts:27:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/smart-push-engine/index.ts:67:    const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:support@m1ssion.eu';
+   1 supabase/functions/smart-push-engine/index.ts:66:    const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')!;
+   1 supabase/functions/smart-push-engine/index.ts:65:    const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY')!;
+   1 supabase/functions/smart-push-engine/index.ts:61:    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/smart-push-engine/index.ts:60:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/send-web-push/index.ts:97:    const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+   1 supabase/functions/send-web-push/index.ts:96:    const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+   1 supabase/functions/send-web-push/index.ts:112:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+   1 supabase/functions/send-web-push/index.ts:111:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/send-test-push/index.ts:75:  const projectId = Deno.env.get('FCM_PROJECT_ID')
+   1 supabase/functions/send-test-push/index.ts:21:  const privateKey = Deno.env.get('FCM_PRIVATE_KEY')?.replace(/\\n/g, '\n')
+   1 supabase/functions/send-test-push/index.ts:20:  const clientEmail = Deno.env.get('FCM_CLIENT_EMAIL')
+   1 supabase/functions/send-test-push/index.ts:19:  const projectId = Deno.env.get('FCM_PROJECT_ID')
+   1 supabase/functions/send-test-push/index.ts:126:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/send-test-push/index.ts:125:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/send-registration-notification/index.ts:30:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/send-registration-notification/index.ts:29:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/send-registration-notification/index.ts:118:                'x-admin-token': Deno.env.get('PUSH_ADMIN_TOKEN') || ''
+   1 supabase/functions/send-registration-notification/index.ts:117:                'apikey': Deno.env.get('SUPABASE_ANON_KEY') || '',
+   1 supabase/functions/send-registration-notification/index.ts:116:                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+   1 supabase/functions/send-registration-notification/index.ts:112:            await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/webpush-targeted-send`, {
+   1 supabase/functions/send-push/index.ts:37:    const vapidEmail = Deno.env.get('VAPID_EMAIL') || 'mailto:admin@m1ssion.eu';
+   1 supabase/functions/send-push/index.ts:36:    const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+   1 supabase/functions/send-push/index.ts:35:    const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+   1 supabase/functions/send-push/index.ts:27:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/send-push/index.ts:26:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/send-push-notification-real/index.ts:40:    const VAPID_EMAIL = Deno.env.get('VAPID_EMAIL') || 'noreply@m1ssion.com';
+   1 supabase/functions/send-push-notification-real/index.ts:39:    const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY');
+   1 supabase/functions/send-push-notification-real/index.ts:38:    const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY');
+   1 supabase/functions/send-push-notification-real/index.ts:34:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/send-push-notification-real/index.ts:33:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/send-push-notification-onesignal/index.ts:28:    const oneSignalApiKey = Deno.env.get('ONESIGNAL_REST_API_KEY')!;
+   1 supabase/functions/send-push-notification-onesignal/index.ts:27:    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/send-push-notification-onesignal/index.ts:26:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/send-push-canary/info.ts:91:      buildSha: Deno.env.get('BUILD_SHA') || 'dev',
+   1 supabase/functions/send-push-canary/info.ts:38:    const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT');
+   1 supabase/functions/send-push-canary/info.ts:37:    const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY');
+   1 supabase/functions/send-push-canary/info.ts:36:    const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY');
+   1 supabase/functions/send-push-canary/index.ts:80:        build: Deno.env.get('BUILD_SHA') || 'dev',
+   1 supabase/functions/send-push-canary/index.ts:43:      const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT');
+   1 supabase/functions/send-push-canary/index.ts:42:      const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY');
+   1 supabase/functions/send-push-canary/index.ts:41:      const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY');
+   1 supabase/functions/send-push-canary/index.ts:122:    const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:wikus77@hotmail.it';
+   1 supabase/functions/send-push-canary/index.ts:121:    const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY');
+   1 supabase/functions/send-push-canary/index.ts:120:    const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY');
+   1 supabase/functions/send-push-canary/index.ts:109:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+   1 supabase/functions/send-push-canary/index.ts:108:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/send-native-push/index.ts:29:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/send-native-push/index.ts:28:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/send-native-push/index.ts:161:    const fcmServerKey = Deno.env.get('FCM_SERVER_KEY');
+   1 supabase/functions/send-mailjet-email/index.ts:20:    const MJ_APIKEY_PRIVATE = Deno.env.get('MJ_APIKEY_PRIVATE');
+   1 supabase/functions/send-mailjet-email/index.ts:19:    const MJ_APIKEY_PUBLIC = Deno.env.get('MJ_APIKEY_PUBLIC');
+   1 supabase/functions/send-ios-push/index.ts:85:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/send-ios-push/index.ts:84:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/secure-api-protection/index.ts:83:    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/secure-api-protection/index.ts:82:    Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/secure-api-protection/index.ts:238:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/secure-api-protection/index.ts:237:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/secure-api-protection/index.ts:11:const HMAC_SECRET = Deno.env.get('M1SSION_HMAC_SECRET') || 'default-secret-change-me'
+   1 supabase/functions/schedule-buzz-notification/index.ts:37:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/schedule-buzz-notification/index.ts:36:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/restore-iap-subscription/index.ts:27:const APPLE_SHARED_SECRET = Deno.env.get('APPLE_SHARED_SECRET') || '';
+   1 supabase/functions/restore-iap-subscription/index.ts:26:const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/restore-iap-subscription/index.ts:25:const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/restore-iap-subscription/index.ts:109:      const verifyUrl = Deno.env.get('IAP_SANDBOX') === 'true'
+   1 supabase/functions/reset-mission/index.ts:25:    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/reset-mission/index.ts:24:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/reset-mission-test/index.ts:19:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/reset-mission-test/index.ts:18:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/register-push-token/index.ts:24:      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+   1 supabase/functions/register-push-token/index.ts:23:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/register-push-subscription/index.ts:59:      Deno.env.get('SUPABASE_ANON_KEY')!,
+   1 supabase/functions/register-push-subscription/index.ts:58:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/register-bypass/index.ts:29:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/register-bypass/index.ts:28:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/redeem_qr/index.ts:22:    const url=Deno.env.get('SUPABASE_URL')!, key=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/rag-search/index.ts:25:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/rag-search/index.ts:24:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/qr-redeem/index.ts:39:      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+   1 supabase/functions/qr-redeem/index.ts:38:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/push-subscribe/index.ts:78:    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/push-subscribe/index.ts:77:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/push-self-test/index.ts:30:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/push-self-test/index.ts:29:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/push_unsubscribe/index.ts:22:      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+   1 supabase/functions/push_unsubscribe/index.ts:21:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/push_test/index.ts:47:const vapidContact = Deno.env.get('VAPID_CONTACT');
+   1 supabase/functions/push_test/index.ts:46:const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+   1 supabase/functions/push_test/index.ts:45:const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+   1 supabase/functions/push_test/index.ts:44:const fcmServerKey = Deno.env.get('FCM_SERVER_KEY');
+   1 supabase/functions/push_test/index.ts:43:const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/push_test/index.ts:42:const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/push_send/index.ts:52:const vapidContact = Deno.env.get('VAPID_CONTACT');
+   1 supabase/functions/push_send/index.ts:51:const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+   1 supabase/functions/push_send/index.ts:50:const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+   1 supabase/functions/push_send/index.ts:49:const fcmServerKey = Deno.env.get('FCM_SERVER_KEY');
+   1 supabase/functions/push_send/index.ts:48:const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/push_send/index.ts:47:const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/push_send_canary/index.ts:78:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+   1 supabase/functions/push_send_canary/index.ts:77:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/push_send_canary/index.ts:57:    const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY');
+   1 supabase/functions/push_send_canary/index.ts:56:    const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY');
+   1 supabase/functions/push_register/index.ts:59:      Deno.env.get('SUPABASE_ANON_KEY')!,
+   1 supabase/functions/push_register/index.ts:58:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/push_gc/index.ts:53:    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/push_gc/index.ts:52:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/push_gc/index.ts:41:    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+   1 supabase/functions/push_admin_broadcast/index.ts:51:const vapidContact = Deno.env.get('VAPID_CONTACT');
+   1 supabase/functions/push_admin_broadcast/index.ts:50:const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+   1 supabase/functions/push_admin_broadcast/index.ts:49:const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+   1 supabase/functions/push_admin_broadcast/index.ts:48:const fcmServerKey = Deno.env.get('FCM_SERVER_KEY');
+   1 supabase/functions/push_admin_broadcast/index.ts:47:const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/push_admin_broadcast/index.ts:46:const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/pulse-decay-cron/index.ts:38:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/pulse-decay-cron/index.ts:37:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/pulse-decay-cron/index.ts:26:    const expectedSecret = Deno.env.get('CRON_SECRET');
+   1 supabase/functions/profile-reducer/index.ts:29:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+   1 supabase/functions/profile-reducer/index.ts:28:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+   1 supabase/functions/process-scheduled-notifications/index.ts:76:          const pushAdminToken = Deno.env.get('PUSH_ADMIN_TOKEN');
+   1 supabase/functions/process-scheduled-notifications/index.ts:22:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/process-scheduled-notifications/index.ts:21:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/populate-knowledge-base/index.ts:20:    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/populate-knowledge-base/index.ts:19:    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/populate-knowledge-base/index.ts:18:    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+   1 supabase/functions/panel-security-status/index.ts:30:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/panel-security-status/index.ts:29:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/open-support-ticket/index.ts:23:      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+   1 supabase/functions/open-support-ticket/index.ts:22:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/notify-mission-access/index.ts:84:                <a href="${Deno.env.get('SUPABASE_URL')?.replace('https://','https://').replace('.supabase.co','.lovable.app') || 'https://m1ssion.lovable.app'}" 
+   1 supabase/functions/notify-mission-access/index.ts:27:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/notify-mission-access/index.ts:26:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/notifier-engine/index.ts:41:    const cooldownHours = parseInt(Deno.env.get('NOTIFIER_PREFS_COOLDOWN_HOURS') || '12')
+   1 supabase/functions/notifier-engine/index.ts:37:    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+   1 supabase/functions/notifier-engine/index.ts:36:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+   1 supabase/functions/notifier-engine/index.ts:35:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+   1 supabase/functions/norah-proactive-analyzer/index.ts:18:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/norah-proactive-analyzer/index.ts:17:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/norah-chat/index.ts:30:    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/norah-chat/index.ts:29:    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/norah-chat/index.ts:28:    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+   1 supabase/functions/norah-chat-v2/index.ts:356:    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+   1 supabase/functions/norah-chat-v2/index.ts:209:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/norah-chat-v2/index.ts:208:    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+   1 supabase/functions/norah-chat-v2/index.ts:207:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/nearby_qr_notify/index.ts:9:    const url = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/nearby_qr_notify/index.ts:10:    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/mirror-push-logtee/index.ts:24:  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+   1 supabase/functions/mirror-push-logtee/index.ts:23:  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+   1 supabase/functions/mirror-push-log-harvester/index.ts:57:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+   1 supabase/functions/mirror-push-log-harvester/index.ts:56:    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+   1 supabase/functions/lottery-draw-cron/index.ts:41:  const cronSecret = Deno.env.get('CRON_SECRET');
+   1 supabase/functions/lottery-draw-cron/index.ts:40:  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/lottery-draw-cron/index.ts:39:  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/lottery-draw-cron/index.ts:388:  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+   1 supabase/functions/lottery-draw-cron/index.ts:387:  const fcmUrl = Deno.env.get('SUPABASE_URL') + '/functions/v1/fcm-send';
+   1 supabase/functions/log-user-geo-alert/index.ts:27:    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/log-user-geo-alert/index.ts:26:    const url = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/log-daily-spin/index.ts:27:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/log-daily-spin/index.ts:26:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/launch-new-mission/index.ts:271:      const pushAdminToken = Deno.env.get('PUSH_ADMIN_TOKEN');
+   1 supabase/functions/launch-new-mission/index.ts:127:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/launch-new-mission/index.ts:126:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/iap-google-rtdn/index.ts:26:const PUBSUB_VERIFICATION_TOKEN = Deno.env.get('PUBSUB_VERIFICATION_TOKEN') || '';
+   1 supabase/functions/iap-google-rtdn/index.ts:25:const GOOGLE_SERVICE_ACCOUNT_KEY = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY') || '';
+   1 supabase/functions/iap-google-rtdn/index.ts:24:const GOOGLE_PACKAGE_NAME = Deno.env.get('GOOGLE_PACKAGE_NAME') || 'eu.m1ssion.app';
+   1 supabase/functions/iap-google-rtdn/index.ts:23:const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/iap-google-rtdn/index.ts:22:const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/iap-apple-notifications/index.ts:24:const APPLE_BUNDLE_ID = Deno.env.get('APPLE_BUNDLE_ID') || 'eu.m1ssion.app';
+   1 supabase/functions/iap-apple-notifications/index.ts:23:const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/iap-apple-notifications/index.ts:22:const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/handle-pre-registration/index.ts:24:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/handle-pre-registration/index.ts:23:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/handle-payment-success/index.ts:38:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/handle-payment-success/index.ts:37:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/handle-payment-success/index.ts:30:    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+   1 supabase/functions/handle-daily-checkin/index.ts:18:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/handle-daily-checkin/index.ts:17:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/handle-buzz-press/index.ts:9:const DEBUG = Deno.env.get('DEBUG_BUZZ_MAP') === '1';
+   1 supabase/functions/handle-buzz-press/index.ts:35:    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/handle-buzz-press/index.ts:34:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/handle-buzz-press/index.ts:14:  const wantsDebug = req.headers.get('x-m1-debug') === '1' || Deno.env.get('DEBUG_PANELS') === 'true';
+   1 supabase/functions/handle-buzz-map/index.ts:7:const DEBUG = Deno.env.get('DEBUG_BUZZ_MAP') === '1';
+   1 supabase/functions/handle-buzz-map/index.ts:33:    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/handle-buzz-map/index.ts:32:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/handle-buzz-map/index.ts:12:  const wantsDebug = req.headers.get('x-m1-debug') === '1' || Deno.env.get('DEBUG_PANELS') === 'true';
+   1 supabase/functions/get-user-state/index.ts:95:        SERVICE_ROLE_PRESENT: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+   1 supabase/functions/get-user-state/index.ts:94:        SUPABASE_URL: !!Deno.env.get('SUPABASE_URL'),
+   1 supabase/functions/get-user-state/index.ts:33:      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+   1 supabase/functions/get-user-state/index.ts:32:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/get-user-state/index.ts:11:  const wantsDebug = req.headers.get('x-m1-debug') === '1' || Deno.env.get('DEBUG_PANELS') === 'true';
+   1 supabase/functions/get-push-logs/index.ts:30:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/get-push-logs/index.ts:29:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/get-norah-context/index.ts:24:    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/get-norah-context/index.ts:23:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/get-nearby-prizes/index.ts:23:      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+   1 supabase/functions/get-nearby-prizes/index.ts:22:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/get-nearby-markers/index.ts:39:    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/get-nearby-markers/index.ts:38:    const url = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/generate-mission-clues/index.ts:879:    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/generate-mission-clues/index.ts:878:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/generate-mission-clues-ai/index.ts:116:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+   1 supabase/functions/generate-mission-clues-ai/index.ts:115:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/generate-mission-clues-ai/index.ts:106:    const GEMINI_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-2.0-flash';
+   1 supabase/functions/generate-mission-clues-ai/index.ts:105:    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+   1 supabase/functions/generate-bound-clue/index.ts:450:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/generate-bound-clue/index.ts:449:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/final-shoot-notify/index.ts:30:    const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:support@m1ssion.eu'
+   1 supabase/functions/final-shoot-notify/index.ts:29:    const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')!
+   1 supabase/functions/final-shoot-notify/index.ts:28:    const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY')!
+   1 supabase/functions/final-shoot-notify/index.ts:24:    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+   1 supabase/functions/final-shoot-notify/index.ts:23:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+   1 supabase/functions/feed-crawler/index.ts:425:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/feed-crawler/index.ts:424:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/feed-crawler/index.ts:276:        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/feed-crawler/index.ts:275:        Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/feed-crawler/index.ts:106:    const USE_PRO_SCORING = Deno.env.get('USE_PRO_SCORING') !== 'false';
+   1 supabase/functions/feed-crawler/index.ts:105:    const FEED_SCORE_MIN = parseFloat(Deno.env.get('FEED_SCORE_MIN') || '0.72');
+   1 supabase/functions/feed-crawler/index.ts:102:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+   1 supabase/functions/feed-crawler/index.ts:101:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/fcmTestSend/index.ts:32:                          Deno.env.get('FIREBASE_SA_JSON');
+   1 supabase/functions/fcmTestSend/index.ts:31:    const firebaseSAJSON = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON') || 
+   1 supabase/functions/fcm-test/index.ts:21:                              Deno.env.get('FCM_SERVICE_ACCOUNT_JSON_B64');
+   1 supabase/functions/fcm-test/index.ts:20:    const serviceAccountJson = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON') || 
+   1 supabase/functions/fcm-test/index.ts:120:    const projectId = Deno.env.get('FCM_PROJECT_ID');
+   1 supabase/functions/fcm-send/index.ts:44:    const projectId = Deno.env.get('FCM_PROJECT_ID') || serviceAccount.project_id;
+   1 supabase/functions/fcm-send/index.ts:33:                              Deno.env.get('FCM_SERVICE_ACCOUNT_JSON_B64');
+   1 supabase/functions/fcm-send/index.ts:32:    const serviceAccountJson = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON') || 
+   1 supabase/functions/fcm-send/index.ts:211:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/fcm-send/index.ts:210:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/fcm-send/index.ts:120:    const projectId = Deno.env.get('FCM_PROJECT_ID');
+   1 supabase/functions/ensure-agent-code/index.ts:121:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+   1 supabase/functions/ensure-agent-code/index.ts:120:    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+   1 supabase/functions/ensure-agent-code/index.ts:119:    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+   1 supabase/functions/enroll-mission-of-the-month/index.ts:34:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/enroll-mission-of-the-month/index.ts:33:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/domination-decay-job/index.ts:41:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/domination-decay-job/index.ts:40:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/domination-decay-job/index.ts:32:    const expectedToken = Deno.env.get('DECAY_ADMIN_TOKEN');
+   1 supabase/functions/debug-push/index.ts:32:    const fcmServerKey = Deno.env.get('FCM_SERVER_KEY');
+   1 supabase/functions/debug-push/index.ts:31:    const vapidEmail = Deno.env.get('VAPID_EMAIL');
+   1 supabase/functions/debug-push/index.ts:30:    const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+   1 supabase/functions/debug-push/index.ts:29:    const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+   1 supabase/functions/debug-push/index.ts:20:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/debug-push/index.ts:19:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/debug-mission-reset/index.ts:22:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/debug-mission-reset/index.ts:21:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/create-random-markers/index.ts:183:    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+   1 supabase/functions/create-random-markers/index.ts:182:    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+   1 supabase/functions/claim-marker-reward/index.ts:94:            'x-admin-token': Deno.env.get('PUSH_ADMIN_TOKEN') || service,
+   1 supabase/functions/check-daily-spin/index.ts:19:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/check-daily-spin/index.ts:18:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/buzz-map-resolve/index.ts:21:    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/buzz-map-resolve/index.ts:20:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/buzz-map-resolve-v2/index.ts:21:    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/buzz-map-resolve-v2/index.ts:20:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/bulk-marker-drop/index.ts:26:    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/bulk-marker-drop/index.ts:25:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/battle-tap-commit/index.ts:30:      Deno.env.get('SUPABASE_ANON_KEY')!,
+   1 supabase/functions/battle-tap-commit/index.ts:29:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/battle-resolve/index.ts:24:      Deno.env.get('SUPABASE_ANON_KEY')!,
+   1 supabase/functions/battle-resolve/index.ts:23:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/battle-ready/index.ts:24:      Deno.env.get('SUPABASE_ANON_KEY')!,
+   1 supabase/functions/battle-ready/index.ts:23:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/battle-random-opponent/index.ts:34:    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+   1 supabase/functions/battle-random-opponent/index.ts:33:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/battle-push-dispatcher/index.ts:39:    const pushAdminToken = Deno.env.get('PUSH_ADMIN_TOKEN')!;
+   1 supabase/functions/battle-push-dispatcher/index.ts:38:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/battle-push-dispatcher/index.ts:37:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/battle-cron-finalize/index.ts:26:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/battle-cron-finalize/index.ts:25:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/battle-create/index.ts:29:      Deno.env.get('SUPABASE_ANON_KEY')!,
+   1 supabase/functions/battle-create/index.ts:28:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/battle-cancel/index.ts:24:      Deno.env.get('SUPABASE_ANON_KEY')!,
+   1 supabase/functions/battle-cancel/index.ts:23:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/battle-analytics-refresh/index.ts:28:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+   1 supabase/functions/battle-analytics-refresh/index.ts:27:    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+   1 supabase/functions/battle-accept/index.ts:16:      Deno.env.get('SUPABASE_ANON_KEY')!,
+   1 supabase/functions/battle-accept/index.ts:15:      Deno.env.get('SUPABASE_URL')!,
+   1 supabase/functions/ai-kb-bulk-seed/index.ts:89:            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+   1 supabase/functions/ai-kb-bulk-seed/index.ts:86:        const upsertResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/ai-kb-upsert`, {
+   1 supabase/functions/ai-kb-bulk-seed/index.ts:41:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/ai-kb-bulk-seed/index.ts:40:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/ai-content-generator/index.ts:418:      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/ai-content-generator/index.ts:417:      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/ai-content-generator/index.ts:219:    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+   1 supabase/functions/ai-content-generator/index.ts:170:    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/ai-content-generator/index.ts:169:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/ai-chat/index.ts:17:    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
+   1 supabase/functions/admin-delete-user/index.ts:28:    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/admin-delete-user/index.ts:27:    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/admin-delete-marker/index.ts:27:    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+   1 supabase/functions/admin-delete-marker/index.ts:26:    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/admin-delete-marker/index.ts:25:    const url = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/_shared/telemetry.ts:81:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/_shared/telemetry.ts:80:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/_shared/telemetry.ts:25:      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+   1 supabase/functions/_shared/telemetry.ts:24:      Deno.env.get('SUPABASE_URL') ?? '',
+   1 supabase/functions/_shared/embedProvider.ts:95:  const apiToken = Deno.env.get('CLOUDFLARE_API_TOKEN')!;
+   1 supabase/functions/_shared/embedProvider.ts:94:  const accountId = Deno.env.get('CLOUDFLARE_ACCOUNT_ID')!;
+   1 supabase/functions/_shared/embedProvider.ts:59:  const apiKey = Deno.env.get('LOVABLE_API_KEY')!;
+   1 supabase/functions/_shared/embedProvider.ts:26:    const model = Deno.env.get('CF_EMBEDDING_MODEL') || '@cf/baai/bge-base-en-v1.5';
+   1 supabase/functions/_shared/embedProvider.ts:21:    const model = Deno.env.get('EMBEDDING_MODEL') || 'text-embedding-3-small';
+   1 supabase/functions/_shared/embedProvider.ts:18:  const cfApiToken = Deno.env.get('CLOUDFLARE_API_TOKEN');
+   1 supabase/functions/_shared/embedProvider.ts:17:  const cfAccountId = Deno.env.get('CLOUDFLARE_ACCOUNT_ID');
+   1 supabase/functions/_shared/embedProvider.ts:16:  const lovableKey = Deno.env.get('LOVABLE_API_KEY');
+   1 supabase/functions/_shared/edge-helpers.ts:89:  const raw = Deno.env.get('ADMIN_WHITELIST') ?? '';
+   1 supabase/functions/_shared/edge-helpers.ts:7:  const origins = (Deno.env.get('CORS_ORIGINS') ?? '').split(',').map(s => s.trim()).filter(Boolean);
+   1 supabase/functions/_shared/edge-helpers.ts:124:  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/_shared/edge-helpers.ts:123:  const url = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/_shared/client.ts:80:  const whitelist = (Deno.env.get('ADMIN_WHITELIST') || '')
+   1 supabase/functions/_shared/client.ts:37:  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+   1 supabase/functions/_shared/client.ts:36:  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/_shared/client.ts:15:  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+   1 supabase/functions/_shared/client.ts:14:  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 supabase/functions/_shared/authCors.ts:215:          whitelist_env_set: !!Deno.env.get('ADMIN_WHITELIST')
+   1 supabase/functions/_shared/authCors.ts:18:  const originsStr = Deno.env.get('CORS_ORIGINS') ?? '*';
+   1 supabase/functions/_shared/authCors.ts:139:  const whitelistStr = Deno.env.get('ADMIN_WHITELIST') ?? '';
+   1 supabase/functions/_shared/authCors.ts:111:  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+   1 supabase/functions/_shared/authCors.ts:110:  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+   1 STRIPE_WEBHOOK_SECRET
+   1 ORIGIN_WEB
+   1 ORIGIN_APP
+   1 NOREPLY_PASSWORD
+   1 NOREPLY_EMAIL
+   1 MAILJET_SECRET_KEY
+   1 MAILJET_API_KEY
+   1 LOVABLE_CHAT_MODEL
+   1 FCM_SERVER_KEY
+   1 CORS_ALLOWED_ORIGIN
+   1 ADMIN_USER_IDS
