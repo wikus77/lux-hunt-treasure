@@ -67,7 +67,7 @@ serve(async (req) => {
 
     // Service role client
     const url = Deno.env.get("SUPABASE_URL")!;
-    const srk = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY")!;
+    const srk = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(url, srk);
 
     // Get active subscriptions for these user_ids (batch 100)

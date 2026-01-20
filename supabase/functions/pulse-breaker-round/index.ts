@@ -13,7 +13,7 @@ import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
 import { withCors } from '../_shared/cors.ts';
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 // 🔒 SECURITY CONSTANTS
 const MAX_BET = 100;

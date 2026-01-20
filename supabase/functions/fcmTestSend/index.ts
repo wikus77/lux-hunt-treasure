@@ -26,10 +26,12 @@ serve(async (req) => {
   }
 
   try {
-    // Get Firebase Service Account JSON from secrets
-    const firebaseSAJSON = Deno.env.get('FIREBASE_SA_JSON');
+    // SECURITY CLEANUP 2026-01-20: Standardized to FCM_SERVICE_ACCOUNT_JSON
+    // Get Firebase Service Account JSON from secrets (with fallback for migration)
+    const firebaseSAJSON = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON') || 
+                          Deno.env.get('FIREBASE_SA_JSON');
     if (!firebaseSAJSON) {
-      console.error('FIREBASE_SA_JSON secret not configured');
+      console.error('FCM_SERVICE_ACCOUNT_JSON secret not configured');
       return new Response(
         JSON.stringify({ ok: false, error: 'Firebase Service Account not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -41,7 +43,7 @@ serve(async (req) => {
     try {
       serviceAccount = JSON.parse(firebaseSAJSON);
     } catch (error) {
-      console.error('Failed to parse FIREBASE_SA_JSON:', error);
+      console.error('Failed to parse FCM_SERVICE_ACCOUNT_JSON:', error);
       return new Response(
         JSON.stringify({ ok: false, error: 'Invalid Firebase Service Account format' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

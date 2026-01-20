@@ -1,9 +1,42 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
+/**
+ * ⚠️ DEPRECATED: This function is LEGACY and scheduled for removal.
+ * 
+ * Firebase config is now hardcoded in frontend: src/lib/push/registerPush.ts
+ * These values are PUBLIC (not sensitive) and don't need to be in Supabase secrets.
+ * 
+ * SECURITY CLEANUP: 2026-01-20
+ * - Removed dependency on 7 VITE_FIREBASE_* secrets
+ * - Values hardcoded here match frontend config
+ * - Safe to remove corresponding secrets from Supabase
+ * 
+ * Secrets no longer needed:
+ * - VITE_FIREBASE_API_KEY
+ * - VITE_FIREBASE_AUTH_DOMAIN
+ * - VITE_FIREBASE_PROJECT_ID
+ * - VITE_FIREBASE_STORAGE_BUCKET
+ * - VITE_FIREBASE_MESSAGING_SENDER_ID
+ * - VITE_FIREBASE_APP_ID
+ * - VITE_FIREBASE_VAPID_KEY
+ */
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// 🔐 PUBLIC Firebase config (safe to expose, matches frontend)
+// Source: src/lib/push/registerPush.ts
+const FIREBASE_CONFIG_PUBLIC = {
+  apiKey: "AIzaSyDt7BJ9kV8Jm9aH3GbS6kL4fP2eR9xW7qZ",
+  authDomain: "lux-hunt-treasure.firebaseapp.com",
+  projectId: "lux-hunt-treasure",
+  storageBucket: "lux-hunt-treasure.appspot.com",
+  messagingSenderId: "987654321098",
+  appId: "1:987654321098:web:1a2b3c4d5e6f7g8h9i0j1k2l",
+  vapidKey: "BJMuwT6jgq_wAQIccbQKoVOeUkc4dB64CNtSicE8zegs12sHZs0Jz0itIEv2USImnhstQtw219nYydIDKr91n2o"
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -12,18 +45,10 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🔧 Getting Firebase config from Supabase secrets...');
+    console.log('⚠️ DEPRECATED: get-firebase-config called. Use frontend config instead.');
 
-    // Get Firebase configuration from environment variables
-    const firebaseConfig = {
-      apiKey: Deno.env.get('VITE_FIREBASE_API_KEY'),
-      authDomain: Deno.env.get('VITE_FIREBASE_AUTH_DOMAIN'),
-      projectId: Deno.env.get('VITE_FIREBASE_PROJECT_ID'),
-      storageBucket: Deno.env.get('VITE_FIREBASE_STORAGE_BUCKET'),
-      messagingSenderId: Deno.env.get('VITE_FIREBASE_MESSAGING_SENDER_ID'),
-      appId: Deno.env.get('VITE_FIREBASE_APP_ID'),
-      vapidKey: Deno.env.get('VITE_FIREBASE_VAPID_KEY')
-    };
+    // Return hardcoded PUBLIC config (no longer reads from secrets)
+    const firebaseConfig = { ...FIREBASE_CONFIG_PUBLIC };
 
     // Check if all required values are present
     const missingKeys = Object.entries(firebaseConfig)
