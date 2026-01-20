@@ -28,8 +28,9 @@ Deno.serve(async req => {
   const t0=Date.now();
 
   try{
+    // SECURITY CLEANUP 2026-01-20: Standardized to SUPABASE_SERVICE_ROLE_KEY only
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY");
+    const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     if(!SUPABASE_URL || !SERVICE_ROLE_KEY) throw new Error("Missing Supabase env vars");
 
     const sb = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
