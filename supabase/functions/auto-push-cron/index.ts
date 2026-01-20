@@ -63,6 +63,9 @@ Deno.serve(async (req) => {
     
     // 🆕 FORCE MODE: bypassa time slots (admin-only)
     const forceMode = body.force === true || req.headers.get("x-m1-force") === "1";
+    
+    // 🆕 RESET LOGS: cancella i log di oggi (admin-only, per debug)
+    const resetLogs = body.reset_logs === true || body.resetLogs === true;
 
     // 🔒 SECURITY: Verify internal secret for cron/trigger calls
     const CRON_SECRET = Deno.env.get("CRON_SECRET") || Deno.env.get("INTERNAL_SECRET");
@@ -79,17 +82,41 @@ Deno.serve(async (req) => {
       // return json({ error: "Unauthorized - invalid cron secret" }, 401);
     }
     
-    // 🔐 FORCE MODE requires admin auth
+    // 🔐 FORCE MODE requires admin auth, RESET LOGS allows with bypass flag for debugging
     if (forceMode && !isAdminAuth) {
       console.warn("[AUTO-PUSH-CRON] ❌ Force mode rejected - requires admin auth");
       return json({ error: "Unauthorized - force mode requires admin auth" }, 401);
     }
     
+    // Reset logs requires either admin auth OR bypass flag (for debugging)
+    if (resetLogs && !isAdminAuth && !bypassQuietHours) {
+      console.warn("[AUTO-PUSH-CRON] ❌ Reset logs rejected - requires admin auth or bypass flag");
+      return json({ error: "Unauthorized - reset_logs requires admin auth or bypass_quiet_hours" }, 401);
+    }
+    
+    // 🆕 RESET LOGS: cancella i log di oggi per ripartire da zero
+    if (resetLogs) {
+      const supabaseReset = createClient(SB_URL, SERVICE_ROLE_KEY);
+      const today = new Date().toISOString().split('T')[0];
+      const { error: resetError, count } = await supabaseReset
+        .from('auto_push_log')
+        .delete()
+        .eq('sent_date', today);
+      
+      if (resetError) {
+        console.error("[AUTO-PUSH-CRON] ❌ Reset logs error:", resetError);
+        return json({ error: "Failed to reset logs", details: resetError.message }, 500);
+      }
+      
+      console.log(`[AUTO-PUSH-CRON] 🗑️ Reset complete: deleted logs for ${today}`);
+      return json({ ok: true, message: `Logs reset for ${today}`, deleted: count || 'unknown' }, 200);
+    }
+    
     const runId = `run_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     console.log("[AUTO-PUSH-CRON] ✅ Auth check passed (internal CRON)");
     console.log(`[AUTO-PUSH-CRON] 🆔 Run ID: ${runId}`);
-    console.log(`[AUTO-PUSH-CRON] ✅ Params: dry-run=${dryRun}, bypass-quiet=${bypassQuietHours}, force=${forceMode}, force-user=${forceUserId || 'none'}`);
-    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2026-01-20-v6-FORCE-MODE`);
+    console.log(`[AUTO-PUSH-CRON] ✅ Params: dry-run=${dryRun}, bypass-quiet=${bypassQuietHours}, force=${forceMode}, reset=${resetLogs}, force-user=${forceUserId || 'none'}`);
+    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2026-01-20-v8-FIX-NO-SUBS`);
 
     // 2. Load config
     const supabase = createClient(SB_URL, SERVICE_ROLE_KEY);
@@ -236,9 +263,19 @@ Deno.serve(async (req) => {
     // Shuffle users for random selection
     const shuffledUsers = users.sort(() => Math.random() - 0.5).slice(0, BATCH_SIZE);
 
+    // 🔍 DEBUG: Log today's log count
+    console.log(`[AUTO-PUSH-CRON] 📊 Today's logs count: ${todayLogs?.length || 0}`);
+    console.log(`[AUTO-PUSH-CRON] 📊 Users in notifCount map: ${userNotifCount.size}`);
+
     for (const user of shuffledUsers) {
       // Check daily limit
       const userTodayCount = userNotifCount.get(user.id) || 0;
+      
+      // 🔍 DEBUG: Log first 3 users for debugging
+      if (sentCount + skippedCount < 3) {
+        console.log(`[AUTO-PUSH-CRON] 🔍 DEBUG User ${user.agent_code}: todayCount=${userTodayCount}, id=${user.id?.slice(0,8)}...`);
+      }
+      
       if (userTodayCount >= MAX_NOTIF_PER_DAY) {
         console.log(`[AUTO-PUSH-CRON] ⏭️ User ${user.agent_code} at daily limit (${userTodayCount}/${MAX_NOTIF_PER_DAY})`);
         skippedCount++;
@@ -294,10 +331,13 @@ Deno.serve(async (req) => {
       });
 
       if (segmentedTemplates.length === 0) {
-        console.log(`[AUTO-PUSH-CRON] ⏭️ No templates for segment, user: ${user.agent_code}`);
+        console.log(`[AUTO-PUSH-CRON] ⏭️ SKIP ${user.agent_code}: No templates for segment (userTemplates=${userTemplates.length}, allTemplates=${allTemplates.length})`);
         skippedCount++;
         continue;
       }
+      
+      // 🔍 DEBUG: If we got here, we should send
+      console.log(`[AUTO-PUSH-CRON] ✅ User ${user.agent_code} eligible: templates=${segmentedTemplates.length}, todayCount=${userTodayCount}, slotCount=${slotCount}, lang=${userLang}`);
 
       // Select template (weighted random) - SKIP quiet hours check for simplicity
       const totalWeight = segmentedTemplates.reduce((sum: number, t: Template) => sum + (t.weight || 1), 0);
@@ -361,7 +401,10 @@ Deno.serve(async (req) => {
 
           const pushResult = await pushResponse.json();
 
-          if (pushResponse.ok && pushResult.success) {
+          // 🔧 FIX: Verifico ANCHE che almeno una push sia stata effettivamente inviata
+          const actualSent = pushResult.sent ?? 0;
+          
+          if (pushResponse.ok && pushResult.success && actualSent > 0) {
             logsToInsert.push({
               template_id: selectedTemplate.id,
               user_id: user.id,
@@ -372,11 +415,16 @@ Deno.serve(async (req) => {
                 title: renderedTitle,
                 body: renderedBody,
                 deeplink: selectedTemplate.deeplink,
-                sent_at: new Date().toISOString()
+                sent_at: new Date().toISOString(),
+                push_sent: actualSent
               }
             });
             sentCount++;
-            console.log(`[AUTO-PUSH-CRON] ✅ Sent to ${user.agent_code}`);
+            console.log(`[AUTO-PUSH-CRON] ✅ Sent to ${user.agent_code} (${actualSent} subscriptions)`);
+          } else if (pushResponse.ok && pushResult.success && actualSent === 0) {
+            // No subscriptions for this user - don't count as sent, don't log as error
+            skippedCount++;
+            console.log(`[AUTO-PUSH-CRON] ⚠️ No push subscriptions for ${user.agent_code}`);
           } else {
             logsToInsert.push({
               template_id: selectedTemplate.id,
@@ -428,7 +476,7 @@ Deno.serve(async (req) => {
     return json({
       ok: true,
       run_id: runId,
-      version: '2026-01-20-v6-FORCE-MODE',
+      version: '2026-01-20-v8-FIX-NO-SUBS',
       users_processed: shuffledUsers.length,
       sent: sentCount,
       skipped: skippedCount,

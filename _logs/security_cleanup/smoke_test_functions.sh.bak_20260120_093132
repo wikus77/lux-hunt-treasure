@@ -6,8 +6,6 @@ NOW="$(date)"
 OUT_DIR="_logs/security_cleanup"
 mkdir -p "$OUT_DIR"
 
-SUPABASE_PROJECT_ID="$PROJECT_REF"
-
 banner() {
   echo "========================================"
   echo "M1SSION SMOKE TEST"
@@ -23,11 +21,23 @@ fail=0
 invoke_nojwt() {
   local fn="$1"
   local body="${2:-}"
-  local out=""
+  local out
   if [[ -n "${body}" ]]; then
-    out="$(SUPABASE_PROJECT_ID="$SUPABASE_PROJECT_ID" supabase functions invoke "$fn" --no-verify-jwt --body "$body" 2>&1 || true)"
+    out="$(supabase functions invoke "$fn" --project-ref "$PROJECT_REF" --no-verify-jwt --body "$body" 2>&1 || true)"
   else
-    out="$(SUPABASE_PROJECT_ID="$SUPABASE_PROJECT_ID" supabase functions invoke "$fn" --no-verify-jwt 2>&1 || true)"
+    out="$(supabase functions invoke "$fn" --project-ref "$PROJECT_REF" --no-verify-jwt 2>&1 || true)"
+  fi
+  echo "$out"
+}
+
+invoke_default() {
+  local fn="$1"
+  local body="${2:-}"
+  local out
+  if [[ -n "${body}" ]]; then
+    out="$(supabase functions invoke "$fn" --project-ref "$PROJECT_REF" --body "$body" 2>&1 || true)"
+  else
+    out="$(supabase functions invoke "$fn" --project-ref "$PROJECT_REF" 2>&1 || true)"
   fi
   echo "$out"
 }
@@ -39,14 +49,19 @@ check_http() {
 
   local code
   code="$(echo "$out" | tr -d '\r' | awk '/^[0-9]{3}$/ {print $0}' | tail -n 1)"
-  if [[ -z "${code}" ]]; then code="???"; fi
+  if [[ -z "${code}" ]]; then
+    code="$(echo "$out" | tr -d '\r' | awk '/HTTP\/[0-9.]+/ {print $2}' | tail -n 1)"
+  fi
+  if [[ -z "${code}" ]]; then
+    code="???"
+  fi
 
   if [[ "$code" == "$expect" ]]; then
     echo "Testing $name... ✅ PASS (HTTP $code)"
     pass=$((pass+1))
   else
     echo "Testing $name... ❌ FAIL (HTTP $code)"
-    echo "   Response: $(echo "$out" | tr -d '\r' | tail -n 8 | tr '\n' ' ' | sed 's/  */ /g')"
+    echo "   Response: $(echo "$out" | tr -d '\r' | tail -n 5 | tr '\n' ' ' | sed 's/  */ /g')"
     fail=$((fail+1))
   fi
 }
@@ -60,6 +75,7 @@ out="$(invoke_nojwt get-vapid '{}')";          check_http "get-vapid"           
 out="$(invoke_nojwt stripe-mode '{}')";        check_http "stripe-mode"         "$out" "200"
 out="$(invoke_nojwt auto-push-cron '{}')";     check_http "auto-push-cron"      "$out" "200"
 
+# This endpoint is expected to reject if it requires admin auth (403 is acceptable)
 out="$(invoke_nojwt push-broadcast '{}')"
 code="$(echo "$out" | tr -d '\r' | awk '/^[0-9]{3}$/ {print $0}' | tail -n 1)"
 if [[ "$code" == "403" ]]; then
@@ -71,12 +87,17 @@ fi
 
 echo
 echo "[PUSH] Testing push notification functions..."
+# This one was failing with invalid_jwt: run without jwt verification
 out="$(invoke_nojwt webpush-self-test '{"dry_run":true}')"; check_http "webpush-self-test" "$out" "200"
 
 echo
 echo "[DB] Testing database functions..."
+# get-user-state was failing with JSON parse error: always send a JSON body
 out="$(invoke_nojwt get-user-state '{"ping":true}')"; check_http "get-user-state" "$out" "200"
-out="$(invoke_nojwt analytics-track '{"session_id":"smoke_test_session","event":"smoke_test","ts":'$(date +%s)'}')"; check_http "analytics-track" "$out" "200"
+
+# analytics-track requires session_id: send minimal valid payload
+out="$(invoke_nojwt analytics-track '{"session_id":"smoke_test_session","event":"smoke_test","ts":'$(date +%s)'}')"
+check_http "analytics-track" "$out" "200"
 
 echo
 echo "========================================"

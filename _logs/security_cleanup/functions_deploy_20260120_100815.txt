@@ -1,0 +1,397 @@
+WARNING: Docker is not running
+Deploying Function: generate-mission-clues
+Uploading asset (generate-mission-clues): supabase/functions/generate-mission-clues/index.ts
+Deploying Function: handle-payment-success
+Uploading asset (handle-payment-success): supabase/functions/handle-payment-success/index.ts
+Deploying Function: push_send
+Uploading asset (push_send): supabase/functions/push_send/index.ts
+Deploying Function: verify-iap-purchase
+Uploading asset (verify-iap-purchase): supabase/functions/verify-iap-purchase/index.ts
+Uploading asset (verify-iap-purchase): supabase/functions/_shared/rateLimit.ts
+Deploying Function: verify-subscription-sync
+Uploading asset (verify-subscription-sync): supabase/functions/verify-subscription-sync/index.ts
+Deploying Function: cancel-subscription
+Uploading asset (cancel-subscription): supabase/functions/cancel-subscription/index.ts
+Uploading asset (cancel-subscription): supabase/functions/_shared/secureLog.ts
+Uploading asset (cancel-subscription): supabase/functions/_shared/cors.ts
+Deploying Function: get-spectator-summary
+Uploading asset (get-spectator-summary): supabase/functions/get-spectator-summary/index.ts
+Deploying Function: register-push-token
+Uploading asset (register-push-token): supabase/functions/register-push-token/index.ts
+Deploying Function: reset-mission
+Uploading asset (reset-mission): supabase/functions/reset-mission/index.ts
+Deploying Function: ritual-orchestrator
+Uploading asset (ritual-orchestrator): supabase/functions/ritual-orchestrator/index.ts
+Uploading asset (ritual-orchestrator): supabase/functions/_shared/edge-helpers.ts
+Uploading asset (ritual-orchestrator): supabase/functions/_shared/authCors.ts
+Deploying Function: send-push
+Uploading asset (send-push): supabase/functions/send-push/index.ts
+Deploying Function: tts-elevenlabs
+Uploading asset (tts-elevenlabs): supabase/functions/tts-elevenlabs/index.ts
+Deploying Function: weekly-reset-cron
+Uploading asset (weekly-reset-cron): supabase/functions/weekly-reset-cron/index.ts
+Deploying Function: admin-delete-user
+Uploading asset (admin-delete-user): supabase/functions/admin-delete-user/index.ts
+Deploying Function: battle-create
+Uploading asset (battle-create): supabase/functions/battle-create/index.ts
+Uploading asset (battle-create): supabase/functions/_shared/cors.ts
+Deploying Function: handle-daily-checkin
+Uploading asset (handle-daily-checkin): supabase/functions/handle-daily-checkin/index.ts
+Deploying Function: norah-chat
+Uploading asset (norah-chat): supabase/functions/norah-chat/index.ts
+Uploading asset (norah-chat): supabase/functions/_shared/telemetry.ts
+Deploying Function: push_admin_broadcast
+Uploading asset (push_admin_broadcast): supabase/functions/push_admin_broadcast/index.ts
+Deploying Function: secure-api-protection
+Uploading asset (secure-api-protection): supabase/functions/secure-api-protection/index.ts
+Deploying Function: sync-weekly-leaderboard
+Uploading asset (sync-weekly-leaderboard): supabase/functions/sync-weekly-leaderboard/index.ts
+Deploying Function: verify-recaptcha
+Uploading asset (verify-recaptcha): supabase/functions/verify-recaptcha/index.ts
+Deploying Function: battle-push-send
+Uploading asset (battle-push-send): supabase/functions/battle-push-send/index.ts
+Deploying Function: final-shoot-notify
+Uploading asset (final-shoot-notify): supabase/functions/final-shoot-notify/index.ts
+Deploying Function: norah-proactive-analyzer
+Uploading asset (norah-proactive-analyzer): supabase/functions/norah-proactive-analyzer/index.ts
+Deploying Function: send-native-push
+Uploading asset (send-native-push): supabase/functions/send-native-push/index.ts
+Deploying Function: ai-chat
+Uploading asset (ai-chat): supabase/functions/ai-chat/index.ts
+Deploying Function: battle-accept
+Uploading asset (battle-accept): supabase/functions/battle-accept/index.ts
+Uploading asset (battle-accept): supabase/functions/_shared/cors.ts
+Deploying Function: generate-mission-clues-ai
+Uploading asset (generate-mission-clues-ai): supabase/functions/generate-mission-clues-ai/index.ts
+Deploying Function: get-nearby-prizes
+Uploading asset (get-nearby-prizes): supabase/functions/get-nearby-prizes/index.ts
+Deploying Function: iap-apple-notifications
+Uploading asset (iap-apple-notifications): supabase/functions/iap-apple-notifications/index.ts
+Uploading asset (iap-apple-notifications): supabase/functions/_shared/rateLimit.ts
+Deploying Function: register-bypass
+Uploading asset (register-bypass): supabase/functions/register-bypass/index.ts
+Uploading asset (register-bypass): supabase/functions/_shared/rateLimit.ts
+Uploading asset (register-bypass): supabase/functions/_shared/secureLog.ts
+Uploading asset (register-bypass): supabase/functions/_shared/cors.ts
+Deploying Function: send-push-canary
+Uploading asset (send-push-canary): supabase/functions/send-push-canary/index.ts
+Uploading asset (send-push-canary): supabase/functions/_shared/pushHeaders.ts
+Uploading asset (send-push-canary): supabase/functions/_shared/vapid.ts
+Deploying Function: track_event
+Uploading asset (track_event): supabase/functions/track_event/index.ts
+Deploying Function: lottery-draw-cron
+Uploading asset (lottery-draw-cron): supabase/functions/lottery-draw-cron/index.ts
+Deploying Function: panel-security-status
+Uploading asset (panel-security-status): supabase/functions/panel-security-status/index.ts
+Deploying Function: populate-knowledge-base
+Uploading asset (populate-knowledge-base): supabase/functions/populate-knowledge-base/index.ts
+Deploying Function: send-auto-reply
+Uploading asset (send-auto-reply): supabase/functions/send-auto-reply/index.ts
+Deploying Function: verify-turnstile
+Uploading asset (verify-turnstile): supabase/functions/verify-turnstile/index.ts
+Deploying Function: analytics-track
+Uploading asset (analytics-track): supabase/functions/analytics-track/index.ts
+Deploying Function: chat-push-notify
+Uploading asset (chat-push-notify): supabase/functions/chat-push-notify/index.ts
+Deploying Function: env-dump
+Uploading asset (env-dump): supabase/functions/env-dump/deno.json
+Uploading asset (env-dump): supabase/functions/env-dump/index.ts
+Deploying Function: geocode-address
+Uploading asset (geocode-address): supabase/functions/geocode-address/index.ts
+Deploying Function: store-fcm-token
+Uploading asset (store-fcm-token): supabase/functions/store-fcm-token/index.ts
+Deploying Function: tts-openai
+Uploading asset (tts-openai): supabase/functions/tts-openai/index.ts
+Deploying Function: claim-welcome-bonus
+Uploading asset (claim-welcome-bonus): supabase/functions/claim-welcome-bonus/index.ts
+Deploying Function: handle-buzz-map
+Uploading asset (handle-buzz-map): supabase/functions/handle-buzz-map/index.ts
+Uploading asset (handle-buzz-map): supabase/functions/_shared/cors.ts
+Deploying Function: mirror-push-log-harvester
+Uploading asset (mirror-push-log-harvester): supabase/functions/mirror-push-log-harvester/index.ts
+Uploading asset (mirror-push-log-harvester): supabase/functions/_shared/cors.ts
+Deploying Function: restore-iap-subscription
+Uploading asset (restore-iap-subscription): supabase/functions/restore-iap-subscription/index.ts
+Uploading asset (restore-iap-subscription): supabase/functions/_shared/rateLimit.ts
+Deploying Function: schedule-buzz-notification
+Uploading asset (schedule-buzz-notification): supabase/functions/schedule-buzz-notification/index.ts
+Deploying Function: cashback-claim
+Uploading asset (cashback-claim): supabase/functions/cashback-claim/index.ts
+Uploading asset (cashback-claim): supabase/functions/_shared/secureCors.ts
+Deploying Function: check-daily-spin
+Uploading asset (check-daily-spin): supabase/functions/check-daily-spin/index.ts
+Deploying Function: create-admin-profile
+Uploading asset (create-admin-profile): supabase/functions/create-admin-profile/index.ts
+Deploying Function: geofence-engine
+Uploading asset (geofence-engine): supabase/functions/geofence-engine/index.ts
+Deploying Function: push_subscribe_canary
+Uploading asset (push_subscribe_canary): supabase/functions/push_subscribe_canary/index.ts
+Deploying Function: send-email
+Uploading asset (send-email): supabase/functions/send-email/index.ts
+Deploying Function: send-mailjet-campaign
+Uploading asset (send-mailjet-campaign): supabase/functions/send-mailjet-campaign/index.ts
+Deploying Function: domination-decay-job
+Uploading asset (domination-decay-job): supabase/functions/domination-decay-job/index.ts
+Deploying Function: norah-chat-v2
+Uploading asset (norah-chat-v2): supabase/functions/norah-chat-v2/index.ts
+Deploying Function: push-self-test
+Uploading asset (push-self-test): supabase/functions/push-self-test/index.ts
+Deploying Function: send-push-notification-real
+Uploading asset (send-push-notification-real): supabase/functions/send-push-notification-real/index.ts
+Deploying Function: smart-push-engine
+Uploading asset (smart-push-engine): supabase/functions/smart-push-engine/index.ts
+Deploying Function: webpush-upsert
+Uploading asset (webpush-upsert): supabase/functions/webpush-upsert/index.ts
+Deploying Function: ai-content-generator
+Uploading asset (ai-content-generator): supabase/functions/ai-content-generator/index.ts
+Deploying Function: battle-cron-finalize
+Uploading asset (battle-cron-finalize): supabase/functions/battle-cron-finalize/index.ts
+Deploying Function: battle-tap-commit
+Uploading asset (battle-tap-commit): supabase/functions/battle-tap-commit/index.ts
+Deploying Function: get-norah-context
+Uploading asset (get-norah-context): supabase/functions/get-norah-context/index.ts
+Deploying Function: profile-reducer
+Uploading asset (profile-reducer): supabase/functions/profile-reducer/index.ts
+Deploying Function: send-push-notification-onesignal
+Uploading asset (send-push-notification-onesignal): supabase/functions/send-push-notification-onesignal/index.ts
+Deploying Function: sync-subscription-status
+Uploading asset (sync-subscription-status): supabase/functions/sync-subscription-status/index.ts
+Uploading asset (sync-subscription-status): supabase/functions/_shared/rateLimit.ts
+Deploying Function: battle-ready
+Uploading asset (battle-ready): supabase/functions/battle-ready/index.ts
+Deploying Function: bulk-marker-drop
+Uploading asset (bulk-marker-drop): supabase/functions/bulk-marker-drop/index.ts
+Deploying Function: norah-answer
+Uploading asset (norah-answer): supabase/functions/norah-answer/index.ts
+Uploading asset (norah-answer): supabase/functions/_shared/cfEmbed.ts
+Deploying Function: send-mailjet-email
+Uploading asset (send-mailjet-email): supabase/functions/send-mailjet-email/index.ts
+Deploying Function: create-checkout
+Uploading asset (create-checkout): supabase/functions/create-checkout/index.ts
+Uploading asset (create-checkout): supabase/functions/_shared/secureLog.ts
+Uploading asset (create-checkout): supabase/functions/_shared/cors.ts
+Deploying Function: create-prize-clues-table
+Uploading asset (create-prize-clues-table): supabase/functions/create-prize-clues-table/index.ts
+Deploying Function: ensure-agent-code
+Uploading asset (ensure-agent-code): supabase/functions/ensure-agent-code/index.ts
+Deploying Function: handle-buzz-press
+Uploading asset (handle-buzz-press): supabase/functions/handle-buzz-press/index.ts
+Uploading asset (handle-buzz-press): supabase/functions/_shared/buzzMapPricing.ts
+Uploading asset (handle-buzz-press): supabase/functions/_shared/cors.ts
+Deploying Function: iap-google-rtdn
+Uploading asset (iap-google-rtdn): supabase/functions/iap-google-rtdn/index.ts
+Uploading asset (iap-google-rtdn): supabase/functions/_shared/rateLimit.ts
+Deploying Function: notify-mission-access
+Uploading asset (notify-mission-access): supabase/functions/notify-mission-access/index.ts
+Deploying Function: push_subscribe
+Uploading asset (push_subscribe): supabase/functions/push_subscribe/index.ts
+Deploying Function: stripe-webhook
+Uploading asset (stripe-webhook): supabase/functions/stripe-webhook/index.ts
+Deploying Function: fcm-test
+Uploading asset (fcm-test): supabase/functions/fcm-test/index.ts
+Deploying Function: send-test-push
+Uploading asset (send-test-push): supabase/functions/send-test-push/index.ts
+Deploying Function: vapid_generator
+Uploading asset (vapid_generator): supabase/functions/vapid_generator/index.ts
+Deploying Function: battle-random-opponent
+Uploading asset (battle-random-opponent): supabase/functions/battle-random-opponent/index.ts
+Deploying Function: claim-marker-reward
+Uploading asset (claim-marker-reward): supabase/functions/claim-marker-reward/index.ts
+Uploading asset (claim-marker-reward): supabase/functions/_shared/rateLimit.ts
+Uploading asset (claim-marker-reward): supabase/functions/_shared/cors.ts
+Deploying Function: insert-prize-clues
+Uploading asset (insert-prize-clues): supabase/functions/insert-prize-clues/index.ts
+Deploying Function: norah-ingest
+Uploading asset (norah-ingest): supabase/functions/norah-ingest/index.ts
+Uploading asset (norah-ingest): supabase/functions/_shared/cors.ts
+Deploying Function: pulse-decay-cron
+Uploading asset (pulse-decay-cron): supabase/functions/pulse-decay-cron/index.ts
+Deploying Function: push-subscribe
+Uploading asset (push-subscribe): supabase/functions/push-subscribe/index.ts
+Deploying Function: stripe-mode
+Uploading asset (stripe-mode): supabase/functions/stripe-mode/index.ts
+Uploading asset (stripe-mode): supabase/functions/_shared/stripeConfig.ts
+Deploying Function: auto-push-cron
+Uploading asset (auto-push-cron): supabase/functions/auto-push-cron/index.ts
+Deploying Function: battle-analytics-refresh
+Uploading asset (battle-analytics-refresh): supabase/functions/battle-analytics-refresh/index.ts
+Deploying Function: norah-kb-upsert
+Uploading asset (norah-kb-upsert): supabase/functions/norah-kb-upsert/index.ts
+Uploading asset (norah-kb-upsert): supabase/functions/_shared/cors.ts
+Deploying Function: push_send_canary
+Uploading asset (push_send_canary): supabase/functions/push_send_canary/index.ts
+Deploying Function: update-mission
+Uploading asset (update-mission): supabase/functions/update-mission/index.ts
+Deploying Function: buzz-map-resolve
+Uploading asset (buzz-map-resolve): supabase/functions/buzz-map-resolve/index.ts
+Uploading asset (buzz-map-resolve): supabase/functions/_shared/cors.ts
+Deploying Function: fcm-config
+Uploading asset (fcm-config): supabase/functions/fcm-config/index.ts
+Deploying Function: log-daily-spin
+Uploading asset (log-daily-spin): supabase/functions/log-daily-spin/index.ts
+Deploying Function: qr-redeem
+Uploading asset (qr-redeem): supabase/functions/qr-redeem/index.ts
+Deploying Function: send-agent-confirmation
+Uploading asset (send-agent-confirmation): supabase/functions/send-agent-confirmation/index.ts
+Uploading asset (send-agent-confirmation): supabase/functions/send-agent-confirmation/cors.ts
+Deploying Function: send-welcome-email
+Uploading asset (send-welcome-email): supabase/functions/send-welcome-email/index.ts
+Deploying Function: stripe-webhook-secure
+Uploading asset (stripe-webhook-secure): supabase/functions/stripe-webhook-secure/index.ts
+Deploying Function: create-payment-intent
+Uploading asset (create-payment-intent): supabase/functions/create-payment-intent/index.ts
+Uploading asset (create-payment-intent): supabase/functions/_shared/cors.ts
+Uploading asset (create-payment-intent): supabase/functions/_shared/stripeConfig.ts
+Deploying Function: credit-m1u-purchase
+Uploading asset (credit-m1u-purchase): supabase/functions/credit-m1u-purchase/index.ts
+Uploading asset (credit-m1u-purchase): supabase/functions/_shared/cors.ts
+Deploying Function: fcm-send
+Uploading asset (fcm-send): supabase/functions/fcm-send/index.ts
+Deploying Function: login-no-captcha
+Uploading asset (login-no-captcha): supabase/functions/login-no-captcha/index.ts
+Uploading asset (login-no-captcha): supabase/functions/_shared/rateLimit.ts
+Uploading asset (login-no-captcha): supabase/functions/_shared/secureLog.ts
+Uploading asset (login-no-captcha): supabase/functions/_shared/cors.ts
+Deploying Function: send-ios-push
+Uploading asset (send-ios-push): supabase/functions/send-ios-push/index.ts
+Deploying Function: send-registration-notification
+Uploading asset (send-registration-notification): supabase/functions/send-registration-notification/index.ts
+Deploying Function: stripe-create-payment-intent
+Uploading asset (stripe-create-payment-intent): supabase/functions/stripe-create-payment-intent/index.ts
+Deploying Function: test-notifications
+Uploading asset (test-notifications): supabase/functions/test-notifications/index.ts
+Deploying Function: notifier-engine
+Uploading asset (notifier-engine): supabase/functions/notifier-engine/index.ts
+Deploying Function: pulse-breaker-round
+Uploading asset (pulse-breaker-round): supabase/functions/pulse-breaker-round/index.ts
+Uploading asset (pulse-breaker-round): supabase/functions/_shared/cors.ts
+Deploying Function: webpush-targeted-send
+Uploading asset (webpush-targeted-send): supabase/functions/webpush-targeted-send/deno.json
+Uploading asset (webpush-targeted-send): supabase/functions/webpush-targeted-send/index.ts
+Deploying Function: ai-kb-bulk-seed
+Uploading asset (ai-kb-bulk-seed): supabase/functions/ai-kb-bulk-seed/index.ts
+Deploying Function: create_qr_code
+Uploading asset (create_qr_code): supabase/functions/create_qr_code/index.ts
+Deploying Function: debug-push
+Uploading asset (debug-push): supabase/functions/debug-push/index.ts
+Deploying Function: nearby_qr_notify
+Uploading asset (nearby_qr_notify): supabase/functions/nearby_qr_notify/index.ts
+Deploying Function: open-support-ticket
+Uploading asset (open-support-ticket): supabase/functions/open-support-ticket/index.ts
+Deploying Function: push_gc
+Uploading asset (push_gc): supabase/functions/push_gc/index.ts
+Deploying Function: send-pre-registration-email
+Uploading asset (send-pre-registration-email): supabase/functions/send-pre-registration-email/index.ts
+Deploying Function: webpush-self-test
+Uploading asset (webpush-self-test): supabase/functions/webpush-self-test/index.ts
+Deploying Function: buzz-map-resolve-v2
+Uploading asset (buzz-map-resolve-v2): supabase/functions/buzz-map-resolve-v2/index.ts
+Uploading asset (buzz-map-resolve-v2): supabase/functions/_shared/cors.ts
+Deploying Function: create-random-markers
+Uploading asset (create-random-markers): supabase/functions/create-random-markers/index.ts
+Deploying Function: enroll-mission-of-the-month
+Uploading asset (enroll-mission-of-the-month): supabase/functions/enroll-mission-of-the-month/index.ts
+Deploying Function: feed-crawler
+Uploading asset (feed-crawler): supabase/functions/feed-crawler/index.ts
+Deploying Function: get-vapid
+Uploading asset (get-vapid): supabase/functions/get-vapid/index.ts
+Deploying Function: launch-new-mission
+Uploading asset (launch-new-mission): supabase/functions/launch-new-mission/index.ts
+Deploying Function: process-scheduled-notifications
+Uploading asset (process-scheduled-notifications): supabase/functions/process-scheduled-notifications/index.ts
+Deploying Function: push_unsubscribe
+Uploading asset (push_unsubscribe): supabase/functions/push_unsubscribe/index.ts
+Deploying Function: battle-cancel
+Uploading asset (battle-cancel): supabase/functions/battle-cancel/index.ts
+Deploying Function: debug-mission-reset
+Uploading asset (debug-mission-reset): supabase/functions/debug-mission-reset/index.ts
+Deploying Function: norah-rag-search
+Uploading asset (norah-rag-search): supabase/functions/norah-rag-search/index.ts
+Uploading asset (norah-rag-search): supabase/functions/_shared/cors.ts
+Deploying Function: ritual-test-fire
+Uploading asset (ritual-test-fire): supabase/functions/ritual-test-fire/index.ts
+Uploading asset (ritual-test-fire): supabase/functions/_shared/edge-helpers.ts
+Uploading asset (ritual-test-fire): supabase/functions/_shared/authCors.ts
+Deploying Function: send-registration-email
+Uploading asset (send-registration-email): supabase/functions/send-registration-email/index.ts
+Uploading asset (send-registration-email): supabase/functions/send-registration-email/utils/emailTemplates.ts
+Uploading asset (send-registration-email): supabase/functions/send-registration-email/utils/mailjetClient.ts
+Uploading asset (send-registration-email): supabase/functions/send-registration-email/utils/checkRateLimit.ts
+Uploading asset (send-registration-email): supabase/functions/send-registration-email/utils/verifyAuthHeader.ts
+Uploading asset (send-registration-email): supabase/functions/send-registration-email/utils/validateRegistrationEmail.ts
+Deploying Function: update_vapid_keys
+Uploading asset (update_vapid_keys): supabase/functions/update_vapid_keys/index.ts
+Deploying Function: get-user-state
+Uploading asset (get-user-state): supabase/functions/get-user-state/index.ts
+Uploading asset (get-user-state): supabase/functions/_shared/cors.ts
+Deploying Function: norah-diagnose
+Uploading asset (norah-diagnose): supabase/functions/norah-diagnose/deno.json
+Uploading asset (norah-diagnose): supabase/functions/norah-diagnose/index.ts
+Deploying Function: norah-kpis
+Uploading asset (norah-kpis): supabase/functions/norah-kpis/index.ts
+Uploading asset (norah-kpis): supabase/functions/_shared/cors.ts
+Deploying Function: push-broadcast
+Uploading asset (push-broadcast): supabase/functions/push-broadcast/index.ts
+Deploying Function: send-contact-email
+Uploading asset (send-contact-email): supabase/functions/send-contact-email/index.ts
+Deploying Function: tts-google
+Uploading asset (tts-google): supabase/functions/tts-google/index.ts
+Deploying Function: chat
+Uploading asset (chat): supabase/functions/chat/index.ts
+Deploying Function: webpush-send
+Uploading asset (webpush-send): supabase/functions/webpush-send/index.ts
+Deploying Function: get-firebase-config
+Uploading asset (get-firebase-config): supabase/functions/get-firebase-config/index.ts
+Deploying Function: get-nearby-markers
+Uploading asset (get-nearby-markers): supabase/functions/get-nearby-markers/index.ts
+Deploying Function: handle-pre-registration
+Uploading asset (handle-pre-registration): supabase/functions/handle-pre-registration/index.ts
+Deploying Function: log-user-geo-alert
+Uploading asset (log-user-geo-alert): supabase/functions/log-user-geo-alert/index.ts
+Deploying Function: redeem_qr
+Uploading asset (redeem_qr): supabase/functions/redeem_qr/index.ts
+Deploying Function: register-push-subscription
+Uploading asset (register-push-subscription): supabase/functions/register-push-subscription/index.ts
+Deploying Function: upsert_fcm_subscription
+Uploading asset (upsert_fcm_subscription): supabase/functions/upsert_fcm_subscription/index.ts
+Deploying Function: validate-qr
+Uploading asset (validate-qr): supabase/functions/validate-qr/index.ts
+Deploying Function: generate-bound-clue
+Uploading asset (generate-bound-clue): supabase/functions/generate-bound-clue/index.ts
+Deploying Function: rag-search
+Uploading asset (rag-search): supabase/functions/rag-search/index.ts
+Uploading asset (rag-search): supabase/functions/_shared/cors.ts
+Deploying Function: admin-delete-marker
+Uploading asset (admin-delete-marker): supabase/functions/admin-delete-marker/index.ts
+Deploying Function: ai-kb-upsert
+Uploading asset (ai-kb-upsert): supabase/functions/ai-kb-upsert/index.ts
+Deploying Function: battle-push-dispatcher
+Uploading asset (battle-push-dispatcher): supabase/functions/battle-push-dispatcher/index.ts
+Deploying Function: get-push-logs
+Uploading asset (get-push-logs): supabase/functions/get-push-logs/index.ts
+Deploying Function: pulse-threshold-notify
+Uploading asset (pulse-threshold-notify): supabase/functions/pulse-threshold-notify/index.ts
+Deploying Function: push_test
+Uploading asset (push_test): supabase/functions/push_test/index.ts
+Deploying Function: redeem-qr
+Uploading asset (redeem-qr): supabase/functions/redeem-qr/index.ts
+Uploading asset (redeem-qr): supabase/functions/_shared/cors.ts
+Deploying Function: reset-mission-test
+Uploading asset (reset-mission-test): supabase/functions/reset-mission-test/index.ts
+Deploying Function: fcmTestSend
+Uploading asset (fcmTestSend): supabase/functions/fcmTestSend/index.ts
+Deploying Function: generate-prize-clues
+Uploading asset (generate-prize-clues): supabase/functions/generate-prize-clues/index.ts
+Deploying Function: mirror-push-logtee
+Uploading asset (mirror-push-logtee): supabase/functions/mirror-push-logtee/index.ts
+Deploying Function: norah-embed
+Uploading asset (norah-embed): supabase/functions/norah-embed/index.ts
+Uploading asset (norah-embed): supabase/functions/_shared/cors.ts
+Deploying Function: push_register
+Uploading asset (push_register): supabase/functions/push_register/index.ts
+Deploying Function: battle-resolve
+Uploading asset (battle-resolve): supabase/functions/battle-resolve/index.ts
+Deploying Function: send-web-push
+Uploading asset (send-web-push): supabase/functions/send-web-push/index.ts
+Deployed Functions on project vkjrqirvdvjbemsfzxof: admin-delete-marker, admin-delete-user, ai-chat, ai-content-generator, ai-kb-bulk-seed, ai-kb-upsert, analytics-track, auto-push-cron, battle-accept, battle-analytics-refresh, battle-cancel, battle-create, battle-cron-finalize, battle-push-dispatcher, battle-push-send, battle-random-opponent, battle-ready, battle-resolve, battle-tap-commit, bulk-marker-drop, buzz-map-resolve, buzz-map-resolve-v2, cancel-subscription, cashback-claim, chat, chat-push-notify, check-daily-spin, claim-marker-reward, claim-welcome-bonus, create-admin-profile, create-checkout, create-payment-intent, create-prize-clues-table, create-random-markers, create_qr_code, credit-m1u-purchase, debug-mission-reset, debug-push, domination-decay-job, enroll-mission-of-the-month, ensure-agent-code, env-dump, fcm-config, fcm-send, fcm-test, fcmTestSend, feed-crawler, final-shoot-notify, generate-bound-clue, generate-mission-clues, generate-mission-clues-ai, generate-prize-clues, geocode-address, geofence-engine, get-firebase-config, get-nearby-markers, get-nearby-prizes, get-norah-context, get-push-logs, get-spectator-summary, get-user-state, get-vapid, handle-buzz-map, handle-buzz-press, handle-daily-checkin, handle-payment-success, handle-pre-registration, iap-apple-notifications, iap-google-rtdn, insert-prize-clues, launch-new-mission, log-daily-spin, log-user-geo-alert, login-no-captcha, lottery-draw-cron, mirror-push-log-harvester, mirror-push-logtee, nearby_qr_notify, norah-answer, norah-chat, norah-chat-v2, norah-diagnose, norah-embed, norah-ingest, norah-kb-upsert, norah-kpis, norah-proactive-analyzer, norah-rag-search, notifier-engine, notify-mission-access, open-support-ticket, panel-security-status, populate-knowledge-base, process-scheduled-notifications, profile-reducer, pulse-breaker-round, pulse-decay-cron, pulse-threshold-notify, push-broadcast, push-self-test, push-subscribe, push_admin_broadcast, push_gc, push_register, push_send, push_send_canary, push_subscribe, push_subscribe_canary, push_test, push_unsubscribe, qr-redeem, rag-search, redeem-qr, redeem_qr, register-bypass, register-push-subscription, register-push-token, reset-mission, reset-mission-test, restore-iap-subscription, ritual-orchestrator, ritual-test-fire, schedule-buzz-notification, secure-api-protection, send-agent-confirmation, send-auto-reply, send-contact-email, send-email, send-ios-push, send-mailjet-campaign, send-mailjet-email, send-native-push, send-pre-registration-email, send-push, send-push-canary, send-push-notification-onesignal, send-push-notification-real, send-registration-email, send-registration-notification, send-test-push, send-web-push, send-welcome-email, smart-push-engine, store-fcm-token, stripe-create-payment-intent, stripe-mode, stripe-webhook, stripe-webhook-secure, sync-subscription-status, sync-weekly-leaderboard, test-notifications, track_event, tts-elevenlabs, tts-google, tts-openai, update-mission, update_vapid_keys, upsert_fcm_subscription, validate-qr, vapid_generator, verify-iap-purchase, verify-recaptcha, verify-subscription-sync, verify-turnstile, webpush-self-test, webpush-send, webpush-targeted-send, webpush-upsert, weekly-reset-cron
+You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/vkjrqirvdvjbemsfzxof/functions
