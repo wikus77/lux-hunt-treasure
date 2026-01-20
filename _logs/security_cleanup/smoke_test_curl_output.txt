@@ -1,0 +1,33 @@
+========================================
+M1SSION SMOKE TEST (CURL)
+========================================
+Project: vkjrqirvdvjbemsfzxof
+URL:     https://vkjrqirvdvjbemsfzxof.supabase.co
+Date:    Tue Jan 20 09:46:20 CET 2026
+
+[PUBLIC-ish] (anon jwt)
+Testing get-firebase-config... ✅ PASS (HTTP 200)
+Testing fcm-config... ✅ PASS (HTTP 200)
+Testing get-vapid... ✅ PASS (HTTP 200)
+Testing stripe-mode... ✅ PASS (HTTP 200)
+
+[ADMIN-ONLY FUNCTIONS]
+Testing push-broadcast... ⚠️  WARN (HTTP 403 - admin only)
+   Response: {"error":"Forbidden"} 
+
+[USER AUTH REQUIRED?] (401 allowed)
+Testing webpush-self-test... ⚠️  WARN (HTTP 401 - user auth required)
+   Response: {"error":"invalid_jwt"} 
+Testing get-user-state... ✅ PASS (HTTP 200)
+
+[ANALYTICS]
+Testing analytics-track... ✅ PASS (HTTP 200)
+
+========================================
+SUMMARY
+========================================
+Passed: 8
+Warn:   0
+Failed: 0
+
+Log: _logs/security_cleanup/smoke_test_curl_output.txt
