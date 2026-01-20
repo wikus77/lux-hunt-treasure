@@ -10,7 +10,7 @@ function getCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('origin');
   const allowedOrigins = [
     'https://m1ssion.eu',
-    /^https:\/\/.*\.m1ssion\.pages\.dev$/,
+    /^https:\/\/.*m1ssion.*\.pages\.dev$/,  // m1ssion-launch.pages.dev, m1ssion.pages.dev, etc.
     /^https:\/\/.*\.lovable\.dev$/,
     /^https:\/\/.*\.lovableproject\.com$/,
     /^http:\/\/localhost(:\d+)?$/
