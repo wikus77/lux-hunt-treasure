@@ -11,7 +11,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8';
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const PUSH_ADMIN_TOKEN = Deno.env.get("PUSH_ADMIN_TOKEN")!;
 

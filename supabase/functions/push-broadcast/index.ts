@@ -47,9 +47,10 @@ const normalizeEndpoint = (ep: string) => {
 };
 
 async function getAuthedUserIdOrServiceRole(req: Request) {
-  const supabaseUrl = Deno.env.get("SB_URL") ?? Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("ANON_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY");
-  const srk = Deno.env.get("SERVICE_ROLE_KEY");
+  // SECURITY CLEANUP 2026-01-20: Standardized to SUPABASE_* naming
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const srk = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !anonKey) return { userId: null, isServiceRole: false };
 
   const authHeader = req.headers.get("authorization") || req.headers.get("Authorization") || "";
@@ -108,8 +109,9 @@ serve(async (req) => {
     }
 
     // ----- DB -----
-    const supabaseUrl = Deno.env.get("SB_URL") ?? Deno.env.get("SUPABASE_URL");
-    const srk = Deno.env.get("SERVICE_ROLE_KEY");
+    // SECURITY CLEANUP 2026-01-20: Standardized to SUPABASE_* naming
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const srk = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const sb = createClient(supabaseUrl!, srk!);
 
     let query = sb.from("fcm_subscriptions").select("*").eq("is_active", true);

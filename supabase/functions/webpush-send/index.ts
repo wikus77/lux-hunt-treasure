@@ -35,7 +35,7 @@ serve(async (req) => {
       // Token admin valido → BYPASS completo (no Authorization required)
       console.log("[WEBPUSH-SEND] ✅ Admin bypass attivo");
       const url = Deno.env.get("SUPABASE_URL")!;
-      const srk = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY")!;
+      const srk = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       const supabase = createClient(url, srk);
 
       const body = await req.json().catch(() => ({}));
