@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/core';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.2716f91b957c47ba91e06f572f3ce00d',
-  appName: 'm1ssion',
+  appId: 'eu.m1ssion.app',
+  appName: 'M1SSION',
   webDir: 'dist',
   server: {
     androidScheme: 'https'
