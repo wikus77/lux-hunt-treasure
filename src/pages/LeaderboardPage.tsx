@@ -219,7 +219,8 @@ export const LeaderboardPage: React.FC = () => {
       className="w-full overflow-x-hidden p-4 space-y-4" 
       data-onboarding="leaderboard"
       style={{
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+        // 🔧 FIX v3 (21/01/2026): Match IntelligencePage pattern - 80px for header + safe-area
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
         height: '100dvh',
         overflowY: 'auto',

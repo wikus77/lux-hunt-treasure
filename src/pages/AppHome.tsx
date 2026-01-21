@@ -201,6 +201,9 @@ const { isConnected } = useRealTimeNotifications();
       <div 
         className="m1-app-bg relative"
       style={{
+        // 🔧 FIX v3 (21/01/2026): Match IntelligencePage pattern - 80px for header + safe-area
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
         height: '100dvh',
         overflowY: 'auto',
         overflowX: 'hidden',
