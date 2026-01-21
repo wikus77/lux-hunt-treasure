@@ -49,5 +49,10 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<!-- M1SSION™ WRAP FIX: Location Permission Keys -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>M1SSION needs your location to show nearby treasure on the map and verify your discoveries.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>M1SSION needs your location to show nearby treasure on the map and verify your discoveries.</string>
 </dict>
 </plist>

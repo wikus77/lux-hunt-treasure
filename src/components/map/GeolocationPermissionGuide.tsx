@@ -4,6 +4,7 @@ import React from 'react';
 import { AlertTriangle, Settings, Smartphone, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { openAppSettings, isNativeApp } from '@/lib/native-settings';
 
 interface GeolocationPermissionGuideProps {
   isIOS?: boolean;
@@ -16,15 +17,17 @@ export const GeolocationPermissionGuide: React.FC<GeolocationPermissionGuideProp
   isPWA = false,
   onRetry
 }) => {
-  const openSettings = () => {
+  const openSettings = async () => {
+    // M1SSION™ WRAP FIX: Use native bridge in Capacitor apps
+    if (isNativeApp()) {
+      const opened = await openAppSettings();
+      if (opened) return; // Successfully opened native settings
+    }
+    
+    // Fallback for PWA/web
     if (isIOS) {
-      // iOS specific settings URL (may not work in all contexts)
-      try {
-        window.open('App-Prefs:Privacy&path=LOCATION', '_system');
-      } catch {
-        // Fallback - just alert user
-        alert('Apri Impostazioni > Privacy e Sicurezza > Localizzazione');
-      }
+      // iOS PWA/Safari - guide user manually
+      alert('Apri Impostazioni > Privacy e Sicurezza > Localizzazione');
     } else {
       // For other browsers, guide user to browser settings
       alert('Apri le impostazioni del browser e abilita la geolocalizzazione per questo sito');

@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,8 +8,47 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // © 2026 M1SSION™ — NIYVORA KFT — Joseph MULÉ
+        // WRAP FIX: Configure WebView after launch to prevent double safe-area
+        
+        // Schedule safe-area fix after window is set up
+        DispatchQueue.main.async {
+            self.configureSafeAreaBehavior()
+        }
+        
         return true
+    }
+    
+    // MARK: - M1SSION™ Safe-Area Fix (WRAP-ONLY)
+    /// Neutralizes automatic content inset adjustment to prevent double safe-area offset
+    /// when CSS already applies env(safe-area-inset-top)
+    private func configureSafeAreaBehavior() {
+        guard let rootVC = window?.rootViewController else { return }
+        
+        // Find the Capacitor WebView
+        if let webView = findWebView(in: rootVC.view) {
+            // Disable automatic content inset adjustment
+            webView.scrollView.contentInsetAdjustmentBehavior = .never
+            
+            // Reset any existing insets that may have been applied
+            webView.scrollView.contentInset = .zero
+            webView.scrollView.scrollIndicatorInsets = .zero
+            
+            print("✅ M1SSION™ WRAP: Safe-area adjustment disabled for WebView")
+        }
+    }
+    
+    /// Recursively finds WKWebView in view hierarchy
+    private func findWebView(in view: UIView) -> WKWebView? {
+        if let webView = view as? WKWebView {
+            return webView
+        }
+        for subview in view.subviews {
+            if let found = findWebView(in: subview) {
+                return found
+            }
+        }
+        return nil
     }
 
     func applicationWillResignActive(_ application: UIApplication) {

@@ -28,8 +28,22 @@ const ALLOWED_ORIGINS = [
   /^127\.0\.0\.1$/i
 ];
 
+// M1SSION™ WRAP FIX: Capacitor/Native app origins
+const CAPACITOR_ORIGINS = [
+  'capacitor://localhost',
+  'ionic://localhost',
+  'http://localhost',  // Android with androidScheme: http
+  'https://localhost'  // Android with androidScheme: https
+];
+
 function isAllowedOrigin(origin: string): boolean {
   if (!origin) return false;
+  
+  // M1SSION™ WRAP FIX: Check Capacitor/Native origins first (exact match)
+  if (CAPACITOR_ORIGINS.includes(origin.toLowerCase())) {
+    return true;
+  }
+  
   try {
     const url = new URL(origin);
     const hostname = url.hostname.toLowerCase();
@@ -37,8 +51,10 @@ function isAllowedOrigin(origin: string): boolean {
     // Check against allowed patterns
     const allowed = ALLOWED_ORIGINS.some((pattern) => pattern.test(hostname));
     
-    // Validate protocol (must be https or http for localhost)
+    // Validate protocol (must be https, http for localhost, or capacitor/ionic)
     const validProtocol = url.protocol === 'https:' || 
+                         url.protocol === 'capacitor:' ||
+                         url.protocol === 'ionic:' ||
                          (url.protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1'));
     
     return allowed && validProtocol;
@@ -150,7 +166,11 @@ export function corsHeaders(origin: string | null) {
     // 🔧 FIX: Cloudflare Pages previews
     /^https:\/\/.*\.pages\.dev$/,
     /^https:\/\/[a-z0-9-]+\.m1ssion-launch\.pages\.dev$/,
-    /^http:\/\/localhost:\d+$/
+    /^http:\/\/localhost:\d+$/,
+    // M1SSION™ WRAP FIX: Capacitor/Native app origins
+    /^capacitor:\/\/localhost$/,
+    /^ionic:\/\/localhost$/,
+    /^https:\/\/localhost$/
   ];
   
   let finalOrigin = '*';

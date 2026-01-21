@@ -13,7 +13,10 @@ const config: CapacitorConfig = {
     }
   },
   ios: {
-    scheme: 'M1SSION'
+    scheme: 'M1SSION',
+    // M1SSION™ WRAP FIX: Prevent double safe-area application
+    contentInset: 'never',
+    scrollEnabled: true
   },
   android: {
     allowMixedContent: true

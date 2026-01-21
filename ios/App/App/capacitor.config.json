@@ -15,12 +15,15 @@
 		}
 	},
 	"ios": {
-		"scheme": "M1SSION"
+		"scheme": "M1SSION",
+		"contentInset": "never",
+		"scrollEnabled": true
 	},
 	"android": {
 		"allowMixedContent": true
 	},
 	"packageClassList": [
+		"AppPlugin",
 		"PushNotificationsPlugin",
 		"StatusBarPlugin",
 		"SafeAreaPlugin"
