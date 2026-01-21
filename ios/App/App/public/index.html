@@ -3,6 +3,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- M1SSION™ Capacitor iOS Safe-Area Fix - WRAP ONLY -->
+    <style id="capacitor-ios-safearea">
+      /* Injected at build time for iOS Capacitor wrapper */
+      html { --capacitor-safe-top: env(safe-area-inset-top, 59px); }
+      .unified-header-wrapper { padding-top: calc(env(safe-area-inset-top, 59px) + 12px) !important; }
+    </style>
     <meta name="x-pwa-version" content="2025.01.18.001">
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-m1-192x192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-m1-512x512.png" />
