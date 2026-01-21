@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Haptic Feedback Utility - Vibrazioni per feedback tattile
+// M1SSION™ WRAP FIX: Added Capacitor Haptics support for iOS native
 
 /**
  * Haptic Feedback Types
@@ -24,8 +25,13 @@ const HAPTIC_PATTERNS: Record<HapticType, number | number[]> = {
   notification: [50, 100, 50],   // Pattern notifica 🔔
 };
 
+// M1SSION™ WRAP FIX: Check if running in Capacitor native
+const isCapacitorNative = (): boolean => {
+  return !!(window as any).Capacitor?.isNativePlatform?.();
+};
+
 /**
- * Check if Vibration API is supported
+ * Check if Vibration API is supported (web fallback)
  */
 const isVibrationSupported = (): boolean => {
   return typeof navigator !== 'undefined' && 'vibrate' in navigator;
@@ -41,14 +47,67 @@ const isHapticsEnabled = (): boolean => {
 };
 
 /**
+ * M1SSION™ WRAP FIX: Trigger native haptics via Capacitor plugin
+ * Uses @capacitor/haptics for iOS which doesn't support navigator.vibrate()
+ */
+const triggerNativeHaptic = async (type: HapticType): Promise<boolean> => {
+  try {
+    // Dynamically import Capacitor Haptics to avoid bundle issues in PWA
+    const { Haptics, ImpactStyle, NotificationType } = await import('@capacitor/haptics');
+    
+    switch (type) {
+      case 'light':
+        await Haptics.impact({ style: ImpactStyle.Light });
+        break;
+      case 'medium':
+        await Haptics.impact({ style: ImpactStyle.Medium });
+        break;
+      case 'heavy':
+        await Haptics.impact({ style: ImpactStyle.Heavy });
+        break;
+      case 'success':
+        await Haptics.notification({ type: NotificationType.Success });
+        break;
+      case 'error':
+        await Haptics.notification({ type: NotificationType.Error });
+        break;
+      case 'warning':
+        await Haptics.notification({ type: NotificationType.Warning });
+        break;
+      case 'notification':
+        await Haptics.notification({ type: NotificationType.Success });
+        break;
+      default:
+        await Haptics.impact({ style: ImpactStyle.Light });
+    }
+    return true;
+  } catch (error) {
+    console.debug('[Haptics] Native haptic failed:', error);
+    return false;
+  }
+};
+
+/**
  * Trigger haptic feedback
  * @param type - Type of haptic feedback
  * @returns boolean - true if vibration was triggered
  */
 export const haptic = (type: HapticType = 'light'): boolean => {
   try {
-    // Check if supported and enabled
-    if (!isVibrationSupported() || !isHapticsEnabled()) {
+    // Check if enabled
+    if (!isHapticsEnabled()) {
+      return false;
+    }
+
+    // M1SSION™ WRAP FIX: Use native Capacitor haptics on iOS
+    // navigator.vibrate() does NOT work on iOS Safari/WKWebView
+    if (isCapacitorNative()) {
+      triggerNativeHaptic(type); // Fire and forget (async)
+      return true;
+    }
+
+    // Web fallback (Android Chrome, etc.)
+    if (!isVibrationSupported()) {
       return false;
     }
 
