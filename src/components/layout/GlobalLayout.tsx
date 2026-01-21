@@ -1,11 +1,16 @@
 // M1SSION™ - Enhanced Global Layout with Safe Area Integration
-import React from "react";
+// © 2026 M1SSION™ — NIYVORA KFT — Joseph MULÉ
+// 
+// FIX v3: Use --app-height instead of 100vh/100dvh for iOS WKWebView compatibility
+// The 100vh bug in iOS causes content to be pushed under fixed elements
+
+import React, { useEffect } from "react";
 import { useLocation } from "wouter";
 import { SafeAreaWrapper } from "./SafeAreaWrapper";
 import UnifiedHeader from "./UnifiedHeader";
 import BottomNavigation from "./BottomNavigation";
 import { detectPWAEnvironment } from "@/utils/pwaStubs";
-// CookieBanner RIMOSSO - gestito centralmente da CookieConsentManager in App.tsx
+import { initViewportHeight, updateAppHeight } from "@/utils/viewportHeight";
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
@@ -13,10 +18,18 @@ interface GlobalLayoutProps {
 
 /**
  * Enhanced GlobalLayout with automatic layout detection and safe area handling
+ * Uses --app-height CSS variable for iOS WKWebView compatibility
  */
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   const [location] = useLocation();
   const isCapacitor = detectPWAEnvironment();
+  
+  // Initialize viewport height tracking for iOS
+  useEffect(() => {
+    initViewportHeight();
+    // Also update on mount in case values changed
+    updateAppHeight();
+  }, []);
   
   // Routes that should hide navigation
   const hideNavigationRoutes = [
@@ -68,14 +81,16 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   }
 
   // Full screen pages (map, buzz, games) - no header padding
-  // 🔧 FIX v2: iOS overscroll containment applied
+  // 🔧 FIX v3: Use --app-height for iOS WKWebView compatibility
   if (isFullScreen) {
     return (
       <SafeAreaWrapper className="min-h-screen">
         <div 
           className="relative"
           style={{
-            height: '100dvh',
+            height: 'var(--app-height, 100dvh)',
+            minHeight: 'var(--app-height, 100dvh)',
+            maxHeight: 'var(--app-height, 100dvh)',
             overflow: 'hidden',
             position: 'relative',
             overscrollBehavior: 'none',
@@ -89,7 +104,9 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
             key={location} 
             className="relative global-layout-content"
             style={{
-              height: '100dvh',
+              height: 'var(--app-height, 100dvh)',
+              paddingTop: isCapacitor ? 'calc(80px + env(safe-area-inset-top, 0px))' : '80px',
+              paddingBottom: isCapacitor ? 'calc(64px + env(safe-area-inset-bottom, 0px))' : '64px',
               overflowY: 'auto',
               overflowX: 'hidden',
               position: 'relative',
@@ -112,13 +129,16 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   }
 
   // Standard app pages - with header padding
-  // 🔧 FIX v2: iOS overscroll containment applied at layout level
+  // 🔧 FIX v3: Use --app-height for iOS WKWebView compatibility
+  // Removed duplicate className padding (pt-[80px]) - using only style.paddingTop
   return (
     <SafeAreaWrapper className="min-h-screen">
       <div 
         className="relative has-bottom-nav-padding"
         style={{
-          height: '100dvh',
+          height: 'var(--app-height, 100dvh)',
+          minHeight: 'var(--app-height, 100dvh)',
+          maxHeight: 'var(--app-height, 100dvh)',
           overflow: 'hidden',
           position: 'relative',
           overscrollBehavior: 'none',
@@ -130,10 +150,12 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
         {/* Main content with header padding - INSTANT RENDER */}
         <main 
           key={location} // Force remount on route change for clean transition
-          className="relative pt-[80px] pb-20 global-layout-content"
+          className="relative global-layout-content"
           style={{
-            height: '100dvh',
+            height: 'var(--app-height, 100dvh)',
+            // M1SSION™ WRAP FIX: Correct padding for header + safe-area + bottom nav
             paddingTop: isCapacitor ? 'calc(80px + env(safe-area-inset-top, 0px))' : '80px',
+            paddingBottom: isCapacitor ? 'calc(64px + env(safe-area-inset-bottom, 0px))' : '64px',
             overflowY: 'auto',
             overflowX: 'hidden',
             position: 'relative',

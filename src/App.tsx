@@ -84,6 +84,10 @@ import { RankUpWatcher } from "./components/rank/RankUpWatcher";
 import { ProgressFeedbackProvider } from "./components/feedback";
 // 📱 iOS KEYBOARD: Hide bottom nav when keyboard is open (like Telegram)
 import { useKeyboardVisible } from "./hooks/useKeyboardVisible";
+// 📐 VIEWPORT DEBUG HUD: Shows real-time viewport metrics for iOS WKWebView debugging
+import { ViewportHUD } from "./components/debug/ViewportHUD";
+// 📏 VIEWPORT HEIGHT FIX: Initialize --app-height for iOS WKWebView
+import { initViewportHeight } from "./utils/viewportHeight";
 
 function App() {
   // 🚀 NATIVE APP FEEL: Show splash on EVERY app launch (but only once per session)
@@ -101,6 +105,11 @@ function App() {
     if (cacheCleared) {
       console.log('🔄 [App] Cache cleared, app will reload fresh data');
     }
+  }, []);
+
+  // 📏 Initialize viewport height for iOS WKWebView compatibility
+  useEffect(() => {
+    initViewportHeight();
   }, []);
 
   // Initialize GA4 and M1SSION Analytics once on mount
@@ -310,6 +319,9 @@ function App() {
       
       {/* Service Worker Update Banner - outside router/auth context */}
       <UpdateBanner />
+      
+      {/* 📐 VIEWPORT DEBUG HUD: Shows metrics in DEV mode or with ?debug=1 */}
+      <ViewportHUD />
     </div>
   );
 }

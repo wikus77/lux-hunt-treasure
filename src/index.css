@@ -38,6 +38,13 @@
   --app-header-height: 72px;
   --app-bottom-nav-height: 64px;
   --m1-bottom-nav: 96px; /* Fallback height for bottom navigation */
+  
+  /* 📏 M1SSION™ WRAP FIX: Viewport height variables for iOS WKWebView */
+  /* These are updated dynamically by viewportHeight.ts */
+  --app-height: 100dvh; /* Fallback, will be overwritten by JS */
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-content-height: calc(100dvh - 80px - 64px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
 }
 
 @layer base {
