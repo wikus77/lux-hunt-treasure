@@ -26,8 +26,30 @@ const HAPTIC_PATTERNS: Record<HapticType, number | number[]> = {
 };
 
 // M1SSION™ WRAP FIX: Check if running in Capacitor native
+// Using robust detection that checks multiple indicators
 const isCapacitorNative = (): boolean => {
-  return !!(window as any).Capacitor?.isNativePlatform?.();
+  if (typeof window === 'undefined') return false;
+  
+  // Check injected marker first (fastest)
+  if ((window as any).__CAPACITOR_NATIVE__ === true) return true;
+  
+  // Check HTML data attribute
+  if (document.documentElement?.dataset?.capacitor === 'true') return true;
+  
+  const cap = (window as any).Capacitor;
+  if (!cap) return false;
+  
+  // Official API check
+  if (cap.isNativePlatform?.()) return true;
+  
+  // Platform check
+  const platform = cap.getPlatform?.();
+  if (platform === 'ios' || platform === 'android') return true;
+  
+  // Protocol check
+  if (window.location.protocol === 'capacitor:') return true;
+  
+  return false;
 };
 
 /**

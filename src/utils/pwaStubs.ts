@@ -9,6 +9,19 @@ export const preserveFunctionName = <T extends (...args: any[]) => any>(fn: T, n
 // PWA environment detection
 export const detectPWAEnvironment = (): boolean => {
   if (typeof window === 'undefined') return false;
+  
+  // M1SSION™ WRAP FIX: Include Capacitor native detection
+  const cap = (window as any).Capacitor;
+  
+  // Check Capacitor FIRST (native app)
+  if (cap?.isNativePlatform?.() || 
+      ['ios', 'android'].includes(cap?.getPlatform?.() || '') ||
+      window.location.protocol === 'capacitor:' ||
+      (window as any).__CAPACITOR_NATIVE__ === true) {
+    return true;
+  }
+  
+  // Then check PWA standalone mode
   return window.matchMedia('(display-mode: standalone)').matches ||
     (window.navigator as any).standalone === true ||
     document.referrer.includes('android-app://');
