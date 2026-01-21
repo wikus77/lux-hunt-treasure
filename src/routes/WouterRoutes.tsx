@@ -208,9 +208,17 @@ const WouterRoutes: React.FC = () => {
     checkSubscription();
   }, [isAuthenticated, isLoading, getCurrentUser, location, setLocation]);
 
-  const isCapacitorApp = typeof window !== 'undefined' && 
-    (window.location.protocol === 'capacitor:' || 
-     (window.location.hostname === 'localhost' && process.env.NODE_ENV === 'development'));
+  // M1SSION™ WRAP FIX: Improved Capacitor detection for store apps
+  const isCapacitorApp = typeof window !== 'undefined' && (
+    // Method 1: Capacitor protocol
+    window.location.protocol === 'capacitor:' ||
+    // Method 2: Capacitor object exists with native platform
+    !!(window as any).Capacitor?.isNativePlatform?.() ||
+    // Method 3: Capacitor getPlatform returns ios/android
+    ['ios', 'android'].includes((window as any).Capacitor?.getPlatform?.() || '') ||
+    // Method 4: Development localhost only if Capacitor object exists
+    (window.location.hostname === 'localhost' && (window as any).Capacitor && process.env.NODE_ENV === 'development')
+  );
 
   // Debug logs only in development
   if (import.meta.env.DEV) {
@@ -231,13 +239,17 @@ const WouterRoutes: React.FC = () => {
         <Switch>
           {/* ✅ QR routes - redirected to main app with marker rewards popup */}
 
-          {/* Landing page - SEMPRE Landing per utenti non autenticati */}
-          {/* ✅ FIX (26/12/2025): Utenti non autenticati → sempre Landing, non Login */}
+          {/* Landing page vs Login routing
+              M1SSION™ WRAP FIX (21/01/2026):
+              - Native app (Capacitor): Skip Landing → go to Login/Home
+              - Web browser: Show Landing first for marketing/SEO
+          */}
           <Route path="/">
             {isLoading ? (
               <PageSkeleton variant="default" />
             ) : !isAuthenticated ? (
-              <LandingPage />
+              // In native app, skip landing page - go directly to login
+              isCapacitorApp ? <Redirect to="/login" /> : <LandingPage />
             ) : (
               <ProtectedRoute>
                 <GlobalLayout>

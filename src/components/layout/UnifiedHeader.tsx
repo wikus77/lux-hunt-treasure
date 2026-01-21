@@ -186,8 +186,13 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     const isPWAMode = window.matchMedia('(display-mode: standalone)').matches;
     setIsPWA(isPWAMode);
     const checkAccess = async () => {
-      // Detect Capacitor environment
-      const isCapacitorApp = !!(window as any).Capacitor;
+      // M1SSION™ WRAP FIX: Improved Capacitor environment detection
+      const cap = (window as any).Capacitor;
+      const isCapacitorApp = !!(
+        cap?.isNativePlatform?.() ||
+        ['ios', 'android'].includes(cap?.getPlatform?.() || '') ||
+        window.location.protocol === 'capacitor:'
+      );
       setIsCapacitor(isCapacitorApp);
       
       // Enhanced mobile detection including Capacitor
@@ -228,7 +233,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   }, [user]);
 
   const handleProfileClick = async () => {
-    const isCapacitorApp = !!(window as any).Capacitor;
+    const cap = (window as any).Capacitor;
+    const isCapacitorApp = !!(cap?.isNativePlatform?.() || ['ios', 'android'].includes(cap?.getPlatform?.() || ''));
     const userAgent = navigator.userAgent;
     const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
     const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
@@ -313,7 +319,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           zIndex: 9999,
           display: 'flex',
           justifyContent: 'center',
-          paddingTop: isPWA ? 'calc(env(safe-area-inset-top, 0px) + 12px)' : '16px',
+          // M1SSION™ WRAP FIX: Use safe-area for both PWA and Capacitor native
+          paddingTop: (isPWA || isCapacitor) ? 'calc(env(safe-area-inset-top, 0px) + 12px)' : '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
           pointerEvents: 'none',

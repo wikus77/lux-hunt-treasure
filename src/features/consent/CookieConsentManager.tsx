@@ -5,6 +5,7 @@ import { CookieBanner } from './CookieBanner';
 import { PreferencesModal } from './PreferencesModal';
 import { getStoredConsent, saveConsent, getEffectivePreferences } from './consentStorage';
 import { useConsentSync } from './useConsentSync';
+import { isCapacitorNative } from '@/utils/capacitor';
 import type { ConsentData, ConsentPreferences } from './types';
 
 /**
@@ -16,9 +17,18 @@ import type { ConsentData, ConsentPreferences } from './types';
  * - Expose window.__consent API for reopening preferences
  * - Respect DNA Manager priority (delay if modal is open)
  * 
+ * M1SSION™ WRAP FIX: Hidden in native Capacitor app (not needed for store apps)
+ * 
  * Mounting: Add to App.tsx just below AuthProvider
  */
 export const CookieConsentManager: React.FC = () => {
+  // M1SSION™ WRAP: Don't show cookie consent in native app
+  // Store apps don't need GDPR cookie consent (no web cookies)
+  const [isNativeApp] = useState(() => isCapacitorNative());
+  
+  if (isNativeApp) {
+    return null;
+  }
   const [consent, setConsent] = useState<ConsentData | null>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);

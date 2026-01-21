@@ -2,19 +2,31 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, X, Smartphone } from 'lucide-react';
+import { isCapacitorNative } from '@/utils/capacitor';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+/**
+ * M1SSION™ PWA Install Prompt
+ * 
+ * WRAP FIX: This component is HIDDEN when running in Capacitor native wrapper
+ * because the app is already installed from the store.
+ */
 export const InstallPrompt: React.FC = () => {
+  // M1SSION™ WRAP: Don't show install prompt in native app
+  const [isNativeApp] = useState(() => isCapacitorNative());
+  
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
+    // M1SSION™ WRAP: Skip all logic if in native app
+    if (isNativeApp) return;
     // Detect iOS
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     setIsIOS(iOS);
@@ -73,8 +85,9 @@ export const InstallPrompt: React.FC = () => {
     }
   };
 
-  // Don't show if already installed
-  if (isStandalone || !showPrompt) {
+  // M1SSION™ WRAP: Don't show in native app (already installed from store)
+  // Also don't show if already installed as PWA
+  if (isNativeApp || isStandalone || !showPrompt) {
     return null;
   }
 
