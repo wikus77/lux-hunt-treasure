@@ -1,7 +1,6 @@
 // © 2025 M1SSION™ – Mission Sync Pull-to-Refresh
-// 🔧 FIX v2: Removed nested scroll container, added iOS safety handlers
-// 🔧 FIX v9 (22/01/2026): Fixed scroll detection - now checks parent <main> scroll container
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+// 🔧 FIX v12 (22/01/2026): ALL NATIVE LISTENERS - fixes "first pull doesn't work" on iOS
+import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Logo M1 ufficiale
@@ -15,9 +14,12 @@ interface MissionSyncProps {
 const PULL_THRESHOLD = 80; // px to trigger refresh
 const MAX_PULL = 120; // max pull distance
 
+// 🔧 DEBUG PTR - Set to true to enable debug logging (remove for production)
+const DEBUG_PTR = true;
+const logPTR = (...args: unknown[]) => DEBUG_PTR && console.log('[MissionSync PTR]', ...args);
+
 /**
- * 🔧 FIX v9: Find the actual scroll container (parent <main> with overflowY: auto)
- * The scroll is on GlobalLayout's <main>, not on MissionSync's wrapper
+ * Find the actual scroll container (parent <main> with overflowY: auto)
  */
 const findScrollParent = (element: HTMLElement | null): HTMLElement | null => {
   if (!element) return null;
@@ -28,237 +30,269 @@ const findScrollParent = (element: HTMLElement | null): HTMLElement | null => {
       return parent;
     }
     if (parent.tagName === 'MAIN') {
-      return parent; // GlobalLayout's main is the scroll container
+      return parent;
     }
     parent = parent.parentElement;
   }
-  return document.documentElement; // Fallback to document
+  return document.documentElement;
 };
 
 export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children }) => {
+  // State for React re-renders (visual updates)
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
-  const [isAtTop, setIsAtTop] = useState(true);
+  
+  // Refs for values needed in native event listeners (avoids stale closures)
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
-  const startY = useRef(0);
-  const currentY = useRef(0);
-  
-  // 🔧 FIX v11: Use refs for values needed in native event listeners
-  // This prevents stale closure issues that caused "first pull doesn't work"
   const isPullingRef = useRef(false);
   const isRefreshingRef = useRef(false);
+  const startYRef = useRef(0);
+  const pullDistanceRef = useRef(0);
+  const listenersAttachedRef = useRef(false);
+  const onRefreshRef = useRef(onRefresh);
   
-  // Keep refs in sync with state
-  useEffect(() => { isPullingRef.current = isPulling; }, [isPulling]);
-  useEffect(() => { isRefreshingRef.current = isRefreshing; }, [isRefreshing]);
+  // Keep onRefresh ref updated
+  useEffect(() => { onRefreshRef.current = onRefresh; }, [onRefresh]);
+  
+  // Keep pullDistanceRef in sync for touchend check
+  useEffect(() => { pullDistanceRef.current = pullDistance; }, [pullDistance]);
 
-  // 🔧 FIX v11: Find scroll parent AND setup scroll monitoring in SAME useEffect
-  // This ensures scroll listener is added AFTER scrollParentRef is set
-  useEffect(() => {
-    // Find scroll parent
-    scrollParentRef.current = findScrollParent(containerRef.current);
-    console.log('[MissionSync] Scroll parent found:', scrollParentRef.current?.tagName);
-    
-    // Setup scroll monitoring
-    const scrollParent = scrollParentRef.current;
-    if (!scrollParent) return;
-    
-    const handleScroll = () => {
-      const atTop = scrollParent.scrollTop <= 1;
-      setIsAtTop(atTop);
-    };
-    
-    scrollParent.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Initial check
-    
-    return () => scrollParent.removeEventListener('scroll', handleScroll);
-  }, []); // Run once on mount
-  
-  // 🔧 FIX v11: Native touchmove listener - ADDED ONCE, uses refs to avoid stale closure
-  // This fixes "first pull doesn't work" bug caused by listener having stale isPulling value
+  // 🔧 FIX v12: Use useLayoutEffect to find scrollParent BEFORE paint
+  useLayoutEffect(() => {
+    if (containerRef.current) {
+      scrollParentRef.current = findScrollParent(containerRef.current);
+      logPTR('MOUNT: container=', containerRef.current?.tagName, 'scrollParent=', scrollParentRef.current?.tagName);
+    }
+  }, []);
+
+  // 🔧 FIX v12: ALL NATIVE LISTENERS in single useEffect
+  // This ensures touchstart, touchmove, touchend are all registered together
+  // and share the same refs without closure issues
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      logPTR('WARN: container not ready');
+      return;
+    }
     
-    const handleNativeTouchMove = (e: TouchEvent) => {
-      // 🔧 FIX v11: Read from REFS, not state (avoids stale closure)
-      if (!isPullingRef.current || isRefreshingRef.current) return;
+    // Prevent double-attach
+    if (listenersAttachedRef.current) return;
+    
+    // Wait for scrollParent with RAF retry (max 10 frames)
+    let frameCount = 0;
+    const maxFrames = 10;
+    
+    const tryAttachListeners = () => {
+      frameCount++;
       
-      const currentTouchY = e.touches[0].clientY;
-      const diff = currentTouchY - startY.current;
+      if (!scrollParentRef.current) {
+        scrollParentRef.current = findScrollParent(container);
+      }
       
-      // Check scroll position
-      const scrollParent = scrollParentRef.current || container;
-      const scrollTop = scrollParent?.scrollTop ?? 0;
+      if (!scrollParentRef.current && frameCount < maxFrames) {
+        requestAnimationFrame(tryAttachListeners);
+        return;
+      }
       
-      if (diff > 0 && scrollTop <= 1) {
-        // User is pulling DOWN while at top - PULL-TO-REFRESH gesture
-        // CRITICAL: Prevent browser from handling this as scroll/overscroll
-        e.preventDefault();
-        e.stopPropagation();
+      logPTR('SETUP: Attaching listeners after', frameCount, 'frames, scrollParent=', scrollParentRef.current?.tagName);
+      
+      // ============================================
+      // NATIVE TOUCHSTART
+      // ============================================
+      const handleTouchStart = (e: TouchEvent) => {
+        if (isRefreshingRef.current) {
+          logPTR('touchstart: BLOCKED (refreshing)');
+          return;
+        }
         
-        const resistance = 0.5;
-        const newPull = Math.min(diff * resistance, MAX_PULL);
-        setPullDistance(newPull);
-        currentY.current = currentTouchY;
-        console.log('[MissionSync] Pulling:', newPull.toFixed(1), 'px');
-      } else if (diff < -10) {
-        // User is scrolling DOWN (to see more content) - cancel pull, let browser handle
+        const scrollParent = scrollParentRef.current || container;
+        const scrollTop = scrollParent.scrollTop;
+        const isAtTop = scrollTop <= 1;
+        
+        logPTR('touchstart: scrollTop=', scrollTop, 'isAtTop=', isAtTop, 'target=', (e.target as HTMLElement)?.tagName);
+        
+        if (isAtTop) {
+          startYRef.current = e.touches[0].clientY;
+          isPullingRef.current = true;
+          setIsPulling(true);
+          logPTR('touchstart: PULL READY ✓');
+        }
+      };
+      
+      // ============================================
+      // NATIVE TOUCHMOVE (with passive: false)
+      // ============================================
+      const handleTouchMove = (e: TouchEvent) => {
+        if (!isPullingRef.current) return;
+        if (isRefreshingRef.current) return;
+        
+        const currentY = e.touches[0].clientY;
+        const deltaY = currentY - startYRef.current;
+        
+        const scrollParent = scrollParentRef.current || container;
+        const scrollTop = scrollParent.scrollTop;
+        
+        logPTR('touchmove: deltaY=', deltaY.toFixed(1), 'scrollTop=', scrollTop, 'isPulling=', isPullingRef.current);
+        
+        if (deltaY > 0 && scrollTop <= 1) {
+          // User is pulling DOWN at top → PULL-TO-REFRESH
+          // CRITICAL: preventDefault to stop browser scroll/overscroll
+          e.preventDefault();
+          
+          const resistance = 0.5;
+          const newPull = Math.min(deltaY * resistance, MAX_PULL);
+          pullDistanceRef.current = newPull;
+          setPullDistance(newPull);
+          
+          logPTR('touchmove: PULLING', newPull.toFixed(1), 'px, preventDefault CALLED ✓');
+        } else if (deltaY < -10) {
+          // User is scrolling DOWN (viewing content) → cancel pull
+          logPTR('touchmove: Scrolling down, canceling pull');
+          isPullingRef.current = false;
+          setIsPulling(false);
+          setPullDistance(0);
+          pullDistanceRef.current = 0;
+        }
+      };
+      
+      // ============================================
+      // NATIVE TOUCHEND
+      // ============================================
+      const handleTouchEnd = async () => {
+        logPTR('touchend: isPulling=', isPullingRef.current, 'pullDistance=', pullDistanceRef.current);
+        
+        if (!isPullingRef.current) return;
+        
+        isPullingRef.current = false;
+        setIsPulling(false);
+        
+        const currentPull = pullDistanceRef.current;
+        
+        if (currentPull >= PULL_THRESHOLD && !isRefreshingRef.current) {
+          logPTR('touchend: TRIGGERING REFRESH ✓');
+          
+          isRefreshingRef.current = true;
+          setIsRefreshing(true);
+          setPullDistance(60); // Hold at indicator
+          
+          try {
+            await onRefreshRef.current();
+            logPTR('touchend: Refresh complete');
+          } catch (error) {
+            console.error('[MissionSync] Refresh error:', error);
+          } finally {
+            isRefreshingRef.current = false;
+            setIsRefreshing(false);
+            setPullDistance(0);
+            pullDistanceRef.current = 0;
+          }
+        } else {
+          logPTR('touchend: Release without refresh (pull=', currentPull, ')');
+          setPullDistance(0);
+          pullDistanceRef.current = 0;
+        }
+      };
+      
+      // ============================================
+      // NATIVE TOUCHCANCEL
+      // ============================================
+      const handleTouchCancel = () => {
+        logPTR('touchcancel: Resetting state');
         isPullingRef.current = false;
         setIsPulling(false);
         setPullDistance(0);
-      }
-    };
-    
-    // CRITICAL: { passive: false } allows preventDefault() to work on iOS
-    // 🔧 FIX v11: Add listener ONCE (no deps), use refs for current values
-    container.addEventListener('touchmove', handleNativeTouchMove, { passive: false });
-    
-    return () => {
-      container.removeEventListener('touchmove', handleNativeTouchMove);
-    };
-  }, []); // 🔧 FIX v11: Empty deps - listener added once, refs provide current values
-
-  // 🔧 FIX v4 (22/01/2026): Aggressive iOS safety reset - multiple triggers
-  useEffect(() => {
-    const forceResetState = () => {
-      console.log('[MissionSync] ⚠️ Force reset triggered');
-      setPullDistance(0);
-      setIsPulling(false);
-    };
-
-    // Reset on visibility change (tab switch, app background)
-    const handleVisibilityChange = () => {
-      if (document.hidden) forceResetState();
-    };
-
-    // Reset on window blur (keyboard, other UI)
-    const handleBlur = () => forceResetState();
-    
-    // 🔧 NEW: Reset on pagehide (iOS app going to background)
-    const handlePageHide = () => forceResetState();
-    
-    // 🔧 NEW: Reset on pointercancel (iOS gesture interruption)
-    const handlePointerCancel = () => forceResetState();
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handleBlur);
-    window.addEventListener('pagehide', handlePageHide);
-    document.addEventListener('pointercancel', handlePointerCancel);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handleBlur);
-      window.removeEventListener('pagehide', handlePageHide);
-      document.removeEventListener('pointercancel', handlePointerCancel);
-    };
-  }, []);
-
-  // 🔧 FIX v11: React touchStart handles initial detection + sets ref
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    const scrollParent = scrollParentRef.current || containerRef.current;
-    const scrollTop = scrollParent?.scrollTop ?? 0;
-    
-    if (scrollTop <= 1 && !isRefreshingRef.current) {
-      startY.current = e.touches[0].clientY;
-      // 🔧 FIX v11: Set BOTH ref and state for immediate availability
-      isPullingRef.current = true;
-      setIsPulling(true);
-      console.log('[MissionSync] Touch start - ready for pull (first try should work!)');
-    }
-  }, []); // No deps needed - uses refs
-
-  // TouchMove is handled by native listener (for proper preventDefault)
-  const handleTouchMove = useCallback(() => {
-    // Native listener handles this with { passive: false }
-  }, []);
-
-  const handleTouchEnd = useCallback(async () => {
-    // 🔧 FIX v11: Check ref for immediate value
-    if (!isPullingRef.current) return;
-    
-    // Reset both ref and state
-    isPullingRef.current = false;
-    setIsPulling(false);
-    
-    if (pullDistance >= PULL_THRESHOLD && !isRefreshingRef.current) {
-      // Trigger refresh
-      isRefreshingRef.current = true;
-      setIsRefreshing(true);
-      setPullDistance(60); // Hold at indicator position
+        pullDistanceRef.current = 0;
+      };
       
-      try {
-        await onRefresh();
-      } catch (error) {
-        console.error('[MissionSync] Refresh error:', error);
-      } finally {
-        isRefreshingRef.current = false;
-        setIsRefreshing(false);
-        setPullDistance(0);
+      // ============================================
+      // SCROLL LISTENER (for isAtTop tracking)
+      // ============================================
+      const scrollParent = scrollParentRef.current;
+      const handleScroll = () => {
+        // Only used for debugging, refs handle actual logic
+      };
+      
+      // ATTACH ALL LISTENERS
+      container.addEventListener('touchstart', handleTouchStart, { passive: true });
+      container.addEventListener('touchmove', handleTouchMove, { passive: false }); // CRITICAL
+      container.addEventListener('touchend', handleTouchEnd, { passive: true });
+      container.addEventListener('touchcancel', handleTouchCancel, { passive: true });
+      
+      if (scrollParent) {
+        scrollParent.addEventListener('scroll', handleScroll, { passive: true });
       }
-    } else {
-      // Release without refresh
-      setPullDistance(0);
-    }
-  }, [pullDistance, onRefresh]);
+      
+      listenersAttachedRef.current = true;
+      logPTR('SETUP: All listeners attached ✓');
+      
+      // CLEANUP
+      return () => {
+        logPTR('CLEANUP: Removing listeners');
+        container.removeEventListener('touchstart', handleTouchStart);
+        container.removeEventListener('touchmove', handleTouchMove);
+        container.removeEventListener('touchend', handleTouchEnd);
+        container.removeEventListener('touchcancel', handleTouchCancel);
+        
+        if (scrollParent) {
+          scrollParent.removeEventListener('scroll', handleScroll);
+        }
+        
+        listenersAttachedRef.current = false;
+      };
+    };
+    
+    // Start attachment process
+    requestAnimationFrame(tryAttachListeners);
+  }, []); // Empty deps - attach once on mount
 
-  // 🔧 FIX: Handle touchcancel (iOS interrupts)
-  const handleTouchCancel = useCallback(() => {
-    console.log('[MissionSync] Touch cancelled, resetting state');
-    // 🔧 FIX v11: Reset both ref and state
-    isPullingRef.current = false;
-    setIsPulling(false);
-    setPullDistance(0);
+  // Safety reset on visibility/blur
+  useEffect(() => {
+    const forceReset = () => {
+      logPTR('Force reset (visibility/blur)');
+      isPullingRef.current = false;
+      setIsPulling(false);
+      setPullDistance(0);
+      pullDistanceRef.current = 0;
+    };
+
+    const onVisibilityChange = () => { if (document.hidden) forceReset(); };
+    const onBlur = () => forceReset();
+    const onPageHide = () => forceReset();
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('blur', onBlur);
+    window.addEventListener('pagehide', onPageHide);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('blur', onBlur);
+      window.removeEventListener('pagehide', onPageHide);
+    };
   }, []);
 
-  // 🔧 FIX v4 (22/01/2026): Aggressive watchdog - reset transform after 500ms if not actively pulling
+  // Watchdog: reset stuck transforms
   useEffect(() => {
     if (pullDistance > 0 && !isRefreshing && !isPulling) {
-      // Short timeout - if we have pullDistance but no active pull, something is wrong
       const watchdog = setTimeout(() => {
-        console.warn('[MissionSync] ⚠️ Watchdog: Resetting stuck transform (500ms)');
+        logPTR('Watchdog: resetting stuck transform');
         setPullDistance(0);
+        pullDistanceRef.current = 0;
       }, 500);
       return () => clearTimeout(watchdog);
     }
   }, [pullDistance, isRefreshing, isPulling]);
-  
-  // 🔧 FIX v4: Micro-watchdog - immediate RAF reset check
-  useEffect(() => {
-    if (!isPulling && !isRefreshing && pullDistance > 0) {
-      // Use RAF to ensure we're not in mid-animation
-      const rafId = requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (!isPulling && !isRefreshing && pullDistance > 0) {
-            console.warn('[MissionSync] ⚠️ RAF micro-watchdog: Resetting stale transform');
-            setPullDistance(0);
-          }
-        });
-      });
-      return () => cancelAnimationFrame(rafId);
-    }
-  }, [isPulling, isRefreshing, pullDistance]);
 
   const progress = Math.min(pullDistance / PULL_THRESHOLD, 1);
   const shouldTrigger = pullDistance >= PULL_THRESHOLD;
-
-  // 🔧 FIX v10: Determine touchAction based on pull state ONLY
-  // We only block browser touch when actively pulling down (pullDistance > 0)
-  // This way user can still scroll down when at top
   const shouldBlockBrowserTouch = isPulling && pullDistance > 0;
-  
+
   return (
     <div
       ref={containerRef}
       className="relative w-full h-full"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchCancel}
       style={{ 
-        // 🔧 FIX v10: Block browser touch ONLY when actively pulling
         touchAction: shouldBlockBrowserTouch ? 'none' : 'pan-y',
       }}
     >
@@ -276,7 +310,6 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
             transition={{ duration: 0.2 }}
             style={{ top: 0 }}
           >
-            {/* M1 Logo - Solo logo, nessun testo */}
             <motion.div
               className={`
                 flex items-center justify-center rounded-full overflow-hidden
@@ -311,8 +344,7 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
         )}
       </AnimatePresence>
 
-      {/* Content with pull offset - 🔧 FIX 22/01/2026: Improved iOS safety */}
-      {/* Using conditional rendering with key to force re-mount and clear stale transforms */}
+      {/* Content with pull offset */}
       {(pullDistance > 0 || isRefreshing) ? (
         <motion.div
           key="pull-content"
@@ -322,21 +354,11 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
           style={{ 
             willChange: isPulling ? 'transform' : 'auto',
-            // 🔧 FIX: Clear transform explicitly when not pulling
-            transform: !isPulling && pullDistance === 0 ? 'none' : undefined,
-          }}
-          onAnimationComplete={() => {
-            // 🔧 FIX: Ensure transform is cleared when animation ends at 0
-            if (pullDistance === 0 && !isRefreshing) {
-              console.log('[MissionSync] Animation complete, transform cleared');
-            }
           }}
         >
           {children}
         </motion.div>
       ) : (
-        // No transform wrapper when idle - prevents iOS stacking context issues
-        // data-idle-content triggers CSS reset in ios-native.css
         <div key="idle-content" data-idle-content="true">{children}</div>
       )}
     </div>
@@ -344,5 +366,3 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
 };
 
 export default MissionSync;
-
-
