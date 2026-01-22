@@ -19,8 +19,8 @@ const STORAGE_KEY_BASE_SEEN_AT = 'm1ssion_prizeIntroSeenAt';
 // Current user ID (set when user logs in)
 let currentUserId: string | undefined;
 
-// Debug flag
-export const PRIZE_INTRO_DEBUG = true;
+// Debug flag - DISABLED for production release
+export const PRIZE_INTRO_DEBUG = false;
 
 // 🔐 Set current user ID (called from auth context)
 export const setPrizeIntroUserId = (userId: string | undefined) => {

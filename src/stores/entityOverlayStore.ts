@@ -18,7 +18,8 @@ import { SHADOW_PROTOCOL_TIMING, CTA_COOLDOWN_MS } from '@/config/shadowProtocol
 // DEBUG FLAG
 // ============================================================================
 
-export const SHADOW_DEBUG = true;
+// Debug flag - DISABLED for production release
+export const SHADOW_DEBUG = false;
 
 // ============================================================================
 // 🆕 v4: LOCALSTORAGE KEYS

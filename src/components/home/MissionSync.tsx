@@ -14,8 +14,8 @@ interface MissionSyncProps {
 const PULL_THRESHOLD = 80; // px to trigger refresh
 const MAX_PULL = 120; // max pull distance
 
-// 🔧 DEBUG PTR - Set to true to enable debug logging (remove for production)
-const DEBUG_PTR = true;
+// 🔧 DEBUG PTR - DISABLED for production release
+const DEBUG_PTR = false;
 const logPTR = (...args: unknown[]) => DEBUG_PTR && console.log('[MissionSync PTR]', ...args);
 
 /**
