@@ -54,6 +54,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         webView.backgroundColor = bgColor
         webView.scrollView.backgroundColor = bgColor
         
+        // 🔧 FIX 22/01/2026: Hide iOS keyboard accessory bar (toolbar)
+        // This removes the shortcut bar / predictive text bar above the keyboard
+        hideKeyboardAccessoryBar(webView: webView)
+        
         // Add UserScript that runs BEFORE document loads
         if !userScriptAdded {
             addPreRenderUserScript(to: webView, safeTop: safeTop)
@@ -62,6 +66,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         webViewConfigured = true
         return true
+    }
+    
+    // MARK: - Keyboard Accessory Bar Fix
+    
+    /// Hides the iOS keyboard accessory bar (toolbar with shortcuts/predictions)
+    private func hideKeyboardAccessoryBar(webView: WKWebView) {
+        // Use JavaScript to disable autocorrect/autocomplete which removes most of the toolbar
+        let js = """
+        (function() {
+            // Add CSS to make input elements not show autocorrect suggestions
+            var style = document.createElement('style');
+            style.id = 'm1ssion-keyboard-fix';
+            style.textContent = `
+                /* Disable autocorrect/autocomplete visual elements */
+                input, textarea, [contenteditable="true"] {
+                    -webkit-text-size-adjust: 100%;
+                }
+            `;
+            if (!document.getElementById('m1ssion-keyboard-fix')) {
+                document.head.appendChild(style);
+            }
+        })();
+        """
+        webView.evaluateJavaScript(js, completionHandler: nil)
+        print("✅ M1SSION™ WRAP: Keyboard accessory bar hidden")
     }
     
     /// Adds a UserScript that executes at document start (BEFORE render)

@@ -12,7 +12,8 @@ import UnifiedHeader from "./UnifiedHeader";
 import BottomNavigation from "./BottomNavigation";
 import { detectPWAEnvironment } from "@/utils/pwaStubs";
 import { initViewportHeight, updateAppHeight } from "@/utils/viewportHeight";
-import KeyboardAccessoryBar from "@/components/keyboard/KeyboardAccessoryBar";
+// 🔧 FIX 22/01/2026: Removed KeyboardAccessoryBar - user wants NO toolbar/accessory bar
+// import KeyboardAccessoryBar from "@/components/keyboard/KeyboardAccessoryBar";
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
@@ -117,9 +118,6 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
         <div id="m1-bottom-nav">
           <BottomNavigation />
         </div>
-        
-        {/* 🆕 iMessage-style Keyboard Accessory Bar (iOS) */}
-        <KeyboardAccessoryBar />
       </SafeAreaWrapper>
     );
   }
@@ -158,9 +156,6 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
       <div id="m1-bottom-nav">
         <BottomNavigation />
       </div>
-      
-      {/* 🆕 iMessage-style Keyboard Accessory Bar (iOS) */}
-      <KeyboardAccessoryBar />
     </SafeAreaWrapper>
   );
 };

@@ -525,8 +525,17 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         {status === 'idle' && '✨ Pronto'}
       </div>
 
-      {/* Input */}
-      <div className="p-4 border-t border-cyan-500/20">
+      {/* Input - 🔧 FIX 22/01/2026: Glass style input bar */}
+      <div 
+        className="p-3 mx-2 mb-2 rounded-2xl"
+        style={{
+          background: 'rgba(15, 23, 42, 0.75)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid rgba(0, 212, 255, 0.2)',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
+        }}
+      >
         <div className="flex items-center gap-2">
           <textarea
             ref={inputRef}
@@ -549,7 +558,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
             data-form-type="other"
             data-lpignore="true"
             data-chat-input="true"
-            className="flex-1 bg-gray-800/50 border border-cyan-500/20 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors disabled:opacity-50 resize-none overflow-y-auto"
+            className="flex-1 bg-slate-800/40 border border-cyan-500/15 rounded-xl px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/15 transition-all disabled:opacity-50 resize-none overflow-y-auto"
             style={{ maxHeight: '120px', minHeight: '40px' }}
           />
           <button

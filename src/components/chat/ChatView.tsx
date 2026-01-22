@@ -240,30 +240,32 @@ export function ChatView({
         </div>
       </div>
 
-      {/* Input Bar - SEMPRE VISIBILE sopra bottom nav 
-          🔧 FIX v9: Use visualViewport height for iOS keyboard positioning */}
+      {/* Input Bar - GLASS STYLE 
+          🔧 FIX v9: Use visualViewport height for iOS keyboard positioning
+          🔧 FIX 22/01/2026: Glass style with blur, rounded corners, neon glow */}
       <div 
-        className="fixed left-0 right-0 border-t border-white/10 bg-gray-900/95 backdrop-blur-sm"
+        className="fixed left-0 right-0 mx-2 rounded-2xl overflow-hidden"
         style={{ 
           // 🔧 FIX v9: When keyboard open, position at bottom of visualViewport
-          // keyboardOffset = innerHeight - visualViewport.height
-          // So input sits at: bottom: 0 + NO safe-area (keyboard replaces it)
-          bottom: isKeyboardOpen ? '0px' : '100px',
-          // 🔧 FIX v9: No safe-area padding when keyboard is open (keyboard handles it)
-          paddingBottom: isKeyboardOpen ? '8px' : '8px',
+          bottom: isKeyboardOpen ? '8px' : '108px',
           minHeight: `${inputHeight}px`,
           zIndex: 60000,
-          // 🔧 FIX v9: Smooth transition
-          transition: 'bottom 0.15s ease-out',
+          transition: 'bottom 0.2s ease-out',
+          // 🔧 FIX 22/01/2026: Glass style
+          background: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(0, 212, 255, 0.25)',
+          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 212, 255, 0.1)',
         }}
       >
-        <div className="flex items-center gap-2 px-3 h-full">
+        <div className="flex items-center gap-2 px-3 py-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleShareLocation}
             disabled={!position || isSending}
-            className="p-2 hover:bg-white/10 flex-shrink-0"
+            className="p-2 hover:bg-white/10 flex-shrink-0 rounded-full"
             title="Condividi posizione"
           >
             <MapPin className="w-5 h-5 text-cyan-400" />
@@ -290,15 +292,15 @@ export function ChatView({
             data-form-type="other"
             data-lpignore="true"
             data-chat-input="true"
-            className="flex-1 bg-gray-800/60 border border-white/10 rounded-2xl px-4 py-2 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors disabled:opacity-50 resize-none overflow-y-auto"
-            style={{ maxHeight: '120px', minHeight: '36px' }}
+            className="flex-1 bg-slate-800/50 border border-cyan-500/20 rounded-xl px-4 py-2.5 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 transition-all disabled:opacity-50 resize-none overflow-y-auto"
+            style={{ maxHeight: '120px', minHeight: '38px' }}
           />
           
           <Button
             onClick={handleSend}
             disabled={!inputValue.trim() || isSending}
             size="sm"
-            className="p-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 flex-shrink-0"
+            className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 flex-shrink-0 shadow-lg shadow-cyan-500/20"
           >
             {isSending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
