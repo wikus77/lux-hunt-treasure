@@ -21,6 +21,8 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabase } from '@/integrations/supabase/client';
 import { format, isToday, isYesterday } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { KeyboardDock } from '@/components/keyboard/KeyboardDock'; // 🔧 FIX v11
+import { useKeyboardInset } from '@/hooks/useKeyboardInset'; // 🔧 FIX v11
 
 interface ChatViewProps {
   conversationId: string;
@@ -37,7 +39,6 @@ export function ChatView({
 }: ChatViewProps) {
   const { messages, isLoading, isSending, sendMessage, sendLocation } = useChatMessages(conversationId);
   const [inputValue, setInputValue] = useState('');
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { position } = useGeolocation();
@@ -49,48 +50,8 @@ export function ChatView({
     }
   }, [messages]);
 
-  // 🔧 FIX v10: Track keyboard offset using visualViewport for precise positioning
-  const [keyboardOffset, setKeyboardOffset] = useState(0);
-  
-  // ✅ Detect keyboard using visualViewport ONLY (no auto-focus!)
-  useEffect(() => {
-    // Store initial height to detect keyboard
-    const initialHeight = window.innerHeight;
-    
-    const handleResize = () => {
-      if (window.visualViewport) {
-        // 🔧 FIX v10: Use more reliable keyboard detection
-        // Keyboard is open if visualViewport is significantly smaller than initial height
-        const gap = initialHeight - window.visualViewport.height;
-        const keyboardOpen = gap > 100; // 100px threshold for keyboard
-        
-        setIsKeyboardOpen(keyboardOpen);
-        // 🔧 FIX v10: Subtract safe-area from gap to avoid double offset
-        // The gap includes safe-area, but we only want keyboard height
-        const safeAreaBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sab') || '0', 10);
-        const adjustedGap = Math.max(0, gap - safeAreaBottom);
-        setKeyboardOffset(keyboardOpen ? adjustedGap : 0);
-        
-        // Debug log (remove in production)
-        if (keyboardOpen) {
-          console.log('[ChatView KB]', { gap, adjustedGap, vvH: window.visualViewport.height, winH: window.innerHeight });
-        }
-      }
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-      window.visualViewport.addEventListener('scroll', handleResize);
-      handleResize(); // Check initial state
-    }
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-        window.visualViewport.removeEventListener('scroll', handleResize);
-      }
-    };
-  }, []);
+  // 🔧 FIX v11: Use unified keyboard inset hook
+  const { isOpen: isKeyboardOpen, inset: keyboardInset } = useKeyboardInset();
 
   // ✅ Mark messages as read when viewing conversation
   useEffect(() => {
@@ -253,77 +214,136 @@ export function ChatView({
       </div>
 
       {/* Input Bar - GLASS STYLE 
-          🔧 FIX v9: Use visualViewport height for iOS keyboard positioning
-          🔧 FIX 22/01/2026: Glass style with blur, rounded corners, neon glow
-          🔧 FIX v10 (22/01/2026): CORRECT keyboard offset - input sticks to keyboard */}
-      <div 
-        className="fixed left-0 right-0 mx-2 rounded-2xl overflow-hidden"
-        style={{ 
-          // 🔧 FIX v10: When keyboard open, add keyboardOffset to bottom position
-          // This positions the bar at bottom of VISUAL viewport (above keyboard)
-          bottom: isKeyboardOpen ? `${keyboardOffset + 8}px` : '108px',
-          minHeight: `${inputHeight}px`,
-          zIndex: 60000,
-          transition: 'bottom 0.15s ease-out',
-          // 🔧 FIX 22/01/2026: Glass style
-          background: 'rgba(15, 23, 42, 0.85)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(0, 212, 255, 0.25)',
-          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 212, 255, 0.1)',
-        }}
-      >
-        <div className="flex items-center gap-2 px-3 py-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleShareLocation}
-            disabled={!position || isSending}
-            className="p-2 hover:bg-white/10 flex-shrink-0 rounded-full"
-            title="Condividi posizione"
-          >
-            <MapPin className="w-5 h-5 text-cyan-400" />
-          </Button>
-          
-          <textarea
-            ref={inputRef}
-            value={inputValue}
-            onChange={(e) => {
-              setInputValue(e.target.value);
-              // Auto-resize: reset height then set to scrollHeight
-              e.target.style.height = 'auto';
-              e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-            }}
-            onKeyDown={handleKeyPress}
-            placeholder="Scrivi un messaggio..."
-            disabled={isSending}
-            rows={1}
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="sentences"
-            spellCheck={false}
-            inputMode="text"
-            data-form-type="other"
-            data-lpignore="true"
-            data-chat-input="true"
-            className="flex-1 bg-slate-800/50 border border-cyan-500/20 rounded-xl px-4 py-2.5 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 transition-all disabled:opacity-50 resize-none overflow-y-auto"
-            style={{ maxHeight: '120px', minHeight: '38px' }}
-          />
-          
-          <Button
-            onClick={handleSend}
-            disabled={!inputValue.trim() || isSending}
-            size="sm"
-            className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 flex-shrink-0 shadow-lg shadow-cyan-500/20"
-          >
-            {isSending ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Send className="w-5 h-5" />
-            )}
-          </Button>
+          🔧 FIX v11: Static input bar when keyboard closed */}
+      {!isKeyboardOpen && (
+        <div 
+          className="fixed left-0 right-0 mx-2 rounded-2xl overflow-hidden"
+          style={{ 
+            bottom: '108px',
+            minHeight: `${inputHeight}px`,
+            zIndex: 60000,
+            background: 'rgba(15, 23, 42, 0.85)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(0, 212, 255, 0.25)',
+            boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 212, 255, 0.1)',
+          }}
+        >
+          <div className="flex items-center gap-2 px-3 py-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleShareLocation}
+              disabled={!position || isSending}
+              className="p-2 hover:bg-white/10 flex-shrink-0 rounded-full"
+              title="Condividi posizione"
+            >
+              <MapPin className="w-5 h-5 text-cyan-400" />
+            </Button>
+            
+            <textarea
+              ref={inputRef}
+              value={inputValue}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+              }}
+              onKeyDown={handleKeyPress}
+              placeholder="Scrivi un messaggio..."
+              disabled={isSending}
+              rows={1}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="sentences"
+              spellCheck={false}
+              inputMode="text"
+              data-form-type="other"
+              data-lpignore="true"
+              data-chat-input="true"
+              className="flex-1 bg-slate-800/50 border border-cyan-500/20 rounded-xl px-4 py-2.5 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 transition-all disabled:opacity-50 resize-none overflow-y-auto"
+              style={{ maxHeight: '120px', minHeight: '38px' }}
+            />
+            
+            <Button
+              onClick={handleSend}
+              disabled={!inputValue.trim() || isSending}
+              size="sm"
+              className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 flex-shrink-0 shadow-lg shadow-cyan-500/20"
+            >
+              {isSending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* 🔧 FIX v11: Keyboard-docked input via Portal */}
+      <KeyboardDock isActive={isKeyboardOpen} gapPx={8}>
+        <div 
+          className="mx-2 rounded-2xl overflow-hidden"
+          style={{ 
+            minHeight: `${inputHeight}px`,
+            background: 'rgba(15, 23, 42, 0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(0, 212, 255, 0.3)',
+            boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 212, 255, 0.15)',
+          }}
+        >
+          <div className="flex items-center gap-2 px-3 py-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleShareLocation}
+              disabled={!position || isSending}
+              className="p-2 hover:bg-white/10 flex-shrink-0 rounded-full"
+              title="Condividi posizione"
+            >
+              <MapPin className="w-5 h-5 text-cyan-400" />
+            </Button>
+            
+            <textarea
+              value={inputValue}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+              }}
+              onKeyDown={handleKeyPress}
+              placeholder="Scrivi un messaggio..."
+              disabled={isSending}
+              rows={1}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="sentences"
+              spellCheck={false}
+              inputMode="text"
+              data-form-type="other"
+              data-lpignore="true"
+              data-chat-input="true"
+              className="flex-1 bg-slate-800/50 border border-cyan-500/20 rounded-xl px-4 py-2.5 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 transition-all disabled:opacity-50 resize-none overflow-y-auto"
+              style={{ maxHeight: '120px', minHeight: '38px' }}
+            />
+            
+            <Button
+              onClick={handleSend}
+              disabled={!inputValue.trim() || isSending}
+              size="sm"
+              className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 flex-shrink-0 shadow-lg shadow-cyan-500/20"
+            >
+              {isSending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </KeyboardDock>
     </div>
   );
 }
