@@ -39,20 +39,29 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
-  const [isAtTop, setIsAtTop] = useState(true); // 🔧 FIX v10: Track if at scroll top
+  const [isAtTop, setIsAtTop] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
   const startY = useRef(0);
   const currentY = useRef(0);
+  
+  // 🔧 FIX v11: Use refs for values needed in native event listeners
+  // This prevents stale closure issues that caused "first pull doesn't work"
+  const isPullingRef = useRef(false);
+  const isRefreshingRef = useRef(false);
+  
+  // Keep refs in sync with state
+  useEffect(() => { isPullingRef.current = isPulling; }, [isPulling]);
+  useEffect(() => { isRefreshingRef.current = isRefreshing; }, [isRefreshing]);
 
-  // 🔧 FIX v9: Find scroll parent on mount
+  // 🔧 FIX v11: Find scroll parent AND setup scroll monitoring in SAME useEffect
+  // This ensures scroll listener is added AFTER scrollParentRef is set
   useEffect(() => {
+    // Find scroll parent
     scrollParentRef.current = findScrollParent(containerRef.current);
     console.log('[MissionSync] Scroll parent found:', scrollParentRef.current?.tagName);
-  }, []);
-  
-  // 🔧 FIX v10: Monitor scroll position
-  useEffect(() => {
+    
+    // Setup scroll monitoring
     const scrollParent = scrollParentRef.current;
     if (!scrollParent) return;
     
@@ -65,17 +74,17 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
     handleScroll(); // Initial check
     
     return () => scrollParent.removeEventListener('scroll', handleScroll);
-  }, [scrollParentRef.current]);
+  }, []); // Run once on mount
   
-  // 🔧 FIX v10: Native touchmove listener with { passive: false } for proper preventDefault
-  // This is the KEY FIX: React synthetic events can't properly preventDefault on iOS
+  // 🔧 FIX v11: Native touchmove listener - ADDED ONCE, uses refs to avoid stale closure
+  // This fixes "first pull doesn't work" bug caused by listener having stale isPulling value
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     
     const handleNativeTouchMove = (e: TouchEvent) => {
-      // Only intercept if we're actively pulling
-      if (!isPulling || isRefreshing) return;
+      // 🔧 FIX v11: Read from REFS, not state (avoids stale closure)
+      if (!isPullingRef.current || isRefreshingRef.current) return;
       
       const currentTouchY = e.touches[0].clientY;
       const diff = currentTouchY - startY.current;
@@ -97,18 +106,20 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
         console.log('[MissionSync] Pulling:', newPull.toFixed(1), 'px');
       } else if (diff < -10) {
         // User is scrolling DOWN (to see more content) - cancel pull, let browser handle
+        isPullingRef.current = false;
         setIsPulling(false);
         setPullDistance(0);
       }
     };
     
     // CRITICAL: { passive: false } allows preventDefault() to work on iOS
+    // 🔧 FIX v11: Add listener ONCE (no deps), use refs for current values
     container.addEventListener('touchmove', handleNativeTouchMove, { passive: false });
     
     return () => {
       container.removeEventListener('touchmove', handleNativeTouchMove);
     };
-  }, [isPulling, isRefreshing]); // Re-add listener when state changes
+  }, []); // 🔧 FIX v11: Empty deps - listener added once, refs provide current values
 
   // 🔧 FIX v4 (22/01/2026): Aggressive iOS safety reset - multiple triggers
   useEffect(() => {
@@ -145,17 +156,19 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
     };
   }, []);
 
-  // 🔧 FIX v10: React touchStart still handles initial detection
+  // 🔧 FIX v11: React touchStart handles initial detection + sets ref
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const scrollParent = scrollParentRef.current || containerRef.current;
     const scrollTop = scrollParent?.scrollTop ?? 0;
     
-    if (scrollTop <= 1 && !isRefreshing) {
+    if (scrollTop <= 1 && !isRefreshingRef.current) {
       startY.current = e.touches[0].clientY;
+      // 🔧 FIX v11: Set BOTH ref and state for immediate availability
+      isPullingRef.current = true;
       setIsPulling(true);
-      console.log('[MissionSync] Touch start - ready for pull');
+      console.log('[MissionSync] Touch start - ready for pull (first try should work!)');
     }
-  }, [isRefreshing]);
+  }, []); // No deps needed - uses refs
 
   // TouchMove is handled by native listener (for proper preventDefault)
   const handleTouchMove = useCallback(() => {
@@ -163,12 +176,16 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
   }, []);
 
   const handleTouchEnd = useCallback(async () => {
-    if (!isPulling) return;
+    // 🔧 FIX v11: Check ref for immediate value
+    if (!isPullingRef.current) return;
     
+    // Reset both ref and state
+    isPullingRef.current = false;
     setIsPulling(false);
     
-    if (pullDistance >= PULL_THRESHOLD && !isRefreshing) {
+    if (pullDistance >= PULL_THRESHOLD && !isRefreshingRef.current) {
       // Trigger refresh
+      isRefreshingRef.current = true;
       setIsRefreshing(true);
       setPullDistance(60); // Hold at indicator position
       
@@ -177,6 +194,7 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
       } catch (error) {
         console.error('[MissionSync] Refresh error:', error);
       } finally {
+        isRefreshingRef.current = false;
         setIsRefreshing(false);
         setPullDistance(0);
       }
@@ -184,13 +202,14 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
       // Release without refresh
       setPullDistance(0);
     }
-  }, [isPulling, pullDistance, isRefreshing, onRefresh]);
+  }, [pullDistance, onRefresh]);
 
   // 🔧 FIX: Handle touchcancel (iOS interrupts)
   const handleTouchCancel = useCallback(() => {
     console.log('[MissionSync] Touch cancelled, resetting state');
+    // 🔧 FIX v11: Reset both ref and state
+    isPullingRef.current = false;
     setIsPulling(false);
-    // 🔧 FIX 22/01/2026: ALWAYS reset pullDistance on cancel to prevent stuck transform
     setPullDistance(0);
   }, []);
 
