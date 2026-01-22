@@ -49,20 +49,32 @@ export function ChatView({
     }
   }, [messages]);
 
-  // 🔧 FIX v9: Track keyboard offset using visualViewport for precise positioning
+  // 🔧 FIX v10: Track keyboard offset using visualViewport for precise positioning
   const [keyboardOffset, setKeyboardOffset] = useState(0);
   
   // ✅ Detect keyboard using visualViewport ONLY (no auto-focus!)
   useEffect(() => {
+    // Store initial height to detect keyboard
+    const initialHeight = window.innerHeight;
+    
     const handleResize = () => {
       if (window.visualViewport) {
-        const keyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
-        setIsKeyboardOpen(keyboardOpen);
+        // 🔧 FIX v10: Use more reliable keyboard detection
+        // Keyboard is open if visualViewport is significantly smaller than initial height
+        const gap = initialHeight - window.visualViewport.height;
+        const keyboardOpen = gap > 100; // 100px threshold for keyboard
         
-        // 🔧 FIX v9: Calculate exact keyboard height
-        // gap = layoutViewport - visualViewport (the space taken by keyboard)
-        const gap = window.innerHeight - window.visualViewport.height;
-        setKeyboardOffset(gap > 50 ? gap : 0);
+        setIsKeyboardOpen(keyboardOpen);
+        // 🔧 FIX v10: Subtract safe-area from gap to avoid double offset
+        // The gap includes safe-area, but we only want keyboard height
+        const safeAreaBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sab') || '0', 10);
+        const adjustedGap = Math.max(0, gap - safeAreaBottom);
+        setKeyboardOffset(keyboardOpen ? adjustedGap : 0);
+        
+        // Debug log (remove in production)
+        if (keyboardOpen) {
+          console.log('[ChatView KB]', { gap, adjustedGap, vvH: window.visualViewport.height, winH: window.innerHeight });
+        }
       }
     };
 
@@ -242,15 +254,17 @@ export function ChatView({
 
       {/* Input Bar - GLASS STYLE 
           🔧 FIX v9: Use visualViewport height for iOS keyboard positioning
-          🔧 FIX 22/01/2026: Glass style with blur, rounded corners, neon glow */}
+          🔧 FIX 22/01/2026: Glass style with blur, rounded corners, neon glow
+          🔧 FIX v10 (22/01/2026): CORRECT keyboard offset - input sticks to keyboard */}
       <div 
         className="fixed left-0 right-0 mx-2 rounded-2xl overflow-hidden"
         style={{ 
-          // 🔧 FIX v9: When keyboard open, position at bottom of visualViewport
-          bottom: isKeyboardOpen ? '8px' : '108px',
+          // 🔧 FIX v10: When keyboard open, add keyboardOffset to bottom position
+          // This positions the bar at bottom of VISUAL viewport (above keyboard)
+          bottom: isKeyboardOpen ? `${keyboardOffset + 8}px` : '108px',
           minHeight: `${inputHeight}px`,
           zIndex: 60000,
-          transition: 'bottom 0.2s ease-out',
+          transition: 'bottom 0.15s ease-out',
           // 🔧 FIX 22/01/2026: Glass style
           background: 'rgba(15, 23, 42, 0.85)',
           backdropFilter: 'blur(20px)',

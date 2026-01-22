@@ -10,7 +10,7 @@ import { useTTS } from '@/components/intel/hooks/useTTS';
 import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION Cashback Vault™
 import { useAionDynamicIsland } from '@/hooks/useAionDynamicIsland'; // 🎙️ DI SOLO per AION
 import type { AionEntityHandle, Viseme } from '@/components/aion/AionEntity';
-import { useKeyboardVisible } from '@/hooks/useKeyboardVisible'; // 🔧 FIX v9: iOS keyboard detection
+// 🔧 FIX v10: Removed useKeyboardVisible - using inline visualViewport logic instead
 
 interface Message {
   id: string;
@@ -70,32 +70,45 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sessionIdRef = useRef<string>(`session_${Date.now()}`);
   
-  // 🔧 FIX v9: iOS keyboard gap handling
-  const isKeyboardOpen = useKeyboardVisible(100);
+  // 🔧 FIX v10 (22/01/2026): iOS keyboard gap handling - CORRECT approach
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const initialHeightRef = useRef(typeof window !== 'undefined' ? window.innerHeight : 0);
   
-  // 🔧 FIX v9: Track visualViewport for iOS keyboard positioning
+  // 🔧 FIX v10: Track visualViewport for iOS keyboard positioning
   useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+    
+    // Store initial height on mount
+    initialHeightRef.current = window.innerHeight;
+    
     const updateKeyboardOffset = () => {
-      if (window.visualViewport) {
-        // When keyboard opens, visualViewport shrinks
-        // The gap = innerHeight - visualViewport.height
-        const gap = window.innerHeight - window.visualViewport.height;
-        setKeyboardOffset(gap > 50 ? gap : 0);
+      if (!window.visualViewport) return;
+      
+      // 🔧 FIX v10: Calculate gap from INITIAL height, not current innerHeight
+      // innerHeight can change on iOS, so use stored initial value
+      const gap = initialHeightRef.current - window.visualViewport.height;
+      const keyboardOpen = gap > 100; // 100px threshold
+      
+      setIsKeyboardOpen(keyboardOpen);
+      // 🔧 FIX v10: Subtract safe-area to avoid double offset
+      const safeAreaBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sab') || '0', 10);
+      const adjustedGap = Math.max(0, gap - safeAreaBottom);
+      setKeyboardOffset(keyboardOpen ? adjustedGap : 0);
+      
+      // Debug log
+      if (keyboardOpen) {
+        console.log('[AION KB]', { gap, adjustedGap, vvH: window.visualViewport.height, initial: initialHeightRef.current });
       }
     };
     
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', updateKeyboardOffset);
-      window.visualViewport.addEventListener('scroll', updateKeyboardOffset);
-      updateKeyboardOffset();
-    }
+    window.visualViewport.addEventListener('resize', updateKeyboardOffset);
+    window.visualViewport.addEventListener('scroll', updateKeyboardOffset);
+    updateKeyboardOffset();
     
     return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', updateKeyboardOffset);
-        window.visualViewport.removeEventListener('scroll', updateKeyboardOffset);
-      }
+      window.visualViewport?.removeEventListener('resize', updateKeyboardOffset);
+      window.visualViewport?.removeEventListener('scroll', updateKeyboardOffset);
     };
   }, []);
   
@@ -409,9 +422,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         background: 'rgba(7, 8, 24, 0.6)',
         backdropFilter: 'blur(12px)',
         border: '1px solid rgba(0, 212, 255, 0.2)',
-        // 🔧 FIX v9: Shrink panel when keyboard is open to prevent gap
-        marginBottom: isKeyboardOpen ? `${keyboardOffset}px` : undefined,
-        transition: 'margin-bottom 0.2s ease-out',
+        // 🔧 FIX v10: Remove marginBottom - we'll handle keyboard in input bar
         ...style
       }}
     >
@@ -453,11 +464,13 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Messages - 🔧 FIX v10: Add padding when keyboard open to prevent overlap */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[200px]"
         style={{ 
           scrollBehavior: 'smooth',
-          WebkitOverflowScrolling: 'touch'
+          WebkitOverflowScrolling: 'touch',
+          // 🔧 FIX v10: Extra padding when keyboard is open (input bar becomes fixed)
+          paddingBottom: isKeyboardOpen ? '80px' : undefined,
         }}
       >
         <AnimatePresence>
@@ -525,15 +538,22 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         {status === 'idle' && '✨ Pronto'}
       </div>
 
-      {/* Input - 🔧 FIX 22/01/2026: Glass style input bar */}
+      {/* Input - 🔧 FIX v10 (22/01/2026): Glass style input bar + keyboard dock 
+          When keyboard is open, use position:fixed to dock to keyboard top */}
       <div 
-        className="p-3 mx-2 mb-2 rounded-2xl"
+        className={`p-3 rounded-2xl ${isKeyboardOpen ? 'fixed left-2 right-2' : 'mx-2 mb-2'}`}
         style={{
-          background: 'rgba(15, 23, 42, 0.75)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(0, 212, 255, 0.2)',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
+          background: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(0, 212, 255, 0.25)',
+          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 212, 255, 0.1)',
+          // 🔧 FIX v10: When keyboard open, position at bottom of visual viewport
+          ...(isKeyboardOpen ? {
+            bottom: `${keyboardOffset + 8}px`,
+            zIndex: 60000,
+            transition: 'bottom 0.15s ease-out',
+          } : {}),
         }}
       >
         <div className="flex items-center gap-2">
