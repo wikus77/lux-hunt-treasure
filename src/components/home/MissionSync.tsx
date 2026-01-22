@@ -39,6 +39,7 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
+  const [isAtTop, setIsAtTop] = useState(true); // 🔧 FIX v10: Track if at scroll top
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
   const startY = useRef(0);
@@ -49,6 +50,65 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
     scrollParentRef.current = findScrollParent(containerRef.current);
     console.log('[MissionSync] Scroll parent found:', scrollParentRef.current?.tagName);
   }, []);
+  
+  // 🔧 FIX v10: Monitor scroll position
+  useEffect(() => {
+    const scrollParent = scrollParentRef.current;
+    if (!scrollParent) return;
+    
+    const handleScroll = () => {
+      const atTop = scrollParent.scrollTop <= 1;
+      setIsAtTop(atTop);
+    };
+    
+    scrollParent.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial check
+    
+    return () => scrollParent.removeEventListener('scroll', handleScroll);
+  }, [scrollParentRef.current]);
+  
+  // 🔧 FIX v10: Native touchmove listener with { passive: false } for proper preventDefault
+  // This is the KEY FIX: React synthetic events can't properly preventDefault on iOS
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    
+    const handleNativeTouchMove = (e: TouchEvent) => {
+      // Only intercept if we're actively pulling
+      if (!isPulling || isRefreshing) return;
+      
+      const currentTouchY = e.touches[0].clientY;
+      const diff = currentTouchY - startY.current;
+      
+      // Check scroll position
+      const scrollParent = scrollParentRef.current || container;
+      const scrollTop = scrollParent?.scrollTop ?? 0;
+      
+      if (diff > 0 && scrollTop <= 1) {
+        // User is pulling DOWN while at top - PULL-TO-REFRESH gesture
+        // CRITICAL: Prevent browser from handling this as scroll/overscroll
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const resistance = 0.5;
+        const newPull = Math.min(diff * resistance, MAX_PULL);
+        setPullDistance(newPull);
+        currentY.current = currentTouchY;
+        console.log('[MissionSync] Pulling:', newPull.toFixed(1), 'px');
+      } else if (diff < -10) {
+        // User is scrolling DOWN (to see more content) - cancel pull, let browser handle
+        setIsPulling(false);
+        setPullDistance(0);
+      }
+    };
+    
+    // CRITICAL: { passive: false } allows preventDefault() to work on iOS
+    container.addEventListener('touchmove', handleNativeTouchMove, { passive: false });
+    
+    return () => {
+      container.removeEventListener('touchmove', handleNativeTouchMove);
+    };
+  }, [isPulling, isRefreshing]); // Re-add listener when state changes
 
   // 🔧 FIX v4 (22/01/2026): Aggressive iOS safety reset - multiple triggers
   useEffect(() => {
@@ -85,41 +145,22 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
     };
   }, []);
 
+  // 🔧 FIX v10: React touchStart still handles initial detection
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // 🔧 FIX v9: Check scroll position on the ACTUAL scroll container (parent <main>)
     const scrollParent = scrollParentRef.current || containerRef.current;
     const scrollTop = scrollParent?.scrollTop ?? 0;
     
-    // Only start pull if at top of scroll
-    if (scrollTop <= 1) { // Allow 1px tolerance
+    if (scrollTop <= 1 && !isRefreshing) {
       startY.current = e.touches[0].clientY;
       setIsPulling(true);
-      console.log('[MissionSync] Pull started, scrollTop:', scrollTop);
+      console.log('[MissionSync] Touch start - ready for pull');
     }
-  }, []);
+  }, [isRefreshing]);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isPulling || isRefreshing) return;
-    
-    currentY.current = e.touches[0].clientY;
-    const diff = currentY.current - startY.current;
-    
-    // 🔧 FIX v9: Check scroll position on the ACTUAL scroll container
-    const scrollParent = scrollParentRef.current || containerRef.current;
-    const scrollTop = scrollParent?.scrollTop ?? 0;
-    
-    if (diff > 0 && scrollTop <= 1) { // Allow 1px tolerance
-      // Apply resistance curve
-      const resistance = 0.5;
-      const newPull = Math.min(diff * resistance, MAX_PULL);
-      setPullDistance(newPull);
-      
-      // Prevent default scroll when pulling
-      if (newPull > 10) {
-        e.preventDefault();
-      }
-    }
-  }, [isPulling, isRefreshing]);
+  // TouchMove is handled by native listener (for proper preventDefault)
+  const handleTouchMove = useCallback(() => {
+    // Native listener handles this with { passive: false }
+  }, []);
 
   const handleTouchEnd = useCallback(async () => {
     if (!isPulling) return;
@@ -184,6 +225,11 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
   const progress = Math.min(pullDistance / PULL_THRESHOLD, 1);
   const shouldTrigger = pullDistance >= PULL_THRESHOLD;
 
+  // 🔧 FIX v10: Determine touchAction based on pull state ONLY
+  // We only block browser touch when actively pulling down (pullDistance > 0)
+  // This way user can still scroll down when at top
+  const shouldBlockBrowserTouch = isPulling && pullDistance > 0;
+  
   return (
     <div
       ref={containerRef}
@@ -192,7 +238,10 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchCancel}
-      style={{ touchAction: isPulling && pullDistance > 10 ? 'none' : 'auto' }}
+      style={{ 
+        // 🔧 FIX v10: Block browser touch ONLY when actively pulling
+        touchAction: shouldBlockBrowserTouch ? 'none' : 'pan-y',
+      }}
     >
       {/* Pull indicator */}
       <AnimatePresence>
