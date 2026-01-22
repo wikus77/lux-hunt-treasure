@@ -193,79 +193,80 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
           />
           
           {/* 🆕 FIX 16/01/2026: Container che scende dall'alto con swipe up */}
+          {/* 🔧 FIX 22/01/2026 v2: Full width responsive, compromesso bilanciato */}
           <motion.div
             initial={{ y: '-100%', opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '-100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             drag="y"
-            dragConstraints={{ top: -200, bottom: 0 }}
+            dragConstraints={{ top: -150, bottom: 0 }}
             dragElastic={0.2}
             onDragEnd={handleDragEnd}
-            className="fixed top-0 left-0 right-0 z-[10002] mx-auto max-w-lg"
+            className="fixed top-0 left-0 right-0 z-[10002]"
             style={{ touchAction: 'none' }}
           >
             <div 
-              className="mx-2 mt-2 rounded-3xl overflow-hidden relative"
+              className="mx-3 mt-2 rounded-2xl overflow-hidden relative"
               style={{
                 background: 'linear-gradient(145deg, rgba(0, 40, 40, 0.98), rgba(0, 60, 60, 0.95))',
-                border: '3px solid rgba(0, 255, 136, 0.5)',
-                boxShadow: '0 0 80px rgba(0, 255, 136, 0.4), 0 16px 50px rgba(0, 0, 0, 0.7)',
+                border: '2px solid rgba(0, 255, 136, 0.5)',
+                boxShadow: '0 0 50px rgba(0, 255, 136, 0.35), 0 10px 30px rgba(0, 0, 0, 0.7)',
               }}
             >
               {/* Ambient glow */}
               <div 
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.25) 0%, transparent 60%)',
+                  background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.22) 0%, transparent 60%)',
                 }}
               />
 
               {/* Swipe indicator (drag handle) */}
-              <div className="flex justify-center pt-5 pb-3">
+              <div className="flex justify-center pt-3 pb-2">
                 <div 
-                  className="w-20 h-2.5 rounded-full"
+                  className="w-12 h-1.5 rounded-full"
                   style={{ background: 'rgba(255,255,255,0.35)' }}
                 />
               </div>
 
-              {/* Content - GRANDE + TESTI PRIORITARI */}
-              <div className="relative px-6 pb-8 pt-2">
-                <div className="flex items-start gap-5">
-                  {/* Icon - media, bilanciata */}
+              {/* Content - 🔧 FIX 22/01/2026 v2: Bilanciato (full width, testi medi) */}
+              <div className="relative px-4 pb-5 pt-1">
+                <div className="flex items-start gap-3">
+                  {/* Icon - dimensione media */}
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', delay: 0.1 }}
-                    className="w-16 h-16 rounded-2xl flex-shrink-0 flex items-center justify-center"
+                    className="w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center"
                     style={{
                       background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
-                      boxShadow: '0 6px 25px rgba(0, 255, 136, 0.5)',
+                      boxShadow: '0 4px 16px rgba(0, 255, 136, 0.45)',
                     }}
                   >
-                    <span className="text-black scale-110">{getIcon()}</span>
+                    <span className="text-black scale-90">{getIcon()}</span>
                   </motion.div>
 
-                  {/* Text content - PRIORITÀ MASSIMA, testi grandi e completi */}
-                  <div className="flex-1 pr-2">
+                  {/* Text content - testi medi, leggibili */}
+                  <div className="flex-1 pr-1">
                     <motion.h2
-                      initial={{ y: 10, opacity: 0 }}
+                      initial={{ y: 8, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.15 }}
-                      className="text-2xl font-bold leading-tight"
+                      className="text-lg font-bold leading-tight"
                       style={{
                         color: '#00FF88',
-                        textShadow: '0 0 20px rgba(0, 255, 136, 0.6)',
+                        textShadow: '0 0 15px rgba(0, 255, 136, 0.55)',
                       }}
                     >
                       {message.title}
                     </motion.h2>
 
                     <motion.p
-                      initial={{ y: 10, opacity: 0 }}
+                      initial={{ y: 8, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.2 }}
-                      className="text-white/90 text-lg mt-3 leading-relaxed"
+                      className="text-white/90 text-sm mt-1.5 leading-relaxed"
                     >
                       {message.description}
                     </motion.p>
@@ -274,7 +275,7 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
 
                 {/* Progress bar for auto-dismiss */}
                 <motion.div
-                  className="absolute bottom-0 left-0 right-0 h-2 rounded-b-3xl overflow-hidden"
+                  className="absolute bottom-0 left-0 right-0 h-1.5 rounded-b-2xl overflow-hidden"
                   style={{ background: 'rgba(0, 255, 136, 0.2)' }}
                 >
                   <motion.div
@@ -288,14 +289,14 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
               </div>
             </div>
 
-            {/* 🆕 Swipe hint text */}
+            {/* Swipe hint text */}
             <motion.p
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
+              animate={{ opacity: 0.45 }}
               transition={{ delay: 1 }}
-              className="text-center text-white/40 text-xs mt-2"
+              className="text-center text-white/35 text-[11px] mt-1.5"
             >
-              ↑ Swipe up per chiudere
+              ↑ swipe per chiudere
             </motion.p>
           </motion.div>
         </>

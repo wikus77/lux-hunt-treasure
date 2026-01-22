@@ -3,7 +3,8 @@ import React, { lazy, Suspense } from 'react';
 import MapLoadingFallback from './MapLoadingFallback';
 import LivingMapOverlay from '@/components/living/LivingMapOverlay';
 import MapDock from '@/components/map/MapDock';
-import PortalContainer from '@/components/map/PortalContainer';
+// 🔧 FIX 22/01/2026: Removed PortalContainer pill (hidden feature for now)
+// import PortalContainer from '@/components/map/PortalContainer';
 import MapLayerToggle from '@/components/map/MapLayerToggle';
 import '@/styles/map-dock.css';
 import '@/styles/portal-container.css';
@@ -110,11 +111,7 @@ const MapSection: React.FC<MapSectionProps> = ({
         {/* Living Map™ Overlay */}
         <LivingMapOverlay mode="auto" />
         
-        {/* M1SSION Portal Container - Left Side */}
-        <PortalContainer 
-          portalCount={12}
-          onPortalAction={(type) => console.log('🎯 Portal filter:', type)}
-        />
+        {/* 🔧 FIX 22/01/2026: Removed PortalContainer pill (hidden feature for now) */}
         
         {/* LIVING LAYERS - Top Right */}
         <MapLayerToggle />

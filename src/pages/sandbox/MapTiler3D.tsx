@@ -5,7 +5,8 @@ import maplibregl, { Map as MLMap } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import neonStyleTemplate from '../map/styles/m1_neon_style_FULL_3D.json';
 import BuzzMapButtonSecure from '@/components/map/BuzzMapButtonSecure';
-import PortalContainer from '@/components/map/PortalContainer';
+// 🔧 FIX 22/01/2026: Removed PortalContainer pill (hidden feature for now)
+// import PortalContainer from '@/components/map/PortalContainer';
 import { toast } from 'sonner';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { getCurrentWeekOfYear } from '@/lib/weekUtils';
@@ -1660,10 +1661,7 @@ export default function MapTiler3D() {
         </motion.button>
       </div>
       
-      <PortalContainer 
-        portalCount={portals.length}
-        onPortalAction={(type) => console.log('🎯 Portal filter:', type)}
-      />
+      {/* 🔧 FIX 22/01/2026: Removed PortalContainer pill (hidden feature for now) */}
       
       {/* 3D Layers Overlay - All 5 features */}
       <AgentsLayer3D 
