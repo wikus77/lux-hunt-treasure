@@ -10,8 +10,7 @@ import { useTTS } from '@/components/intel/hooks/useTTS';
 import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION Cashback Vault™
 import { useAionDynamicIsland } from '@/hooks/useAionDynamicIsland'; // 🎙️ DI SOLO per AION
 import type { AionEntityHandle, Viseme } from '@/components/aion/AionEntity';
-import { KeyboardDock } from '@/components/keyboard/KeyboardDock'; // 🔧 FIX v11: Unified keyboard dock
-import { useKeyboardInset } from '@/hooks/useKeyboardInset'; // 🔧 FIX v11: For padding adjustment
+import { useKeyboardInset } from '@/hooks/useKeyboardInset'; // 🔧 FIX v12: For keyboard positioning
 
 interface Message {
   id: string;
@@ -500,98 +499,62 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         {status === 'idle' && '✨ Pronto'}
       </div>
 
-      {/* Input - 🔧 FIX v11: Static input when keyboard closed */}
-      {!isKeyboardOpen && (
-        <div 
-          className="p-3 mx-2 mb-2 rounded-2xl"
-          style={{
-            background: 'rgba(15, 23, 42, 0.85)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(0, 212, 255, 0.25)',
-            boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 212, 255, 0.1)',
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                e.target.style.height = 'auto';
-                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-              }}
-              onKeyDown={handleKeyPress}
-              placeholder="Scrivi un messaggio..."
-              disabled={isLoading}
-              rows={1}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="sentences"
-              spellCheck={false}
-              inputMode="text"
-              data-form-type="other"
-              data-lpignore="true"
-              data-chat-input="true"
-              className="flex-1 bg-slate-800/40 border border-cyan-500/15 rounded-xl px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/15 transition-all disabled:opacity-50 resize-none overflow-y-auto"
-              style={{ maxHeight: '120px', minHeight: '40px' }}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={!input.trim() || isLoading}
-              className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
-            >
-              <Send className="w-5 h-5" />
-            </button>
-          </div>
+      {/* Input - 🔧 FIX v12: SINGLE input bar, NEVER remounts
+          Uses position:fixed + transform to dock to keyboard without remounting
+          CRITICAL: iOS requires the same DOM node to maintain focus session */}
+      <div 
+        className="p-3 mx-2 mb-2 rounded-2xl"
+        style={{
+          // 🔧 FIX v12: Always fixed positioning, use transform to move
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          // When keyboard open: move up by keyboardInset
+          // When keyboard closed: stay at bottom with safe-area
+          bottom: isKeyboardOpen ? `${keyboardInset + 8}px` : 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
+          zIndex: 60000,
+          transition: 'bottom 0.15s ease-out',
+          // Glass style
+          background: 'rgba(15, 23, 42, 0.95)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(0, 212, 255, 0.25)',
+          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 212, 255, 0.1)',
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value);
+              e.target.style.height = 'auto';
+              e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+            }}
+            onKeyDown={handleKeyPress}
+            placeholder="Scrivi un messaggio..."
+            disabled={isLoading}
+            rows={1}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="sentences"
+            spellCheck={false}
+            inputMode="text"
+            data-form-type="other"
+            data-lpignore="true"
+            data-chat-input="true"
+            className="flex-1 bg-slate-800/40 border border-cyan-500/15 rounded-xl px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/15 transition-all disabled:opacity-50 resize-none overflow-y-auto"
+            style={{ maxHeight: '120px', minHeight: '40px' }}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim() || isLoading}
+            className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
+          >
+            <Send className="w-5 h-5" />
+          </button>
         </div>
-      )}
-
-      {/* 🔧 FIX v11: Keyboard-docked input via Portal (renders at document.body level) */}
-      <KeyboardDock isActive={isKeyboardOpen} gapPx={8}>
-        <div 
-          className="p-3 mx-2 rounded-2xl"
-          style={{
-            background: 'rgba(15, 23, 42, 0.95)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(0, 212, 255, 0.3)',
-            boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 212, 255, 0.15)',
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <textarea
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                e.target.style.height = 'auto';
-                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-              }}
-              onKeyDown={handleKeyPress}
-              placeholder="Scrivi un messaggio..."
-              disabled={isLoading}
-              rows={1}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="sentences"
-              spellCheck={false}
-              inputMode="text"
-              data-form-type="other"
-              data-lpignore="true"
-              data-chat-input="true"
-              className="flex-1 bg-slate-800/40 border border-cyan-500/15 rounded-xl px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/15 transition-all disabled:opacity-50 resize-none overflow-y-auto"
-              style={{ maxHeight: '120px', minHeight: '40px' }}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={!input.trim() || isLoading}
-              className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
-            >
-              <Send className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </KeyboardDock>
+      </div>
     </div>
   );
 };
