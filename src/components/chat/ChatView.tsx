@@ -289,6 +289,7 @@ export function ChatView({
             inputMode="text"
             data-form-type="other"
             data-lpignore="true"
+            data-chat-input="true"
             className="flex-1 bg-gray-800/60 border border-white/10 rounded-2xl px-4 py-2 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors disabled:opacity-50 resize-none overflow-y-auto"
             style={{ maxHeight: '120px', minHeight: '36px' }}
           />
