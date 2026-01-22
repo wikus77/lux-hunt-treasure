@@ -14,8 +14,7 @@ import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 // 🔇 RIMOSSO: useSoundEffects - tutti i suoni ora gestiti da BuzzActionButton
 // 🔇 RIMOSSO: createVortexSound - suono vortex eliminato per evitare conflitti con BUZZMAP.mp3
 // import { createVortexSound } from '@/utils/audioSynthesis';
-import UnifiedHeader from '@/components/layout/UnifiedHeader';
-// BottomNavigation gestita da GlobalLayout
+// UnifiedHeader e BottomNavigation gestiti da GlobalLayout
 import M1UPill from '@/features/m1u/M1UPill';
 import { useDebugFlag } from '@/debug/useDebugFlag';
 import { DebugBuzzPanel } from '@/debug/DebugBuzzPanel';
@@ -99,23 +98,16 @@ export const BuzzPage: React.FC = () => {
   // 🚀 INSTANT RENDER: Never block the page with loading spinner
   // Data will load in background and update via realtime subscriptions
 
+  // 🔧 FIX v2: BuzzPage now relies on GlobalLayout for header/nav/safe-area
+  // The outer wrapper provides scrollable content area
   return (
     <div 
-      className="bg-[#070818] w-full"
-      style={{ 
-        height: '100dvh',
-        overflow: 'hidden',
-        position: 'relative',
-        paddingTop: 'env(safe-area-inset-top, 47px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        paddingLeft: 'env(safe-area-inset-left, 0px)',
-        paddingRight: 'env(safe-area-inset-right, 0px)'
-      }}
+      className="bg-[#070818] w-full relative"
     >
       {/* Free BUZZ Reward Handler - Non interferisce con Stripe */}
       <BuzzRewardHandler onRewardRedeemed={handleBuzzSuccess} />
       
-      <UnifiedHeader />
+      {/* 🔧 FIX: UnifiedHeader RIMOSSO - già gestito da GlobalLayout per fullscreen routes */}
       
       {/* Decorative gradient effect at top - INSTANT (no delay) */}
       <div
@@ -130,38 +122,28 @@ export const BuzzPage: React.FC = () => {
         }}
       />
       
-      {/* Main scrollable content - FIX: reduced padding to fit all content */}
+      {/* Main content - 🔧 FIX v2: No extra padding, GlobalLayout handles it */}
       <main
-        style={{
-          paddingTop: 'calc(90px + env(safe-area-inset-top, 0px))',
-          paddingBottom: 'calc(90px + env(safe-area-inset-bottom, 34px))',
-          height: '100dvh',
-          overflowY: 'auto',
-          position: 'relative',
-          zIndex: 0
-        }}
+        className="relative"
+        style={{ zIndex: 0 }}
       >
         <div className="container mx-auto px-4">
           {/* © 2025 Joseph MULÉ – M1SSION™ */}
           
 
-          {/* M1U Pill Slot - Buzz (fixed overlay aligned like Home) */}
+          {/* M1U Pill Slot - Buzz (inline, scrolls with content)
+              🔧 FIX v6: First content offset for AION-like scroll under header */}
           <div 
             id="m1u-pill-buzz-slot" 
-            className="fixed z-[1000] flex items-center gap-2"
-            style={{ 
-              top: 'calc(env(safe-area-inset-top, 0px) + 96px)',
-              left: 'max(1rem, env(safe-area-inset-left, 0px))',
-              pointerEvents: 'auto' 
-            }}
+            className="flex items-center gap-2 mb-4 m1-first-content-offset-compact"
             aria-hidden={false}
           >
             <M1UPill showLabel showPlusButton />
           </div>
 
 
-          {/* Container centrato - FIX: reduced min-height to show all content */}
-          <div className="flex flex-col items-center justify-center" style={{ minHeight: 'calc(100dvh - 220px)', paddingTop: '50px' }}>
+          {/* Container centrato - 🔧 FIX v2: Simpler layout, no calc that can break */}
+          <div className="flex flex-col items-center justify-center py-4">
             
             {/* 🚨 START M1SSION GATE: Show overlay when not enrolled (V4: no flash) */}
             <AnimatePresence mode="wait">

@@ -111,34 +111,19 @@ const Notifications = () => {
   }
 
   // Main notifications/messages page - GlobalLayout gestisce Header e BottomNav
-  // 🔧 FIX v2: Outer container blocks iOS bounce scroll (like LeaderboardPage)
+  // 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
+  // Content scrolls behind glass header, first element has margin-top
   return (
-    <div
-      style={{
-        height: '100dvh',
-        overflow: 'hidden',
-        position: 'relative',
-        overscrollBehavior: 'none',
-      }}
-    >
     <div 
       className="w-full px-3" 
       style={{ 
-        // 🔧 FIX v3 (21/01/2026): Match IntelligencePage pattern - 80px for header + safe-area
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
-        height: '100dvh',
-        overflowY: 'auto',
-        overflowX: 'hidden',
         position: 'relative',
         zIndex: 0,
-        overscrollBehavior: 'contain',
-        WebkitOverflowScrolling: 'touch',
-        touchAction: 'pan-y',
       }}
     >
-        <div className="w-full max-w-3xl mx-auto">
-          {/* Tabs - Alzati del 7% */}
+        {/* 🔧 FIX v6: First content offset for AION-like scroll under header */}
+        <div className="w-full max-w-3xl mx-auto m1-first-content-offset">
+          {/* Tabs */}
           <Tabs 
             value={activeTab} 
             onValueChange={(v) => setActiveTab(v as 'notifications' | 'messages')}
@@ -213,7 +198,6 @@ const Notifications = () => {
           onGroupCreated={handleGroupCreated}
         />
       </div>
-    </div>
   );
 };
 

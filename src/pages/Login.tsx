@@ -121,7 +121,17 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center bg-black px-4 py-8 relative overflow-x-hidden overflow-y-auto">
+    <div 
+      className="flex flex-col items-center justify-center bg-black px-4 relative overflow-x-hidden overflow-y-auto"
+      style={{
+        // 🔧 FIX v6 (22/01/2026): Login page - full height, centered, no band/cut
+        // Uses 100dvh for iOS Safari compatibility + safe-area padding
+        minHeight: '100dvh',
+        // Safe-area padding ensures content doesn't go under notch/home indicator
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
+    >
       {/* 🚀 M1 Logo Splash Animation - 2 seconds (reduced from 7s for better UX) */}
       {showSplash && (
         <M1LogoSplash 

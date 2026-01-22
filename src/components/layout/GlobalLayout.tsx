@@ -2,7 +2,8 @@
 // © 2026 M1SSION™ — NIYVORA KFT — Joseph MULÉ
 // 
 // FIX v3: Use --app-height instead of 100vh/100dvh for iOS WKWebView compatibility
-// The 100vh bug in iOS causes content to be pushed under fixed elements
+// FIX v8: Capacitor iOS - AppDelegate handles header offset via body padding
+//         CSS overrides neutralize redundant main padding and element margin
 
 import React, { useEffect } from "react";
 import { useLocation } from "wouter";
@@ -81,80 +82,23 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   }
 
   // Full screen pages (map, buzz, games) - no header padding
-  // 🔧 FIX v3: Use --app-height for iOS WKWebView compatibility
+  // 🔧 FIX v6 (22/01/2026): AION-LIKE PATTERN - content scrolls UNDER header
+  // No paddingTop on <main> - content starts at top:0 and scrolls behind glass header
   if (isFullScreen) {
     return (
       <SafeAreaWrapper className="min-h-screen">
-        <div 
-          className="relative"
-          style={{
-            height: 'var(--app-height, 100dvh)',
-            minHeight: 'var(--app-height, 100dvh)',
-            maxHeight: 'var(--app-height, 100dvh)',
-            overflow: 'hidden',
-            position: 'relative',
-            overscrollBehavior: 'none',
-          }}
-        >
-          {/* Header - always visible */}
-          <UnifiedHeader />
-          
-          {/* Main content - INSTANT RENDER */}
-          <main 
-            key={location} 
-            className="relative global-layout-content"
-            style={{
-              height: 'var(--app-height, 100dvh)',
-              paddingTop: isCapacitor ? 'calc(80px + env(safe-area-inset-top, 0px))' : '80px',
-              paddingBottom: isCapacitor ? 'calc(64px + env(safe-area-inset-bottom, 0px))' : '64px',
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              position: 'relative',
-              zIndex: 0,
-              overscrollBehavior: 'contain',
-              WebkitOverflowScrolling: 'touch',
-              touchAction: 'pan-y',
-            }}
-          >
-            {children}
-          </main>
-          
-          {/* Bottom Navigation - wrapped for keyboard hide (iOS PWA) */}
-          <div id="m1-bottom-nav">
-            <BottomNavigation />
-          </div>
-        </div>
-      </SafeAreaWrapper>
-    );
-  }
-
-  // Standard app pages - with header padding
-  // 🔧 FIX v3: Use --app-height for iOS WKWebView compatibility
-  // Removed duplicate className padding (pt-[80px]) - using only style.paddingTop
-  return (
-    <SafeAreaWrapper className="min-h-screen">
-      <div 
-        className="relative has-bottom-nav-padding"
-        style={{
-          height: 'var(--app-height, 100dvh)',
-          minHeight: 'var(--app-height, 100dvh)',
-          maxHeight: 'var(--app-height, 100dvh)',
-          overflow: 'hidden',
-          position: 'relative',
-          overscrollBehavior: 'none',
-        }}
-      >
-        {/* Header - always visible, no transition */}
+        {/* Header - fixed position with glass effect, content scrolls behind it */}
         <UnifiedHeader />
         
-        {/* Main content with header padding - INSTANT RENDER */}
+        {/* Main content - SCROLLS UNDER HEADER (AION-like) */}
         <main 
-          key={location} // Force remount on route change for clean transition
-          className="relative global-layout-content"
+          key={location} 
+          className="relative global-layout-content m1-single-scroll-root m1-scroll-under-header"
           style={{
-            height: 'var(--app-height, 100dvh)',
-            // M1SSION™ WRAP FIX: Correct padding for header + safe-area + bottom nav
-            paddingTop: isCapacitor ? 'calc(80px + env(safe-area-inset-top, 0px))' : '80px',
+            minHeight: 'var(--app-height, 100dvh)',
+            // 🔧 FIX v6: NO paddingTop - content scrolls under the glass header
+            // Each page's first element handles its own top margin for visibility
+            paddingTop: 0,
             paddingBottom: isCapacitor ? 'calc(64px + env(safe-area-inset-bottom, 0px))' : '64px',
             overflowY: 'auto',
             overflowX: 'hidden',
@@ -172,6 +116,43 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
         <div id="m1-bottom-nav">
           <BottomNavigation />
         </div>
+      </SafeAreaWrapper>
+    );
+  }
+
+  // Standard app pages - AION-like scroll under header
+  // 🔧 FIX v6 (22/01/2026): AION-LIKE PATTERN - content scrolls UNDER header
+  // No global paddingTop - each page handles its first-element margin
+  return (
+    <SafeAreaWrapper className="min-h-screen">
+      {/* Header - fixed position with glass effect, content scrolls behind it */}
+      <UnifiedHeader />
+      
+      {/* Main content - SCROLLS UNDER HEADER (AION-like) */}
+      <main 
+        key={location}
+        className="relative global-layout-content has-bottom-nav-padding m1-single-scroll-root m1-scroll-under-header"
+        style={{
+          minHeight: 'var(--app-height, 100dvh)',
+          // 🔧 FIX v6: NO paddingTop - content scrolls under the glass header
+          // Each page's first element handles its own top margin for visibility
+          paddingTop: 0,
+          paddingBottom: isCapacitor ? 'calc(64px + env(safe-area-inset-bottom, 0px))' : '64px',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          position: 'relative',
+          zIndex: 0,
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch',
+          touchAction: 'pan-y',
+        }}
+      >
+        {children}
+      </main>
+      
+      {/* Bottom Navigation - wrapped for keyboard hide (iOS PWA) */}
+      <div id="m1-bottom-nav">
+        <BottomNavigation />
       </div>
     </SafeAreaWrapper>
   );

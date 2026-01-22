@@ -1,12 +1,15 @@
 /**
  * M1SSION™ Long Press Hook with Multi-Platform Feedback
  * Detects long press events for both mouse and touch
- * Includes haptic, audio, and visual feedback
+ * Uses centralized haptics utility for cross-platform feedback
+ * 
+ * 🔧 FIX v6 (22/01/2026): Switched to centralized haptics.ts for iOS PWA support
  * 
  * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { hapticMedium } from '@/utils/haptics';
 
 interface LongPressOptions {
   threshold?: number; // Time in ms to consider a press as a long press (default 500)
@@ -23,125 +26,21 @@ interface LongPressResult {
   onTouchStart: (e: React.TouchEvent) => void;
   onTouchEnd: () => void;
   onTouchMove: (e: React.TouchEvent) => void;
+  // 🔧 FIX v6: Added Pointer Events for better iOS support
+  onPointerDown: (e: React.PointerEvent) => void;
+  onPointerUp: () => void;
+  onPointerCancel: () => void;
+  onPointerMove: (e: React.PointerEvent) => void;
 }
 
-// Audio Context for click sound (singleton)
-let audioContext: AudioContext | null = null;
-
 /**
- * Play a short click/tap sound as feedback
- */
-const playClickSound = () => {
-  try {
-    // Create AudioContext lazily
-    if (!audioContext) {
-      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
-    
-    // Resume if suspended (required on iOS)
-    if (audioContext.state === 'suspended') {
-      audioContext.resume();
-    }
-    
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    // Short "tick" sound - 1800Hz for 30ms
-    oscillator.frequency.value = 1800;
-    oscillator.type = 'sine';
-    
-    // Fade out quickly
-    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.03);
-    
-  } catch (error) {
-    console.debug('[useLongPress] Audio feedback not available');
-  }
-};
-
-/**
- * Trigger haptic feedback (vibration) if supported
- */
-const triggerHapticFeedback = () => {
-  try {
-    // Try vibration API (Android, some desktop browsers)
-    if ('vibrate' in navigator) {
-      navigator.vibrate([50]);
-      return true;
-    }
-    
-    // Try iOS webkit haptic (PWA)
-    if ('webkit' in window && (window as any).webkit?.messageHandlers?.hapticFeedback) {
-      (window as any).webkit.messageHandlers.hapticFeedback.postMessage('medium');
-      return true;
-    }
-    
-    return false;
-  } catch (error) {
-    return false;
-  }
-};
-
-/**
- * Flash the screen edges as visual feedback
- */
-const flashVisualFeedback = () => {
-  try {
-    // Create flash overlay
-    const flash = document.createElement('div');
-    flash.style.cssText = `
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 999999;
-      background: radial-gradient(circle at center, transparent 30%, rgba(0, 209, 255, 0.3) 100%);
-      animation: longPressFlash 0.2s ease-out forwards;
-    `;
-    
-    // Add animation keyframes if not exists
-    if (!document.getElementById('longpress-flash-style')) {
-      const style = document.createElement('style');
-      style.id = 'longpress-flash-style';
-      style.textContent = `
-        @keyframes longPressFlash {
-          0% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-    
-    document.body.appendChild(flash);
-    
-    // Remove after animation
-    setTimeout(() => {
-      flash.remove();
-    }, 200);
-  } catch (error) {
-    console.debug('[useLongPress] Visual feedback error');
-  }
-};
-
-/**
- * Trigger all feedback mechanisms
+ * 🔧 FIX v6: Trigger feedback using centralized haptics utility
+ * This handles iOS PWA fallback (audio + visual) automatically
  */
 const triggerFeedback = () => {
-  // Try haptic first
-  const hapticWorked = triggerHapticFeedback();
-  
-  // Always play audio (works on iOS!)
-  playClickSound();
-  
-  // Always show visual flash for extra feedback
-  flashVisualFeedback();
-  
-  console.debug('[useLongPress] Feedback triggered - haptic:', hapticWorked);
+  // Use centralized haptic utility - handles iOS PWA fallback
+  const result = hapticMedium();
+  console.debug('[useLongPress] Feedback triggered via haptics.ts:', result);
 };
 
 /**
@@ -240,13 +139,31 @@ export const useLongPress = (
     };
   }, []);
 
+  // 🔧 FIX v6: Handle pointer events for better iOS support
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (startPos.current && isPressed.current) {
+      const moveX = Math.abs(e.clientX - startPos.current.x);
+      const moveY = Math.abs(e.clientY - startPos.current.y);
+      if (moveX > 10 || moveY > 10) {
+        clear();
+      }
+    }
+  }, [clear]);
+
   return {
+    // Mouse events (desktop)
     onMouseDown: (e: React.MouseEvent) => start(e),
     onMouseUp: clear,
     onMouseLeave: clear,
+    // Touch events (mobile fallback)
     onTouchStart: (e: React.TouchEvent) => start(e),
     onTouchEnd: clear,
-    onTouchMove: handleTouchMove
+    onTouchMove: handleTouchMove,
+    // 🔧 FIX v6: Pointer events (unified, better iOS support)
+    onPointerDown: (e: React.PointerEvent) => start(e as any),
+    onPointerUp: clear,
+    onPointerCancel: clear,
+    onPointerMove: handlePointerMove,
   };
 };
 

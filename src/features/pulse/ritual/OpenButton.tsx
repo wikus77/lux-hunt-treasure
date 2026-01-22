@@ -1,13 +1,15 @@
-// @ts-nocheck
 /**
  * The Pulse™ — OPEN Button (Deep 2.5D with Haptics)
  * Appears at ritual reveal phase; provides haptic feedback and claim action
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * 
+ * 🔧 FIX v7 (22/01/2026): Uses centralized haptics.ts (Capacitor-only)
  */
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { hapticHeavy, hapticLight } from '@/utils/haptics';
 
 interface OpenButtonProps {
   ritualId: number | null;
@@ -20,22 +22,12 @@ export function OpenButton({ ritualId, onClaimed, mode = 'prod' }: OpenButtonPro
   const [isPressed, setIsPressed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // 🔧 FIX v7: Use centralized haptics utility (Capacitor native only)
   const triggerHaptics = (style: 'heavy' | 'light') => {
-    try {
-      // Web Vibration API (PWA-compatible)
-      if ('vibrate' in navigator) {
-        const pattern = style === 'heavy' ? [12] : [6];
-        navigator.vibrate(pattern);
-      }
-      
-      // Capacitor Haptics (if available, for native builds)
-      // @ts-ignore - Capacitor might not be available in types
-      if (typeof window !== 'undefined' && window.Capacitor?.Plugins?.Haptics) {
-        // @ts-ignore
-        window.Capacitor.Plugins.Haptics.impact({ style: style === 'heavy' ? 'Heavy' : 'Light' });
-      }
-    } catch (err) {
-      console.debug('[Haptics] Not available:', err);
+    if (style === 'heavy') {
+      hapticHeavy();
+    } else {
+      hapticLight();
     }
   };
 

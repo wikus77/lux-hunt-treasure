@@ -19,32 +19,21 @@ import { MotivationalPopup } from '@/components/feedback';
 const IntelligencePage: React.FC = () => {
   const aionRef = useRef<AionEntityHandle>(null);
 
+  // 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
+  // Content scrolls behind glass header, first element has margin-top
   return (
-    <>
-    {/* 🔧 FIX v5: SAME pattern as LeaderboardPage - double wrapper with 100dvh */}
-    <div
-      style={{
-        height: '100dvh',
-        overflow: 'hidden',
-        position: 'relative',
-        overscrollBehavior: 'none', // BLOCK body-level bounce
-      }}
-    >
-      {/* Inner container - NO SCROLL, flex fills space */}
       <div 
         className="flex flex-col px-3"
         style={{
-          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)', // Header space
-          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 64px)', // Bottom nav height only
-          height: '100dvh',
-          overflow: 'hidden', // NO scroll - flex distributes space
           position: 'relative',
           zIndex: 0,
         }}
       >
-        {/* M1U Pill - SEMPRE VISIBILE subito - z-index alto */}
+        {/* M1U Pill - SEMPRE VISIBILE subito - z-index alto
+            🔧 FIX v6: First content offset for AION-like scroll under header */}
         <div 
           data-onboarding="m1u-pill"
+          className="m1-first-content-offset-compact"
           style={{ 
             pointerEvents: 'auto',
             marginBottom: '3px',
@@ -129,12 +118,10 @@ const IntelligencePage: React.FC = () => {
           <InactivityHint type="aion" />
         </div>
         */}
+      
+        {/* 🎯 Motivational Popup - Shows once per session for AION page */}
+        <MotivationalPopup pageType="aion" />
       </div>
-    </div>
-    
-    {/* 🎯 Motivational Popup - Shows once per session for AION page */}
-    <MotivationalPopup pageType="aion" />
-    </>
   );
 };
 

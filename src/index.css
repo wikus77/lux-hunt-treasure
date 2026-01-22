@@ -811,4 +811,95 @@ nav[style*="position: fixed"] {
   transition: opacity 0.15s ease-out, visibility 0.15s ease-out, transform 0.15s ease-out;
 }
 
-/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   🔧 iOS DRAGGABLE OVERLAY FIX (22/01/2026)
+   Prevents motion.div transforms from creating draggable content on iOS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Ensure body never becomes a scroll trap on native iOS */
+body.is-native .global-layout-content {
+  /* Prevent nested scroll issues */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Reset transforms on visibility change (app background/foreground) */
+body.is-native [style*="translateY"] {
+  /* Ensure touch events work properly */
+  touch-action: pan-y;
+}
+
+/* Prevent pull-to-refresh from creating persistent transforms */
+body.is-native .mission-sync-content {
+  will-change: auto !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🔧 AION-LIKE SCROLL UNDER HEADER (22/01/2026)
+   Content scrolls behind the glass header - no "band" under header
+   
+   🔧 FIX v8 (22/01/2026): Capacitor iOS offset fix
+   AppDelegate.swift injects body/main padding-top with !important
+   So m1-first-content-offset classes must NOT duplicate the header offset
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Mark content that scrolls under header */
+.m1-scroll-under-header {
+  /* Content starts at top:0, scrolls behind the fixed glass header */
+  padding-top: 0 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   First content element offset classes
+   
+   WEB (no Capacitor): needs full header + safe-area offset
+   CAPACITOR iOS: AppDelegate injects padding, so only breathing room needed
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Default (WEB): Full offset = header height + safe-area + breathing room */
+.m1-first-content-offset {
+  margin-top: calc(80px + env(safe-area-inset-top, 0px) + 16px);
+}
+
+.m1-first-content-offset-compact {
+  margin-top: calc(80px + env(safe-area-inset-top, 0px) + 8px);
+}
+
+.m1-first-content-offset-spacious {
+  margin-top: calc(80px + env(safe-area-inset-top, 0px) + 24px);
+}
+
+/* 🔧 FIX v8: CAPACITOR iOS OFFSET FIX
+   
+   DESIGN: Content appears IMMEDIATELY BELOW the fixed header (not scroll-under)
+   
+   On Capacitor iOS, AppDelegate.swift injects:
+   - body { padding-top: safe-area + 76px } → creates space for header
+   - main { padding-top: safe-area + 80px } → ADDITIONAL space (problematic!)
+   
+   The m1-first-content-offset classes add EVEN MORE margin-top.
+   
+   FIX: When AppDelegate handles header spacing, pages should NOT add extra margin.
+   Keep AppDelegate body padding (correct), neutralize redundant main padding and element margin.
+*/
+
+/* Neutralize redundant first-element margin on Capacitor iOS */
+html.capacitor-ios .m1-first-content-offset,
+html[data-capacitor="ios"] .m1-first-content-offset,
+html.capacitor-ios .m1-first-content-offset-compact,
+html[data-capacitor="ios"] .m1-first-content-offset-compact,
+html.capacitor-ios .m1-first-content-offset-spacious,
+html[data-capacitor="ios"] .m1-first-content-offset-spacious {
+  /* AppDelegate already handled header offset via body padding */
+  margin-top: 0 !important;
+}
+
+/* Neutralize AppDelegate's redundant main padding-top injection
+   AppDelegate injects BOTH body AND main padding - we only need ONE.
+   Keep body padding (creates header space), remove main padding (redundant) */
+html.capacitor-ios main,
+html[data-capacitor="ios"] main {
+  padding-top: 0 !important;
+}
+
+/* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

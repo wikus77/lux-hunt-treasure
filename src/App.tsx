@@ -88,8 +88,17 @@ import { useKeyboardVisible } from "./hooks/useKeyboardVisible";
 import { ViewportHUD } from "./components/debug/ViewportHUD";
 // 📏 VIEWPORT HEIGHT FIX: Initialize --app-height for iOS WKWebView
 import { initViewportHeight } from "./utils/viewportHeight";
+// 📱 NATIVE DETECTION: For scoped native-only CSS fixes
+import { Capacitor } from '@capacitor/core';
 
 function App() {
+  // 📱 NATIVE CLASS: Add 'is-native' to body for scoped iOS WKWebView fixes
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      document.body.classList.add('is-native');
+      console.log('📱 [App] Native platform detected, added is-native class');
+    }
+  }, []);
   // 🚀 NATIVE APP FEEL: Show splash on EVERY app launch (but only once per session)
   // sessionStorage clears when app is closed, localStorage persists
   const [showSplash, setShowSplash] = useState(() => {

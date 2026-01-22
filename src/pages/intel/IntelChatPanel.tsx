@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Intel Chat Panel - AION Communication Interface with M1U Logic
+// 🔧 FIX v9 (22/01/2026): Added iOS keyboard gap handling with visualViewport
 
 import React, { useState, useRef, useEffect, RefObject } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +10,7 @@ import { useTTS } from '@/components/intel/hooks/useTTS';
 import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION Cashback Vault™
 import { useAionDynamicIsland } from '@/hooks/useAionDynamicIsland'; // 🎙️ DI SOLO per AION
 import type { AionEntityHandle, Viseme } from '@/components/aion/AionEntity';
+import { useKeyboardVisible } from '@/hooks/useKeyboardVisible'; // 🔧 FIX v9: iOS keyboard detection
 
 interface Message {
   id: string;
@@ -67,6 +69,35 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sessionIdRef = useRef<string>(`session_${Date.now()}`);
+  
+  // 🔧 FIX v9: iOS keyboard gap handling
+  const isKeyboardOpen = useKeyboardVisible(100);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+  
+  // 🔧 FIX v9: Track visualViewport for iOS keyboard positioning
+  useEffect(() => {
+    const updateKeyboardOffset = () => {
+      if (window.visualViewport) {
+        // When keyboard opens, visualViewport shrinks
+        // The gap = innerHeight - visualViewport.height
+        const gap = window.innerHeight - window.visualViewport.height;
+        setKeyboardOffset(gap > 50 ? gap : 0);
+      }
+    };
+    
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateKeyboardOffset);
+      window.visualViewport.addEventListener('scroll', updateKeyboardOffset);
+      updateKeyboardOffset();
+    }
+    
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', updateKeyboardOffset);
+        window.visualViewport.removeEventListener('scroll', updateKeyboardOffset);
+      }
+    };
+  }, []);
   
   const { speak, stop: stopTTS, isSpeaking, unlockAudio } = useTTS();
   const { accrueFromAion } = useCashbackWallet(); // 🆕 M1SSION Cashback Vault™
@@ -378,6 +409,9 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         background: 'rgba(7, 8, 24, 0.6)',
         backdropFilter: 'blur(12px)',
         border: '1px solid rgba(0, 212, 255, 0.2)',
+        // 🔧 FIX v9: Shrink panel when keyboard is open to prevent gap
+        marginBottom: isKeyboardOpen ? `${keyboardOffset}px` : undefined,
+        transition: 'margin-bottom 0.2s ease-out',
         ...style
       }}
     >

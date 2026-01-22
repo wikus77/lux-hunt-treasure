@@ -49,12 +49,20 @@ export function ChatView({
     }
   }, [messages]);
 
+  // 🔧 FIX v9: Track keyboard offset using visualViewport for precise positioning
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+  
   // ✅ Detect keyboard using visualViewport ONLY (no auto-focus!)
   useEffect(() => {
     const handleResize = () => {
       if (window.visualViewport) {
         const keyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
         setIsKeyboardOpen(keyboardOpen);
+        
+        // 🔧 FIX v9: Calculate exact keyboard height
+        // gap = layoutViewport - visualViewport (the space taken by keyboard)
+        const gap = window.innerHeight - window.visualViewport.height;
+        setKeyboardOffset(gap > 50 ? gap : 0);
       }
     };
 
@@ -176,14 +184,17 @@ export function ChatView({
         </div>
       </div>
 
-      {/* Messages Container - SCROLLABLE ONLY THIS PART */}
+      {/* Messages Container - SCROLLABLE ONLY THIS PART 
+          🔧 FIX v9: Adjust bottom based on keyboard state */}
       <div 
         className="absolute left-0 right-0 overflow-y-auto overscroll-contain"
         style={{
           top: `calc(72px + ${safeAreaTop} + ${headerHeight}px)`, // Sotto UnifiedHeader + Chat Header
+          // 🔧 FIX v9: When keyboard open, messages area shrinks properly
           bottom: isKeyboardOpen ? `${inputHeight + 8}px` : `${inputHeight + 108}px`, // Sopra input bar (+ bottom nav se visibile)
           paddingTop: '8px',
           paddingBottom: '16px',
+          transition: 'bottom 0.15s ease-out',
         }}
       >
         <div className="px-4 space-y-1">
@@ -229,15 +240,21 @@ export function ChatView({
         </div>
       </div>
 
-      {/* Input Bar - SEMPRE VISIBILE sopra bottom nav */}
+      {/* Input Bar - SEMPRE VISIBILE sopra bottom nav 
+          🔧 FIX v9: Use visualViewport height for iOS keyboard positioning */}
       <div 
         className="fixed left-0 right-0 border-t border-white/10 bg-gray-900/95 backdrop-blur-sm"
         style={{ 
-          // Bottom nav: 64px pill + padding. Su iPhone: ~100px totali
+          // 🔧 FIX v9: When keyboard open, position at bottom of visualViewport
+          // keyboardOffset = innerHeight - visualViewport.height
+          // So input sits at: bottom: 0 + NO safe-area (keyboard replaces it)
           bottom: isKeyboardOpen ? '0px' : '100px',
-          paddingBottom: isKeyboardOpen ? 'env(safe-area-inset-bottom, 8px)' : '8px',
+          // 🔧 FIX v9: No safe-area padding when keyboard is open (keyboard handles it)
+          paddingBottom: isKeyboardOpen ? '8px' : '8px',
           minHeight: `${inputHeight}px`,
           zIndex: 60000,
+          // 🔧 FIX v9: Smooth transition
+          transition: 'bottom 0.15s ease-out',
         }}
       >
         <div className="flex items-center gap-2 px-3 h-full">

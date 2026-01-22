@@ -74,6 +74,31 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
     };
   }, [isMissionVisible, registerActivePopup, unregisterActivePopup]);
 
+  // 🔧 FIX v4 (21/01/2026): Reset showFinalCelebration if user navigates away
+  // This prevents the full-screen overlay from blocking UI after navigation
+  useEffect(() => {
+    if (showFinalCelebration && location !== '/home') {
+      console.log('[MicroMissions] 🔧 Navigation detected during celebration - auto-closing');
+      setShowFinalCelebration(false);
+      // Also mark as completed to prevent it showing again
+      localStorage.setItem('m1_micro_missions_completed', 'true');
+    }
+  }, [location, showFinalCelebration]);
+
+  // 🔧 FIX v4 (21/01/2026): Cleanup on unmount - reset body styles if any overlay was shown
+  useEffect(() => {
+    return () => {
+      // Remove any highlight classes that might have been left
+      document.querySelectorAll('.micro-mission-highlight').forEach(el => {
+        el.classList.remove('micro-mission-highlight');
+      });
+      // Ensure scroll is restored
+      if (document.body.style.overflow === 'hidden') {
+        document.body.style.overflow = '';
+      }
+    };
+  }, []);
+
   // 🔥 FIX 16/01/2026: State per DB check (anti-exploit!)
   const [dbCheckDone, setDbCheckDone] = useState(false);
   const [alreadyCompletedInDb, setAlreadyCompletedInDb] = useState(false);

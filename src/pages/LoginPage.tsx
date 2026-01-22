@@ -1,5 +1,7 @@
 // Pagina di autenticazione (Login/Register)
+// 🔧 FIX v11: Uses createPortal like LegalOnboarding for proper iOS WKWebView centering
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, Shield, ArrowRight } from 'lucide-react';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
@@ -10,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 
 interface FormData {
   email: string;
@@ -203,46 +204,63 @@ const LoginPage: React.FC = () => {
     return 'Errore imprevisto. Riprova.';
   };
 
+  // 🔧 FIX v10: Removed transform variants (y: 20) - they break centering in WKWebView
+  // Using opacity-only animations to prevent transform stacking context issues
   const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      y: 0,
       transition: {
-        duration: 0.6,
-        staggerChildren: 0.1
+        duration: 0.4,
+        staggerChildren: 0.05
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 }
   };
 
   if (authLoading) {
-    return (
-      <SafeAreaWrapper className="min-h-screen bg-background flex items-center justify-center">
+    // 🔧 FIX v11: Use createPortal for loading state too
+    return createPortal(
+      <div className="fixed inset-0 bg-background z-[100] flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full"
         />
-      </SafeAreaWrapper>
+      </div>,
+      document.body
     );
   }
 
-  return (
-    <SafeAreaWrapper className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(0,209,255,0.1),transparent)]" />
+  // 🔧 FIX v11: Use createPortal like LegalOnboarding for proper iOS WKWebView centering
+  // This ensures the modal is rendered at document.body level, avoiding transform stacking issues
+  return createPortal(
+    <div 
+      className="fixed inset-0 bg-background z-[100]"
+      style={{
+        paddingTop: 'max(env(safe-area-inset-top, 16px), 16px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 16px), 16px)',
+        paddingLeft: '16px',
+        paddingRight: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflowY: 'auto',
+      }}
+    >
+      {/* Background Effects - inside fixed container */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(0,209,255,0.1),transparent)] pointer-events-none" />
       
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative z-10 min-h-screen flex items-center justify-center p-4"
+        className="relative z-10 w-full max-w-md my-auto"
       >
         <motion.div variants={itemVariants} className="w-full max-w-md">
           {/* Logo/Title */}
@@ -487,7 +505,8 @@ const LoginPage: React.FC = () => {
           </motion.div>
         </motion.div>
       </motion.div>
-    </SafeAreaWrapper>
+    </div>,
+    document.body
   );
 };
 

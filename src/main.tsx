@@ -9,6 +9,7 @@ import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/supabase/clientUtils';
 import '@/lib/pwa/sw-autorun';
 
 import React from 'react';
+// __M1_BUILD_STAMP__=1769059557
 import ReactDOM from 'react-dom/client';
 import * as Sentry from "@sentry/react";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -43,6 +44,44 @@ import { populateKnowledgeBase } from '@/utils/populateKnowledgeBase';
 if (typeof window !== 'undefined') {
   (window as any).__populateKB__ = populateKnowledgeBase;
   console.log('✅ [GLOBAL] window.__populateKB__ disponibile (main.tsx)');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 🔬 UI GAP INSPECTOR - Diagnoses "gap under header" issues on iOS
+// WORKS IN ALL BUILDS - Activated via localStorage or URL param
+// ═══════════════════════════════════════════════════════════════════════════
+if (typeof window !== 'undefined') {
+  // UI Gap Inspector - Always load, feature-flagged activation
+  import('./debug/uiGapInspector')
+    .then((module) => {
+      module.initUiGapInspector();
+    })
+    .catch((e) => {
+      console.warn('[UI-GAP] Inspector load failed (non-critical):', e);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 🔬 FORENSIC PROBE - iOS WKWebView Draggable Overlay Diagnostic
+// DEV ONLY - Loads on iOS user agent OR with ?forensic=1 URL parameter
+// ═══════════════════════════════════════════════════════════════════════════
+if (typeof window !== 'undefined') {
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const url = new URL(window.location.href);
+  const forensicFlag = url.searchParams.get('forensic') === '1';
+  const isDev = import.meta.env.DEV;
+  
+  if (isDev && (isIOS || forensicFlag)) {
+    console.log('[FORENSIC-BOOTSTRAP] ✅ Conditions met, loading probe...');
+    import('./debug/forensicProbe')
+      .then((module) => {
+        module.initForensicProbe();
+      })
+      .catch((e) => {
+        console.error('[FORENSIC-BOOTSTRAP] ❌ Import FAILED:', e);
+      });
+  }
 }
 
 
@@ -709,6 +748,7 @@ if (typeof window !== 'undefined') {
   setTimeout(() => {
     initDiagnostics();
   }, 100);
+
 }
 
 // Enhanced global error handling with flood prevention

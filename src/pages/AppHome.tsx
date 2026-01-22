@@ -189,31 +189,16 @@ const { isConnected } = useRealTimeNotifications();
 
   return (
     <>
-      {/* 🔧 FIX v2: Outer container blocks iOS bounce scroll (like LeaderboardPage) */}
-      <div
+      {/* 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
+          Content scrolls behind the glass header (no "band" under header).
+          First content element has margin-top for initial visibility. */}
+      <div 
+        className="m1-app-bg relative m1-single-scroll-root"
         style={{
-          height: '100dvh',
-          overflow: 'hidden',
           position: 'relative',
-          overscrollBehavior: 'none',
+          zIndex: 0,
         }}
       >
-      <div 
-        className="m1-app-bg relative"
-      style={{
-        // 🔧 FIX v3 (21/01/2026): Match IntelligencePage pattern - 80px for header + safe-area
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
-        height: '100dvh',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        position: 'relative',
-        zIndex: 0,
-        overscrollBehavior: 'contain',
-        WebkitOverflowScrolling: 'touch',
-        touchAction: 'pan-y',
-      }}
-    >
       {/* Micro-grain overlay for depth */}
       <div className="m1-grain" />
       
@@ -227,7 +212,7 @@ const { isConnected } = useRealTimeNotifications();
         <AnimatePresence>
           {isLoaded && (
             <motion.div
-              className="relative min-h-screen overflow-y-auto"
+              className="relative"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
@@ -255,8 +240,11 @@ const { isConnected } = useRealTimeNotifications();
               )}
 
                   <div className="container mx-auto px-3 pb-20">
-                {/* 🚀 PILLS - Layout flex, scorrono con pagina - +5% margin top per visibilità */}
-                <div className="flex justify-between items-start mb-4 mt-[5%] overflow-visible">
+                {/* 🚀 PILLS - Layout flex, scorrono con pagina
+                    🔧 FIX v6: First content offset for AION-like scroll under header */}
+                <div 
+                  className="flex justify-between items-start mb-4 overflow-visible m1-first-content-offset"
+                >
                   {/* Colonna sinistra - overflow-visible per pill-orb rings */}
                   <div className="flex flex-col gap-2 overflow-visible">
                     <motion.div
@@ -436,7 +424,6 @@ const { isConnected } = useRealTimeNotifications();
         onClose={() => setShowFortuneWheel(false)} 
       />
       </MissionSync>
-    </div>
     </div>
     </>
   );

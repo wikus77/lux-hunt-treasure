@@ -188,4 +188,97 @@
   }
 }
 
+/* ========================================
+   iOS NATIVE WRAPPER FIXES (WKWebView)
+   Scoped to body.is-native to avoid PWA regressions
+   ======================================== */
+
+/**
+ * Fix layout issues specific to Capacitor iOS WKWebView
+ * These rules ONLY apply when app runs in native wrapper
+ * 
+ * 🔧 FIX 22/01/2026: REMOVED position:fixed from body
+ * position:fixed on body creates a stacking context that breaks
+ * scroll behavior and causes the "draggable overlay" bug on iOS
+ */
+body.is-native {
+  /* Prevent overscroll bounce at body level */
+  overscroll-behavior: none;
+  /* 🚨 DO NOT USE position:fixed here - causes draggable overlay bug! */
+  /* Use overscroll-behavior instead for bounce prevention */
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Ensure full height without breaking scroll context */
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/**
+ * Ensure modals with fixed positioning work correctly
+ * WKWebView can have issues with transform stacking contexts
+ */
+body.is-native .fixed {
+  /* Force GPU layer for fixed elements */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/**
+ * Safe area inset corrections for native
+ * WKWebView may report different values than Safari PWA
+ */
+body.is-native [data-safe-area-top] {
+  padding-top: env(safe-area-inset-top, 47px);
+}
+
+body.is-native [data-safe-area-bottom] {
+  padding-bottom: env(safe-area-inset-bottom, 34px);
+}
+
+/* ========================================
+   🔧 FIX v4 (22/01/2026): Anti-Draggable Overlay Defense
+   Prevents the "draggable half-page" bug on iOS WKWebView
+   ======================================== */
+
+/**
+ * Single scroll root marker - ensures ONE element handles scrolling
+ * Applied by GlobalLayout and AppHome
+ */
+body.is-native .m1-single-scroll-root {
+  /* Ensure this is THE scroll container */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  /* Prevent any inherited transforms from creating drag effect */
+  transform: none !important;
+}
+
+/**
+ * Prevent motion.div children from creating persistent transforms
+ * when not actively in a gesture
+ */
+body.is-native .m1-single-scroll-root > div:not([style*="translateY"]) {
+  transform: none;
+}
+
+/**
+ * Kill any lingering translateY on idle content
+ * This is aggressive but necessary for iOS
+ */
+body.is-native [data-idle-content="true"] {
+  transform: none !important;
+  will-change: auto !important;
+}
+
+/**
+ * Ensure no element inside single scroll root creates a nested scroll trap
+ */
+body.is-native .m1-single-scroll-root * {
+  /* Only allow overflow on explicitly marked elements */
+  --m1-allow-scroll: 0;
+}
+
+body.is-native .m1-single-scroll-root [data-allow-scroll="true"] {
+  --m1-allow-scroll: 1;
+}
+
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

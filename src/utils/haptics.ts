@@ -1,63 +1,20 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Haptic Feedback Utility - Vibrazioni per feedback tattile
-// M1SSION™ WRAP FIX: Added Capacitor Haptics support for iOS native
+// © 2026 M1SSION™ — NIYVORA KFT — Joseph MULÉ
+// Haptic Feedback Utility - CAPACITOR iOS NATIVE ONLY
+// 
+// ⚠️ CRITICAL: This module is designed for Capacitor native apps ONLY.
+// If called outside Capacitor runtime, it will:
+// - DEV: throw Error + console.error
+// - PROD: log error + return false (no crash, but tracked)
+
+import { isCapacitorNative, getCapacitorPlatform } from '@/utils/capacitor';
 
 /**
- * Haptic Feedback Types
- * - light: feedback leggero per tap/click
- * - medium: feedback medio per conferme
- * - heavy: feedback forte per azioni importanti
- * - success: pattern per successo/achievement
- * - error: pattern per errori
- * - warning: pattern per warning
+ * Haptic Feedback Types supported by iOS native
  */
+export type HapticType = 'light' | 'medium' | 'heavy' | 'success' | 'error' | 'warning' | 'notification' | 'selection';
 
-type HapticType = 'light' | 'medium' | 'heavy' | 'success' | 'error' | 'warning' | 'notification';
-
-// Vibration patterns in milliseconds [vibrate, pause, vibrate, pause, ...]
-const HAPTIC_PATTERNS: Record<HapticType, number | number[]> = {
-  light: 10,           // Tap leggero
-  medium: 25,          // Conferma
-  heavy: 50,           // Azione importante
-  success: [30, 50, 30, 50, 50], // Pattern successo ✓
-  error: [50, 30, 50, 30, 100],  // Pattern errore ✗
-  warning: [30, 50, 30],         // Pattern warning ⚠
-  notification: [50, 100, 50],   // Pattern notifica 🔔
-};
-
-// M1SSION™ WRAP FIX: Check if running in Capacitor native
-// Using robust detection that checks multiple indicators
-const isCapacitorNative = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  
-  // Check injected marker first (fastest)
-  if ((window as any).__CAPACITOR_NATIVE__ === true) return true;
-  
-  // Check HTML data attribute
-  if (document.documentElement?.dataset?.capacitor === 'true') return true;
-  
-  const cap = (window as any).Capacitor;
-  if (!cap) return false;
-  
-  // Official API check
-  if (cap.isNativePlatform?.()) return true;
-  
-  // Platform check
-  const platform = cap.getPlatform?.();
-  if (platform === 'ios' || platform === 'android') return true;
-  
-  // Protocol check
-  if (window.location.protocol === 'capacitor:') return true;
-  
-  return false;
-};
-
-/**
- * Check if Vibration API is supported (web fallback)
- */
-const isVibrationSupported = (): boolean => {
-  return typeof navigator !== 'undefined' && 'vibrate' in navigator;
-};
+// Track haptic unavailability for debugging
+let _hapticUnavailableLogged = false;
 
 /**
  * Check if user has enabled haptics (stored in localStorage)
@@ -69,16 +26,61 @@ const isHapticsEnabled = (): boolean => {
 };
 
 /**
- * M1SSION™ WRAP FIX: Trigger native haptics via Capacitor plugin
- * Uses @capacitor/haptics for iOS which doesn't support navigator.vibrate()
+ * 🚨 FAIL-LOUD GUARD: Check if haptics can work in current runtime
+ * @throws Error in DEV mode if not in Capacitor
+ * @returns false in PROD mode if not in Capacitor
+ */
+const guardHapticsRuntime = (caller: string): boolean => {
+  const isNative = isCapacitorNative();
+  const platform = getCapacitorPlatform();
+  
+  if (isNative) {
+    return true; // All good
+  }
+  
+  // Not in Capacitor native - this is an error condition
+  const errorMsg = `[HAPTICS] ❌ CALLED OUTSIDE CAPACITOR NATIVE RUNTIME!
+    Caller: ${caller}
+    Platform detected: ${platform}
+    isCapacitorNative(): ${isNative}
+    
+    Haptics require Capacitor native iOS/Android app.
+    If you see this in the wrapped app, there's a detection bug.
+    If you see this in browser, someone called haptics incorrectly.`;
+  
+  // Always log the error
+  console.error(errorMsg);
+  
+  // Track for analytics (only once per session)
+  if (!_hapticUnavailableLogged) {
+    _hapticUnavailableLogged = true;
+    // Could send to analytics here if needed
+    console.error('[HAPTICS] 📊 Tracked: haptics_unavailable_runtime');
+  }
+  
+  // In DEV mode: throw to make it obvious
+  if (import.meta.env.DEV) {
+    throw new Error('HAPTICS CALLED OUTSIDE CAPACITOR NATIVE RUNTIME. Check console for details.');
+  }
+  
+  // In PROD: return false silently (no crash)
+  return false;
+};
+
+/**
+ * Trigger native iOS/Android haptic via @capacitor/haptics
+ * This is the ONLY way to trigger haptics in this app.
  */
 const triggerNativeHaptic = async (type: HapticType): Promise<boolean> => {
   try {
-    // Dynamically import Capacitor Haptics to avoid bundle issues in PWA
+    // Import Capacitor Haptics
     const { Haptics, ImpactStyle, NotificationType } = await import('@capacitor/haptics');
+    
+    console.debug(`[HAPTICS] 📳 Triggering native haptic: ${type}`);
     
     switch (type) {
       case 'light':
+      case 'selection':
         await Haptics.impact({ style: ImpactStyle.Light });
         break;
       case 'medium':
@@ -102,64 +104,70 @@ const triggerNativeHaptic = async (type: HapticType): Promise<boolean> => {
       default:
         await Haptics.impact({ style: ImpactStyle.Light });
     }
+    
+    console.debug(`[HAPTICS] ✅ Native haptic triggered: ${type}`);
     return true;
   } catch (error) {
-    console.debug('[Haptics] Native haptic failed:', error);
+    console.error('[HAPTICS] ❌ Native haptic FAILED:', error);
+    console.error('[HAPTICS] This should NOT happen in Capacitor native. Check plugin sync.');
     return false;
   }
 };
 
 /**
- * Trigger haptic feedback
+ * Main haptic trigger function
+ * 
  * @param type - Type of haptic feedback
- * @returns boolean - true if vibration was triggered
+ * @returns Promise<boolean> - true if haptic was triggered
+ * 
+ * ⚠️ CAPACITOR NATIVE ONLY - Will fail-loud if called outside Capacitor
  */
-export const haptic = (type: HapticType = 'light'): boolean => {
-  try {
-    // Check if enabled
-    if (!isHapticsEnabled()) {
-      return false;
-    }
-
-    // M1SSION™ WRAP FIX: Use native Capacitor haptics on iOS
-    // navigator.vibrate() does NOT work on iOS Safari/WKWebView
-    if (isCapacitorNative()) {
-      triggerNativeHaptic(type); // Fire and forget (async)
-      return true;
-    }
-
-    // Web fallback (Android Chrome, etc.)
-    if (!isVibrationSupported()) {
-      return false;
-    }
-
-    const pattern = HAPTIC_PATTERNS[type];
-    navigator.vibrate(pattern);
-    return true;
-  } catch (error) {
-    // Silently fail - haptics are optional
-    console.debug('[Haptics] Vibration failed:', error);
+export const haptic = async (type: HapticType = 'light'): Promise<boolean> => {
+  // Guard: Check runtime environment
+  if (!guardHapticsRuntime(`haptic(${type})`)) {
     return false;
   }
+  
+  // Check user preference
+  if (!isHapticsEnabled()) {
+    console.debug('[HAPTICS] Disabled by user preference');
+    return false;
+  }
+  
+  // Trigger native haptic
+  return triggerNativeHaptic(type);
+};
+
+/**
+ * Synchronous wrapper for haptic (fire-and-forget)
+ * Use this when you don't need to await the result
+ */
+export const hapticSync = (type: HapticType = 'light'): void => {
+  haptic(type).catch(err => {
+    console.error('[HAPTICS] Async error (ignored):', err);
+  });
 };
 
 /**
  * Shortcut functions for common haptic types
+ * All are fire-and-forget (synchronous interface)
  */
-export const hapticLight = () => haptic('light');
-export const hapticMedium = () => haptic('medium');
-export const hapticHeavy = () => haptic('heavy');
-export const hapticSuccess = () => haptic('success');
-export const hapticError = () => haptic('error');
-export const hapticWarning = () => haptic('warning');
-export const hapticNotification = () => haptic('notification');
+export const hapticLight = (): void => hapticSync('light');
+export const hapticMedium = (): void => hapticSync('medium');
+export const hapticHeavy = (): void => hapticSync('heavy');
+export const hapticSuccess = (): void => hapticSync('success');
+export const hapticError = (): void => hapticSync('error');
+export const hapticWarning = (): void => hapticSync('warning');
+export const hapticNotification = (): void => hapticSync('notification');
+export const hapticSelection = (): void => hapticSync('selection');
 
 /**
- * Enable/disable haptics
+ * Enable/disable haptics (user preference)
  */
 export const setHapticsEnabled = (enabled: boolean): void => {
   if (typeof localStorage !== 'undefined') {
     localStorage.setItem('m1_haptics_enabled', String(enabled));
+    console.debug('[HAPTICS] User preference set:', enabled);
   }
 };
 
@@ -176,50 +184,25 @@ export const getHapticsEnabled = (): boolean => {
 export const toggleHaptics = (): boolean => {
   const newState = !isHapticsEnabled();
   setHapticsEnabled(newState);
-  if (newState) {
-    haptic('light'); // Feedback to confirm haptics are on
+  if (newState && isCapacitorNative()) {
+    hapticSync('light'); // Feedback to confirm haptics are on
   }
   return newState;
 };
 
 /**
- * Custom vibration pattern
- * @param pattern - Array of [vibrate, pause, vibrate, pause, ...]
+ * Check if haptics are available in current runtime
+ * @returns true if in Capacitor native with haptics plugin
  */
-export const hapticCustom = (pattern: number[]): boolean => {
-  try {
-    if (!isVibrationSupported() || !isHapticsEnabled()) {
-      return false;
-    }
-    navigator.vibrate(pattern);
-    return true;
-  } catch {
-    return false;
-  }
+export const isHapticsAvailable = (): boolean => {
+  return isCapacitorNative();
 };
 
 /**
- * Stop any ongoing vibration
+ * Haptic Manager object for compatibility with existing code
  */
-export const hapticStop = (): void => {
-  try {
-    if (isVibrationSupported()) {
-      navigator.vibrate(0);
-    }
-  } catch {
-    // Silently fail
-  }
-};
-
-// HapticType for compatibility
-export type HapticType = 'light' | 'medium' | 'heavy' | 'success' | 'error' | 'warning' | 'notification' | 'selection';
-
-// Haptic Manager object for compatibility with existing code
 export const hapticManager = {
-  trigger: (type: HapticType = 'light') => {
-    if (type === 'selection') return haptic('light');
-    return haptic(type as any);
-  },
+  trigger: (type: HapticType = 'light') => hapticSync(type),
   light: hapticLight,
   medium: hapticMedium,
   heavy: hapticHeavy,
@@ -227,13 +210,42 @@ export const hapticManager = {
   error: hapticError,
   warning: hapticWarning,
   notification: hapticNotification,
-  custom: hapticCustom,
-  stop: hapticStop,
+  selection: hapticSelection,
   setEnabled: setHapticsEnabled,
   getEnabled: getHapticsEnabled,
   toggle: toggleHaptics,
-  isSupported: isVibrationSupported,
+  isAvailable: isHapticsAvailable,
 };
 
-// Export default object for convenience
+// Debug helper - expose on window for console testing
+if (typeof window !== 'undefined') {
+  (window as any).__M1_HAPTICS_DEBUG = () => {
+    const native = isCapacitorNative();
+    const platform = getCapacitorPlatform();
+    const enabled = isHapticsEnabled();
+    
+    console.log('🔍 M1SSION™ Haptics Debug:');
+    console.log('  - isCapacitorNative():', native);
+    console.log('  - getCapacitorPlatform():', platform);
+    console.log('  - isHapticsEnabled():', enabled);
+    console.log('  - Can trigger haptics:', native && enabled);
+    
+    if (native) {
+      console.log('  ✅ Haptics should work! Try: window.__M1_HAPTICS_DEBUG.test()');
+    } else {
+      console.log('  ❌ NOT in Capacitor native - haptics will fail');
+    }
+    
+    return {
+      isNative: native,
+      platform,
+      enabled,
+      test: () => {
+        console.log('Testing haptic...');
+        hapticMedium();
+      }
+    };
+  };
+}
+
 export default hapticManager;

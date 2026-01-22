@@ -204,40 +204,22 @@ export const LeaderboardPage: React.FC = () => {
     city: <MapPin className="w-4 h-4" />
   };
 
+  // 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
+  // Content scrolls behind glass header, first element has margin-top
   return (
-    // 🔧 FIX v2: Outer container blocks iOS bounce scroll
-    <div
-      style={{
-        height: '100dvh',
-        overflow: 'hidden',
-        position: 'relative',
-        // Block body-level overscroll
-        overscrollBehavior: 'none',
-      }}
-    >
     <div 
       className="w-full overflow-x-hidden p-4 space-y-4" 
       data-onboarding="leaderboard"
       style={{
-        // 🔧 FIX v3 (21/01/2026): Match IntelligencePage pattern - 80px for header + safe-area
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
-        height: '100dvh',
-        overflowY: 'auto',
-        overflowX: 'hidden',
         position: 'relative',
         zIndex: 0,
-        // 🔧 KEY FIX: Contain scroll within this element, prevent iOS rubber-band
-        overscrollBehavior: 'contain',
-        WebkitOverflowScrolling: 'touch', // Smooth iOS scroll
-        touchAction: 'pan-y', // Only vertical scroll allowed
       }}
     >
-      {/* Header */}
+      {/* Header - 🔧 FIX v6: First content offset for AION-like scroll under header */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="text-center space-y-2"
+        className="text-center space-y-2 m1-first-content-offset-compact"
       >
         <div className="flex items-center justify-center gap-3 mb-2">
           <motion.div
@@ -575,7 +557,6 @@ export const LeaderboardPage: React.FC = () => {
       
       {/* 🎯 Motivational Popup - Shows once per session */}
       <MotivationalPopup pageType="leaderboard" />
-    </div>
     </div>
   );
 };
