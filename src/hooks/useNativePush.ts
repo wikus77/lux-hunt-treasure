@@ -11,9 +11,10 @@ import {
   isCapacitorNative,
   getPlatform,
   setPushListeners,
-  type NativePushState 
+  type NativePushState,
+  type PushNotificationSchema,
+  type ActionPerformed,
 } from '@/lib/nativePush';
-import type { PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
 import { toast } from 'sonner';
 
 export interface UseNativePushReturn {

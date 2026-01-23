@@ -1,12 +1,12 @@
 // © 2025 Joseph MULÉ – M1SSION™ - REAL Native Push Notifications
 // This module uses the REAL @capacitor/push-notifications plugin, NOT the stub
+// SAFE: Uses dynamic import to avoid crash on web/PWA
 
 import { Capacitor } from '@capacitor/core';
-import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
 import { supabase } from '@/integrations/supabase/client';
 
 // ============================================================================
-// TYPES
+// TYPES (defined locally to avoid import errors on web)
 // ============================================================================
 
 export interface NativePushState {
@@ -18,6 +18,27 @@ export interface NativePushState {
   lastError: string | null;
   lastReceived: Date | null;
   initialized: boolean;
+}
+
+// Re-define types locally to avoid importing from @capacitor/push-notifications on web
+export interface PushNotificationSchema {
+  title?: string;
+  subtitle?: string;
+  body?: string;
+  id: string;
+  tag?: string;
+  badge?: number;
+  data: any;
+}
+
+export interface ActionPerformed {
+  actionId: string;
+  inputValue?: string;
+  notification: PushNotificationSchema;
+}
+
+export interface Token {
+  value: string;
 }
 
 type PushEventListener = {
@@ -44,6 +65,7 @@ let _state: NativePushState = {
 
 let _listeners: Partial<PushEventListener> = {};
 let _initPromise: Promise<NativePushState> | null = null;
+let _pushModule: any = null; // Will hold dynamically imported module
 
 // ============================================================================
 // DEBUG LOGGING
@@ -65,14 +87,22 @@ function logPush(emoji: string, message: string, data?: any) {
  * Check if we're running in a native Capacitor environment
  */
 export function isCapacitorNative(): boolean {
-  return Capacitor.isNativePlatform();
+  try {
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
 }
 
 /**
  * Get current platform
  */
 export function getPlatform(): 'ios' | 'android' | 'web' {
-  return Capacitor.getPlatform() as 'ios' | 'android' | 'web';
+  try {
+    return Capacitor.getPlatform() as 'ios' | 'android' | 'web';
+  } catch {
+    return 'web';
+  }
 }
 
 /**
@@ -110,8 +140,13 @@ async function _initNativePushInternal(): Promise<NativePushState> {
   }
 
   try {
+    // DYNAMIC IMPORT: Only load @capacitor/push-notifications on native platforms
+    logPush('📦', 'Dynamically importing @capacitor/push-notifications...');
+    _pushModule = await import('@capacitor/push-notifications');
+    logPush('✅', 'Push module loaded successfully');
+
     // Check current permission
-    const permStatus = await PushNotifications.checkPermissions();
+    const permStatus = await _pushModule.PushNotifications.checkPermissions();
     _state.permission = permStatus.receive;
     logPush('🔐', `Current permission: ${_state.permission}`);
 
@@ -142,11 +177,15 @@ export async function requestPushPermission(): Promise<{ success: boolean; error
     await initNativePush();
   }
 
+  if (!_pushModule) {
+    return { success: false, error: 'Push module not loaded' };
+  }
+
   try {
     logPush('🔔', 'Requesting push permission...');
 
     // Request permission from user
-    const permResult = await PushNotifications.requestPermissions();
+    const permResult = await _pushModule.PushNotifications.requestPermissions();
     _state.permission = permResult.receive;
 
     logPush('📱', `Permission result: ${_state.permission}`);
@@ -157,7 +196,7 @@ export async function requestPushPermission(): Promise<{ success: boolean; error
 
     // Register with APNs/FCM
     logPush('📤', 'Registering with push service...');
-    await PushNotifications.register();
+    await _pushModule.PushNotifications.register();
 
     return { success: true };
 
@@ -180,7 +219,13 @@ export function setPushListeners(listeners: Partial<PushEventListener>) {
 // ============================================================================
 
 async function setupListeners() {
+  if (!_pushModule) {
+    logPush('⚠️', 'Cannot setup listeners - push module not loaded');
+    return;
+  }
+
   logPush('👂', 'Setting up push listeners...');
+  const PushNotifications = _pushModule.PushNotifications;
 
   // TOKEN REGISTRATION SUCCESS
   await PushNotifications.addListener('registration', async (token: Token) => {
