@@ -236,7 +236,14 @@ async function saveTokenToBackend(token: string) {
       return;
     }
 
-    const tokenData = {
+    logPush('💾', 'Saving token to Supabase...', { 
+      user_id: user.id, 
+      platform: _state.platform,
+      token_preview: token.substring(0, 10) + '...'
+    });
+
+    // Full token data with all native push columns
+    const fullTokenData = {
       user_id: user.id,
       token: token,
       platform: _state.platform,
@@ -246,50 +253,72 @@ async function saveTokenToBackend(token: string) {
         platform: _state.platform,
         registered_at: new Date().toISOString(),
       },
+      is_active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       last_used_at: new Date().toISOString(),
     };
 
-    logPush('💾', 'Saving token to Supabase...', { user_id: user.id, platform: _state.platform });
-
-    // Upsert by user_id + platform (one token per platform per user)
-    const { error } = await supabase
+    // Strategy 1: Delete existing tokens for this user+platform, then insert
+    // This avoids unique constraint issues
+    const { error: deleteError } = await supabase
       .from('push_tokens')
-      .upsert(tokenData, { 
-        onConflict: 'user_id,platform',
-        ignoreDuplicates: false 
-      });
+      .delete()
+      .eq('user_id', user.id)
+      .eq('platform', _state.platform);
 
-    if (error) {
-      // Try without onConflict if that fails
-      logPush('⚠️', 'Upsert failed, trying insert:', error);
+    if (deleteError) {
+      logPush('⚠️', 'Delete existing token failed (may not exist):', deleteError.message);
+    }
+
+    // Try full insert with all columns
+    const { error: insertError } = await supabase
+      .from('push_tokens')
+      .insert(fullTokenData);
+
+    if (insertError) {
+      logPush('⚠️', 'Full insert failed, trying minimal:', insertError.message);
       
-      // Delete old token first
+      // Fallback: Try minimal insert (old schema without new columns)
+      const minimalTokenData = {
+        user_id: user.id,
+        token: token,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Delete by token (old unique constraint)
       await supabase
         .from('push_tokens')
         .delete()
-        .eq('user_id', user.id)
-        .eq('platform', _state.platform);
+        .eq('token', token);
 
-      // Insert new
-      const { error: insertError } = await supabase
+      const { error: minimalError } = await supabase
         .from('push_tokens')
-        .insert(tokenData);
+        .insert(minimalTokenData);
 
-      if (insertError) {
-        logPush('❌', 'Token save failed:', insertError);
+      if (minimalError) {
+        logPush('❌', 'Token save completely failed:', minimalError.message);
         _state.tokenSaved = false;
+        _state.lastError = `Token save failed: ${minimalError.message}`;
         return;
       }
+      
+      logPush('⚠️', 'Token saved with MINIMAL schema (run migration!)');
+      _state.tokenSaved = true;
+      _state.lastError = 'Token saved but DB missing platform/endpoint_type columns - run migration';
+      return;
     }
 
     _state.tokenSaved = true;
-    logPush('✅', 'Push token saved to backend!');
+    _state.lastError = null;
+    logPush('✅', 'Push token saved to backend with full schema!');
 
-  } catch (error) {
+  } catch (error: any) {
     logPush('❌', 'Error saving token:', error);
     _state.tokenSaved = false;
+    _state.lastError = error.message || 'Unknown error saving token';
   }
 }
 
