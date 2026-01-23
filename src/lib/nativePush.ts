@@ -155,6 +155,19 @@ async function _initNativePushInternal(): Promise<NativePushState> {
 
     _state.initialized = true;
     logPush('✅', 'Native push initialized successfully');
+
+    // 🔧 FIX: If permission is already granted, AUTO-REGISTER immediately!
+    // This handles the case where user granted permission previously but register() was never called
+    if (_state.permission === 'granted') {
+      logPush('🔄', 'Permission already granted — auto-registering with APNs...');
+      try {
+        await _pushModule.PushNotifications.register();
+        logPush('📤', 'Auto-register called successfully');
+      } catch (regErr: any) {
+        logPush('⚠️', 'Auto-register failed (will retry on manual request):', regErr.message);
+      }
+    }
+
     return _state;
 
   } catch (error: any) {

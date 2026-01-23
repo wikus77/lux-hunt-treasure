@@ -214,17 +214,31 @@ export const NativePushDiagnostic: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2">
-          {/* Request Permission */}
-          <Button
-            size="sm"
-            variant={hasPermission ? "outline" : "default"}
-            onClick={requestPermission}
-            disabled={isLoading || hasPermission}
-            className="text-xs"
-          >
-            <Shield className="w-3 h-3 mr-1" />
-            {hasPermission ? 'Permission Granted' : 'Request Permission'}
-          </Button>
+          {/* Request Permission / Register Token */}
+          {!hasPermission ? (
+            <Button
+              size="sm"
+              variant="default"
+              onClick={requestPermission}
+              disabled={isLoading}
+              className="text-xs"
+            >
+              <Shield className="w-3 h-3 mr-1" />
+              Request Permission
+            </Button>
+          ) : (
+            /* 🔧 FIX: Always allow manual registration when permission granted but no token */
+            <Button
+              size="sm"
+              variant={state.token ? "outline" : "default"}
+              onClick={requestPermission}
+              disabled={isLoading}
+              className="text-xs"
+            >
+              <Bell className="w-3 h-3 mr-1" />
+              {state.token ? 'Re-register Token' : 'Register Token'}
+            </Button>
+          )}
 
           {/* Refresh Status */}
           <Button
@@ -268,9 +282,10 @@ export const NativePushDiagnostic: React.FC = () => {
           <div className="bg-blue-500/10 border border-blue-500/30 rounded p-2 text-xs text-blue-300">
             <strong>To enable push notifications:</strong>
             <ol className="list-decimal list-inside mt-1 space-y-1">
-              <li>Tap "Request Permission"</li>
-              <li>Allow notifications when prompted</li>
-              <li>Token will be registered automatically</li>
+              {!hasPermission && <li>Tap "Request Permission"</li>}
+              {!hasPermission && <li>Allow notifications when prompted</li>}
+              {hasPermission && !state.token && <li>Tap "Register Token" to get APNs token</li>}
+              <li>Token will be registered and saved to DB</li>
               <li>Use "Send Test Push" to verify</li>
             </ol>
           </div>
