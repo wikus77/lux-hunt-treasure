@@ -123,11 +123,16 @@ Deno.serve(async (req) => {
     }
     
     const runId = `run_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    console.log(`[AUTO-PUSH-CRON] ✅ Auth check passed (method: ${isServiceRole ? 'service_role' : providedSecret ? 'cron_secret' : 'no_secret_configured'})`);
+    const startTime = Date.now();
+    
+    // 📊 RELIABILITY: Structured logging header
+    console.log(`[AUTO-PUSH-CRON] ════════════════════════════════════════════`);
     console.log(`[AUTO-PUSH-CRON] 🆔 Run ID: ${runId}`);
-    console.log(`[AUTO-PUSH-CRON] ✅ Params: dry-run=${dryRun}, bypass-quiet=${bypassQuietHours}, force=${forceMode}, reset=${resetLogs}, force-user=${forceUserId || 'none'}`);
-    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2026-01-20-v13-DIRECT-WEBPUSH`);
-    console.log(`[AUTO-PUSH-CRON] 🔑 VAPID configured: contact=${!!VAPID_CONTACT}, public=${!!VAPID_PUBLIC_KEY}, private=${!!VAPID_PRIVATE_KEY}`);
+    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2026-01-23-v14-RELIABLE`);
+    console.log(`[AUTO-PUSH-CRON] ✅ Auth: ${isServiceRole ? 'service_role' : providedSecret ? 'cron_secret' : 'no_secret_configured'}`);
+    console.log(`[AUTO-PUSH-CRON] ⚙️ Params: dry=${dryRun}, bypass=${bypassQuietHours}, force=${forceMode}, user=${forceUserId || 'all'}`);
+    console.log(`[AUTO-PUSH-CRON] 🔑 VAPID: contact=${!!VAPID_CONTACT}, public=${!!VAPID_PUBLIC_KEY}, private=${!!VAPID_PRIVATE_KEY}`);
+    console.log(`[AUTO-PUSH-CRON] ════════════════════════════════════════════`);
 
     // 2. Load config
     const supabase = createClient(SB_URL, SERVICE_ROLE_KEY);
@@ -525,18 +530,23 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`[AUTO-PUSH-CRON] ✅ Complete: run_id=${runId}, sent=${sentCount}, skipped=${skippedCount}`);
+    const durationMs = Date.now() - startTime;
+    console.log(`[AUTO-PUSH-CRON] ════════════════════════════════════════════`);
+    console.log(`[AUTO-PUSH-CRON] ✅ COMPLETE: run_id=${runId}`);
+    console.log(`[AUTO-PUSH-CRON] 📊 Stats: sent=${sentCount}, skipped=${skippedCount}, duration=${durationMs}ms`);
+    console.log(`[AUTO-PUSH-CRON] ════════════════════════════════════════════`);
 
     return json({
       ok: true,
       run_id: runId,
-      version: '2026-01-20-v13-DIRECT-WEBPUSH',
+      version: '2026-01-23-v14-RELIABLE',
       users_processed: shuffledUsers.length,
       sent: sentCount,
       skipped: skippedCount,
       dry_run: dryRun,
       force_mode: forceMode,
-      time_slot_bypassed: skipTimeSlot
+      time_slot_bypassed: skipTimeSlot,
+      duration_ms: durationMs
     }, 200);
 
   } catch (error: any) {
@@ -587,5 +597,90 @@ function json(obj: unknown, status = 200): Response {
     }
   });
 }
+
+// ============================================================================
+// PHASE 4 — NATIVE MIRROR PREP (DISABLED BY DEFAULT)
+// This abstraction allows sending the same notification payload to:
+// - WebPush (PWA) ← currently active
+// - APNs (iOS native) ← disabled, for future use
+// ============================================================================
+
+/**
+ * Unified notification payload structure
+ * Used by both WebPush and Native senders
+ */
+interface UnifiedNotificationPayload {
+  title: string;
+  body: string;
+  url?: string;
+  icon?: string;
+  badge?: string;
+  tag?: string;
+  data?: Record<string, any>;
+}
+
+/**
+ * Configuration for native mirror feature
+ * Set NATIVE_PUSH_MIRROR_ENABLED=true in Edge Function env to enable
+ */
+const NATIVE_MIRROR_CONFIG = {
+  enabled: Deno.env.get("NATIVE_PUSH_MIRROR_ENABLED") === "true",
+  testOnly: true, // Only send to users with test flag
+};
+
+/**
+ * Native APNs sender stub (DISABLED)
+ * Will be implemented when we enable native mirror
+ * 
+ * @param userId - Target user ID
+ * @param payload - Unified notification payload
+ * @returns Promise<{ sent: number; failed: number }>
+ */
+async function sendNativeAPNs(
+  _userId: string, 
+  _payload: UnifiedNotificationPayload
+): Promise<{ sent: number; failed: number }> {
+  if (!NATIVE_MIRROR_CONFIG.enabled) {
+    // Native mirror is disabled - return immediately
+    return { sent: 0, failed: 0 };
+  }
+
+  // TODO: Implement when enabling native mirror
+  // 1. Query push_tokens table for user's APNs tokens
+  // 2. Call send-native-push Edge Function with payload
+  // 3. Return results
+  
+  console.log(`[NATIVE-MIRROR] 🔇 Native mirror is DISABLED (set NATIVE_PUSH_MIRROR_ENABLED=true to enable)`);
+  return { sent: 0, failed: 0 };
+}
+
+/**
+ * Create unified payload from template (for future native mirror)
+ */
+function createUnifiedPayload(
+  title: string,
+  body: string,
+  templateId: string,
+  deeplink?: string,
+  lang?: string
+): UnifiedNotificationPayload {
+  return {
+    title,
+    body,
+    url: deeplink || '/home',
+    icon: '/icon-512.png',
+    badge: '/icon-192.png',
+    tag: `auto_${templateId}`,
+    data: {
+      template_id: templateId,
+      lang: lang || 'it',
+      ctx: 'auto-cron',
+      timestamp: new Date().toISOString()
+    }
+  };
+}
+
+// Export for potential testing
+export { sendNativeAPNs, createUnifiedPayload, UnifiedNotificationPayload, NATIVE_MIRROR_CONFIG };
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
