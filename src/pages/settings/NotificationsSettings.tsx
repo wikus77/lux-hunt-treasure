@@ -63,7 +63,11 @@ const NotificationsSettings: React.FC = () => {
   }, [user]);
 
   const loadNotificationSettings = async () => {
-    if (!user) return;
+    // 🔧 FIX 23/01/2026: Guard against undefined user
+    if (!user?.id) {
+      console.log('[NotificationsSettings] No user, skipping load');
+      return;
+    }
 
     try {
       const { data: profile, error } = await supabase
@@ -85,7 +89,11 @@ const NotificationsSettings: React.FC = () => {
   };
 
   const saveSettings = async (newSettings: Partial<NotificationSettings>) => {
-    if (!user) return;
+    // 🔧 FIX 23/01/2026: Guard against undefined user
+    if (!user?.id) {
+      console.warn('[NotificationsSettings] Cannot save - no user');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -258,11 +266,16 @@ const NotificationsSettings: React.FC = () => {
             ) : (
               <UnifiedPushToggle className="w-full" data-push-toggle-v1 />
             )}
-            <div className="mt-4">
-              <NotificationsStatus userId="495246c1-9154-4f01-a428-7f37fe230180" />
-            </div>
-            {/* Audit read-only */}
-            <PushInspector userId={"495246c1-9154-4f01-a428-7f37fe230180"} />
+            {/* 🔧 FIX 23/01/2026: Use actual current user ID instead of hardcoded */}
+            {user?.id && (
+              <>
+                <div className="mt-4">
+                  <NotificationsStatus userId={user.id} />
+                </div>
+                {/* Audit read-only */}
+                <PushInspector userId={user.id} />
+              </>
+            )}
           </div>
 
           {/* Debug Panel for Push Notifications - Solo development */}

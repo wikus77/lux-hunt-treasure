@@ -97,15 +97,23 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, isOpen
             onClick={handleClose}
           />
 
-          {/* Modal */}
+          {/* Modal - 🔧 FIX 23/01/2026: Proper centering with safe-area */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed left-4 right-4 top-1/2 -translate-y-1/2 z-[10000] max-w-md mx-auto"
+            className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
+            style={{
+              paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
+            }}
             onClick={(e) => e.stopPropagation()}
           >
+            <div 
+              className="w-full max-w-md max-h-[calc(100vh-120px)] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
             <div className="relative rounded-2xl overflow-hidden border border-cyan-500/30 shadow-[0_0_30px_rgba(0,209,255,0.2)]">
               {/* Glass background */}
               <div className="absolute inset-0 bg-gradient-to-b from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl" />
@@ -216,6 +224,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, isOpen
                   </Button>
                 </div>
               </div>
+            </div>
             </div>
           </motion.div>
         </>
