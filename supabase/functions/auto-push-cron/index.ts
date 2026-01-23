@@ -70,6 +70,7 @@ Deno.serve(async (req) => {
     const resetLogs = body.reset_logs === true || body.resetLogs === true;
 
     // 🔒 SECURITY: Verify internal secret for cron/trigger calls
+    // NOTE: verify_jwt = false in config.toml, so we MUST validate x-cron-secret
     const CRON_SECRET = Deno.env.get("CRON_SECRET") || Deno.env.get("INTERNAL_SECRET");
     const providedSecret = req.headers.get("x-cron-secret") || req.headers.get("x-internal-secret") || body.cron_secret;
     
@@ -78,10 +79,17 @@ Deno.serve(async (req) => {
     const isServiceRole = authHeader?.includes(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.slice(0, 20) || "NONE");
     const isAdminAuth = (CRON_SECRET && providedSecret === CRON_SECRET) || isServiceRole;
     
-    if (!isAdminAuth) {
-      console.warn("[AUTO-PUSH-CRON] ⚠️ Missing or invalid cron secret - allowing for backwards compatibility");
-      // NOTE: Enable this block to enforce strict auth:
-      // return json({ error: "Unauthorized - invalid cron secret" }, 401);
+    // 🔧 2026-01-23: Made auth DETERMINISTIC (removed backwards-compat mode)
+    // If CRON_SECRET is not configured, allow all requests (for initial setup)
+    // If CRON_SECRET IS configured, require valid secret or service role
+    if (CRON_SECRET && !isAdminAuth) {
+      console.error("[AUTO-PUSH-CRON] ❌ Invalid cron secret - REJECTED");
+      console.error(`[AUTO-PUSH-CRON] 🔍 Debug: CRON_SECRET set=${!!CRON_SECRET}, providedSecret set=${!!providedSecret}, isServiceRole=${isServiceRole}`);
+      return json({ error: "Unauthorized - invalid cron secret" }, 401);
+    }
+    
+    if (!CRON_SECRET) {
+      console.warn("[AUTO-PUSH-CRON] ⚠️ CRON_SECRET not configured - allowing request (SET THIS IN PRODUCTION!)");
     }
     
     // 🔐 FORCE MODE requires admin auth, RESET LOGS allows with bypass flag for debugging
@@ -115,7 +123,7 @@ Deno.serve(async (req) => {
     }
     
     const runId = `run_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    console.log("[AUTO-PUSH-CRON] ✅ Auth check passed (internal CRON)");
+    console.log(`[AUTO-PUSH-CRON] ✅ Auth check passed (method: ${isServiceRole ? 'service_role' : providedSecret ? 'cron_secret' : 'no_secret_configured'})`);
     console.log(`[AUTO-PUSH-CRON] 🆔 Run ID: ${runId}`);
     console.log(`[AUTO-PUSH-CRON] ✅ Params: dry-run=${dryRun}, bypass-quiet=${bypassQuietHours}, force=${forceMode}, reset=${resetLogs}, force-user=${forceUserId || 'none'}`);
     console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2026-01-20-v13-DIRECT-WEBPUSH`);
