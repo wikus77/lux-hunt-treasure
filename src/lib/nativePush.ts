@@ -66,6 +66,7 @@ let _state: NativePushState = {
 let _listeners: Partial<PushEventListener> = {};
 let _initPromise: Promise<NativePushState> | null = null;
 let _pushModule: any = null; // Will hold dynamically imported module
+let _listenersRegistered = false; // Singleton guard for listeners
 
 // ============================================================================
 // DEBUG LOGGING
@@ -162,9 +163,35 @@ async function _initNativePushInternal(): Promise<NativePushState> {
       logPush('🔄', 'Permission already granted — auto-registering with APNs...');
       try {
         await _pushModule.PushNotifications.register();
-        logPush('📤', 'Auto-register called successfully');
+        logPush('📤', 'Auto-register called successfully - waiting for registration event...');
+        
+        // Give APNs time to respond (up to 10 seconds)
+        // The registration listener will update _state.token when it fires
+        await new Promise<void>((resolve) => {
+          let attempts = 0;
+          const checkToken = setInterval(() => {
+            attempts++;
+            logPush('⏳', `Waiting for token... attempt ${attempts}/20, current token: ${_state.token ? 'YES' : 'NO'}`);
+            
+            if (_state.token) {
+              logPush('🎉', 'Token received via listener!');
+              clearInterval(checkToken);
+              resolve();
+            } else if (_state.lastError) {
+              logPush('❌', `Registration error detected: ${_state.lastError}`);
+              clearInterval(checkToken);
+              resolve();
+            } else if (attempts >= 20) {
+              logPush('⚠️', 'Timeout waiting for token (10s) - registration may have failed silently');
+              clearInterval(checkToken);
+              resolve();
+            }
+          }, 500);
+        });
+        
       } catch (regErr: any) {
-        logPush('⚠️', 'Auto-register failed (will retry on manual request):', regErr.message);
+        _state.lastError = regErr.message || 'Auto-register failed';
+        logPush('❌', 'Auto-register exception:', regErr.message);
       }
     }
 
@@ -181,7 +208,7 @@ async function _initNativePushInternal(): Promise<NativePushState> {
 /**
  * Request permission and register for push notifications
  */
-export async function requestPushPermission(): Promise<{ success: boolean; error?: string }> {
+export async function requestPushPermission(): Promise<{ success: boolean; error?: string; token?: string }> {
   if (!_state.isNative) {
     return { success: false, error: 'Not running in native app' };
   }
@@ -197,7 +224,7 @@ export async function requestPushPermission(): Promise<{ success: boolean; error
   try {
     logPush('🔔', 'Requesting push permission...');
 
-    // Request permission from user
+    // Request permission from user (will show prompt if not already granted)
     const permResult = await _pushModule.PushNotifications.requestPermissions();
     _state.permission = permResult.receive;
 
@@ -208,14 +235,50 @@ export async function requestPushPermission(): Promise<{ success: boolean; error
     }
 
     // Register with APNs/FCM
-    logPush('📤', 'Registering with push service...');
+    logPush('📤', 'Calling PushNotifications.register()...');
+    
+    // Reset error before registering
+    _state.lastError = null;
+    
     await _pushModule.PushNotifications.register();
+    logPush('✅', 'register() called - now waiting for token callback...');
 
-    return { success: true };
+    // Wait for the registration listener to fire (up to 10 seconds)
+    const tokenReceived = await new Promise<boolean>((resolve) => {
+      let attempts = 0;
+      const maxAttempts = 20; // 10 seconds total
+      
+      const checkToken = setInterval(() => {
+        attempts++;
+        
+        if (_state.token) {
+          logPush('🎉', `Token received! ${_state.token.substring(0, 20)}...`);
+          clearInterval(checkToken);
+          resolve(true);
+        } else if (_state.lastError) {
+          logPush('❌', `Registration error: ${_state.lastError}`);
+          clearInterval(checkToken);
+          resolve(false);
+        } else if (attempts >= maxAttempts) {
+          logPush('⚠️', 'Timeout waiting for APNs token (10s)');
+          _state.lastError = 'Timeout: APNs did not return a token. Check: 1) Bundle ID matches 2) Push entitlement enabled 3) Real device (not simulator)';
+          clearInterval(checkToken);
+          resolve(false);
+        } else {
+          logPush('⏳', `Waiting for token... ${attempts}/${maxAttempts}`);
+        }
+      }, 500);
+    });
+
+    if (tokenReceived && _state.token) {
+      return { success: true, token: _state.token };
+    } else {
+      return { success: false, error: _state.lastError || 'Token not received' };
+    }
 
   } catch (error: any) {
     _state.lastError = error.message || 'Permission request failed';
-    logPush('❌', 'Permission request error:', error);
+    logPush('❌', 'Permission request exception:', error);
     return { success: false, error: _state.lastError };
   }
 }
@@ -237,7 +300,14 @@ async function setupListeners() {
     return;
   }
 
-  logPush('👂', 'Setting up push listeners...');
+  // SINGLETON GUARD: Only register listeners once!
+  if (_listenersRegistered) {
+    logPush('ℹ️', 'Listeners already registered, skipping duplicate setup');
+    return;
+  }
+  _listenersRegistered = true;
+
+  logPush('👂', 'Setting up push listeners (FIRST TIME)...');
   const PushNotifications = _pushModule.PushNotifications;
 
   // TOKEN REGISTRATION SUCCESS
