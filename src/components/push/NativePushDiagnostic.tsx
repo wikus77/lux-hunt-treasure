@@ -144,6 +144,28 @@ export const NativePushDiagnostic: React.FC = () => {
       value: state.lastError || 'None',
       status: state.lastError ? 'error' : 'ok',
     },
+    // 🛡️ HARDENING: Show last push result details
+    ...(state.lastPushResult ? [
+      {
+        label: 'Last Push Status',
+        value: state.lastPushResult.success 
+          ? `✅ ${state.lastPushResult.status || 200}` 
+          : `❌ ${state.lastPushResult.error || 'Failed'}`,
+        status: state.lastPushResult.success ? 'ok' as const : 'error' as const,
+      },
+      {
+        label: 'APNs Environment',
+        value: state.lastPushResult.apns_env || 'Unknown',
+        status: 'neutral' as const,
+      },
+      {
+        label: 'APNs ID',
+        value: state.lastPushResult.apns_id 
+          ? state.lastPushResult.apns_id.substring(0, 16) + '...'
+          : 'N/A',
+        status: state.lastPushResult.apns_id ? 'ok' as const : 'neutral' as const,
+      },
+    ] : []),
   ];
 
   // Non-native warning

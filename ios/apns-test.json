@@ -1,0 +1,9 @@
+{
+  "aps": {
+    "alert": {
+      "title": "M1SSION",
+      "body": "APNs sandbox OK (Xcode)"
+    },
+    "sound": "default"
+  }
+}

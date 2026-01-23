@@ -18,6 +18,15 @@ export interface NativePushState {
   lastError: string | null;
   lastReceived: Date | null;
   initialized: boolean;
+  // 🛡️ HARDENING: Track last push result
+  lastPushResult?: {
+    success: boolean;
+    apns_id?: string;
+    apns_env?: string;
+    status?: number;
+    error?: string;
+    timestamp: Date;
+  };
 }
 
 // Re-define types locally to avoid importing from @capacitor/push-notifications on web
@@ -496,6 +505,20 @@ export async function sendTestPush(): Promise<{ success: boolean; error?: string
         targetUserId: user.id,
       },
     });
+
+    // 🛡️ HARDENING: Store last push result for diagnostics
+    if (data?.results?.[0]) {
+      const result = data.results[0];
+      _state.lastPushResult = {
+        success: result.success,
+        apns_id: result.apns_id,
+        apns_env: result.apns_env,
+        status: result.status,
+        error: result.error,
+        timestamp: new Date(),
+      };
+      logPush('📊', 'Push result stored:', _state.lastPushResult);
+    }
 
     if (error) {
       logPush('❌', 'Test push failed:', error);

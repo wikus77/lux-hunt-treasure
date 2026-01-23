@@ -22,6 +22,27 @@ function maskToken(token: string): string {
   return token.substring(0, 10) + '...[' + token.length + ' chars]';
 }
 
+// ============================================================================
+// TOKEN VALIDATION GUARD (HARDENING)
+// ============================================================================
+function validateAPNsToken(token: string, requestId?: string): { valid: boolean; error?: string } {
+  if (!token) {
+    return { valid: false, error: 'Token is empty or null' };
+  }
+  
+  if (token.length !== 64) {
+    console.error(`❌ [${requestId}] Token length invalid: ${token.length} (expected 64)`);
+    return { valid: false, error: `Token length ${token.length}, expected 64` };
+  }
+  
+  if (!/^[0-9a-fA-F]+$/.test(token)) {
+    console.error(`❌ [${requestId}] Token contains non-hex characters`);
+    return { valid: false, error: 'Token contains non-hex characters' };
+  }
+  
+  return { valid: true };
+}
+
 serve(async (req) => {
   const requestId = crypto.randomUUID().substring(0, 8);
   console.log(`📨 [${requestId}] send-native-push invoked`);
@@ -163,9 +184,16 @@ serve(async (req) => {
           sendResult = await sendFCMNotification(tokenData.token, title, body, data, requestId);
           notificationSent = sendResult.success;
         } else if (platform === 'ios' && endpointType === 'apns') {
-          // Send APNs notification for iOS
-          sendResult = await sendAPNSNotification(tokenData.token, title, body, data, requestId);
-          notificationSent = sendResult.success;
+          // 🛡️ HARDENING: Validate token BEFORE making network call
+          const tokenValidation = validateAPNsToken(tokenData.token, requestId);
+          if (!tokenValidation.valid) {
+            console.error(`❌ [${requestId}] Token validation failed: ${tokenValidation.error}`);
+            sendResult = { success: false, error: tokenValidation.error };
+          } else {
+            // Send APNs notification for iOS
+            sendResult = await sendAPNSNotification(tokenData.token, title, body, data, requestId);
+            notificationSent = sendResult.success;
+          }
         } else {
           console.log(`⚠️ [${requestId}] Skipping unsupported platform/type: ${platform}/${endpointType}`);
           sendResult = { success: false, error: 'Unsupported platform' };
@@ -383,7 +411,17 @@ async function sendAPNSNotification(
     // Create JWT for APNs authentication
     console.log(`🔐 [${requestId}] Creating APNs JWT...`);
     const jwtToken = await createAppleJWT(teamId, keyId, privateKey, requestId);
-    console.log(`✅ [${requestId}] JWT created: ${jwtToken.substring(0, 50)}...`);
+    
+    // 🛡️ HARDENING: Validate JWT before sending
+    if (!jwtToken || jwtToken.length < 100) {
+      console.error(`❌ [${requestId}] JWT creation failed or too short: length=${jwtToken?.length || 0}`);
+      return { 
+        success: false, 
+        error: { message: 'JWT creation failed', jwt_length: jwtToken?.length || 0 }
+      };
+    }
+    
+    console.log(`✅ [${requestId}] JWT created: length=${jwtToken.length}, preview=${jwtToken.substring(0, 30)}...`);
 
     // Determine APNs endpoint based on environment
     const apnsHost = apnsEnvironment === 'production' 
@@ -438,7 +476,13 @@ async function sendAPNSNotification(
 
     if (response.ok || response.status === 200) {
       console.log(`✅ [${requestId}] APNs notification sent! apns-id: ${apnsId}`);
-      return { success: true, status: response.status, apns_id: apnsId || undefined };
+      return { 
+        success: true, 
+        status: response.status, 
+        apns_id: apnsId || undefined,
+        apns_env: apnsEnvironment,
+        topic: bundleId
+      };
     }
 
     // Handle error response
