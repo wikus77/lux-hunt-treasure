@@ -138,8 +138,10 @@ const { isConnected } = useRealTimeNotifications();
   
   // 🔐 SAFE EARLY RETURN - Now all hooks are called above
   // CRITICAL FIX: Ensure consistent return to prevent hook count mismatch
-  // 🔥 M1SSION™: Skeleton loader invece di "Caricamento..." per UX nativa
-  if (!isAuthenticated || isLoading) {
+  // 🔥 M1SSION™: Skeleton ONLY when genuinely loading (not when auth is cached)
+  // 🔧 FIX 23/01/2026: Removed !isAuthenticated check — ProtectedRoute handles auth
+  // This prevents "ghost skeleton" on iOS cold start when user is already cached
+  if (isLoading) {
     return <PageSkeleton variant="default" />;
   }
 

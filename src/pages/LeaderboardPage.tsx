@@ -39,9 +39,196 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useRealtimeLeaderboard, LeaderboardScope } from '@/hooks/useRealtimeLeaderboard';
-import { hapticLight } from '@/utils/haptics';
+import { hapticLight, hapticMedium } from '@/utils/haptics';
 import { notifyShadowContext } from '@/stores/entityOverlayStore'; // 🌑 Shadow Protocol v3
 import { MotivationalPopup } from '@/components/feedback';
+import { UserProfileModal } from '@/components/leaderboard/UserProfileModal';
+
+// 🎯 LeaderboardUserCard - Card with long-press support
+interface LeaderboardUserCardProps {
+  user: any;
+  index: number;
+  style: ReturnType<typeof getRankStyling>;
+  isTop10: boolean;
+  onLongPress: () => void;
+}
+
+// Forward declare getRankStyling type
+type RankStyle = {
+  icon: React.ReactNode;
+  bgClass: string;
+  borderClass: string;
+  glowClass: string;
+  textClass: string;
+};
+
+const LeaderboardUserCard: React.FC<LeaderboardUserCardProps> = ({ 
+  user, index, style, isTop10, onLongPress 
+}) => {
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startPosRef = React.useRef({ x: 0, y: 0 });
+  const isScrollingRef = React.useRef(false);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    startPosRef.current = { x: e.clientX, y: e.clientY };
+    isScrollingRef.current = false;
+    timerRef.current = setTimeout(() => {
+      if (!isScrollingRef.current) {
+        hapticMedium();
+        onLongPress();
+      }
+    }, 500);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!timerRef.current) return;
+    const dx = Math.abs(e.clientX - startPosRef.current.x);
+    const dy = Math.abs(e.clientY - startPosRef.current.y);
+    if (dx > 10 || dy > 10) {
+      isScrollingRef.current = true;
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const handlePointerEnd = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  // Get tier badge
+  const getTierBadgeLocal = (tier?: string) => {
+    switch (tier) {
+      case 'premium':
+      case 'gold':
+        return <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-[10px] px-1.5">GOLD</Badge>;
+      case 'silver':
+        return <Badge className="bg-gray-400 text-black text-[10px] px-1.5">SILVER</Badge>;
+      case 'black':
+      case 'titanium':
+        return <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] px-1.5">VIP</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <motion.div
+      key={user.id}
+      initial={{ x: -20, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 20, opacity: 0 }}
+      transition={{ delay: index * 0.03 }}
+      layout
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerEnd}
+      onPointerCancel={handlePointerEnd}
+      onPointerLeave={handlePointerEnd}
+      style={{ touchAction: 'pan-y' }}
+    >
+      <Card className={`${style.bgClass} ${style.borderClass} ${style.glowClass} ${
+        user.isCurrentUser ? 'ring-2 ring-[#00D1FF]' : ''
+      } transition-all duration-300 overflow-hidden cursor-pointer active:scale-[0.98]`}>
+        {/* Top 3 animated glow bar */}
+        {user.rank <= 3 && (
+          <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden">
+            <motion.div
+              className={`h-full ${
+                user.rank === 1 ? 'bg-yellow-400' : 
+                user.rank === 2 ? 'bg-gray-300' : 'bg-amber-500'
+              }`}
+              animate={{ x: ['-100%', '200%'] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              style={{ width: '50%' }}
+            />
+          </div>
+        )}
+
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex items-center justify-between">
+            {/* Rank & User Info */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <motion.div 
+                className="flex-shrink-0"
+                animate={user.rank <= 3 ? { scale: [1, 1.1, 1] } : {}}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                {style.icon}
+              </motion.div>
+              
+              <Avatar className={`w-10 h-10 sm:w-12 sm:h-12 border-2 ${style.borderClass}`}>
+                <AvatarImage src={user.avatar_url} />
+                <AvatarFallback className="bg-gray-700 text-white text-sm">
+                  {user.full_name?.charAt(0) || user.agent_code?.charAt(0) || 'A'}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <p className={`font-semibold truncate ${user.isCurrentUser ? 'text-[#00D1FF]' : 'text-white'}`}>
+                    {user.full_name || 'Agente'}
+                  </p>
+                  {user.isCurrentUser && (
+                    <Badge variant="outline" className="text-[10px] px-1 py-0">Tu</Badge>
+                  )}
+                  {getTierBadgeLocal(user.subscription_plan)}
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <span className="font-mono">{user.agent_code}</span>
+                  {user.city && (
+                    <span className="flex items-center gap-0.5">
+                      <MapPin className="w-3 h-3" />
+                      {user.city}
+                    </span>
+                  )}
+                </div>
+                {/* Stats row for Top 10 */}
+                {isTop10 && (
+                  <div className="flex items-center gap-2 mt-1 text-[10px]">
+                    <span className="flex items-center gap-0.5 text-cyan-400">
+                      <Zap className="w-3 h-3" />
+                      {user.pulse_energy}
+                    </span>
+                    <span className="flex items-center gap-0.5 text-green-400">
+                      <Star className="w-3 h-3" />
+                      {user.clues_unlocked}
+                    </span>
+                    <span className="flex items-center gap-0.5 text-orange-400">
+                      <Flame className="w-3 h-3" />
+                      {user.streak_days}d
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Score & Change */}
+            <div className="text-right flex-shrink-0 ml-2">
+              <motion.div 
+                className={`text-lg sm:text-xl font-bold ${style.textClass}`}
+                animate={isTop10 ? { scale: [1, 1.02, 1] } : {}}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                {user.total_score.toLocaleString()}
+              </motion.div>
+              {user.change !== undefined && user.change !== 0 && (
+                <div className={`flex items-center justify-end gap-0.5 text-xs ${
+                  user.change > 0 ? 'text-green-400' : 'text-red-400'
+                }`}>
+                  {user.change > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  {user.change > 0 ? '+' : ''}{user.change}
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
 
 // Forum Quick Link Component
 const ForumQuickLink: React.FC = () => {
@@ -63,11 +250,60 @@ const ForumQuickLink: React.FC = () => {
   );
 };
 
+// 🔧 Long-press hook for leaderboard cards
+const useLongPressCard = (onLongPress: () => void, delay = 500) => {
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLongPressRef = React.useRef(false);
+  const startPosRef = React.useRef({ x: 0, y: 0 });
+
+  const start = React.useCallback((e: React.PointerEvent) => {
+    startPosRef.current = { x: e.clientX, y: e.clientY };
+    isLongPressRef.current = false;
+    timerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      hapticMedium();
+      onLongPress();
+    }, delay);
+  }, [onLongPress, delay]);
+
+  const move = React.useCallback((e: React.PointerEvent) => {
+    if (!timerRef.current) return;
+    const dx = Math.abs(e.clientX - startPosRef.current.x);
+    const dy = Math.abs(e.clientY - startPosRef.current.y);
+    // Cancel if moved more than 10px (scrolling)
+    if (dx > 10 || dy > 10) {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+  }, []);
+
+  const end = React.useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  return {
+    onPointerDown: start,
+    onPointerMove: move,
+    onPointerUp: end,
+    onPointerCancel: end,
+    onPointerLeave: end,
+  };
+};
+
 export const LeaderboardPage: React.FC = () => {
   const [scope, setScope] = useState<LeaderboardScope>('global');
   const [filterValue, setFilterValue] = useState<string>('');
   const [filterOptions, setFilterOptions] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState('score');
+  
+  // 🎯 Long-press modal state
+  const [selectedUser, setSelectedUser] = useState<typeof leaderboard[0] | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const { 
     leaderboard, 
@@ -83,6 +319,12 @@ export const LeaderboardPage: React.FC = () => {
     limit: 50,
     enableNotifications: true
   });
+
+  // 🎯 Handle long-press on user card
+  const handleUserLongPress = React.useCallback((user: typeof leaderboard[0]) => {
+    setSelectedUser(user);
+    setIsProfileModalOpen(true);
+  }, []);
 
   // 🌑 Shadow Protocol v3 - Trigger contestuale LEADERBOARD al mount
   useEffect(() => {
@@ -391,112 +633,14 @@ export const LeaderboardPage: React.FC = () => {
               const style = getRankStyling(user.rank, isTop10);
               
               return (
-                <motion.div
+                <LeaderboardUserCard
                   key={user.id}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 20, opacity: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  layout
-                >
-                  <Card className={`${style.bgClass} ${style.borderClass} ${style.glowClass} ${
-                    user.isCurrentUser ? 'ring-2 ring-[#00D1FF]' : ''
-                  } transition-all duration-300 overflow-hidden`}>
-                    {/* Top 3 animated glow bar */}
-                    {user.rank <= 3 && (
-                      <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden">
-                        <motion.div
-                          className={`h-full ${
-                            user.rank === 1 ? 'bg-yellow-400' : 
-                            user.rank === 2 ? 'bg-gray-300' : 'bg-amber-500'
-                          }`}
-                          animate={{ x: ['-100%', '200%'] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                          style={{ width: '50%' }}
-                        />
-                      </div>
-                    )}
-
-                    <CardContent className="p-3 sm:p-4">
-                      <div className="flex items-center justify-between">
-                        {/* Rank & User Info */}
-                        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                          <motion.div 
-                            className="flex-shrink-0"
-                            animate={user.rank <= 3 ? { scale: [1, 1.1, 1] } : {}}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          >
-                            {style.icon}
-                          </motion.div>
-                          
-                          <Avatar className={`w-10 h-10 sm:w-12 sm:h-12 border-2 ${style.borderClass}`}>
-                            <AvatarImage src={user.avatar_url} />
-                            <AvatarFallback className="bg-gray-700 text-white text-sm">
-                              {user.full_name?.charAt(0) || user.agent_code?.charAt(0) || 'A'}
-                            </AvatarFallback>
-                          </Avatar>
-                          
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <p className={`font-semibold truncate ${user.isCurrentUser ? 'text-[#00D1FF]' : 'text-white'}`}>
-                                {user.full_name || 'Agente'}
-                              </p>
-                              {user.isCurrentUser && (
-                                <Badge variant="outline" className="text-[10px] px-1 py-0">Tu</Badge>
-                              )}
-                              {getTierBadge(user.subscription_plan)}
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
-                              <span className="font-mono">{user.agent_code}</span>
-                              {user.city && (
-                                <span className="flex items-center gap-0.5">
-                                  <MapPin className="w-3 h-3" />
-                                  {user.city}
-                                </span>
-                              )}
-                            </div>
-                            {/* Stats row for Top 10 */}
-                            {isTop10 && (
-                              <div className="flex items-center gap-2 mt-1 text-[10px]">
-                                <span className="flex items-center gap-0.5 text-cyan-400">
-                                  <Zap className="w-3 h-3" />
-                                  {user.pulse_energy}
-                                </span>
-                                <span className="flex items-center gap-0.5 text-green-400">
-                                  <Star className="w-3 h-3" />
-                                  {user.clues_unlocked}
-                                </span>
-                                <span className="flex items-center gap-0.5 text-orange-400">
-                                  <Flame className="w-3 h-3" />
-                                  {user.streak_days}d
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Score & Change */}
-                        <div className="text-right flex-shrink-0 ml-2">
-                          <motion.div 
-                            className={`text-lg sm:text-xl font-bold ${style.textClass}`}
-                            animate={isTop10 ? { scale: [1, 1.02, 1] } : {}}
-                            transition={{ duration: 3, repeat: Infinity }}
-                          >
-                            {user.total_score.toLocaleString()}
-                          </motion.div>
-                          {user.change !== undefined && user.change !== 0 && (
-                            <div className={`flex items-center justify-end gap-0.5 text-xs ${
-                              user.change > 0 ? 'text-green-400' : 'text-red-400'
-                            }`}>
-                              {user.change > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                              {user.change > 0 ? '+' : ''}{user.change}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                  user={user}
+                  index={index}
+                  style={style}
+                  isTop10={isTop10}
+                  onLongPress={() => handleUserLongPress(user)}
+                />
               );
             })}
           </AnimatePresence>
@@ -557,6 +701,13 @@ export const LeaderboardPage: React.FC = () => {
       
       {/* 🎯 Motivational Popup - Shows once per session */}
       <MotivationalPopup pageType="leaderboard" />
+      
+      {/* 🎯 User Profile Modal - Long-press on user card */}
+      <UserProfileModal
+        user={selectedUser}
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </div>
   );
 };
