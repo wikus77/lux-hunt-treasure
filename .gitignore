@@ -53,3 +53,9 @@ m1ssion-one-clean/
 # Supabase local backups
 supabase/backups/
 supabase/functions/buzz-map-resolve/backups/
+
+# APNs test files (NEVER COMMIT)
+ios/apns-test.json
+ios/apns_auth_key.p8
+ios/*.p8
+
