@@ -1,6 +1,6 @@
 // @ts-nocheck
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -10,15 +10,82 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Bell, Volume2, VolumeX, RefreshCw } from 'lucide-react';
+import { Bell, Volume2, VolumeX, RefreshCw, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { UnifiedPushToggle } from '@/components/UnifiedPushToggle';
-import PushToggleV2 from '@/components/push/PushToggleV2';
-import PushDebugPanel from '@/components/PushDebugPanel';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
-import NotificationsStatus from '@/components/NotificationsStatus';
-import PushInspector from "@/components/PushInspector";
 import { NativePushDiagnostic } from "@/components/push/NativePushDiagnostic";
+import { Capacitor } from '@capacitor/core';
+
+// 🔧 FIX 23/01/2026: Lazy load web push components to prevent crash on native iOS
+// These components access navigator.serviceWorker, PushManager, Notification which don't exist on native
+const UnifiedPushToggle = lazy(() => import('@/components/UnifiedPushToggle').then(m => ({ default: m.UnifiedPushToggle })));
+const PushToggleV2 = lazy(() => import('@/components/push/PushToggleV2'));
+const PushDebugPanel = lazy(() => import('@/components/PushDebugPanel'));
+const NotificationsStatus = lazy(() => import('@/components/NotificationsStatus'));
+const PushInspector = lazy(() => import('@/components/PushInspector'));
+
+// Safe check for native platform
+const isNativePlatform = (): boolean => {
+  try {
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+};
+
+// Loading fallback for lazy components
+const PushLoadingFallback = () => (
+  <div className="p-4 rounded-lg bg-white/5 border border-white/10 animate-pulse">
+    <div className="h-4 bg-white/10 rounded w-1/3 mb-2"></div>
+    <div className="h-3 bg-white/10 rounded w-2/3"></div>
+  </div>
+);
+
+// Error fallback for web push components on native
+const WebPushNotAvailable = () => (
+  <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+    <div className="flex items-center gap-2 text-yellow-400 text-sm">
+      <AlertCircle className="w-4 h-4" />
+      <span>Web Push non disponibile su app nativa. Usa il pannello Native Push qui sotto.</span>
+    </div>
+  </div>
+);
+
+// Simple error boundary wrapper for push components
+class ErrorBoundaryWrapper extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[NotificationsSettings] Push component error:', error.message);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+          <div className="flex items-center gap-2 text-red-400 text-sm">
+            <AlertCircle className="w-4 h-4" />
+            <span>Errore nel caricamento delle notifiche push. Ricarica la pagina.</span>
+          </div>
+          <p className="text-xs text-red-400/60 mt-1">
+            {this.state.error?.message || 'Errore sconosciuto'}
+          </p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 interface NotificationSettings {
   notifications_enabled: boolean;
@@ -260,35 +327,49 @@ const NotificationsSettings: React.FC = () => {
             </div>
           </div>
 
-          {/* Push Notifications with V2 toggle when flag enabled */}
-          <div className="border-t border-white/10 pt-4">
-            {import.meta.env.VITE_PUSH_TOGGLE_V2 === '1' ? (
-              <PushToggleV2 data-push-toggle-v2 />
-            ) : (
-              <UnifiedPushToggle className="w-full" data-push-toggle-v1 />
+          {/* Push Notifications Section */}
+          <div className="border-t border-white/10 pt-4 space-y-4">
+            {/* 🔧 FIX 23/01/2026: Separate Web Push (PWA) and Native Push (iOS/Android) */}
+            
+            {/* NATIVE PUSH - Show on iOS/Android Capacitor apps */}
+            {isNativePlatform() && (
+              <ErrorBoundaryWrapper>
+                <NativePushDiagnostic />
+              </ErrorBoundaryWrapper>
             )}
-            {/* 🔧 FIX 23/01/2026: Use actual current user ID instead of hardcoded */}
-            {user?.id && (
-              <>
-                <div className="mt-4">
-                  <NotificationsStatus userId={user.id} />
-                </div>
-                {/* Audit read-only */}
-                <PushInspector userId={user.id} />
 
-                {/* 🆕 Native Push Diagnostics (iOS/Android) */}
-                <div className="mt-4">
-                  <NativePushDiagnostic />
-                </div>
-              </>
+            {/* WEB PUSH - Only show on web/PWA, NOT on native (would crash) */}
+            {!isNativePlatform() && (
+              <Suspense fallback={<PushLoadingFallback />}>
+                {import.meta.env.VITE_PUSH_TOGGLE_V2 === '1' ? (
+                  <PushToggleV2 data-push-toggle-v2 />
+                ) : (
+                  <UnifiedPushToggle className="w-full" data-push-toggle-v1 />
+                )}
+                {user?.id && (
+                  <>
+                    <div className="mt-4">
+                      <NotificationsStatus userId={user.id} />
+                    </div>
+                    <PushInspector userId={user.id} />
+                  </>
+                )}
+              </Suspense>
+            )}
+
+            {/* Native platform notice for web push section */}
+            {isNativePlatform() && (
+              <WebPushNotAvailable />
             )}
           </div>
 
-          {/* Debug Panel for Push Notifications - Solo development */}
-          {import.meta.env.DEV && !(window as any).__M1_PROD_MODE__ && (
-            <div className="border-t border-white/10 pt-4">
-              <PushDebugPanel />
-            </div>
+          {/* Debug Panel for Push Notifications - Solo development + Web only */}
+          {import.meta.env.DEV && !isNativePlatform() && !(window as any).__M1_PROD_MODE__ && (
+            <Suspense fallback={<PushLoadingFallback />}>
+              <div className="border-t border-white/10 pt-4">
+                <PushDebugPanel />
+              </div>
+            </Suspense>
           )}
         </CardContent>
       </Card>
