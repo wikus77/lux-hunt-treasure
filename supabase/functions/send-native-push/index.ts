@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
+import { encode as base64urlEncode } from "https://deno.land/std@0.168.0/encoding/base64url.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -200,24 +201,151 @@ async function sendFCMNotification(token: string, title: string, body: string, d
   }
 }
 
-// APNs notification sender
+// APNs JWT token creation (ES256 signing)
+async function createAppleJWT(teamId: string, keyId: string, privateKey: string): Promise<string> {
+  const header = {
+    alg: "ES256",
+    kid: keyId,
+    typ: "JWT"
+  };
+
+  const payload = {
+    iss: teamId,
+    iat: Math.floor(Date.now() / 1000)
+  };
+
+  const headerB64 = base64urlEncode(JSON.stringify(header));
+  const payloadB64 = base64urlEncode(JSON.stringify(payload));
+  const data = `${headerB64}.${payloadB64}`;
+  
+  // Import private key
+  const keyData = privateKey
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s/g, '');
+  
+  const keyBuffer = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8',
+    keyBuffer,
+    {
+      name: 'ECDSA',
+      namedCurve: 'P-256'
+    },
+    false,
+    ['sign']
+  );
+
+  const signature = await crypto.subtle.sign(
+    {
+      name: 'ECDSA',
+      hash: 'SHA-256'
+    },
+    cryptoKey,
+    new TextEncoder().encode(data)
+  );
+
+  const signatureB64 = base64urlEncode(new Uint8Array(signature));
+  return `${data}.${signatureB64}`;
+}
+
+// APNs notification sender - REAL IMPLEMENTATION
 async function sendAPNSNotification(token: string, title: string, body: string, data?: Record<string, any>): Promise<boolean> {
   try {
-    // For now, we'll just log that APNs would be sent
-    // In production, you'd implement APNs HTTP/2 API
-    console.log('📱 APNs notification would be sent:', { token: token.substring(0, 20), title, body });
+    // Get APNs configuration from environment
+    const teamId = Deno.env.get('APPLE_TEAM_ID');
+    const keyId = Deno.env.get('APPLE_KEY_ID');
+    const privateKey = Deno.env.get('APPLE_PRIVATE_KEY');
+    const bundleId = Deno.env.get('APPLE_BUNDLE_ID') || 'eu.m1ssion.app';
+    const apnsEnvironment = Deno.env.get('APNS_ENVIRONMENT') || 'development';
     
-    // TODO: Implement actual APNs sending using JWT authentication
-    // This requires:
-    // - Apple Developer Team ID
-    // - APNs Key ID  
-    // - APNs Private Key (p8 file)
-    // - Bundle ID
+    // Check required configuration
+    if (!teamId || !keyId || !privateKey) {
+      console.error('❌ APNs configuration missing. Required: APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY');
+      console.log('📋 Current config:', { 
+        hasTeamId: !!teamId, 
+        hasKeyId: !!keyId, 
+        hasPrivateKey: !!privateKey,
+        bundleId,
+        environment: apnsEnvironment
+      });
+      return false;
+    }
+
+    // Create JWT for APNs authentication
+    const jwtToken = await createAppleJWT(teamId, keyId, privateKey);
+
+    // Determine APNs endpoint based on environment
+    const apnsHost = apnsEnvironment === 'production' 
+      ? 'https://api.push.apple.com'
+      : 'https://api.sandbox.push.apple.com';
+
+    const apnsUrl = `${apnsHost}/3/device/${token}`;
+
+    console.log('📱 Sending APNs notification:', {
+      tokenPreview: token.substring(0, 20) + '...',
+      bundleId,
+      environment: apnsEnvironment,
+      host: apnsHost
+    });
+
+    // APNs payload
+    const apnsPayload = {
+      aps: {
+        alert: {
+          title: title,
+          body: body
+        },
+        badge: 1,
+        sound: 'default',
+        'mutable-content': 1
+      },
+      // Custom data for deep linking
+      data: {
+        ...data,
+        timestamp: new Date().toISOString()
+      }
+    };
+
+    const response = await fetch(apnsUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${jwtToken}`,
+        'Content-Type': 'application/json',
+        'apns-topic': bundleId,
+        'apns-push-type': 'alert',
+        'apns-priority': '10',
+        'apns-expiration': '0'
+      },
+      body: JSON.stringify(apnsPayload)
+    });
+
+    if (response.ok || response.status === 200) {
+      console.log('✅ APNs notification sent successfully to device:', token.substring(0, 20) + '...');
+      return true;
+    }
+
+    // Handle error response
+    const errorText = await response.text();
+    let errorData;
+    try {
+      errorData = JSON.parse(errorText);
+    } catch {
+      errorData = { raw: errorText };
+    }
     
-    return true;
+    console.error('❌ APNs send failed:', {
+      status: response.status,
+      statusText: response.statusText,
+      error: errorData,
+      token: token.substring(0, 20) + '...'
+    });
+    
+    return false;
 
   } catch (error) {
-    console.error('APNs send error:', error);
+    console.error('❌ APNs send error:', error);
     return false;
   }
 }

@@ -18,6 +18,7 @@ import PushDebugPanel from '@/components/PushDebugPanel';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import NotificationsStatus from '@/components/NotificationsStatus';
 import PushInspector from "@/components/PushInspector";
+import { NativePushDiagnostic } from "@/components/push/NativePushDiagnostic";
 
 interface NotificationSettings {
   notifications_enabled: boolean;
@@ -274,6 +275,11 @@ const NotificationsSettings: React.FC = () => {
                 </div>
                 {/* Audit read-only */}
                 <PushInspector userId={user.id} />
+
+                {/* 🆕 Native Push Diagnostics (iOS/Android) */}
+                <div className="mt-4">
+                  <NativePushDiagnostic />
+                </div>
               </>
             )}
           </div>

@@ -62,6 +62,36 @@ if (typeof window !== 'undefined') {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// 📱 NATIVE PUSH INITIALIZATION - Capacitor iOS/Android
+// Initializes native push notifications (listeners, permission check)
+// ═══════════════════════════════════════════════════════════════════════════
+if (typeof window !== 'undefined') {
+  // Lazy load native push to avoid blocking app startup
+  import('./lib/nativePush')
+    .then(({ initNativePush, isCapacitorNative }) => {
+      if (isCapacitorNative()) {
+        console.log('[NATIVE-PUSH] 📱 Capacitor detected, initializing push...');
+        initNativePush()
+          .then((state) => {
+            console.log('[NATIVE-PUSH] ✅ Initialized:', {
+              platform: state.platform,
+              permission: state.permission,
+              hasToken: !!state.token,
+            });
+          })
+          .catch((e) => {
+            console.error('[NATIVE-PUSH] ❌ Init failed:', e);
+          });
+      } else {
+        console.log('[NATIVE-PUSH] ℹ️ Not native platform, using web push');
+      }
+    })
+    .catch((e) => {
+      console.warn('[NATIVE-PUSH] Module load failed (non-critical):', e);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // 🔬 FORENSIC PROBE - iOS WKWebView Draggable Overlay Diagnostic
 // DEV ONLY - Loads on iOS user agent OR with ?forensic=1 URL parameter
 // ═══════════════════════════════════════════════════════════════════════════
