@@ -1,6 +1,7 @@
 import UIKit
 import Capacitor
 import WebKit
+import UserNotifications
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -16,7 +17,64 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Start polling for WebView to inject UserScript BEFORE page loads
         startEarlyInjection()
         
+        // 🔔 Push Notifications: Set delegate
+        UNUserNotificationCenter.current().delegate = self
+        
         return true
+    }
+    
+    // MARK: - 🔔 PUSH NOTIFICATIONS (APNs)
+    
+    /// Called when APNs successfully registers and returns a device token
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        // Convert token to hex string
+        let tokenString = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+        
+        print("🔔🔔🔔 ============================================")
+        print("🔔🔔🔔 APNs DEVICE TOKEN RECEIVED!")
+        print("🔔🔔🔔 Token: \(tokenString)")
+        print("🔔🔔🔔 Length: \(tokenString.count) characters")
+        print("🔔🔔🔔 ============================================")
+        
+        // Forward to Capacitor's ApplicationDelegateProxy
+        NotificationCenter.default.post(
+            name: .capacitorDidRegisterForRemoteNotifications,
+            object: deviceToken
+        )
+    }
+    
+    /// Called when APNs registration fails
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        print("❌❌❌ ============================================")
+        print("❌❌❌ APNs REGISTRATION FAILED!")
+        print("❌❌❌ Error: \(error.localizedDescription)")
+        print("❌❌❌ Full error: \(error)")
+        print("❌❌❌ ============================================")
+        
+        // Forward to Capacitor's ApplicationDelegateProxy
+        NotificationCenter.default.post(
+            name: .capacitorDidFailToRegisterForRemoteNotifications,
+            object: error
+        )
+    }
+    
+    /// Called when a push notification is received while app is in foreground
+    func application(_ application: UIApplication,
+                     didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        print("📬📬📬 Push notification received!")
+        print("📬📬📬 Payload: \(userInfo)")
+        
+        // Forward to Capacitor
+        NotificationCenter.default.post(
+            name: NSNotification.Name("capacitorDidReceiveRemoteNotification"),
+            object: nil,
+            userInfo: userInfo
+        )
+        
+        completionHandler(.newData)
     }
     
     // MARK: - M1SSION™ Safe-Area Fix (WRAP-ONLY)
@@ -224,4 +282,41 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+}
+
+// MARK: - UNUserNotificationCenterDelegate
+extension AppDelegate: UNUserNotificationCenterDelegate {
+    
+    /// Called when notification is delivered while app is in FOREGROUND
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        print("📱📱📱 Notification will present (foreground)")
+        print("📱📱📱 Title: \(notification.request.content.title)")
+        print("📱📱📱 Body: \(notification.request.content.body)")
+        
+        // Show notification even when app is in foreground
+        completionHandler([.banner, .sound, .badge])
+    }
+    
+    /// Called when user taps on notification
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        print("👆👆👆 Notification tapped!")
+        print("👆👆👆 Action: \(response.actionIdentifier)")
+        
+        // Forward to Capacitor
+        let userInfo = response.notification.request.content.userInfo
+        NotificationCenter.default.post(
+            name: NSNotification.Name("capacitorPushNotificationActionPerformed"),
+            object: nil,
+            userInfo: [
+                "actionId": response.actionIdentifier,
+                "notification": userInfo
+            ]
+        )
+        
+        completionHandler()
+    }
 }
