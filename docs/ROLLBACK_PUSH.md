@@ -1,135 +1,131 @@
-# Push Chain Rollback Guide
+# 🚨 PUSH NOTIFICATION ROLLBACK GUIDE
 
-## Emergency Rollback Procedure
+© 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-### 1. Identify Target Tag
+## Quick Reference
 
-Find the latest stable push tag:
-```bash
-git tag -l "push-stable-*" | sort -r | head -5
+| Method | Time | Impact |
+|--------|------|--------|
+| Feature Flag (code) | 2 min + build | Cleanest |
+| Kill Switch (localStorage) | Instant | Per-device |
+| URL Hotfix | Instant | Per-session |
+| Git Revert | 5 min + build | Full rollback |
+
+---
+
+## 🔴 EMERGENCY: Disable Immediately
+
+### Option 1: Feature Flag (Recommended)
+
+Edit `src/config/featureFlags.ts`:
+
+```typescript
+export const NATIVE_PUSH_ENABLED = false;  // ← SET TO FALSE
 ```
 
-### 2. Create Hotfix Branch
+Then rebuild and deploy:
 
 ```bash
-# Example with specific timestamp
-export TARGET_TAG="push-stable-20250909-1045"
-
-# Create hotfix branch from tag
-git checkout -b hotfix/rollback-push-${TARGET_TAG} tags/${TARGET_TAG}
+npm run build
+npx cap sync ios android
+# Deploy to app stores or TestFlight
 ```
 
-### 3. Verify Snapshot Integrity
+### Option 2: Kill Switch (Per-Device, Instant)
+
+In browser console or app:
+
+```javascript
+window.pushKillSwitch.disable()
+```
+
+Or navigate to: `https://your-app.com/?__noPush=1`
+
+This sets `localStorage.push:disable = '1'`
+
+### Option 3: Git Revert (Full Rollback)
 
 ```bash
-# Run hash verification
-node scripts/hash-sw.mjs
+# Revert to pre-integration state
+git checkout pre-native-cron-push-integration
 
-# Compare with snapshot in docs/PUSH_CHAIN_SNAPSHOT.md
-# Ensure all critical files match expected hashes
+# Or revert specific commits
+git revert HEAD~3..HEAD
+
+# Rebuild
+npm run build
+npx cap sync ios android
 ```
 
-### 4. Deploy Rollback
+---
 
-```bash
-# Force push to main (emergency only)
-git checkout main
-git reset --hard tags/${TARGET_TAG}
-git push --force-with-lease origin main
-
-# Or merge hotfix (safer)
-git checkout main
-git merge hotfix/rollback-push-${TARGET_TAG}
-git push origin main
-```
-
-### 5. Verify Deployment
-
-1. Check that SW registration is single: `/sw.js` only
-2. Verify VAPID key matches snapshot (redacted form)
-3. Test push subscription on iOS PWA
-4. Monitor edge function logs for errors
-
-## File Recovery
-
-### Individual File Rollback
-
-```bash
-# Rollback specific protected file
-git checkout tags/${TARGET_TAG} -- public/sw.js
-git commit -m "rollback: restore SW from ${TARGET_TAG}"
-
-# Or multiple files
-git checkout tags/${TARGET_TAG} -- src/components/WebPushToggle.tsx src/utils/vapidHelper.ts
-```
-
-### Environment Variables
-
-```bash
-# Check .env against snapshot
-diff .env .env.snapshot.${TARGET_TAG}
-
-# Restore specific VAPID key
-# VITE_VAPID_PUBLIC_KEY="[from snapshot]"
-```
-
-## Edge Functions Rollback
-
-### Export Current Functions (backup)
-
-```bash
-mkdir -p infra/backups/$(date +%Y%m%d-%H%M)
-cd infra/backups/$(date +%Y%m%d-%H%M)
-
-# Export current versions
-supabase functions download webpush-upsert
-supabase functions download webpush-send
-```
-
-### Restore from Snapshot
-
-```bash
-# Deploy from snapshot directory
-cd infra/snapshots/${TARGET_TAG}/functions
-
-supabase functions deploy webpush-upsert --project-ref vkjrqirvdvjbemsfzxof
-supabase functions deploy webpush-send --project-ref vkjrqirvdvjbemsfzxof
-```
-
-### Database Schema Rollback
-
-```bash
-# Only if schema changes broke push functionality
-psql ${SUPABASE_DB_URL} < infra/snapshots/${TARGET_TAG}/schema.sql
-
-# Verify fcm_subscriptions table integrity
-psql ${SUPABASE_DB_URL} -c "\\d fcm_subscriptions;"
-```
-
-## Verification Checklist
+## 📋 Rollback Verification Checklist
 
 After rollback, verify:
 
-- [ ] Single SW registration: `/sw.js` scope `/`
-- [ ] No `firebase-messaging-sw.js` active
-- [ ] VAPID key matches snapshot (first/last 6 chars)
-- [ ] Push subscription works on iOS PWA
-- [ ] `webpush-upsert` accepts valid payloads (no 400 errors)
-- [ ] `webpush-send` delivers notifications
-- [ ] Debug panel shows controller=true, subscribed=true
+- [ ] No push permission prompts appear
+- [ ] No token registration attempts in logs
+- [ ] Existing users unaffected
+- [ ] App loads normally without errors
 
-## Prevention
+---
 
-To prevent future issues:
+## 🔧 Re-Enable After Fix
 
-1. Always create tags before push chain changes
-2. Use `override-push-guard` label only with approval
-3. Test on iOS PWA before merging
-4. Monitor edge function logs after deployment
-5. Keep snapshots up to date
+### Re-enable Feature Flag:
 
-## Emergency Contacts
+```typescript
+export const NATIVE_PUSH_ENABLED = true;
+```
 
-- **Lead Developer**: Joseph MULÉ
-- **Push Chain Owner**: M1SSION™ Team
-- **Critical Issue**: Create GitHub issue with `critical` label
+### Clear Kill Switch:
+
+```javascript
+window.pushKillSwitch.enable()
+// or
+localStorage.removeItem('push:disable')
+```
+
+---
+
+## 📊 Monitoring
+
+Check these after rollback:
+
+1. **Supabase Edge Function Logs**
+   - No new token registrations
+   - No push send attempts to disabled users
+
+2. **Error Tracking (if configured)**
+   - No push-related errors
+   - No permission errors
+
+3. **User Reports**
+   - No unexpected push prompts
+   - No app crashes
+
+---
+
+## 🔗 Related Files
+
+| File | Purpose |
+|------|---------|
+| `src/config/featureFlags.ts` | Feature flags |
+| `src/utils/pushKillSwitch.ts` | Kill switch utility |
+| `src/lib/nativePush.ts` | Main push implementation |
+| `src/main.tsx` | App initialization |
+
+---
+
+## 📞 Escalation
+
+If rollback doesn't work:
+
+1. Check browser console for errors
+2. Clear app data/cache
+3. Reinstall app from scratch
+4. Contact: wikus77@hotmail.it
+
+---
+
+*Last updated: 2026-01-24*

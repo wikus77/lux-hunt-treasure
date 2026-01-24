@@ -19,6 +19,14 @@ export const FCM_PUSH_ENABLED = true;  // ✅ ATTIVO
 // VAPID Web Push
 export const VAPID_PUSH_ENABLED = true;  // ✅ ATTIVO
 
+// ====== NATIVE PUSH (Capacitor iOS/Android) ======
+// Master switch for native push notification integration
+// Set to false to disable: permission prompts, token registration, listeners, deep links
+export const NATIVE_PUSH_ENABLED = true;  // ✅ ATTIVO - Cron push integration verified working
+
+// Native push analytics events (token registered, push received, push opened)
+export const NATIVE_PUSH_ANALYTICS = true;  // ✅ ATTIVO
+
 // ====== PRODUCTION SAFETY ======
 // Enable verbose logging in production (disable for launch)
 export const VERBOSE_LOGGING = import.meta.env.DEV;

@@ -1,9 +1,12 @@
 // © 2025 Joseph MULÉ – M1SSION™ - REAL Native Push Notifications
 // This module uses the REAL @capacitor/push-notifications plugin, NOT the stub
 // SAFE: Uses dynamic import to avoid crash on web/PWA
+// GATED: Behind NATIVE_PUSH_ENABLED feature flag for instant rollback
 
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
+import { NATIVE_PUSH_ENABLED, NATIVE_PUSH_ANALYTICS } from '@/config/featureFlags';
+import { isPushDisabled } from '@/utils/pushKillSwitch';
 
 // ============================================================================
 // TYPES (defined locally to avoid import errors on web)
@@ -90,6 +93,27 @@ function logPush(emoji: string, message: string, data?: any) {
 }
 
 // ============================================================================
+// ANALYTICS (minimal, non-sensitive)
+// ============================================================================
+
+function trackPushEvent(event: string, properties?: Record<string, any>) {
+  if (!NATIVE_PUSH_ANALYTICS) return;
+  
+  try {
+    // Log to console in dev
+    if (DEBUG_PUSH) {
+      console.log(`📊 [NativePush Analytics] ${event}`, properties || {});
+    }
+    
+    // Future: integrate with your analytics provider (Mixpanel, Amplitude, etc.)
+    // window.analytics?.track(event, properties);
+    
+  } catch (error) {
+    // Silent fail - analytics should never break the app
+  }
+}
+
+// ============================================================================
 // PUBLIC API
 // ============================================================================
 
@@ -141,6 +165,21 @@ async function _initNativePushInternal(): Promise<NativePushState> {
   _state.isNative = isCapacitorNative();
 
   logPush('🚀', `Initializing push for platform: ${_state.platform}, native: ${_state.isNative}`);
+
+  // 🛡️ FEATURE FLAG + KILL SWITCH CHECK
+  if (!NATIVE_PUSH_ENABLED) {
+    logPush('🚫', 'Native push disabled by NATIVE_PUSH_ENABLED feature flag');
+    _state.initialized = true;
+    _state.lastError = 'Native push disabled by feature flag';
+    return _state;
+  }
+
+  if (isPushDisabled()) {
+    logPush('🚫', 'Native push disabled by kill switch (localStorage)');
+    _state.initialized = true;
+    _state.lastError = 'Native push disabled by kill switch';
+    return _state;
+  }
 
   // Web/PWA - don't use Capacitor push
   if (!_state.isNative) {
@@ -325,6 +364,12 @@ async function setupListeners() {
     _state.token = token.value;
     _state.lastError = null;
 
+    // 📊 Analytics: token registered
+    trackPushEvent('push_token_registered', {
+      platform: _state.platform,
+      token_length: token.value.length,
+    });
+
     // Save to backend
     await saveTokenToBackend(token.value);
 
@@ -347,6 +392,13 @@ async function setupListeners() {
     logPush('📬', 'Push received in foreground:', notification);
     _state.lastReceived = new Date();
 
+    // 📊 Analytics: push received (no sensitive data)
+    trackPushEvent('push_received', {
+      platform: _state.platform,
+      in_foreground: true,
+      has_data: !!notification.data,
+    });
+
     // Call custom listener
     _listeners.received?.(notification);
   });
@@ -354,6 +406,14 @@ async function setupListeners() {
   // PUSH ACTION (user tapped notification)
   await PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
     logPush('👆', 'Push action performed:', action);
+
+    // 📊 Analytics: push opened (no sensitive data)
+    trackPushEvent('push_opened', {
+      platform: _state.platform,
+      action_id: action.actionId,
+      has_route: !!action.notification.data?.route,
+      has_type: !!action.notification.data?.type,
+    });
 
     // Handle deep linking based on notification data
     handlePushAction(action);
