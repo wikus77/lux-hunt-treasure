@@ -66,7 +66,6 @@ LIMIT 1;
 -- ================================================================
 SELECT 
   id,
-  created_at,
   url,
   headers::text LIKE '%x-cron-secret%' as has_cron_secret_header,
   LEFT(body::text, 100) as body_preview
@@ -79,7 +78,6 @@ LIMIT 20;
 -- ================================================================
 SELECT 
   id,
-  created,
   status_code,
   LEFT(error_msg, 100) as error_msg
 FROM net._http_response 
