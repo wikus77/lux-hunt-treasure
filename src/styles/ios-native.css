@@ -205,8 +205,9 @@ body.is-native {
   /* Prevent overscroll bounce at body level */
   overscroll-behavior: none;
   /* 🚨 DO NOT USE position:fixed here - causes draggable overlay bug! */
-  /* Use overscroll-behavior instead for bounce prevention */
-  overflow-y: auto;
+  /* 🔧 FIX 25/01/2026: overflow-y: hidden (was auto) to prevent nested scroll containers */
+  /* Only <main> should scroll - body must NOT be a scroll container */
+  overflow-y: hidden;
   overflow-x: hidden;
   /* Ensure full height without breaking scroll context */
   min-height: 100vh;
