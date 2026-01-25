@@ -41,11 +41,8 @@ const findScrollParent = (element: HTMLElement | null): HTMLElement | null => {
 };
 
 export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, disabled = false }) => {
-  // 🔧 A/B TEST 25/01/2026: If disabled, render children directly without PTR
-  // This isolates whether ghost refresh is caused by MissionSync or something else
-  if (disabled) {
-    return <>{children}</>;
-  }
+  // 🔧 FIX 25/01/2026: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURN
+  // React requires consistent hook calls across renders
   
   // State for React re-renders (visual updates)
   const [pullDistance, setPullDistance] = useState(0);
@@ -70,16 +67,24 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
 
   // 🔧 FIX v12: Use useLayoutEffect to find scrollParent BEFORE paint
   useLayoutEffect(() => {
+    // 🔧 FIX 25/01/2026: Skip if disabled
+    if (disabled) return;
     if (containerRef.current) {
       scrollParentRef.current = findScrollParent(containerRef.current);
       logPTR('MOUNT: container=', containerRef.current?.tagName, 'scrollParent=', scrollParentRef.current?.tagName);
     }
-  }, []);
+  }, [disabled]);
 
   // 🔧 FIX v12: ALL NATIVE LISTENERS in single useEffect
   // This ensures touchstart, touchmove, touchend are all registered together
   // and share the same refs without closure issues
   useEffect(() => {
+    // 🔧 FIX 25/01/2026: Skip listener attachment if disabled (iOS native)
+    if (disabled) {
+      logPTR('SKIP: PTR disabled (iOS native wrapped)');
+      return;
+    }
+    
     const container = containerRef.current;
     if (!container) {
       logPTR('WARN: container not ready');
@@ -281,10 +286,13 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
     
     // Start attachment process
     requestAnimationFrame(tryAttachListeners);
-  }, []); // Empty deps - attach once on mount
+  }, [disabled]); // 🔧 FIX 25/01/2026: Re-run when disabled changes
 
   // Safety reset on visibility/blur
   useEffect(() => {
+    // 🔧 FIX 25/01/2026: Skip if disabled
+    if (disabled) return;
+    
     const forceReset = () => {
       logPTR('Force reset (visibility/blur)');
       isPullingRef.current = false;
@@ -306,7 +314,7 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
       window.removeEventListener('blur', onBlur);
       window.removeEventListener('pagehide', onPageHide);
     };
-  }, []);
+  }, [disabled]);
 
   // Watchdog: reset stuck transforms
   useEffect(() => {
@@ -323,6 +331,12 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
   const progress = Math.min(pullDistance / PULL_THRESHOLD, 1);
   const shouldTrigger = pullDistance >= PULL_THRESHOLD;
   const shouldBlockBrowserTouch = isPulling && pullDistance > 0;
+
+  // 🔧 FIX 25/01/2026: Conditional return AFTER all hooks (React rules compliance)
+  // When disabled, render children directly without PTR wrapper
+  if (disabled) {
+    return <>{children}</>;
+  }
 
   return (
     <div

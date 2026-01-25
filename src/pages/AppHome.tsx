@@ -38,7 +38,10 @@ const AppHome = () => {
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
-  const [isCapacitor, setIsCapacitor] = useState(false);
+  // 🔧 FIX 25/01/2026: Synchronous detection - MUST be true BEFORE first render
+  // Previous bug: useState(false) + useEffect caused race condition where MissionSync
+  // mounted with disabled=false, attached listeners, then disabled changed to true
+  const [isCapacitor] = useState(() => !!(window as any).Capacitor);
   const { hasRole, user, isAuthenticated, isLoading, getCurrentUser } = useUnifiedAuth();
   const [, navigate] = useLocation();
 
@@ -79,13 +82,8 @@ const { isConnected } = useRealTimeNotifications();
   // Check for developer access and Capacitor environment
   useEffect(() => {
     const checkAccess = () => {
-      const isCapacitorApp = !!(window as any).Capacitor;
-      setIsCapacitor(isCapacitorApp);
-      
-      const userAgent = navigator.userAgent;
-      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
-      
-      // Access check completed
+      // 🔧 FIX 25/01/2026: isCapacitor now detected synchronously in useState initializer
+      // No longer need to setIsCapacitor here
       
       // Allow access for all users since this is an internal authenticated route
       // If users reach this page, they're already authenticated
