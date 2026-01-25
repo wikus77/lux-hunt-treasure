@@ -9,6 +9,8 @@ const M1_LOGO_URL = '/icons/icon-m1-512x512.png';
 interface MissionSyncProps {
   onRefresh: () => Promise<void>;
   children: React.ReactNode;
+  /** 🔧 A/B TEST 25/01/2026: Disable PTR on iOS native to isolate ghost refresh cause */
+  disabled?: boolean;
 }
 
 const PULL_THRESHOLD = 80; // px to trigger refresh
@@ -38,7 +40,13 @@ const findScrollParent = (element: HTMLElement | null): HTMLElement | null => {
   return document.documentElement;
 };
 
-export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children }) => {
+export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, disabled = false }) => {
+  // 🔧 A/B TEST 25/01/2026: If disabled, render children directly without PTR
+  // This isolates whether ghost refresh is caused by MissionSync or something else
+  if (disabled) {
+    return <>{children}</>;
+  }
+  
   // State for React re-renders (visual updates)
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
