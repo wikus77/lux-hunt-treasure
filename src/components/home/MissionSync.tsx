@@ -13,6 +13,7 @@ interface MissionSyncProps {
 
 const PULL_THRESHOLD = 80; // px to trigger refresh
 const MAX_PULL = 120; // max pull distance
+const MIN_TOUCH_DELTA = 10; // 🔧 FIX 25/01/2026: Minimum delta before considering pull gesture
 
 // 🔧 DEBUG PTR - DISABLED for production release
 const DEBUG_PTR = false;
@@ -100,6 +101,8 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
       
       // ============================================
       // NATIVE TOUCHSTART
+      // 🔧 FIX 25/01/2026: Stricter check - scrollTop must be EXACTLY 0
+      // and we defer isPulling activation to touchmove to avoid momentum false positives
       // ============================================
       const handleTouchStart = (e: TouchEvent) => {
         if (isRefreshingRef.current) {
@@ -109,24 +112,32 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
         
         const scrollParent = scrollParentRef.current || container;
         const scrollTop = scrollParent.scrollTop;
-        const isAtTop = scrollTop <= 1;
+        // 🔧 FIX: Require scrollTop === 0 (not <= 1) to prevent momentum false positives
+        const isAtTop = scrollTop === 0;
         
         logPTR('touchstart: scrollTop=', scrollTop, 'isAtTop=', isAtTop, 'target=', (e.target as HTMLElement)?.tagName);
         
+        // 🔧 FIX: Only record start position, don't activate pulling yet
+        // Activation happens in touchmove after confirming deliberate downward gesture
         if (isAtTop) {
           startYRef.current = e.touches[0].clientY;
-          isPullingRef.current = true;
-          setIsPulling(true);
-          logPTR('touchstart: PULL READY ✓');
+          // NOTE: isPullingRef NOT set here - will be set in touchmove after MIN_TOUCH_DELTA
+          logPTR('touchstart: POTENTIAL PULL (waiting for touchmove validation)');
+        } else {
+          // Not at top - clear any stale start position
+          startYRef.current = 0;
         }
       };
       
       // ============================================
       // NATIVE TOUCHMOVE (with passive: false)
+      // 🔧 FIX 25/01/2026: Activate pulling only after MIN_TOUCH_DELTA confirmed
       // ============================================
       const handleTouchMove = (e: TouchEvent) => {
-        if (!isPullingRef.current) return;
         if (isRefreshingRef.current) return;
+        
+        // 🔧 FIX: If startY is 0, we didn't start at top - ignore
+        if (startYRef.current === 0) return;
         
         const currentY = e.touches[0].clientY;
         const deltaY = currentY - startYRef.current;
@@ -136,8 +147,16 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
         
         logPTR('touchmove: deltaY=', deltaY.toFixed(1), 'scrollTop=', scrollTop, 'isPulling=', isPullingRef.current);
         
-        if (deltaY > 0 && scrollTop <= 1) {
-          // User is pulling DOWN at top → PULL-TO-REFRESH
+        // 🔧 FIX: Require scrollTop === 0 AND deltaY > MIN_TOUCH_DELTA to activate pull
+        if (scrollTop === 0 && deltaY > MIN_TOUCH_DELTA) {
+          // User is deliberately pulling DOWN at top → activate PULL-TO-REFRESH
+          if (!isPullingRef.current) {
+            // First activation - set pulling state
+            isPullingRef.current = true;
+            setIsPulling(true);
+            logPTR('touchmove: PULL ACTIVATED (delta passed threshold)');
+          }
+          
           // CRITICAL: preventDefault to stop browser scroll/overscroll
           e.preventDefault();
           
@@ -147,21 +166,28 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
           setPullDistance(newPull);
           
           logPTR('touchmove: PULLING', newPull.toFixed(1), 'px, preventDefault CALLED ✓');
-        } else if (deltaY < -10) {
-          // User is scrolling DOWN (viewing content) → cancel pull
-          logPTR('touchmove: Scrolling down, canceling pull');
-          isPullingRef.current = false;
-          setIsPulling(false);
-          setPullDistance(0);
-          pullDistanceRef.current = 0;
+        } else if (scrollTop > 0 || deltaY < -MIN_TOUCH_DELTA) {
+          // 🔧 FIX: User scrolled away from top OR is scrolling up (viewing content) → cancel pull
+          if (isPullingRef.current || startYRef.current !== 0) {
+            logPTR('touchmove: Canceling pull (scrollTop=', scrollTop, ', deltaY=', deltaY, ')');
+            isPullingRef.current = false;
+            setIsPulling(false);
+            setPullDistance(0);
+            pullDistanceRef.current = 0;
+            startYRef.current = 0; // Clear start position
+          }
         }
       };
       
       // ============================================
       // NATIVE TOUCHEND
+      // 🔧 FIX 25/01/2026: Reset startYRef on touchend
       // ============================================
       const handleTouchEnd = async () => {
         logPTR('touchend: isPulling=', isPullingRef.current, 'pullDistance=', pullDistanceRef.current);
+        
+        // 🔧 FIX: Always reset startY on touchend
+        startYRef.current = 0;
         
         if (!isPullingRef.current) return;
         
@@ -197,6 +223,7 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
       
       // ============================================
       // NATIVE TOUCHCANCEL
+      // 🔧 FIX 25/01/2026: Also reset startYRef
       // ============================================
       const handleTouchCancel = () => {
         logPTR('touchcancel: Resetting state');
@@ -204,6 +231,7 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children })
         setIsPulling(false);
         setPullDistance(0);
         pullDistanceRef.current = 0;
+        startYRef.current = 0; // 🔧 FIX: Reset start position
       };
       
       // ============================================
