@@ -207,8 +207,8 @@ const { isConnected } = useRealTimeNotifications();
       </Helmet>
       
       {/* CRITICAL FIX: Remove duplicate header/nav - GlobalLayout handles these */}
-      {/* 🔧 A/B TEST 25/01/2026: Disable PTR on iOS native to isolate ghost refresh cause */}
-      <MissionSync onRefresh={handleMissionSync} disabled={isCapacitor}>
+      {/* 🔧 FIX 25/01/2026: PTR re-enabled after race condition fix - safe guards in MissionSync */}
+      <MissionSync onRefresh={handleMissionSync}>
       <div className="px-4 space-y-6 relative z-10">
         <AnimatePresence>
           {isLoaded && (

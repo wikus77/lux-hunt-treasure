@@ -15,7 +15,10 @@ interface MissionSyncProps {
 
 const PULL_THRESHOLD = 80; // px to trigger refresh
 const MAX_PULL = 120; // max pull distance
-const MIN_TOUCH_DELTA = 10; // 🔧 FIX 25/01/2026: Minimum delta before considering pull gesture
+// 🔧 FIX 25/01/2026: Increased delta for more deliberate gesture (was 10)
+const MIN_TOUCH_DELTA = 24; // px before considering pull gesture
+// 🔧 FIX 25/01/2026: Momentum lockout - don't arm PTR if scroll happened recently
+const MOMENTUM_LOCKOUT_MS = 150; // ms to wait after scroll before allowing PTR
 
 // 🔧 DEBUG PTR - DISABLED for production release
 const DEBUG_PTR = false;
@@ -58,6 +61,8 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
   const pullDistanceRef = useRef(0);
   const listenersAttachedRef = useRef(false);
   const onRefreshRef = useRef(onRefresh);
+  // 🔧 FIX 25/01/2026: Track last scroll time for momentum lockout
+  const lastScrollTimeRef = useRef(0);
   
   // Keep onRefresh ref updated
   useEffect(() => { onRefreshRef.current = onRefresh; }, [onRefresh]);
@@ -114,8 +119,10 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
       
       // ============================================
       // NATIVE TOUCHSTART
-      // 🔧 FIX 25/01/2026: Stricter check - scrollTop must be EXACTLY 0
-      // and we defer isPulling activation to touchmove to avoid momentum false positives
+      // 🔧 FIX 25/01/2026: Stricter checks:
+      // - scrollTop must be EXACTLY 0
+      // - momentum lockout: no recent scroll
+      // - defer isPulling activation to touchmove
       // ============================================
       const handleTouchStart = (e: TouchEvent) => {
         if (isRefreshingRef.current) {
@@ -128,17 +135,24 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
         // 🔧 FIX: Require scrollTop === 0 (not <= 1) to prevent momentum false positives
         const isAtTop = scrollTop === 0;
         
-        logPTR('touchstart: scrollTop=', scrollTop, 'isAtTop=', isAtTop, 'target=', (e.target as HTMLElement)?.tagName);
+        // 🔧 FIX 25/01/2026: Momentum lockout - don't arm if scroll happened recently
+        const timeSinceScroll = Date.now() - lastScrollTimeRef.current;
+        const isMomentumActive = timeSinceScroll < MOMENTUM_LOCKOUT_MS;
         
-        // 🔧 FIX: Only record start position, don't activate pulling yet
+        logPTR('touchstart: scrollTop=', scrollTop, 'isAtTop=', isAtTop, 'timeSinceScroll=', timeSinceScroll, 'momentum=', isMomentumActive);
+        
+        // 🔧 FIX: Only record start position if at top AND no momentum
         // Activation happens in touchmove after confirming deliberate downward gesture
-        if (isAtTop) {
+        if (isAtTop && !isMomentumActive) {
           startYRef.current = e.touches[0].clientY;
           // NOTE: isPullingRef NOT set here - will be set in touchmove after MIN_TOUCH_DELTA
           logPTR('touchstart: POTENTIAL PULL (waiting for touchmove validation)');
         } else {
-          // Not at top - clear any stale start position
+          // Not at top or momentum active - clear any stale start position
           startYRef.current = 0;
+          if (isMomentumActive) {
+            logPTR('touchstart: BLOCKED (momentum lockout)');
+          }
         }
       };
       
@@ -248,11 +262,13 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
       };
       
       // ============================================
-      // SCROLL LISTENER (for isAtTop tracking)
+      // SCROLL LISTENER (for momentum lockout tracking)
+      // 🔧 FIX 25/01/2026: Track scroll time to prevent PTR during momentum
       // ============================================
       const scrollParent = scrollParentRef.current;
       const handleScroll = () => {
-        // Only used for debugging, refs handle actual logic
+        lastScrollTimeRef.current = Date.now();
+        logPTR('scroll: updated lastScrollTime');
       };
       
       // ATTACH ALL LISTENERS
