@@ -22,6 +22,59 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
+// ============================================================================
+// 🆕 NATIVE PUSH HELPER (2026-01-25)
+// Calls send-native-push Edge Function for iOS/Android tokens
+// ============================================================================
+async function sendNativePushForUser(
+  userId: string,
+  title: string,
+  body: string,
+  data: Record<string, any>,
+  dryRun: boolean
+): Promise<{ sent: number; failed: number; skipped: boolean }> {
+  const ADMIN_PUSH_SECRET = Deno.env.get("ADMIN_PUSH_SECRET");
+  
+  if (!ADMIN_PUSH_SECRET) {
+    console.log(`[AUTO-PUSH-CRON] ⚠️ ADMIN_PUSH_SECRET not set, skipping native push`);
+    return { sent: 0, failed: 0, skipped: true };
+  }
+
+  if (dryRun) {
+    console.log(`[AUTO-PUSH-CRON] 📱 DRY RUN: Would send native push to user ${userId.slice(0,8)}...`);
+    return { sent: 0, failed: 0, skipped: true };
+  }
+
+  try {
+    const response = await fetch(`${SB_URL}/functions/v1/send-native-push`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-secret': ADMIN_PUSH_SECRET,
+      },
+      body: JSON.stringify({
+        title,
+        body,
+        data,
+        targetUserId: userId,
+      }),
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log(`[AUTO-PUSH-CRON] 📱 Native push sent: user=${userId.slice(0,8)}..., sent=${result.sent}, failed=${result.failed}`);
+      return { sent: result.sent || 0, failed: result.failed || 0, skipped: false };
+    } else {
+      console.log(`[AUTO-PUSH-CRON] ⚠️ Native push failed for user ${userId.slice(0,8)}...: ${result.error || 'unknown'}`);
+      return { sent: 0, failed: 1, skipped: false };
+    }
+  } catch (error: any) {
+    console.error(`[AUTO-PUSH-CRON] ❌ Native push error for user ${userId.slice(0,8)}...:`, error.message);
+    return { sent: 0, failed: 1, skipped: false };
+  }
+}
+
 interface Template {
   id: string;
   title: string;
@@ -128,7 +181,7 @@ Deno.serve(async (req) => {
     // 📊 RELIABILITY: Structured logging header
     console.log(`[AUTO-PUSH-CRON] ════════════════════════════════════════════`);
     console.log(`[AUTO-PUSH-CRON] 🆔 Run ID: ${runId}`);
-    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2026-01-23-v14-RELIABLE`);
+    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2026-01-25-v15-NATIVE`);
     console.log(`[AUTO-PUSH-CRON] ✅ Auth: ${isServiceRole ? 'service_role' : providedSecret ? 'cron_secret' : 'no_secret_configured'}`);
     console.log(`[AUTO-PUSH-CRON] ⚙️ Params: dry=${dryRun}, bypass=${bypassQuietHours}, force=${forceMode}, user=${forceUserId || 'all'}`);
     console.log(`[AUTO-PUSH-CRON] 🔑 VAPID: contact=${!!VAPID_CONTACT}, public=${!!VAPID_PUBLIC_KEY}, private=${!!VAPID_PRIVATE_KEY}`);
@@ -468,6 +521,19 @@ Deno.serve(async (req) => {
           }
           
           if (sentToUser > 0) {
+            // 🆕 2026-01-25: Also send to native iOS/Android tokens
+            const nativeResult = await sendNativePushForUser(
+              user.id,
+              renderedTitle,
+              renderedBody,
+              {
+                template_id: selectedTemplate.id,
+                deeplink: selectedTemplate.deeplink,
+                ctx: 'auto-cron-native'
+              },
+              dryRun
+            );
+
             logsToInsert.push({
               template_id: selectedTemplate.id,
               user_id: user.id,
@@ -480,7 +546,11 @@ Deno.serve(async (req) => {
                 deeplink: selectedTemplate.deeplink,
                 sent_at: new Date().toISOString(),
                 push_sent: sentToUser,
-                push_failed: failedForUser
+                push_failed: failedForUser,
+                // 🆕 Native push stats
+                native_sent: nativeResult.sent,
+                native_failed: nativeResult.failed,
+                native_skipped: nativeResult.skipped
               }
             });
             sentCount++;
@@ -539,14 +609,15 @@ Deno.serve(async (req) => {
     return json({
       ok: true,
       run_id: runId,
-      version: '2026-01-23-v14-RELIABLE',
+      version: '2026-01-25-v15-NATIVE',
       users_processed: shuffledUsers.length,
       sent: sentCount,
       skipped: skippedCount,
       dry_run: dryRun,
       force_mode: forceMode,
       time_slot_bypassed: skipTimeSlot,
-      duration_ms: durationMs
+      duration_ms: durationMs,
+      native_push_enabled: !!Deno.env.get("ADMIN_PUSH_SECRET")
     }, 200);
 
   } catch (error: any) {
