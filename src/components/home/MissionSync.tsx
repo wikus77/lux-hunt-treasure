@@ -13,14 +13,39 @@ interface MissionSyncProps {
   disabled?: boolean;
 }
 
-// 🔧 FIX 25/01/2026: True PTR requires deliberate LONG PULL + RELEASE
-// No refresh on tap, no refresh on micro-movements
-const PULL_THRESHOLD = 90; // pullDistance to trigger refresh (deltaY * 0.5)
-const MAX_PULL = 130; // max visual pull distance
-const ARM_DELTA = 35; // deltaY required to ARM pull state (must drag down this far)
-const MIN_HOLD_MS = 250; // must HOLD pulled state for this long before release triggers
-const TAP_MAX_DELTA = 15; // if total deltaY < this on touchend, it's a tap - ignore
-const MOMENTUM_LOCKOUT_MS = 200; // no PTR if scroll happened within this time
+// 🔧 FIX 25/01/2026: STATE MACHINE PTR - RELEASE-ONLY GATE
+// States: idle → tracking → armed → refreshing
+// NO refresh on touchstart, NO refresh on tap, ONLY on deliberate release
+const PULL_THRESHOLD = 100; // pullDistance to trigger refresh (must pull this far)
+const MAX_PULL = 140; // max visual pull distance
+const ARM_DELTA = 50; // deltaY required to ARM (must drag down at least this far)
+const MIN_HOLD_MS = 300; // must HOLD armed state for this long before release works
+const TAP_DURATION_MS = 200; // if touch duration < this, it's a tap - ALWAYS ignore
+const TAP_MAX_DELTA = 20; // if total deltaY < this, it's a tap - ALWAYS ignore
+const MOMENTUM_LOCKOUT_MS = 250; // no PTR if scroll happened within this time
+
+// PTR States
+type PTRState = 'idle' | 'tracking' | 'armed' | 'refreshing';
+
+// 🔧 KILL SWITCH: This is the ONLY function that can trigger refresh
+// All conditions must be met or refresh is BLOCKED
+const canCommitRefresh = (
+  state: PTRState,
+  pullDistance: number,
+  holdDuration: number,
+  touchDuration: number,
+  maxDelta: number,
+  scrollTop: number
+): boolean => {
+  // HARD BLOCKS
+  if (state !== 'armed') return false;
+  if (scrollTop !== 0) return false;
+  if (pullDistance < PULL_THRESHOLD) return false;
+  if (holdDuration < MIN_HOLD_MS) return false;
+  if (touchDuration < TAP_DURATION_MS) return false;
+  if (maxDelta < TAP_MAX_DELTA) return false;
+  return true;
+};
 
 // 🔧 DEBUG PTR - DISABLED for production release
 const DEBUG_PTR = false;
@@ -63,11 +88,11 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
   const pullDistanceRef = useRef(0);
   const listenersAttachedRef = useRef(false);
   const onRefreshRef = useRef(onRefresh);
-  // 🔧 FIX 25/01/2026: Track last scroll time for momentum lockout
+  // 🔧 FIX 25/01/2026: STATE MACHINE refs
+  const ptrStateRef = useRef<PTRState>('idle');
   const lastScrollTimeRef = useRef(0);
-  // 🔧 FIX 25/01/2026: Track when PTR was armed (for hold time validation)
   const armTimeRef = useRef(0);
-  // 🔧 FIX 25/01/2026: Track max deltaY during gesture (for tap detection)
+  const touchStartTimeRef = useRef(0);
   const maxDeltaYRef = useRef(0);
   
   // Keep onRefresh ref updated
@@ -125,55 +150,52 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
       
       // ============================================
       // NATIVE TOUCHSTART
-      // 🔧 FIX 25/01/2026: Stricter checks:
-      // - scrollTop must be EXACTLY 0
-      // - momentum lockout: no recent scroll
-      // - defer isPulling activation to touchmove
+      // 🔧 STATE MACHINE: touchstart → state = 'tracking' (NEVER 'armed')
+      // NO refresh can EVER happen from touchstart
       // ============================================
       const handleTouchStart = (e: TouchEvent) => {
-        if (isRefreshingRef.current) {
+        // BLOCK if already refreshing
+        if (ptrStateRef.current === 'refreshing') {
           logPTR('touchstart: BLOCKED (refreshing)');
           return;
         }
         
         const scrollParent = scrollParentRef.current || container;
         const scrollTop = scrollParent.scrollTop;
-        // 🔧 FIX: Require scrollTop === 0 (not <= 1) to prevent momentum false positives
         const isAtTop = scrollTop === 0;
-        
-        // 🔧 FIX 25/01/2026: Momentum lockout - don't arm if scroll happened recently
         const timeSinceScroll = Date.now() - lastScrollTimeRef.current;
         const isMomentumActive = timeSinceScroll < MOMENTUM_LOCKOUT_MS;
         
-        logPTR('touchstart: scrollTop=', scrollTop, 'isAtTop=', isAtTop, 'timeSinceScroll=', timeSinceScroll, 'momentum=', isMomentumActive);
+        logPTR('touchstart: scrollTop=', scrollTop, 'isAtTop=', isAtTop, 'momentum=', isMomentumActive, 'state=', ptrStateRef.current);
         
-        // 🔧 FIX: Only record start position if at top AND no momentum
-        // Activation happens in touchmove after confirming deliberate downward gesture
+        // Reset to TRACKING state (not armed!)
         if (isAtTop && !isMomentumActive) {
+          ptrStateRef.current = 'tracking';
           startYRef.current = e.touches[0].clientY;
-          armTimeRef.current = 0; // Reset arm time
-          maxDeltaYRef.current = 0; // Reset max delta tracking
-          // NOTE: isPullingRef NOT set here - will be set in touchmove after ARM_DELTA
-          logPTR('touchstart: POTENTIAL PULL (waiting for touchmove validation)');
-        } else {
-          // Not at top or momentum active - clear all state
-          startYRef.current = 0;
+          touchStartTimeRef.current = Date.now();
           armTimeRef.current = 0;
           maxDeltaYRef.current = 0;
-          if (isMomentumActive) {
-            logPTR('touchstart: BLOCKED (momentum lockout)');
-          }
+          isPullingRef.current = false;
+          logPTR('touchstart: state → tracking');
+        } else {
+          // Reset to IDLE
+          ptrStateRef.current = 'idle';
+          startYRef.current = 0;
+          touchStartTimeRef.current = 0;
+          armTimeRef.current = 0;
+          maxDeltaYRef.current = 0;
+          logPTR('touchstart: state → idle (not at top or momentum)');
         }
       };
       
       // ============================================
       // NATIVE TOUCHMOVE (with passive: false)
-      // 🔧 FIX 25/01/2026: True PTR - arm only after ARM_DELTA, track hold time
+      // 🔧 STATE MACHINE: tracking → armed (only if deltaY > ARM_DELTA)
       // ============================================
       const handleTouchMove = (e: TouchEvent) => {
-        if (isRefreshingRef.current) return;
-        
-        // 🔧 FIX: If startY is 0, we didn't start at top - ignore
+        // BLOCK if refreshing or not tracking/armed
+        if (ptrStateRef.current === 'refreshing') return;
+        if (ptrStateRef.current === 'idle') return;
         if (startYRef.current === 0) return;
         
         const currentY = e.touches[0].clientY;
@@ -187,100 +209,120 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
         const scrollParent = scrollParentRef.current || container;
         const scrollTop = scrollParent.scrollTop;
         
-        logPTR('touchmove: deltaY=', deltaY.toFixed(1), 'scrollTop=', scrollTop, 'isPulling=', isPullingRef.current, 'maxDelta=', maxDeltaYRef.current.toFixed(1));
+        logPTR('touchmove: state=', ptrStateRef.current, 'deltaY=', deltaY.toFixed(1), 'scrollTop=', scrollTop, 'maxDelta=', maxDeltaYRef.current.toFixed(1));
         
-        // 🔧 FIX: Require scrollTop === 0 AND deltaY > ARM_DELTA to activate pull
+        // Check if user scrolled away from top or is scrolling up
+        if (scrollTop > 0 || deltaY < -20) {
+          // DISARM and reset to idle
+          logPTR('touchmove: DISARM → idle (scrollTop=', scrollTop, ', deltaY=', deltaY, ')');
+          ptrStateRef.current = 'idle';
+          isPullingRef.current = false;
+          armTimeRef.current = 0;
+          setIsPulling(false);
+          setPullDistance(0);
+          pullDistanceRef.current = 0;
+          startYRef.current = 0;
+          return;
+        }
+        
+        // Only process if at top
         if (scrollTop === 0 && deltaY > ARM_DELTA) {
-          // User is deliberately pulling DOWN at top → activate PULL-TO-REFRESH
-          if (!isPullingRef.current) {
-            // First activation - record arm time
-            isPullingRef.current = true;
+          // Transition: tracking → armed
+          if (ptrStateRef.current === 'tracking') {
+            ptrStateRef.current = 'armed';
             armTimeRef.current = Date.now();
+            isPullingRef.current = true;
             setIsPulling(true);
-            logPTR('touchmove: PULL ARMED at', armTimeRef.current);
+            logPTR('touchmove: state → armed at', armTimeRef.current);
           }
           
-          // CRITICAL: preventDefault to stop browser scroll/overscroll
-          e.preventDefault();
-          
-          const resistance = 0.5;
-          const newPull = Math.min(deltaY * resistance, MAX_PULL);
-          pullDistanceRef.current = newPull;
-          setPullDistance(newPull);
-          
-          logPTR('touchmove: PULLING', newPull.toFixed(1), 'px');
-        } else if (scrollTop > 0 || deltaY < -ARM_DELTA) {
-          // 🔧 FIX: User scrolled away from top OR is scrolling up → cancel pull
-          if (isPullingRef.current || startYRef.current !== 0) {
-            logPTR('touchmove: DISARMING (scrollTop=', scrollTop, ', deltaY=', deltaY, ')');
-            isPullingRef.current = false;
-            armTimeRef.current = 0;
-            setIsPulling(false);
-            setPullDistance(0);
-            pullDistanceRef.current = 0;
-            startYRef.current = 0;
+          // Update visual (only if armed)
+          if (ptrStateRef.current === 'armed') {
+            e.preventDefault(); // Block browser overscroll
+            const resistance = 0.5;
+            const newPull = Math.min(deltaY * resistance, MAX_PULL);
+            pullDistanceRef.current = newPull;
+            setPullDistance(newPull);
+            logPTR('touchmove: pulling', newPull.toFixed(1), 'px');
           }
         }
       };
       
       // ============================================
       // NATIVE TOUCHEND
-      // 🔧 FIX 25/01/2026: True PTR - requires arm + hold time + threshold
-      // NO refresh on tap or quick micro-swipes
+      // 🔧 STATE MACHINE: ONLY place refresh can happen (RELEASE-ONLY GATE)
+      // Uses KILL SWITCH to validate ALL conditions
       // ============================================
       const handleTouchEnd = async () => {
         const currentPull = pullDistanceRef.current;
-        const wasArmed = isPullingRef.current;
-        const armTime = armTimeRef.current;
+        const currentState = ptrStateRef.current;
         const maxDelta = maxDeltaYRef.current;
-        const holdDuration = armTime > 0 ? Date.now() - armTime : 0;
+        const touchDuration = touchStartTimeRef.current > 0 ? Date.now() - touchStartTimeRef.current : 0;
+        const holdDuration = armTimeRef.current > 0 ? Date.now() - armTimeRef.current : 0;
+        const scrollParent = scrollParentRef.current || container;
+        const scrollTop = scrollParent.scrollTop;
         
-        logPTR('touchend: armed=', wasArmed, 'pull=', currentPull.toFixed(1), 'maxDelta=', maxDelta.toFixed(1), 'holdTime=', holdDuration);
+        logPTR('touchend: state=', currentState, 'pull=', currentPull.toFixed(1), 'maxDelta=', maxDelta.toFixed(1), 
+               'touchDuration=', touchDuration, 'holdDuration=', holdDuration, 'scrollTop=', scrollTop);
         
-        // 🔧 FIX: Always reset ALL state on touchend
+        // 🔧 ALWAYS reset state first (prevents any re-trigger)
+        const wasState = ptrStateRef.current;
+        ptrStateRef.current = 'idle';
         startYRef.current = 0;
+        touchStartTimeRef.current = 0;
         armTimeRef.current = 0;
         maxDeltaYRef.current = 0;
         isPullingRef.current = false;
         setIsPulling(false);
         
-        // 🔧 FIX: TAP DETECTION - if maxDelta was tiny, this was a tap, not a pull
-        if (maxDelta < TAP_MAX_DELTA) {
-          logPTR('touchend: TAP DETECTED (maxDelta < TAP_MAX_DELTA), ignoring');
+        // 🔧 KILL SWITCH: Use centralized validation
+        const canRefresh = canCommitRefresh(
+          wasState,
+          currentPull,
+          holdDuration,
+          touchDuration,
+          maxDelta,
+          scrollTop
+        );
+        
+        if (!canRefresh) {
+          logPTR('touchend: KILL SWITCH BLOCKED refresh. Conditions:', {
+            state: wasState,
+            pull: currentPull,
+            holdDuration,
+            touchDuration,
+            maxDelta,
+            scrollTop,
+            required: { 
+              state: 'armed', 
+              pull: `>=${PULL_THRESHOLD}`, 
+              hold: `>=${MIN_HOLD_MS}`,
+              touch: `>=${TAP_DURATION_MS}`,
+              delta: `>=${TAP_MAX_DELTA}`
+            }
+          });
           setPullDistance(0);
           pullDistanceRef.current = 0;
           return;
         }
         
-        // 🔧 FIX: HOLD TIME VALIDATION - must have held for MIN_HOLD_MS
-        if (holdDuration < MIN_HOLD_MS) {
-          logPTR('touchend: HOLD TOO SHORT (', holdDuration, 'ms < ', MIN_HOLD_MS, 'ms), ignoring');
-          setPullDistance(0);
-          pullDistanceRef.current = 0;
-          return;
-        }
+        // 🔧 PASSED KILL SWITCH - trigger refresh
+        logPTR('touchend: KILL SWITCH PASSED ✓ → TRIGGERING REFRESH');
         
-        // 🔧 FIX: PULL THRESHOLD - must have pulled far enough
-        if (currentPull >= PULL_THRESHOLD && wasArmed && !isRefreshingRef.current) {
-          logPTR('touchend: TRIGGERING REFRESH ✓ (armed + held + threshold met)');
-          
-          isRefreshingRef.current = true;
-          setIsRefreshing(true);
-          setPullDistance(60); // Hold at indicator
-          
-          try {
-            await onRefreshRef.current();
-            logPTR('touchend: Refresh complete');
-          } catch (error) {
-            console.error('[MissionSync] Refresh error:', error);
-          } finally {
-            isRefreshingRef.current = false;
-            setIsRefreshing(false);
-            setPullDistance(0);
-            pullDistanceRef.current = 0;
-          }
-        } else {
-          logPTR('touchend: Release without refresh (conditions not met)');
+        ptrStateRef.current = 'refreshing';
+        isRefreshingRef.current = true;
+        setIsRefreshing(true);
+        setPullDistance(60);
+        
+        try {
+          await onRefreshRef.current();
+          logPTR('touchend: Refresh complete');
+        } catch (error) {
+          console.error('[MissionSync] Refresh error:', error);
+        } finally {
+          ptrStateRef.current = 'idle';
+          isRefreshingRef.current = false;
+          setIsRefreshing(false);
           setPullDistance(0);
           pullDistanceRef.current = 0;
         }
@@ -288,15 +330,17 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
       
       // ============================================
       // NATIVE TOUCHCANCEL
-      // 🔧 FIX 25/01/2026: Reset ALL state
+      // 🔧 STATE MACHINE: Reset to idle
       // ============================================
       const handleTouchCancel = () => {
-        logPTR('touchcancel: Resetting ALL state');
+        logPTR('touchcancel: state → idle');
+        ptrStateRef.current = 'idle';
         isPullingRef.current = false;
         setIsPulling(false);
         setPullDistance(0);
         pullDistanceRef.current = 0;
         startYRef.current = 0;
+        touchStartTimeRef.current = 0;
         armTimeRef.current = 0;
         maxDeltaYRef.current = 0;
       };
