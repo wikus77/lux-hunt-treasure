@@ -19,7 +19,13 @@ const FinalShootOverlay: React.FC<FinalShootOverlayProps> = ({ map }) => {
   const [targetCoords, setTargetCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [phase, setPhase] = useState<'idle' | 'suspense' | 'result'>('idle');
   const [progress, setProgress] = useState(0);
-  const [result, setResult] = useState<{ isWinner: boolean; hint: string } | null>(null);
+  const [result, setResult] = useState<{ isWinner: boolean; hint: string; distance?: number } | null>(null);
+  
+  // 🔧 FIX 26/01/2026: Helper per formattare distanza
+  const formatDistance = (meters: number): string => {
+    if (meters >= 1000) return `${(meters / 1000).toFixed(1)} km`;
+    return `${Math.round(meters)} m`;
+  };
   
   const timerRef = useRef<number | null>(null);
   const beatTimerRef = useRef<number | null>(null);
@@ -311,9 +317,10 @@ const FinalShootOverlay: React.FC<FinalShootOverlayProps> = ({ map }) => {
   }, [cleanup]);
 
   // ========== SHOW RESULT ==========
-  const showResult = useCallback((isWinner: boolean, hint: string) => {
+  // 🔧 FIX 26/01/2026: Aggiungi distance al risultato
+  const showResult = useCallback((isWinner: boolean, hint: string, distance?: number) => {
     cleanup();
-    setResult({ isWinner, hint });
+    setResult({ isWinner, hint, distance });
     setPhase('result');
     
     if (isWinner) {
@@ -369,9 +376,10 @@ const FinalShootOverlay: React.FC<FinalShootOverlayProps> = ({ map }) => {
         ctx.executeShoot(lat, lng)
           .then((isWinner) => {
             const hint = isWinner ? '🎯 PERFETTO!' : (ctx.lastAttempt?.hint || 'Riprova!');
-            showResult(isWinner, hint);
+            const distance = ctx.lastAttempt?.distance;
+            showResult(isWinner, hint, distance);
           })
-          .catch(() => showResult(false, 'Errore - Riprova!'));
+          .catch(() => showResult(false, 'Errore - Riprova!', undefined));
       }
     };
     
@@ -633,7 +641,7 @@ const FinalShootOverlay: React.FC<FinalShootOverlayProps> = ({ map }) => {
                 </motion.div>
               </div>
             ) : (
-              /* FAIL STATE - unchanged */
+              /* FAIL STATE - 🔧 FIX 26/01/2026: Mostra distanza formattata */
               <div className="relative w-full h-full flex flex-col items-center justify-center px-4">
                 <motion.div className="absolute inset-0" style={{ background: 'radial-gradient(circle, rgba(80,0,0,0.4) 0%, rgba(0,0,0,0.95) 70%)' }} />
                 <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }} className="mb-8 z-10">
@@ -644,7 +652,19 @@ const FinalShootOverlay: React.FC<FinalShootOverlayProps> = ({ map }) => {
                 <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-center z-10">
                   <div className="text-4xl sm:text-6xl font-orbitron font-bold text-red-500 mb-6" style={{ textShadow: '0 0 40px rgba(255, 0, 0, 0.5)' }}>MANCATO!</div>
                   <div className="text-xl sm:text-2xl text-white/80 mb-4">{result.hint}</div>
+                  {/* 🔧 FIX 26/01/2026: Mostra distanza formattata (sempre) */}
+                  {result.distance !== undefined && result.distance > 0 && (
+                    <div className="text-lg text-white/60 mb-3">
+                      Distanza dal target: <span className="font-bold text-amber-400">{formatDistance(result.distance)}</span>
+                    </div>
+                  )}
                   <div className="text-lg sm:text-xl text-cyan-400 font-bold">Tentativi rimasti: {ctx.remainingAttempts}</div>
+                  {/* DEV-ONLY: Mostra debug info con raw distance (solo in test mode) */}
+                  {ctx.isTestMode && result.distance !== undefined && (
+                    <div className="mt-4 p-2 rounded bg-black/50 border border-yellow-500/30 text-xs text-yellow-400 font-mono">
+                      [DEBUG] Raw distance: {result.distance.toFixed(2)}m
+                    </div>
+                  )}
                 </motion.div>
               </div>
             )}

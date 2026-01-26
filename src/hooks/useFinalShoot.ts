@@ -399,15 +399,17 @@ export function useFinalShoot() {
   };
 }
 
+// 🔧 FIX 26/01/2026: Soglie hint ragionevoli (allineate con RPC)
 // Helper per generare hint (usato solo per display, mai per logica di vittoria)
 function getHintFromDistance(distanceMeters: number): string {
   if (distanceMeters <= 19) return '🎯 PERFETTO! HAI VINTO!';
-  if (distanceMeters <= 50) return '🔥 Caldissimo! Sei vicinissimo!';
-  if (distanceMeters <= 100) return '🌡️ Molto caldo! Quasi ci sei!';
-  if (distanceMeters <= 250) return '☀️ Caldo! Stai andando bene!';
-  if (distanceMeters <= 500) return '😊 Tiepido. Direzione giusta!';
-  if (distanceMeters <= 1000) return '😐 Freddo. Riprova!';
-  if (distanceMeters <= 2000) return '❄️ Molto freddo. Sei lontano.';
-  return '🥶 Freddissimo! Sei molto lontano.';
+  if (distanceMeters <= 150) return '🔥 Ci sei quasi! Pochissimi passi!';
+  if (distanceMeters <= 500) return '🌡️ Molto vicino! Sei in zona calda!';
+  if (distanceMeters <= 1000) return '☀️ Vicino! Continua così!';
+  if (distanceMeters <= 3000) return '😊 Sei in zona. Esplora meglio!';
+  if (distanceMeters <= 5000) return '😐 Zona giusta ma non vicinissimo.';
+  if (distanceMeters <= 10000) return '❄️ Lontano. Cambia direzione!';
+  if (distanceMeters <= 25000) return '🥶 Molto lontano. Riconsidera la zona!';
+  return '🌍 Lontanissimo! Sei fuori area.';
 }
 

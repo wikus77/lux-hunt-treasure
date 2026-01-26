@@ -50,26 +50,16 @@ const TEST_COORDINATES = { lat: 45.4642, lng: 9.1900 };
 // WINNING DISTANCE: 50 meters (reasonable for mobile GPS accuracy)
 const WINNING_DISTANCE_METERS = 50;
 
-// 🔧 FIX 26/01/2026: Soglie hint ragionevoli per esperienza utente migliore
-// Generate hint based on distance (soglie allineate con RPC)
+// Generate hint based on distance
 const getHintFromDistance = (distanceMeters: number): string => {
   if (distanceMeters <= WINNING_DISTANCE_METERS) return '🎯 PERFETTO! HAI VINTO!';
-  if (distanceMeters <= 150) return '🔥 Ci sei quasi! Pochissimi passi!';
-  if (distanceMeters <= 500) return '🌡️ Molto vicino! Sei in zona calda!';
-  if (distanceMeters <= 1000) return '☀️ Vicino! Continua così!';
-  if (distanceMeters <= 3000) return '😊 Sei in zona. Esplora meglio!';
-  if (distanceMeters <= 5000) return '😐 Zona giusta ma non vicinissimo.';
-  if (distanceMeters <= 10000) return '❄️ Lontano. Cambia direzione!';
-  if (distanceMeters <= 25000) return '🥶 Molto lontano. Riconsidera la zona!';
-  return '🌍 Lontanissimo! Sei fuori area.';
-};
-
-// Format distance for display (m/km)
-const formatDistance = (distanceMeters: number): string => {
-  if (distanceMeters >= 1000) {
-    return `${(distanceMeters / 1000).toFixed(1)} km`;
-  }
-  return `${Math.round(distanceMeters)} m`;
+  if (distanceMeters <= 100) return '🔥 Caldissimo! Sei vicinissimo! (< 100m)';
+  if (distanceMeters <= 250) return '🌡️ Molto caldo! Quasi ci sei! (< 250m)';
+  if (distanceMeters <= 500) return '☀️ Caldo! Stai andando bene! (< 500m)';
+  if (distanceMeters <= 1000) return '😊 Tiepido. Direzione giusta! (< 1km)';
+  if (distanceMeters <= 2000) return '😐 Freddo. Riprova! (< 2km)';
+  if (distanceMeters <= 5000) return '❄️ Molto freddo. Sei lontano. (< 5km)';
+  return '🥶 Freddissimo! Sei molto lontano. (> 5km)';
 };
 
 export function FinalShootProvider({ children }: { children: ReactNode }) {
