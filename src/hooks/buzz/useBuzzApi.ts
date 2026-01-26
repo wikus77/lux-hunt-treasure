@@ -109,26 +109,48 @@ export function useBuzzApi() {
       });
       
       // Get user session for API call
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      const jwt = sessionData?.session?.access_token || '';
+      // 🔧 FIX 26/01/2026: Try multiple methods to get session (native WebView compatibility)
+      let jwt = '';
+      let sessionUserId = '';
       
-      // 🔍 DIAGNOSTIC TRACE (as requested in task)
-      console.debug('BUZZ_MAP_FRONTEND_AUTH', {
-        hasSession: !!sessionData?.session,
-        hasJwt: !!jwt,
-        jwtPrefix: jwt ? jwt.substring(0, 20) : 'none',
-        jwtLength: jwt.length,
-        userId: sessionData?.session?.user?.id,
-        sessionError: sessionError?.message
-      });
-      
-      console.log('🔐 SESSION CHECK:', {
-        hasSession: !!sessionData?.session,
-        hasUser: !!sessionData?.session?.user,
-        userId: sessionData?.session?.user?.id,
-        sessionError: sessionError?.message,
-        hasToken: !!jwt
-      });
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        jwt = sessionData?.session?.access_token || '';
+        sessionUserId = sessionData?.session?.user?.id || '';
+        
+        // 🔍 DIAGNOSTIC TRACE (as requested in task)
+        console.debug('BUZZ_MAP_FRONTEND_AUTH', {
+          hasSession: !!sessionData?.session,
+          hasJwt: !!jwt,
+          jwtPrefix: jwt ? jwt.substring(0, 20) : 'none',
+          jwtLength: jwt.length,
+          userId: sessionUserId,
+          sessionError: sessionError?.message
+        });
+        
+        console.log('🔐 SESSION CHECK:', {
+          hasSession: !!sessionData?.session,
+          hasUser: !!sessionData?.session?.user,
+          userId: sessionUserId,
+          sessionError: sessionError?.message,
+          hasToken: !!jwt
+        });
+        
+        // 🔧 FIX: If session is null, try refreshing
+        if (!jwt && !sessionError) {
+          console.log('🔄 Attempting session refresh...');
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshData?.session) {
+            jwt = refreshData.session.access_token || '';
+            sessionUserId = refreshData.session.user?.id || '';
+            console.log('✅ Session refreshed successfully');
+          } else {
+            console.error('❌ Session refresh failed:', refreshError);
+          }
+        }
+      } catch (authErr) {
+        console.error('❌ Auth exception:', authErr);
+      }
       
       if (!jwt) {
         console.error('❌ No active session or access token found');
@@ -138,7 +160,7 @@ export function useBuzzApi() {
       // 🔥 FIX: Use direct fetch with explicit JWT instead of supabase.functions.invoke
       // to avoid potential AuthSessionMissingError in invoke mechanism
       console.log(`🔐 Calling ${functionName} via direct fetch with explicit JWT...`);
-      console.log(`📡 User ID: ${sessionData.session.user.id}`);
+      console.log(`📡 User ID: ${sessionUserId}`);
       console.log(`🔑 JWT Length: ${jwt.length}, Prefix: ${jwt.substring(0, 20)}`);
       
       const supabaseUrl = (supabase as any).supabaseUrl || 'https://vkjrqirvdvjbemsfzxof.supabase.co';
@@ -211,8 +233,18 @@ export function useBuzzApi() {
       if (error) {
         console.warn("⚠️ EDGE FUNCTION ERROR:", error);
         
+        // 🔧 FIX 26/01/2026: Better error handling with specific messages
+        const statusCode = error.status || response?.status;
+        const errorMsg = error.message || 'Unknown error';
+        
+        console.error('🔴 [BUZZ-API] Error details:', {
+          statusCode,
+          errorMsg,
+          fullError: error
+        });
+        
         // Check specific error types
-        if (error.message?.includes('daily_quota_exceeded') || error.message?.includes('429')) {
+        if (errorMsg.includes('daily_quota_exceeded') || statusCode === 429) {
           toast.error("Hai raggiunto il limite giornaliero di 5 BUZZ. Riprova dopo mezzanotte.");
           return { success: false, error: true, errorMessage: "Limite giornaliero raggiunto. Riprova dopo mezzanotte." };
         }
@@ -222,10 +254,32 @@ export function useBuzzApi() {
           return { success: false, error: true, errorMessage: "Limite giornaliero raggiunto. Riprova dopo mezzanotte." };
         }
         
-        // Generic error handling - show friendly message
+        // 🔧 FIX: Handle specific status codes
+        if (statusCode === 401) {
+          toast.error('Sessione scaduta. Effettua nuovamente l\'accesso.');
+          return { success: false, error: true, errorMessage: 'Sessione scaduta' };
+        }
+        
+        if (statusCode === 400) {
+          // Try to parse specific error from message
+          if (errorMsg.includes('insufficient_balance')) {
+            toast.error('Saldo M1U insufficiente per BUZZ MAP');
+            return { success: false, error: true, errorMessage: 'Saldo insufficiente' };
+          }
+          toast.error('Richiesta non valida. Riprova.');
+          return { success: false, error: true, errorMessage: errorMsg };
+        }
+        
+        if (statusCode === 500) {
+          console.error('🔴 [BUZZ-API] Server error:', errorMsg);
+          toast.error('Errore server. I nostri tecnici sono stati avvisati.');
+          return { success: false, error: true, errorMessage: `Server error: ${errorMsg}` };
+        }
+        
+        // Generic error handling - show friendly message WITH debug info
         console.warn('BUZZ edge function error:', error.message);
-        toast.error('Operazione non riuscita, riprova fra poco.');
-        return { success: false, error: true, errorMessage: 'Operazione non riuscita, riprova fra poco.' };
+        toast.error(`Operazione non riuscita (${statusCode || 'unknown'}). Riprova fra poco.`);
+        return { success: false, error: true, errorMessage: `Operazione non riuscita: ${errorMsg}` };
       }
 
       // Handle successful response
@@ -260,37 +314,66 @@ export function useBuzzApi() {
       
       if (!data) {
         console.error("❌ EDGE FUNCTION RETURNED NULL DATA");
-        toast.error('Operazione non riuscita. Riprova tra poco.');
-        return { success: false, error: true, errorMessage: "Operazione non riuscita. Riprova tra poco." };
+        toast.error('Nessuna risposta dal server. Verifica connessione.');
+        return { success: false, error: true, errorMessage: "Nessuna risposta dal server" };
       }
       
       if (!data.success) {
-        console.error("❌ EDGE FUNCTION RETURNED FAILURE:", data?.error || "Unknown error");
+        // 🔧 FIX 26/01/2026: Better error extraction from server response
+        const serverError = data?.error || data?.code || 'unknown';
+        const serverDetail = data?.detail || data?.message || '';
+        
+        console.error("❌ EDGE FUNCTION RETURNED FAILURE:", {
+          error: serverError,
+          detail: serverDetail,
+          fullResponse: data
+        });
         
         // Handle specific error codes from the edge function
-        if (data?.code === 'daily_quota_exceeded') {
+        if (serverError === 'daily_quota_exceeded' || data?.code === 'daily_quota_exceeded') {
           toast.error("Hai raggiunto il limite giornaliero di 5 BUZZ. Riprova dopo mezzanotte.");
-          return { 
-            success: false, 
-            error: true,
-            errorMessage: "Limite giornaliero raggiunto. Riprova dopo mezzanotte."
-          };
+          return { success: false, error: true, errorMessage: "Limite giornaliero raggiunto" };
         }
         
-        if (data?.code === 'payment_required') {
+        if (serverError === 'payment_required' || data?.code === 'payment_required') {
           toast.error("Pagamento richiesto per utilizzare BUZZ MAPPA.");
-          return { 
-            success: false, 
-            error: true,
-            errorMessage: "Pagamento richiesto per utilizzare BUZZ MAPPA."
-          };
+          return { success: false, error: true, errorMessage: "Pagamento richiesto" };
         }
         
-        toast.error('Operazione non riuscita. Riprova tra poco.');
+        if (serverError === 'insufficient_balance') {
+          const required = data?.required || '?';
+          const current = data?.current_balance || '?';
+          toast.error(`Saldo insufficiente. Richiesti: ${required} M1U, Disponibili: ${current} M1U`);
+          return { success: false, error: true, errorMessage: "Saldo M1U insufficiente" };
+        }
+        
+        if (serverError === 'unauthorized') {
+          toast.error("Sessione scaduta. Effettua nuovamente l'accesso.");
+          return { success: false, error: true, errorMessage: "Non autorizzato" };
+        }
+        
+        if (serverError === 'level_error') {
+          console.error('🔴 [BUZZ-API] Level RPC error:', serverDetail);
+          toast.error(`Errore calcolo livello: ${serverDetail}`);
+          return { success: false, error: true, errorMessage: `Level error: ${serverDetail}` };
+        }
+        
+        if (serverError === 'profile_not_found') {
+          toast.error("Profilo non trovato. Contatta supporto.");
+          return { success: false, error: true, errorMessage: "Profilo non trovato" };
+        }
+        
+        if (serverError === 'area_creation_failed') {
+          toast.error("Impossibile creare l'area. Riprova.");
+          return { success: false, error: true, errorMessage: "Creazione area fallita" };
+        }
+        
+        // Generic fallback with server error details
+        toast.error(`Errore: ${serverError}${serverDetail ? ' - ' + serverDetail : ''}`);
         return { 
           success: false, 
           error: true,
-          errorMessage: 'Operazione non riuscita. Riprova tra poco.' 
+          errorMessage: `${serverError}: ${serverDetail}` 
         };
       }
       
