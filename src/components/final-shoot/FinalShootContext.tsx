@@ -425,23 +425,33 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
 
       if (!result.success) {
         // 🎯 PLUS/ELITE: Handle specific error statuses
+        // 🔧 FIX 26/01/2026: Throw error for blocked attempts so UI can handle appropriately
         if (result.status === 'insufficient_funds') {
           toast.error('💰 Saldo M1U insufficiente', {
-            description: `Richiesti: ${result.required_m1u} M1U | Disponibili: ${result.current_balance} M1U`,
+            description: `Richiesti: ${result.required_m1u} M1U | Disponibili: ${result.balance_before || result.current_balance} M1U`,
             duration: 5000,
           });
+          refreshPricing();
+          throw new Error('insufficient_funds');
         } else if (result.status === 'cap_reached') {
           toast.error('🚫 Limite raggiunto', {
             description: 'Hai utilizzato tutti i 23 tentativi per questa missione.',
             duration: 5000,
           });
+          refreshPricing();
+          throw new Error('cap_reached');
+        } else if (result.status === 'not_available') {
+          toast.error('⏳ Final Shot non disponibile', {
+            description: 'Attendi gli ultimi 7 giorni di missione.',
+            duration: 5000,
+          });
+          throw new Error('not_available');
         } else {
           const errorMessage = result.error || result.message || 'Tentativo fallito';
           toast.error(errorMessage);
+          refreshPricing();
+          throw new Error(result.status || 'unknown_error');
         }
-        // Refresh pricing after error
-        refreshPricing();
-        return false;
       }
 
       const isWinner = result.winner === true;

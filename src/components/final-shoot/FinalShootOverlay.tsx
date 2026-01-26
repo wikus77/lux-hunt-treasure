@@ -341,49 +341,67 @@ const FinalShootOverlay: React.FC<FinalShootOverlayProps> = ({ map }) => {
   }, [cleanup, playWinSound, playFailSound, triggerGoldenCelebration, resetToIdle, ctx]);
 
   // ========== CONFIRM & EXECUTE ==========
-  const confirmShoot = useCallback(() => {
+  // 🔧 FIX 26/01/2026: Execute RPC first, then show animation with result
+  // This prevents the user from watching a 15-second animation only to find out funds are insufficient
+  const confirmShoot = useCallback(async () => {
     if (!targetCoords) return;
     
     const lat = targetCoords.lat;
     const lng = targetCoords.lng;
     
-    cleanup();
+    // Close confirm modal and show brief processing state
     setShowConfirm(false);
+    cleanup();
     setPhase('suspense');
-    setProgress(0);
+    setProgress(0.1); // Show quick initial progress
     
     if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
-    startHeartbeat();
     
-    const duration = 15000;
-    const startTime = Date.now();
-    let isRunning = true;
-    
-    const tick = () => {
-      if (!isRunning) return;
+    try {
+      // 🔧 FIX: Execute shoot FIRST (DB does atomic check + charge + record)
+      // This ensures: 1) Funds checked 2) Funds charged 3) Attempt recorded
+      // All before we show the dramatic animation
+      // If blocked (insufficient_funds, cap_reached), throws an error
+      const isWinner = await ctx.executeShoot(lat, lng);
       
-      const elapsed = Date.now() - startTime;
-      const p = Math.min(elapsed / duration, 1);
-      setProgress(p);
-      progressRef.current = p;
+      // Attempt was recorded successfully - now show the dramatic animation
+      startHeartbeat();
       
-      if (p < 1) {
-        timerRef.current = window.setTimeout(tick, 50);
-      } else {
-        isRunning = false;
-        cleanup();
+      const duration = 5000; // Shorter animation since payment already done
+      const startTime = Date.now();
+      let isRunning = true;
+      
+      const tick = () => {
+        if (!isRunning) return;
         
-        ctx.executeShoot(lat, lng)
-          .then((isWinner) => {
-            const hint = isWinner ? '🎯 PERFETTO!' : (ctx.lastAttempt?.hint || 'Riprova!');
-            const distance = ctx.lastAttempt?.distance;
-            showResult(isWinner, hint, distance);
-          })
-          .catch(() => showResult(false, 'Errore - Riprova!', undefined));
-      }
-    };
-    
-    timerRef.current = window.setTimeout(tick, 50);
+        const elapsed = Date.now() - startTime;
+        const p = Math.min(elapsed / duration, 1);
+        setProgress(p);
+        progressRef.current = p;
+        
+        if (p < 1) {
+          timerRef.current = window.setTimeout(tick, 50);
+        } else {
+          isRunning = false;
+          cleanup();
+          
+          const hint = isWinner ? '🎯 PERFETTO!' : (ctx.lastAttempt?.hint || 'Riprova!');
+          const distance = ctx.lastAttempt?.distance;
+          showResult(isWinner, hint, distance);
+        }
+      };
+      
+      timerRef.current = window.setTimeout(tick, 50);
+      
+    } catch (error) {
+      // 🔧 FIX: Attempt was blocked (insufficient_funds, cap_reached, not_available)
+      // Error toast already shown by executeShoot, just reset UI
+      console.log('🎯 [FINAL-SHOOT-OVERLAY] Shot blocked:', error);
+      cleanup();
+      setPhase('idle');
+      setProgress(0);
+      setTargetCoords(null);
+    }
   }, [targetCoords, startHeartbeat, cleanup, ctx, showResult]);
 
   const cancelConfirm = useCallback(() => {
