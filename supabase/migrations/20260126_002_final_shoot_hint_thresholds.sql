@@ -54,8 +54,9 @@ BEGIN
   
   -- ═══════════════════════════════════════════════════════════════════════════
   -- STEP 3: Verifica se esiste già un vincitore per questa missione
+  -- 🔧 FIX 26/01/2026: Usa winner_user_id (colonna reale) invece di user_id
   -- ═══════════════════════════════════════════════════════════════════════════
-  SELECT user_id INTO existing_winner
+  SELECT winner_user_id INTO existing_winner
   FROM public.final_shoot_winners
   WHERE mission_id = p_mission_id
   LIMIT 1;
@@ -127,12 +128,14 @@ BEGIN
   -- ═══════════════════════════════════════════════════════════════════════════
   IF is_winner THEN
     BEGIN
-      INSERT INTO public.final_shoot_winners (mission_id, user_id, attempt_id, won_at)
-      VALUES (p_mission_id, p_user_id, attempt_record_id, NOW())
+      -- 🔧 FIX 26/01/2026: Usa winner_user_id (colonna reale) + includi distance_meters (NOT NULL)
+      INSERT INTO public.final_shoot_winners (mission_id, winner_user_id, attempt_id, won_at, distance_meters)
+      VALUES (p_mission_id, p_user_id, attempt_record_id, NOW(), distance)
       ON CONFLICT (mission_id) DO NOTHING;
       
       -- Verifica se siamo stati noi a vincere (race condition check)
-      SELECT user_id INTO existing_winner
+      -- 🔧 FIX 26/01/2026: Usa winner_user_id (colonna reale)
+      SELECT winner_user_id INTO existing_winner
       FROM public.final_shoot_winners
       WHERE mission_id = p_mission_id;
       
