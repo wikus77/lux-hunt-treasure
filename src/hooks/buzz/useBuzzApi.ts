@@ -1,6 +1,11 @@
 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { isCapacitorNative, getCapacitorPlatform } from "@/utils/capacitor";
+
+// 🔧 FIX 26/01/2026: Native-safe HTTP transport for Capacitor iOS
+// WKWebView has issues with CORS preflight and session storage
+// This wrapper ensures proper JWT handling in native context
 
 interface BuzzApiParams {
   userId: string;
@@ -41,6 +46,89 @@ interface BuzzApiResponse {
 // 🔍 Debug switch (controlled by ENV)
 const DEBUG_BUZZ = import.meta.env.VITE_DEBUG_BUZZ_MAP === '1';
 const dlog = (...args: any[]) => { if (DEBUG_BUZZ) console.log(...args); };
+
+// 🔧 FIX 26/01/2026: Native-safe HTTP fetch wrapper
+// Handles WKWebView quirks: CORS, session, credentials
+async function nativeSafeFetch(
+  url: string,
+  options: RequestInit & { 
+    headers: Record<string, string>;
+    body: string;
+  }
+): Promise<Response> {
+  const isNative = isCapacitorNative();
+  const platform = getCapacitorPlatform();
+  
+  console.log(`🌐 [NATIVE-FETCH] Platform: ${platform}, isNative: ${isNative}`);
+  console.log(`🌐 [NATIVE-FETCH] URL: ${url}`);
+  console.log(`🌐 [NATIVE-FETCH] Headers present:`, Object.keys(options.headers));
+  
+  // In native, try using CapacitorHttp if available (Capacitor v4+)
+  if (isNative) {
+    try {
+      const CapacitorHttp = (window as any).Capacitor?.Plugins?.CapacitorHttp;
+      
+      if (CapacitorHttp) {
+        console.log('🌐 [NATIVE-FETCH] Using CapacitorHttp plugin');
+        
+        const httpResponse = await CapacitorHttp.request({
+          url,
+          method: 'POST',
+          headers: options.headers,
+          data: JSON.parse(options.body),
+        });
+        
+        console.log(`🌐 [NATIVE-FETCH] CapacitorHttp response status: ${httpResponse.status}`);
+        
+        // Convert CapacitorHttp response to fetch Response-like object
+        return {
+          ok: httpResponse.status >= 200 && httpResponse.status < 300,
+          status: httpResponse.status,
+          statusText: httpResponse.status.toString(),
+          headers: new Headers(httpResponse.headers || {}),
+          json: async () => httpResponse.data,
+          text: async () => typeof httpResponse.data === 'string' 
+            ? httpResponse.data 
+            : JSON.stringify(httpResponse.data),
+        } as unknown as Response;
+      }
+    } catch (capErr) {
+      console.warn('🌐 [NATIVE-FETCH] CapacitorHttp not available or failed:', capErr);
+    }
+    
+    // Native fallback: enhanced fetch with explicit settings for WKWebView
+    console.log('🌐 [NATIVE-FETCH] Using enhanced fetch for native');
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          ...options.headers,
+          'Accept': 'application/json',
+        },
+        body: options.body,
+        // 🔧 FIX: WKWebView specific settings
+        credentials: 'omit', // Don't send cookies - use JWT only
+        mode: 'cors',
+        cache: 'no-cache',
+      });
+      
+      console.log(`🌐 [NATIVE-FETCH] Native fetch response status: ${response.status}`);
+      return response;
+    } catch (fetchErr: any) {
+      console.error('🌐 [NATIVE-FETCH] Native fetch failed:', {
+        error: fetchErr.message,
+        name: fetchErr.name,
+        stack: fetchErr.stack?.substring(0, 200)
+      });
+      throw fetchErr;
+    }
+  }
+  
+  // PWA/Web: standard fetch
+  console.log('🌐 [NATIVE-FETCH] Using standard fetch for web');
+  return fetch(url, options);
+}
 
 export function useBuzzApi() {
   const handleBuzzPress = async ({ userId, mode, generateMap, coordinates, prizeId, sessionId, buzzType, m1uCost }: BuzzApiParams): Promise<BuzzApiResponse> => {
@@ -109,76 +197,128 @@ export function useBuzzApi() {
       });
       
       // Get user session for API call
-      // 🔧 FIX 26/01/2026: Try multiple methods to get session (native WebView compatibility)
+      // 🔧 FIX 26/01/2026: Native-robust session retrieval for Capacitor iOS
+      // WKWebView can have timing issues with session storage
+      const isNative = isCapacitorNative();
       let jwt = '';
       let sessionUserId = '';
       
+      console.log(`🔐 [SESSION] Starting session retrieval, isNative: ${isNative}`);
+      
       try {
+        // Method 1: Try getSession first (fast, from cache)
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         jwt = sessionData?.session?.access_token || '';
         sessionUserId = sessionData?.session?.user?.id || '';
         
-        // 🔍 DIAGNOSTIC TRACE (as requested in task)
-        console.debug('BUZZ_MAP_FRONTEND_AUTH', {
+        // 🔍 DIAGNOSTIC TRACE
+        console.log('🔐 [SESSION] getSession result:', {
           hasSession: !!sessionData?.session,
           hasJwt: !!jwt,
-          jwtPrefix: jwt ? jwt.substring(0, 20) : 'none',
           jwtLength: jwt.length,
           userId: sessionUserId,
-          sessionError: sessionError?.message
-        });
-        
-        console.log('🔐 SESSION CHECK:', {
-          hasSession: !!sessionData?.session,
-          hasUser: !!sessionData?.session?.user,
-          userId: sessionUserId,
           sessionError: sessionError?.message,
-          hasToken: !!jwt
+          isNative
         });
         
-        // 🔧 FIX: If session is null, try refreshing
-        if (!jwt && !sessionError) {
-          console.log('🔄 Attempting session refresh...');
+        // Method 2: If no JWT, try refreshSession (forces token refresh)
+        if (!jwt) {
+          console.log('🔄 [SESSION] No JWT from getSession, trying refreshSession...');
           const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
           if (refreshData?.session) {
             jwt = refreshData.session.access_token || '';
             sessionUserId = refreshData.session.user?.id || '';
-            console.log('✅ Session refreshed successfully');
+            console.log('✅ [SESSION] refreshSession succeeded');
           } else {
-            console.error('❌ Session refresh failed:', refreshError);
+            console.warn('⚠️ [SESSION] refreshSession failed:', refreshError?.message);
           }
         }
-      } catch (authErr) {
-        console.error('❌ Auth exception:', authErr);
+        
+        // Method 3: Native-specific - Try getUser as last resort (makes API call)
+        if (!jwt && isNative) {
+          console.log('🔄 [SESSION] Native: Trying getUser as last resort...');
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          if (userData?.user && !userError) {
+            // User exists, try to get session again
+            const { data: retrySession } = await supabase.auth.getSession();
+            if (retrySession?.session?.access_token) {
+              jwt = retrySession.session.access_token;
+              sessionUserId = retrySession.session.user?.id || '';
+              console.log('✅ [SESSION] Native retry succeeded');
+            }
+          } else {
+            console.error('❌ [SESSION] Native getUser failed:', userError?.message);
+          }
+        }
+      } catch (authErr: any) {
+        console.error('❌ [SESSION] Auth exception:', authErr?.message);
       }
       
+      // Final check
       if (!jwt) {
-        console.error('❌ No active session or access token found');
-        return { success: false, error: true, errorMessage: "Sessione non valida. Effettua l'accesso nuovamente." };
+        console.error('❌ [SESSION] All methods failed - no JWT available');
+        toast.error(isNative 
+          ? 'Sessione scaduta in app nativa. Effettua nuovamente il login.' 
+          : 'Sessione non valida. Effettua l\'accesso nuovamente.');
+        return { success: false, error: true, errorMessage: "session_missing" };
       }
       
-      // 🔥 FIX: Use direct fetch with explicit JWT instead of supabase.functions.invoke
-      // to avoid potential AuthSessionMissingError in invoke mechanism
-      console.log(`🔐 Calling ${functionName} via direct fetch with explicit JWT...`);
+      console.log(`✅ [SESSION] JWT obtained successfully, length: ${jwt.length}`);
+      
+      // 🔥 FIX 26/01/2026: Native-safe fetch with explicit JWT
+      // Uses CapacitorHttp in native or enhanced fetch for WKWebView compatibility
+      const platform = getCapacitorPlatform();
+      
+      console.log(`🔐 Calling ${functionName} via native-safe fetch...`);
+      console.log(`📱 Platform: ${platform}, isNative: ${isNative}`);
       console.log(`📡 User ID: ${sessionUserId}`);
       console.log(`🔑 JWT Length: ${jwt.length}, Prefix: ${jwt.substring(0, 20)}`);
       
       const supabaseUrl = (supabase as any).supabaseUrl || 'https://vkjrqirvdvjbemsfzxof.supabase.co';
       const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
+      const apiKey = (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY || '';
       
       console.log(`📡 Function URL: ${functionUrl}`);
       console.log(`📦 Payload:`, JSON.stringify(payload));
+      console.log(`🔑 API Key present: ${!!apiKey}, length: ${apiKey.length}`);
       
-      // 🔥 FIX: Simple direct call - no retry, clean request
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${jwt}`,
-          'apikey': (supabase as any).supabaseKey || import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-        },
-        body: JSON.stringify(payload)
-      });
+      // 🔥 FIX: Use native-safe fetch wrapper
+      let response: Response;
+      try {
+        response = await nativeSafeFetch(functionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwt}`,
+            'apikey': apiKey,
+          },
+          body: JSON.stringify(payload)
+        });
+      } catch (fetchError: any) {
+        // 🔧 FIX: Handle fetch-level errors (network, CORS, etc.)
+        console.error('❌ [BUZZ-API] Fetch-level error:', {
+          name: fetchError.name,
+          message: fetchError.message,
+          isNative,
+          platform
+        });
+        
+        // Specific error messages for common issues
+        if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
+          toast.error(isNative 
+            ? 'Errore di rete in app nativa. Verifica connessione.' 
+            : 'Errore di connessione. Verifica la rete.');
+          return { success: false, error: true, errorMessage: 'Network fetch failed' };
+        }
+        
+        if (fetchError.message?.includes('CORS') || fetchError.message?.includes('blocked')) {
+          toast.error('Errore CORS. Riprova o contatta supporto.');
+          return { success: false, error: true, errorMessage: 'CORS blocked' };
+        }
+        
+        toast.error(`Errore rete: ${fetchError.message || 'unknown'}`);
+        return { success: false, error: true, errorMessage: `Fetch error: ${fetchError.message}` };
+      }
       
       console.log(`📡 Response status: ${response.status}`);
       
