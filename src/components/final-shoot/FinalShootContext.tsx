@@ -6,6 +6,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 
+// 🎯 FINAL SHOOT PLUS/ELITE PRICING (26/01/2026)
+interface PricingInfo {
+  attempts_used: number;
+  next_attempt_number: number;
+  tier: 'free' | 'plus' | 'elite' | 'blocked';
+  cost_m1u: number;
+  allowed: boolean;
+  reason: string | null;
+  free_remaining: number;
+  plus_remaining: number;
+  elite_remaining: number;
+  total_remaining: number;
+}
+
 interface FinalShootState {
   isAvailable: boolean;
   isActive: boolean;
@@ -17,6 +31,8 @@ interface FinalShootState {
     distance: number;
     hint: string;
   } | null;
+  // 🎯 PLUS/ELITE pricing
+  pricing: PricingInfo | null;
 }
 
 interface MissionData {
@@ -33,6 +49,7 @@ interface FinalShootContextValue extends FinalShootState {
   activateFinalShoot: () => void;
   deactivateFinalShoot: () => void;
   executeShoot: (lat: number, lng: number) => Promise<boolean>;
+  refreshPricing: () => Promise<void>;
 }
 
 const FinalShootContext = createContext<FinalShootContextValue | null>(null);
@@ -80,11 +97,12 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<FinalShootState>({
     isAvailable: false,
     isActive: false,
-    remainingAttempts: 3,
+    remainingAttempts: 23, // 🎯 Updated: 3 free + 10 plus + 10 elite = 23 max
     daysRemaining: 0,
     hasWon: false,
     isLoading: true,
     lastAttempt: null,
+    pricing: null, // 🎯 PLUS/ELITE pricing
   });
 
   const [missionData, setMissionData] = useState<MissionData>({
@@ -143,6 +161,7 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
             hasWon: false,
             isLoading: false,
             lastAttempt: null,
+            pricing: null, // 🎯 Test mode doesn't use pricing
           });
           setTotalMissionDays(30);
           return;
@@ -223,6 +242,7 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
           hasWon,
           isLoading: false,
           lastAttempt,
+          pricing: null, // 🎯 Will be fetched by refreshPricing effect
         });
 
         console.log('🎯 [FINAL-SHOOT-CTX] Status:', {
@@ -241,6 +261,44 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
     checkAvailability();
     hasInitializedRef.current = true;
   }, [authUser?.id, authLoading]); // 🔥 FIX: Re-run when user becomes available
+
+  // 🎯 PLUS/ELITE: Fetch pricing info from server
+  const refreshPricing = useCallback(async () => {
+    if (!authUser?.id || !missionData.missionId) {
+      console.log('🎯 [FINAL-SHOOT-CTX] Cannot fetch pricing: no user or mission');
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase.rpc('get_final_shoot_pricing', {
+        p_user_id: authUser.id,
+        p_mission_id: missionData.missionId,
+      });
+      
+      if (error) {
+        console.error('🎯 [FINAL-SHOOT-CTX] Pricing error:', error);
+        return;
+      }
+      
+      const pricing = data as PricingInfo;
+      console.log('🎯 [FINAL-SHOOT-CTX] Pricing:', pricing);
+      
+      setState(prev => ({
+        ...prev,
+        pricing,
+        remainingAttempts: pricing.total_remaining,
+      }));
+    } catch (err) {
+      console.error('🎯 [FINAL-SHOOT-CTX] Pricing fetch failed:', err);
+    }
+  }, [authUser?.id, missionData.missionId]);
+
+  // Fetch pricing when mission data changes
+  useEffect(() => {
+    if (missionData.missionId && authUser?.id) {
+      refreshPricing();
+    }
+  }, [missionData.missionId, authUser?.id, refreshPricing]);
 
   // Activate Final Shoot mode
   const activateFinalShoot = useCallback(() => {
@@ -340,7 +398,7 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      // Parse RPC response
+      // Parse RPC response - 🎯 PLUS/ELITE: includes pricing info
       const result = rpcResult as { 
         success: boolean; 
         status: string; 
@@ -350,14 +408,36 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
         hint?: string;
         message?: string;
         error?: string;
+        // 🎯 PLUS/ELITE fields
+        cost_charged?: number;
+        tier?: string;
+        pricing?: PricingInfo;
+        required_m1u?: number;
+        current_balance?: number;
+        refunded?: boolean;
+        refund_amount?: number;
       };
 
       console.log('🎯 [FINAL-SHOOT-CTX] RPC result:', result);
 
       if (!result.success) {
-        // Handle specific error statuses
-        const errorMessage = result.error || result.message || 'Tentativo fallito';
-        toast.error(errorMessage);
+        // 🎯 PLUS/ELITE: Handle specific error statuses
+        if (result.status === 'insufficient_funds') {
+          toast.error('💰 Saldo M1U insufficiente', {
+            description: `Richiesti: ${result.required_m1u} M1U | Disponibili: ${result.current_balance} M1U`,
+            duration: 5000,
+          });
+        } else if (result.status === 'cap_reached') {
+          toast.error('🚫 Limite raggiunto', {
+            description: 'Hai utilizzato tutti i 23 tentativi per questa missione.',
+            duration: 5000,
+          });
+        } else {
+          const errorMessage = result.error || result.message || 'Tentativo fallito';
+          toast.error(errorMessage);
+        }
+        // Refresh pricing after error
+        refreshPricing();
         return false;
       }
 
@@ -365,15 +445,26 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
       const distance = result.distance_meters || 0;
       const hint = result.hint || getHintFromDistance(distance);
       const attemptsRemaining = result.attempts_remaining ?? (state.remainingAttempts - 1);
+      const costCharged = result.cost_charged || 0;
+      const tier = result.tier || 'free';
 
-      // Update local state
+      // 🎯 PLUS/ELITE: Show cost charged if applicable
+      if (costCharged > 0) {
+        console.log(`🎯 [FINAL-SHOOT-CTX] Charged ${costCharged} M1U (${tier})`);
+      }
+
+      // Update local state with new pricing if available
       setState(prev => ({
         ...prev,
         remainingAttempts: Math.max(0, attemptsRemaining),
         hasWon: isWinner,
         isActive: isWinner ? false : prev.isActive,
         lastAttempt: { distance, hint },
+        pricing: result.pricing || prev.pricing,
       }));
+      
+      // Refresh pricing after successful attempt
+      refreshPricing();
 
       if (isWinner) {
         toast.success('🎉 HAI VINTO IL FINAL SHOOT!', {
@@ -410,6 +501,7 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
     activateFinalShoot,
     deactivateFinalShoot,
     executeShoot,
+    refreshPricing, // 🎯 PLUS/ELITE pricing
   };
 
   return (

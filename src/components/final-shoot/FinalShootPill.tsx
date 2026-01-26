@@ -29,7 +29,25 @@ const FinalShootPill: React.FC = () => {
     isTestMode,
     activateFinalShoot,
     deactivateFinalShoot,
+    pricing, // 🎯 PLUS/ELITE pricing
   } = useFinalShootContext();
+  
+  // 🎯 PLUS/ELITE: Format next attempt cost
+  const getNextAttemptLabel = () => {
+    if (!pricing) return `${remainingAttempts} tentativi`;
+    if (pricing.tier === 'blocked') return 'Limite raggiunto';
+    if (pricing.tier === 'free') return `${pricing.free_remaining} gratuiti`;
+    if (pricing.tier === 'plus') return `${pricing.cost_m1u} M1U`;
+    if (pricing.tier === 'elite') return `${pricing.cost_m1u} M1U (Elite)`;
+    return `${remainingAttempts} tentativi`;
+  };
+  
+  const getTierBadge = () => {
+    if (!pricing || pricing.tier === 'free') return null;
+    if (pricing.tier === 'plus') return { label: 'PLUS', color: 'bg-amber-500' };
+    if (pricing.tier === 'elite') return { label: 'ELITE', color: 'bg-purple-500' };
+    return null;
+  };
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
@@ -419,15 +437,30 @@ const FinalShootPill: React.FC = () => {
                   </ul>
                 </div>
 
+                {/* 🎯 PLUS/ELITE: Updated pricing info */}
                 <div className="p-3 rounded-xl bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-400/20">
                   <h3 className="font-bold text-red-300 mb-2 flex items-center gap-2 text-sm">
                     <AlertCircle className="w-4 h-4" />
-                    Attenzione
+                    Tentativi Disponibili
                   </h3>
-                  <p className="text-xs text-white/70">
-                    Hai solo <span className="text-red-400 font-bold">3 tentativi</span> per l'intera missione. 
-                    Usa gli indizi raccolti per aumentare le tue probabilità!
-                  </p>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between text-white/80">
+                      <span>🆓 Gratuiti</span>
+                      <span className="font-bold text-green-400">3 tentativi</span>
+                    </div>
+                    <div className="flex justify-between text-white/80">
+                      <span>⭐ Plus</span>
+                      <span className="font-bold text-amber-400">10 tentativi (100-1000 M1U)</span>
+                    </div>
+                    <div className="flex justify-between text-white/80">
+                      <span>💎 Elite</span>
+                      <span className="font-bold text-purple-400">10 tentativi (1500 M1U cad.)</span>
+                    </div>
+                    <div className="pt-1 border-t border-white/10 flex justify-between text-white/60">
+                      <span>Totale massimo</span>
+                      <span className="font-bold text-cyan-400">23 tentativi</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Status */}

@@ -672,7 +672,7 @@ const FinalShootOverlay: React.FC<FinalShootOverlayProps> = ({ map }) => {
         )}
       </AnimatePresence>
 
-      {/* CONFIRM MODAL */}
+      {/* CONFIRM MODAL - 🎯 PLUS/ELITE: Show pricing info */}
       <AnimatePresence>
         {showConfirm && targetCoords && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[2500] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4" onClick={cancelConfirm}>
@@ -681,13 +681,40 @@ const FinalShootOverlay: React.FC<FinalShootOverlayProps> = ({ map }) => {
                 <div className="p-2 rounded-full bg-red-500/20 border border-red-400/30"><AlertTriangle className="w-6 h-6 text-red-400" /></div>
                 <div><h3 className="text-lg font-bold text-white font-orbitron">CONFERMA SPARO</h3><p className="text-sm text-white/60">Questa azione è irreversibile</p></div>
               </div>
-              <div className="mb-5 p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="mb-4 p-3 rounded-lg bg-white/5 border border-white/10">
                 <div className="text-sm text-white/70">Coordinate selezionate:</div>
                 <div className="text-white font-mono text-sm">{targetCoords.lat.toFixed(6)}°N, {targetCoords.lng.toFixed(6)}°E</div>
               </div>
+              {/* 🎯 PLUS/ELITE: Show cost if not free */}
+              {ctx.pricing && ctx.pricing.cost_m1u > 0 && (
+                <div className={`mb-4 p-3 rounded-lg border ${ctx.pricing.tier === 'elite' ? 'bg-purple-500/10 border-purple-400/30' : 'bg-amber-500/10 border-amber-400/30'}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${ctx.pricing.tier === 'elite' ? 'bg-purple-500 text-white' : 'bg-amber-500 text-black'}`}>
+                        {ctx.pricing.tier === 'elite' ? '💎 ELITE' : '⭐ PLUS'}
+                      </span>
+                      <span className="text-sm text-white/70">Tentativo #{ctx.pricing.next_attempt_number}</span>
+                    </div>
+                    <div className={`font-bold font-orbitron ${ctx.pricing.tier === 'elite' ? 'text-purple-400' : 'text-amber-400'}`}>
+                      {ctx.pricing.cost_m1u} M1U
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* Free attempt indicator */}
+              {ctx.pricing && ctx.pricing.cost_m1u === 0 && (
+                <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-400/30">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-500 text-white">🆓 GRATUITO</span>
+                    <span className="text-sm text-green-400">Tentativo #{ctx.pricing.next_attempt_number} di 3</span>
+                  </div>
+                </div>
+              )}
               <div className="flex gap-3">
                 <button onClick={cancelConfirm} className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white font-medium hover:bg-white/10 active:scale-95 transition-all">Annulla</button>
-                <button onClick={confirmShoot} className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 border border-red-400/50 text-white font-bold font-orbitron hover:from-red-500 hover:to-orange-500 active:scale-95 transition-all shadow-lg shadow-red-500/30">🎯 SPARA!</button>
+                <button onClick={confirmShoot} className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-red-600 to-orange-600 border border-red-400/50 text-white font-bold font-orbitron hover:from-red-500 hover:to-orange-500 active:scale-95 transition-all shadow-lg shadow-red-500/30">
+                  🎯 {ctx.pricing && ctx.pricing.cost_m1u > 0 ? `SPARA (${ctx.pricing.cost_m1u} M1U)` : 'SPARA!'}
+                </button>
               </div>
               <div className="mt-4 text-center text-xs text-white/40">Tentativi rimasti: {ctx.remainingAttempts}</div>
             </motion.div>
