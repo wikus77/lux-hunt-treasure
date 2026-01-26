@@ -41,7 +41,7 @@ const LayerTogglePanel: React.FC<LayerTogglePanelProps> = ({ layers, onToggle, m
       style={{ 
         top: 'calc(env(safe-area-inset-top, 0px) + 96px)',
         pointerEvents: 'auto',
-        zIndex: 50000,
+        zIndex: 1500, // 🔧 FIX 26/01/2026: Was 50000, lowered to allow FinalShoot INFO BAR (z-1600) to appear above
       }}
     >
       {/* Collapsed state - Pill button */}

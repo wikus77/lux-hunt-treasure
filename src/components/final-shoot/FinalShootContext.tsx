@@ -257,10 +257,11 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Execute a Final Shoot attempt
+  // 🔧 FIX 26/01/2026: Use RPC execute_final_shoot instead of direct INSERT (blocked by RLS)
   const executeShoot = useCallback(async (lat: number, lng: number): Promise<boolean> => {
     console.log('🎯 [FINAL-SHOOT-CTX] Executing shoot at:', lat, lng);
     
-    if (!missionData.missionId || !missionData.prizeLocation) {
+    if (!missionData.missionId) {
       toast.error('Errore: Missione non trovata');
       return false;
     }
@@ -275,55 +276,90 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
+    if (!authUser) {
+      toast.error('Devi essere loggato');
+      return false;
+    }
+
     try {
-      // Calculate distance using Haversine formula
-      const R = 6371000;
-      const dLat = (missionData.prizeLocation.lat - lat) * Math.PI / 180;
-      const dLng = (missionData.prizeLocation.lng - lng) * Math.PI / 180;
-      const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat * Math.PI / 180) * Math.cos(missionData.prizeLocation.lat * Math.PI / 180) * 
-        Math.sin(dLng/2) * Math.sin(dLng/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      const distance = R * c;
+      // 🔧 FIX 26/01/2026: TEST MODE - calculate locally, skip DB save
+      if (isTestMode() && missionData.prizeLocation) {
+        const R = 6371000;
+        const dLat = (missionData.prizeLocation.lat - lat) * Math.PI / 180;
+        const dLng = (missionData.prizeLocation.lng - lng) * Math.PI / 180;
+        const a = 
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat * Math.PI / 180) * Math.cos(missionData.prizeLocation.lat * Math.PI / 180) * 
+          Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+        const isWinner = distance <= WINNING_DISTANCE_METERS;
+        const hint = getHintFromDistance(distance);
 
-      const isWinner = distance <= WINNING_DISTANCE_METERS;
-      const hint = getHintFromDistance(distance);
+        console.log('🎯 [FINAL-SHOOT-CTX] TEST MODE - Distance:', distance, 'isWinner:', isWinner);
 
-      console.log('🎯 [FINAL-SHOOT-CTX] Distance:', distance, 'isWinner:', isWinner);
+        setState(prev => ({
+          ...prev,
+          remainingAttempts: prev.remainingAttempts - 1,
+          hasWon: isWinner,
+          isActive: isWinner ? false : prev.isActive,
+          lastAttempt: { distance, hint },
+        }));
 
-      // 🔥 FIX: Use authUser from context instead of direct Supabase call
-      if (!authUser) {
-        toast.error('Devi essere loggato');
+        if (isWinner) {
+          toast.success('🎉 HAI VINTO IL FINAL SHOOT! (TEST)', { duration: 10000 });
+        } else {
+          toast.info(hint, { description: `Tentativi rimasti: ${state.remainingAttempts - 1}`, duration: 5000 });
+        }
+        return isWinner;
+      }
+
+      // 🔧 FIX 26/01/2026: PRODUCTION MODE - Use RPC (RLS blocks direct INSERT)
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('execute_final_shoot', {
+        p_user_id: authUser.id,
+        p_mission_id: missionData.missionId,
+        p_lat: lat,
+        p_lng: lng,
+      });
+
+      if (rpcError) {
+        console.error('🎯 [FINAL-SHOOT-CTX] RPC error:', rpcError);
+        toast.error(`Errore: ${rpcError.message || 'Salvataggio fallito'}`, {
+          description: rpcError.code ? `Code: ${rpcError.code}` : undefined,
+        });
         return false;
       }
-      const user = authUser;
 
-      // Save attempt (skip in test mode for now)
-      if (!isTestMode()) {
-        const { error: insertError } = await supabase
-          .from('final_shoot_attempts')
-          .insert({
-            user_id: user.id,
-            mission_id: missionData.missionId,
-            attempt_lat: lat,
-            attempt_lng: lng,
-            distance_meters: distance,
-            is_winner: isWinner,
-            attempt_number: 4 - state.remainingAttempts,
-          });
+      // Parse RPC response
+      const result = rpcResult as { 
+        success: boolean; 
+        status: string; 
+        winner?: boolean;
+        distance_meters?: number;
+        attempts_remaining?: number;
+        hint?: string;
+        message?: string;
+        error?: string;
+      };
 
-        if (insertError) {
-          console.error('🎯 [FINAL-SHOOT-CTX] Error saving attempt:', insertError);
-          toast.error('Errore nel salvataggio del tentativo');
-          return false;
-        }
+      console.log('🎯 [FINAL-SHOOT-CTX] RPC result:', result);
+
+      if (!result.success) {
+        // Handle specific error statuses
+        const errorMessage = result.error || result.message || 'Tentativo fallito';
+        toast.error(errorMessage);
+        return false;
       }
 
-      // Update state
+      const isWinner = result.winner === true;
+      const distance = result.distance_meters || 0;
+      const hint = result.hint || getHintFromDistance(distance);
+      const attemptsRemaining = result.attempts_remaining ?? (state.remainingAttempts - 1);
+
+      // Update local state
       setState(prev => ({
         ...prev,
-        remainingAttempts: prev.remainingAttempts - 1,
+        remainingAttempts: Math.max(0, attemptsRemaining),
         hasWon: isWinner,
         isActive: isWinner ? false : prev.isActive,
         lastAttempt: { distance, hint },
@@ -331,7 +367,7 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
 
       if (isWinner) {
         toast.success('🎉 HAI VINTO IL FINAL SHOOT!', {
-          description: 'Complimenti! Hai trovato la posizione esatta del premio!',
+          description: result.message || 'Complimenti! Hai trovato la posizione esatta del premio!',
           duration: 10000,
         });
         
@@ -340,7 +376,7 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
         }
       } else {
         toast.info(hint, {
-          description: `Tentativi rimasti: ${state.remainingAttempts - 1}`,
+          description: `Tentativi rimasti: ${attemptsRemaining}`,
           duration: 5000,
         });
       }
@@ -349,10 +385,11 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
 
     } catch (error) {
       console.error('🎯 [FINAL-SHOOT-CTX] Error executing shoot:', error);
-      toast.error('Errore durante il tentativo');
+      const errMsg = error instanceof Error ? error.message : 'Errore sconosciuto';
+      toast.error(`Errore: ${errMsg}`);
       return false;
     }
-  }, [missionData, state.remainingAttempts, state.hasWon, authUser]); // 🔥 FIX: Added authUser dependency
+  }, [missionData.missionId, missionData.prizeLocation, state.remainingAttempts, state.hasWon, authUser]);
 
   const value: FinalShootContextValue = {
     ...state,
