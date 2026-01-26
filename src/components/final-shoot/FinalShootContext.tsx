@@ -398,7 +398,7 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      // Parse RPC response - 🎯 PLUS/ELITE: includes pricing info
+      // Parse RPC response - 🎯 PLUS/ELITE: includes pricing info + balance
       const result = rpcResult as { 
         success: boolean; 
         status: string; 
@@ -416,6 +416,9 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
         current_balance?: number;
         refunded?: boolean;
         refund_amount?: number;
+        // 🔧 FIX 26/01/2026: Balance for live UI update
+        balance_before?: number;
+        balance_after?: number;
       };
 
       console.log('🎯 [FINAL-SHOOT-CTX] RPC result:', result);
@@ -447,10 +450,24 @@ export function FinalShootProvider({ children }: { children: ReactNode }) {
       const attemptsRemaining = result.attempts_remaining ?? (state.remainingAttempts - 1);
       const costCharged = result.cost_charged || 0;
       const tier = result.tier || 'free';
+      const balanceAfter = result.balance_after;
 
-      // 🎯 PLUS/ELITE: Show cost charged if applicable
-      if (costCharged > 0) {
-        console.log(`🎯 [FINAL-SHOOT-CTX] Charged ${costCharged} M1U (${tier})`);
+      // 🔧 FIX 26/01/2026: Dispatch m1u-spent event for LIVE UI update
+      if (costCharged > 0 && balanceAfter !== undefined) {
+        console.log(`🎯 [FINAL-SHOOT-CTX] Charged ${costCharged} M1U (${tier}), new balance: ${balanceAfter}`);
+        
+        // Dispatch event to update M1U pill immediately
+        window.dispatchEvent(new CustomEvent('m1u-spent', {
+          detail: {
+            amount: costCharged,
+            newBalance: balanceAfter,
+            reason: `final_shoot_${tier}`,
+          }
+        }));
+      } else if (costCharged > 0) {
+        console.log(`🎯 [FINAL-SHOOT-CTX] Charged ${costCharged} M1U (${tier}), triggering refetch`);
+        // Fallback: trigger balance refresh if no balance_after returned
+        window.dispatchEvent(new CustomEvent('m1u-balance-changed'));
       }
 
       // Update local state with new pricing if available
