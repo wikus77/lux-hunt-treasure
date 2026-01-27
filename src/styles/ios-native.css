@@ -337,31 +337,24 @@ body.is-native .m1-single-scroll-root [data-allow-scroll="true"] {
 */
 /* body.is-native::before - REMOVED */
 
-/* 🔧 FIX 27/01/2026 v8.4: BOUNCE OVERLAY FIX - CRITICAL
+/* 🔧 FIX 27/01/2026 v8.5: BOUNCE OVERLAY FIX - FINAL
    
-   PROBLEM: During iOS bounce, a dark "overlay" covers content.
-   This happens in ALL pages except Map.
+   PROBLEM: During iOS bounce, a dark "overlay" appears covering content.
+   - When at TOP and pulling DOWN → overlay from top
+   - When at BOTTOM and pulling UP → overlay from bottom
    
-   ROOT CAUSE: index.css sets:
-     html { background: gradient; background-attachment: fixed !important; }
+   ROOT CAUSE: Fixed elements (header/bottom nav wrappers) have areas that 
+   extend beyond their visible pills. These areas may have backdrop-filter
+   or inherited backgrounds that show during bounce.
    
-   When content bounces in WKWebView, the FIXED background stays in place 
-   while content moves, creating a visual "overlay" effect.
-   
-   SOLUTION: Override html background-attachment to 'scroll' for native iOS.
-   This makes the background move WITH the content during bounce.
-   
-   NOTE: html.capacitor-ios is set by AppDelegate.swift UserScript
-         body.is-native is set by App.tsx
+   SOLUTION: 
+   1. Remove all backgrounds from wrappers
+   2. Disable backdrop-filter on wrapper elements (only pills should have it)
+   3. Ensure ONLY the pill elements have backgrounds/blur
 */
 
 /* CRITICAL: Remove fixed background-attachment on native iOS */
-html.capacitor-ios {
-  /* Keep the gradient but make it SCROLL with content, not fixed */
-  background-attachment: scroll !important;
-}
-
-/* Also target html when body has is-native (fallback) */
+html.capacitor-ios,
 html[data-capacitor="ios"] {
   background-attachment: scroll !important;
 }
@@ -372,13 +365,42 @@ body.is-native {
   background-color: transparent !important;
 }
 
-/* All containers transparent - html gradient shows through */
+/* All containers transparent */
 body.is-native #root,
 body.is-native .safe-area-wrapper,
 body.is-native .global-layout-content,
 body.is-native main {
   background: transparent !important;
   background-color: transparent !important;
+}
+
+/* ========================================
+   HEADER & BOTTOM NAV WRAPPER FIX
+   Ensure wrappers are completely transparent
+   Only the INNER pills should have backgrounds
+   ======================================== */
+
+/* Header wrapper - completely transparent */
+body.is-native .unified-header-wrapper {
+  background: transparent !important;
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Bottom nav wrapper - completely transparent */
+body.is-native .bottom-navigation-ios {
+  background: transparent !important;
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* MinimalHeaderStrip - transparent */
+body.is-native [class*="MinimalHeaderStrip"],
+body.is-native [class*="minimal-header"] {
+  background: transparent !important;
+  backdrop-filter: none !important;
 }
 
 /* ========================================
