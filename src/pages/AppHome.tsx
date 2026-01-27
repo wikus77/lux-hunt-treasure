@@ -244,29 +244,18 @@ const { isConnected } = useRealTimeNotifications();
 
                   <div className="container mx-auto px-3 pb-20">
                 {/* 🚀 PILLS - Layout flex, scorrono con pagina
-                    🔧 FIX v6: First content offset for AION-like scroll under header */}
+                    🔧 FIX v8: M1UPill moved to FIXED OVERLAY (see below) - like Map page 
+                    This prevents clipping of the animated orb rings */}
                 <div 
                   className="flex justify-between items-start mb-4 overflow-visible m1-first-content-offset"
                 >
-                  {/* Colonna sinistra - overflow-visible per pill-orb rings
-                      🔧 FIX v7: Added pl-2 to give room for pill orb rings on left */}
-                  <div className="flex flex-col gap-2 overflow-visible pl-2">
-                    <motion.div
-                      id="m1u-pill-home-slot"
-                      data-onboarding="m1u-pill"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                      style={{ marginLeft: '-4px' }} /* Compensate for pl-2 visually */
-                    >
-                      <M1UPill showLabel showPlusButton />
-                    </motion.div>
-                    
+                  {/* Colonna sinistra - Only StreakPill here now (M1UPill is fixed overlay) */}
+                  <div className="flex flex-col gap-2 overflow-visible">
                     <motion.div
                       data-onboarding="streak-pill"
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, delay: 0.05 }}
+                      transition={{ duration: 0.3 }}
                     >
                       <StreakPill showLabel />
                     </motion.div>
@@ -429,6 +418,22 @@ const { isConnected } = useRealTimeNotifications();
         onClose={() => setShowFortuneWheel(false)} 
       />
       </MissionSync>
+      
+      {/* 🔧 FIX v8: M1UPill as FIXED OVERLAY (like Map page)
+          This prevents clipping of the animated orb rings
+          Position: fixed, left side, below header with safe area */}
+      <div 
+        id="m1u-pill-home-slot" 
+        data-onboarding="m1u-pill"
+        className="fixed left-4 z-[1001] flex flex-col gap-3"
+        style={{ 
+          top: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+          paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
+          pointerEvents: 'auto' 
+        }}
+      >
+        <M1UPill showLabel showPlusButton />
+      </div>
     </div>
     </>
   );

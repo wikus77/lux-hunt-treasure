@@ -1,10 +1,9 @@
 // © 2025 M1SSION™ – Mission Sync Pull-to-Refresh
-// 🔧 FIX v7 (27/01/2026): COMPLETE REWRITE - HOLD → PULL → RELEASE
-// NO ghost triggers, NO single-tap refresh, PROPER iOS bounce support
+// 🔧 FIX v8 (27/01/2026): SIMPLIFIED PTR - No complex state machine
+// Just: At top of scroll + pull down + release = refresh
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Logo M1 ufficiale
 const M1_LOGO_URL = '/icons/icon-m1-512x512.png';
 
 interface MissionSyncProps {
@@ -13,337 +12,169 @@ interface MissionSyncProps {
   disabled?: boolean;
 }
 
-// 🔧 v7: STRICT PTR CONSTANTS
-const HOLD_DURATION_MS = 200; // Must HOLD finger down for this long before PTR activates
-const PULL_THRESHOLD = 80; // Must pull this far to trigger refresh
-const MAX_PULL = 130; // Max visual pull distance
-const MIN_PULL_TO_ARM = 50; // Must pull at least this far to "arm" the refresh
+// Thresholds
+const PULL_TRIGGER = 80; // Pull this far to trigger refresh
+const MAX_PULL = 120; // Max visual distance
 
-// Debug flag (disable for production)
-const DEBUG_PTR = false;
-const log = (...args: unknown[]) => DEBUG_PTR && console.log('[PTR v7]', ...args);
-
-/**
- * MissionSync v7 - HOLD → PULL → RELEASE Pull-to-Refresh
- * 
- * State machine:
- * - idle: waiting for touch
- * - holding: finger down, counting hold time
- * - ready: hold time passed, can start pulling
- * - pulling: actively pulling down (visual feedback)
- * - armed: pulled past threshold, will refresh on release
- * - refreshing: refresh in progress
- * 
- * Key behaviors:
- * - Single tap = NO refresh (hold time not met)
- * - Quick swipe = NO refresh (hold time not met)
- * - Must HOLD → PULL → RELEASE to trigger refresh
- * - iOS bounce works normally when not in pulling state
- */
 export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, disabled = false }) => {
-  // Visual state
-  const [pullDistance, setPullDistance] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isPulling, setIsPulling] = useState(false);
-  const [showIndicator, setShowIndicator] = useState(false);
-
-  // Refs (for event listeners to avoid stale closures)
+  const [pull, setPull] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  
   const containerRef = useRef<HTMLDivElement>(null);
-  const stateRef = useRef<'idle' | 'holding' | 'ready' | 'pulling' | 'armed' | 'refreshing'>('idle');
-  const holdTimerRef = useRef<number | null>(null);
-  const startYRef = useRef(0);
-  const pullDistanceRef = useRef(0);
+  const startYRef = useRef<number | null>(null);
+  const refreshingRef = useRef(false);
   const onRefreshRef = useRef(onRefresh);
-
-  // Keep onRefresh ref updated
+  
   useEffect(() => { onRefreshRef.current = onRefresh; }, [onRefresh]);
 
-  // Main effect - attach touch listeners
   useEffect(() => {
-    if (disabled) {
-      log('DISABLED - not attaching listeners');
-      return;
-    }
-
+    if (disabled) return;
+    
     const container = containerRef.current;
     if (!container) return;
 
-    // Find scroll parent (main element with overflow-y: auto)
-    const findScrollParent = (el: HTMLElement | null): HTMLElement => {
-      if (!el) return document.documentElement;
-      let parent = el.parentElement;
-      while (parent) {
-        const style = getComputedStyle(parent);
-        if (style.overflowY === 'auto' || style.overflowY === 'scroll' || parent.tagName === 'MAIN') {
-          return parent;
+    // Find scroll parent
+    const getScrollParent = (): HTMLElement => {
+      let el = container.parentElement;
+      while (el) {
+        const style = getComputedStyle(el);
+        if (style.overflowY === 'auto' || style.overflowY === 'scroll' || el.tagName === 'MAIN') {
+          return el;
         }
-        parent = parent.parentElement;
+        el = el.parentElement;
       }
       return document.documentElement;
     };
 
-    const scrollParent = findScrollParent(container);
-    log('Scroll parent:', scrollParent.tagName);
+    const scrollParent = getScrollParent();
 
-    // ========================================
-    // TOUCHSTART - Start hold timer
-    // ========================================
-    const handleTouchStart = (e: TouchEvent) => {
-      // Block if refreshing
-      if (stateRef.current === 'refreshing') {
-        log('BLOCKED - refreshing');
-        return;
+    const onTouchStart = (e: TouchEvent) => {
+      // Always reset on new touch
+      if (refreshingRef.current) return;
+      
+      // Only track if at top
+      if (scrollParent.scrollTop <= 0) {
+        startYRef.current = e.touches[0].clientY;
+      } else {
+        startYRef.current = null;
       }
-
-      // Check if at top of scroll
-      const scrollTop = scrollParent.scrollTop;
-      if (scrollTop > 0) {
-        log('NOT AT TOP - scrollTop:', scrollTop);
-        stateRef.current = 'idle';
-        return;
-      }
-
-      // Start hold timer
-      stateRef.current = 'holding';
-      startYRef.current = e.touches[0].clientY;
-      log('TOUCHSTART - holding, startY:', startYRef.current);
-
-      // Clear any existing timer
-      if (holdTimerRef.current) {
-        clearTimeout(holdTimerRef.current);
-      }
-
-      // Set hold timer - after this, PTR becomes "ready"
-      holdTimerRef.current = window.setTimeout(() => {
-        if (stateRef.current === 'holding') {
-          stateRef.current = 'ready';
-          log('HOLD COMPLETE - ready for pull');
-        }
-      }, HOLD_DURATION_MS);
     };
 
-    // ========================================
-    // TOUCHMOVE - Track pull (only if ready/pulling/armed)
-    // ========================================
-    const handleTouchMove = (e: TouchEvent) => {
-      const state = stateRef.current;
-
-      // If still in 'holding' state and user moves, check direction
-      if (state === 'holding') {
-        const currentY = e.touches[0].clientY;
-        const deltaY = currentY - startYRef.current;
-        
-        // If scrolling UP or sideways significantly, cancel hold
-        if (deltaY < -10) {
-          if (holdTimerRef.current) {
-            clearTimeout(holdTimerRef.current);
-            holdTimerRef.current = null;
-          }
-          stateRef.current = 'idle';
-          log('HOLD CANCELLED - scrolling up');
-        }
-        // Don't process further - let native scroll work
-        return;
-      }
-
-      // If not ready/pulling/armed, ignore
-      if (state !== 'ready' && state !== 'pulling' && state !== 'armed') {
-        return;
-      }
-
-      // Check scrollTop again
-      const scrollTop = scrollParent.scrollTop;
-      if (scrollTop > 0) {
-        // User scrolled away from top - reset
-        stateRef.current = 'idle';
-        setPullDistance(0);
-        setIsPulling(false);
-        setShowIndicator(false);
-        pullDistanceRef.current = 0;
-        log('SCROLL AWAY - reset');
+    const onTouchMove = (e: TouchEvent) => {
+      if (refreshingRef.current) return;
+      if (startYRef.current === null) return;
+      
+      // Check still at top
+      if (scrollParent.scrollTop > 0) {
+        startYRef.current = null;
+        setPull(0);
         return;
       }
 
       const currentY = e.touches[0].clientY;
-      const deltaY = currentY - startYRef.current;
+      const delta = currentY - startYRef.current;
 
-      // If pulling up, cancel
-      if (deltaY < 0) {
-        stateRef.current = 'idle';
-        setPullDistance(0);
-        setIsPulling(false);
-        setShowIndicator(false);
-        pullDistanceRef.current = 0;
-        log('PULL UP - reset');
+      // Only track downward pull
+      if (delta <= 0) {
+        setPull(0);
         return;
       }
 
       // Calculate pull with resistance
-      const resistance = 0.5;
-      const pull = Math.min(deltaY * resistance, MAX_PULL);
-      pullDistanceRef.current = pull;
-      setPullDistance(pull);
+      const pullDist = Math.min(delta * 0.5, MAX_PULL);
+      setPull(pullDist);
 
-      // State transitions based on pull distance
-      if (pull >= PULL_THRESHOLD) {
-        if (stateRef.current !== 'armed') {
-          stateRef.current = 'armed';
-          log('ARMED - ready to refresh on release');
-        }
-        setIsPulling(true);
-        setShowIndicator(true);
-        // Prevent browser overscroll ONLY when armed
+      // Prevent native scroll only when pulling
+      if (pullDist > 10) {
         e.preventDefault();
-      } else if (pull >= MIN_PULL_TO_ARM) {
-        if (stateRef.current !== 'pulling') {
-          stateRef.current = 'pulling';
-          log('PULLING - visual feedback');
-        }
-        setIsPulling(true);
-        setShowIndicator(true);
-        // Prevent browser overscroll when visibly pulling
-        e.preventDefault();
-      } else {
-        // Small movement - don't show indicator yet
-        setShowIndicator(false);
       }
     };
 
-    // ========================================
-    // TOUCHEND - Trigger refresh if armed
-    // ========================================
-    const handleTouchEnd = async () => {
-      // Clear hold timer
-      if (holdTimerRef.current) {
-        clearTimeout(holdTimerRef.current);
-        holdTimerRef.current = null;
-      }
-
-      const state = stateRef.current;
-      const pull = pullDistanceRef.current;
-      log('TOUCHEND - state:', state, 'pull:', pull);
-
-      // Reset visual state
-      setIsPulling(false);
+    const onTouchEnd = async () => {
+      if (refreshingRef.current) return;
       
-      // Check if should refresh
-      if (state === 'armed' && pull >= PULL_THRESHOLD) {
-        log('REFRESH TRIGGERED ✓');
-        stateRef.current = 'refreshing';
-        setIsRefreshing(true);
-        setPullDistance(60); // Hold at indicator position
+      const currentPull = pull;
+      startYRef.current = null;
 
+      // Check if should refresh
+      if (currentPull >= PULL_TRIGGER) {
+        refreshingRef.current = true;
+        setRefreshing(true);
+        setPull(60); // Hold position during refresh
+        
         try {
           await onRefreshRef.current();
-          log('Refresh complete');
         } catch (err) {
-          console.error('[MissionSync] Refresh error:', err);
+          console.error('[MissionSync] Error:', err);
         } finally {
-          stateRef.current = 'idle';
-          setIsRefreshing(false);
-          setPullDistance(0);
-          setShowIndicator(false);
-          pullDistanceRef.current = 0;
+          refreshingRef.current = false;
+          setRefreshing(false);
+          setPull(0);
         }
       } else {
-        // Not armed or not pulled enough - reset
-        log('NO REFRESH - conditions not met');
-        stateRef.current = 'idle';
-        setPullDistance(0);
-        setShowIndicator(false);
-        pullDistanceRef.current = 0;
+        // Reset
+        setPull(0);
       }
     };
 
-    // ========================================
-    // TOUCHCANCEL - Reset everything
-    // ========================================
-    const handleTouchCancel = () => {
-      log('TOUCHCANCEL - reset');
-      if (holdTimerRef.current) {
-        clearTimeout(holdTimerRef.current);
-        holdTimerRef.current = null;
+    const onTouchCancel = () => {
+      startYRef.current = null;
+      if (!refreshingRef.current) {
+        setPull(0);
       }
-      stateRef.current = 'idle';
-      setPullDistance(0);
-      setIsPulling(false);
-      setShowIndicator(false);
-      pullDistanceRef.current = 0;
     };
 
     // Attach listeners
-    // CRITICAL: touchmove with passive: false ONLY on the container
-    // This allows iOS bounce on the scroll parent while we can preventDefault when pulling
-    container.addEventListener('touchstart', handleTouchStart, { passive: true });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd, { passive: true });
-    container.addEventListener('touchcancel', handleTouchCancel, { passive: true });
-
-    log('Listeners attached');
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchmove', onTouchMove, { passive: false });
+    container.addEventListener('touchend', onTouchEnd, { passive: true });
+    container.addEventListener('touchcancel', onTouchCancel, { passive: true });
 
     return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
-      container.removeEventListener('touchcancel', handleTouchCancel);
-      if (holdTimerRef.current) {
-        clearTimeout(holdTimerRef.current);
-      }
-      log('Listeners removed');
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', onTouchEnd);
+      container.removeEventListener('touchcancel', onTouchCancel);
     };
-  }, [disabled]);
+  }, [disabled, pull]); // Include pull in deps so touchend sees current value
 
-  // Render
   if (disabled) {
     return <>{children}</>;
   }
 
-  const progress = Math.min(pullDistance / PULL_THRESHOLD, 1);
-  const isArmed = pullDistance >= PULL_THRESHOLD;
+  const progress = Math.min(pull / PULL_TRIGGER, 1);
+  const isArmed = pull >= PULL_TRIGGER;
 
   return (
     <div ref={containerRef} className="relative w-full h-full">
       {/* Pull indicator */}
       <AnimatePresence>
-        {(showIndicator || isRefreshing) && (
+        {(pull > 20 || refreshing) && (
           <motion.div
-            className="absolute left-0 right-0 flex flex-col items-center justify-center z-[200] pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: 1,
-              y: Math.min(pullDistance, MAX_PULL) - 50
-            }}
+            className="absolute left-0 right-0 flex items-center justify-center z-[200] pointer-events-none"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: Math.min(pull, MAX_PULL) - 40 }}
             exit={{ opacity: 0, y: -50 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.1 }}
             style={{ top: 0 }}
           >
             <motion.div
-              className={`
-                flex items-center justify-center rounded-full overflow-hidden
-                ${isArmed || isRefreshing ? 'ring-2 ring-cyan-400/60' : ''}
-                transition-all duration-150
-              `}
+              className={`rounded-full ${isArmed || refreshing ? 'ring-2 ring-cyan-400/60' : ''}`}
               animate={{ 
-                scale: isRefreshing ? [1, 1.1, 1] : isArmed ? 1.1 : 0.9 + progress * 0.2,
-                rotate: isRefreshing ? 360 : 0
+                scale: refreshing ? [1, 1.1, 1] : (0.8 + progress * 0.3),
+                rotate: refreshing ? 360 : 0
               }}
               transition={{ 
-                scale: isRefreshing 
-                  ? { duration: 0.8, repeat: Infinity, ease: 'easeInOut' } 
-                  : { duration: 0.15 },
-                rotate: isRefreshing 
-                  ? { duration: 1.5, repeat: Infinity, ease: 'linear' } 
-                  : { duration: 0 }
+                scale: refreshing ? { duration: 0.6, repeat: Infinity } : { duration: 0.1 },
+                rotate: refreshing ? { duration: 1, repeat: Infinity, ease: 'linear' } : { duration: 0 }
               }}
             >
               <img 
                 src={M1_LOGO_URL} 
                 alt="M1" 
-                className="w-12 h-12 object-contain"
+                className="w-10 h-10 object-contain"
                 style={{
-                  filter: isArmed || isRefreshing 
-                    ? 'drop-shadow(0 0 10px rgba(0, 209, 255, 0.8))' 
-                    : 'none'
+                  filter: isArmed || refreshing ? 'drop-shadow(0 0 8px rgba(0, 209, 255, 0.7))' : 'none'
                 }}
               />
             </motion.div>
@@ -351,20 +182,13 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
         )}
       </AnimatePresence>
 
-      {/* Content with pull offset */}
-      {(pullDistance > 0 || isRefreshing) ? (
-        <motion.div
-          key="pull-content"
-          initial={{ y: 0 }}
-          animate={{ y: pullDistance }}
-          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          style={{ willChange: isPulling ? 'transform' : 'auto' }}
-        >
-          {children}
-        </motion.div>
-      ) : (
-        <div key="idle-content" data-idle-content="true">{children}</div>
-      )}
+      {/* Content */}
+      <motion.div
+        animate={{ y: pull }}
+        transition={{ type: 'spring', stiffness: 400, damping: 30, duration: 0.1 }}
+      >
+        {children}
+      </motion.div>
     </div>
   );
 };

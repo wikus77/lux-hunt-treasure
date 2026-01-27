@@ -100,10 +100,10 @@ export const BuzzPage: React.FC = () => {
 
   // 🔧 FIX v2: BuzzPage now relies on GlobalLayout for header/nav/safe-area
   // The outer wrapper provides scrollable content area
-  // 🔧 FIX 27/01/2026 v7: REVERTED - bg-[#070818] restored (user prefers original)
+  // 🔧 FIX 27/01/2026 v8: Background TRANSPARENT - gradient layer shows through (like other pages)
   return (
     <div 
-      className="bg-[#070818] w-full relative"
+      className="w-full relative"
     >
       {/* Free BUZZ Reward Handler - Non interferisce con Stripe */}
       <BuzzRewardHandler onRewardRedeemed={handleBuzzSuccess} />
@@ -132,14 +132,10 @@ export const BuzzPage: React.FC = () => {
           {/* © 2025 Joseph MULÉ – M1SSION™ */}
           
 
-          {/* M1U Pill Slot - Buzz (inline, scrolls with content)
-              🔧 FIX v6: First content offset for AION-like scroll under header */}
-          <div 
-            id="m1u-pill-buzz-slot" 
-            className="flex items-center gap-2 mb-4 m1-first-content-offset-compact"
-            aria-hidden={false}
-          >
-            <M1UPill showLabel showPlusButton />
+          {/* 🔧 FIX v8: M1UPill moved to FIXED OVERLAY (see bottom of component)
+              This prevents clipping of the animated orb rings */}
+          <div className="m1-first-content-offset-compact mb-4">
+            {/* Placeholder for scroll offset - pill is now fixed overlay */}
           </div>
 
 
@@ -306,6 +302,22 @@ export const BuzzPage: React.FC = () => {
       
       {/* 🎯 Motivational Popup - Shows once per session */}
       <MotivationalPopup pageType="buzz" />
+      
+      {/* 🔧 FIX v8: M1UPill as FIXED OVERLAY (like Map page)
+          This prevents clipping of the animated orb rings
+          Position: fixed, left side, below header with safe area */}
+      <div 
+        id="m1u-pill-buzz-slot" 
+        data-onboarding="m1u-pill"
+        className="fixed left-4 z-[1001] flex flex-col gap-3"
+        style={{ 
+          top: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+          paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
+          pointerEvents: 'auto' 
+        }}
+      >
+        <M1UPill showLabel showPlusButton />
+      </div>
     </div>
   );
 };
