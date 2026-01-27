@@ -216,8 +216,7 @@ body.is-native {
   /* Ensure full height without breaking scroll context */
   min-height: 100vh;
   min-height: 100dvh;
-  /* 🔧 FIX 27/01/2026 v4: Background provided by ::before pseudo-element (gradient layer)
-   * Body stays transparent so gradient layer shows through behind header */
+  /* 🔧 FIX 27/01/2026 v8.4: Background transparent - html gradient shows through */
   background: transparent !important;
   background-color: transparent !important;
 }
@@ -338,26 +337,46 @@ body.is-native .m1-single-scroll-root [data-allow-scroll="true"] {
 */
 /* body.is-native::before - REMOVED */
 
-/* 🔧 FIX 27/01/2026 v8.3: Gradient on body WITHOUT fixed attachment
-   The ::before pseudo-element caused "overlay" artifacts during iOS bounce
-   because it stayed fixed while content moved.
+/* 🔧 FIX 27/01/2026 v8.4: BOUNCE OVERLAY FIX - CRITICAL
    
-   Solution: Apply gradient directly to body (no background-attachment: fixed)
-   The native scrollView backgroundColor (#0a0b0f) shows during bounce edges.
+   PROBLEM: During iOS bounce, a dark "overlay" covers content.
+   This happens in ALL pages except Map.
+   
+   ROOT CAUSE: index.css sets:
+     html { background: gradient; background-attachment: fixed !important; }
+   
+   When content bounces in WKWebView, the FIXED background stays in place 
+   while content moves, creating a visual "overlay" effect.
+   
+   SOLUTION: Override html background-attachment to 'scroll' for native iOS.
+   This makes the background move WITH the content during bounce.
+   
+   NOTE: html.capacitor-ios is set by AppDelegate.swift UserScript
+         body.is-native is set by App.tsx
 */
-body.is-native {
-  background:
-    radial-gradient(ellipse 1200px 800px at 85% -10%, rgba(0, 229, 255, 0.25), transparent 50%),
-    radial-gradient(ellipse 1000px 700px at -15% 25%, rgba(123, 46, 255, 0.20), transparent 50%),
-    radial-gradient(ellipse 800px 500px at 50% 90%, rgba(252, 30, 255, 0.10), transparent 45%),
-    #0a0b0f !important;
-  /* NO background-attachment: fixed - this would cause the overlay issue */
+
+/* CRITICAL: Remove fixed background-attachment on native iOS */
+html.capacitor-ios {
+  /* Keep the gradient but make it SCROLL with content, not fixed */
+  background-attachment: scroll !important;
 }
 
-/* Ensure containers stay transparent - gradient shows through */
+/* Also target html when body has is-native (fallback) */
+html[data-capacitor="ios"] {
+  background-attachment: scroll !important;
+}
+
+/* Body should NOT have any conflicting background */
+body.is-native {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* All containers transparent - html gradient shows through */
 body.is-native #root,
 body.is-native .safe-area-wrapper,
-body.is-native .global-layout-content {
+body.is-native .global-layout-content,
+body.is-native main {
   background: transparent !important;
   background-color: transparent !important;
 }
