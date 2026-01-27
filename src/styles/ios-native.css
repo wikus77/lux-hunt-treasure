@@ -379,4 +379,29 @@ body.is-native .global-layout-content {
   min-height: -webkit-fill-available !important;
 }
 
+/* ========================================
+   🔧 FIX 27/01/2026 v6: PILL ORB ANTI-CLIPPING
+   
+   ROOT CAUSE: .container class has overflow-x: hidden which clips
+   the animated rings of the pill orb (72px rings on 60px orb).
+   
+   FIX: Override container overflow in native mode to allow
+   pill orb rings to show fully.
+   ======================================== */
+
+body.is-native .container {
+  /* Allow pill orb rings to extend beyond container */
+  overflow-x: visible !important;
+}
+
+/* Ensure pill orb parent can show rings */
+body.is-native .flex.overflow-visible {
+  overflow: visible !important;
+}
+
+/* Extra safety: ensure m1-first-content-offset allows overflow */
+body.is-native .m1-first-content-offset {
+  overflow: visible !important;
+}
+
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

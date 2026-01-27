@@ -13,19 +13,22 @@ interface MissionSyncProps {
   disabled?: boolean;
 }
 
-// 🔧 FIX 25/01/2026: STATE MACHINE PTR - RELEASE-ONLY GATE
-// States: idle → tracking → armed → refreshing
-// NO refresh on touchstart, NO refresh on tap, ONLY on deliberate release
-const PULL_THRESHOLD = 100; // pullDistance to trigger refresh (must pull this far)
+// 🔧 FIX 27/01/2026 v6: STRICTER PTR - PRESS-DELAY + HIGHER THRESHOLDS
+// States: idle → waiting → tracking → armed → refreshing
+// NO refresh on touchstart, NO refresh on tap, NO ghost triggers
+// REQUIRES: pressDelay before tracking, higher arm threshold, release-only gate
+const PULL_THRESHOLD = 90; // pullDistance to trigger refresh (must pull this far)
 const MAX_PULL = 140; // max visual pull distance
-const ARM_DELTA = 50; // deltaY required to ARM (must drag down at least this far)
-const MIN_HOLD_MS = 300; // must HOLD armed state for this long before release works
-const TAP_DURATION_MS = 200; // if touch duration < this, it's a tap - ALWAYS ignore
-const TAP_MAX_DELTA = 20; // if total deltaY < this, it's a tap - ALWAYS ignore
-const MOMENTUM_LOCKOUT_MS = 250; // no PTR if scroll happened within this time
+const ARM_DELTA = 70; // deltaY required to ARM (must drag down at least this far) - INCREASED from 50
+const MIN_HOLD_MS = 250; // must HOLD armed state for this long before release works - REDUCED slightly
+const TAP_DURATION_MS = 150; // if touch duration < this, it's a tap - ALWAYS ignore
+const TAP_MAX_DELTA = 25; // if total deltaY < this, it's a tap - ALWAYS ignore
+const MOMENTUM_LOCKOUT_MS = 300; // no PTR if scroll happened within this time - INCREASED
+// 🔧 NEW: Press delay before PTR can start tracking (prevents ghost triggers)
+const PRESS_DELAY_MS = 150; // must hold finger down for this long before PTR tracking begins
 
-// PTR States
-type PTRState = 'idle' | 'tracking' | 'armed' | 'refreshing';
+// PTR States - 🔧 v6: Added 'waiting' state for pressDelay
+type PTRState = 'idle' | 'waiting' | 'tracking' | 'armed' | 'refreshing';
 
 // 🔧 KILL SWITCH: This is the ONLY function that can trigger refresh
 // All conditions must be met or refresh is BLOCKED
@@ -88,12 +91,13 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
   const pullDistanceRef = useRef(0);
   const listenersAttachedRef = useRef(false);
   const onRefreshRef = useRef(onRefresh);
-  // 🔧 FIX 25/01/2026: STATE MACHINE refs
+  // 🔧 FIX 27/01/2026 v6: STATE MACHINE refs (with pressDelay support)
   const ptrStateRef = useRef<PTRState>('idle');
   const lastScrollTimeRef = useRef(0);
   const armTimeRef = useRef(0);
   const touchStartTimeRef = useRef(0);
   const maxDeltaYRef = useRef(0);
+  const pressDelayTimerRef = useRef<number | null>(null); // Timer for pressDelay
   
   // Keep onRefresh ref updated
   useEffect(() => { onRefreshRef.current = onRefresh; }, [onRefresh]);
@@ -150,10 +154,17 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
       
       // ============================================
       // NATIVE TOUCHSTART
-      // 🔧 STATE MACHINE: touchstart → state = 'tracking' (NEVER 'armed')
+      // 🔧 v6: STATE MACHINE: touchstart → 'waiting' (with pressDelay)
+      // Only transitions to 'tracking' after PRESS_DELAY_MS
       // NO refresh can EVER happen from touchstart
       // ============================================
       const handleTouchStart = (e: TouchEvent) => {
+        // Clear any existing pressDelay timer
+        if (pressDelayTimerRef.current) {
+          clearTimeout(pressDelayTimerRef.current);
+          pressDelayTimerRef.current = null;
+        }
+        
         // BLOCK if already refreshing
         if (ptrStateRef.current === 'refreshing') {
           logPTR('touchstart: BLOCKED (refreshing)');
@@ -168,15 +179,24 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
         
         logPTR('touchstart: scrollTop=', scrollTop, 'isAtTop=', isAtTop, 'momentum=', isMomentumActive, 'state=', ptrStateRef.current);
         
-        // Reset to TRACKING state (not armed!)
+        // 🔧 v6: Go to WAITING state first (not tracking!)
+        // PTR tracking only begins after pressDelay
         if (isAtTop && !isMomentumActive) {
-          ptrStateRef.current = 'tracking';
+          ptrStateRef.current = 'waiting';
           startYRef.current = e.touches[0].clientY;
           touchStartTimeRef.current = Date.now();
           armTimeRef.current = 0;
           maxDeltaYRef.current = 0;
           isPullingRef.current = false;
-          logPTR('touchstart: state → tracking');
+          logPTR('touchstart: state → waiting (pressDelay starts)');
+          
+          // 🔧 v6: Set timer to transition to tracking after pressDelay
+          pressDelayTimerRef.current = window.setTimeout(() => {
+            if (ptrStateRef.current === 'waiting') {
+              ptrStateRef.current = 'tracking';
+              logPTR('pressDelay: state → tracking (ready for PTR)');
+            }
+          }, PRESS_DELAY_MS);
         } else {
           // Reset to IDLE
           ptrStateRef.current = 'idle';
@@ -190,13 +210,34 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
       
       // ============================================
       // NATIVE TOUCHMOVE (with passive: false)
-      // 🔧 STATE MACHINE: tracking → armed (only if deltaY > ARM_DELTA)
+      // 🔧 v6: STATE MACHINE: tracking → armed (only if deltaY > ARM_DELTA)
+      // CRITICAL: Only preventDefault when ARMED to allow iOS bounce when not pulling
       // ============================================
       const handleTouchMove = (e: TouchEvent) => {
-        // BLOCK if refreshing or not tracking/armed
+        // BLOCK if refreshing, idle, or waiting (pressDelay not elapsed)
         if (ptrStateRef.current === 'refreshing') return;
         if (ptrStateRef.current === 'idle') return;
         if (startYRef.current === 0) return;
+        
+        // 🔧 v6: If still in 'waiting', check if we should cancel (user is scrolling)
+        // This allows normal scroll to work during pressDelay
+        if (ptrStateRef.current === 'waiting') {
+          const currentY = e.touches[0].clientY;
+          const deltaY = currentY - startYRef.current;
+          
+          // If user scrolls UP during waiting, cancel PTR entirely
+          if (deltaY < -10) {
+            if (pressDelayTimerRef.current) {
+              clearTimeout(pressDelayTimerRef.current);
+              pressDelayTimerRef.current = null;
+            }
+            ptrStateRef.current = 'idle';
+            startYRef.current = 0;
+            logPTR('touchmove: waiting → idle (scrolled up, PTR cancelled)');
+          }
+          // Otherwise, let native scroll/bounce work - don't preventDefault
+          return;
+        }
         
         const currentY = e.touches[0].clientY;
         const deltaY = currentY - startYRef.current;
@@ -225,7 +266,7 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
           return;
         }
         
-        // Only process if at top
+        // Only process if at top AND delta exceeds ARM threshold
         if (scrollTop === 0 && deltaY > ARM_DELTA) {
           // Transition: tracking → armed
           if (ptrStateRef.current === 'tracking') {
@@ -236,9 +277,9 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
             logPTR('touchmove: state → armed at', armTimeRef.current);
           }
           
-          // Update visual (only if armed)
+          // 🔧 v6: Only preventDefault when ARMED (allows iOS bounce when not pulling)
           if (ptrStateRef.current === 'armed') {
-            e.preventDefault(); // Block browser overscroll
+            e.preventDefault(); // Block browser overscroll ONLY when actually pulling
             const resistance = 0.5;
             const newPull = Math.min(deltaY * resistance, MAX_PULL);
             pullDistanceRef.current = newPull;
@@ -246,6 +287,8 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
             logPTR('touchmove: pulling', newPull.toFixed(1), 'px');
           }
         }
+        // 🔧 v6: If tracking but delta < ARM_DELTA, don't preventDefault
+        // This allows iOS native bounce to work when user is just scrolling
       };
       
       // ============================================
@@ -254,6 +297,12 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
       // Uses KILL SWITCH to validate ALL conditions
       // ============================================
       const handleTouchEnd = async () => {
+        // 🔧 v6: Clear pressDelay timer
+        if (pressDelayTimerRef.current) {
+          clearTimeout(pressDelayTimerRef.current);
+          pressDelayTimerRef.current = null;
+        }
+        
         const currentPull = pullDistanceRef.current;
         const currentState = ptrStateRef.current;
         const maxDelta = maxDeltaYRef.current;
@@ -333,6 +382,12 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
       // 🔧 STATE MACHINE: Reset to idle
       // ============================================
       const handleTouchCancel = () => {
+        // 🔧 v6: Clear pressDelay timer
+        if (pressDelayTimerRef.current) {
+          clearTimeout(pressDelayTimerRef.current);
+          pressDelayTimerRef.current = null;
+        }
+        
         logPTR('touchcancel: state → idle');
         ptrStateRef.current = 'idle';
         isPullingRef.current = false;

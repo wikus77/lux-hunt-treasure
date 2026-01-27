@@ -494,7 +494,7 @@ if (typeof window !== 'undefined') {
   showM1Logo();
   
   // 🔧 BUILD FINGERPRINT: Expose for native bundle verification (remove after testing)
-  const buildStamp = `BUILD_${Date.now()}_NATIVE_FIX_V5_AION_PTR`;
+  const buildStamp = `BUILD_${Date.now()}_NATIVE_FIX_V6_PTR_PILL_BOUNCE`;
   (window as any).__M1_BUILD_STAMP__ = buildStamp;
   console.log('🏷️ BUILD STAMP:', buildStamp);
 }
