@@ -492,6 +492,11 @@ const showM1Logo = () => {
 // Show logo on app start
 if (typeof window !== 'undefined') {
   showM1Logo();
+  
+  // 🔧 BUILD FINGERPRINT: Expose for native bundle verification (remove after testing)
+  const buildStamp = `BUILD_${Date.now()}_NATIVE_FIX_V2`;
+  (window as any).__M1_BUILD_STAMP__ = buildStamp;
+  console.log('🏷️ BUILD STAMP:', buildStamp);
 }
 
 // Enhanced error handling for better debugging
