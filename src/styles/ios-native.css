@@ -328,25 +328,36 @@ body.is-native .m1-single-scroll-root [data-allow-scroll="true"] {
    Containers remain transparent so the gradient shows through.
    ======================================== */
 
-body.is-native::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  /* Same gradient as PWA html (from index.css lines 60-64) */
+/* 🔧 FIX 27/01/2026 v8.3: REMOVED fixed gradient ::before
+   
+   PROBLEM: During iOS bounce, the fixed ::before stays in place while content moves,
+   creating a visual "dark overlay" effect.
+   
+   SOLUTION: Remove the pseudo-element. Use html/body background directly,
+   which moves with the content during bounce.
+*/
+/* body.is-native::before - REMOVED */
+
+/* 🔧 FIX 27/01/2026 v8.3: Gradient on body WITHOUT fixed attachment
+   The ::before pseudo-element caused "overlay" artifacts during iOS bounce
+   because it stayed fixed while content moved.
+   
+   Solution: Apply gradient directly to body (no background-attachment: fixed)
+   The native scrollView backgroundColor (#0a0b0f) shows during bounce edges.
+*/
+body.is-native {
   background:
-    radial-gradient(ellipse 1200px 800px at 85% -10%, rgba(0, 229, 255, 0.35), transparent 50%),
-    radial-gradient(ellipse 1000px 700px at -15% 25%, rgba(123, 46, 255, 0.30), transparent 50%),
-    radial-gradient(ellipse 800px 500px at 50% 90%, rgba(252, 30, 255, 0.15), transparent 45%),
-    linear-gradient(180deg, #0a0b0f 0%, #0c0e14 25%, #0e1118 50%, #0a0c10 75%, #080a0d 100%);
+    radial-gradient(ellipse 1200px 800px at 85% -10%, rgba(0, 229, 255, 0.25), transparent 50%),
+    radial-gradient(ellipse 1000px 700px at -15% 25%, rgba(123, 46, 255, 0.20), transparent 50%),
+    radial-gradient(ellipse 800px 500px at 50% 90%, rgba(252, 30, 255, 0.10), transparent 45%),
+    #0a0b0f !important;
+  /* NO background-attachment: fixed - this would cause the overlay issue */
 }
 
-/* Ensure containers stay transparent (PWA parity) - gradient shows through */
+/* Ensure containers stay transparent - gradient shows through */
 body.is-native #root,
 body.is-native .safe-area-wrapper,
 body.is-native .global-layout-content {
-  /* REVERTED: Do NOT set solid backgrounds - let gradient layer show through */
   background: transparent !important;
   background-color: transparent !important;
 }

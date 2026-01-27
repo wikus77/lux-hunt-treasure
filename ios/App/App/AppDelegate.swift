@@ -111,8 +111,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         webView.scrollView.bounces = true
         webView.scrollView.alwaysBounceVertical = true
         
-        // Set background color immediately to prevent white flash
-        let bgColor = UIColor(red: 0, green: 0.031, blue: 0.078, alpha: 1) // #000814
+        // 🔧 FIX 27/01/2026 v8.3: Background color matches gradient base
+        // This color shows during iOS bounce - must match CSS gradient base #0a0b0f
+        let bgColor = UIColor(red: 0.039, green: 0.043, blue: 0.059, alpha: 1) // #0a0b0f
         webView.isOpaque = true
         webView.backgroundColor = bgColor
         webView.scrollView.backgroundColor = bgColor
