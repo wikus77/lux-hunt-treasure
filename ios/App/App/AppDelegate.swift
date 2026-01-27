@@ -193,7 +193,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             document.documentElement.style.setProperty('--sat', '\(safeTop)px');
             document.documentElement.style.setProperty('--capacitor-safe-area-top', '\(safeTop)px');
             
-            // Inject CSS immediately
+            // 🔧 FIX v8.8: NUCLEAR - Set inline style DIRECTLY on html to override ALL CSS
+            // This has highest specificity and WILL override any stylesheet rule
+            document.documentElement.style.background = '#0a0b0f';
+            document.documentElement.style.backgroundImage = 'none';
+            document.documentElement.style.backgroundAttachment = 'scroll';
+            
+            // Inject layout CSS immediately
             var style = document.createElement('style');
             style.id = 'm1ssion-capacitor-preload';
             style.textContent = `\(cssOverride.replacingOccurrences(of: "`", with: "\\`"))`;
@@ -205,7 +211,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 document.documentElement.appendChild(style);
             }
             
-            console.log('✅ M1SSION™ WRAP: Pre-render CSS injected');
+            // 🔧 FIX v8.8: Also run when body is available to ensure coverage
+            function fixBodyBackground() {
+                if (document.body) {
+                    document.body.style.setProperty('background', 'transparent', 'important');
+                    document.body.style.setProperty('background-color', 'transparent', 'important');
+                    document.body.classList.add('is-native');
+                }
+            }
+            
+            // Try immediately
+            fixBodyBackground();
+            
+            // Also on DOMContentLoaded
+            document.addEventListener('DOMContentLoaded', fixBodyBackground);
+            
+            console.log('✅ M1SSION™ WRAP: Pre-render CSS + NUCLEAR background fix injected');
         })();
         """
         
