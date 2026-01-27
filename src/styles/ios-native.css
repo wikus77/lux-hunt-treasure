@@ -216,10 +216,10 @@ body.is-native {
   /* Ensure full height without breaking scroll context */
   min-height: 100vh;
   min-height: 100dvh;
-  /* 🔧 FIX 27/01/2026 v2: Background continuity behind header (PWA parity)
-   * MUST use !important to override index.css "body { background: transparent !important }" */
-  background-color: #070818 !important;
-  background: #070818 !important;
+  /* 🔧 FIX 27/01/2026 v4: Background provided by ::before pseudo-element (gradient layer)
+   * Body stays transparent so gradient layer shows through behind header */
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /**
@@ -292,17 +292,43 @@ body.is-native .m1-single-scroll-root [data-allow-scroll="true"] {
 }
 
 /* ========================================
-   🔧 FIX 27/01/2026 v2: NATIVE BACKGROUND CONTINUITY
-   Override index.css "background: transparent !important" for native
-   Ensures header area has continuous background like PWA
+   🔧 FIX 27/01/2026 v4: NATIVE BACKGROUND LAYER (PWA PARITY)
+   
+   ROOT CAUSE OF REGRESSION: Setting solid backgrounds on containers
+   (body, #root, wrapper) caused "hard cut" under header because the
+   background doesn't extend behind header like PWA gradient does.
+   
+   SOLUTION: Create a FIXED pseudo-element background layer on body
+   that uses the same gradient as PWA html. This layer:
+   - Sits at z-index: -1 (behind everything)
+   - Is position: fixed (covers entire viewport including behind header)
+   - Uses same gradient as PWA html element
+   - Has pointer-events: none (doesn't interfere with UI)
+   
+   Containers remain transparent so the gradient shows through.
    ======================================== */
 
+body.is-native::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* Same gradient as PWA html (from index.css lines 60-64) */
+  background:
+    radial-gradient(ellipse 1200px 800px at 85% -10%, rgba(0, 229, 255, 0.35), transparent 50%),
+    radial-gradient(ellipse 1000px 700px at -15% 25%, rgba(123, 46, 255, 0.30), transparent 50%),
+    radial-gradient(ellipse 800px 500px at 50% 90%, rgba(252, 30, 255, 0.15), transparent 45%),
+    linear-gradient(180deg, #0a0b0f 0%, #0c0e14 25%, #0e1118 50%, #0a0c10 75%, #080a0d 100%);
+}
+
+/* Ensure containers stay transparent (PWA parity) - gradient shows through */
 body.is-native #root,
 body.is-native .safe-area-wrapper,
 body.is-native .global-layout-content {
-  /* Override PWA transparent rules for native - solid background behind header */
-  background-color: #070818 !important;
-  background: #070818 !important;
+  /* REVERTED: Do NOT set solid backgrounds - let gradient layer show through */
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* ========================================

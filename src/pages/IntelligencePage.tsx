@@ -21,14 +21,14 @@ const IntelligencePage: React.FC = () => {
 
   // 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
   // Content scrolls behind glass header, first element has margin-top
-  // 🔧 FIX 27/01/2026: Added background for native PWA parity (header area continuity)
+  // 🔧 FIX 27/01/2026 v4: Background handled by ios-native.css ::before gradient layer
   return (
       <div 
         className="flex flex-col px-3"
         style={{
           position: 'relative',
           zIndex: 0,
-          backgroundColor: '#070818', // Native PWA parity: background behind header
+          // Background transparent - native gradient layer from ios-native.css handles background
         }}
       >
         {/* M1U Pill - SEMPRE VISIBILE subito - z-index alto
