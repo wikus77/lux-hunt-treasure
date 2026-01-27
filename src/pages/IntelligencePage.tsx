@@ -31,20 +31,10 @@ const IntelligencePage: React.FC = () => {
           // Background transparent - native gradient layer from ios-native.css handles background
         }}
       >
-        {/* M1U Pill - SEMPRE VISIBILE subito - z-index alto
-            🔧 FIX v6: First content offset for AION-like scroll under header */}
-        <div 
-          data-onboarding="m1u-pill"
-          className="m1-first-content-offset-compact"
-          style={{ 
-            pointerEvents: 'auto',
-            marginBottom: '3px',
-            flexShrink: 0,
-            position: 'relative',
-            zIndex: 50
-          }}
-        >
-          <M1UPill showLabel showPlusButton />
+        {/* 🔧 FIX v8: M1UPill moved to FIXED OVERLAY (see bottom of component)
+            This prevents clipping - pill now renders on top of everything */}
+        <div className="m1-first-content-offset-compact" style={{ marginBottom: '3px' }}>
+          {/* Spacer for scroll offset - actual pill is fixed overlay */}
         </div>
 
         {/* AION Entity - BLOB CONTAINER */}
@@ -127,6 +117,22 @@ const IntelligencePage: React.FC = () => {
       
         {/* 🎯 Motivational Popup - Shows once per session for AION page */}
         <MotivationalPopup pageType="aion" />
+        
+        {/* 🔧 FIX v8: M1UPill as FIXED OVERLAY (like Map/Home/Buzz pages)
+            This prevents clipping of the animated orb rings
+            Position: fixed, left side, below header with safe area */}
+        <div 
+          id="m1u-pill-aion-slot" 
+          data-onboarding="m1u-pill"
+          className="fixed left-4 z-[1001] flex flex-col gap-3"
+          style={{ 
+            top: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+            paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
+            pointerEvents: 'auto' 
+          }}
+        >
+          <M1UPill showLabel showPlusButton />
+        </div>
       </div>
   );
 };

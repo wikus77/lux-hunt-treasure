@@ -244,21 +244,14 @@ const { isConnected } = useRealTimeNotifications();
 
                   <div className="container mx-auto px-3 pb-20">
                 {/* 🚀 PILLS - Layout flex, scorrono con pagina
-                    🔧 FIX v8: M1UPill moved to FIXED OVERLAY (see below) - like Map page 
-                    This prevents clipping of the animated orb rings */}
+                    🔧 FIX v8: M1UPill + StreakPill moved to FIXED OVERLAY (see below)
+                    This prevents clipping and overlap issues */}
                 <div 
                   className="flex justify-between items-start mb-4 overflow-visible m1-first-content-offset"
                 >
-                  {/* Colonna sinistra - Only StreakPill here now (M1UPill is fixed overlay) */}
+                  {/* Colonna sinistra - Empty now (pills are fixed overlays) */}
                   <div className="flex flex-col gap-2 overflow-visible">
-                    <motion.div
-                      data-onboarding="streak-pill"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <StreakPill showLabel />
-                    </motion.div>
+                    {/* M1UPill + StreakPill are now fixed overlays below */}
                   </div>
                   
                   {/* Colonna destra */}
@@ -419,13 +412,14 @@ const { isConnected } = useRealTimeNotifications();
       />
       </MissionSync>
       
-      {/* 🔧 FIX v8: M1UPill as FIXED OVERLAY (like Map page)
+      {/* 🔧 FIX v8: M1UPill + StreakPill as FIXED OVERLAY (like Map page)
           This prevents clipping of the animated orb rings
-          Position: fixed, left side, below header with safe area */}
+          Position: fixed, left side, below header with safe area
+          StreakPill positioned below M1UPill with gap-2 */}
       <div 
         id="m1u-pill-home-slot" 
         data-onboarding="m1u-pill"
-        className="fixed left-4 z-[1001] flex flex-col gap-3"
+        className="fixed left-4 z-[1001] flex flex-col gap-2"
         style={{ 
           top: 'calc(env(safe-area-inset-top, 0px) + 80px)',
           paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
@@ -433,6 +427,7 @@ const { isConnected } = useRealTimeNotifications();
         }}
       >
         <M1UPill showLabel showPlusButton />
+        <StreakPill showLabel />
       </div>
     </div>
     </>

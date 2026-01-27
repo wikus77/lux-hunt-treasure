@@ -262,6 +262,26 @@ body.is-native .m1-single-scroll-root {
   transform: none !important;
 }
 
+/* ========================================
+   🔧 FIX 27/01/2026 v8: FORCE iOS BOUNCE ON ALL SCROLL CONTAINERS
+   
+   ROOT CAUSE: index.css has "overscroll-behavior-y: contain" which kills bounce
+   FIX: Override ALL scrollable containers to allow native iOS rubber-band bounce
+   ======================================== */
+
+body.is-native,
+body.is-native html,
+body.is-native #root,
+body.is-native main,
+body.is-native .global-layout-content,
+body.is-native .safe-area-wrapper,
+body.is-native [style*="overflow"] {
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: auto !important;
+  overscroll-behavior-y: auto !important;
+  overscroll-behavior-x: auto !important;
+}
+
 /**
  * Prevent motion.div children from creating persistent transforms
  * when not actively in a gesture
