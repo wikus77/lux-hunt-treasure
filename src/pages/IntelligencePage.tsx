@@ -47,13 +47,15 @@ const IntelligencePage: React.FC = () => {
           <M1UPill showLabel showPlusButton />
         </div>
 
-        {/* AION Entity - REDUCED */}
-        {/* 🔧 FIX 27/01/2026: overflow:visible allows cloud glow to extend (PWA parity) */}
+        {/* AION Entity - BLOB CONTAINER */}
+        {/* 🔧 FIX 27/01/2026 v5: Container height increased to fit 280px blob (was 81px - clipping!)
+            Root cause: AionEntity has minHeight:280px but parent limited to 81-97px
+            Fix: Increase container to ~180px to show blob without clipping */}
         <div 
           style={{ 
-            height: '81px',
-            minHeight: '65px',
-            maxHeight: '97px',
+            height: '180px',
+            minHeight: '160px',
+            maxHeight: '220px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
