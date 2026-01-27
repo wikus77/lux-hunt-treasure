@@ -21,12 +21,14 @@ const IntelligencePage: React.FC = () => {
 
   // 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
   // Content scrolls behind glass header, first element has margin-top
+  // 🔧 FIX 27/01/2026: Added background for native PWA parity (header area continuity)
   return (
       <div 
         className="flex flex-col px-3"
         style={{
           position: 'relative',
           zIndex: 0,
+          backgroundColor: '#070818', // Native PWA parity: background behind header
         }}
       >
         {/* M1U Pill - SEMPRE VISIBILE subito - z-index alto
@@ -46,6 +48,7 @@ const IntelligencePage: React.FC = () => {
         </div>
 
         {/* AION Entity - REDUCED */}
+        {/* 🔧 FIX 27/01/2026: overflow:visible allows cloud glow to extend (PWA parity) */}
         <div 
           style={{ 
             height: '81px',
@@ -57,7 +60,8 @@ const IntelligencePage: React.FC = () => {
             justifyContent: 'center',
             flexShrink: 0,
             position: 'relative',
-            zIndex: 1
+            zIndex: 1,
+            overflow: 'visible', // Allow AION cloud/glow to extend beyond container
           }}
         >
           <Suspense fallback={<div className="w-18 h-18 rounded-full bg-cyan-500/20 animate-pulse" />}>
