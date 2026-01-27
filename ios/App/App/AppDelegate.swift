@@ -193,11 +193,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             document.documentElement.style.setProperty('--sat', '\(safeTop)px');
             document.documentElement.style.setProperty('--capacitor-safe-area-top', '\(safeTop)px');
             
-            // 🔧 FIX v8.8: NUCLEAR - Set inline style DIRECTLY on html to override ALL CSS
-            // This has highest specificity and WILL override any stylesheet rule
-            document.documentElement.style.background = '#0a0b0f';
-            document.documentElement.style.backgroundImage = 'none';
-            document.documentElement.style.backgroundAttachment = 'scroll';
+            // 🔧 FIX v8.9: NUCLEAR - Use setProperty with 'important' to override !important CSS
+            // Normal inline styles LOSE to !important in stylesheets
+            // But setProperty('prop', 'value', 'important') WINS over everything
+            document.documentElement.style.setProperty('background', '#0a0b0f', 'important');
+            document.documentElement.style.setProperty('background-image', 'none', 'important');
+            document.documentElement.style.setProperty('background-attachment', 'scroll', 'important');
             
             // Inject layout CSS immediately
             var style = document.createElement('style');
