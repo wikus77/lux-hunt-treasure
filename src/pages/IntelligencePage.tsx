@@ -31,21 +31,19 @@ const IntelligencePage: React.FC = () => {
           // Background transparent - native gradient layer from ios-native.css handles background
         }}
       >
-        {/* 🔧 FIX v8: M1UPill moved to FIXED OVERLAY (see bottom of component)
-            This prevents clipping - pill now renders on top of everything */}
-        <div className="m1-first-content-offset-compact" style={{ marginBottom: '3px' }}>
-          {/* Spacer for scroll offset - actual pill is fixed overlay */}
-        </div>
+        {/* 🔧 FIX v8.2: M1UPill is FIXED OVERLAY (see bottom)
+            Spacer removed - blob container starts right after header offset */}
+        <div className="m1-first-content-offset-compact" />
 
         {/* AION Entity - BLOB CONTAINER */}
-        {/* 🔧 FIX 27/01/2026 v5: Container height increased to fit 280px blob (was 81px - clipping!)
-            Root cause: AionEntity has minHeight:280px but parent limited to 81-97px
-            Fix: Increase container to ~180px to show blob without clipping */}
+        {/* 🔧 FIX 27/01/2026 v8.2: Container height INCREASED to 280px to fully show blob
+            The blob cloud extends ~140px in each direction from center
+            Container must be tall enough to show full cloud without clipping */}
         <div 
           style={{ 
-            height: '180px',
-            minHeight: '160px',
-            maxHeight: '220px',
+            height: '280px',
+            minHeight: '260px',
+            maxHeight: '320px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',

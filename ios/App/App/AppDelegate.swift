@@ -106,9 +106,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.scrollView.contentInset = .zero
         
-        // 🔧 FIX 25/01/2026: Disable bounce to prevent accidental pull-to-refresh triggers
-        // during momentum scroll. Pull-to-refresh is handled by MissionSync in JS.
-        webView.scrollView.bounces = false
+        // 🔧 FIX 27/01/2026 v8.2: ENABLE bounce for native iOS feel
+        // PTR now properly checks touchStartedAtTopRef, so bounce won't trigger accidental refreshes
+        webView.scrollView.bounces = true
+        webView.scrollView.alwaysBounceVertical = true
         
         // Set background color immediately to prevent white flash
         let bgColor = UIColor(red: 0, green: 0.031, blue: 0.078, alpha: 1) // #000814

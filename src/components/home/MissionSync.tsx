@@ -1,6 +1,6 @@
 // © 2025 M1SSION™ – Mission Sync Pull-to-Refresh
-// 🔧 FIX v8 (27/01/2026): SIMPLIFIED PTR - No complex state machine
-// Just: At top of scroll + pull down + release = refresh
+// 🔧 FIX v8.2 (27/01/2026): Use ref for pull value to avoid stale state in touchEnd
+// Bug: scroll up slowly from bottom → refresh triggers → FIXED
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,6 +15,7 @@ interface MissionSyncProps {
 // Thresholds
 const PULL_TRIGGER = 80; // Pull this far to trigger refresh
 const MAX_PULL = 120; // Max visual distance
+const MIN_DELTA_FOR_PTR = 30; // Minimum delta Y to consider it a PTR gesture (not small movement)
 
 export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, disabled = false }) => {
   const [pull, setPull] = useState(0);
@@ -22,8 +23,10 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
   
   const containerRef = useRef<HTMLDivElement>(null);
   const startYRef = useRef<number | null>(null);
+  const pullRef = useRef(0); // 🔧 FIX: Use ref for pull value in touchEnd
   const refreshingRef = useRef(false);
   const onRefreshRef = useRef(onRefresh);
+  const touchStartedAtTopRef = useRef(false); // 🔧 FIX: Track if touch STARTED at top
   
   useEffect(() => { onRefreshRef.current = onRefresh; }, [onRefresh]);
 
@@ -49,24 +52,31 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
     const scrollParent = getScrollParent();
 
     const onTouchStart = (e: TouchEvent) => {
-      // Always reset on new touch
+      // Reset all tracking
+      startYRef.current = null;
+      pullRef.current = 0;
+      touchStartedAtTopRef.current = false;
+      
       if (refreshingRef.current) return;
       
-      // Only track if at top
-      if (scrollParent.scrollTop <= 0) {
+      // CRITICAL: Only track if ALREADY at top when touch starts
+      // This prevents triggering when scrolling up reaches top
+      const scrollTop = scrollParent.scrollTop;
+      if (scrollTop <= 0) {
         startYRef.current = e.touches[0].clientY;
-      } else {
-        startYRef.current = null;
+        touchStartedAtTopRef.current = true;
       }
     };
 
     const onTouchMove = (e: TouchEvent) => {
       if (refreshingRef.current) return;
       if (startYRef.current === null) return;
+      if (!touchStartedAtTopRef.current) return; // 🔧 FIX: Must have started at top
       
-      // Check still at top
-      if (scrollParent.scrollTop > 0) {
+      // If user scrolled away from top, cancel PTR tracking
+      if (scrollParent.scrollTop > 5) {
         startYRef.current = null;
+        pullRef.current = 0;
         setPull(0);
         return;
       }
@@ -74,18 +84,21 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
       const currentY = e.touches[0].clientY;
       const delta = currentY - startYRef.current;
 
-      // Only track downward pull
-      if (delta <= 0) {
+      // Only track DELIBERATE downward pull (not tiny movements)
+      if (delta <= MIN_DELTA_FOR_PTR) {
+        // Small movement - could be scroll attempt, don't show PTR UI
+        pullRef.current = 0;
         setPull(0);
         return;
       }
 
       // Calculate pull with resistance
-      const pullDist = Math.min(delta * 0.5, MAX_PULL);
+      const pullDist = Math.min((delta - MIN_DELTA_FOR_PTR) * 0.5, MAX_PULL);
+      pullRef.current = pullDist;
       setPull(pullDist);
 
-      // Prevent native scroll only when pulling
-      if (pullDist > 10) {
+      // Prevent native scroll only when visibly pulling
+      if (pullDist > 5) {
         e.preventDefault();
       }
     };
@@ -93,14 +106,20 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
     const onTouchEnd = async () => {
       if (refreshingRef.current) return;
       
-      const currentPull = pull;
+      // 🔧 FIX: Use ref value, not state (which can be stale)
+      const currentPull = pullRef.current;
+      const wasAtTop = touchStartedAtTopRef.current;
+      
+      // Reset tracking
       startYRef.current = null;
+      touchStartedAtTopRef.current = false;
 
-      // Check if should refresh
-      if (currentPull >= PULL_TRIGGER) {
+      // Only refresh if: touch started at top AND pulled enough
+      if (wasAtTop && currentPull >= PULL_TRIGGER) {
         refreshingRef.current = true;
         setRefreshing(true);
         setPull(60); // Hold position during refresh
+        pullRef.current = 60;
         
         try {
           await onRefreshRef.current();
@@ -110,17 +129,21 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
           refreshingRef.current = false;
           setRefreshing(false);
           setPull(0);
+          pullRef.current = 0;
         }
       } else {
         // Reset
         setPull(0);
+        pullRef.current = 0;
       }
     };
 
     const onTouchCancel = () => {
       startYRef.current = null;
+      touchStartedAtTopRef.current = false;
       if (!refreshingRef.current) {
         setPull(0);
+        pullRef.current = 0;
       }
     };
 
@@ -136,7 +159,7 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
       container.removeEventListener('touchend', onTouchEnd);
       container.removeEventListener('touchcancel', onTouchCancel);
     };
-  }, [disabled, pull]); // Include pull in deps so touchend sees current value
+  }, [disabled]); // 🔧 FIX: Removed pull from deps - using ref now
 
   if (disabled) {
     return <>{children}</>;
