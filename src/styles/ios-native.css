@@ -216,8 +216,10 @@ body.is-native {
   /* Ensure full height without breaking scroll context */
   min-height: 100vh;
   min-height: 100dvh;
-  /* 🔧 FIX 27/01/2026: Background continuity behind header (PWA parity) */
-  background-color: #070818;
+  /* 🔧 FIX 27/01/2026 v2: Background continuity behind header (PWA parity)
+   * MUST use !important to override index.css "body { background: transparent !important }" */
+  background-color: #070818 !important;
+  background: #070818 !important;
 }
 
 /**
@@ -287,6 +289,20 @@ body.is-native .m1-single-scroll-root * {
 
 body.is-native .m1-single-scroll-root [data-allow-scroll="true"] {
   --m1-allow-scroll: 1;
+}
+
+/* ========================================
+   🔧 FIX 27/01/2026 v2: NATIVE BACKGROUND CONTINUITY
+   Override index.css "background: transparent !important" for native
+   Ensures header area has continuous background like PWA
+   ======================================== */
+
+body.is-native #root,
+body.is-native .safe-area-wrapper,
+body.is-native .global-layout-content {
+  /* Override PWA transparent rules for native - solid background behind header */
+  background-color: #070818 !important;
+  background: #070818 !important;
 }
 
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

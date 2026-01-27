@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>M1SSION</string>
+	<string>M1SSION</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -19,9 +19,17 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<string>20260127051624</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>M1SSION needs your location to show nearby treasure on the map and verify your discoveries.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>M1SSION needs your location to show nearby treasure on the map and verify your discoveries.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -45,14 +53,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
-	<!-- M1SSION™ WRAP FIX: Location Permission Keys -->
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>M1SSION needs your location to show nearby treasure on the map and verify your discoveries.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>M1SSION needs your location to show nearby treasure on the map and verify your discoveries.</string>
 </dict>
 </plist>
