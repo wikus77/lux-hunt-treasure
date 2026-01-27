@@ -134,6 +134,13 @@ if (import.meta.env.DEV) {
 // Initialize diagnostics early (development only)
 if (import.meta.env.DEV) {
   console.log('🔍 M1SSION™ Diagnostics ready');
+  
+  // 🔬 Scroll Forensics - DEV only diagnostic tool
+  import('./utils/scrollForensics').then(() => {
+    console.log('🔬 Scroll Forensics loaded - Run: __M1_SCROLL_FORENSICS()');
+  }).catch(() => {
+    // Silent fail - non-critical
+  });
 }
 
 // Initialize badge diagnostics
