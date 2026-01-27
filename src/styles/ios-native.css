@@ -305,4 +305,52 @@ body.is-native .global-layout-content {
   background: #070818 !important;
 }
 
+/* ========================================
+   🔧 FIX 27/01/2026 v3: NATIVE LAYOUT OFFSET CORRECTION
+   
+   ROOT CAUSE: index.css rules use html.capacitor-ios selector which is NEVER SET.
+   The app only sets body.is-native. This fix uses the correct selector.
+   
+   PROBLEM: Without this fix, content has DOUBLE spacing:
+   - m1-first-content-offset adds margin-top: ~130px
+   - GlobalLayout paddingTop is 0 but pages add their own offset
+   Result: Content pushed too far down, appears "cut off" at bottom
+   
+   FIX: Neutralize the first-content-offset margins in native mode
+   since native WKWebView handles safe area differently.
+   ======================================== */
+
+/* Native layout offset: Replace large margin with compact native-appropriate value */
+body.is-native .m1-first-content-offset,
+body.is-native .m1-first-content-offset-compact,
+body.is-native .m1-first-content-offset-spacious {
+  /* Native iOS: header space handled by safe-area, just add breathing room */
+  margin-top: calc(80px + env(safe-area-inset-top, 47px) + 8px) !important;
+}
+
+/* Native: Ensure main content area doesn't have competing padding */
+body.is-native .global-layout-content,
+body.is-native .m1-single-scroll-root {
+  /* Let the page offset classes handle top spacing */
+  padding-top: 0 !important;
+}
+
+/* ========================================
+   🔧 FIX 27/01/2026 v3: AION CLOUD ANTI-CLIPPING
+   Ensure the AION entity and decorative elements are not clipped
+   ======================================== */
+
+body.is-native .m1-single-scroll-root {
+  /* Allow decorative elements to extend beyond scroll bounds */
+  overflow-x: visible !important;
+  clip-path: none !important;
+}
+
+/* Ensure scroll content area takes proper height */
+body.is-native .global-layout-content {
+  /* Use dvh for proper iOS viewport height */
+  min-height: 100dvh !important;
+  min-height: -webkit-fill-available !important;
+}
+
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
