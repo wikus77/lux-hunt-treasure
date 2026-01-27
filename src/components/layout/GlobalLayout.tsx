@@ -106,7 +106,8 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
             overflowX: 'hidden',
             position: 'relative',
             zIndex: 0,
-            overscrollBehavior: 'contain',
+            // 🔧 FIX 27/01/2026 (Option B): contain → auto for native iOS rubber-band bounce
+            overscrollBehavior: 'auto',
             WebkitOverflowScrolling: 'touch',
             touchAction: 'pan-y',
           }}
@@ -144,7 +145,8 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
           overflowX: 'hidden',
           position: 'relative',
           zIndex: 0,
-          overscrollBehavior: 'contain',
+          // 🔧 FIX 27/01/2026 (Option B): contain → auto for native iOS rubber-band bounce
+          overscrollBehavior: 'auto',
           WebkitOverflowScrolling: 'touch',
           touchAction: 'pan-y',
         }}

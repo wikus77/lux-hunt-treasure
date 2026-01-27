@@ -202,8 +202,12 @@
  * scroll behavior and causes the "draggable overlay" bug on iOS
  */
 body.is-native {
-  /* Prevent overscroll bounce at body level */
-  overscroll-behavior: none;
+  /* 🔧 FIX 27/01/2026 (Option B): REMOVED overscroll-behavior: none
+   * Was killing iOS rubber-band bounce. Now body allows native overscroll,
+   * but body itself is not a scroll container (overflow: hidden).
+   * The actual scroll container (.m1-single-scroll-root) handles scrolling.
+   */
+  /* overscroll-behavior: none; — REMOVED for native iOS bounce */
   /* 🚨 DO NOT USE position:fixed here - causes draggable overlay bug! */
   /* 🔧 FIX 25/01/2026: overflow-y: hidden (was auto) to prevent nested scroll containers */
   /* Only <main> should scroll - body must NOT be a scroll container */
@@ -248,7 +252,8 @@ body.is-native [data-safe-area-bottom] {
 body.is-native .m1-single-scroll-root {
   /* Ensure this is THE scroll container */
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  /* 🔧 FIX 27/01/2026 (Option B): contain → auto for native iOS rubber-band bounce */
+  overscroll-behavior: auto;
   /* Prevent any inherited transforms from creating drag effect */
   transform: none !important;
 }
