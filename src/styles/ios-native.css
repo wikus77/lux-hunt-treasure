@@ -216,6 +216,8 @@ body.is-native {
   /* Ensure full height without breaking scroll context */
   min-height: 100vh;
   min-height: 100dvh;
+  /* 🔧 FIX 27/01/2026: Background continuity behind header (PWA parity) */
+  background-color: #070818;
 }
 
 /**
