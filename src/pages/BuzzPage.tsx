@@ -100,10 +100,10 @@ export const BuzzPage: React.FC = () => {
 
   // 🔧 FIX v2: BuzzPage now relies on GlobalLayout for header/nav/safe-area
   // The outer wrapper provides scrollable content area
-  // 🔧 FIX 27/01/2026 v4: Background transparent - native gradient layer handles bg
+  // 🔧 FIX 27/01/2026 v7: REVERTED - bg-[#070818] restored (user prefers original)
   return (
     <div 
-      className="w-full relative"
+      className="bg-[#070818] w-full relative"
     >
       {/* Free BUZZ Reward Handler - Non interferisce con Stripe */}
       <BuzzRewardHandler onRewardRedeemed={handleBuzzSuccess} />

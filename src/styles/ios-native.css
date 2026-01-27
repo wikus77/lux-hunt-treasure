@@ -380,27 +380,44 @@ body.is-native .global-layout-content {
 }
 
 /* ========================================
-   🔧 FIX 27/01/2026 v6: PILL ORB ANTI-CLIPPING
+   🔧 FIX 27/01/2026 v7: PILL ORB ANTI-CLIPPING (COMPLETE FIX)
    
-   ROOT CAUSE: .container class has overflow-x: hidden which clips
-   the animated rings of the pill orb (72px rings on 60px orb).
+   ROOT CAUSE: Multiple overflow:hidden up the chain clip pill orb rings.
+   The pill orb rings extend ~10px beyond the orb itself.
    
-   FIX: Override container overflow in native mode to allow
-   pill orb rings to show fully.
+   FIX: 
+   1. Override all relevant container overflows to visible
+   2. Give the pill orb extra room with padding
    ======================================== */
 
 body.is-native .container {
   /* Allow pill orb rings to extend beyond container */
+  overflow: visible !important;
   overflow-x: visible !important;
+  overflow-y: visible !important;
 }
 
-/* Ensure pill orb parent can show rings */
-body.is-native .flex.overflow-visible {
+/* Ensure all flex parents with overflow-visible actually work */
+body.is-native .flex.overflow-visible,
+body.is-native [class*="overflow-visible"] {
   overflow: visible !important;
 }
 
 /* Extra safety: ensure m1-first-content-offset allows overflow */
 body.is-native .m1-first-content-offset {
+  overflow: visible !important;
+}
+
+/* Give pill orb room for its rings - target the pill container directly */
+body.is-native #m1u-pill-home-slot,
+body.is-native [data-onboarding="m1u-pill"] {
+  overflow: visible !important;
+  /* Add left margin to give room for left ring */
+  margin-left: 8px !important;
+}
+
+/* Ensure motion.div wrappers don't clip */
+body.is-native .m1-first-content-offset > div {
   overflow: visible !important;
 }
 

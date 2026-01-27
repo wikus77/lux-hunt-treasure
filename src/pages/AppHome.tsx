@@ -248,14 +248,16 @@ const { isConnected } = useRealTimeNotifications();
                 <div 
                   className="flex justify-between items-start mb-4 overflow-visible m1-first-content-offset"
                 >
-                  {/* Colonna sinistra - overflow-visible per pill-orb rings */}
-                  <div className="flex flex-col gap-2 overflow-visible">
+                  {/* Colonna sinistra - overflow-visible per pill-orb rings
+                      🔧 FIX v7: Added pl-2 to give room for pill orb rings on left */}
+                  <div className="flex flex-col gap-2 overflow-visible pl-2">
                     <motion.div
                       id="m1u-pill-home-slot"
                       data-onboarding="m1u-pill"
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3 }}
+                      style={{ marginLeft: '-4px' }} /* Compensate for pl-2 visually */
                     >
                       <M1UPill showLabel showPlusButton />
                     </motion.div>

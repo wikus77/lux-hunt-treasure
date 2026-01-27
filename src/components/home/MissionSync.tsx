@@ -1,6 +1,7 @@
 // © 2025 M1SSION™ – Mission Sync Pull-to-Refresh
-// 🔧 FIX v12 (22/01/2026): ALL NATIVE LISTENERS - fixes "first pull doesn't work" on iOS
-import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+// 🔧 FIX v7 (27/01/2026): COMPLETE REWRITE - HOLD → PULL → RELEASE
+// NO ghost triggers, NO single-tap refresh, PROPER iOS bounce support
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Logo M1 ufficiale
@@ -9,526 +10,327 @@ const M1_LOGO_URL = '/icons/icon-m1-512x512.png';
 interface MissionSyncProps {
   onRefresh: () => Promise<void>;
   children: React.ReactNode;
-  /** 🔧 A/B TEST 25/01/2026: Disable PTR on iOS native to isolate ghost refresh cause */
   disabled?: boolean;
 }
 
-// 🔧 FIX 27/01/2026 v6: STRICTER PTR - PRESS-DELAY + HIGHER THRESHOLDS
-// States: idle → waiting → tracking → armed → refreshing
-// NO refresh on touchstart, NO refresh on tap, NO ghost triggers
-// REQUIRES: pressDelay before tracking, higher arm threshold, release-only gate
-const PULL_THRESHOLD = 90; // pullDistance to trigger refresh (must pull this far)
-const MAX_PULL = 140; // max visual pull distance
-const ARM_DELTA = 70; // deltaY required to ARM (must drag down at least this far) - INCREASED from 50
-const MIN_HOLD_MS = 250; // must HOLD armed state for this long before release works - REDUCED slightly
-const TAP_DURATION_MS = 150; // if touch duration < this, it's a tap - ALWAYS ignore
-const TAP_MAX_DELTA = 25; // if total deltaY < this, it's a tap - ALWAYS ignore
-const MOMENTUM_LOCKOUT_MS = 300; // no PTR if scroll happened within this time - INCREASED
-// 🔧 NEW: Press delay before PTR can start tracking (prevents ghost triggers)
-const PRESS_DELAY_MS = 150; // must hold finger down for this long before PTR tracking begins
+// 🔧 v7: STRICT PTR CONSTANTS
+const HOLD_DURATION_MS = 200; // Must HOLD finger down for this long before PTR activates
+const PULL_THRESHOLD = 80; // Must pull this far to trigger refresh
+const MAX_PULL = 130; // Max visual pull distance
+const MIN_PULL_TO_ARM = 50; // Must pull at least this far to "arm" the refresh
 
-// PTR States - 🔧 v6: Added 'waiting' state for pressDelay
-type PTRState = 'idle' | 'waiting' | 'tracking' | 'armed' | 'refreshing';
-
-// 🔧 KILL SWITCH: This is the ONLY function that can trigger refresh
-// All conditions must be met or refresh is BLOCKED
-const canCommitRefresh = (
-  state: PTRState,
-  pullDistance: number,
-  holdDuration: number,
-  touchDuration: number,
-  maxDelta: number,
-  scrollTop: number
-): boolean => {
-  // HARD BLOCKS
-  if (state !== 'armed') return false;
-  if (scrollTop !== 0) return false;
-  if (pullDistance < PULL_THRESHOLD) return false;
-  if (holdDuration < MIN_HOLD_MS) return false;
-  if (touchDuration < TAP_DURATION_MS) return false;
-  if (maxDelta < TAP_MAX_DELTA) return false;
-  return true;
-};
-
-// 🔧 DEBUG PTR - DISABLED for production release
+// Debug flag (disable for production)
 const DEBUG_PTR = false;
-const logPTR = (...args: unknown[]) => DEBUG_PTR && console.log('[MissionSync PTR]', ...args);
+const log = (...args: unknown[]) => DEBUG_PTR && console.log('[PTR v7]', ...args);
 
 /**
- * Find the actual scroll container (parent <main> with overflowY: auto)
+ * MissionSync v7 - HOLD → PULL → RELEASE Pull-to-Refresh
+ * 
+ * State machine:
+ * - idle: waiting for touch
+ * - holding: finger down, counting hold time
+ * - ready: hold time passed, can start pulling
+ * - pulling: actively pulling down (visual feedback)
+ * - armed: pulled past threshold, will refresh on release
+ * - refreshing: refresh in progress
+ * 
+ * Key behaviors:
+ * - Single tap = NO refresh (hold time not met)
+ * - Quick swipe = NO refresh (hold time not met)
+ * - Must HOLD → PULL → RELEASE to trigger refresh
+ * - iOS bounce works normally when not in pulling state
  */
-const findScrollParent = (element: HTMLElement | null): HTMLElement | null => {
-  if (!element) return null;
-  let parent = element.parentElement;
-  while (parent) {
-    const style = getComputedStyle(parent);
-    if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
-      return parent;
-    }
-    if (parent.tagName === 'MAIN') {
-      return parent;
-    }
-    parent = parent.parentElement;
-  }
-  return document.documentElement;
-};
-
 export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, disabled = false }) => {
-  // 🔧 FIX 25/01/2026: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURN
-  // React requires consistent hook calls across renders
-  
-  // State for React re-renders (visual updates)
+  // Visual state
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
-  
-  // Refs for values needed in native event listeners (avoids stale closures)
+  const [showIndicator, setShowIndicator] = useState(false);
+
+  // Refs (for event listeners to avoid stale closures)
   const containerRef = useRef<HTMLDivElement>(null);
-  const scrollParentRef = useRef<HTMLElement | null>(null);
-  const isPullingRef = useRef(false);
-  const isRefreshingRef = useRef(false);
+  const stateRef = useRef<'idle' | 'holding' | 'ready' | 'pulling' | 'armed' | 'refreshing'>('idle');
+  const holdTimerRef = useRef<number | null>(null);
   const startYRef = useRef(0);
   const pullDistanceRef = useRef(0);
-  const listenersAttachedRef = useRef(false);
   const onRefreshRef = useRef(onRefresh);
-  // 🔧 FIX 27/01/2026 v6: STATE MACHINE refs (with pressDelay support)
-  const ptrStateRef = useRef<PTRState>('idle');
-  const lastScrollTimeRef = useRef(0);
-  const armTimeRef = useRef(0);
-  const touchStartTimeRef = useRef(0);
-  const maxDeltaYRef = useRef(0);
-  const pressDelayTimerRef = useRef<number | null>(null); // Timer for pressDelay
-  
+
   // Keep onRefresh ref updated
   useEffect(() => { onRefreshRef.current = onRefresh; }, [onRefresh]);
-  
-  // Keep pullDistanceRef in sync for touchend check
-  useEffect(() => { pullDistanceRef.current = pullDistance; }, [pullDistance]);
 
-  // 🔧 FIX v12: Use useLayoutEffect to find scrollParent BEFORE paint
-  useLayoutEffect(() => {
-    // 🔧 FIX 25/01/2026: Skip if disabled
-    if (disabled) return;
-    if (containerRef.current) {
-      scrollParentRef.current = findScrollParent(containerRef.current);
-      logPTR('MOUNT: container=', containerRef.current?.tagName, 'scrollParent=', scrollParentRef.current?.tagName);
-    }
-  }, [disabled]);
-
-  // 🔧 FIX v12: ALL NATIVE LISTENERS in single useEffect
-  // This ensures touchstart, touchmove, touchend are all registered together
-  // and share the same refs without closure issues
+  // Main effect - attach touch listeners
   useEffect(() => {
-    // 🔧 FIX 25/01/2026: Skip listener attachment if disabled (iOS native)
     if (disabled) {
-      logPTR('SKIP: PTR disabled (iOS native wrapped)');
+      log('DISABLED - not attaching listeners');
       return;
     }
-    
+
     const container = containerRef.current;
-    if (!container) {
-      logPTR('WARN: container not ready');
-      return;
-    }
-    
-    // Prevent double-attach
-    if (listenersAttachedRef.current) return;
-    
-    // Wait for scrollParent with RAF retry (max 10 frames)
-    let frameCount = 0;
-    const maxFrames = 10;
-    
-    const tryAttachListeners = () => {
-      frameCount++;
-      
-      if (!scrollParentRef.current) {
-        scrollParentRef.current = findScrollParent(container);
+    if (!container) return;
+
+    // Find scroll parent (main element with overflow-y: auto)
+    const findScrollParent = (el: HTMLElement | null): HTMLElement => {
+      if (!el) return document.documentElement;
+      let parent = el.parentElement;
+      while (parent) {
+        const style = getComputedStyle(parent);
+        if (style.overflowY === 'auto' || style.overflowY === 'scroll' || parent.tagName === 'MAIN') {
+          return parent;
+        }
+        parent = parent.parentElement;
       }
-      
-      if (!scrollParentRef.current && frameCount < maxFrames) {
-        requestAnimationFrame(tryAttachListeners);
+      return document.documentElement;
+    };
+
+    const scrollParent = findScrollParent(container);
+    log('Scroll parent:', scrollParent.tagName);
+
+    // ========================================
+    // TOUCHSTART - Start hold timer
+    // ========================================
+    const handleTouchStart = (e: TouchEvent) => {
+      // Block if refreshing
+      if (stateRef.current === 'refreshing') {
+        log('BLOCKED - refreshing');
         return;
       }
-      
-      logPTR('SETUP: Attaching listeners after', frameCount, 'frames, scrollParent=', scrollParentRef.current?.tagName);
-      
-      // ============================================
-      // NATIVE TOUCHSTART
-      // 🔧 v6: STATE MACHINE: touchstart → 'waiting' (with pressDelay)
-      // Only transitions to 'tracking' after PRESS_DELAY_MS
-      // NO refresh can EVER happen from touchstart
-      // ============================================
-      const handleTouchStart = (e: TouchEvent) => {
-        // Clear any existing pressDelay timer
-        if (pressDelayTimerRef.current) {
-          clearTimeout(pressDelayTimerRef.current);
-          pressDelayTimerRef.current = null;
+
+      // Check if at top of scroll
+      const scrollTop = scrollParent.scrollTop;
+      if (scrollTop > 0) {
+        log('NOT AT TOP - scrollTop:', scrollTop);
+        stateRef.current = 'idle';
+        return;
+      }
+
+      // Start hold timer
+      stateRef.current = 'holding';
+      startYRef.current = e.touches[0].clientY;
+      log('TOUCHSTART - holding, startY:', startYRef.current);
+
+      // Clear any existing timer
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+      }
+
+      // Set hold timer - after this, PTR becomes "ready"
+      holdTimerRef.current = window.setTimeout(() => {
+        if (stateRef.current === 'holding') {
+          stateRef.current = 'ready';
+          log('HOLD COMPLETE - ready for pull');
         }
-        
-        // BLOCK if already refreshing
-        if (ptrStateRef.current === 'refreshing') {
-          logPTR('touchstart: BLOCKED (refreshing)');
-          return;
-        }
-        
-        const scrollParent = scrollParentRef.current || container;
-        const scrollTop = scrollParent.scrollTop;
-        const isAtTop = scrollTop === 0;
-        const timeSinceScroll = Date.now() - lastScrollTimeRef.current;
-        const isMomentumActive = timeSinceScroll < MOMENTUM_LOCKOUT_MS;
-        
-        logPTR('touchstart: scrollTop=', scrollTop, 'isAtTop=', isAtTop, 'momentum=', isMomentumActive, 'state=', ptrStateRef.current);
-        
-        // 🔧 v6: Go to WAITING state first (not tracking!)
-        // PTR tracking only begins after pressDelay
-        if (isAtTop && !isMomentumActive) {
-          ptrStateRef.current = 'waiting';
-          startYRef.current = e.touches[0].clientY;
-          touchStartTimeRef.current = Date.now();
-          armTimeRef.current = 0;
-          maxDeltaYRef.current = 0;
-          isPullingRef.current = false;
-          logPTR('touchstart: state → waiting (pressDelay starts)');
-          
-          // 🔧 v6: Set timer to transition to tracking after pressDelay
-          pressDelayTimerRef.current = window.setTimeout(() => {
-            if (ptrStateRef.current === 'waiting') {
-              ptrStateRef.current = 'tracking';
-              logPTR('pressDelay: state → tracking (ready for PTR)');
-            }
-          }, PRESS_DELAY_MS);
-        } else {
-          // Reset to IDLE
-          ptrStateRef.current = 'idle';
-          startYRef.current = 0;
-          touchStartTimeRef.current = 0;
-          armTimeRef.current = 0;
-          maxDeltaYRef.current = 0;
-          logPTR('touchstart: state → idle (not at top or momentum)');
-        }
-      };
-      
-      // ============================================
-      // NATIVE TOUCHMOVE (with passive: false)
-      // 🔧 v6: STATE MACHINE: tracking → armed (only if deltaY > ARM_DELTA)
-      // CRITICAL: Only preventDefault when ARMED to allow iOS bounce when not pulling
-      // ============================================
-      const handleTouchMove = (e: TouchEvent) => {
-        // BLOCK if refreshing, idle, or waiting (pressDelay not elapsed)
-        if (ptrStateRef.current === 'refreshing') return;
-        if (ptrStateRef.current === 'idle') return;
-        if (startYRef.current === 0) return;
-        
-        // 🔧 v6: If still in 'waiting', check if we should cancel (user is scrolling)
-        // This allows normal scroll to work during pressDelay
-        if (ptrStateRef.current === 'waiting') {
-          const currentY = e.touches[0].clientY;
-          const deltaY = currentY - startYRef.current;
-          
-          // If user scrolls UP during waiting, cancel PTR entirely
-          if (deltaY < -10) {
-            if (pressDelayTimerRef.current) {
-              clearTimeout(pressDelayTimerRef.current);
-              pressDelayTimerRef.current = null;
-            }
-            ptrStateRef.current = 'idle';
-            startYRef.current = 0;
-            logPTR('touchmove: waiting → idle (scrolled up, PTR cancelled)');
-          }
-          // Otherwise, let native scroll/bounce work - don't preventDefault
-          return;
-        }
-        
+      }, HOLD_DURATION_MS);
+    };
+
+    // ========================================
+    // TOUCHMOVE - Track pull (only if ready/pulling/armed)
+    // ========================================
+    const handleTouchMove = (e: TouchEvent) => {
+      const state = stateRef.current;
+
+      // If still in 'holding' state and user moves, check direction
+      if (state === 'holding') {
         const currentY = e.touches[0].clientY;
         const deltaY = currentY - startYRef.current;
         
-        // Track max deltaY for tap detection
-        if (deltaY > maxDeltaYRef.current) {
-          maxDeltaYRef.current = deltaY;
-        }
-        
-        const scrollParent = scrollParentRef.current || container;
-        const scrollTop = scrollParent.scrollTop;
-        
-        logPTR('touchmove: state=', ptrStateRef.current, 'deltaY=', deltaY.toFixed(1), 'scrollTop=', scrollTop, 'maxDelta=', maxDeltaYRef.current.toFixed(1));
-        
-        // Check if user scrolled away from top or is scrolling up
-        if (scrollTop > 0 || deltaY < -20) {
-          // DISARM and reset to idle
-          logPTR('touchmove: DISARM → idle (scrollTop=', scrollTop, ', deltaY=', deltaY, ')');
-          ptrStateRef.current = 'idle';
-          isPullingRef.current = false;
-          armTimeRef.current = 0;
-          setIsPulling(false);
-          setPullDistance(0);
-          pullDistanceRef.current = 0;
-          startYRef.current = 0;
-          return;
-        }
-        
-        // Only process if at top AND delta exceeds ARM threshold
-        if (scrollTop === 0 && deltaY > ARM_DELTA) {
-          // Transition: tracking → armed
-          if (ptrStateRef.current === 'tracking') {
-            ptrStateRef.current = 'armed';
-            armTimeRef.current = Date.now();
-            isPullingRef.current = true;
-            setIsPulling(true);
-            logPTR('touchmove: state → armed at', armTimeRef.current);
+        // If scrolling UP or sideways significantly, cancel hold
+        if (deltaY < -10) {
+          if (holdTimerRef.current) {
+            clearTimeout(holdTimerRef.current);
+            holdTimerRef.current = null;
           }
-          
-          // 🔧 v6: Only preventDefault when ARMED (allows iOS bounce when not pulling)
-          if (ptrStateRef.current === 'armed') {
-            e.preventDefault(); // Block browser overscroll ONLY when actually pulling
-            const resistance = 0.5;
-            const newPull = Math.min(deltaY * resistance, MAX_PULL);
-            pullDistanceRef.current = newPull;
-            setPullDistance(newPull);
-            logPTR('touchmove: pulling', newPull.toFixed(1), 'px');
-          }
+          stateRef.current = 'idle';
+          log('HOLD CANCELLED - scrolling up');
         }
-        // 🔧 v6: If tracking but delta < ARM_DELTA, don't preventDefault
-        // This allows iOS native bounce to work when user is just scrolling
-      };
-      
-      // ============================================
-      // NATIVE TOUCHEND
-      // 🔧 STATE MACHINE: ONLY place refresh can happen (RELEASE-ONLY GATE)
-      // Uses KILL SWITCH to validate ALL conditions
-      // ============================================
-      const handleTouchEnd = async () => {
-        // 🔧 v6: Clear pressDelay timer
-        if (pressDelayTimerRef.current) {
-          clearTimeout(pressDelayTimerRef.current);
-          pressDelayTimerRef.current = null;
-        }
-        
-        const currentPull = pullDistanceRef.current;
-        const currentState = ptrStateRef.current;
-        const maxDelta = maxDeltaYRef.current;
-        const touchDuration = touchStartTimeRef.current > 0 ? Date.now() - touchStartTimeRef.current : 0;
-        const holdDuration = armTimeRef.current > 0 ? Date.now() - armTimeRef.current : 0;
-        const scrollParent = scrollParentRef.current || container;
-        const scrollTop = scrollParent.scrollTop;
-        
-        logPTR('touchend: state=', currentState, 'pull=', currentPull.toFixed(1), 'maxDelta=', maxDelta.toFixed(1), 
-               'touchDuration=', touchDuration, 'holdDuration=', holdDuration, 'scrollTop=', scrollTop);
-        
-        // 🔧 ALWAYS reset state first (prevents any re-trigger)
-        const wasState = ptrStateRef.current;
-        ptrStateRef.current = 'idle';
-        startYRef.current = 0;
-        touchStartTimeRef.current = 0;
-        armTimeRef.current = 0;
-        maxDeltaYRef.current = 0;
-        isPullingRef.current = false;
+        // Don't process further - let native scroll work
+        return;
+      }
+
+      // If not ready/pulling/armed, ignore
+      if (state !== 'ready' && state !== 'pulling' && state !== 'armed') {
+        return;
+      }
+
+      // Check scrollTop again
+      const scrollTop = scrollParent.scrollTop;
+      if (scrollTop > 0) {
+        // User scrolled away from top - reset
+        stateRef.current = 'idle';
+        setPullDistance(0);
         setIsPulling(false);
-        
-        // 🔧 KILL SWITCH: Use centralized validation
-        const canRefresh = canCommitRefresh(
-          wasState,
-          currentPull,
-          holdDuration,
-          touchDuration,
-          maxDelta,
-          scrollTop
-        );
-        
-        if (!canRefresh) {
-          logPTR('touchend: KILL SWITCH BLOCKED refresh. Conditions:', {
-            state: wasState,
-            pull: currentPull,
-            holdDuration,
-            touchDuration,
-            maxDelta,
-            scrollTop,
-            required: { 
-              state: 'armed', 
-              pull: `>=${PULL_THRESHOLD}`, 
-              hold: `>=${MIN_HOLD_MS}`,
-              touch: `>=${TAP_DURATION_MS}`,
-              delta: `>=${TAP_MAX_DELTA}`
-            }
-          });
-          setPullDistance(0);
-          pullDistanceRef.current = 0;
-          return;
+        setShowIndicator(false);
+        pullDistanceRef.current = 0;
+        log('SCROLL AWAY - reset');
+        return;
+      }
+
+      const currentY = e.touches[0].clientY;
+      const deltaY = currentY - startYRef.current;
+
+      // If pulling up, cancel
+      if (deltaY < 0) {
+        stateRef.current = 'idle';
+        setPullDistance(0);
+        setIsPulling(false);
+        setShowIndicator(false);
+        pullDistanceRef.current = 0;
+        log('PULL UP - reset');
+        return;
+      }
+
+      // Calculate pull with resistance
+      const resistance = 0.5;
+      const pull = Math.min(deltaY * resistance, MAX_PULL);
+      pullDistanceRef.current = pull;
+      setPullDistance(pull);
+
+      // State transitions based on pull distance
+      if (pull >= PULL_THRESHOLD) {
+        if (stateRef.current !== 'armed') {
+          stateRef.current = 'armed';
+          log('ARMED - ready to refresh on release');
         }
-        
-        // 🔧 PASSED KILL SWITCH - trigger refresh
-        logPTR('touchend: KILL SWITCH PASSED ✓ → TRIGGERING REFRESH');
-        
-        ptrStateRef.current = 'refreshing';
-        isRefreshingRef.current = true;
+        setIsPulling(true);
+        setShowIndicator(true);
+        // Prevent browser overscroll ONLY when armed
+        e.preventDefault();
+      } else if (pull >= MIN_PULL_TO_ARM) {
+        if (stateRef.current !== 'pulling') {
+          stateRef.current = 'pulling';
+          log('PULLING - visual feedback');
+        }
+        setIsPulling(true);
+        setShowIndicator(true);
+        // Prevent browser overscroll when visibly pulling
+        e.preventDefault();
+      } else {
+        // Small movement - don't show indicator yet
+        setShowIndicator(false);
+      }
+    };
+
+    // ========================================
+    // TOUCHEND - Trigger refresh if armed
+    // ========================================
+    const handleTouchEnd = async () => {
+      // Clear hold timer
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+      }
+
+      const state = stateRef.current;
+      const pull = pullDistanceRef.current;
+      log('TOUCHEND - state:', state, 'pull:', pull);
+
+      // Reset visual state
+      setIsPulling(false);
+      
+      // Check if should refresh
+      if (state === 'armed' && pull >= PULL_THRESHOLD) {
+        log('REFRESH TRIGGERED ✓');
+        stateRef.current = 'refreshing';
         setIsRefreshing(true);
-        setPullDistance(60);
-        
+        setPullDistance(60); // Hold at indicator position
+
         try {
           await onRefreshRef.current();
-          logPTR('touchend: Refresh complete');
-        } catch (error) {
-          console.error('[MissionSync] Refresh error:', error);
+          log('Refresh complete');
+        } catch (err) {
+          console.error('[MissionSync] Refresh error:', err);
         } finally {
-          ptrStateRef.current = 'idle';
-          isRefreshingRef.current = false;
+          stateRef.current = 'idle';
           setIsRefreshing(false);
           setPullDistance(0);
+          setShowIndicator(false);
           pullDistanceRef.current = 0;
         }
-      };
-      
-      // ============================================
-      // NATIVE TOUCHCANCEL
-      // 🔧 STATE MACHINE: Reset to idle
-      // ============================================
-      const handleTouchCancel = () => {
-        // 🔧 v6: Clear pressDelay timer
-        if (pressDelayTimerRef.current) {
-          clearTimeout(pressDelayTimerRef.current);
-          pressDelayTimerRef.current = null;
-        }
-        
-        logPTR('touchcancel: state → idle');
-        ptrStateRef.current = 'idle';
-        isPullingRef.current = false;
-        setIsPulling(false);
+      } else {
+        // Not armed or not pulled enough - reset
+        log('NO REFRESH - conditions not met');
+        stateRef.current = 'idle';
         setPullDistance(0);
+        setShowIndicator(false);
         pullDistanceRef.current = 0;
-        startYRef.current = 0;
-        touchStartTimeRef.current = 0;
-        armTimeRef.current = 0;
-        maxDeltaYRef.current = 0;
-      };
-      
-      // ============================================
-      // SCROLL LISTENER (for momentum lockout tracking)
-      // 🔧 FIX 25/01/2026: Track scroll time to prevent PTR during momentum
-      // ============================================
-      const scrollParent = scrollParentRef.current;
-      const handleScroll = () => {
-        lastScrollTimeRef.current = Date.now();
-        logPTR('scroll: updated lastScrollTime');
-      };
-      
-      // ATTACH ALL LISTENERS
-      container.addEventListener('touchstart', handleTouchStart, { passive: true });
-      container.addEventListener('touchmove', handleTouchMove, { passive: false }); // CRITICAL
-      container.addEventListener('touchend', handleTouchEnd, { passive: true });
-      container.addEventListener('touchcancel', handleTouchCancel, { passive: true });
-      
-      if (scrollParent) {
-        scrollParent.addEventListener('scroll', handleScroll, { passive: true });
       }
-      
-      listenersAttachedRef.current = true;
-      logPTR('SETUP: All listeners attached ✓');
-      
-      // CLEANUP
-      return () => {
-        logPTR('CLEANUP: Removing listeners');
-        container.removeEventListener('touchstart', handleTouchStart);
-        container.removeEventListener('touchmove', handleTouchMove);
-        container.removeEventListener('touchend', handleTouchEnd);
-        container.removeEventListener('touchcancel', handleTouchCancel);
-        
-        if (scrollParent) {
-          scrollParent.removeEventListener('scroll', handleScroll);
-        }
-        
-        listenersAttachedRef.current = false;
-      };
     };
-    
-    // Start attachment process
-    requestAnimationFrame(tryAttachListeners);
-  }, [disabled]); // 🔧 FIX 25/01/2026: Re-run when disabled changes
 
-  // Safety reset on visibility/blur
-  useEffect(() => {
-    // 🔧 FIX 25/01/2026: Skip if disabled
-    if (disabled) return;
-    
-    const forceReset = () => {
-      logPTR('Force reset (visibility/blur)');
-      isPullingRef.current = false;
-      setIsPulling(false);
+    // ========================================
+    // TOUCHCANCEL - Reset everything
+    // ========================================
+    const handleTouchCancel = () => {
+      log('TOUCHCANCEL - reset');
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+      }
+      stateRef.current = 'idle';
       setPullDistance(0);
+      setIsPulling(false);
+      setShowIndicator(false);
       pullDistanceRef.current = 0;
     };
 
-    const onVisibilityChange = () => { if (document.hidden) forceReset(); };
-    const onBlur = () => forceReset();
-    const onPageHide = () => forceReset();
+    // Attach listeners
+    // CRITICAL: touchmove with passive: false ONLY on the container
+    // This allows iOS bounce on the scroll parent while we can preventDefault when pulling
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
+    container.addEventListener('touchcancel', handleTouchCancel, { passive: true });
 
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    window.addEventListener('blur', onBlur);
-    window.addEventListener('pagehide', onPageHide);
+    log('Listeners attached');
 
     return () => {
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('blur', onBlur);
-      window.removeEventListener('pagehide', onPageHide);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('touchcancel', handleTouchCancel);
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+      }
+      log('Listeners removed');
     };
   }, [disabled]);
 
-  // Watchdog: reset stuck transforms
-  useEffect(() => {
-    if (pullDistance > 0 && !isRefreshing && !isPulling) {
-      const watchdog = setTimeout(() => {
-        logPTR('Watchdog: resetting stuck transform');
-        setPullDistance(0);
-        pullDistanceRef.current = 0;
-      }, 500);
-      return () => clearTimeout(watchdog);
-    }
-  }, [pullDistance, isRefreshing, isPulling]);
-
-  const progress = Math.min(pullDistance / PULL_THRESHOLD, 1);
-  const shouldTrigger = pullDistance >= PULL_THRESHOLD;
-  const shouldBlockBrowserTouch = isPulling && pullDistance > 0;
-
-  // 🔧 FIX 25/01/2026: Conditional return AFTER all hooks (React rules compliance)
-  // When disabled, render children directly without PTR wrapper
+  // Render
   if (disabled) {
     return <>{children}</>;
   }
 
+  const progress = Math.min(pullDistance / PULL_THRESHOLD, 1);
+  const isArmed = pullDistance >= PULL_THRESHOLD;
+
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full h-full"
-      style={{ 
-        touchAction: shouldBlockBrowserTouch ? 'none' : 'pan-y',
-      }}
-    >
+    <div ref={containerRef} className="relative w-full h-full">
       {/* Pull indicator */}
       <AnimatePresence>
-        {(pullDistance > 0 || isRefreshing) && (
+        {(showIndicator || isRefreshing) && (
           <motion.div
             className="absolute left-0 right-0 flex flex-col items-center justify-center z-[200] pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ 
               opacity: 1,
-              y: Math.min(pullDistance, MAX_PULL) - 60
+              y: Math.min(pullDistance, MAX_PULL) - 50
             }}
-            exit={{ opacity: 0, y: -60 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ duration: 0.15 }}
             style={{ top: 0 }}
           >
             <motion.div
               className={`
                 flex items-center justify-center rounded-full overflow-hidden
-                ${shouldTrigger || isRefreshing ? 'ring-2 ring-cyan-400/60' : ''}
-                transition-all duration-200
+                ${isArmed || isRefreshing ? 'ring-2 ring-cyan-400/60' : ''}
+                transition-all duration-150
               `}
               animate={{ 
-                scale: isRefreshing ? [1, 1.1, 1] : shouldTrigger ? 1.1 : 0.9 + progress * 0.2,
+                scale: isRefreshing ? [1, 1.1, 1] : isArmed ? 1.1 : 0.9 + progress * 0.2,
                 rotate: isRefreshing ? 360 : 0
               }}
               transition={{ 
                 scale: isRefreshing 
                   ? { duration: 0.8, repeat: Infinity, ease: 'easeInOut' } 
-                  : { duration: 0.2 },
+                  : { duration: 0.15 },
                 rotate: isRefreshing 
                   ? { duration: 1.5, repeat: Infinity, ease: 'linear' } 
                   : { duration: 0 }
@@ -539,7 +341,7 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
                 alt="M1" 
                 className="w-12 h-12 object-contain"
                 style={{
-                  filter: shouldTrigger || isRefreshing 
+                  filter: isArmed || isRefreshing 
                     ? 'drop-shadow(0 0 10px rgba(0, 209, 255, 0.8))' 
                     : 'none'
                 }}
@@ -555,11 +357,8 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
           key="pull-content"
           initial={{ y: 0 }}
           animate={{ y: pullDistance }}
-          exit={{ y: 0 }}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          style={{ 
-            willChange: isPulling ? 'transform' : 'auto',
-          }}
+          style={{ willChange: isPulling ? 'transform' : 'auto' }}
         >
           {children}
         </motion.div>
