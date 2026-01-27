@@ -902,4 +902,28 @@ html[data-capacitor="ios"] main {
   padding-top: 0 !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   🔧 FIX 27/01/2026 v8.6: NATIVE iOS BOUNCE OVERLAY FIX - FINAL
+   
+   PROBLEM: During iOS bounce in native app, a dark gradient overlay covers content.
+   
+   ROOT CAUSE: The html gradient above has background-attachment: fixed.
+   When content bounces in WKWebView, the FIXED background stays in place
+   while content moves, creating a visual "overlay" effect.
+   
+   SOLUTION: Override background-attachment to 'scroll' for native iOS.
+   This MUST be at the END of this file to override the rules above.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+html.capacitor-ios,
+html[data-capacitor="ios"],
+body.is-native html {
+  background-attachment: scroll !important;
+}
+
+/* Also ensure no fixed backgrounds on body */
+body.is-native {
+  background-attachment: scroll !important;
+}
+
 /* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
