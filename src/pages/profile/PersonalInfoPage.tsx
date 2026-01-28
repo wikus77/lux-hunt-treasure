@@ -1,4 +1,5 @@
 // ✅ Update By JOSEPH MULE – 12/07/2025 – Header fix + Avatar upload fix
+// 🔧 FIX 27/01/2026: Use wouter for native app compatibility
 import React, { useState, useRef } from 'react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import M1ssionText from '@/components/logo/M1ssionText';
@@ -7,13 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Upload, User, Mail, Phone, MapPin, Save } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useProfileData } from '@/hooks/useProfileData';
 
 const PersonalInfoPage: React.FC = () => {
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const { profileData, actions } = useProfileData();
   const fileInputRef = useRef<HTMLInputElement>(null);

@@ -57,6 +57,10 @@ import NorahAssistant from "@/pages/NorahAssistant";
 import SettingsPage from "@/pages/settings/SettingsPage";
 import AgentProfileSettings from "@/pages/settings/AgentProfileSettings";
 import SecuritySettings from "@/pages/settings/SecuritySettings";
+// 🔧 FIX 27/01/2026: Profile subpages for native app
+import PersonalInfoPage from "@/pages/profile/PersonalInfoPage";
+import ProfileSecurityPage from "@/pages/profile/SecurityPage";
+import PaymentsHistoryPage from "@/pages/profile/PaymentsHistoryPage";
 import MissionSettings from "@/pages/settings/MissionSettings";
 import NotificationsSettings from "@/pages/settings/NotificationsSettings";
 import PrivacySettings from "@/pages/settings/PrivacySettings";
@@ -538,6 +542,25 @@ const WouterRoutes: React.FC = () => {
 
           <Route path="/notifications">
             <GlobalLayout><Notifications /></GlobalLayout>
+          </Route>
+
+          {/* 🔧 FIX 27/01/2026: Profile subpages for native app */}
+          <Route path="/profile/personal-info">
+            <ProtectedRoute>
+              <GlobalLayout><PersonalInfoPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/profile/security">
+            <ProtectedRoute>
+              <GlobalLayout><ProfileSecurityPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/profile/payments">
+            <ProtectedRoute>
+              <GlobalLayout><PaymentsHistoryPage /></GlobalLayout>
+            </ProtectedRoute>
           </Route>
 
           {/* ✅ FIX B3: SPA redirect invece di window.location.href */}

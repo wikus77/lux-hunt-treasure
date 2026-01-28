@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
 import { BadgeShowcase } from "@/components/gamification/BadgeShowcase";
+import { SUBSCRIPTIONS_STEALTH } from "@/config/featureFlags";
 
 interface ProfileTabsProps {
   stats: {
@@ -174,7 +175,8 @@ const ProfileTabs = ({
       <TabsContent value="account" className="p-4 bg-black/20 rounded-md mt-2">
         <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
           <Shield className="h-4 w-4 text-cyan-400" />
-          Sicurezza e Abbonamento
+          {/* 🔧 STEALTH: Hide "Abbonamento" when subscriptions are hidden */}
+          {SUBSCRIPTIONS_STEALTH ? 'Account' : 'Sicurezza e Abbonamento'}
         </h3>
         
         <AccountTabContent 
@@ -210,33 +212,35 @@ const AccountTabContent = ({
 }: AccountTabContentProps) => {
   return (
     <>
-      {/* Subscription */}
-      <div className="mb-4 p-3 rounded-md bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border border-cyan-900/40">
-        <div className="flex justify-between items-center">
-          <h4 className="text-sm font-bold">Piano attivo: {subscription.plan}</h4>
-          <span className="bg-amber-600 text-white text-xs px-2 py-0.5 rounded-full">{subscription.plan}</span>
+      {/* 🔧 STEALTH: Hide subscription card when subscriptions are hidden */}
+      {!SUBSCRIPTIONS_STEALTH && (
+        <div className="mb-4 p-3 rounded-md bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border border-cyan-900/40">
+          <div className="flex justify-between items-center">
+            <h4 className="text-sm font-bold">Piano attivo: {subscription.plan}</h4>
+            <span className="bg-amber-600 text-white text-xs px-2 py-0.5 rounded-full">{subscription.plan}</span>
+          </div>
+          <span className="text-xs text-gray-400 block mt-1">Scadenza: {new Date(subscription.expiry).toLocaleDateString()}</span>
+          <div className="mt-2">
+            <span className="text-xs text-gray-400">Vantaggi:</span>
+            <ul className="mt-1 text-xs space-y-1">
+              {subscription.benefits.map((benefit, index) => (
+                <li key={index} className="flex items-center">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 mr-2"></span>
+                  <span>{benefit}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <Button
+            className="w-full mt-3 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+            size="sm"
+            onClick={navigateToSubscriptions}
+          >
+            Gestisci Abbonamento
+          </Button>
         </div>
-        <span className="text-xs text-gray-400 block mt-1">Scadenza: {new Date(subscription.expiry).toLocaleDateString()}</span>
-        <div className="mt-2">
-          <span className="text-xs text-gray-400">Vantaggi:</span>
-          <ul className="mt-1 text-xs space-y-1">
-            {subscription.benefits.map((benefit, index) => (
-              <li key={index} className="flex items-center">
-                <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 mr-2"></span>
-                <span>{benefit}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        
-        <Button
-          className="w-full mt-3 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
-          size="sm"
-          onClick={navigateToSubscriptions}
-        >
-          Gestisci Abbonamento
-        </Button>
-      </div>
+      )}
       
       <AccountSecuritySettings
         navigateToPersonalInfo={navigateToPersonalInfo}

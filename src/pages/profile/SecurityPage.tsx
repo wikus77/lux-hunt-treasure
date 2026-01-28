@@ -1,4 +1,5 @@
 // ✅ Update By JOSEPH MULE – 12/07/2025 – Header fix
+// 🔧 FIX 27/01/2026: Use wouter for native app compatibility
 import React, { useState } from 'react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import M1ssionText from '@/components/logo/M1ssionText';
@@ -9,12 +10,12 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Lock, Shield, Smartphone, Eye, EyeOff, History } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const SecurityPage: React.FC = () => {
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   
   const [passwordData, setPasswordData] = useState({
