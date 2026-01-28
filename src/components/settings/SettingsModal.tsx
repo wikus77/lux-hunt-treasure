@@ -10,7 +10,7 @@ import { GlassModal } from '@/components/ui/GlassModal';
 import { 
   User, Shield, Target, Bell, Lock, 
   FileText, Info, MapPin, Stethoscope, 
-  ChevronRight, Settings
+  ChevronRight, Settings, CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -99,6 +99,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       description: 'Gestione consensi e cookie',
       icon: Lock,
       color: '#A855F7',
+    },
+    {
+      id: 'payment-methods',
+      label: 'Metodi di Pagamento',
+      description: 'Carte, Apple Pay, Google Pay',
+      icon: CreditCard,
+      color: '#14B8A6', // Teal color
     },
     {
       id: 'legal',

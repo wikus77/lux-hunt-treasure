@@ -13,7 +13,6 @@ import { Switch } from '@/components/ui/switch';
 import { 
   CreditCard, 
   Plus, 
-  ArrowLeft, 
   Smartphone,
   Shield,
   AlertCircle,
@@ -21,6 +20,7 @@ import {
   Clock,
   ChevronRight
 } from 'lucide-react';
+import { CircularBackButton } from '@/components/ui/CircularBackButton';
 import { supabase } from '@/integrations/supabase/client';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
@@ -146,16 +146,9 @@ const PaymentMethodsPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6 max-w-lg mx-auto"
         >
-          {/* 🔧 FIX 28/01/2026: Back button BELOW header, navigate to /settings */}
+          {/* 🔧 FIX 28/01/2026: Circular back button BELOW header */}
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/settings')}
-              className="p-2 hover:bg-white/10 rounded-xl"
-            >
-              <ArrowLeft className="h-5 w-5 text-white" />
-            </Button>
+            <CircularBackButton onClick={() => navigate('/settings')} size="md" />
             <h1 className="text-xl font-orbitron text-white">Metodi di Pagamento</h1>
           </div>
 

@@ -9,7 +9,8 @@ import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Download, CheckCircle, AlertCircle, XCircle, Clock } from 'lucide-react';
+import { Calendar, Download, CheckCircle, AlertCircle, XCircle, Clock } from 'lucide-react';
+import { CircularBackButton } from '@/components/ui/CircularBackButton';
 import { supabase } from '@/integrations/supabase/client';
 import { SUBSCRIPTIONS_STEALTH } from '@/config/featureFlags';
 
@@ -143,16 +144,9 @@ const PaymentsHistoryPage: React.FC = () => {
       className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black text-white"
     >
       <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Header */}
+        {/* Header with Circular Back Button */}
         <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/settings/payments')}
-            className="p-2 hover:bg-white/10 rounded-lg"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <CircularBackButton onClick={() => navigate('/settings/payment-methods')} size="md" />
           <div>
             <h1 className="text-2xl font-orbitron font-bold text-white">
               Cronologia Pagamenti

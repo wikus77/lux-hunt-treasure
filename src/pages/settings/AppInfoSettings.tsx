@@ -9,10 +9,10 @@ import {
   Code, 
   Users, 
   Shield,
-  ArrowLeft,
   ExternalLink,
   Heart
 } from 'lucide-react';
+import { CircularBackButton } from '@/components/ui/CircularBackButton';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { useLocation } from 'wouter';
@@ -42,16 +42,9 @@ const AppInfoSettings = () => {
       
       <main className="pt-16 pb-20 px-4">
         <div className="max-w-lg mx-auto space-y-6">
-          {/* Header */}
+          {/* Header with Circular Back Button */}
           <div className="flex items-center space-x-4 mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocation('/settings')}
-              className="p-2 hover:bg-background/50"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
+            <CircularBackButton onClick={() => setLocation('/settings')} size="md" />
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 Info App

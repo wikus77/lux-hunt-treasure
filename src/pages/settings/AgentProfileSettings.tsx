@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import ProfileLayout from "@/components/layout/ProfileLayout";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CircularBackButton } from "@/components/ui/CircularBackButton";
 import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileInfo from "@/components/profile/ProfileInfo";
@@ -45,16 +44,9 @@ const AgentProfileSettings = () => {
   return (
     <div className="min-h-screen bg-black">
       <ProfileLayout>
-        {/* 🔧 FIX 28/01/2026: Back button BELOW header, not on header */}
+        {/* 🔧 FIX 28/01/2026: Circular back button BELOW header */}
         <div className="flex items-center gap-3 mb-4 mx-2 sm:mx-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/settings')}
-            className="p-2 hover:bg-white/10 rounded-xl"
-          >
-            <ArrowLeft className="h-5 w-5 text-white" />
-          </Button>
+          <CircularBackButton onClick={() => navigate('/settings')} size="md" />
           <span className="text-white/60 text-sm">Impostazioni</span>
         </div>
         

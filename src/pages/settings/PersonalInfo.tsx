@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Mail, MapPin, Calendar, Phone, Building, ArrowLeft } from 'lucide-react';
+import { User, Mail, MapPin, Calendar, Phone, Building } from 'lucide-react';
+import { CircularBackButton } from '@/components/ui/CircularBackButton';
 import { supabase } from '@/integrations/supabase/client';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
@@ -126,16 +127,9 @@ const PersonalInfo: React.FC = () => {
           paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))'
         }}
       >
-        {/* 🔧 FIX 28/01/2026: Back button BELOW header */}
+        {/* 🔧 FIX 28/01/2026: Circular back button BELOW header */}
         <div className="flex items-center gap-3 mb-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/settings')}
-            className="p-2 hover:bg-white/10 rounded-xl"
-          >
-            <ArrowLeft className="h-5 w-5 text-white" />
-          </Button>
+          <CircularBackButton onClick={() => navigate('/settings')} size="md" />
           <h1 className="text-xl font-orbitron text-white">Informazioni Personali</h1>
         </div>
         
