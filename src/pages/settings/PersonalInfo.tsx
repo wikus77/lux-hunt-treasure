@@ -1,17 +1,21 @@
 // @ts-nocheck
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// 🔧 FIX 28/01/2026: Added UnifiedHeader, BottomNavigation, back button
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Mail, MapPin, Calendar, Phone, Building } from 'lucide-react';
+import { User, Mail, MapPin, Calendar, Phone, Building, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import UnifiedHeader from '@/components/layout/UnifiedHeader';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 
 interface PersonalInfo {
   firstName: string;
@@ -28,6 +32,7 @@ interface PersonalInfo {
 const PersonalInfo: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [loading, setLoading] = useState(false);
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     firstName: '',
@@ -108,16 +113,35 @@ const PersonalInfo: React.FC = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="max-w-4xl mx-auto p-6 space-y-6"
-    >
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Informazioni Personali</h1>
-        <p className="text-white/70">Gestisci i tuoi dati personali e le informazioni di contatto</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0b0f] via-[#1a1b2e] to-[#0a0b0f]">
+      <UnifiedHeader />
+      
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-4xl mx-auto p-6 space-y-6"
+        style={{ 
+          paddingTop: 'calc(80px + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))'
+        }}
+      >
+        {/* 🔧 FIX 28/01/2026: Back button BELOW header */}
+        <div className="flex items-center gap-3 mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/settings')}
+            className="p-2 hover:bg-white/10 rounded-xl"
+          >
+            <ArrowLeft className="h-5 w-5 text-white" />
+          </Button>
+          <h1 className="text-xl font-orbitron text-white">Informazioni Personali</h1>
+        </div>
+        
+        <div className="mb-4">
+          <p className="text-white/70">Gestisci i tuoi dati personali e le informazioni di contatto</p>
+        </div>
 
       {/* Basic Information */}
       <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700">
@@ -275,6 +299,9 @@ const PersonalInfo: React.FC = () => {
         </CardContent>
       </Card>
     </motion.div>
+    
+    <BottomNavigation />
+  </div>
   );
 };
 

@@ -154,6 +154,18 @@ const SecuritySettings: React.FC = () => {
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
         }}
       >
+        {/* 🔧 FIX 28/01/2026: Back button BELOW header */}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/settings')}
+            className="p-2 hover:bg-white/10 rounded-xl"
+          >
+            <ArrowLeft className="h-5 w-5 text-white" />
+          </Button>
+          <h1 className="text-xl font-orbitron text-white">Sicurezza</h1>
+        </div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

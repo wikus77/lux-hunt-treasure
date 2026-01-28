@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   User, Shield, Target, Bell, Lock, 
   FileText, Info, MapPin, Stethoscope, HelpCircle,
-  ChevronRight
+  ChevronRight, CreditCard
 } from 'lucide-react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
@@ -27,7 +27,8 @@ type SettingsSection =
   | 'app-info'
   | 'privacy-permissions'
   | 'diagnostics'
-  | 'support';
+  | 'support'
+  | 'payment-methods';
 
 const SettingsPage = () => {
   const [, setLocation] = useLocation();
@@ -95,6 +96,12 @@ const SettingsPage = () => {
       label: 'Privacy',
       description: 'Gestione consensi e cookie',
       icon: Lock,
+    },
+    {
+      id: 'payment-methods',
+      label: 'Metodi di Pagamento',
+      description: 'Carte, Apple Pay, Google Pay',
+      icon: CreditCard,
     },
     {
       id: 'legal',

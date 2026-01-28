@@ -355,17 +355,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                 leftComponent
               ) : (
                 <div className="flex items-center">
-                  {/* Back Button - 🚀 NATIVE: Più grande e tappabile */}
-                  {!isHomePage && !isBottomNavPage && canGoBack && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => { hapticLight(); goBackWithFeedback(); }}
-                      className="mr-2 rounded-xl hover:bg-white/10 unified-header-btn w-11 h-11 m1-touch-feedback"
-                    >
-                      <ArrowLeft className="w-6 h-6" />
-                    </Button>
-                  )}
+                  {/* 🔧 FIX 28/01/2026: Back button REMOVED from header - now handled by individual pages below header */}
                   
                   <Link
                     to="/home"
