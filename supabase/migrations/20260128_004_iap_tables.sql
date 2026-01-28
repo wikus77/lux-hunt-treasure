@@ -99,17 +99,20 @@ CREATE TABLE IF NOT EXISTS public.subscription_entitlements (
   
   -- Timestamps
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  
-  -- Only one active entitlement per user
-  CONSTRAINT subscription_entitlements_unique_active UNIQUE (user_id, status) 
-    WHERE (status = 'active')
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_entitlements_user ON public.subscription_entitlements(user_id);
 CREATE INDEX IF NOT EXISTS idx_entitlements_expires ON public.subscription_entitlements(expires_at);
 CREATE INDEX IF NOT EXISTS idx_entitlements_status ON public.subscription_entitlements(status);
+
+-- Partial unique index: only one active entitlement per user
+-- (PostgreSQL requires CREATE UNIQUE INDEX for WHERE clause, not CONSTRAINT)
+DROP INDEX IF EXISTS idx_subscription_entitlements_unique_active;
+CREATE UNIQUE INDEX idx_subscription_entitlements_unique_active 
+  ON public.subscription_entitlements (user_id) 
+  WHERE (status = 'active');
 
 -- RLS
 ALTER TABLE public.subscription_entitlements ENABLE ROW LEVEL SECURITY;
