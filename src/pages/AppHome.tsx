@@ -24,7 +24,7 @@ import ShopPill from "@/components/shop/ShopPill";
 import MissionSync from "@/components/home/MissionSync";
 // STANDBY: Sistema hint inattività disabilitato - riattivare se necessario
 // import { InactivityHint } from "@/components/first-session";
-import { NextActionCard, DailyMissionCard, MotivationalPopup, FortuneWheel } from "@/components/feedback";
+import { NextActionContainer, MotivationalPopup, FortuneWheel } from "@/components/feedback";
 import { SectionErrorBoundary } from "@/components/error/SectionErrorBoundary";
 
 const AppHome = () => {
@@ -277,14 +277,11 @@ const { isConnected } = useRealTimeNotifications();
                   </div>
                 </div>
 
-                {/* 🎯 ACTION CARDS ROW: Prossimo Passo + Daily Mission affiancati */}
-                {/* 🔧 FIX: Wrapped con SectionErrorBoundary per prevenire crash globali */}
-                <div className="flex gap-3 mb-4">
-                  <SectionErrorBoundary section="Prossimo Passo" fallbackHeight="80px">
-                    <NextActionCard />
-                  </SectionErrorBoundary>
-                  <SectionErrorBoundary section="Missione Giornaliera" fallbackHeight="80px">
-                    <DailyMissionCard />
+                {/* 🎯 PROSSIMA AZIONE: Container unificato espandibile */}
+                {/* 🔧 FIX 28/01/2026: Sostituito due card separate con container singolo */}
+                <div className="mb-4">
+                  <SectionErrorBoundary section="Prossima Azione" fallbackHeight="80px">
+                    <NextActionContainer />
                   </SectionErrorBoundary>
                 </div>
 

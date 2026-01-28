@@ -9,6 +9,7 @@ export { CelebrationModal } from './CelebrationModal';
 export { CelebrationToast } from './CelebrationToast';
 export { NextActionCard } from './NextActionCard';
 export { DailyMissionCard } from './DailyMissionCard';
+export { NextActionContainer } from './NextActionContainer';
 export { MotivationalPopup } from './MotivationalPopup';
 export { FortuneWheel } from './FortuneWheel';
 
