@@ -23,16 +23,17 @@ const AgentProfileSettings = () => {
   // Initialize real-time notifications (this sets up the listener)
   useRealTimeNotifications();
   
+  // 🔧 FIX 28/01/2026: Point to EXISTING settings pages
   const navigateToPersonalInfo = () => {
-    navigate('/profile/personal-info');
+    navigate('/settings/personal-info');
   };
 
   const navigateToPrivacySecurity = () => {
-    navigate('/profile/security');
+    navigate('/settings/security'); // EXISTING SecuritySettings.tsx
   };
 
   const navigateToPaymentMethods = () => {
-    navigate('/profile/payments');
+    navigate('/settings/payment-methods'); // NEW dedicated page
   };
 
   const navigateToSubscriptions = () => {
@@ -92,9 +93,9 @@ const AgentProfileSettings = () => {
                   isEditing={profileData.isEditing}
                   setPersonalNotes={actions.setPersonalNotes}
                   togglePinBadge={actions.togglePinBadge}
-                  navigateToPersonalInfo={() => navigate('/profile/personal-info')}
-                  navigateToPrivacySecurity={() => navigate('/profile/security')}
-                  navigateToPaymentMethods={() => navigate('/profile/payments')}
+                  navigateToPersonalInfo={() => navigate('/settings/personal-info')}
+                  navigateToPrivacySecurity={() => navigate('/settings/security')}
+                  navigateToPaymentMethods={() => navigate('/settings/payment-methods')}
                   navigateToSubscriptions={() => navigate('/subscriptions')}
                 />
               </div>

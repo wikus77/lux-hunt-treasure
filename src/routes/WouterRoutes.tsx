@@ -57,10 +57,12 @@ import NorahAssistant from "@/pages/NorahAssistant";
 import SettingsPage from "@/pages/settings/SettingsPage";
 import AgentProfileSettings from "@/pages/settings/AgentProfileSettings";
 import SecuritySettings from "@/pages/settings/SecuritySettings";
-// 🔧 FIX 27/01/2026: Profile subpages for native app
-import PersonalInfoPage from "@/pages/profile/PersonalInfoPage";
-import ProfileSecurityPage from "@/pages/profile/SecurityPage";
+// 🔧 FIX 28/01/2026: Use EXISTING settings pages, not duplicates
+import PersonalInfo from "@/pages/settings/PersonalInfo";
+// PaymentsHistoryPage is for transaction history
 import PaymentsHistoryPage from "@/pages/profile/PaymentsHistoryPage";
+// PaymentMethodsPage is for managing payment methods (Apple Pay, Google Pay, Cards)
+import PaymentMethodsPage from "@/pages/settings/PaymentMethodsPage";
 import MissionSettings from "@/pages/settings/MissionSettings";
 import NotificationsSettings from "@/pages/settings/NotificationsSettings";
 import PrivacySettings from "@/pages/settings/PrivacySettings";
@@ -544,20 +546,24 @@ const WouterRoutes: React.FC = () => {
             <GlobalLayout><Notifications /></GlobalLayout>
           </Route>
 
-          {/* 🔧 FIX 27/01/2026: Profile subpages for native app */}
-          <Route path="/profile/personal-info">
+          {/* 🔧 FIX 28/01/2026: Settings subpages - use EXISTING pages */}
+          <Route path="/settings/personal-info">
             <ProtectedRoute>
-              <GlobalLayout><PersonalInfoPage /></GlobalLayout>
+              <GlobalLayout><PersonalInfo /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
-          <Route path="/profile/security">
+          {/* /settings/security already defined above with SecuritySettings */}
+
+          {/* Payment methods page - dedicated for managing payment methods */}
+          <Route path="/settings/payment-methods">
             <ProtectedRoute>
-              <GlobalLayout><ProfileSecurityPage /></GlobalLayout>
+              <GlobalLayout><PaymentMethodsPage /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
-          <Route path="/profile/payments">
+          {/* Payment history - for viewing transaction history */}
+          <Route path="/profile/payments-history">
             <ProtectedRoute>
               <GlobalLayout><PaymentsHistoryPage /></GlobalLayout>
             </ProtectedRoute>

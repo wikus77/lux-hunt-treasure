@@ -1,5 +1,6 @@
 // @ts-nocheck
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// 🔧 FIX 28/01/2026: Added SUBSCRIPTIONS_STEALTH for hiding subscription CTA
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Download, CheckCircle, AlertCircle, XCircle, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { SUBSCRIPTIONS_STEALTH } from '@/config/featureFlags';
 
 interface PaymentTransaction {
   id: string;
@@ -232,12 +234,15 @@ const PaymentsHistoryPage: React.FC = () => {
                 <p className="text-white/60 mb-6 max-w-md mx-auto">
                   Le tue transazioni M1SSION™ appariranno qui dopo il primo pagamento o acquisto.
                 </p>
-                <Button
-                  onClick={() => navigate('/subscriptions')}
-                  className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold"
-                >
-                  Esplora i Piani M1SSION™
-                </Button>
+                {/* 🔧 STEALTH: Hide subscription CTA when subscriptions are hidden */}
+                {!SUBSCRIPTIONS_STEALTH && (
+                  <Button
+                    onClick={() => navigate('/subscriptions')}
+                    className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold"
+                  >
+                    Esplora i Piani M1SSION™
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>
