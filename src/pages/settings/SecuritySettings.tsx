@@ -145,21 +145,21 @@ const SecuritySettings: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
       <UnifiedHeader profileImage={profileImage || user?.user_metadata?.avatar_url} />
       
-      <div 
-        className="px-4 space-y-6"
-        style={{ 
-          paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
-        }}
-      >
-        {/* 🔧 FIX 28/01/2026: Circular back button BELOW header */}
-        <div className="flex items-center gap-3">
-          <CircularBackButton onClick={() => navigate('/settings')} size="md" />
-          <h1 className="text-xl font-orbitron text-white">Sicurezza</h1>
-        </div>
+      {/* 🔧 FIX 28/01/2026: Layout come Info App - pt-16 per vicinanza header */}
+      <main className="pt-16 pb-20 px-4">
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Header with Circular Back Button */}
+          <div className="flex items-center gap-3 mb-4">
+            <CircularBackButton onClick={() => navigate('/settings')} size="md" />
+            <div>
+              <h1 className="text-xl font-orbitron text-white">Sicurezza</h1>
+              <p className="text-white/60 text-sm">Gestisci la sicurezza del tuo account</p>
+            </div>
+          </div>
+        
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -167,11 +167,6 @@ const SecuritySettings: React.FC = () => {
           transition={{ duration: 0.3 }}
           className="space-y-6"
         >
-          {/* Header */}
-          <div className="text-center space-y-2 mb-6">
-            <h1 className="text-2xl font-bold text-white font-orbitron">Sicurezza</h1>
-            <p className="text-white/70">Gestisci la sicurezza del tuo account</p>
-          </div>
           {/* Password Change */}
           <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
             <CardHeader>
@@ -322,7 +317,8 @@ const SecuritySettings: React.FC = () => {
             </CardContent>
           </Card>
         </motion.div>
-      </div>
+        </div>
+      </main>
 
       {/* Bottom Navigation */}
       <div 

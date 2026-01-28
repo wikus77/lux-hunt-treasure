@@ -44,13 +44,13 @@ const AgentProfileSettings = () => {
   return (
     <div className="min-h-screen bg-black">
       <ProfileLayout>
-        {/* 🔧 FIX 28/01/2026: Circular back button BELOW header */}
-        <div className="flex items-center gap-3 mb-4 mx-2 sm:mx-4">
+        {/* 🔧 FIX 28/01/2026: Circular back button - layout come Info App */}
+        <div className="flex items-center gap-3 mb-2">
           <CircularBackButton onClick={() => navigate('/settings')} size="md" />
           <span className="text-white/60 text-sm">Impostazioni</span>
         </div>
         
-        <div className="glass-card mx-2 sm:mx-4 mt-2 sm:mt-4 mb-20">
+        <div className="glass-card mt-2 mb-20">
           {/* Header with Agent Code and Edit Button */}
           <ProfileHeader 
             agentCode={profileData.agentCode}

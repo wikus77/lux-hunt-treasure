@@ -137,17 +137,14 @@ const PaymentMethodsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0b0f] via-[#1a1b2e] to-[#0a0b0f]">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
       <UnifiedHeader />
       
-      <div className="pt-[calc(env(safe-area-inset-top,0px)+80px)] pb-[calc(env(safe-area-inset-bottom,0px)+100px)] px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6 max-w-lg mx-auto"
-        >
-          {/* 🔧 FIX 28/01/2026: Circular back button BELOW header */}
-          <div className="flex items-center gap-3">
+      {/* 🔧 FIX 28/01/2026: Layout come Info App - pt-16 */}
+      <main className="pt-16 pb-20 px-4">
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Header with Circular Back Button */}
+          <div className="flex items-center gap-3 mb-4">
             <CircularBackButton onClick={() => navigate('/settings')} size="md" />
             <h1 className="text-xl font-orbitron text-white">Metodi di Pagamento</h1>
           </div>
@@ -358,8 +355,8 @@ const PaymentMethodsPage: React.FC = () => {
           >
             📜 Visualizza Cronologia Pagamenti
           </Button>
-        </motion.div>
-      </div>
+        </div>
+      </main>
 
       <BottomNavigation />
     </div>

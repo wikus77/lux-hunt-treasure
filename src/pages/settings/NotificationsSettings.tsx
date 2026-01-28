@@ -13,6 +13,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Bell, Volume2, VolumeX, RefreshCw, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import UnifiedHeader from '@/components/layout/UnifiedHeader';
+import BottomNavigation from '@/components/layout/BottomNavigation';
+import { useWouterNavigation } from '@/hooks/useWouterNavigation';
+import { CircularBackButton } from '@/components/ui/CircularBackButton';
 import { NativePushDiagnostic } from "@/components/push/NativePushDiagnostic";
 import { Capacitor } from '@capacitor/core';
 
@@ -96,6 +100,7 @@ interface NotificationSettings {
 const NotificationsSettings: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { navigate } = useWouterNavigation();
   const [loading, setLoading] = useState(false);
   
   // Use the proper notification preferences hook
@@ -227,16 +232,20 @@ const NotificationsSettings: React.FC = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="max-w-4xl mx-auto p-6 space-y-6"
-    >
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Impostazioni Notifiche</h1>
-        <p className="text-white/70">Gestisci le tue preferenze di notifica e comunicazione</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
+      <UnifiedHeader />
+      
+      {/* 🔧 FIX 28/01/2026: Layout come Info App */}
+      <main className="pt-16 pb-20 px-4">
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Header with Circular Back Button */}
+          <div className="flex items-center gap-3 mb-4">
+            <CircularBackButton onClick={() => navigate('/settings')} size="md" />
+            <div>
+              <h1 className="text-xl font-orbitron text-white">Notifiche</h1>
+              <p className="text-white/60 text-sm">Gestisci le tue preferenze di notifica</p>
+            </div>
+          </div>
 
       {/* Email Notifications */}
       <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700">
@@ -426,7 +435,11 @@ const NotificationsSettings: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-    </motion.div>
+        </div>
+      </main>
+      
+      <BottomNavigation />
+    </div>
   );
 };
 

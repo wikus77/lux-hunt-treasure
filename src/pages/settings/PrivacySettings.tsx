@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Shield, Eye, Database, Cookie, ArrowLeft } from 'lucide-react';
+import { Shield, Eye, Database, Cookie } from 'lucide-react';
+import { CircularBackButton } from '@/components/ui/CircularBackButton';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { useProfileImage } from '@/hooks/useProfileImage';
@@ -108,25 +109,20 @@ const PrivacySettings: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
       <UnifiedHeader profileImage={profileImage || user?.user_metadata?.avatar_url} />
       
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }}
-        className="px-4 space-y-6"
-        style={{ 
-          paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
-        }}
-      >
-        {/* Header */}
-        <div className="text-center space-y-2 mb-6">
-          <h1 className="text-2xl font-bold text-white font-orbitron">Privacy</h1>
-          <p className="text-white/70">Gestisci le tue preferenze sulla privacy</p>
-        </div>
+      {/* 🔧 FIX 28/01/2026: Layout come Info App */}
+      <main className="pt-16 pb-20 px-4">
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Header with Circular Back Button */}
+          <div className="flex items-center gap-3 mb-4">
+            <CircularBackButton onClick={() => navigate('/settings')} size="md" />
+            <div>
+              <h1 className="text-xl font-orbitron text-white">Privacy</h1>
+              <p className="text-white/60 text-sm">Gestisci le tue preferenze sulla privacy</p>
+            </div>
+          </div>
 
         {/* Data Collection */}
         <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
@@ -276,21 +272,10 @@ const PrivacySettings: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
-      </motion.div>
+        </div>
+      </main>
 
-      {/* Bottom Navigation */}
-      <div 
-        style={{ 
-          position: 'fixed', 
-          bottom: 0, 
-          left: 0, 
-          right: 0, 
-          width: '100vw',
-          zIndex: 10000
-        } as React.CSSProperties}
-      >
-        <BottomNavigation />
-      </div>
+      <BottomNavigation />
     </div>
   );
 };
