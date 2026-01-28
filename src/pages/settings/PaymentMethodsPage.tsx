@@ -18,8 +18,11 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  ChevronRight
+  ChevronRight,
+  Trash2,
+  Star
 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { CircularBackButton } from '@/components/ui/CircularBackButton';
 import { supabase } from '@/integrations/supabase/client';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
@@ -121,6 +124,89 @@ const PaymentMethodsPage: React.FC = () => {
       title: "💳 Aggiungi Carta",
       description: "La gestione delle carte sarà disponibile a breve tramite il tuo provider di pagamento sicuro.",
     });
+  };
+
+  const handleDeleteCard = async (cardId: string, stripePmId: string) => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      console.log('🗑️ Deleting payment method:', cardId);
+      
+      // Delete from database
+      const { error } = await supabase
+        .from('user_payment_methods')
+        .delete()
+        .eq('id', cardId)
+        .eq('user_id', user.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Note: In production, also call Stripe to detach the payment method
+      // await supabase.functions.invoke('stripe-detach-payment-method', { body: { pm_id: stripePmId } });
+      
+      toast({
+        title: "✅ Carta Rimossa",
+        description: "La carta è stata rimossa con successo.",
+      });
+      
+      // Refresh list
+      await loadPaymentMethods();
+    } catch (error: any) {
+      console.error('❌ Error deleting card:', error);
+      toast({
+        title: "❌ Errore",
+        description: error.message || "Impossibile rimuovere la carta. Riprova.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetDefault = async (cardId: string) => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      console.log('⭐ Setting default card:', cardId);
+      
+      // First, unset all defaults
+      await supabase
+        .from('user_payment_methods')
+        .update({ is_default: false })
+        .eq('user_id', user.id);
+      
+      // Set new default
+      const { error } = await supabase
+        .from('user_payment_methods')
+        .update({ is_default: true })
+        .eq('id', cardId)
+        .eq('user_id', user.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "⭐ Carta Predefinita",
+        description: "La carta è stata impostata come predefinita.",
+      });
+      
+      // Refresh list
+      await loadPaymentMethods();
+    } catch (error: any) {
+      console.error('❌ Error setting default:', error);
+      toast({
+        title: "❌ Errore",
+        description: error.message || "Impossibile impostare la carta predefinita. Riprova.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getBrandIcon = (brand: string) => {
@@ -263,33 +349,86 @@ const PaymentMethodsPage: React.FC = () => {
                   <div className="animate-spin w-8 h-8 border-2 border-[#00D1FF] border-t-transparent rounded-full mx-auto mb-4"></div>
                   <p className="text-white/60">Caricamento...</p>
                 </div>
-              ) : paymentMethods.length > 0 ? (
+              )               : paymentMethods.length > 0 ? (
                 <div className="space-y-3">
                   {paymentMethods.map((method) => (
                     <div 
                       key={method.id}
-                      className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/10"
+                      className="p-3 bg-black/30 rounded-lg border border-white/10"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
-                          <CreditCard className="w-5 h-5 text-white" />
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
+                            <CreditCard className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-white font-medium">
+                              {method.brand} ••••{method.last4}
+                            </p>
+                            <p className="text-white/60 text-xs">
+                              Scade {method.exp_month}/{method.exp_year}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-white font-medium">
-                            {method.brand} ••••{method.last4}
-                          </p>
-                          <p className="text-white/60 text-xs">
-                            Scade {method.exp_month}/{method.exp_year}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
                         {method.is_default && (
                           <Badge className="bg-green-600/20 text-green-400 text-xs">
                             Predefinita
                           </Badge>
                         )}
-                        <ChevronRight className="w-4 h-4 text-white/40" />
+                      </div>
+                      
+                      {/* Card Actions */}
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
+                        {!method.is_default && (
+                          <Button
+                            onClick={() => handleSetDefault(method.id)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-[#00D1FF] hover:bg-[#00D1FF]/10 flex-1"
+                            disabled={loading}
+                          >
+                            <Star className="w-4 h-4 mr-1" />
+                            Imposta Predefinita
+                          </Button>
+                        )}
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-400 hover:bg-red-500/10"
+                              disabled={loading}
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Rimuovi
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-black/90 border-red-500/20">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-white">
+                                🗑️ Rimuovi Carta
+                              </AlertDialogTitle>
+                              <AlertDialogDescription className="text-white/70">
+                                Vuoi rimuovere la carta {method.brand} ••••{method.last4}?
+                                <br /><br />
+                                Questa azione è reversibile: potrai aggiungere nuovamente 
+                                la carta in seguito.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="bg-white/10 text-white border-white/20">
+                                Annulla
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteCard(method.id, method.stripe_pm_id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Rimuovi Carta
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   ))}

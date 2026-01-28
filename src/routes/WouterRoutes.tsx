@@ -126,6 +126,7 @@ import SafeCreative from "@/pages/SafeCreative";
 import GameRulesComplete from "@/pages/legal/GameRulesComplete";
 import Policies from "@/pages/legal/Policies";
 import GamePoliciesIt from "@/pages/legal/GamePolicies.it";
+import EuipoTrademark from "@/pages/legal/EuipoTrademark";
 
 // Subscription plan pages
 import SilverPlanPage from "@/pages/subscriptions/SilverPlanPage";
@@ -1077,6 +1078,10 @@ const WouterRoutes: React.FC = () => {
           
           <Route path="/safecreative">
             <GlobalLayout><SafeCreative /></GlobalLayout>
+          </Route>
+          
+          <Route path="/euipo">
+            <GlobalLayout><EuipoTrademark /></GlobalLayout>
           </Route>
           
           <Route path="/game-rules">

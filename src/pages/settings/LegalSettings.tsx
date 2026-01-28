@@ -9,7 +9,7 @@ import { useProfileImage } from '@/hooks/useProfileImage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { FileText, ExternalLink, Trash2, Shield, Copyright, Settings } from 'lucide-react';
+import { FileText, ExternalLink, Trash2, Shield, Copyright, Settings, Award } from 'lucide-react';
 import { CircularBackButton } from '@/components/ui/CircularBackButton';
 import { supabase } from '@/integrations/supabase/client';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
@@ -49,10 +49,19 @@ const LegalSettings: React.FC = () => {
     },
     {
       title: 'Gestisci preferenze cookie',
-      description: 'Modifica le tue preferenze sui cookie',
-      url: '#consent',
+      description: 'Modifica le tue preferenze sulla privacy',
+      url: '/settings/privacy',
       icon: Settings,
-      action: () => window.__consent?.open()
+      action: () => {
+        // In native app, window.__consent is not available (no web cookies)
+        // Redirect to Privacy Settings instead
+        if (window.__consent?.open) {
+          window.__consent.open();
+        } else {
+          // Native app fallback - go to privacy settings
+          window.location.href = '/settings/privacy';
+        }
+      }
     },
     {
       title: 'Regolamento M1SSION™',
@@ -71,6 +80,12 @@ const LegalSettings: React.FC = () => {
       description: 'Certificazione di proprietà intellettuale',
       url: '/safecreative',
       icon: Copyright
+    },
+    {
+      title: 'EUIPO – Marchio Registrato',
+      description: 'Registrazione marchio EU n° 019289272',
+      url: '/euipo',
+      icon: Award
     }
   ];
 
@@ -116,6 +131,10 @@ const LegalSettings: React.FC = () => {
   const openExternalLink = (url: string) => {
     if (url.startsWith('/')) {
       // Navigate to internal pages
+      window.location.href = url;
+    } else if (url.startsWith('mailto:')) {
+      // 🔧 FIX: mailto: links should open native mail client
+      // Works on both iOS (Mail app) and Android (default mail client)
       window.location.href = url;
     } else if ((window as any).Capacitor) {
       // In Capacitor, open external URLs in system browser
@@ -219,7 +238,7 @@ const LegalSettings: React.FC = () => {
                 Hai domande o hai bisogno di assistenza?
               </p>
               <Button
-                onClick={() => openExternalLink('mailto:contact@m1ssion.com')}
+                onClick={() => openExternalLink('mailto:contact@m1ssion.com?subject=M1SSION%20Support%20Request')}
                 variant="outline"
                 className="border-[#00D1FF]/50 text-[#00D1FF] hover:bg-[#00D1FF]/10"
               >
