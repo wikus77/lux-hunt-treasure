@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
-import ProfileLayout from "@/components/layout/ProfileLayout";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { CircularBackButton } from "@/components/ui/CircularBackButton";
 import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
 import ProfileHeader from "@/components/profile/ProfileHeader";
@@ -42,15 +42,22 @@ const AgentProfileSettings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black">
-      <ProfileLayout>
-        {/* 🔧 FIX 28/01/2026: Circular back button - layout come Info App */}
-        <div className="flex items-center gap-3 mb-2">
-          <CircularBackButton onClick={() => navigate('/settings')} size="md" />
-          <span className="text-white/60 text-sm">Impostazioni</span>
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
+      <UnifiedHeader />
+      
+      {/* 🔧 FIX 28/01/2026: Layout come Info App - pt-16 */}
+      <main className="pt-16 pb-20 px-4">
+        <div className="max-w-lg mx-auto space-y-4">
+          {/* Header with Circular Back Button */}
+          <div className="flex items-center gap-3 mb-4">
+            <CircularBackButton onClick={() => navigate('/settings')} size="md" />
+            <div>
+              <h1 className="text-xl font-orbitron text-white">Profilo Agente</h1>
+              <p className="text-white/60 text-sm">Impostazioni</p>
+            </div>
+          </div>
         
-        <div className="glass-card mt-2 mb-20">
+        <div className="glass-card mb-20">
           {/* Header with Agent Code and Edit Button */}
           <ProfileHeader 
             agentCode={profileData.agentCode}
@@ -114,28 +121,10 @@ const AgentProfileSettings = () => {
           open={notificationsDrawerOpen}
           onOpenChange={closeNotificationsDrawer}
         />
-      </ProfileLayout>
+        </div>
+      </main>
       
-      {/* Bottom Navigation - Uniform positioning like Home */}
-      <div 
-        id="mission-bottom-nav-container"
-        style={{ 
-          position: 'fixed', 
-          bottom: 0, 
-          left: 0, 
-          right: 0, 
-          width: '100vw',
-          zIndex: 10000,
-          isolation: 'isolate',
-          transform: 'translateZ(0)',
-          willChange: 'transform',
-          display: 'block',
-          visibility: 'visible',
-          opacity: 1
-        } as React.CSSProperties}
-      >
-        <BottomNavigation />
-      </div>
+      <BottomNavigation />
     </div>
   );
 };

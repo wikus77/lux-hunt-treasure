@@ -10,7 +10,6 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   FileText, 
-  ArrowLeft, 
   Shield, 
   Ban, 
   Coins, 
@@ -25,31 +24,26 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
+import UnifiedHeader from '@/components/layout/UnifiedHeader';
+import BottomNavigation from '@/components/layout/BottomNavigation';
+import { CircularBackButton } from '@/components/ui/CircularBackButton';
 
 const GamePoliciesIt: React.FC = () => {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#131524] via-[#0F1419] to-black text-white">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          {/* Header */}
-          <div className="flex items-center space-x-4">
-            <Button
-              onClick={() => window.history.back()}
-              variant="ghost"
-              size="icon"
-              className="rounded-full hover:bg-white/10"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90 text-white">
+      <UnifiedHeader />
+      
+      {/* 🔧 FIX 28/01/2026: Layout come Info App */}
+      <main className="pt-16 pb-20 px-4">
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Header with Circular Back Button */}
+          <div className="flex items-center gap-3 mb-4">
+            <CircularBackButton onClick={() => window.history.back()} size="md" />
             <div>
-              <h1 className="text-2xl font-orbitron font-bold text-white">Policy & Disclaimer</h1>
-              <p className="text-white/70">Informazioni Legali M1SSION™</p>
+              <h1 className="text-xl font-orbitron text-white">Game Policy</h1>
+              <p className="text-white/60 text-sm">Informazioni Legali M1SSION™</p>
             </div>
           </div>
 
@@ -451,8 +445,10 @@ const GamePoliciesIt: React.FC = () => {
               Ultimo Aggiornamento: {new Date().toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </main>
+      
+      <BottomNavigation />
     </div>
   );
 };

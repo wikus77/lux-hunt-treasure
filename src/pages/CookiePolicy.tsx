@@ -6,9 +6,12 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Cookie, Settings, Shield, Info } from "lucide-react";
+import { Cookie, Settings, Shield, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import BottomNavigation from "@/components/layout/BottomNavigation";
+import { CircularBackButton } from "@/components/ui/CircularBackButton";
 
 interface LegalDocument {
   id: string;
@@ -64,23 +67,19 @@ const CookiePolicy = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#131524]/70 to-black text-white">
-      <div className="container mx-auto max-w-4xl px-4 py-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          {/* Header */}
-          <div className="flex items-center space-x-4 mb-8">
-            <Button 
-              variant="outline" 
-              className="border-white/20 text-white hover:bg-white/10"
-              onClick={() => setLocation('/')}
-            >
-              <ArrowLeft className="mr-2 w-4 h-4" /> 
-              Torna alla Home
-            </Button>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90 text-white">
+      <UnifiedHeader />
+      
+      {/* 🔧 FIX 28/01/2026: Layout come Info App */}
+      <main className="pt-16 pb-20 px-4">
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Header with Circular Back Button */}
+          <div className="flex items-center gap-3 mb-4">
+            <CircularBackButton onClick={() => setLocation('/')} size="md" />
+            <div>
+              <h1 className="text-xl font-orbitron text-white">Cookie Policy</h1>
+              <p className="text-white/60 text-sm">Come utilizziamo i cookie</p>
+            </div>
           </div>
 
           {/* Main Content Card */}
@@ -248,8 +247,10 @@ const CookiePolicy = () => {
               Torna alla Home
             </Button>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </main>
+      
+      <BottomNavigation />
     </div>
   );
 };

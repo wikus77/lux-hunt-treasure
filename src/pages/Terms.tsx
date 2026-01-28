@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import BottomNavigation from "@/components/layout/BottomNavigation";
+import { CircularBackButton } from "@/components/ui/CircularBackButton";
 
 const Terms = () => {
   const [location, setLocation] = useLocation();
@@ -54,14 +56,23 @@ const Terms = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-black text-white p-4 pt-20">
-      <div className="container mx-auto max-w-4xl">
-        <Button variant="outline" className="mb-8" onClick={handleBack}>
-          <ArrowLeft className="mr-2 w-4 h-4" /> Torna alla Home
-        </Button>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90 text-white">
+      <UnifiedHeader />
+      
+      {/* 🔧 FIX 28/01/2026: Layout come Info App */}
+      <main className="pt-16 pb-20 px-4">
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Header with Circular Back Button */}
+          <div className="flex items-center gap-3 mb-4">
+            <CircularBackButton onClick={handleBack} size="md" />
+            <div>
+              <h1 className="text-xl font-orbitron text-white">Termini di Servizio</h1>
+              <p className="text-white/60 text-sm">Condizioni d'uso M1SSION™</p>
+            </div>
+          </div>
         
         <div 
-          className="relative overflow-hidden rounded-[24px] p-8"
+          className="relative overflow-hidden rounded-[24px] p-6"
           style={{
             background: 'rgba(0, 0, 0, 0.05)',
             backdropFilter: 'blur(40px)',
@@ -72,9 +83,9 @@ const Terms = () => {
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
           
-          <h1 className="text-3xl font-bold mb-6">
+          <h2 className="text-2xl font-bold mb-6">
             {document?.title || 'Termini e Condizioni'}
-          </h1>
+          </h2>
           
           {document ? (
             <div className="space-y-6 prose prose-invert max-w-none">
@@ -95,13 +106,16 @@ const Terms = () => {
             </div>
           )}
           
-          <div className="mt-10 text-center">
+          <div className="mt-8 text-center">
             <Button onClick={handleBack} className="bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink">
               Torna alla Home
             </Button>
           </div>
         </div>
-      </div>
+        </div>
+      </main>
+      
+      <BottomNavigation />
     </div>
   );
 };

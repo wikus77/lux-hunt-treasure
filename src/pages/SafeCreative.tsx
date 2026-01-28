@@ -2,9 +2,11 @@
 // © 2025 – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
+import UnifiedHeader from '@/components/layout/UnifiedHeader';
+import BottomNavigation from '@/components/layout/BottomNavigation';
+import { CircularBackButton } from '@/components/ui/CircularBackButton';
 
 interface LegalDocument {
   id: string;
@@ -73,21 +75,20 @@ export default function SafeCreative() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#1A1A2E] to-[#16213E]">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={handleBack}
-            className="flex items-center text-[#00D1FF] hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Indietro
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
+      <UnifiedHeader />
+      
+      {/* 🔧 FIX 28/01/2026: Layout come Info App */}
+      <main className="pt-16 pb-20 px-4">
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Header with Circular Back Button */}
+          <div className="flex items-center gap-3 mb-4">
+            <CircularBackButton onClick={handleBack} size="md" />
+            <div>
+              <h1 className="text-xl font-orbitron text-white">Safe Creative</h1>
+              <p className="text-white/60 text-sm">Protezione copyright</p>
+            </div>
+          </div>
           <div 
             className="relative overflow-hidden rounded-[24px] p-8"
             style={{
@@ -140,7 +141,9 @@ export default function SafeCreative() {
             )}
           </div>
         </div>
-      </div>
+      </main>
+      
+      <BottomNavigation />
     </div>
   );
 }
