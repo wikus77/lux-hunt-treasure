@@ -68,8 +68,9 @@ function BattleLobby({ stats, onStartBattle }: BattleLobbyProps) {
           </div>
           <div className="flex-1">
             <h3 className="text-white font-bold text-base mb-1">Battle Arena</h3>
+            {/* 🏪 STORE COMPLIANT: Earn, not win */}
             <p className="text-white/60 text-sm leading-relaxed">
-              Sfida i bot AI e metti alla prova i tuoi riflessi. Vinci M1U o PE (max 5).
+              Sfida i bot AI e metti alla prova i tuoi riflessi. Ottieni M1U o PE (max 5).
             </p>
           </div>
         </div>

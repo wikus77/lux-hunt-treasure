@@ -42,6 +42,8 @@ import "@/utils/populateKnowledgeBase";
 import { NorahProactiveManager } from "./components/norah/NorahProactiveManager";
 import { MissionBadgeInjector } from "./components/home/MissionBadgeInjector";
 import { RewardZonePopup } from "./components/rewards/RewardZonePopup";
+// 🏪 STORE COMPLIANCE: Lazy load PulseBreaker components (hidden on native)
+import { isPulseBreakerEnabled } from "./utils/storeCompliance";
 import { PulseBreakerInfoPopup } from "./components/popups/PulseBreakerInfoPopup";
 import { GlobalPulseBreakerModal } from "./components/popups/GlobalPulseBreakerModal";
 import { UpdateBanner } from "./components/sw/UpdateBanner";
@@ -291,10 +293,15 @@ function App() {
                     <MissionBadgeInjector />
                     {/* 🎯 REWARD ZONE: Popup per scoprire marker rewards */}
                     <RewardZonePopup />
-                    {/* 🎮 PULSE BREAKER: Popup informativo dopo 2 minuti */}
-                    <PulseBreakerInfoPopup />
-                    {/* 🎮 PULSE BREAKER: Modal del gioco (globale) */}
-                    <GlobalPulseBreakerModal />
+                    {/* 🏪 STORE COMPLIANCE: PulseBreaker hidden on native (gambling-like) */}
+                    {isPulseBreakerEnabled() && (
+                      <>
+                        {/* 🎮 PULSE BREAKER: Popup informativo dopo 2 minuti */}
+                        <PulseBreakerInfoPopup />
+                        {/* 🎮 PULSE BREAKER: Modal del gioco (globale) */}
+                        <GlobalPulseBreakerModal />
+                      </>
+                    )}
                     {/* 🔋 PULSE: Toast globale per contribuzioni energia */}
                     <PulseContributionListener />
                     {/* 🎁 PULSE: Notifiche ricompense soglie */}

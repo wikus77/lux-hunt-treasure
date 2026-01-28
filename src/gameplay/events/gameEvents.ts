@@ -155,9 +155,10 @@ export const getEventCopy = (event: GameEvent): EventCopy => {
     
     case 'PULSE_BREAKER_CASHOUT':
       return {
+        // 🏪 STORE COMPLIANT: Earned, not won
         title: '💎 CASHOUT PERFETTO!',
-        effect: `Hai vinto ${payload.payout || 0} ${payload.currency || 'M1U'} a ${payload.multiplier || '1.00'}x`,
-        nextStep: 'Usa le tue vincite per più BUZZ',
+        effect: `Hai ottenuto ${payload.payout || 0} ${payload.currency || 'M1U'} a ${payload.multiplier || '1.00'}x`,
+        nextStep: 'Usa i tuoi crediti per più BUZZ',
         cta: { label: 'FAI BUZZ', path: '/buzz' },
         icon: '💎',
       };

@@ -1062,7 +1062,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                 ) : canSpin ? (
                   <>
                     <Gift className="w-5 h-5" />
-                    GIRA LA RUOTA
+                    AVANZA
                   </>
                 ) : (
                   <>

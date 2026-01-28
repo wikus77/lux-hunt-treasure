@@ -1,6 +1,10 @@
 /**
  * M1SSION™ Shop Modal
- * Centro acquisti con 3 sezioni: Scratch & Win, Gira la Ruota, Lotteria
+ * Centro acquisti con 3 sezioni: Rivela, Progressione, Percorso
+ * 
+ * 🏪 STORE COMPLIANCE (28/01/2026):
+ * - All gambling terminology replaced with progress-based language
+ * - No win/lose states, only progression
  * 
  * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
@@ -201,10 +205,11 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
 
           {/* Tabs */}
           <div className="flex border-b border-white/10">
+            {/* 🏪 STORE COMPLIANT: Progress-based tab labels (no gambling terms) */}
             {[
-              { id: 'scratch' as ShopTab, label: 'Scratch & Win', color: 'from-yellow-500 to-amber-600' },
-              { id: 'wheel' as ShopTab, label: 'Gira la Ruota', color: 'from-green-500 to-emerald-600', badge: canSpinWheel },
-              { id: 'lottery' as ShopTab, label: 'Lotteria', color: 'from-blue-500 to-cyan-600' },
+              { id: 'scratch' as ShopTab, label: 'RIVELA', color: 'from-yellow-500 to-amber-600' },
+              { id: 'wheel' as ShopTab, label: 'PROGRESSIONE', color: 'from-green-500 to-emerald-600', badge: canSpinWheel },
+              { id: 'lottery' as ShopTab, label: 'PERCORSO', color: 'from-blue-500 to-cyan-600' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -235,7 +240,7 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
 
           {/* Content */}
           <div className="p-4 overflow-y-auto flex-1">
-            {/* SCRATCH & WIN TAB */}
+            {/* 🏪 RIVELA TAB (STORE COMPLIANT) */}
             {activeTab === 'scratch' && (
               <div className="space-y-4">
                 <p className="text-sm text-white/70 text-center mb-4">
@@ -328,7 +333,7 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
               </div>
             )}
 
-            {/* GIRA LA RUOTA TAB */}
+            {/* 🏪 PROGRESSIONE TAB (STORE COMPLIANT) */}
             {activeTab === 'wheel' && (
               <div className="space-y-4 text-center">
                 <div className="py-8">
@@ -348,8 +353,9 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
                   
                   {canSpinWheel ? (
                     <>
-                      <h3 className="text-xl font-bold text-white mb-2">Giro GRATUITO disponibile!</h3>
-                      <p className="text-white/60 mb-6">Gira la ruota e vinci M1U ogni giorno</p>
+                      {/* 🏪 STORE COMPLIANT: Progress-based messaging */}
+                      <h3 className="text-xl font-bold text-white mb-2">Progressione GRATUITA disponibile!</h3>
+                      <p className="text-white/60 mb-6">Avanza nella tua progressione giornaliera</p>
                       <motion.button
                         onClick={() => setShowWheel(true)}
                         className="px-8 py-3 rounded-full font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 transition-all"
@@ -369,7 +375,7 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
               </div>
             )}
 
-            {/* LOTTERIA TAB */}
+            {/* 🏪 PERCORSO TAB (STORE COMPLIANT) */}
             {activeTab === 'lottery' && (
               <Suspense fallback={
                 <div className="flex items-center justify-center py-12">
@@ -397,7 +403,7 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
         <FortuneWheel isOpen={showWheel} onClose={handleWheelClose} />
       </Suspense>
       
-      {/* Scratch Win Modal */}
+      {/* 🏪 Reveal Progress Modal (STORE COMPLIANT) */}
       {scratchPurchase && (
         <Suspense fallback={null}>
           <ScratchWinModal

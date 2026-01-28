@@ -51,7 +51,7 @@ const M1UPill: React.FC<M1UPillProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const animationRef = React.useRef<number | null>(null);
 
-  // 🎰 SLOT MACHINE ANIMATION - Animates numbers rolling up like a jackpot
+  // 🏪 COUNTER ANIMATION - Animates numbers rolling up progressively
   const animateBalance = (startValue: number, endValue: number, duration: number = 2000) => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);

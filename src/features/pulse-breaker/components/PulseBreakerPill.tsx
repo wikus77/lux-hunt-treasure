@@ -1,17 +1,28 @@
 /**
  * PULSE BREAKER™ — Quick Access Pill (Same style as AgentEnergyPill)
  * Pill circolare stile M1SSION con anelli rotanti
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * 
+ * 🏪 STORE COMPLIANCE (28/01/2026):
+ * - Hidden on native platforms (gambling-like mechanic)
+ * - Returns null when isPulseBreakerEnabled() === false
+ * 
+ * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import { motion } from 'framer-motion';
 import { Gamepad2 } from 'lucide-react';
 import { PulseBreaker } from './PulseBreaker';
 import { usePulseBreakerStore } from '@/stores/pulseBreakerStore';
+import { isPulseBreakerEnabled } from '@/utils/storeCompliance';
 import '@/features/pulse/styles/pulse-pill.css';
 
 export const PulseBreakerPill = () => {
   const { isOpen, openPulseBreaker, closePulseBreaker } = usePulseBreakerStore();
+
+  // 🏪 STORE COMPLIANCE: Hide on native platforms
+  if (!isPulseBreakerEnabled()) {
+    return null;
+  }
 
   return (
     <div className="relative">

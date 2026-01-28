@@ -1,7 +1,11 @@
 /**
  * THE PULSE™ — Cyberpunk Energy Bar (Faithful Recreation)
  * Design identico al riferimento sci-fi
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * 
+ * 🏪 STORE COMPLIANCE (28/01/2026):
+ * - PulseBreaker conditionally loaded (hidden on native)
+ * 
+ * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import { usePulseRealtime } from '../hooks/usePulseRealtime';
@@ -10,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { PULSE_ENABLED } from '@/config/featureFlags';
 import { Gamepad2 } from 'lucide-react';
 import { PulseBreaker } from '@/features/pulse-breaker';
+import { isPulseBreakerEnabled } from '@/utils/storeCompliance';
 
 interface PulseBarProps {
   onTap?: () => void;
@@ -230,11 +235,13 @@ export const PulseBar = ({ onTap }: PulseBarProps) => {
 
       {/* 🔥 RIMOSSO: PLAY Button - ora si accede solo dal PulseBreakerPill floating */}
 
-      {/* Game Modal - Kept for floating pill */}
-      <PulseBreaker 
-        isOpen={isGameOpen} 
-        onClose={() => setIsGameOpen(false)} 
-      />
+      {/* 🏪 STORE COMPLIANCE: Game Modal (hidden on native) */}
+      {isPulseBreakerEnabled() && (
+        <PulseBreaker 
+          isOpen={isGameOpen} 
+          onClose={() => setIsGameOpen(false)} 
+        />
+      )}
     </motion.div>
   );
 };

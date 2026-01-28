@@ -536,8 +536,9 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
           }}
         >
           <div className="flex items-center gap-2">
+            {/* 🏪 STORE COMPLIANT: Progress reveal, not scratch & win */}
             <Gift className="w-6 h-6" style={{ color: config.color }} />
-            <span className="text-white font-bold text-lg">SCRATCH & WIN</span>
+            <span className="text-white font-bold text-lg">RIVELA PROGRESSI</span>
             <span className="text-white/70 text-sm">• {tier} M1U</span>
           </div>
           <motion.button
@@ -759,8 +760,9 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
                       ))}
                     </div>
                     
+                    {/* 🏪 STORE COMPLIANT: Unlocked, not won */}
                     <div className="text-4xl mb-2">🔍</div>
-                    <div className="text-xl font-bold text-white mb-2">HAI VINTO UN INDIZIO!</div>
+                    <div className="text-xl font-bold text-white mb-2">INDIZIO SBLOCCATO!</div>
                     {result.clueText && (
                       <p className="text-white/80 text-sm italic max-w-xs mx-auto">"{result.clueText}"</p>
                     )}

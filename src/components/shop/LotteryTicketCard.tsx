@@ -111,8 +111,9 @@ const LotteryTicketCard: React.FC<LotteryTicketCardProps> = ({
               </div>
             ) : (
               <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30">
+                {/* 🏪 STORE COMPLIANT: Progress path, not lottery */}
                 <Ticket className="w-4 h-4 text-cyan-400" />
-                <span className="text-xs font-bold text-cyan-400">LOTTERIA</span>
+                <span className="text-xs font-bold text-cyan-400">PERCORSO</span>
               </div>
             )}
           </div>

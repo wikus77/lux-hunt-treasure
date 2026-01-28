@@ -90,6 +90,17 @@ export const STORE_COMPLIANCE_MODE = true;
 // When false: Stripe accessible everywhere (iOS VIOLATION)
 export const STRIPE_NATIVE_DISABLED = true;
 
+// PulseBreaker (Crash/Aviator game) - DISABLED on native for store compliance
+// This is a gambling-like mechanic that will cause Apple/Google rejection
+// When true: PulseBreaker available (web only after compliance check)
+// When false: PulseBreaker hidden everywhere
+export const PULSE_BREAKER_ENABLED = true; // Web default, overridden in native
+
+// Native In-App Purchases (Apple IAP + Google Play Billing)
+// When true: Use native store billing for M1U and subscriptions
+// When false: Fall back to Stripe (web only)
+export const NATIVE_IAP_ENABLED = true;
+
 // ====== LAUNCH FLAGS (19 Dec 2025) ======
 // Set to true when ready for production launch
 export const PRODUCTION_LAUNCH_READY = false;

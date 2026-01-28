@@ -288,27 +288,86 @@ const CheckoutForm: React.FC<{
   );
 };
 
-// 🏪 STORE COMPLIANT: Native IAP Placeholder Component
-const NativeIAPPlaceholder: React.FC<{
+// 🏪 STORE COMPLIANT: Native IAP Checkout Component
+import { useIAP, M1U_PRODUCTS, getProductByCode } from '@/iap';
+
+const NativeIAPCheckout: React.FC<{
   packName: string;
+  packCode: string;
   m1uAmount: number;
   priceEur: number;
+  onSuccess: () => void;
   onCancel: () => void;
-}> = ({ packName, m1uAmount, priceEur, onCancel }) => {
+}> = ({ packName, packCode, m1uAmount, priceEur, onSuccess, onCancel }) => {
   const platform = getCapacitorPlatform();
-  
+  const { 
+    status, 
+    products, 
+    error, 
+    isIAPReady, 
+    purchase, 
+    initIAP,
+    isNativeIAPAvailable 
+  } = useIAP();
+  const [purchasing, setPurchasing] = useState(false);
+  const [initAttempted, setInitAttempted] = useState(false);
+
+  // Initialize IAP on mount
+  useEffect(() => {
+    if (!initAttempted && isNativeIAPAvailable()) {
+      setInitAttempted(true);
+      initIAP().catch(console.error);
+    }
+  }, [initAttempted, initIAP, isNativeIAPAvailable]);
+
+  // Find the store product for display
+  const storeProduct = products.find(p => {
+    const mappedProduct = getProductByCode(packCode);
+    if (!mappedProduct) return false;
+    const storeId = platform === 'ios' 
+      ? mappedProduct.appleProductId 
+      : mappedProduct.googleProductId;
+    return p.productId === storeId;
+  });
+
+  const displayPrice = storeProduct?.localizedPrice || `€${priceEur.toFixed(2)}`;
+
+  const handlePurchase = async () => {
+    if (!isIAPReady || purchasing) return;
+
+    setPurchasing(true);
+    try {
+      const result = await purchase(packCode);
+      
+      if (result.success) {
+        toast.success(`✅ ${m1uAmount} M1U aggiunti al tuo account!`);
+        onSuccess();
+      } else {
+        toast.error(result.error || 'Acquisto non completato');
+      }
+    } catch (err) {
+      console.error('[Native IAP] Purchase error:', err);
+      toast.error('Errore durante l\'acquisto');
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
+  const isLoading = status === 'initializing' || status === 'purchasing' || status === 'validating';
+
   return (
     <Card className="w-full max-w-md mx-auto bg-black/95 border-[#00D1FF]/30 backdrop-blur-xl">
       <CardHeader className="border-b border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-yellow-400" />
-            <CardTitle className="text-white font-orbitron">Acquisto In-App</CardTitle>
+            <ShoppingCart className="w-5 h-5 text-[#00D1FF]" />
+            <CardTitle className="text-white font-orbitron">{packName}</CardTitle>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onCancel}
+            disabled={purchasing}
             className="h-8 w-8 rounded-full hover:bg-white/10"
           >
             <X className="w-4 h-4" />
@@ -319,32 +378,96 @@ const NativeIAPPlaceholder: React.FC<{
             {m1uAmount} <span className="text-[#00D1FF] text-lg">M1U</span>
           </div>
           <div className="text-2xl font-semibold text-[#FFD700]">
-            €{priceEur.toFixed(2)}
+            {displayPrice}
           </div>
         </div>
       </CardHeader>
       
       <CardContent className="space-y-4 pt-6">
-        <div className="text-center p-6 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
-          <AlertCircle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-white mb-2">
-            {platform === 'ios' ? 'Apple In-App Purchase' : 'Google Play Billing'}
-          </h3>
-          <p className="text-white/70 text-sm mb-4">
-            Gli acquisti in-app per {platform === 'ios' ? 'iOS' : 'Android'} saranno disponibili a breve.
-          </p>
-          <p className="text-white/50 text-xs">
-            Nel frattempo, puoi acquistare M1U dalla versione web di M1SSION.
-          </p>
-        </div>
+        {/* Status messages */}
+        {status === 'initializing' && (
+          <div className="text-center p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
+            <div className="w-6 h-6 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin mx-auto mb-2" />
+            <p className="text-white/70 text-sm">Connessione allo store...</p>
+          </div>
+        )}
+
+        {status === 'error' && (
+          <div className="text-center p-4 bg-red-500/10 rounded-lg border border-red-500/30">
+            <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+            <p className="text-red-400 text-sm">{error || 'Errore di connessione'}</p>
+            <Button
+              onClick={() => initIAP()}
+              variant="outline"
+              size="sm"
+              className="mt-2"
+            >
+              Riprova
+            </Button>
+          </div>
+        )}
+
+        {isIAPReady && (
+          <div className="space-y-4">
+            <div className="text-center p-4 bg-green-500/10 rounded-lg border border-green-500/30">
+              <p className="text-white/70 text-sm">
+                {platform === 'ios' ? '🍎 Apple Pay' : '🤖 Google Play'}
+              </p>
+              <p className="text-white/50 text-xs mt-1">
+                Pagamento sicuro tramite {platform === 'ios' ? 'App Store' : 'Play Store'}
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                className="flex-1 border-white/20 hover:bg-white/10"
+                disabled={purchasing}
+              >
+                Annulla
+              </Button>
+              <Button
+                onClick={handlePurchase}
+                disabled={purchasing || isLoading}
+                className="flex-1 bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] hover:opacity-90 text-white font-semibold"
+              >
+                {purchasing ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Acquisto...
+                  </span>
+                ) : (
+                  `Acquista ${displayPrice}`
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!isIAPReady && status !== 'initializing' && status !== 'error' && (
+          <div className="text-center p-6 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
+            <AlertCircle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-white mb-2">
+              {platform === 'ios' ? 'Apple In-App Purchase' : 'Google Play Billing'}
+            </h3>
+            <p className="text-white/70 text-sm mb-4">
+              Configurazione dello store in corso...
+            </p>
+            <Button
+              onClick={() => initIAP()}
+              variant="outline"
+              className="mt-2"
+            >
+              Connetti allo store
+            </Button>
+          </div>
+        )}
         
-        <Button
-          onClick={onCancel}
-          className="w-full border-white/20 hover:bg-white/10"
-          variant="outline"
-        >
-          Chiudi
-        </Button>
+        <div className="text-xs text-white/50 text-center pt-2 border-t border-white/10">
+          🔒 Pagamento sicuro tramite {platform === 'ios' ? 'Apple' : 'Google'}
+        </div>
       </CardContent>
     </Card>
   );
@@ -412,12 +535,14 @@ export const M1UPaymentModal: React.FC<M1UPaymentModalProps> = ({
         }
       }}
     >
-      {/* 🏪 STORE COMPLIANT: Show native placeholder or Stripe checkout */}
+      {/* 🏪 STORE COMPLIANT: Show native IAP or Stripe checkout */}
       {isNative || !stripeAvailable ? (
-        <NativeIAPPlaceholder
+        <NativeIAPCheckout
           packName={packName}
+          packCode={packCode}
           m1uAmount={m1uAmount}
           priceEur={priceEur}
+          onSuccess={onSuccess}
           onCancel={onCancel}
         />
       ) : (

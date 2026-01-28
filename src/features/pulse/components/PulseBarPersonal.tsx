@@ -1,6 +1,10 @@
 /**
  * THE PULSE™ — Personal Energy Bar (PER UTENTE)
  * Design migliorato con info complete: Rank, Livello, PE, Badge prossimo livello
+ * 
+ * 🏪 STORE COMPLIANCE (28/01/2026):
+ * - PulseBreaker conditionally loaded (hidden on native)
+ * 
  * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
@@ -9,6 +13,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { PULSE_ENABLED } from '@/config/featureFlags';
 import { PulseBreaker } from '@/features/pulse-breaker';
+import { isPulseBreakerEnabled } from '@/utils/storeCompliance';
 import { ChevronUp } from 'lucide-react';
 
 interface PulseBarPersonalProps {
@@ -261,11 +266,13 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
         </motion.div>
       )}
 
-      {/* Game Modal */}
-      <PulseBreaker 
-        isOpen={isGameOpen} 
-        onClose={() => setIsGameOpen(false)} 
-      />
+      {/* 🏪 STORE COMPLIANCE: Game Modal (hidden on native) */}
+      {isPulseBreakerEnabled() && (
+        <PulseBreaker 
+          isOpen={isGameOpen} 
+          onClose={() => setIsGameOpen(false)} 
+        />
+      )}
     </motion.div>
   );
 };

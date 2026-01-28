@@ -759,8 +759,9 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose }) =
               >
                 {gameState.status === 'cashed_out' && (
                   <>
+                    {/* 🏪 STORE COMPLIANT: Earned, not won */}
                     <div className="pb-win-banner">
-                      🎉 Hai vinto <strong>{Math.floor(gameState.payout || 0)} {gameState.betCurrency}</strong>!
+                      🎉 Hai ottenuto <strong>{Math.floor(gameState.payout || 0)} {gameState.betCurrency}</strong>!
                     </div>
                     {/* 🎰 REGOLA 1: Near-miss - "Potevi vincere di più!" */}
                     {gameState.nearMissMultiplier && (

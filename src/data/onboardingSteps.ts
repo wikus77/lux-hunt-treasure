@@ -115,8 +115,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: 'battle',
     page: '/home',
     targetSelector: '[data-onboarding="battle"]',
+    // 🏪 STORE COMPLIANT: Earn, not win
     title: '⚔️ BATTLE',
-    description: 'Sfida altri agenti e vinci M1U!',
+    description: 'Sfida altri agenti e ottieni M1U!',
     icon: '⚔️',
     action: 'click',
     position: 'top',

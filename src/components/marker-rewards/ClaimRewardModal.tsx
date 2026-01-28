@@ -217,9 +217,10 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
                 BUZZ Gratuito Sbloccato!
               </p>
             )}
+            {/* 🏪 STORE COMPLIANT: Unlocked, not won */}
             {claimedRewardType === 'physical_prize' && (
               <p className="text-2xl font-bold text-[#FF1493]">
-                HAI VINTO UN PREMIO!
+                PREMIO SBLOCCATO!
               </p>
             )}
             {claimedRewardType === 'clue' && (

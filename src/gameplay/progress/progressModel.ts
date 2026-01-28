@@ -161,8 +161,9 @@ const ROTATING_SUGGESTIONS: NextAction[] = [
   },
   {
     type: 'do_battle',
+    // 🏪 STORE COMPLIANT: Earn, not win
     label: 'BATTLE ARENA',
-    description: 'Sfida il bot e vinci M1U con i tuoi riflessi!',
+    description: 'Sfida il bot e ottieni M1U con i tuoi riflessi!',
     path: '/battle',
     priority: 70,
   },

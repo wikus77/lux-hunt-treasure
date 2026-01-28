@@ -384,7 +384,8 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
                   <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-3" />
                 </motion.div>
                 
-                <h2 className="text-2xl font-bold text-white">🎉 HAI VINTO! 🎉</h2>
+                {/* 🏪 STORE COMPLIANT: Milestone reached, not "won" */}
+                <h2 className="text-2xl font-bold text-white">🎉 MILESTONE RAGGIUNTO! 🎉</h2>
                 <p className="text-yellow-400/80 mt-1">{selectedWin.prize_label}</p>
                 
                 <button

@@ -1,7 +1,12 @@
 /**
  * PULSE BREAKER INFO POPUP
  * Appare dopo 2 minuti di navigazione per spiegare il Pulse Breaker
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * 
+ * 🏪 STORE COMPLIANCE (28/01/2026):
+ * - Hidden on native platforms (gambling-like mechanic)
+ * - Returns null when isPulseBreakerEnabled() === false
+ * 
+ * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -14,12 +19,18 @@ import { Gamepad2, X, Zap, TrendingUp, Coins } from 'lucide-react';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { usePulseBreakerStore } from '@/stores/pulseBreakerStore';
 import { useEntityOverlayStore } from '@/stores/entityOverlayStore';
+import { isPulseBreakerEnabled } from '@/utils/storeCompliance';
 
 const STORAGE_KEY = 'm1ssion_pulse_breaker_popup_dismissed';
 const POPUP_DELAY_MS = 2 * 60 * 1000; // 2 minuti
 const POPUP_ID = 'pulse-breaker';
 
 export const PulseBreakerInfoPopup: React.FC = () => {
+  // 🏪 STORE COMPLIANCE: Hide on native platforms
+  if (!isPulseBreakerEnabled()) {
+    return null;
+  }
+
   const [isVisible, setIsVisible] = useState(false);
   const [location] = useLocation();
   const { isAuthenticated } = useUnifiedAuth();

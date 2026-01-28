@@ -69,8 +69,9 @@ const TermsBanner: React.FC = () => {
       setShowBanner(false);
       
       toast({
+        // 🏪 STORE COMPLIANT: Welcome message without "luck"
         title: "📜 Termini accettati",
-        description: "Benvenuto in M1SSION™! Buona fortuna, agente!"
+        description: "Benvenuto in M1SSION™! Inizia la tua avventura, agente!"
       });
     } catch (error) {
       console.error('Error accepting terms:', error);
