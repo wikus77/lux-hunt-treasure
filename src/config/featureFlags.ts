@@ -44,6 +44,12 @@ export const STRIPE_ENABLED = true;
 // M1U system enabled
 export const M1U_ENABLED = true;
 
+// ====== SUBSCRIPTIONS STEALTH MODE ======
+// When true: Hide ALL subscription UI/entrypoints, users play as FREE
+// M1U purchases remain active (shop/credits)
+// Set to false to restore subscription plans visibility
+export const SUBSCRIPTIONS_STEALTH = true;
+
 // ====== GAME FEATURES ======
 // Battle system
 export const BATTLE_ENABLED = true;

@@ -19,6 +19,7 @@ import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { getPriceCents, getDisplayPrice } from '@/lib/constants/pricingConfig';
 import { getStripeSafe } from '@/lib/stripeFallback';
+import { SUBSCRIPTIONS_STEALTH } from '@/config/featureFlags';
 
 const stripePromise = getStripeSafe();
 
@@ -524,7 +525,8 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
                   </div>
                 )}
 
-                {/* Subscription Tier with Upgrade */}
+                {/* Subscription Tier with Upgrade - HIDDEN when SUBSCRIPTIONS_STEALTH is true */}
+                {!SUBSCRIPTIONS_STEALTH && (
                 <div className="p-3 rounded-xl bg-[#1a1a1a] border border-white/10 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
@@ -632,6 +634,7 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
                     )}
                   </AnimatePresence>
                 </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="space-y-2">

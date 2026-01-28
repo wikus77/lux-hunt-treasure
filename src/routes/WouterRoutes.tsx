@@ -135,6 +135,7 @@ const DevPushTest = React.lazy(() => import("@/pages/dev/PushTest"));
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Import centralizzato
 import { getActiveSubscription } from '@/lib/subscriptions';
+import { SUBSCRIPTIONS_STEALTH } from '@/config/featureFlags';
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading, getCurrentUser } = useUnifiedAuth();
@@ -184,7 +185,8 @@ const WouterRoutes: React.FC = () => {
         const isAdmin = ['admin','owner'].some(r => profile?.role?.toLowerCase?.().includes(r));
         
         // SOFT Guard: Suggest /choose-plan ONLY if needed, but don't force
-        if (!isAdmin && !subResult.hasActive && !profile?.choose_plan_seen && location === '/') {
+        // 🔧 STEALTH MODE: Skip redirect when subscriptions are hidden
+        if (!SUBSCRIPTIONS_STEALTH && !isAdmin && !subResult.hasActive && !profile?.choose_plan_seen && location === '/') {
           setLocation('/choose-plan');
           return;
         }
@@ -625,34 +627,55 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          {/* 🔧 SUBSCRIPTIONS STEALTH: Routes hidden when flag is true */}
           <Route path="/subscriptions">
             <ProtectedRoute>
-              <GlobalLayout><Subscriptions /></GlobalLayout>
+              {SUBSCRIPTIONS_STEALTH ? (
+                <Redirect to="/home" />
+              ) : (
+                <GlobalLayout><Subscriptions /></GlobalLayout>
+              )}
             </ProtectedRoute>
           </Route>
 
-          {/* Subscription plan pages */}
+          {/* Subscription plan pages - hidden in stealth mode */}
           <Route path="/subscriptions/silver">
             <ProtectedRoute>
-              <GlobalLayout><SilverPlanPage /></GlobalLayout>
+              {SUBSCRIPTIONS_STEALTH ? (
+                <Redirect to="/home" />
+              ) : (
+                <GlobalLayout><SilverPlanPage /></GlobalLayout>
+              )}
             </ProtectedRoute>
           </Route>
 
           <Route path="/subscriptions/gold">
             <ProtectedRoute>
-              <GlobalLayout><GoldPlanPage /></GlobalLayout>
+              {SUBSCRIPTIONS_STEALTH ? (
+                <Redirect to="/home" />
+              ) : (
+                <GlobalLayout><GoldPlanPage /></GlobalLayout>
+              )}
             </ProtectedRoute>
           </Route>
 
           <Route path="/subscriptions/black">
             <ProtectedRoute>
-              <GlobalLayout><BlackPlanPage /></GlobalLayout>
+              {SUBSCRIPTIONS_STEALTH ? (
+                <Redirect to="/home" />
+              ) : (
+                <GlobalLayout><BlackPlanPage /></GlobalLayout>
+              )}
             </ProtectedRoute>
           </Route>
 
           <Route path="/subscriptions/titanium">
             <ProtectedRoute>
-              <GlobalLayout><TitaniumPlanPage /></GlobalLayout>
+              {SUBSCRIPTIONS_STEALTH ? (
+                <Redirect to="/home" />
+              ) : (
+                <GlobalLayout><TitaniumPlanPage /></GlobalLayout>
+              )}
             </ProtectedRoute>
           </Route>
 
@@ -1068,8 +1091,11 @@ const WouterRoutes: React.FC = () => {
           )}
 
           {/* Plan selection route - accessible even without plan selected */}
+          {/* 🔧 SUBSCRIPTIONS STEALTH: Redirect to home when flag is true */}
           <Route path="/choose-plan">
-            {isLoading ? (
+            {SUBSCRIPTIONS_STEALTH ? (
+              <Redirect to="/home" />
+            ) : isLoading ? (
               <PageSkeleton variant="default" />
             ) : isAuthenticated ? (
               <GlobalLayout><ChoosePlanPage /></GlobalLayout>
