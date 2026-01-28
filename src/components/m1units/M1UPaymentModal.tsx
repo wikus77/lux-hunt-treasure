@@ -289,7 +289,10 @@ const CheckoutForm: React.FC<{
 };
 
 // 🏪 STORE COMPLIANT: Native IAP Checkout Component
+// 🔧 FIX 28/01/2026: Added timeout, product validation, better error states
 import { useIAP, M1U_PRODUCTS, getProductByCode } from '@/iap';
+
+const IAP_INIT_TIMEOUT_MS = 15000; // 15 seconds max for init
 
 const NativeIAPCheckout: React.FC<{
   packName: string;
@@ -311,49 +314,106 @@ const NativeIAPCheckout: React.FC<{
   } = useIAP();
   const [purchasing, setPurchasing] = useState(false);
   const [initAttempted, setInitAttempted] = useState(false);
+  const [initTimedOut, setInitTimedOut] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  // Initialize IAP on mount
+  // 🔧 FIX: Check product mapping exists IMMEDIATELY
+  const mappedProduct = getProductByCode(packCode);
+  const productMappingError = !mappedProduct 
+    ? `Prodotto non trovato: ${packCode}. Configura i prodotti IAP.`
+    : null;
+
+  // Get store-specific product ID for display
+  const expectedStoreId = mappedProduct 
+    ? (platform === 'ios' ? mappedProduct.appleProductId : mappedProduct.googleProductId)
+    : null;
+
+  // 🔧 FIX: Log for debugging (native only)
   useEffect(() => {
-    if (!initAttempted && isNativeIAPAvailable()) {
-      setInitAttempted(true);
-      initIAP().catch(console.error);
-    }
-  }, [initAttempted, initIAP, isNativeIAPAvailable]);
+    console.log('[Native IAP] 🛒 Checkout opened:', {
+      packCode,
+      packName,
+      platform,
+      mappedProduct: !!mappedProduct,
+      expectedStoreId,
+      isNativeIAPAvailable: isNativeIAPAvailable(),
+    });
+  }, [packCode, packName, platform, mappedProduct, expectedStoreId, isNativeIAPAvailable]);
+
+  // Initialize IAP on mount with timeout guard
+  useEffect(() => {
+    if (initAttempted || !isNativeIAPAvailable() || productMappingError) return;
+    
+    setInitAttempted(true);
+    setLocalError(null);
+    
+    // Start timeout
+    const timeoutId = setTimeout(() => {
+      if (status === 'initializing' || status === 'idle') {
+        console.error('[Native IAP] ⏰ Init timeout after', IAP_INIT_TIMEOUT_MS, 'ms');
+        setInitTimedOut(true);
+        setLocalError('Connessione allo store scaduta. Riprova.');
+      }
+    }, IAP_INIT_TIMEOUT_MS);
+    
+    initIAP()
+      .then(success => {
+        clearTimeout(timeoutId);
+        if (!success) {
+          setLocalError('Impossibile connettersi allo store.');
+        }
+      })
+      .catch(err => {
+        clearTimeout(timeoutId);
+        console.error('[Native IAP] Init error:', err);
+        setLocalError('Errore di connessione allo store.');
+      });
+    
+    return () => clearTimeout(timeoutId);
+  }, [initAttempted, initIAP, isNativeIAPAvailable, productMappingError, status]);
 
   // Find the store product for display
-  const storeProduct = products.find(p => {
-    const mappedProduct = getProductByCode(packCode);
-    if (!mappedProduct) return false;
-    const storeId = platform === 'ios' 
-      ? mappedProduct.appleProductId 
-      : mappedProduct.googleProductId;
-    return p.productId === storeId;
-  });
+  const storeProduct = products.find(p => p.productId === expectedStoreId);
 
   const displayPrice = storeProduct?.localizedPrice || `€${priceEur.toFixed(2)}`;
 
   const handlePurchase = async () => {
-    if (!isIAPReady || purchasing) return;
+    if (!isIAPReady || purchasing || productMappingError) return;
 
     setPurchasing(true);
+    setLocalError(null);
+    
+    console.log('[Native IAP] 💳 Starting purchase:', { packCode, expectedStoreId });
+    
     try {
       const result = await purchase(packCode);
       
       if (result.success) {
+        console.log('[Native IAP] ✅ Purchase successful:', result);
         toast.success(`✅ ${m1uAmount} M1U aggiunti al tuo account!`);
         onSuccess();
       } else {
+        console.error('[Native IAP] ❌ Purchase failed:', result.error);
+        setLocalError(result.error || 'Acquisto non completato');
         toast.error(result.error || 'Acquisto non completato');
       }
     } catch (err) {
-      console.error('[Native IAP] Purchase error:', err);
+      console.error('[Native IAP] ❌ Purchase error:', err);
+      setLocalError('Errore durante l\'acquisto. Riprova.');
       toast.error('Errore durante l\'acquisto');
     } finally {
       setPurchasing(false);
     }
   };
 
+  const handleRetry = () => {
+    setInitAttempted(false);
+    setInitTimedOut(false);
+    setLocalError(null);
+  };
+
   const isLoading = status === 'initializing' || status === 'purchasing' || status === 'validating';
+  const hasError = !!(error || localError || productMappingError || initTimedOut);
 
   return (
     <Card className="w-full max-w-md mx-auto bg-black/95 border-[#00D1FF]/30 backdrop-blur-xl">
@@ -384,30 +444,58 @@ const NativeIAPCheckout: React.FC<{
       </CardHeader>
       
       <CardContent className="space-y-4 pt-6">
-        {/* Status messages */}
-        {status === 'initializing' && (
+        {/* 🔧 FIX: Product mapping error (critical) */}
+        {productMappingError && (
+          <div className="text-center p-4 bg-red-500/10 rounded-lg border border-red-500/30">
+            <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+            <p className="text-red-400 text-sm font-medium mb-2">Configurazione Richiesta</p>
+            <p className="text-white/60 text-xs mb-3">{productMappingError}</p>
+            <p className="text-white/40 text-xs">ID atteso: {expectedStoreId || 'N/A'}</p>
+            <Button
+              onClick={onCancel}
+              variant="outline"
+              size="sm"
+              className="mt-3"
+            >
+              Chiudi
+            </Button>
+          </div>
+        )}
+
+        {/* Loading state */}
+        {!productMappingError && status === 'initializing' && !initTimedOut && (
           <div className="text-center p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
             <div className="w-6 h-6 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin mx-auto mb-2" />
             <p className="text-white/70 text-sm">Connessione allo store...</p>
           </div>
         )}
 
-        {status === 'error' && (
+        {/* Error state (including timeout) */}
+        {!productMappingError && hasError && (status === 'error' || initTimedOut || localError) && (
           <div className="text-center p-4 bg-red-500/10 rounded-lg border border-red-500/30">
             <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-            <p className="text-red-400 text-sm">{error || 'Errore di connessione'}</p>
-            <Button
-              onClick={() => initIAP()}
-              variant="outline"
-              size="sm"
-              className="mt-2"
-            >
-              Riprova
-            </Button>
+            <p className="text-red-400 text-sm">{localError || error || 'Errore di connessione'}</p>
+            <div className="flex gap-2 justify-center mt-3">
+              <Button
+                onClick={handleRetry}
+                variant="outline"
+                size="sm"
+              >
+                Riprova
+              </Button>
+              <Button
+                onClick={onCancel}
+                variant="ghost"
+                size="sm"
+              >
+                Chiudi
+              </Button>
+            </div>
           </div>
         )}
 
-        {isIAPReady && (
+        {/* Ready to purchase */}
+        {!productMappingError && isIAPReady && !hasError && (
           <div className="space-y-4">
             <div className="text-center p-4 bg-green-500/10 rounded-lg border border-green-500/30">
               <p className="text-white/70 text-sm">
@@ -416,6 +504,11 @@ const NativeIAPCheckout: React.FC<{
               <p className="text-white/50 text-xs mt-1">
                 Pagamento sicuro tramite {platform === 'ios' ? 'App Store' : 'Play Store'}
               </p>
+              {!storeProduct && (
+                <p className="text-yellow-400/70 text-xs mt-2">
+                  ⚠️ Prodotto non ancora disponibile nello store
+                </p>
+              )}
             </div>
 
             <div className="flex gap-3">
@@ -430,7 +523,7 @@ const NativeIAPCheckout: React.FC<{
               </Button>
               <Button
                 onClick={handlePurchase}
-                disabled={purchasing || isLoading}
+                disabled={purchasing || isLoading || !storeProduct}
                 className="flex-1 bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] hover:opacity-90 text-white font-semibold"
               >
                 {purchasing ? (
@@ -446,22 +539,33 @@ const NativeIAPCheckout: React.FC<{
           </div>
         )}
 
-        {!isIAPReady && status !== 'initializing' && status !== 'error' && (
+        {/* Idle state - waiting for init (no error, not loading, not ready) */}
+        {!productMappingError && !isIAPReady && !hasError && status !== 'initializing' && (
           <div className="text-center p-6 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
-            <AlertCircle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-white mb-2">
+            <AlertCircle className="w-10 h-10 text-yellow-400 mx-auto mb-3" />
+            <h3 className="text-md font-bold text-white mb-2">
               {platform === 'ios' ? 'Apple In-App Purchase' : 'Google Play Billing'}
             </h3>
             <p className="text-white/70 text-sm mb-4">
-              Configurazione dello store in corso...
+              Premi "Connetti" per avviare il pagamento
             </p>
-            <Button
-              onClick={() => initIAP()}
-              variant="outline"
-              className="mt-2"
-            >
-              Connetti allo store
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button
+                onClick={handleRetry}
+                variant="default"
+                size="sm"
+                className="bg-gradient-to-r from-[#00D1FF] to-[#7C3AED]"
+              >
+                Connetti allo store
+              </Button>
+              <Button
+                onClick={onCancel}
+                variant="ghost"
+                size="sm"
+              >
+                Annulla
+              </Button>
+            </div>
           </div>
         )}
         

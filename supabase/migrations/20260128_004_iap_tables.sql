@@ -178,18 +178,22 @@ DECLARE
   v_new_balance INT;
 BEGIN
   -- 1. Determine product type and amounts
+  -- 🏪 OPTION 2: Codes aligned with UI shop (6 packs)
   CASE p_product_code
-    WHEN 'M1U_PACK_100' THEN v_product_type := 'consumable'; v_m1u_amount := 100;
-    WHEN 'M1U_PACK_500' THEN v_product_type := 'consumable'; v_m1u_amount := 500;
-    WHEN 'M1U_PACK_1000' THEN v_product_type := 'consumable'; v_m1u_amount := 1000;
-    WHEN 'M1U_PACK_2500' THEN v_product_type := 'consumable'; v_m1u_amount := 2500;
-    WHEN 'M1U_PACK_5000' THEN v_product_type := 'consumable'; v_m1u_amount := 5000;
+    -- M1U Packs (aligned with UI)
+    WHEN 'M1U_STARTER' THEN v_product_type := 'consumable'; v_m1u_amount := 50;
+    WHEN 'M1U_AGENT' THEN v_product_type := 'consumable'; v_m1u_amount := 110;
+    WHEN 'M1U_ELITE' THEN v_product_type := 'consumable'; v_m1u_amount := 250;
+    WHEN 'M1U_COMMANDER' THEN v_product_type := 'consumable'; v_m1u_amount := 550;
+    WHEN 'M1U_DIRECTOR' THEN v_product_type := 'consumable'; v_m1u_amount := 1200;
+    WHEN 'M1U_MASTER' THEN v_product_type := 'consumable'; v_m1u_amount := 3000;
+    -- Subscriptions
     WHEN 'SUB_SILVER' THEN v_product_type := 'subscription'; v_subscription_tier := 'silver';
     WHEN 'SUB_GOLD' THEN v_product_type := 'subscription'; v_subscription_tier := 'gold';
     WHEN 'SUB_BLACK' THEN v_product_type := 'subscription'; v_subscription_tier := 'black';
     WHEN 'SUB_TITANIUM' THEN v_product_type := 'subscription'; v_subscription_tier := 'titanium';
     ELSE
-      RETURN jsonb_build_object('success', false, 'error', 'Unknown product code');
+      RETURN jsonb_build_object('success', false, 'error', 'Unknown product code: ' || p_product_code);
   END CASE;
 
   -- 2. Check for duplicate transaction

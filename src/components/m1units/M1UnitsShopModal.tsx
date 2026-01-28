@@ -96,7 +96,7 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const handlePurchase = (pack: M1UPack) => {
-    console.log('[M1U SHOP] Opening payment modal for:', {
+    console.log('[M1U SHOP] 🛒 Purchase initiated:', {
       packCode: pack.code,
       packName: pack.name,
       priceEUR: pack.euro,
@@ -108,6 +108,11 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
       (window as any).plausible('checkout_start', { props: { pack: pack.id } });
     }
 
+    // 🔧 FIX FREEZE BUG: 
+    // 1. Set selected pack
+    // 2. Open payment modal (renders at z-10000, above shop)
+    // 3. Shop modal stays open but buttons are disabled
+    // 4. Payment modal handles success/cancel and cleans up
     setSelectedPack(pack);
     setShowPaymentModal(true);
   };
