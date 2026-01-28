@@ -19,12 +19,16 @@ import {
   Play,
   X,
   Check,
-  Gift
+  Gift,
+  AlertTriangle
 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { createPortal } from 'react-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { GLASS_PRESETS, M1SSION_COLORS } from './glassPresets';
+import { useMissionStatus } from '@/hooks/useMissionStatus';
+import { useBuzzCounter } from '@/hooks/useBuzzCounter';
+import { track } from '@/lib/analytics';
 import { 
   MISSIONS_ENABLED, 
   getMissionOfTheDay,
@@ -51,6 +55,10 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
   const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
   
+  // 🔧 FIX 28/01/2026: Dynamic priority data sources
+  const { missionStatus } = useMissionStatus();
+  const { dailyBuzzCounter } = useBuzzCounter(user?.id);
+  
   // Daily Mission state
   const [showMissionModal, setShowMissionModal] = useState(false);
   const [missionPhase, setMissionPhase] = useState(0);
@@ -66,6 +74,11 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
 
   // Use SUCCESS (green) preset
   const preset = GLASS_PRESETS.success;
+  
+  // 🎯 STEP 1: Dynamic priority calculation
+  const daysRemaining = missionStatus?.daysRemaining ?? null;
+  const isUrgent = daysRemaining !== null && daysRemaining <= 3;
+  const buzzUsedToday = dailyBuzzCounter > 0;
 
   // Mission state refresh
   const refreshMissionState = useCallback(() => {
@@ -126,42 +139,108 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
   const isPhase2Pending = missionPhase === 2 && !isPhase2Ready;
   const isMissionCompleted = missionPhase === 3;
 
-  // Primary actions with priority
-  const primaryActions = [
-    {
-      id: 'map',
-      priority: 'high',
-      label: 'Esplora / Riduci area',
-      description: 'Avvicinati al premio',
-      icon: <Map className="w-5 h-5" />,
-      path: '/map-3d-tiler',
-      color: '#FF4444',
-      bgColor: 'rgba(255, 68, 68, 0.15)',
-      borderColor: 'rgba(255, 68, 68, 0.4)',
-    },
-    {
-      id: 'buzz',
-      priority: 'medium',
-      label: 'Usa Buzz',
-      description: 'Ottieni nuovi indizi',
-      icon: <Zap className="w-5 h-5" />,
-      path: '/buzz',
-      color: '#FFD700',
-      bgColor: 'rgba(255, 215, 0, 0.12)',
-      borderColor: 'rgba(255, 215, 0, 0.35)',
-    },
-    {
-      id: 'aion',
-      priority: 'low',
-      label: 'Chiedi all\'Oracolo',
-      description: 'Analizza la situazione',
-      icon: <Brain className="w-5 h-5" />,
-      path: '/intelligence',
-      color: '#00D1FF',
-      bgColor: 'rgba(0, 209, 255, 0.1)',
-      borderColor: 'rgba(0, 209, 255, 0.3)',
-    },
-  ];
+  // 🎯 STEP 1: Dynamic priority calculation with useMemo
+  // Rules:
+  // - If mission urgent (<=3 days): Explore gets "urgent" emphasis
+  // - If buzzUsedToday: Buzz is demoted below Oracle
+  // - Default ordering: Explore > Buzz > Oracle > Daily
+  const orderedActions = useMemo(() => {
+    const baseActions = [
+      {
+        id: 'map',
+        priority: isUrgent ? 100 : 90, // Highest priority, boosted if urgent
+        label: 'Esplora / Riduci area',
+        description: isUrgent ? '⚠️ Tempo quasi scaduto!' : 'Avvicinati al premio',
+        icon: <Map className="w-5 h-5" />,
+        path: '/map-3d-tiler',
+        color: isUrgent ? '#FF4444' : '#FF4444',
+        bgColor: isUrgent ? 'rgba(255, 68, 68, 0.25)' : 'rgba(255, 68, 68, 0.15)',
+        borderColor: isUrgent ? 'rgba(255, 68, 68, 0.6)' : 'rgba(255, 68, 68, 0.4)',
+        isUrgent,
+      },
+      {
+        id: 'buzz',
+        priority: buzzUsedToday ? 60 : 80, // Demote if already used today
+        label: 'Usa Buzz',
+        description: buzzUsedToday ? `Già usato oggi (${dailyBuzzCounter}x)` : 'Ottieni nuovi indizi',
+        icon: <Zap className="w-5 h-5" />,
+        path: '/buzz',
+        color: '#FFD700',
+        bgColor: buzzUsedToday ? 'rgba(255, 215, 0, 0.08)' : 'rgba(255, 215, 0, 0.12)',
+        borderColor: buzzUsedToday ? 'rgba(255, 215, 0, 0.25)' : 'rgba(255, 215, 0, 0.35)',
+        isUrgent: false,
+      },
+      {
+        id: 'aion',
+        priority: 70, // Middle priority, promoted if Buzz demoted
+        label: 'Chiedi all\'Oracolo',
+        description: 'Analizza la situazione',
+        icon: <Brain className="w-5 h-5" />,
+        path: '/intelligence',
+        color: '#00D1FF',
+        bgColor: 'rgba(0, 209, 255, 0.1)',
+        borderColor: 'rgba(0, 209, 255, 0.3)',
+        isUrgent: false,
+      },
+    ];
+    
+    // Sort by priority (highest first)
+    return baseActions.sort((a, b) => b.priority - a.priority);
+  }, [isUrgent, buzzUsedToday, dailyBuzzCounter]);
+  
+  // Compute primary action for analytics
+  const primaryAction = orderedActions[0]?.id || 'explore';
+  
+  // 🎯 STEP 3: Analytics - track expand/collapse
+  const handleToggleExpand = useCallback(() => {
+    const newExpanded = !isExpanded;
+    setIsExpanded(newExpanded);
+    
+    // Track event
+    track(newExpanded ? 'next_action_expand' : 'next_action_collapse', {
+      screen: 'home',
+      expanded: newExpanded,
+      primary_action: primaryAction,
+      days_left: daysRemaining,
+      is_urgent: isUrgent,
+    });
+  }, [isExpanded, primaryAction, daysRemaining, isUrgent]);
+  
+  // 🎯 STEP 3: Analytics - track action clicks
+  const handleActionClick = useCallback((actionId: string, path: string) => {
+    // Map action ID to event name
+    const eventMap: Record<string, 'next_action_explore_click' | 'next_action_buzz_click' | 'next_action_oracle_click'> = {
+      'map': 'next_action_explore_click',
+      'buzz': 'next_action_buzz_click',
+      'aion': 'next_action_oracle_click',
+    };
+    
+    const eventName = eventMap[actionId];
+    if (eventName) {
+      track(eventName, {
+        screen: 'home',
+        primary_action: primaryAction,
+        days_left: daysRemaining,
+        is_urgent: isUrgent,
+        clicked_action: actionId,
+      });
+    }
+    
+    navigate(path);
+  }, [navigate, primaryAction, daysRemaining, isUrgent]);
+  
+  // 🎯 STEP 3: Analytics - track daily mission click
+  const handleDailyMissionClick = useCallback(() => {
+    track('daily_mission_click_from_next_action', {
+      screen: 'home',
+      primary_action: primaryAction,
+      days_left: daysRemaining,
+      is_urgent: isUrgent,
+      mission_phase: missionPhase,
+    });
+    
+    setShowMissionModal(true);
+  }, [primaryAction, daysRemaining, isUrgent, missionPhase]);
 
   // Get mission status text
   const getMissionStatusText = () => {
@@ -201,7 +280,7 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
 
           {/* Header - Always visible, clickable to expand */}
           <motion.button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={handleToggleExpand}
             className="w-full relative flex items-center justify-between p-4"
             whileTap={{ scale: 0.99 }}
           >
@@ -218,17 +297,24 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
               </div>
               
               <div className="text-left">
-                <p 
-                  className="text-xs font-bold uppercase tracking-wider"
-                  style={{ 
-                    color: preset.textColor,
-                    textShadow: `0 0 15px ${preset.glowColor}`,
-                  }}
-                >
-                  🎯 PROSSIMA AZIONE
-                </p>
+                <div className="flex items-center gap-2">
+                  <p 
+                    className="text-xs font-bold uppercase tracking-wider"
+                    style={{ 
+                      color: isUrgent ? '#FF4444' : preset.textColor,
+                      textShadow: `0 0 15px ${isUrgent ? 'rgba(255, 68, 68, 0.5)' : preset.glowColor}`,
+                    }}
+                  >
+                    🎯 PROSSIMA AZIONE
+                  </p>
+                  {isUrgent && (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/20 text-red-400 animate-pulse">
+                      URGENTE
+                    </span>
+                  )}
+                </div>
                 <p className="text-white/70 text-xs">
-                  {isExpanded ? 'Scegli cosa fare' : 'Tocca per espandere'}
+                  {isExpanded ? 'Scegli cosa fare' : isUrgent ? `Solo ${daysRemaining} giorni rimasti!` : 'Tocca per espandere'}
                 </p>
               </div>
             </div>
@@ -266,15 +352,17 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
                     style={{ background: `linear-gradient(90deg, transparent, ${preset.textColor}40, transparent)` }}
                   />
 
-                  {/* Primary Actions */}
-                  {primaryActions.map((action, index) => (
+                  {/* Primary Actions - Dynamically ordered */}
+                  {orderedActions.map((action, index) => (
                     <motion.button
                       key={action.id}
-                      onClick={() => navigate(action.path)}
+                      onClick={() => handleActionClick(action.id, action.path)}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl transition-all"
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
+                        action.isUrgent ? 'ring-1 ring-red-500/50' : ''
+                      }`}
                       style={{
                         background: action.bgColor,
                         border: `1px solid ${action.borderColor}`,
@@ -287,7 +375,9 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
                     >
                       {/* Priority indicator */}
                       <div 
-                        className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          action.isUrgent ? 'animate-pulse' : ''
+                        }`}
                         style={{
                           background: `linear-gradient(135deg, ${action.color}30, ${action.color}10)`,
                           border: `1px solid ${action.color}50`,
@@ -297,10 +387,15 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
                       </div>
                       
                       <div className="flex-1 text-left">
-                        <p className="text-white font-semibold text-sm">
-                          {action.label}
-                        </p>
-                        <p className="text-white/50 text-xs">
+                        <div className="flex items-center gap-2">
+                          <p className="text-white font-semibold text-sm">
+                            {action.label}
+                          </p>
+                          {action.isUrgent && index === 0 && (
+                            <AlertTriangle className="w-3 h-3 text-red-400 animate-pulse" />
+                          )}
+                        </div>
+                        <p className={`text-xs ${action.isUrgent ? 'text-red-400/80' : 'text-white/50'}`}>
                           {action.description}
                         </p>
                       </div>
@@ -332,7 +427,7 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
 
                       {/* Daily Mission Card */}
                       <motion.button
-                        onClick={() => setShowMissionModal(true)}
+                        onClick={handleDailyMissionClick}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.15 }}

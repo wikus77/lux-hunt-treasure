@@ -90,6 +90,15 @@ export type AnalyticsEventName =
   | 'route_viewed'
   | 'screen_viewed'
   // ═══════════════════════════════════════════════════════════════
+  // 🆕 NEXT ACTION (Home container) - Added 28/01/2026
+  // ═══════════════════════════════════════════════════════════════
+  | 'next_action_expand'
+  | 'next_action_collapse'
+  | 'next_action_explore_click'
+  | 'next_action_buzz_click'
+  | 'next_action_oracle_click'
+  | 'daily_mission_click_from_next_action'
+  // ═══════════════════════════════════════════════════════════════
   // 🆕 DAILY STREAK (Retention core) - Added 17/01/2026
   // ═══════════════════════════════════════════════════════════════
   | 'daily_streak_viewed'
