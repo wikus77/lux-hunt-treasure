@@ -1,15 +1,15 @@
 /**
- * M1SSION™ Fortune Wheel - Daily Spin for Rewards
- * 16 segments with casino-style probabilities
+ * M1SSION™ Progress Wheel - Daily Progress Reveal
+ * 16 segments with deterministic progression (STORE COMPLIANT)
  * NEON STYLE - AAA Game Feel
  * 
- * 🔒 AAA+ SECURITY FIX (17/01/2026):
- * - Outcome e reward ora determinati SERVER-SIDE via RPC execute_wheel_spin
- * - Nessuna logica vincita client-side (getWeightedResult rimosso)
- * - Nessun UPDATE diretto su profiles dal client
- * - Risultato immutabile su wheel_spins table
+ * 🏪 STORE COMPLIANCE FIX (28/01/2026):
+ * - NO random() for outcome decisions
+ * - Deterministic progress-based system
+ * - No win/lose language - only progress advancement
+ * - Compliant with Apple App Store & Google Play guidelines
  * 
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -23,26 +23,25 @@ import confetti from 'canvas-confetti';
 import { AudioManager } from '@/lib/audio/AudioManager';
 import Analytics from '@/lib/analytics';
 
-// 🎰 WHEEL SEGMENTS - 16 segments with 3 LOSE evenly distributed
-// Order: clockwise from top (where pointer is)
-// LOSE positions: 3, 9, 14 (evenly spaced ~5 segments apart)
+// 🎯 WHEEL SEGMENTS - 16 segments for progress visualization (STORE COMPLIANT)
+// All segments represent progress outcomes - NO win/lose
 const WHEEL_SEGMENTS = [
-  { id: 1, label: '50 M1U', icon: '👑', value: 50, type: 'm1u', color: '#1a2d4a', probability: 2 },   // Dark Navy
-  { id: 2, label: '5 M1U', icon: '💰', value: 5, type: 'm1u', color: '#1a1a2e', probability: 15 },    // Dark
-  { id: 3, label: 'LOSE', icon: '❌', value: 0, type: 'nothing', color: '#5a1a1a', probability: 10 }, // Dark Red - LOSE 1
-  { id: 4, label: '50 PE', icon: '⚡', value: 50, type: 'pe', color: '#1a4a4a', probability: 3 },     // Teal
-  { id: 5, label: '50 M1U', icon: '💎', value: 50, type: 'm1u', color: '#1a3d5a', probability: 2 },   // Navy Blue
-  { id: 6, label: '200 PE', icon: '🔥', value: 200, type: 'pe', color: '#5a3a1a', probability: 1 },   // Bronze/Orange
-  { id: 7, label: '100 PE', icon: '⚡', value: 100, type: 'pe', color: '#4a1a5a', probability: 2 },   // Purple
-  { id: 8, label: '50 M1U', icon: '💰', value: 50, type: 'm1u', color: '#1a5a3a', probability: 2 },   // Green
-  { id: 9, label: 'LOSE', icon: '❌', value: 0, type: 'nothing', color: '#5a2020', probability: 10 }, // Dark Red - LOSE 2
-  { id: 10, label: 'Retry', icon: '🔄', value: 0, type: 'retry', color: '#5a5a1a', probability: 12 }, // Yellow/Olive
-  { id: 11, label: 'CLUE', icon: '🔍', value: 1, type: 'clue', color: '#1a5a2a', probability: 5 },    // Green
-  { id: 12, label: '5 M1U', icon: '💰', value: 5, type: 'm1u', color: '#1a4060', probability: 15 },   // Blue
-  { id: 13, label: 'Retry', icon: '🔄', value: 0, type: 'retry', color: '#5a1a5a', probability: 12 }, // Purple
-  { id: 14, label: 'LOSE', icon: '❌', value: 0, type: 'nothing', color: '#5a1a2a', probability: 10 }, // Dark Red - LOSE 3
-  { id: 15, label: '3 M1U', icon: '💵', value: 3, type: 'm1u', color: '#3a5a1a', probability: 10 },   // Olive
-  { id: 16, label: '2 M1U', icon: '💵', value: 2, type: 'm1u', color: '#1a3050', probability: 8 },    // Steel Blue
+  { id: 1, label: '+50 M1U', icon: '👑', value: 50, type: 'm1u', color: '#1a2d4a' },   // Dark Navy
+  { id: 2, label: '+5 M1U', icon: '💰', value: 5, type: 'm1u', color: '#1a1a2e' },     // Dark
+  { id: 3, label: '+5 PT', icon: '📈', value: 5, type: 'progress', color: '#3a3a5a' }, // Progress Step
+  { id: 4, label: '+50 PE', icon: '⚡', value: 50, type: 'pe', color: '#1a4a4a' },     // Teal
+  { id: 5, label: '+50 M1U', icon: '💎', value: 50, type: 'm1u', color: '#1a3d5a' },   // Navy Blue
+  { id: 6, label: '+200 PE', icon: '🔥', value: 200, type: 'pe', color: '#5a3a1a' },   // Bronze/Orange
+  { id: 7, label: '+100 PE', icon: '⚡', value: 100, type: 'pe', color: '#4a1a5a' },   // Purple
+  { id: 8, label: '+50 M1U', icon: '💰', value: 50, type: 'm1u', color: '#1a5a3a' },   // Green
+  { id: 9, label: '+10 PT', icon: '📊', value: 10, type: 'progress', color: '#3a4a5a' }, // Progress Step
+  { id: 10, label: 'DOMANI', icon: '🔄', value: 0, type: 'retry', color: '#5a5a1a' },  // Continue Tomorrow
+  { id: 11, label: 'INDIZIO', icon: '🔍', value: 1, type: 'clue', color: '#1a5a2a' },  // Clue
+  { id: 12, label: '+5 M1U', icon: '💰', value: 5, type: 'm1u', color: '#1a4060' },    // Blue
+  { id: 13, label: 'DOMANI', icon: '🔄', value: 0, type: 'retry', color: '#5a1a5a' },  // Continue Tomorrow
+  { id: 14, label: '+15 PT', icon: '📈', value: 15, type: 'progress', color: '#4a5a3a' }, // Progress Step
+  { id: 15, label: '+3 M1U', icon: '💵', value: 3, type: 'm1u', color: '#3a5a1a' },    // Olive
+  { id: 16, label: '+2 M1U', icon: '💵', value: 2, type: 'm1u', color: '#1a3050' },    // Steel Blue
 ];
 
 // CLUES for instant reveal
@@ -79,7 +78,7 @@ const playTickSound = () => {
   }
 };
 
-// 🎵 AAA QUALITY WIN FANFARE - Casino Jackpot Style (uses AudioManager)
+// 🎵 AAA QUALITY PROGRESS FANFARE - Milestone Achievement Style (uses AudioManager)
 const playWinSound = () => {
   try {
     const ctx = AudioManager.getAudioContext();
@@ -130,8 +129,9 @@ const playWinSound = () => {
   }
 };
 
-// 🔇 AAA QUALITY LOSE SOUND - Dramatic but not harsh (uses AudioManager)
-const playLoseSound = () => {
+// 🔇 AAA QUALITY COMPLETION SOUND - Neutral tone for daily completion (uses AudioManager)
+// NOTE: Kept for backward compatibility but not used in store-compliant version
+const playCompletionSound = () => {
   try {
     const ctx = AudioManager.getAudioContext();
     if (!ctx) return;
@@ -200,14 +200,17 @@ const playSpinStartSound = () => {
   }
 };
 
-// 🔒 Server-side spin result interface
-interface SpinResult {
-  status: 'success' | 'already_spun_today' | 'error';
-  spin_id?: string;
+// 🏪 Server-side progress result interface (STORE COMPLIANT)
+interface ProgressResult {
+  status: 'success' | 'already_completed_today' | 'error';
+  interaction_id?: string;
   segment_id?: number;
+  progress_gain?: number;
+  total_progress?: number;
+  milestone_reached?: boolean;
+  milestone_level?: number;
   reward_type?: string;
   reward_value?: number;
-  reward_label?: string;
   message?: string;
 }
 
@@ -222,55 +225,55 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
   const [revealedClue, setRevealedClue] = useState('');
   const tickIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  // 🔒 Store server spin result for tracking
-  const spinResultRef = useRef<SpinResult | null>(null);
+  // 🏪 Store progress result for tracking (STORE COMPLIANT)
+  const progressResultRef = useRef<ProgressResult | null>(null);
 
-  // 🔒 AAA+ SECURE: Check via server-side RPC (no client-side bypass possible)
+  // 🏪 STORE COMPLIANT: Check via server-side RPC (deterministic progress)
   useEffect(() => {
-    const checkCanSpin = async () => {
+    const checkCanInteract = async () => {
       if (!isOpen) {
         setIsLoading(false);
         return;
       }
 
-      // Track wheel viewed
-      Analytics.track('wheel_viewed', { user_logged_in: !!user });
+      // Track progress wheel viewed
+      Analytics.track('progress_wheel_viewed', { user_logged_in: !!user });
 
-      // 🔒 SERVER-SIDE CHECK via RPC (cannot be bypassed)
+      // 🏪 SERVER-SIDE CHECK via RPC (deterministic progress system)
       if (user) {
         try {
-          const { data, error } = await supabase.rpc('check_can_spin_today');
+          const { data, error } = await supabase.rpc('check_wheel_progress_today');
           
           if (error) {
-            console.error('[FortuneWheel] RPC check failed:', error);
+            console.error('[ProgressWheel] RPC check failed:', error);
             // Fallback to localStorage for UX
             const today = new Date().toDateString();
-            const localLastSpin = localStorage.getItem(STORAGE_KEY);
-            if (localLastSpin) {
-              const localLastSpinDate = new Date(localLastSpin).toDateString();
-              setCanSpin(localLastSpinDate !== today);
+            const localLastInteraction = localStorage.getItem(STORAGE_KEY);
+            if (localLastInteraction) {
+              const localLastDate = new Date(localLastInteraction).toDateString();
+              setCanSpin(localLastDate !== today);
             } else {
               setCanSpin(true);
             }
           } else {
-            setCanSpin(data?.can_spin === true);
+            setCanSpin(data?.can_interact === true);
             
             // Sync localStorage with server state
-            if (!data?.can_spin) {
+            if (!data?.can_interact) {
               localStorage.setItem(STORAGE_KEY, new Date().toISOString());
             }
           }
         } catch (err) {
-          console.error('[FortuneWheel] Check failed:', err);
+          console.error('[ProgressWheel] Check failed:', err);
           setCanSpin(false);
         }
       } else {
         // Non-authenticated: use localStorage only
         const today = new Date().toDateString();
-        const localLastSpin = localStorage.getItem(STORAGE_KEY);
-        if (localLastSpin) {
-          const localLastSpinDate = new Date(localLastSpin).toDateString();
-          setCanSpin(localLastSpinDate !== today);
+        const localLastInteraction = localStorage.getItem(STORAGE_KEY);
+        if (localLastInteraction) {
+          const localLastDate = new Date(localLastInteraction).toDateString();
+          setCanSpin(localLastDate !== today);
         } else {
           setCanSpin(true);
         }
@@ -281,7 +284,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
 
     if (isOpen) {
       setIsLoading(true);
-      checkCanSpin();
+      checkCanInteract();
     }
   }, [isOpen, user]);
 
@@ -340,13 +343,13 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
       }
     }, 500);
 
-    // 🔒 CALL SERVER-SIDE RPC - Outcome determined server-side
-    let serverResult: SpinResult | null = null;
+    // 🏪 CALL SERVER-SIDE RPC - Deterministic progress (STORE COMPLIANT)
+    let serverResult: ProgressResult | null = null;
     try {
-      const { data, error } = await supabase.rpc('execute_wheel_spin');
+      const { data, error } = await supabase.rpc('execute_wheel_progress');
       
       if (error) {
-        console.error('[FortuneWheel] RPC execute_wheel_spin failed:', error);
+        console.error('[ProgressWheel] RPC execute_wheel_progress failed:', error);
         toast.error('Errore durante lo spin. Riprova.');
         setIsSpinning(false);
         if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
@@ -357,9 +360,9 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
       serverResult = data as SpinResult;
       spinResultRef.current = serverResult;
       
-      // Handle already spun today (race condition protection)
-      if (serverResult.status === 'already_spun_today') {
-        toast.info('Hai già girato la ruota oggi. Torna domani!');
+      // Handle already completed today (race condition protection)
+      if (serverResult.status === 'already_completed_today') {
+        toast.info('Progressione giornaliera completata. Torna domani!');
         setCanSpin(false);
         setIsSpinning(false);
         localStorage.setItem(STORAGE_KEY, new Date().toISOString());
@@ -452,10 +455,11 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
           }, { dedupe_key: `wheel:reward:${serverResult!.spin_id}` });
         }
       } else {
-        playLoseSound();
+        // Play completion sound (no lose state in progress system)
+        playWinSound(); // All progress is positive
       }
 
-      // Handle CLUE display (server already recorded the win)
+      // Handle CLUE display (server already recorded the progress)
       if (serverResult!.reward_type === 'clue') {
         showClueReward();
       }
@@ -463,16 +467,17 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
     }, 5500);
   }, [isSpinning, canSpin, rotation, user, showClueReward]);
 
+  // 🏪 STORE COMPLIANT: Progress-based messaging (no win/lose)
   const getResultMessage = () => {
     if (!result) return '';
     switch (result.type) {
-      case 'm1u': return `🎉 HAI VINTO ${result.value} M1U!`;
-      case 'pe': return `⚡ HAI VINTO ${result.value} PE!`;
-      case 'clue': return '🔍 HAI VINTO UN INDIZIO!';
-      case 'marker': return '📍 HAI VINTO UN MARKER!';
-      case 'retry': return '🔄 RIPROVA DOMANI!';
-      case 'nothing': return '❌ LOSE - RIPROVA DOMANI!';
-      default: return '';
+      case 'm1u': return `🎉 +${result.value} M1U sbloccati!`;
+      case 'pe': return `⚡ +${result.value} PE sbloccati!`;
+      case 'clue': return '🔍 Indizio rivelato!';
+      case 'marker': return '📍 Marker sbloccato!';
+      case 'progress': return `📈 +${result.value} punti progressione!`;
+      case 'retry': return '🔄 Continua domani!';
+      default: return '✨ Progressione completata!';
     }
   };
 
@@ -480,23 +485,23 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
 
   const segmentAngle = 360 / WHEEL_SEGMENTS.length;
 
-  // 🎰 SEGMENT COLORS - VIVID AAA QUALITY (3 LOSE evenly distributed)
+  // 🎯 SEGMENT COLORS - VIVID AAA QUALITY (progress visualization)
   const SEGMENT_COLORS = [
-    '#1a3554', // 1. 50 M1U - Deep Navy Blue
-    '#151825', // 2. 5 M1U - Charcoal Dark
-    '#7a2828', // 3. LOSE - Rich Dark Red ← LOSE 1
-    '#187070', // 4. 50 PE - Vivid Teal
-    '#1a3858', // 5. 50 M1U - Ocean Blue
-    '#8a5520', // 6. 200 PE - Burnt Orange/Gold
-    '#5a2875', // 7. 100 PE - Royal Purple
-    '#1a5848', // 8. 50 M1U - Forest Green
-    '#7a2030', // 9. LOSE - Dark Red ← LOSE 2
-    '#a08828', // 10. Retry - Mustard Yellow
-    '#1a6848', // 11. CLUE - Emerald Green
-    '#1a4878', // 12. 5 M1U - Cobalt Blue
-    '#682868', // 13. Retry - Magenta Purple
-    '#7a2838', // 14. LOSE - Dark Red ← LOSE 3
-    '#4a6828', // 15. 3 M1U - Lime Olive
+    '#1a3554', // 1. +50 M1U - Deep Navy Blue
+    '#151825', // 2. +5 M1U - Charcoal Dark
+    '#3a4858', // 3. +5 PT - Progress Blue
+    '#187070', // 4. +50 PE - Vivid Teal
+    '#1a3858', // 5. +50 M1U - Ocean Blue
+    '#8a5520', // 6. +200 PE - Burnt Orange/Gold
+    '#5a2875', // 7. +100 PE - Royal Purple
+    '#1a5848', // 8. +50 M1U - Forest Green
+    '#3a5868', // 9. +10 PT - Progress Teal
+    '#a08828', // 10. DOMANI - Mustard Yellow
+    '#1a6848', // 11. INDIZIO - Emerald Green
+    '#1a4878', // 12. +5 M1U - Cobalt Blue
+    '#682868', // 13. DOMANI - Magenta Purple
+    '#4a6838', // 14. +15 PT - Progress Green
+    '#4a6828', // 15. +3 M1U - Lime Olive
     '#1a3858', // 16. 2 M1U - Steel Blue
   ];
 

@@ -71,7 +71,8 @@ export const FortuneWheelPill: React.FC = () => {
           <Gift className="w-5 h-5 text-yellow-400" />
         </motion.div>
         
-        <span className="text-sm font-bold text-yellow-400">GIRA & VINCI</span>
+        {/* 🏪 STORE COMPLIANT: Progress-based CTA */}
+        <span className="text-sm font-bold text-yellow-400">PROGRESSIONE</span>
         
         {/* Pulse indicator */}
         <motion.div
@@ -81,8 +82,8 @@ export const FortuneWheelPill: React.FC = () => {
         />
       </motion.button>
 
-      {/* 🔧 FIX: Wrap FortuneWheel con ErrorBoundary + Suspense per prevenire crash globali */}
-      <SectionErrorBoundary section="Ruota della Fortuna" fallbackHeight="0px" showRetry={false}>
+      {/* 🔧 FIX: Wrap ProgressWheel con ErrorBoundary + Suspense per prevenire crash globali */}
+      <SectionErrorBoundary section="Progressione Giornaliera" fallbackHeight="0px" showRetry={false}>
         <Suspense fallback={null}>
           <FortuneWheel 
             isOpen={showWheel} 

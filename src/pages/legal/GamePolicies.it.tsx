@@ -149,15 +149,17 @@ const GamePoliciesIt: React.FC = () => {
                 </div>
               </div>
               
+              {/* 🏪 STORE COMPLIANCE: Updated M1U/PE policy */}
               <div className="bg-yellow-900/20 p-4 rounded-lg border border-yellow-500/30">
                 <p className="text-yellow-300 font-semibold mb-2">⚠️ DISCLAIMER CRITICO</p>
                 <ul className="list-disc list-inside space-y-1 text-white/80 text-sm">
-                  <li>M1U e PE <strong>NON hanno valore monetario</strong></li>
-                  <li><strong>NON possono essere acquistati</strong> con denaro reale</li>
+                  <li>M1U e PE <strong>NON hanno valore monetario reale</strong></li>
+                  <li>M1U possono essere acquistati come valuta virtuale in-app (consumabile)</li>
                   <li><strong>NON possono essere venduti, scambiati o convertiti</strong> in valuta reale</li>
                   <li><strong>NON possono essere prelevati</strong> o trasferiti fuori dall'app</li>
-                  <li>Sono <strong>NON RIMBORSABILI</strong> e <strong>NON RISCATTABILI</strong></li>
+                  <li>Sono <strong>NON RIMBORSABILI</strong> e <strong>NON RISCATTABILI in denaro</strong></li>
                   <li>Esistono <strong>SOLO</strong> all'interno dell'applicazione M1SSION™</li>
+                  <li>Nessun "cash-out" è possibile in nessuna circostanza</li>
                 </ul>
               </div>
             </CardContent>
@@ -203,9 +205,51 @@ const GamePoliciesIt: React.FC = () => {
               <div className="bg-[#00D1FF]/10 p-3 rounded-lg border border-[#00D1FF]/20">
                 <p className="text-[#00D1FF] text-sm">
                   <strong>Nota:</strong> Gli abbonamenti premium forniscono accesso a funzionalità 
-                  aggiuntive e sono completamente separati dal sistema di premi del gioco. 
-                  L'abbonamento NON garantisce la vittoria — il successo dipende esclusivamente 
-                  dalle abilità del giocatore.
+                  aggiuntive e sono completamente separati dal sistema di progressione del gioco. 
+                  L'abbonamento NON garantisce premi — il successo dipende esclusivamente 
+                  dall'impegno e dalle abilità del giocatore.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 🏪 STORE COMPLIANCE: NEW SECTION - Deterministic Progress System */}
+          <Card className="bg-black/40 border-blue-500/20 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-white font-orbitron flex items-center">
+                <RefreshCw className="w-5 h-5 mr-2 text-blue-400" />
+                Sistema di Progressione Deterministica
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-white/90 leading-relaxed">
+              <p>
+                M1SSION™ utilizza un <strong>sistema di progressione deterministica</strong> per 
+                tutte le meccaniche di gioco. Questo significa:
+              </p>
+              
+              <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-500/30">
+                <p className="text-blue-300 font-semibold mb-2">📊 COME FUNZIONA</p>
+                <ul className="list-disc list-inside space-y-1 text-white/80 text-sm">
+                  <li><strong>Nessuna casualità decisionale:</strong> I risultati NON sono basati su sorteggi casuali</li>
+                  <li><strong>Progressione a soglie:</strong> Accumuli punti progressione verso milestone predefiniti</li>
+                  <li><strong>Ricompense prevedibili:</strong> Raggiungi obiettivi specifici, sblocchi ricompense specifiche</li>
+                  <li><strong>Zero "vincita/perdita":</strong> Non esiste stato di "vincita" o "perdita" — solo avanzamento</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <p><strong>Meccaniche di Progressione:</strong></p>
+                <ul className="list-disc list-inside space-y-1 ml-4 text-white/80">
+                  <li><strong>Ruota Progressione:</strong> Interazione giornaliera che accumula punti verso milestone</li>
+                  <li><strong>Rivelazione Scratch:</strong> Sblocco progressivo di contenuti e ricompense</li>
+                  <li><strong>Percorso Biglietti:</strong> Acquisto di punti progressione, NON lotterie o estrazioni</li>
+                </ul>
+              </div>
+              
+              <div className="bg-green-900/20 p-3 rounded-lg border border-green-500/30">
+                <p className="text-green-300 text-sm">
+                  <strong>✅ GARANZIA:</strong> Nessun algoritmo casuale determina se "vinci" o "perdi". 
+                  Il sistema è basato su obiettivi, soglie e progressione misurabile.
                 </p>
               </div>
             </CardContent>

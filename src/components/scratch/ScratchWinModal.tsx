@@ -1,14 +1,19 @@
 /**
- * M1SSION™ SCRATCH & WIN Modal - FULLSCREEN VERSION
- * Gratta e Vinci virtuale con area scratch sui 12 rettangoli
+ * M1SSION™ SCRATCH REVEAL Modal - FULLSCREEN VERSION
+ * Rivelazione progressiva con area scratch sui 12 rettangoli
  * 
  * Features:
  * - FULLSCREEN modal (100vw x 100vh)
- * - Real scratch interaction on the 12 prize cells
- * - Server-side outcome (anti-cheat)
- * - Jackpot animations
- * - M1U Pill slot machine integration
- * - Clue notification integration
+ * - Real scratch interaction on the 12 progress cells
+ * - Server-side deterministic progress (STORE COMPLIANT)
+ * - Milestone animations
+ * - M1U Pill integration
+ * - Progress notification integration
+ * 
+ * 🏪 STORE COMPLIANCE (28/01/2026):
+ * - NO random() for outcome decisions
+ * - NO win/lose language
+ * - Deterministic progress reveal system
  * 
  * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
@@ -30,29 +35,29 @@ interface ScratchWinModalProps {
   clientNonce: string;
 }
 
-// Tier configurations
+// Tier configurations (STORE COMPLIANT - progress-based)
 const TIER_CONFIG = {
   10: {
     image: '/assets/scratch/scratch-win-10m1u.png',
-    maxJackpot: 1000,
+    milestoneThreshold: 100, // Progress points for milestone
     color: '#FFD700',
     gradient: 'from-yellow-500 to-amber-600',
-    // Possibili premi REALI per questo tier (usati per riempire celle non vincenti)
-    possiblePrizes: ['10 M1U', '20 M1U', '50 M1U', '100 M1U', 'INDIZIO'],
+    // Progress symbols for cells (no win/lose)
+    progressSymbols: ['+5 PT', '+10 PT', '+15 PT', '+20 PT', 'INDIZIO'],
   },
   30: {
     image: '/assets/scratch/scratch-win-30m1u.png',
-    maxJackpot: 10000,
+    milestoneThreshold: 100,
     color: '#00BFFF',
     gradient: 'from-cyan-500 to-blue-600',
-    possiblePrizes: ['30 M1U', '50 M1U', '100 M1U', '200 M1U', '500 M1U', 'INDIZIO'],
+    progressSymbols: ['+10 PT', '+15 PT', '+25 PT', '+30 PT', '+40 PT', 'INDIZIO'],
   },
   50: {
     image: '/assets/scratch/scratch-win-50m1u.png',
-    maxJackpot: 100000,
+    milestoneThreshold: 100,
     color: '#FF1493',
     gradient: 'from-pink-500 to-purple-600',
-    possiblePrizes: ['50 M1U', '100 M1U', '500 M1U', '1000 M1U', '5000 M1U', 'INDIZIO'],
+    progressSymbols: ['+20 PT', '+30 PT', '+40 PT', '+50 PT', '+75 PT', 'INDIZIO'],
   },
 };
 
@@ -84,10 +89,12 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
   const [isRevealed, setIsRevealed] = useState(false);
   const [scratchProgress, setScratchProgress] = useState(0);
   const [canReveal, setCanReveal] = useState(false);
+  // 🏪 STORE COMPLIANT: Progress-based result (no win/lose)
   const [result, setResult] = useState<{
-    rewardType: 'm1u' | 'clue';
+    rewardType: 'm1u' | 'clue' | 'progress';
     rewardValue: number;
-    isJackpot: boolean;
+    milestoneReached: boolean;
+    milestoneLevel?: number;
     clueText?: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -119,64 +126,62 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
     }
   }, [isOpen, tier]);
   
-  // Genera griglia DOPO il reveal - mostra il VERO premio con 3 simboli uguali
-  const generateRevealedGrid = useCallback((rewardType: 'm1u' | 'clue', rewardValue: number) => {
+  // 🏪 STORE COMPLIANT: Genera griglia con simboli di progresso (no win/lose)
+  const generateRevealedGrid = useCallback((rewardType: 'm1u' | 'clue' | 'progress', rewardValue: number) => {
     const grid: string[] = [];
     
-    // Simboli per celle non vincenti
-    const FILLER_SYMBOLS = ['X', 'PERSO', '?', 'RIPROVA'];
+    // Simboli per celle di progresso (NO gambling terms)
+    const PROGRESS_SYMBOLS = ['+5 PT', '+10 PT', '→', 'STEP', 'OK'];
     
-    // TUTTI i ticket hanno un premio (M1U o INDIZIO), non esistono "perdenti" nel DB!
-    // Questo caso NON dovrebbe mai accadere
-    if (rewardType === 'm1u' && rewardValue === 0) {
-      console.error('⚠️ Unexpected: ticket with 0 M1U reward');
-      // Fallback: mostra simboli misti senza tris
-      const mixedSymbols = [...FILLER_SYMBOLS, ...FILLER_SYMBOLS, ...FILLER_SYMBOLS];
-      return mixedSymbols.slice(0, 12).sort(() => Math.random() - 0.5);
+    // Progress-based fallback (no "lose" state)
+    if (rewardType === 'progress' && rewardValue === 0) {
+      const progressSymbols = [...PROGRESS_SYMBOLS, ...PROGRESS_SYMBOLS, ...PROGRESS_SYMBOLS];
+      return progressSymbols.slice(0, 12).sort(() => Math.random() - 0.5);
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // VINCENTE: 3 celle IDENTICHE con il premio ESATTO + 9 celle diverse
+    // PROGRESS REVEAL: 3 celle highlight + 9 celle di contesto
     // ═══════════════════════════════════════════════════════════════════════════
-    let winningPrize: string;
+    let highlightSymbol: string;
     if (rewardType === 'clue') {
-      winningPrize = 'INDIZIO';
+      highlightSymbol = 'INDIZIO';
+    } else if (rewardType === 'm1u') {
+      highlightSymbol = `+${rewardValue} M1U`;
     } else {
-      // ESATTAMENTE il valore vinto, es. "50 M1U"
-      winningPrize = `${rewardValue} M1U`;
+      highlightSymbol = `+${rewardValue} PT`;
     }
     
-    console.log('🎰 Generating grid with winning prize:', winningPrize);
+    console.log('📊 Generating progress grid:', highlightSymbol);
     
-    // Posizioni random per i 3 premi vincenti
+    // Posizioni per i 3 simboli highlight
     const positions = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     const shuffled = positions.sort(() => Math.random() - 0.5);
-    const winningPositions = new Set(shuffled.slice(0, 3));
+    const highlightPositions = new Set(shuffled.slice(0, 3));
     
-    // Celle non vincenti: mix di simboli DIVERSI dal premio (no tris accidentali!)
-    const fillerOptions = [...FILLER_SYMBOLS];
-    // Aggiungi altri premi M1U possibili DIVERSI dal vincente
-    config.possiblePrizes.forEach(p => {
-      if (p !== winningPrize) {
+    // Celle di contesto: mix di simboli di progresso
+    const fillerOptions = [...PROGRESS_SYMBOLS];
+    // Aggiungi altri simboli di progresso diversi dall'highlight
+    config.progressSymbols.forEach(p => {
+      if (p !== highlightSymbol) {
         fillerOptions.push(p);
       }
     });
     
     // Riempi la griglia
     for (let i = 0; i < 12; i++) {
-      if (winningPositions.has(i)) {
-        // 🏆 Cella vincente - mostra il premio ESATTO
-        grid.push(winningPrize);
+      if (highlightPositions.has(i)) {
+        // 🎯 Cella highlight - mostra il risultato
+        grid.push(highlightSymbol);
       } else {
-        // Simbolo casuale DIVERSO dal vincente
+        // Simbolo di progresso casuale diverso dall'highlight
         const randomSymbol = fillerOptions[Math.floor(Math.random() * fillerOptions.length)];
         grid.push(randomSymbol);
       }
     }
     
-    console.log('🎰 Final grid:', grid);
+    console.log('📊 Final progress grid:', grid);
     return grid;
-  }, [config.possiblePrizes]);
+  }, [config.progressSymbols]);
   
   // Initialize canvas with scratch overlay
   useEffect(() => {
@@ -359,7 +364,7 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
     }
   }, [calculateProgress, canReveal]);
   
-  // Reveal the prize
+  // 🏪 STORE COMPLIANT: Reveal progress (deterministic, no win/lose)
   const handleReveal = async () => {
     if (isRevealing || isRevealed) return;
     
@@ -367,7 +372,7 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
     setError(null);
     
     try {
-      const { data, error: rpcError } = await supabase.rpc('reveal_scratch_ticket', {
+      const { data, error: rpcError } = await supabase.rpc('reveal_scratch_progress', {
         p_purchase_id: purchaseId,
         p_client_nonce: clientNonce,
       });
@@ -378,21 +383,24 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
         throw new Error(data.message);
       }
       
-      // Parse result - LEGGI CAMPI CORRETTI DAL SERVER
-      const rewardType = data.reward_type || 'm1u';
+      // Parse result - DETERMINISTIC PROGRESS SYSTEM
+      const rewardType = data.reward_type || 'progress';
       const rewardValue = data.reward_value || 0;
+      const milestoneReached = data.milestone_reached || false;
+      const milestoneLevel = data.milestone_level || 0;
       const clueText = data.clue_text || null;
       
-      console.log('🎰 Reveal result:', { rewardType, rewardValue, clueText, fullData: data });
+      console.log('📊 Progress reveal:', { rewardType, rewardValue, milestoneReached, fullData: data });
       
-      // GENERA LA GRIGLIA REALE con 3 premi vincenti uguali
+      // GENERA LA GRIGLIA con simboli di progresso
       const revealedGrid = generateRevealedGrid(rewardType, rewardValue);
       setGridSymbols(revealedGrid);
       
       setResult({
         rewardType,
         rewardValue,
-        isJackpot: data.is_jackpot || rewardValue >= config.maxJackpot,
+        milestoneReached,
+        milestoneLevel,
         clueText: clueText,
       });
       setIsRevealed(true);
@@ -406,74 +414,62 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
         }
       }
       
-      // Trigger animations based on result
-      if (rewardType === 'm1u' && rewardValue > 0) {
-        // Fire confetti for wins
-        if (rewardValue >= config.maxJackpot) {
-          // MEGA JACKPOT confetti
-          const duration = 5000;
-          const end = Date.now() + duration;
-          
-          const jackpotConfetti = () => {
-            confetti({
-              particleCount: 100,
-              spread: 180,
-              startVelocity: 60,
-              origin: { y: 0.6 },
-              colors: ['#FFD700', '#FFA500', '#FF6347', '#FF1493', '#00FF00'],
-            });
-            
-            if (Date.now() < end) {
-              requestAnimationFrame(jackpotConfetti);
-            }
-          };
-          jackpotConfetti();
-          
-          toast.success('🎰 JACKPOT! 🎰', {
-            description: `Hai vinto ${rewardValue.toLocaleString()} M1U!`,
-            duration: 10000,
-          });
-          
-        } else if (rewardValue >= 100) {
-          // Big win confetti
-          confetti({
-            particleCount: 150,
-            spread: 100,
-            origin: { y: 0.6 },
-          });
-          toast.success('🎉 HAI VINTO!', {
-            description: `+${rewardValue.toLocaleString()} M1U`,
-          });
-        } else {
-          // Small win confetti
-          confetti({
-            particleCount: 50,
-            spread: 60,
-            origin: { y: 0.7 },
-          });
-          toast.success('💰 Hai vinto!', {
-            description: `+${rewardValue.toLocaleString()} M1U`,
-          });
-        }
+      // 🏪 STORE COMPLIANT: Progress-based animations (no win/lose)
+      if (milestoneReached && rewardType === 'm1u' && rewardValue > 0) {
+        // MILESTONE REACHED - celebration confetti
+        const duration = 3000;
+        const end = Date.now() + duration;
         
-        // Trigger M1U Pill slot machine animation
+        const milestoneConfetti = () => {
+          confetti({
+            particleCount: 80,
+            spread: 120,
+            startVelocity: 45,
+            origin: { y: 0.6 },
+            colors: ['#FFD700', '#FFA500', '#FF6347', '#FF1493', '#00FF00'],
+          });
+          
+          if (Date.now() < end) {
+            requestAnimationFrame(milestoneConfetti);
+          }
+        };
+        milestoneConfetti();
+        
+        toast.success('🎯 MILESTONE RAGGIUNTA!', {
+          description: `Livello ${milestoneLevel} sbloccato! +${rewardValue.toLocaleString()} M1U`,
+          duration: 8000,
+        });
+        
+        // Trigger M1U Pill animation
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('m1u-credited', { 
             detail: { amount: rewardValue } 
           }));
         }, 1500);
         
+      } else if (rewardType === 'progress') {
+        // Progress advancement confetti
+        confetti({
+          particleCount: 40,
+          spread: 60,
+          origin: { y: 0.7 },
+          colors: ['#4169E1', '#00BFFF', '#1E90FF'],
+        });
+        toast.success('📈 Progressione completata!', {
+          description: `+${rewardValue} punti avanzamento`,
+        });
+        
       } else if (rewardType === 'clue') {
-        // HAI VINTO UN INDIZIO! 
+        // Indizio sbloccato
         confetti({
           particleCount: 30,
           spread: 50,
           colors: ['#00BFFF', '#1E90FF', '#4169E1'],
         });
         
-        const clueMessage = clueText || 'Hai trovato un indizio! Controlla le notifiche.';
+        const clueMessage = clueText || 'Nuovo indizio rivelato! Controlla le notifiche.';
         
-        toast.success('🔍 Hai vinto un INDIZIO!', {
+        toast.success('🔍 Indizio rivelato!', {
           description: clueMessage,
           duration: 8000,
         });
@@ -486,10 +482,9 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
           });
         }
       } else {
-        // Questo NON dovrebbe MAI accadere - tutti i ticket hanno un premio!
-        console.error('⚠️ Unexpected result - no reward type matched:', { rewardType, rewardValue, clueText, fullData: data });
-        toast.info('Risultato in elaborazione...', {
-          description: 'Controlla il tuo saldo M1U',
+        // Standard progress completion
+        toast.info('✨ Rivelazione completata!', {
+          description: 'Continua a fare progressi!',
         });
       }
       
@@ -619,7 +614,8 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
                   
                   {/* POST-REVEAL: Simboli reali con animazione */}
                   {gridSymbols.length > 0 && gridSymbols.map((symbol, index) => {
-                    const isPerso = symbol === 'PERSO' || symbol === 'X' || symbol === 'RIPROVA' || symbol === '?';
+                    // 🏪 STORE COMPLIANT: Progress-based symbol styling (no win/lose)
+                    const isProgressStep = symbol === 'STEP' || symbol === '→' || symbol === 'OK' || symbol.includes('PT');
                     const isIndizio = symbol === 'INDIZIO';
                     const isM1U = symbol.includes('M1U');
                     
@@ -628,9 +624,9 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
                     let fontSize = '0.55rem';
                     let glow = 'none';
                     
-                    if (isPerso) {
-                      bgColor = 'bg-red-900/80';
-                      textColor = 'text-red-300';
+                    if (isProgressStep) {
+                      bgColor = 'bg-blue-900/80';
+                      textColor = 'text-blue-300';
                       fontSize = '0.5rem';
                     } else if (isIndizio) {
                       bgColor = 'bg-cyan-700/90';
@@ -704,13 +700,14 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
                     transition={{ delay: 0.2 }}
                     className="text-center px-4"
                   >
-                    {result.isJackpot && (
+                    {/* 🏪 STORE COMPLIANT: Milestone celebration (no jackpot) */}
+                    {result.milestoneReached && (
                       <motion.div
                         animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
                         transition={{ duration: 0.5, repeat: Infinity }}
                         className="text-3xl mb-2"
                       >
-                        🎰 JACKPOT! 🎰
+                        🎯 MILESTONE! 🎯
                       </motion.div>
                     )}
                     
@@ -774,9 +771,10 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
                     animate={{ y: 0, opacity: 1 }}
                     className="text-center px-6"
                   >
-                    <div className="text-5xl mb-4">😔</div>
-                    <div className="text-xl font-bold text-white/80">Nessuna vincita</div>
-                    <p className="text-white/60 mt-2 text-sm">Ritenta!</p>
+                    {/* 🏪 STORE COMPLIANT: Progress completion (no lose state) */}
+                    <div className="text-5xl mb-4">✨</div>
+                    <div className="text-xl font-bold text-white/80">Rivelazione completata</div>
+                    <p className="text-white/60 mt-2 text-sm">Continua a fare progressi!</p>
                   </motion.div>
                 )}
               </div>

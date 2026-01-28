@@ -84,9 +84,9 @@ const MESSAGES = {
     { title: '🔥 STREAK ATTIVA', description: 'Non perdere il tuo bonus giornaliero!' },
     { title: '🚀 READY FOR ACTION', description: 'Scegli la tua prossima mossa!' },
     { title: '📈 LIVELLO IN CRESCITA', description: 'Sei sempre più vicino al top!' },
-    { title: '🎁 SORPRESA IN ARRIVO', description: 'Controlla la ruota della fortuna!' },
+    { title: '🎁 PROGRESSO ATTIVO', description: 'Controlla la tua progressione giornaliera!' },
     { title: '⚡ ENERGIA PIENA', description: 'È il momento perfetto per agire!' },
-    { title: '🏆 AGENT OPERATIVO', description: 'Missione in corso. Buona fortuna!' },
+    { title: '🏆 AGENT OPERATIVO', description: 'Missione in corso. Continua così!' },
   ],
   forum: [
     { title: '💬 COMMUNITY ATTIVA', description: 'Unisciti alla discussione!' },

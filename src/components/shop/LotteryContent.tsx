@@ -1,12 +1,17 @@
 /**
- * M1SSION™ Lottery Content Component
- * Componente per la sezione Lotteria nello ShopModal
+ * M1SSION™ Progress Path Content Component
+ * Componente per la sezione Percorso Progressione nello ShopModal
+ * 
+ * 🏪 STORE COMPLIANCE (28/01/2026):
+ * - NO lottery/random drawing
+ * - Tickets = progress points toward milestones
+ * - Deterministic threshold-based rewards
  * 
  * Features:
- * - Visualizzazione ciclo attivo con countdown
- * - Acquisto biglietti
- * - Banner vincite pending + Modal claim
- * - Progresso soglia
+ * - Visualizzazione progressione con countdown
+ * - Acquisto punti progressione
+ * - Banner milestone raggiunti
+ * - Progresso soglia deterministica
  * 
  * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
@@ -340,7 +345,7 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
         </motion.div>
         <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
         <h3 className="text-lg font-bold text-white mb-2">Nessun ciclo attivo</h3>
-        <p className="text-white/60 text-sm">La prossima lotteria inizierà presto!</p>
+        <p className="text-white/60 text-sm">Il prossimo percorso progressione inizierà presto!</p>
       </div>
     );
   }
@@ -404,9 +409,10 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
                 </div>
                 
                 {/* Deadline */}
+                {/* 🏪 STORE COMPLIANT: Milestone claim deadline */}
                 <div className="flex items-center justify-center gap-2 text-orange-400 bg-orange-500/10 rounded-lg p-2 text-sm">
                   <Clock className="w-4 h-4" />
-                  <span>Riscuoti entro: <strong>{formatTimeRemaining(selectedWin.time_remaining_seconds)}</strong></span>
+                  <span>Sblocca entro: <strong>{formatTimeRemaining(selectedWin.time_remaining_seconds)}</strong></span>
                 </div>
                 
                 {/* Claim Button */}
@@ -417,15 +423,16 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
                   disabled={isClaiming}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-amber-600 text-white font-bold shadow-lg shadow-yellow-500/30 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
+                  {/* 🏪 STORE COMPLIANT: Claim milestone reward */}
                   {isClaiming ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Riscuotendo...
+                      Elaborazione...
                     </>
                   ) : (
                     <>
                       <Gift className="w-5 h-5" />
-                      RISCUOTI VINCITA
+                      SBLOCCA MILESTONE
                       <Sparkles className="w-5 h-5" />
                     </>
                   )}
@@ -463,10 +470,11 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
                 >
                   <Sparkles className="w-12 h-12 text-yellow-400 mx-auto mb-2" />
                 </motion.div>
+                {/* 🏪 STORE COMPLIANT: Progress tickets purchased */}
                 <h2 className="text-xl font-bold text-white">
                   🎫 {newTicketCodes.length === 1 ? 'NUOVO BIGLIETTO!' : `${newTicketCodes.length} NUOVI BIGLIETTI!`}
                 </h2>
-                <p className="text-white/60 text-sm mt-1">Buona fortuna!</p>
+                <p className="text-white/60 text-sm mt-1">Progressione attivata!</p>
               </div>
               
               {/* Tickets */}
@@ -511,9 +519,10 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
             }}
             className="w-full p-3 rounded-xl bg-gradient-to-r from-yellow-500/20 to-amber-600/20 border border-yellow-500/50 flex items-center justify-between"
           >
+            {/* 🏪 STORE COMPLIANT: Pending milestone reward */}
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-yellow-400" />
-              <span className="font-bold text-yellow-400 text-sm">Hai {pendingWins.length} vincita da riscuotere!</span>
+              <span className="font-bold text-yellow-400 text-sm">Hai {pendingWins.length} milestone da sbloccare!</span>
             </div>
             <Gift className="w-5 h-5 text-yellow-400 animate-pulse" />
           </motion.button>

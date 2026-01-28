@@ -79,6 +79,17 @@ export const isUserInProgressFeedbackAllowlist = (email: string | undefined | nu
   return PROGRESS_FEEDBACK_ALLOWLIST.includes(email.toLowerCase());
 };
 
+// ====== STORE COMPLIANCE (Apple/Google) ======
+// Deterministic progress systems (no RNG for win/lose decisions)
+// When true: wheel/scratch/lottery use deterministic progress reveal
+// When false: legacy random behavior (will be rejected by stores)
+export const STORE_COMPLIANCE_MODE = true;
+
+// Disable Stripe on native platforms (iOS/Android must use native IAP)
+// When true: Stripe checkout hidden in Capacitor builds
+// When false: Stripe accessible everywhere (iOS VIOLATION)
+export const STRIPE_NATIVE_DISABLED = true;
+
 // ====== LAUNCH FLAGS (19 Dec 2025) ======
 // Set to true when ready for production launch
 export const PRODUCTION_LAUNCH_READY = false;

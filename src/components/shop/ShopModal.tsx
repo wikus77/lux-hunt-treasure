@@ -26,10 +26,11 @@ interface ShopModalProps {
 
 type ShopTab = 'scratch' | 'wheel' | 'lottery';
 
+// 🏪 STORE COMPLIANT: Progress-based stats (no jackpot)
 interface ScratchStats {
-  tier_10?: { available: number; jackpot_available: boolean; user_purchases_today: number; daily_limit: number };
-  tier_30?: { available: number; jackpot_available: boolean; user_purchases_today: number; daily_limit: number };
-  tier_50?: { available: number; jackpot_available: boolean; user_purchases_today: number; daily_limit: number };
+  tier_10?: { available: number; milestone_bonus: boolean; user_purchases_today: number; daily_limit: number };
+  tier_30?: { available: number; milestone_bonus: boolean; user_purchases_today: number; daily_limit: number };
+  tier_50?: { available: number; milestone_bonus: boolean; user_purchases_today: number; daily_limit: number };
   user_m1u_balance?: number;
   user_total_purchases_today?: number;
   user_total_wins?: number;
@@ -256,7 +257,8 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
                       const canAfford = balance >= tier;
                       const underLimit = purchasesToday < dailyLimit;
                       const canPurchase = canAfford && underLimit;
-                      const maxJackpot = tier === 10 ? 1000 : tier === 30 ? 10000 : 100000;
+                      // 🏪 STORE COMPLIANT: Max milestone bonus (no jackpot)
+                      const maxMilestone = tier === 10 ? 100 : tier === 30 ? 200 : 500;
                       
                       let disabledReason = '';
                       if (!canAfford) disabledReason = `Servono ${tier} M1U`;
@@ -275,11 +277,11 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
                           whileHover={canPurchase ? { scale: 1.02 } : {}}
                           whileTap={canPurchase ? { scale: 0.98 } : {}}
                         >
-                          {/* Jackpot badge - posizione fissa in alto a destra */}
-                          {tierData?.jackpot_available && (
+                          {/* 🏪 STORE COMPLIANT: Milestone badge (no jackpot) */}
+                          {tierData?.milestone_bonus && (
                             <div className="absolute top-2 right-2 z-10">
-                              <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-yellow-500 to-orange-500 text-black rounded-full animate-pulse">
-                                🎰 JACKPOT
+                              <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full animate-pulse">
+                                🎯 BONUS
                               </span>
                             </div>
                           )}
@@ -297,11 +299,11 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
                               )}
                               <div>
                                 <p className="font-bold text-white">{tier} M1U</p>
-                                <p className="text-xs text-white/60">Jackpot: {maxJackpot.toLocaleString()} M1U</p>
+                                <p className="text-xs text-white/60">Milestone: +{maxMilestone} M1U</p>
                               </div>
                             </div>
                             
-                            {/* Info rimasti - spostato a sinistra per non sovrapporsi a JACKPOT */}
+                            {/* 🏪 STORE COMPLIANT: Info section */}
                             <div className="text-right">
                               {!canPurchase && disabledReason ? (
                                 <p className="text-xs text-red-400 flex items-center gap-1">

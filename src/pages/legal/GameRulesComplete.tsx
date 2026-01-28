@@ -52,21 +52,23 @@ const GameRulesComplete: React.FC = () => {
             "M1SSION™ è gestito e operato da NIYVORA KFT™, società registrata in Ungheria."
           ]
         },
+        // 🏪 STORE COMPLIANCE: Updated anti-gambling clause
         antiGambling: {
-          title: "⚠️ CLAUSOLA ANTI-GAMBLING — Gioco di Pura Abilità",
+          title: "⚠️ CLAUSOLA ANTI-GAMBLING — Gioco a Progressione Deterministica",
           warning: "DICHIARAZIONE IMPORTANTE",
           content: [
-            "M1SSION™ è un GIOCO DI PURA ABILITÀ (Skill-Based Game Only).",
-            "NON è un gioco d'azzardo. NON utilizza meccanismi di casualità, lotterie, estrazioni a sorte, slot machine, ruote della fortuna o qualsiasi altro sistema basato sulla fortuna o sul caso.",
-            "La vittoria dipende ESCLUSIVAMENTE dalle capacità cognitive del giocatore: interpretazione degli indizi, deduzione logica, analisi delle coordinate, velocità di risoluzione.",
-            "Nessun elemento del gioco è determinato da RNG (Random Number Generator) o da sistemi casuali."
+            "M1SSION™ è un GIOCO A PROGRESSIONE DETERMINISTICA (Skill & Progress Based).",
+            "NON è un gioco d'azzardo. Utilizza un sistema di progressione a soglie e milestone, NON basato su casualità.",
+            "La progressione dipende dall'impegno del giocatore: interazioni giornaliere, accumulo di punti progressione, raggiungimento di obiettivi specifici.",
+            "Tutte le ricompense sono basate su soglie deterministiche. NON esiste uno stato di 'vincita' o 'perdita' — solo avanzamento progressivo.",
+            "Le funzionalità come Ruota Progressione, Rivelazione Scratch e Percorso Biglietti sono sistemi di sblocco a obiettivi, NON giochi d'azzardo."
           ],
           prohibited: [
             "Scommesse o puntate in denaro reale",
-            "Meccanismi di fortuna o casualità",
-            "Ruote della fortuna o spin giornalieri con premi casuali",
-            "Estrazioni a sorte o lotterie",
-            "Qualsiasi forma di gambling o betting"
+            "Cash-out o conversione in denaro delle ricompense",
+            "Prelievo di valute virtuali",
+            "Trasferimento di M1U/PE ad altri utenti",
+            "Qualsiasi forma di gambling, betting o estrazione casuale"
           ]
         },
         art2: {

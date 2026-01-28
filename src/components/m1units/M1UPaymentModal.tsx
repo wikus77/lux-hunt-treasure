@@ -1,7 +1,12 @@
 /**
- * M1U Payment Modal — In-App Stripe Checkout for M1 UNITS™
- * Reuses Stripe Elements flow (same as subscriptions) for one-time M1U purchases
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * M1U Payment Modal — In-App Checkout for M1 UNITS™
+ * 
+ * 🏪 STORE COMPLIANCE (28/01/2026):
+ * - Stripe checkout on WEB only
+ * - Native platforms (iOS/Android) show "coming soon" placeholder
+ * - Apple IAP / Google Play Billing to be implemented
+ * 
+ * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import React, { useState, useEffect } from 'react';
@@ -17,8 +22,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
-import { X, ShoppingCart } from 'lucide-react';
+import { X, ShoppingCart, AlertCircle } from 'lucide-react';
 import { getStripeSafe } from '@/lib/stripeFallback';
+import { isStripeAvailable } from '@/lib/stripe/stripeClient';
+import { isCapacitorNative, getCapacitorPlatform } from '@/utils/capacitor';
 
 const stripePromise = getStripeSafe();
 
@@ -281,6 +288,68 @@ const CheckoutForm: React.FC<{
   );
 };
 
+// 🏪 STORE COMPLIANT: Native IAP Placeholder Component
+const NativeIAPPlaceholder: React.FC<{
+  packName: string;
+  m1uAmount: number;
+  priceEur: number;
+  onCancel: () => void;
+}> = ({ packName, m1uAmount, priceEur, onCancel }) => {
+  const platform = getCapacitorPlatform();
+  
+  return (
+    <Card className="w-full max-w-md mx-auto bg-black/95 border-[#00D1FF]/30 backdrop-blur-xl">
+      <CardHeader className="border-b border-white/10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-yellow-400" />
+            <CardTitle className="text-white font-orbitron">Acquisto In-App</CardTitle>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCancel}
+            className="h-8 w-8 rounded-full hover:bg-white/10"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+        <div className="text-center mt-4">
+          <div className="text-3xl font-bold text-white mb-1">
+            {m1uAmount} <span className="text-[#00D1FF] text-lg">M1U</span>
+          </div>
+          <div className="text-2xl font-semibold text-[#FFD700]">
+            €{priceEur.toFixed(2)}
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-4 pt-6">
+        <div className="text-center p-6 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
+          <AlertCircle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-white mb-2">
+            {platform === 'ios' ? 'Apple In-App Purchase' : 'Google Play Billing'}
+          </h3>
+          <p className="text-white/70 text-sm mb-4">
+            Gli acquisti in-app per {platform === 'ios' ? 'iOS' : 'Android'} saranno disponibili a breve.
+          </p>
+          <p className="text-white/50 text-xs">
+            Nel frattempo, puoi acquistare M1U dalla versione web di M1SSION.
+          </p>
+        </div>
+        
+        <Button
+          onClick={onCancel}
+          className="w-full border-white/20 hover:bg-white/10"
+          variant="outline"
+        >
+          Chiudi
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
+
 export const M1UPaymentModal: React.FC<M1UPaymentModalProps> = ({ 
   isOpen,
   packName,
@@ -291,6 +360,10 @@ export const M1UPaymentModal: React.FC<M1UPaymentModalProps> = ({
   onSuccess, 
   onCancel 
 }) => {
+  // 🏪 STORE COMPLIANT: Check if on native platform
+  const isNative = isCapacitorNative();
+  const stripeAvailable = isStripeAvailable();
+  
   // Close on ESC key
   useEffect(() => {
     if (!isOpen) return;
@@ -339,16 +412,26 @@ export const M1UPaymentModal: React.FC<M1UPaymentModalProps> = ({
         }
       }}
     >
-      <Elements stripe={stripePromise} options={options}>
-        <CheckoutForm 
+      {/* 🏪 STORE COMPLIANT: Show native placeholder or Stripe checkout */}
+      {isNative || !stripeAvailable ? (
+        <NativeIAPPlaceholder
           packName={packName}
-          packCode={packCode}
           m1uAmount={m1uAmount}
-          priceCents={priceCents}
-          onSuccess={onSuccess} 
-          onCancel={onCancel} 
+          priceEur={priceEur}
+          onCancel={onCancel}
         />
-      </Elements>
+      ) : (
+        <Elements stripe={stripePromise} options={options}>
+          <CheckoutForm 
+            packName={packName}
+            packCode={packCode}
+            m1uAmount={m1uAmount}
+            priceCents={priceCents}
+            onSuccess={onSuccess} 
+            onCancel={onCancel} 
+          />
+        </Elements>
+      )}
     </div>
   );
 };
