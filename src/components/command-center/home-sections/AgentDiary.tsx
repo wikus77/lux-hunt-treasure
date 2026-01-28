@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect, useCallback, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Plus, RefreshCw, Sparkles, User, Activity, Target, BookOpen } from "lucide-react";
+import { ChevronDown, Plus, RefreshCw, Sparkles, User, Activity, Target, BookOpen, Search, Clock, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 // 🔥 CRITICAL: Lazy load AgentLabModal to prevent THREE.js hook errors
@@ -113,6 +113,96 @@ function AgentDiaryModalContent({
           <div className="text-2xl">🧬</div>
         </div>
       </motion.button>
+
+      {/* 🔧 FIX 28/01/2026: Mission Shortcuts - Accesso rapido ai pannelli missione */}
+      <div className="mb-5">
+        <h3 className="text-white font-medium mb-3 flex items-center gap-2 text-sm">
+          <Target className="w-4 h-4 text-cyan-400" />
+          Azioni Rapide Missione
+        </h3>
+        <div className="space-y-2">
+          {/* Indizi Trovati */}
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('openMissionModal', { detail: 'clues' }));
+              }, 300);
+            }}
+            className="w-full p-3 rounded-xl border border-green-500/30 hover:border-green-500/50 transition-all group flex items-center justify-between"
+            style={{ background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%)' }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                <Search className="w-4 h-4 text-green-400" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-white group-hover:text-green-400 transition-colors">
+                  Indizi Trovati
+                </p>
+                <p className="text-[10px] text-white/50">Progressi caccia al tesoro</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-green-400/60 group-hover:text-green-400 transition-colors" />
+          </motion.button>
+
+          {/* Stato Missione */}
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('openMissionModal', { detail: 'status' }));
+              }, 300);
+            }}
+            className="w-full p-3 rounded-xl border border-cyan-500/30 hover:border-cyan-500/50 transition-all group flex items-center justify-between"
+            style={{ background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)' }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                <Target className="w-4 h-4 text-cyan-400" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-white group-hover:text-cyan-400 transition-colors">
+                  Stato Missione
+                </p>
+                <p className="text-[10px] text-white/50">Panoramica completa</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-cyan-400/60 group-hover:text-cyan-400 transition-colors" />
+          </motion.button>
+
+          {/* Tempo Rimasto */}
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('openMissionModal', { detail: 'time' }));
+              }, 300);
+            }}
+            className="w-full p-3 rounded-xl border border-amber-500/30 hover:border-amber-500/50 transition-all group flex items-center justify-between"
+            style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(251, 191, 36, 0.08) 100%)' }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                <Clock className="w-4 h-4 text-amber-400" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-white group-hover:text-amber-400 transition-colors">
+                  Tempo Rimasto
+                </p>
+                <p className="text-[10px] text-white/50">Countdown deadline</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-amber-400/60 group-hover:text-amber-400 transition-colors" />
+          </motion.button>
+        </div>
+      </div>
 
       {/* Agent Statistics */}
       <div 

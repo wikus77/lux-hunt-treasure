@@ -421,6 +421,26 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
   const [levelUpAnimation, setLevelUpAnimation] = useState(false);
   const [showEndWarningModal, setShowEndWarningModal] = useState(false);
   
+  // 🔧 FIX 28/01/2026: Listen for external modal triggers from M1SSION AGENT shortcuts
+  useEffect(() => {
+    const handleOpenMissionModal = (e: CustomEvent<string>) => {
+      switch (e.detail) {
+        case 'clues':
+          setIsCluesModalOpen(true);
+          break;
+        case 'time':
+          setIsTimeModalOpen(true);
+          break;
+        case 'status':
+          setIsStatusModalOpen(true);
+          break;
+      }
+    };
+    
+    window.addEventListener('openMissionModal', handleOpenMissionModal as EventListener);
+    return () => window.removeEventListener('openMissionModal', handleOpenMissionModal as EventListener);
+  }, []);
+  
   // Long press info states
   const [showCluesLongPress, setShowCluesLongPress] = useState(false);
   const [showTimeLongPress, setShowTimeLongPress] = useState(false);
@@ -546,80 +566,9 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
         </h3>
       </div>
 
-      {/* Three Box Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
-        {/* INDIZI TROVATI */}
-        <motion.div
-          className="m1-relief-sm rounded-2xl p-4 cursor-pointer hover:border-green-500/30 transition-colors overflow-hidden relative"
-          data-section="clues"
-          onClick={() => setIsCluesModalOpen(true)}
-          {...cluesLongPress}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          {/* Level-up glow animation */}
-          <AnimatePresence>
-            {levelUpAnimation && (
-              <motion.div
-                className="absolute inset-0 rounded-2xl pointer-events-none"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.3) 0%, rgba(217, 70, 239, 0.3) 100%)',
-                  boxShadow: '0 0 40px rgba(0, 209, 255, 0.5), inset 0 0 20px rgba(0, 209, 255, 0.3)',
-                }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 1, 0.5, 1, 0] }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.5 }}
-              />
-            )}
-          </AnimatePresence>
-          
-          <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-400 to-transparent opacity-60" style={{ animation: 'slideGlow 3s ease-in-out infinite', width: '200%', left: '-100%' }} />
-          </div>
-          <div className="flex items-center space-x-2 mb-2">
-            <div className={`w-2 h-2 rounded-full ${levelUpAnimation ? 'bg-cyan-400 animate-pulse' : 'bg-green-400'}`} />
-            <span className="text-white/80 text-sm">Indizi trovati</span>
-            {nextMilestone && (
-              <span className="text-[10px] text-cyan-400/70 ml-auto">→ {nextMilestone.threshold}</span>
-            )}
-          </div>
-          <div className="text-2xl font-bold text-green-400 mb-2">{displayCluesFound}/{totalClues}</div>
-          
-          {/* Progress bar with milestone markers */}
-          <div className="relative w-full bg-gray-700 rounded-full h-2 mb-2">
-            {/* Milestone markers */}
-            {CLUE_MILESTONES.slice(0, 5).map(m => (
-              <div
-                key={m.key}
-                className={`absolute top-1/2 -translate-y-1/2 w-1 h-3 rounded-full transition-colors ${
-                  displayCluesFound >= m.threshold ? 'bg-cyan-400' : 'bg-gray-500'
-                }`}
-                style={{ left: `${(m.threshold / totalClues) * 100}%` }}
-                title={`${m.threshold} indizi: +${m.m1u} M1U`}
-              />
-            ))}
-            
-            {/* Progress fill */}
-            <motion.div 
-              className={`h-2 rounded-full transition-all duration-500 relative ${
-                displayCluesFound === 0 ? 'bg-gray-500' : 
-                displayCluesFound < 50 ? 'bg-gradient-to-r from-[#22C55E] to-[#10B981]' : 
-                displayCluesFound < 100 ? 'bg-gradient-to-r from-[#10B981] to-[#00D1FF]' : 
-                displayCluesFound < 150 ? 'bg-gradient-to-r from-[#00D1FF] to-[#A855F7]' : 
-                'bg-gradient-to-r from-[#A855F7] to-[#D946EF]'
-              }`}
-              style={{ width: `${(displayCluesFound / totalClues) * 100}%` }}
-              animate={levelUpAnimation ? {
-                boxShadow: ['0 0 0 rgba(0, 209, 255, 0)', '0 0 20px rgba(0, 209, 255, 0.8)', '0 0 0 rgba(0, 209, 255, 0)']
-              } : {}}
-              transition={{ duration: 1, repeat: levelUpAnimation ? 2 : 0 }}
-            />
-          </div>
-          <span className="text-xs text-white/60">{Math.round((displayCluesFound / totalClues) * 100)}% completato</span>
-          <div className="absolute bottom-2 right-2 text-white/30"><ChevronDown className="w-4 h-4" /></div>
-        </motion.div>
+      {/* 🔧 FIX 28/01/2026: Solo "Tempo Rimasto" visibile su Home */}
+      {/* "Indizi Trovati" e "Stato Missione" spostati dentro M1SSION AGENT come shortcuts */}
+      <div className="grid grid-cols-1 gap-4">
 
         {/* TEMPO RIMASTO - with pulse animation when <= 10 days */}
         <motion.div
@@ -728,29 +677,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           <div className="absolute bottom-2 right-2 text-white/30"><ChevronDown className="w-4 h-4" /></div>
         </motion.div>
 
-        {/* STATO MISSIONE */}
-        <motion.div
-          className="m1-relief-sm rounded-2xl p-4 cursor-pointer hover:border-[#00D1FF]/30 transition-colors overflow-hidden relative"
-          onClick={() => setIsStatusModalOpen(true)}
-          {...statusLongPress}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60" style={{ animation: 'slideGlow 3s ease-in-out infinite', width: '200%', left: '-100%' }} />
-          </div>
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="w-2 h-2 bg-[#00D1FF] rounded-full" />
-            <span className="text-white/80 text-sm">Stato missione</span>
-          </div>
-          <div className="text-xl font-bold text-[#00D1FF] mb-3">{mission.remainingDays > 0 ? 'ATTIVA' : 'SCADUTA'}</div>
-          <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-            <div className={`h-2 rounded-full transition-all duration-500 ${mission.remainingDays <= 0 ? 'bg-red-500' : mission.remainingDays <= 5 ? 'bg-gradient-to-r from-yellow-400 to-red-500' : mission.remainingDays <= 15 ? 'bg-gradient-to-r from-green-400 to-yellow-400' : 'bg-gradient-to-r from-[#00D1FF] to-green-400'}`} style={{ width: `${((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100}%` }} />
-          </div>
-          <div className="text-xs text-white/60 mb-1">Iniziata il {new Date(mission.startTime).toLocaleDateString('it-IT')}</div>
-          <span className="text-xs text-white/60">{Math.round(((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100)}% tempo trascorso</span>
-          <div className="absolute bottom-2 right-2 text-white/30"><ChevronDown className="w-4 h-4" /></div>
-        </motion.div>
+        {/* 🔧 FIX 28/01/2026: "Stato Missione" card rimossa da Home - ora accessibile solo da M1SSION AGENT */}
       </div>
       
       {/* Keyframes */}
