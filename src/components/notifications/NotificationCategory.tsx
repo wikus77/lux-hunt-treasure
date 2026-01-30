@@ -46,54 +46,35 @@ const NotificationCategory: React.FC<NotificationCategoryProps> = ({
 
   return (
     <>
-      {/* Compact Card - Tap to open modal */}
+      {/* 🎨 SOFT NATIVE: Clean notification card */}
       <motion.div
-        className="m1-relief rounded-[20px] transition-all duration-300 hover:shadow-lg mb-4 relative overflow-hidden cursor-pointer"
+        className="sn-card mb-4 relative overflow-hidden cursor-pointer"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         onClick={handleOpenModal}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
       >
-        {/* Animated glow strip */}
-        <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
-          <div 
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
-            style={{
-              animation: 'slideGlowNotif 3s ease-in-out infinite',
-              width: '200%',
-              left: '-100%'
-            }}
-          />
-        </div>
-        <style>{`
-          @keyframes slideGlowNotif {
-            0% { transform: translateX(0); }
-            50% { transform: translateX(50%); }
-            100% { transform: translateX(0); }
-          }
-        `}</style>
-        
-        {/* Category Header */}
-        <div className="p-5 flex items-center justify-between">
+        {/* Category Header - 🎨 SOFT NATIVE */}
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div 
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ background: `${getAccentColor()}20`, border: `1px solid ${getAccentColor()}40` }}
+              className="sn-list-row-icon"
+              style={{ background: `${getAccentColor()}12`, borderRadius: '12px' }}
             >
               <Bell className="w-5 h-5" style={{ color: getAccentColor() }} />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white font-orbitron">
+              <h3 className="text-base font-semibold" style={{ color: 'var(--sn-text-primary)' }}>
                 {categoryInfo.title}
               </h3>
-              <p className="text-sm text-white/60">
+              <p className="text-sm" style={{ color: 'var(--sn-text-secondary)' }}>
                 {notifications.length} {notifications.length === 1 ? 'notifica' : 'notifiche'}
                 {unreadCount > 0 && (
                   <span 
-                    className="ml-2 px-2 py-0.5 text-white text-xs rounded-full"
-                    style={{ background: `linear-gradient(135deg, ${getAccentColor()} 0%, #FC1EFF 100%)` }}
+                    className="ml-2 sn-badge"
+                    style={{ background: getAccentColor() }}
                   >
                     {unreadCount} nuove
                   </span>
@@ -102,7 +83,7 @@ const NotificationCategory: React.FC<NotificationCategoryProps> = ({
             </div>
           </div>
           
-          <ChevronDown className="w-4 h-4 text-white/40" />
+          <ChevronDown className="w-4 h-4" style={{ color: 'var(--sn-text-tertiary)' }} />
         </div>
       </motion.div>
 

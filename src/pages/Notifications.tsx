@@ -112,47 +112,48 @@ const Notifications = () => {
 
   // Main notifications/messages page - GlobalLayout gestisce Header e BottomNav
   // 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
-  // Content scrolls behind glass header, first element has margin-top
+  // 🎨 SOFT NATIVE: Apple-like design update
   return (
     <div 
-      className="w-full px-3" 
+      className="w-full px-3 sn-page" 
       style={{ 
         position: 'relative',
         zIndex: 0,
+        background: 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)',
       }}
     >
         {/* 🔧 FIX v6: First content offset for AION-like scroll under header */}
         <div className="w-full max-w-3xl mx-auto m1-first-content-offset">
-          {/* Tabs */}
+          {/* Tabs - 🎨 SOFT NATIVE: Pill-style tabs */}
           <Tabs 
             value={activeTab} 
             onValueChange={(v) => setActiveTab(v as 'notifications' | 'messages')}
-            className="w-full"
+            className="w-full sn-notification-tabs"
           >
-            {/* Tab Buttons - posizione alzata */}
-            <TabsList className="grid w-full grid-cols-2 bg-gray-900/50 border border-cyan-500/20 rounded-xl p-1" style={{ marginBottom: '7vh' }}>
+            {/* Tab Buttons - 🎨 SOFT NATIVE: Clean pill design */}
+            <TabsList className="grid w-full grid-cols-2 sn-tabs-container" style={{ marginBottom: '24px' }}>
               <TabsTrigger 
                 value="notifications"
-                className="relative flex items-center justify-center gap-2 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 rounded-lg py-3 transition-all"
+                className={`relative flex items-center justify-center gap-2 sn-tab ${activeTab === 'notifications' ? 'sn-tab-active' : ''}`}
               >
-                <Bell className="w-5 h-5" />
-                <span className="font-semibold">Notifiche</span>
+                <Bell className="w-4 h-4" />
+                <span className="font-medium">Notifiche</span>
                 {unreadNotificationsCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center bg-cyan-500 text-white text-xs">
+                  <span className="sn-badge ml-1">
                     {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
-                  </Badge>
+                  </span>
                 )}
               </TabsTrigger>
               <TabsTrigger 
                 value="messages"
-                className="relative flex items-center justify-center gap-2 data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400 rounded-lg py-3 transition-all"
+                className={`relative flex items-center justify-center gap-2 sn-tab ${activeTab === 'messages' ? 'sn-tab-active' : ''}`}
               >
-                <MessageCircle className="w-5 h-5" />
-                <span className="font-semibold">Messaggi</span>
+                <MessageCircle className="w-4 h-4" />
+                <span className="font-medium">Messaggi</span>
                 {chatUnreadCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center bg-purple-500 text-white text-xs">
+                  <span className="sn-badge ml-1" style={{ background: '#AF52DE' }}>
                     {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
-                  </Badge>
+                  </span>
                 )}
               </TabsTrigger>
             </TabsList>

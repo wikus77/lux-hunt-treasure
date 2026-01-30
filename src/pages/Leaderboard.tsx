@@ -106,9 +106,10 @@ const Leaderboard = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // 🎨 SOFT NATIVE: Apple-like design update
   return (
     <motion.div 
-      className="bg-gradient-to-b from-[#131524]/70 to-black"
+      className="sn-page"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -116,19 +117,19 @@ const Leaderboard = () => {
         height: '100dvh',
         overflow: 'hidden',
         position: 'relative',
-        background: 'rgba(19, 21, 36, 0.6)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)'
+        background: 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)',
       }}
     >
-      {/* Fixed Header */}
+      {/* Fixed Header - 🎨 SOFT NATIVE: Light glass header */}
       <header 
         className="fixed top-0 left-0 right-0 z-50"
         style={{
           height: '72px',
           paddingTop: 'env(safe-area-inset-top, 47px)',
-          background: 'rgba(19, 21, 33, 0.55)',
-          backdropFilter: 'blur(12px)'
+          background: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
         <UnifiedHeader />
@@ -146,42 +147,25 @@ const Leaderboard = () => {
         }}
       >
         <div className="container mx-auto">
-          {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Titolo sezione */}
+          {/* 🎨 SOFT NATIVE: Clean section title */}
           <motion.div
-            className="m1-relief p-6 mb-6 mx-3 relative"
+            className="sn-card-elevated mb-6 mx-3 relative"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            style={{
-              borderRadius: '24px'
-            }}
           >
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] via-[#F059FF] to-[#FACC15] opacity-90" />
-            <h1 className="text-4xl font-orbitron font-bold text-center">
-              <span 
-                className="text-[#00F7FF]"
-                style={{ textShadow: "0 0 10px rgba(0, 247, 255, 0.6), 0 0 20px rgba(0, 247, 255, 0.3)" }}
-              >
-                CLASSI
-              </span>
-              <span 
-                className="text-white"
-                style={{ textShadow: "0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.3)" }}
-              >
-                FICA
-              </span>
+            <h1 className="sn-section-title text-center" style={{ marginBottom: 0 }}>
+              <span style={{ color: 'var(--sn-accent)' }}>Classi</span>
+              <span style={{ color: 'var(--sn-text-primary)' }}>fica</span>
             </h1>
           </motion.div>
           
-          {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Header filtri */}
+          {/* 🎨 SOFT NATIVE: Header filtri */}
           <motion.div
-            className="m1-relief-sm p-4 mb-6 mx-3"
+            className="sn-card mb-4 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            style={{
-              borderRadius: '16px'
-            }}
           >
             <LeaderboardHeader 
               onSimulateRankChange={simulateRankChange}
@@ -189,42 +173,32 @@ const Leaderboard = () => {
             />
           </motion.div>
 
-          {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Ricerca */}
+          {/* 🎨 SOFT NATIVE: Ricerca */}
           <motion.div
-            className="m1-relief-sm p-4 mb-6 mx-3"
+            className="sn-card mb-4 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            style={{
-              borderRadius: '16px'
-            }}
           >
             <LeaderboardSearch value={searchQuery} onChange={setSearchQuery} />
           </motion.div>
 
-          {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Top 3 Podio */}
+          {/* 🎨 SOFT NATIVE: Top 3 Podio */}
           <motion.div
-            className="m1-relief p-6 mb-6 mx-3 relative"
+            className="sn-card-elevated sn-leaderboard-podium mb-4 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            style={{
-              borderRadius: '24px'
-            }}
           >
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#F059FF] opacity-90" />
             <LeaderboardTopUsers players={samplePlayers.slice(0, 3)} />
           </motion.div>
 
-          {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Lista principale */}
+          {/* 🎨 SOFT NATIVE: Lista principale */}
           <motion.div
-            className="m1-relief-sm p-4 mb-6 mx-3"
+            className="sn-card mb-4 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            style={{
-              borderRadius: '16px'
-            }}
           >
             <LeaderboardTabs 
               filteredPlayers={filteredPlayers}
@@ -238,15 +212,12 @@ const Leaderboard = () => {
             />
           </motion.div>
 
-          {/* ✅ Fix UI chirurgico firmato esclusivamente BY JOSEPH MULE — M1SSION™ - Progress personale */}
+          {/* 🎨 SOFT NATIVE: Progress personale */}
           <motion.div
-            className="m1-relief-sm p-4 mb-6 mx-3"
+            className="sn-card mb-6 mx-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            style={{
-              borderRadius: '16px'
-            }}
           >
             <LeaderboardProgress currentPosition={42} totalPlayers={100} />
           </motion.div>

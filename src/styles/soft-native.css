@@ -1,0 +1,446 @@
+/**
+ * 🎨 M1SSION™ SOFT NATIVE DESIGN SYSTEM
+ * © 2025 Joseph MULÉ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * 
+ * Apple-like soft glass design: white/off-white, rounded, gentle shadows
+ * Apply to: AION/Intelligence, Notifications, Leaderboard
+ * 
+ * Usage: Add .sn-* classes to elements
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS (CSS Variables)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Backgrounds */
+  --sn-bg-page: #F8F9FA;
+  --sn-bg-card: rgba(255, 255, 255, 0.95);
+  --sn-bg-card-hover: rgba(255, 255, 255, 1);
+  --sn-bg-input: rgba(255, 255, 255, 0.9);
+  
+  /* Borders */
+  --sn-border-light: rgba(0, 0, 0, 0.06);
+  --sn-border-medium: rgba(0, 0, 0, 0.08);
+  --sn-border-focus: rgba(0, 150, 200, 0.3);
+  
+  /* Shadows (Apple-like soft) */
+  --sn-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --sn-shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.05);
+  --sn-shadow-pill: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --sn-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  
+  /* Radii */
+  --sn-radius-sm: 12px;
+  --sn-radius-md: 16px;
+  --sn-radius-lg: 20px;
+  --sn-radius-xl: 24px;
+  --sn-radius-pill: 100px;
+  
+  /* Colors */
+  --sn-accent: #0A84FF;
+  --sn-accent-light: rgba(10, 132, 255, 0.12);
+  --sn-accent-teal: #34C759;
+  --sn-text-primary: #1C1C1E;
+  --sn-text-secondary: #6B7280;
+  --sn-text-tertiary: #9CA3AF;
+  --sn-divider: rgba(0, 0, 0, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PAGE CONTAINER
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-page {
+  background: var(--sn-bg-page);
+  min-height: 100dvh;
+}
+
+.sn-page-gradient {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARDS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-card {
+  background: var(--sn-bg-card);
+  border-radius: var(--sn-radius-lg);
+  border: 1px solid var(--sn-border-light);
+  box-shadow: var(--sn-shadow-card);
+  padding: 16px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.sn-card:hover {
+  box-shadow: var(--sn-shadow-card-hover);
+}
+
+.sn-card-elevated {
+  background: var(--sn-bg-card);
+  border-radius: var(--sn-radius-xl);
+  border: 1px solid var(--sn-border-light);
+  box-shadow: var(--sn-shadow-card), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  padding: 20px;
+}
+
+.sn-card-flat {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--sn-radius-md);
+  border: 1px solid var(--sn-border-light);
+  padding: 12px 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TABS / PILLS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-tabs-container {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: var(--sn-radius-pill);
+  padding: 4px;
+  display: flex;
+  gap: 4px;
+}
+
+.sn-tab {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: var(--sn-radius-pill);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sn-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.sn-tab:hover {
+  color: var(--sn-text-primary);
+}
+
+.sn-tab-active {
+  background: white;
+  color: var(--sn-text-primary);
+  box-shadow: var(--sn-shadow-pill);
+}
+
+.sn-tab-accent {
+  background: var(--sn-accent);
+  color: white;
+  box-shadow: var(--sn-shadow-pill);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PILLS / BADGES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--sn-radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--sn-text-secondary);
+}
+
+.sn-pill-accent {
+  background: var(--sn-accent-light);
+  color: var(--sn-accent);
+}
+
+.sn-pill-success {
+  background: rgba(52, 199, 89, 0.12);
+  color: #34C759;
+}
+
+.sn-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--sn-accent);
+  color: white;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIST ROWS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-list {
+  background: var(--sn-bg-card);
+  border-radius: var(--sn-radius-lg);
+  border: 1px solid var(--sn-border-light);
+  overflow: hidden;
+}
+
+.sn-list-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  background: transparent;
+  border-bottom: 1px solid var(--sn-divider);
+  transition: background 0.15s ease;
+}
+
+.sn-list-row:last-child {
+  border-bottom: none;
+}
+
+.sn-list-row:active {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.sn-list-row-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--sn-accent-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.sn-list-row-icon svg {
+  width: 20px;
+  height: 20px;
+  color: var(--sn-accent);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ICON BUTTONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--sn-bg-card);
+  border: 1px solid var(--sn-border-light);
+  box-shadow: var(--sn-shadow-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sn-icon-btn:hover {
+  background: var(--sn-bg-card-hover);
+  box-shadow: var(--sn-shadow-card);
+}
+
+.sn-icon-btn:active {
+  transform: scale(0.95);
+}
+
+.sn-icon-btn svg {
+  width: 18px;
+  height: 18px;
+  color: var(--sn-text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION HEADERS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-section-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--sn-text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.sn-section-subtitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sn-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY OVERRIDES (when inside .sn-page)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-page .sn-text-primary {
+  color: var(--sn-text-primary);
+}
+
+.sn-page .sn-text-secondary {
+  color: var(--sn-text-secondary);
+}
+
+.sn-page .sn-text-tertiary {
+  color: var(--sn-text-tertiary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DIVIDERS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-divider {
+  height: 1px;
+  background: var(--sn-divider);
+  margin: 16px 0;
+}
+
+.sn-divider-inset {
+  height: 1px;
+  background: var(--sn-divider);
+  margin: 0 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INPUTS (for search, chat input)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--sn-radius-md);
+  border: 1px solid var(--sn-border-light);
+  background: var(--sn-bg-input);
+  font-size: 15px;
+  color: var(--sn-text-primary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sn-input::placeholder {
+  color: var(--sn-text-tertiary);
+}
+
+.sn-input:focus {
+  outline: none;
+  border-color: var(--sn-border-focus);
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLL AREA (no visible scrollbar, smooth)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-scroll-area {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sn-scroll-area::-webkit-scrollbar {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOTIFICATION-SPECIFIC OVERRIDES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-notification-tabs .sn-tabs-container {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.sn-notification-category {
+  margin-bottom: 24px;
+}
+
+.sn-notification-category-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sn-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  padding-left: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEADERBOARD-SPECIFIC OVERRIDES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-leaderboard-podium {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.9) 100%);
+  border-radius: var(--sn-radius-xl);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.sn-leaderboard-rank {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sn-accent-light);
+  color: var(--sn-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.sn-leaderboard-rank-gold {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: white;
+}
+
+.sn-leaderboard-rank-silver {
+  background: linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%);
+  color: white;
+}
+
+.sn-leaderboard-rank-bronze {
+  background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
+  color: white;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AION/INTELLIGENCE-SPECIFIC OVERRIDES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sn-aion-container {
+  /* Keep blob area transparent - no background interference */
+  position: relative;
+}
+
+.sn-aion-label {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.sn-aion-label h2 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.sn-aion-label h2 .sn-accent-text {
+  color: var(--sn-accent);
+}
+
+.sn-aion-label p {
+  font-size: 11px;
+  color: var(--sn-text-tertiary);
+  letter-spacing: 0.03em;
+}
+
+.sn-chat-container {
+  background: var(--sn-bg-card);
+  border-radius: var(--sn-radius-xl) var(--sn-radius-xl) 0 0;
+  border: 1px solid var(--sn-border-light);
+  border-bottom: none;
+  margin-top: 16px;
+  overflow: hidden;
+}

@@ -21,14 +21,14 @@ const IntelligencePage: React.FC = () => {
 
   // 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
   // Content scrolls behind glass header, first element has margin-top
-  // 🔧 FIX 27/01/2026 v4: Background handled by ios-native.css ::before gradient layer
+  // 🎨 SOFT NATIVE: Apple-like design update
   return (
       <div 
-        className="flex flex-col px-3"
+        className="flex flex-col px-3 sn-page"
         style={{
           position: 'relative',
           zIndex: 0,
-          // Background transparent - native gradient layer from ios-native.css handles background
+          background: 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)',
         }}
       >
         {/* 🔧 FIX v8.2: M1UPill is FIXED OVERLAY (see bottom)
@@ -64,9 +64,9 @@ const IntelligencePage: React.FC = () => {
           </Suspense>
         </div>
         
-        {/* AION Label - COMPACT */}
+        {/* AION Label - 🎨 SOFT NATIVE: Clean label */}
         <div 
-          className="text-center"
+          className="text-center sn-aion-label"
           style={{ 
             flexShrink: 0,
             marginBottom: '6px',
@@ -74,11 +74,11 @@ const IntelligencePage: React.FC = () => {
             zIndex: 10
           }}
         >
-          <h2 className="text-lg font-bold tracking-wider">
-            <span className="text-cyan-400">AI</span>
-            <span className="text-white">ON</span>
+          <h2 className="text-lg font-semibold tracking-wider">
+            <span style={{ color: 'var(--sn-accent)' }}>AI</span>
+            <span style={{ color: 'var(--sn-text-primary)' }}>ON</span>
           </h2>
-          <p className="text-[9px] text-gray-500 tracking-wide">Adaptive Intelligence ON</p>
+          <p className="text-[9px] tracking-wide" style={{ color: 'var(--sn-text-tertiary)' }}>Neural Link Established</p>
         </div>
 
         {/* Shadow Protocol v2 - Hidden on mobile to save space */}
@@ -88,9 +88,10 @@ const IntelligencePage: React.FC = () => {
           </Suspense>
         </div>
 
-        {/* Chat Panel - si estende fino alla bottom nav */}
+        {/* Chat Panel - 🎨 SOFT NATIVE: Clean chat container */}
         <div 
           data-onboarding="ai-chat"
+          className="sn-chat-container"
           style={{ 
             flex: 1,
             minHeight: '200px',
