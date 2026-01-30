@@ -22,8 +22,6 @@ type LoginScreen = 'opening' | 'signup' | 'login';
 const Login = () => {
   const [currentScreen, setCurrentScreen] = useState<LoginScreen>('opening');
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [videoError, setVideoError] = useState(false);
   
   const { navigate } = useWouterNavigation();
   const { isAuthenticated, isLoading } = useUnifiedAuth();
@@ -38,8 +36,15 @@ const Login = () => {
   useEffect(() => {
     const platform = Capacitor.isNativePlatform() ? 'capacitor' : 'web';
     const videoSrc = '/assets/VIDEO/M1SSION_INTRO.mp4';
-    console.log('🎬 [Login] Mount debug:', { platform, videoSrc, videoLoaded, videoError });
-  }, [videoLoaded, videoError]);
+    console.log('🎬 [Login] Mount debug:', { platform, videoSrc });
+    
+    // Try to play video programmatically (helps with some iOS edge cases)
+    if (videoRef.current) {
+      videoRef.current.play().catch(err => {
+        console.warn('🎬 [Login] Video autoplay blocked:', err);
+      });
+    }
+  }, []);
 
   // 🚀 Redirect if already authenticated
   useEffect(() => {
@@ -63,15 +68,13 @@ const Login = () => {
     }
   }, []);
 
-  // Video handlers
+  // Video handlers (logging only, no state dependency)
   const handleVideoLoad = useCallback(() => {
     console.log('🎬 [Login] Video loaded successfully');
-    setVideoLoaded(true);
   }, []);
 
   const handleVideoError = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     console.error('🎬 [Login] Video failed to load:', e);
-    setVideoError(true);
   }, []);
 
   // Navigation handlers
@@ -98,37 +101,44 @@ const Login = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6 }}
-      className="relative z-10 flex flex-col items-center justify-between h-full py-16 px-6"
+      className="relative z-10 flex flex-col h-full px-6"
       style={{
-        paddingTop: 'max(env(safe-area-inset-top, 64px), 64px)',
-        paddingBottom: 'max(env(safe-area-inset-bottom, 64px), 64px)'
+        paddingTop: 'max(env(safe-area-inset-top, 24px), 24px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 40px), 40px)'
       }}
     >
-      {/* Brand Logo - Top Center */}
+      {/* Small M1SSION label - Top Left (like "runway" in reference) */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.6 }}
-        className="text-center"
+        className="self-start"
       >
-        <h1 className="text-5xl font-orbitron font-black tracking-wider mb-2">
-          <span className="text-[#00D1FF] drop-shadow-[0_0_20px_rgba(0,209,255,0.8)]">M1</span>
-          <span className="text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">SSION</span>
-        </h1>
-        <p className="text-white/70 text-sm font-light tracking-widest uppercase">
-          La Caccia al Tesoro Reale
-        </p>
+        <span className="text-white text-sm font-medium tracking-wider">
+          M1SSION
+        </span>
       </motion.div>
 
-      {/* Spacer */}
-      <div className="flex-1" />
+      {/* Large Headline - Center (like "Tools for Human Imagination") */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.6 }}
+        className="flex-1 flex items-center justify-center"
+      >
+        <h1 className="text-5xl sm:text-6xl font-orbitron font-black text-white leading-tight text-center">
+          <span className="block">Tools for</span>
+          <span className="block">Real-World</span>
+          <span className="block text-[#00D1FF] drop-shadow-[0_0_20px_rgba(0,209,255,0.6)]">Treasure Hunting</span>
+        </h1>
+      </motion.div>
 
       {/* CTA Buttons - Bottom */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.6 }}
-        className="w-full max-w-sm space-y-4"
+        className="w-full max-w-sm mx-auto space-y-4"
       >
         {/* Sign Up Button - Primary */}
         <button
@@ -154,12 +164,12 @@ const Login = () => {
           Log In
         </button>
 
-        {/* Terms Notice */}
-        <p className="text-center text-white/40 text-xs mt-6 px-4">
-          By continuing, you agree to our{' '}
-          <a href="/terms" className="text-white/60 underline">Terms</a>
-          {' '}and{' '}
-          <a href="/privacy" className="text-white/60 underline">Privacy Policy</a>
+        {/* Terms Notice - Runway Style */}
+        <p className="text-center text-white/40 text-xs mt-6 px-2 leading-relaxed">
+          By tapping "Sign Up", you agree to our{' '}
+          <a href="/terms" className="text-white/60 underline">Terms of Use</a>
+          {' '}and acknowledge that you have read and understand our{' '}
+          <a href="/privacy" className="text-white/60 underline">Privacy Policy</a>.
         </p>
       </motion.div>
     </motion.div>
@@ -321,39 +331,33 @@ const Login = () => {
   // ============================================================================
   return createPortal(
     <div className="fixed inset-0 z-[100] overflow-hidden bg-black">
-      {/* 🎬 Video Background - Full Screen Cover */}
-      {!videoError && (
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          onLoadedData={handleVideoLoad}
-          onError={handleVideoError}
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ 
-            opacity: videoLoaded ? 1 : 0,
-            transition: 'opacity 0.5s ease-in'
-          }}
-        >
-          <source src="/assets/VIDEO/M1SSION_INTRO.mp4" type="video/mp4" />
-        </video>
-      )}
+      {/* 🎬 Video Background - Full Screen Cover (z-index: 0) */}
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        onLoadedData={handleVideoLoad}
+        onError={handleVideoError}
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ zIndex: 0 }}
+        poster="/assets/m1-logo-dark.png"
+      >
+        <source src="/assets/VIDEO/M1SSION_INTRO.mp4" type="video/mp4" />
+      </video>
 
-      {/* Fallback gradient if video fails */}
+      {/* Gradient overlay for readability (z-index: 1) */}
       <div 
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          background: videoLoaded 
-            ? 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.5) 100%)'
-            : 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)',
-          transition: 'background 0.5s ease-in'
+          zIndex: 1,
+          background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.2) 70%, rgba(0,0,0,0.5) 100%)'
         }}
       />
 
-      {/* Animated content based on current screen */}
+      {/* Animated content based on current screen (z-index: 10) */}
       <AnimatePresence mode="wait">
         {currentScreen === 'opening' && renderOpeningScreen()}
         {currentScreen === 'signup' && renderSignUpScreen()}
