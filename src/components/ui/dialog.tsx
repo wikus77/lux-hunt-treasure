@@ -1,7 +1,10 @@
 // © 2025 Joseph MULÉ – M1SSION™
+// 🎬 Native Feel: Spring animations for dialogs
 import * as React from "react"
 import { createPortal } from "react-dom"
+import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { hapticLight } from "@/utils/haptics"
 
 interface DialogProps {
   open?: boolean;
@@ -71,37 +74,88 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
       return () => setMounted(false);
     }, []);
 
-    if (!isOpen || !mounted) return null;
+    // 🎬 Native Feel: Haptic on open
+    React.useEffect(() => {
+      if (isOpen) {
+        hapticLight();
+      }
+    }, [isOpen]);
+
+    if (!mounted) return null;
+
+    // 🎬 Native Feel: iOS-style spring animation
+    const overlayVariants = {
+      hidden: { opacity: 0 },
+      visible: { opacity: 1 }
+    };
+
+    const contentVariants = {
+      hidden: { opacity: 0, scale: 0.95, y: 20 },
+      visible: { 
+        opacity: 1, 
+        scale: 1, 
+        y: 0,
+        transition: {
+          type: "spring" as const,
+          damping: 25,
+          stiffness: 300
+        }
+      },
+      exit: { 
+        opacity: 0, 
+        scale: 0.95, 
+        y: 10,
+        transition: { duration: 0.15 }
+      }
+    };
+
+    const handleClose = () => {
+      hapticLight();
+      onOpenChange?.(false);
+    };
 
     const content = (
-      <div 
-        className="fixed inset-0 z-[10000] bg-black/80 flex items-center justify-center p-4"
-        onClick={(e) => {
-          // Chiudi cliccando sullo sfondo
-          if (e.target === e.currentTarget) {
-            onOpenChange?.(false);
-          }
-        }}
-      >
-        <div
-          ref={ref}
-          className={cn(
-            "relative bg-background rounded-lg shadow-lg max-w-lg w-full max-h-[85vh] overflow-y-auto m1ssion-glass-card",
-            className
-          )}
-          onClick={(e) => e.stopPropagation()}
-          {...props}
-        >
-          <button
-            onClick={() => onOpenChange?.(false)}
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-white hover:text-[#00D1FF] z-10"
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            className="fixed inset-0 z-[10000] bg-black/80 flex items-center justify-center p-4"
+            variants={overlayVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            transition={{ duration: 0.2 }}
+            onClick={(e) => {
+              // Chiudi cliccando sullo sfondo
+              if (e.target === e.currentTarget) {
+                handleClose();
+              }
+            }}
           >
-            <span className="sr-only">Close</span>
-            ✕
-          </button>
-          {children}
-        </div>
-      </div>
+            <motion.div
+              ref={ref}
+              className={cn(
+                "relative bg-background rounded-lg shadow-lg max-w-lg w-full max-h-[85vh] overflow-y-auto m1ssion-glass-card",
+                className
+              )}
+              variants={contentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={(e) => e.stopPropagation()}
+              style={props.style}
+            >
+              <button
+                onClick={handleClose}
+                className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-white hover:text-[#00D1FF] z-10 active:scale-95"
+              >
+                <span className="sr-only">Close</span>
+                ✕
+              </button>
+              {children}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     );
 
     // Usa Portal per renderizzare direttamente nel body
