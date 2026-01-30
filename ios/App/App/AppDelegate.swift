@@ -111,9 +111,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         webView.scrollView.bounces = true
         webView.scrollView.alwaysBounceVertical = true
         
-        // 🔧 FIX 27/01/2026 v8.3: Background color matches gradient base
-        // This color shows during iOS bounce - must match CSS gradient base #0a0b0f
-        let bgColor = UIColor(red: 0.039, green: 0.043, blue: 0.059, alpha: 1) // #0a0b0f
+        // 🔧 FIX 30/01/2026: WHITE background for iOS bounce/overscroll
+        // This color shows during iOS rubber-band bounce - MUST be WHITE to match white theme
+        let bgColor = UIColor.white // #FFFFFF
         webView.isOpaque = true
         webView.backgroundColor = bgColor
         webView.scrollView.backgroundColor = bgColor
@@ -193,12 +193,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             document.documentElement.style.setProperty('--sat', '\(safeTop)px');
             document.documentElement.style.setProperty('--capacitor-safe-area-top', '\(safeTop)px');
             
-            // 🔧 FIX v8.9: NUCLEAR - Use setProperty with 'important' to override !important CSS
-            // Normal inline styles LOSE to !important in stylesheets
-            // But setProperty('prop', 'value', 'important') WINS over everything
-            document.documentElement.style.setProperty('background', '#0a0b0f', 'important');
-            document.documentElement.style.setProperty('background-image', 'none', 'important');
+            // 🔧 FIX 30/01/2026: WHITE background for overscroll
+            // Use setProperty with 'important' to override all CSS
+            document.documentElement.style.setProperty('background', 'linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%)', 'important');
+            document.documentElement.style.setProperty('background-color', '#FFFFFF', 'important');
             document.documentElement.style.setProperty('background-attachment', 'scroll', 'important');
+            
+            // Also add sn-page class for CSS white theme gate
+            document.documentElement.classList.add('sn-page');
             
             // Inject layout CSS immediately
             var style = document.createElement('style');

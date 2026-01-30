@@ -1,6 +1,6 @@
 // FILE MODIFICATO — BY JOSEPH MULE
 // With Chat/Messages Tab Integration - STATIC LAYOUT
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, MessageCircle } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
@@ -42,6 +42,30 @@ const Notifications = () => {
   
   useDynamicIslandSafety();
   useNotificationsAutoReload(reloadNotifications);
+
+  // 🔧 FIX 30/01/2026: Force white background on html (bypass CSS :has() issues in iOS WebView)
+  useEffect(() => {
+    // Add sn-page class to html element for CSS gate
+    document.documentElement.classList.add('sn-page');
+    
+    // Hide dark overlays
+    const fullscreenBg = document.querySelector('.m1-fullscreen-bg') as HTMLElement;
+    const grain = document.querySelector('.m1-grain') as HTMLElement;
+    if (fullscreenBg) fullscreenBg.style.display = 'none';
+    if (grain) grain.style.display = 'none';
+    
+    // Force white background on html
+    document.documentElement.style.background = 'linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%)';
+    document.documentElement.style.backgroundColor = '#FFFFFF';
+    
+    return () => {
+      document.documentElement.classList.remove('sn-page');
+      if (fullscreenBg) fullscreenBg.style.display = '';
+      if (grain) grain.style.display = '';
+      document.documentElement.style.background = '';
+      document.documentElement.style.backgroundColor = '';
+    };
+  }, []);
 
   const handleMarkAsRead = async (id: string) => {
     await triggerHaptic('tick');

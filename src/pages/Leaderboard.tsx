@@ -106,6 +106,30 @@ const Leaderboard = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // 🔧 FIX 30/01/2026: Force white background on html (bypass CSS :has() issues in iOS WebView)
+  useEffect(() => {
+    // Add sn-page class to html element for CSS gate
+    document.documentElement.classList.add('sn-page');
+    
+    // Hide dark overlays
+    const fullscreenBg = document.querySelector('.m1-fullscreen-bg') as HTMLElement;
+    const grain = document.querySelector('.m1-grain') as HTMLElement;
+    if (fullscreenBg) fullscreenBg.style.display = 'none';
+    if (grain) grain.style.display = 'none';
+    
+    // Force white background on html
+    document.documentElement.style.background = 'linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%)';
+    document.documentElement.style.backgroundColor = '#FFFFFF';
+    
+    return () => {
+      document.documentElement.classList.remove('sn-page');
+      if (fullscreenBg) fullscreenBg.style.display = '';
+      if (grain) grain.style.display = '';
+      document.documentElement.style.background = '';
+      document.documentElement.style.backgroundColor = '';
+    };
+  }, []);
+
   // 🎨 SOFT NATIVE: Apple-like design update
   return (
     <motion.div 

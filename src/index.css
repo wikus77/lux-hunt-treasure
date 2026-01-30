@@ -1082,7 +1082,19 @@ body.is-native {
    force WHITE background that extends into iOS safe-area
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* WHITE background when .sn-page is present - HIGHEST PRIORITY */
+/* 🔧 FIX 30/01/2026: WHITE background when .sn-page is present - HIGHEST PRIORITY
+   Uses BOTH html.sn-page (direct class) AND html:has(.sn-page) (descendant)
+   to ensure compatibility with WKWebView where :has() may not work reliably */
+
+/* PRIMARY: Direct class on html (set by AppDelegate + useEffect) */
+html.sn-page {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%) !important;
+  background-color: #FFFFFF !important;
+  background-attachment: scroll !important;
+  background-image: none !important;
+}
+
+/* FALLBACK: :has() selector for browsers that support it */
 html:has(.sn-page) {
   background: linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%) !important;
   background-color: #FFFFFF !important;
@@ -1090,13 +1102,17 @@ html:has(.sn-page) {
   background-image: none !important;
 }
 
+html.sn-page body,
 body:has(.sn-page) {
   background: transparent !important;
   background-color: transparent !important;
 }
 
-/* Override native iOS dark background when .sn-page is present */
+/* Override native iOS dark background */
+html.sn-page.capacitor-ios,
+html.capacitor-ios.sn-page,
 html.capacitor-ios:has(.sn-page),
+html[data-capacitor="ios"].sn-page,
 html[data-capacitor="ios"]:has(.sn-page) {
   background: linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%) !important;
   background-color: #FFFFFF !important;
@@ -1104,20 +1120,19 @@ html[data-capacitor="ios"]:has(.sn-page) {
   background-attachment: scroll !important;
 }
 
-/* Fallback for body.is-native when .sn-page is present */
+/* Fallback for body.is-native */
+html.sn-page body.is-native,
 html:has(body.is-native):has(.sn-page) {
-  background: linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%) !important;
-  background-color: #FFFFFF !important;
-  background-image: none !important;
-  background-attachment: scroll !important;
-}
-
-body.is-native:has(.sn-page) {
   background: transparent !important;
   background-color: transparent !important;
 }
 
 /* Ensure all wrappers are transparent to show white background */
+html.sn-page #root,
+html.sn-page .safe-area-wrapper,
+html.sn-page .global-layout-content,
+html.sn-page .app-shell,
+html.sn-page main,
 html:has(.sn-page) #root,
 html:has(.sn-page) .safe-area-wrapper,
 html:has(.sn-page) .global-layout-content,
@@ -1127,7 +1142,7 @@ html:has(.sn-page) main {
   background-color: transparent !important;
 }
 
-/* .sn-page container itself - WHITE background as fallback if :has() not supported */
+/* .sn-page container itself - WHITE background as fallback */
 .sn-page {
   background: linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%) !important;
   background-color: #FFFFFF !important;
@@ -1135,7 +1150,7 @@ html:has(.sn-page) main {
 }
 
 /* 🔧 CRITICAL: Hide the dark fullscreen background div when .sn-page is present */
-/* This div is in App.tsx and shows dark gradient that bleeds through transparent pages */
+html.sn-page .m1-fullscreen-bg,
 html:has(.sn-page) .m1-fullscreen-bg,
 body:has(.sn-page) .m1-fullscreen-bg {
   display: none !important;
@@ -1143,6 +1158,7 @@ body:has(.sn-page) .m1-fullscreen-bg {
 }
 
 /* Also hide the grain overlay on white pages */
+html.sn-page .m1-grain,
 html:has(.sn-page) .m1-grain,
 body:has(.sn-page) .m1-grain {
   display: none !important;
@@ -1150,11 +1166,16 @@ body:has(.sn-page) .m1-grain {
 }
 
 /* Header and Bottom Nav z-index guarantee for .sn-page */
+html.sn-page .unified-header-wrapper,
+html.sn-page header[class*="fixed"],
 html:has(.sn-page) .unified-header-wrapper,
 html:has(.sn-page) header[class*="fixed"] {
   z-index: 9999 !important;
 }
 
+html.sn-page .bottom-navigation-ios,
+html.sn-page #m1-bottom-nav,
+html.sn-page nav[class*="fixed"],
 html:has(.sn-page) .bottom-navigation-ios,
 html:has(.sn-page) #m1-bottom-nav,
 html:has(.sn-page) nav[class*="fixed"] {
