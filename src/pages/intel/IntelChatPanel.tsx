@@ -377,29 +377,32 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
     fetchAionStatus();
   };
 
+  // 🔧 FIX 30/01/2026: Changed to WHITE glass theme (was dark rgba(7,8,24,0.6))
   return (
-    <div className={`flex flex-col rounded-2xl overflow-hidden ${className}`}
+    <div className={`flex flex-col rounded-2xl overflow-hidden sn-chat-container ${className}`}
       style={{
-        background: 'rgba(7, 8, 24, 0.6)',
-        backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(0, 212, 255, 0.2)',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: '1px solid rgba(0, 0, 0, 0.08)',
+        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
         // 🔧 FIX v10: Remove marginBottom - we'll handle keyboard in input bar
         ...style
       }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-cyan-500/20">
+      {/* Header - WHITE theme */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200/60">
         <div className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-cyan-400" />
-          <span className="text-sm font-medium text-white">Neural Link Established</span>
-          <span className={`w-2 h-2 rounded-full ${status === 'idle' ? 'bg-green-400' : status === 'speaking' ? 'bg-cyan-400 animate-pulse' : 'bg-yellow-400 animate-pulse'}`} />
+          <Brain className="w-5 h-5 text-cyan-600" />
+          <span className="text-sm font-medium text-gray-800">Neural Link Established</span>
+          <span className={`w-2 h-2 rounded-full ${status === 'idle' ? 'bg-green-500' : status === 'speaking' ? 'bg-cyan-500 animate-pulse' : 'bg-yellow-500 animate-pulse'}`} />
         </div>
         <div className="flex items-center gap-2">
           {/* AION Status Info */}
           {aionStatus && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-800/50 text-xs">
-              <Zap className="w-3 h-3 text-yellow-400" />
-              <span className="text-gray-400">
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 text-xs border border-gray-200/60">
+              <Zap className="w-3 h-3 text-yellow-500" />
+              <span className="text-gray-600">
                 {aionStatus.free_remaining > 0 
                   ? `${aionStatus.free_remaining} gratis`
                   : `${aionStatus.cost_per_consult} M1U`
@@ -409,17 +412,17 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
           )}
           <button
             onClick={toggleMic}
-            className={`p-2 rounded-lg transition-colors ${isMicEnabled ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white'}`}
+            className={`p-2 rounded-lg transition-colors ${isMicEnabled ? 'bg-cyan-100 text-cyan-600' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'}`}
           >
             {isMicEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
           </button>
           <button
             onClick={refreshChat}
-            className="p-2 rounded-lg text-gray-400 hover:text-white transition-colors"
+            className="p-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
           >
             <RotateCw className="w-4 h-4" />
           </button>
-          <button className="p-2 rounded-lg text-gray-400 hover:text-white transition-colors">
+          <button className="p-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors">
             <MoreHorizontal className="w-4 h-4" />
           </button>
         </div>
@@ -434,6 +437,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
           paddingBottom: isKeyboardOpen ? `${keyboardInset + 80}px` : '80px',
         }}
       >
+        {/* 🔧 FIX 30/01/2026: WHITE theme message bubbles */}
         <AnimatePresence>
           {messages.map((message) => (
             <motion.div
@@ -446,18 +450,18 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
               <div
                 className={`max-w-[80%] px-4 py-2 rounded-2xl ${
                   message.role === 'user'
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-md'
                     : message.role === 'system'
-                    ? 'bg-gray-800/50 text-gray-400 italic text-sm'
+                    ? 'bg-gray-100 text-gray-500 italic text-sm border border-gray-200/60'
                     : message.role === 'error'
-                    ? 'bg-red-900/30 text-red-300 border border-red-500/30 relative'
-                    : 'bg-gray-800/80 text-white border border-cyan-500/20'
+                    ? 'bg-red-50 text-red-600 border border-red-200 relative'
+                    : 'bg-gray-100 text-gray-800 border border-gray-200/60 shadow-sm'
                 }`}
               >
                 <p className="text-sm leading-relaxed">{message.content}</p>
                 {/* Show M1U spent info */}
                 {message.meta?.m1u_spent !== undefined && message.meta.m1u_spent > 0 && (
-                  <p className="text-xs text-cyan-400/70 mt-1">
+                  <p className="text-xs text-cyan-600/70 mt-1">
                     -{message.meta.m1u_spent} M1U
                   </p>
                 )}
@@ -466,7 +470,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
                   <button
                     onClick={handleRetry}
                     disabled={isLoading}
-                    className="mt-2 px-3 py-1.5 text-xs bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                    className="mt-2 px-3 py-1.5 text-xs bg-cyan-100 hover:bg-cyan-200 text-cyan-700 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
                   >
                     <RotateCw className="w-3 h-3" />
                     Riprova ({MAX_RETRY_COUNT - retryCount} tentativi)
@@ -483,8 +487,8 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
             animate={{ opacity: 1 }}
             className="flex justify-start"
           >
-            <div className="bg-gray-800/80 px-4 py-2 rounded-2xl border border-cyan-500/20">
-              <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+            <div className="bg-gray-100 px-4 py-2 rounded-2xl border border-gray-200/60 shadow-sm">
+              <Loader2 className="w-5 h-5 text-cyan-600 animate-spin" />
             </div>
           </motion.div>
         )}
@@ -501,7 +505,8 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
 
       {/* Input - 🔧 FIX v12: SINGLE input bar, NEVER remounts
           Uses position:fixed + transform to dock to keyboard without remounting
-          CRITICAL: iOS requires the same DOM node to maintain focus session */}
+          CRITICAL: iOS requires the same DOM node to maintain focus session
+          🔧 FIX 30/01/2026: WHITE theme styling */}
       <div 
         className="p-3 mx-2 mb-2 rounded-2xl"
         style={{
@@ -514,12 +519,12 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
           bottom: isKeyboardOpen ? `${keyboardInset + 8}px` : 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
           zIndex: 60000,
           transition: 'bottom 0.15s ease-out',
-          // Glass style
-          background: 'rgba(15, 23, 42, 0.95)',
+          // WHITE Glass style
+          background: 'rgba(255, 255, 255, 0.98)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(0, 212, 255, 0.25)',
-          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 212, 255, 0.1)',
+          border: '1px solid rgba(0, 0, 0, 0.08)',
+          boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.08), 0 -1px 3px rgba(0, 0, 0, 0.04)',
         }}
       >
         <div className="flex items-center gap-2">
@@ -543,7 +548,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
             data-form-type="other"
             data-lpignore="true"
             data-chat-input="true"
-            className="flex-1 bg-slate-800/40 border border-cyan-500/15 rounded-xl px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/15 transition-all disabled:opacity-50 resize-none overflow-y-auto"
+            className="flex-1 bg-gray-100 border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 transition-all disabled:opacity-50 resize-none overflow-y-auto"
             style={{ maxHeight: '120px', minHeight: '40px' }}
           />
           <button

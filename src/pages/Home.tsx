@@ -221,32 +221,14 @@ const Home = () => {
         <UnifiedHeader profileImage={profileImage} />
       </div>
       
+      {/* 🔧 FIX 30/01/2026: Changed to sn-page pattern for iOS overscroll fix + white theme */}
       <div 
-        className="min-h-screen" 
+        className="sn-page" 
         style={{ 
           paddingTop: '140px', 
           paddingBottom: '120px',
-          width: '100vw',
-          maxWidth: '100vw',
-          overflowX: 'hidden',
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 0, // Stay below header and bottom nav
-          overflowY: 'auto',
-          backgroundColor: '#ffffff',
-          backgroundImage: `
-            radial-gradient(circle at 20% 30%, rgba(0, 209, 255, 0.15), transparent 50%),
-            radial-gradient(circle at 80% 70%, rgba(123, 92, 255, 0.12), transparent 50%),
-            radial-gradient(circle at 50% 50%, rgba(240, 89, 255, 0.08), transparent 60%),
-            linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)
-          `,
-          backgroundAttachment: 'fixed',
-          // iOS scroll containment (GlobalLayout handles outer containment)
-          overscrollBehavior: 'contain',
-          WebkitOverflowScrolling: 'touch',
+          position: 'relative',
+          zIndex: 0,
         }}
       >
         {/* Texture tramata */}

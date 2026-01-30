@@ -146,10 +146,10 @@ const { isConnected } = useRealTimeNotifications();
   // CRITICAL FIX: Second check for user without causing hook issues
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#070818]">
+      <div className="sn-page min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-t-2 border-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white/70">Inizializzazione utente...</p>
+          <div className="w-8 h-8 border-t-2 border-cyan-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Inizializzazione utente...</p>
         </div>
       </div>
     );
@@ -170,10 +170,10 @@ const { isConnected } = useRealTimeNotifications();
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#070818] px-4">
-        <div className="p-8 bg-red-800/30 rounded-xl text-center w-full max-w-sm glass-card">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-red-300">Errore</h2>
-          <p className="text-white/80">{error}</p>
+      <div className="sn-page flex min-h-screen items-center justify-center px-4">
+        <div className="p-8 bg-red-100 border border-red-200 rounded-xl text-center w-full max-w-sm shadow-lg">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-red-600">Errore</h2>
+          <p className="text-gray-700">{error}</p>
           <motion.button 
             onClick={() => window.location.reload()}
             className="mt-6 px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 rounded-full text-white btn-hover-effect"
@@ -191,15 +191,16 @@ const { isConnected } = useRealTimeNotifications();
     <>
       {/* 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
           Content scrolls behind the glass header (no "band" under header).
-          First content element has margin-top for initial visibility. */}
+          First content element has margin-top for initial visibility.
+          🔧 FIX 30/01/2026: Added sn-page for iOS overscroll + white theme */}
       <div 
-        className="m1-app-bg relative m1-single-scroll-root"
+        className="sn-page relative m1-single-scroll-root"
         style={{
           position: 'relative',
           zIndex: 0,
         }}
       >
-      {/* Micro-grain overlay for depth */}
+      {/* Micro-grain overlay - hidden by CSS when sn-page active */}
       <div className="m1-grain" />
       
       <Helmet>
