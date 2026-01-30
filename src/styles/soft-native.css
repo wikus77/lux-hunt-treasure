@@ -48,12 +48,37 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   ROOT OVERRIDE - CRITICAL FOR iOS SAFE AREA
+   When a page uses .sn-page, override the dark html background
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+html:has(.sn-page),
+body:has(.sn-page) {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%) !important;
+}
+
+/* Fallback for browsers without :has() support */
+.sn-page-root {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%);
+  z-index: -1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    PAGE CONTAINER
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .sn-page {
-  background: var(--sn-bg-page);
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%);
   min-height: 100dvh;
+  position: relative;
+}
+
+/* Ensure content is visible above bg */
+.sn-page > * {
+  position: relative;
+  z-index: 1;
 }
 
 .sn-page-gradient {

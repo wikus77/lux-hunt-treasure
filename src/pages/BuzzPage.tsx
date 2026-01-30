@@ -99,29 +99,15 @@ export const BuzzPage: React.FC = () => {
   // Data will load in background and update via realtime subscriptions
 
   // 🔧 FIX v2: BuzzPage now relies on GlobalLayout for header/nav/safe-area
-  // The outer wrapper provides scrollable content area
-  // 🔧 FIX 27/01/2026 v8: Background TRANSPARENT - gradient layer shows through (like other pages)
+  // 🎨 SOFT NATIVE: White Apple-like design
   return (
     <div 
-      className="w-full relative"
+      className="w-full relative sn-page"
     >
       {/* Free BUZZ Reward Handler - Non interferisce con Stripe */}
       <BuzzRewardHandler onRewardRedeemed={handleBuzzSuccess} />
       
       {/* 🔧 FIX: UnifiedHeader RIMOSSO - già gestito da GlobalLayout per fullscreen routes */}
-      
-      {/* Decorative gradient effect at top - INSTANT (no delay) */}
-      <div
-        className="fixed top-24 left-0 right-0 h-32 pointer-events-none z-[9]"
-        style={{
-          background: `
-            radial-gradient(ellipse at 50% 0%, rgba(0, 209, 255, 0.18), transparent 70%),
-            radial-gradient(ellipse at 20% 0%, rgba(123, 92, 255, 0.15), transparent 60%),
-            radial-gradient(ellipse at 80% 0%, rgba(240, 89, 255, 0.12), transparent 65%)
-          `,
-          filter: 'blur(20px)'
-        }}
-      />
       
       {/* Main content - 🔧 FIX v2: No extra padding, GlobalLayout handles it */}
       <main
@@ -227,39 +213,18 @@ export const BuzzPage: React.FC = () => {
               />
             </div>
 
-            {/* Container con descrizione - Sistema 200 indizi - RESET COMPLETO 17/07/2025 */}
+            {/* 🎨 SOFT NATIVE: Info container */}
             <div 
-              className="m1-relief p-4 sm:p-6 mb-6 max-w-3xl w-full mx-4 relative overflow-hidden"
-              style={{
-                borderRadius: '24px'
-              }}
+              className="sn-card-elevated p-4 sm:p-6 mb-6 max-w-3xl w-full mx-4 relative overflow-hidden"
             >
-              {/* Animated glow strip like header */}
-              <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
-                <div 
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
-                  style={{
-                    animation: 'slideGlowBuzz 3s ease-in-out infinite',
-                    width: '200%',
-                    left: '-100%'
-                  }}
-                />
-              </div>
-              <style>{`
-                @keyframes slideGlowBuzz {
-                  0% { transform: translateX(0); }
-                  50% { transform: translateX(50%); }
-                  100% { transform: translateX(0); }
-                }
-              `}</style>
               <div className="text-center space-y-4">
-                {/* Descrizione BUZZ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025 */}
-                <div className="text-white/80 space-y-2">
+                {/* Descrizione BUZZ */}
+                <div className="space-y-2" style={{ color: 'var(--sn-text-secondary)' }}>
                   <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi. Ogni Buzz ti aiuta a trovare indizi nascosti per raggiungere l'obiettivo di 250 indizi totali.</p>
-                  <p className="font-semibold">BUZZ oggi: {dailyBuzzCounter} (prezzo progressivo)</p>
-                  <p className="font-semibold">BUZZ totali: {stats?.total_count || 0}/250 (target finale)</p>
-                  <p className="text-[#00ffff]">Prossimo: {currentPriceDisplay}</p>
-                  <p className="text-xs text-white/60 flex items-center gap-1">
+                  <p className="font-semibold" style={{ color: 'var(--sn-text-primary)' }}>BUZZ oggi: {dailyBuzzCounter} (prezzo progressivo)</p>
+                  <p className="font-semibold" style={{ color: 'var(--sn-text-primary)' }}>BUZZ totali: {stats?.total_count || 0}/250 (target finale)</p>
+                  <p style={{ color: 'var(--sn-accent)' }}>Prossimo: {currentPriceDisplay}</p>
+                  <p className="text-xs flex items-center justify-center gap-1" style={{ color: 'var(--sn-text-tertiary)' }}>
                     <span 
                       className="inline-flex w-4 h-4 rounded-full items-center justify-center text-[8px] font-bold"
                       style={{
@@ -278,19 +243,6 @@ export const BuzzPage: React.FC = () => {
           </div>
         </div>
       </main>
-      
-      {/* Decorative gradient effect at bottom - INSTANT (no delay) */}
-      <div
-        className="fixed bottom-24 left-0 right-0 h-32 pointer-events-none z-[9]"
-        style={{
-          background: `
-            radial-gradient(ellipse at 50% 100%, rgba(0, 209, 255, 0.18), transparent 70%),
-            radial-gradient(ellipse at 20% 100%, rgba(123, 92, 255, 0.15), transparent 60%),
-            radial-gradient(ellipse at 80% 100%, rgba(240, 89, 255, 0.12), transparent 65%)
-          `,
-          filter: 'blur(20px)'
-        }}
-      />
       
       {/* Bottom Navigation - gestita da GlobalLayout */}
 

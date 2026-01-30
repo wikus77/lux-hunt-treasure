@@ -447,17 +447,17 @@ export const LeaderboardPage: React.FC = () => {
   };
 
   // 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
-  // Content scrolls behind glass header, first element has margin-top
+  // 🎨 SOFT NATIVE: White Apple-like design
   return (
     <div 
-      className="w-full overflow-x-hidden p-4 space-y-4" 
+      className="w-full overflow-x-hidden p-4 space-y-4 sn-page" 
       data-onboarding="leaderboard"
       style={{
         position: 'relative',
         zIndex: 0,
       }}
     >
-      {/* Header - 🔧 FIX v6: First content offset for AION-like scroll under header */}
+      {/* 🎨 SOFT NATIVE: Clean header */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -468,10 +468,11 @@ export const LeaderboardPage: React.FC = () => {
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <TriangleDownIcon className="w-8 h-8 text-[#00D1FF] drop-shadow-[0_0_10px_rgba(0,209,255,0.6)]" />
+            <TriangleDownIcon className="w-8 h-8" style={{ color: 'var(--sn-accent)' }} />
           </motion.div>
-          <h1 className="text-3xl font-orbitron font-bold text-white">
-            <span className="text-[#00D1FF]">LIVE</span> Classifica
+          <h1 className="text-3xl font-orbitron font-bold">
+            <span style={{ color: 'var(--sn-accent)' }}>LIVE</span>
+            <span style={{ color: 'var(--sn-text-primary)' }}> Classifica</span>
           </h1>
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
@@ -479,7 +480,7 @@ export const LeaderboardPage: React.FC = () => {
             className="w-3 h-3 rounded-full bg-green-500"
           />
         </div>
-        <p className="text-gray-400 text-sm">
+        <p style={{ color: 'var(--sn-text-secondary)' }} className="text-sm">
           Aggiornamenti in tempo reale
         </p>
         {/* Forum Quick Link */}

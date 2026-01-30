@@ -16,53 +16,46 @@ export const NotificationsHeader: React.FC<NotificationsHeaderProps> = ({
   onMarkAllAsRead,
   onManualReload
 }) => {
+  // 🎨 SOFT NATIVE: Clean header card
   return (
-    <div 
-      className="m1-relief p-4 sm:p-6 mb-6 relative overflow-hidden rounded-[24px]"
-    >
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
+    <div className="sn-card-elevated p-4 sm:p-6 mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <h2 className="text-xl font-semibold text-white">Le tue notifiche</h2>
+        <h2 className="sn-section-title" style={{ marginBottom: 0 }}>Le tue notifiche</h2>
         <div className="flex flex-wrap gap-2">
-          <Button variant="ghost" size="sm" onClick={onManualReload} className="flex-1 sm:flex-none">
-            <Bell className="w-4 h-4 mr-2" />
-            Aggiorna
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onMarkAllAsRead} className="flex-1 sm:flex-none">
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            Segna tutto come letto
-          </Button>
+          <button onClick={onManualReload} className="sn-icon-btn flex items-center gap-2 px-3 w-auto">
+            <Bell className="w-4 h-4" style={{ color: 'var(--sn-text-secondary)' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--sn-text-secondary)' }}>Aggiorna</span>
+          </button>
+          <button onClick={onMarkAllAsRead} className="sn-icon-btn flex items-center gap-2 px-3 w-auto">
+            <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--sn-text-secondary)' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--sn-text-secondary)' }}>Segna tutto come letto</span>
+          </button>
         </div>
       </div>
       
-      <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3 overflow-x-auto mb-6">
-        <Button
-          variant={filter === 'all' ? 'default' : 'outline'}
-          size="sm"
+      {/* 🎨 SOFT NATIVE: Pill-style filter tabs */}
+      <div className="sn-tabs-container">
+        <button
           onClick={() => onFilterChange('all')}
-          className="flex-shrink-0 flex-1 sm:flex-none"
+          className={`sn-tab ${filter === 'all' ? 'sn-tab-active' : ''}`}
         >
-          <Bell className="w-4 h-4 mr-2" />
+          <Bell className="w-4 h-4 mr-2 inline" />
           Generali
-        </Button>
-        <Button
-          variant={filter === 'unread' ? 'default' : 'outline'}
-          size="sm"
+        </button>
+        <button
           onClick={() => onFilterChange('unread')}
-          className="flex-shrink-0 flex-1 sm:flex-none"
+          className={`sn-tab ${filter === 'unread' ? 'sn-tab-active' : ''}`}
         >
-          <Bell className="w-4 h-4 mr-2" />
+          <Bell className="w-4 h-4 mr-2 inline" />
           Buzz
-        </Button>
-        <Button
-          variant={filter === 'important' ? 'default' : 'outline'}
-          size="sm"
+        </button>
+        <button
           onClick={() => onFilterChange('important')}
-          className="flex-shrink-0 flex-1 sm:flex-none"
+          className={`sn-tab ${filter === 'important' ? 'sn-tab-active' : ''}`}
         >
-          <AlertCircle className="w-4 h-4 mr-2" />
+          <AlertCircle className="w-4 h-4 mr-2 inline" />
           Classifica
-        </Button>
+        </button>
       </div>
     </div>
   );
