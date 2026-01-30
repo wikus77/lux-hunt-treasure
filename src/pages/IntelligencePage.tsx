@@ -19,28 +19,17 @@ import { MotivationalPopup } from '@/components/feedback';
 const IntelligencePage: React.FC = () => {
   const aionRef = useRef<AionEntityHandle>(null);
 
-  // 🔧 FIX 30/01/2026: Force white background on html (bypass CSS :has() issues in iOS WebView)
+  // 🔧 FIX 30/01/2026 v2: Use CSS class only - NO inline styles on html
+  // REASON: Inline styles on <html> conflict with WKWebView native background during iOS overscroll
+  // The CSS dual selectors (html.sn-page, body.sn-page) now handle everything
   useEffect(() => {
-    // Add sn-page class to html element for CSS gate (works even if :has() fails)
+    // Add sn-page class to html AND body for CSS gate (works on iOS where :has() fails)
     document.documentElement.classList.add('sn-page');
-    
-    // Hide dark overlays
-    const fullscreenBg = document.querySelector('.m1-fullscreen-bg') as HTMLElement;
-    const grain = document.querySelector('.m1-grain') as HTMLElement;
-    if (fullscreenBg) fullscreenBg.style.display = 'none';
-    if (grain) grain.style.display = 'none';
-    
-    // Force white background on html (belt + suspenders)
-    document.documentElement.style.background = 'linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%)';
-    document.documentElement.style.backgroundColor = '#FFFFFF';
+    document.body.classList.add('sn-page');
     
     return () => {
-      // Cleanup on unmount
       document.documentElement.classList.remove('sn-page');
-      if (fullscreenBg) fullscreenBg.style.display = '';
-      if (grain) grain.style.display = '';
-      document.documentElement.style.background = '';
-      document.documentElement.style.backgroundColor = '';
+      document.body.classList.remove('sn-page');
     };
   }, []);
 
@@ -53,7 +42,6 @@ const IntelligencePage: React.FC = () => {
         style={{
           position: 'relative',
           zIndex: 0,
-          background: 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)',
         }}
       >
         {/* 🔧 FIX v8.2: M1UPill is FIXED OVERLAY (see bottom)

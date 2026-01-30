@@ -1086,8 +1086,9 @@ body.is-native {
    Uses BOTH html.sn-page (direct class) AND html:has(.sn-page) (descendant)
    to ensure compatibility with WKWebView where :has() may not work reliably */
 
-/* PRIMARY: Direct class on html (set by AppDelegate + useEffect) */
-html.sn-page {
+/* PRIMARY: Direct class on html OR body (set by useEffect in pages) */
+html.sn-page,
+body.sn-page {
   background: linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%) !important;
   background-color: #FFFFFF !important;
   background-attachment: scroll !important;

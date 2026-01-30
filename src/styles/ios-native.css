@@ -542,46 +542,167 @@ body.is-native #m1-bottom-nav button.active svg {
    header and nav need DARK backgrounds for light theme
    ======================================== */
 
-/* White theme header - dark glass on light background */
+/* ========================================
+   WHITE THEME (.sn-page) HEADER - UNIVERSAL
+   Works on iOS native AND web browsers
+   ======================================== */
+
+/* White theme header - white glass on light background */
+html.sn-page .unified-header-wrapper header,
+body.sn-page .unified-header-wrapper header,
 body.is-native.sn-page .unified-header-wrapper header,
 body.is-native .sn-page ~ .unified-header-wrapper header,
 html.sn-page body.is-native .unified-header-wrapper header {
-  background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255,255,255,0.5) inset !important;
 }
 
 /* White theme header text - dark for contrast */
+html.sn-page .unified-header-wrapper header *,
+body.sn-page .unified-header-wrapper header *,
 body.is-native.sn-page .unified-header-wrapper header *,
 body.is-native .sn-page ~ .unified-header-wrapper header *,
 html.sn-page body.is-native .unified-header-wrapper header * {
   color: #1C1C1E !important;
+  text-shadow: none !important;
 }
 
+/* White theme header icons - dark */
+html.sn-page .unified-header-wrapper header svg,
+body.sn-page .unified-header-wrapper header svg {
+  color: #0A84FF !important;
+  filter: none !important;
+}
+
+/* White theme M1SSION logo - accent color */
+html.sn-page .unified-header-wrapper .m1ssion-logo span:first-child,
+body.sn-page .unified-header-wrapper .m1ssion-logo span:first-child {
+  color: #0A84FF !important;
+  text-shadow: none !important;
+}
+
+html.sn-page .unified-header-wrapper .m1ssion-logo span:last-child,
+body.sn-page .unified-header-wrapper .m1ssion-logo span:last-child {
+  color: #1C1C1E !important;
+  text-shadow: none !important;
+}
+
+/* ========================================
+   WHITE THEME (.sn-page) BOTTOM NAV - UNIVERSAL
+   Works on iOS native AND web browsers
+   ======================================== */
+
 /* White theme bottom nav - white glass */
+html.sn-page .bottom-navigation-ios nav,
+body.sn-page .bottom-navigation-ios nav,
+html.sn-page #m1-bottom-nav nav,
+body.sn-page #m1-bottom-nav nav,
 body.is-native.sn-page .bottom-navigation-ios nav,
 body.is-native .sn-page ~ .bottom-navigation-ios nav,
 html.sn-page body.is-native .bottom-navigation-ios nav,
 html.sn-page body.is-native #m1-bottom-nav nav {
-  background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(255,255,255,0.5) inset !important;
 }
 
 /* White theme nav icons - dark inactive */
+html.sn-page .bottom-navigation-ios button:not([class*="active"]) svg,
+body.sn-page .bottom-navigation-ios button:not([class*="active"]) svg,
+html.sn-page #m1-bottom-nav button:not([class*="active"]) svg,
+body.sn-page #m1-bottom-nav button:not([class*="active"]) svg,
 body.is-native.sn-page .bottom-navigation-ios button:not([class*="active"]) svg,
 html.sn-page body.is-native .bottom-navigation-ios button:not([class*="active"]) svg {
   color: #6B7280 !important;
 }
 
 /* White theme nav active - accent color */
+html.sn-page .bottom-navigation-ios button[class*="active"] svg,
+body.sn-page .bottom-navigation-ios button[class*="active"] svg,
+html.sn-page #m1-bottom-nav button[class*="active"] svg,
+body.sn-page #m1-bottom-nav button[class*="active"] svg,
 body.is-native.sn-page .bottom-navigation-ios button[class*="active"] svg,
 html.sn-page body.is-native .bottom-navigation-ios button[class*="active"] svg {
   color: #0A84FF !important;
+}
+
+/* White theme nav text/labels */
+html.sn-page .bottom-navigation-ios button span,
+body.sn-page .bottom-navigation-ios button span {
+  color: #6B7280 !important;
+}
+
+/* ========================================
+   WHITE THEME (.sn-page) SETTINGS SHEET/PANEL
+   Expandable container with readable text
+   ======================================== */
+
+/* Settings modal/sheet - white glass background */
+html.sn-page [data-radix-dialog-content],
+body.sn-page [data-radix-dialog-content],
+html.sn-page .settings-modal,
+body.sn-page .settings-modal,
+html.sn-page [role="dialog"],
+body.sn-page [role="dialog"] {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Settings modal text - high contrast dark */
+html.sn-page [data-radix-dialog-content] *,
+body.sn-page [data-radix-dialog-content] *,
+html.sn-page .settings-modal *,
+body.sn-page .settings-modal * {
+  color: #1C1C1E !important;
+}
+
+/* Settings modal secondary text */
+html.sn-page [data-radix-dialog-content] .text-gray-400,
+body.sn-page [data-radix-dialog-content] .text-gray-400,
+html.sn-page [data-radix-dialog-content] .text-gray-500,
+body.sn-page [data-radix-dialog-content] .text-gray-500,
+html.sn-page .settings-modal .text-muted-foreground,
+body.sn-page .settings-modal .text-muted-foreground {
+  color: #6B7280 !important;
+}
+
+/* Settings modal icons */
+html.sn-page [data-radix-dialog-content] svg,
+body.sn-page [data-radix-dialog-content] svg,
+html.sn-page .settings-modal svg,
+body.sn-page .settings-modal svg {
+  color: #0A84FF !important;
+}
+
+/* Settings modal cards/list items */
+html.sn-page [data-radix-dialog-content] .card,
+body.sn-page [data-radix-dialog-content] .card,
+html.sn-page .settings-modal [class*="card"],
+body.sn-page .settings-modal [class*="card"] {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Expandable panels/sheets with drag handle */
+html.sn-page [data-vaul-drawer],
+body.sn-page [data-vaul-drawer],
+html.sn-page .drawer-content,
+body.sn-page .drawer-content {
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+}
+
+html.sn-page [data-vaul-drawer] *,
+body.sn-page [data-vaul-drawer] * {
+  color: #1C1C1E !important;
 }
 
 /* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
