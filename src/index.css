@@ -936,6 +936,145 @@ body.is-native {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   🎨 WHITE THEME DESIGN TOKENS
+   🔧 FIX 30/01/2026: Centralized tokens for consistent white theme
+   
+   Hierarchy:
+   - Main containers: stronger elevation (--wt-surface-main)
+   - Secondary containers: softer/more transparent (--wt-surface-secondary)
+   - Primary pills: high contrast (--wt-pill-primary)
+   - Secondary pills: neutral (--wt-pill-secondary)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Page backgrounds */
+  --wt-bg-page: linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%);
+  --wt-bg-page-solid: #FFFFFF;
+  
+  /* Surfaces - Main (more prominent) */
+  --wt-surface-main: rgba(255, 255, 255, 0.98);
+  --wt-surface-main-border: rgba(0, 0, 0, 0.08);
+  --wt-surface-main-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06), 0 16px 48px rgba(0, 0, 0, 0.04);
+  
+  /* Surfaces - Secondary (softer) */
+  --wt-surface-secondary: rgba(255, 255, 255, 0.85);
+  --wt-surface-secondary-border: rgba(0, 0, 0, 0.05);
+  --wt-surface-secondary-shadow: 0 1px 4px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.04);
+  
+  /* Text colors */
+  --wt-text-primary: #1C1C1E;
+  --wt-text-secondary: #6B7280;
+  --wt-text-tertiary: #9CA3AF;
+  --wt-text-muted: #B0B0B5;
+  
+  /* Pills - Primary (high contrast, prominent) */
+  --wt-pill-primary-bg: rgba(255, 255, 255, 0.98);
+  --wt-pill-primary-border: rgba(0, 0, 0, 0.1);
+  --wt-pill-primary-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --wt-pill-primary-text: #1C1C1E;
+  
+  /* Pills - Secondary (neutral, less prominent) */
+  --wt-pill-secondary-bg: rgba(255, 255, 255, 0.75);
+  --wt-pill-secondary-border: rgba(0, 0, 0, 0.06);
+  --wt-pill-secondary-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --wt-pill-secondary-text: #6B7280;
+  
+  /* Accent colors */
+  --wt-accent-cyan: #0891B2;
+  --wt-accent-cyan-light: rgba(8, 145, 178, 0.1);
+  --wt-accent-blue: #2563EB;
+  --wt-accent-green: #16A34A;
+  --wt-accent-yellow: #EAB308;
+  --wt-accent-red: #DC2626;
+  
+  /* Borders and dividers */
+  --wt-border-light: rgba(0, 0, 0, 0.06);
+  --wt-border-medium: rgba(0, 0, 0, 0.1);
+  --wt-divider: rgba(0, 0, 0, 0.08);
+  
+  /* Blur values */
+  --wt-blur-main: blur(16px);
+  --wt-blur-secondary: blur(12px);
+  
+  /* Border radius */
+  --wt-radius-sm: 12px;
+  --wt-radius-md: 16px;
+  --wt-radius-lg: 20px;
+  --wt-radius-xl: 24px;
+  --wt-radius-pill: 100px;
+  
+  /* Transitions (matching Login page motion) */
+  --wt-transition-fast: 0.15s ease-out;
+  --wt-transition-normal: 0.25s ease-out;
+  --wt-transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --wt-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎨 WHITE THEME UTILITY CLASSES (for .sn-page pages)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Main container - more prominent */
+.wt-card-main {
+  background: var(--wt-surface-main);
+  backdrop-filter: var(--wt-blur-main);
+  -webkit-backdrop-filter: var(--wt-blur-main);
+  border: 1px solid var(--wt-surface-main-border);
+  border-radius: var(--wt-radius-lg);
+  box-shadow: var(--wt-surface-main-shadow);
+}
+
+/* Secondary container - softer */
+.wt-card-secondary {
+  background: var(--wt-surface-secondary);
+  backdrop-filter: var(--wt-blur-secondary);
+  -webkit-backdrop-filter: var(--wt-blur-secondary);
+  border: 1px solid var(--wt-surface-secondary-border);
+  border-radius: var(--wt-radius-md);
+  box-shadow: var(--wt-surface-secondary-shadow);
+}
+
+/* Primary pill - prominent */
+.wt-pill-primary {
+  background: var(--wt-pill-primary-bg);
+  backdrop-filter: var(--wt-blur-main);
+  -webkit-backdrop-filter: var(--wt-blur-main);
+  border: 1px solid var(--wt-pill-primary-border);
+  border-radius: var(--wt-radius-pill);
+  box-shadow: var(--wt-pill-primary-shadow);
+  color: var(--wt-pill-primary-text);
+  transition: all var(--wt-transition-normal);
+}
+
+.wt-pill-primary:hover {
+  box-shadow: var(--wt-surface-main-shadow);
+  transform: translateY(-1px);
+}
+
+/* Secondary pill - neutral */
+.wt-pill-secondary {
+  background: var(--wt-pill-secondary-bg);
+  backdrop-filter: var(--wt-blur-secondary);
+  -webkit-backdrop-filter: var(--wt-blur-secondary);
+  border: 1px solid var(--wt-pill-secondary-border);
+  border-radius: var(--wt-radius-pill);
+  box-shadow: var(--wt-pill-secondary-shadow);
+  color: var(--wt-pill-secondary-text);
+  transition: all var(--wt-transition-fast);
+}
+
+.wt-pill-secondary:hover {
+  background: var(--wt-pill-primary-bg);
+  border-color: var(--wt-pill-primary-border);
+}
+
+/* Text utilities */
+.wt-text-primary { color: var(--wt-text-primary); }
+.wt-text-secondary { color: var(--wt-text-secondary); }
+.wt-text-tertiary { color: var(--wt-text-tertiary); }
+.wt-text-muted { color: var(--wt-text-muted); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
    🎨 WHITE/LIGHT THEME OVERRIDE FOR .sn-page PAGES
    🔧 FIX 30/01/2026: These rules MUST be at the END to override dark backgrounds
    
@@ -1020,6 +1159,96 @@ html:has(.sn-page) .bottom-navigation-ios,
 html:has(.sn-page) #m1-bottom-nav,
 html:has(.sn-page) nav[class*="fixed"] {
   z-index: 9999 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎨 WHITE THEME OVERRIDES FOR EXISTING DARK COMPONENTS
+   When .sn-page is active, override dark m1-card and glass-card with white theme
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Override m1-card dark styles to white when in sn-page */
+.sn-page .m1-card,
+html:has(.sn-page) .m1-card {
+  background: var(--wt-surface-main) !important;
+  backdrop-filter: var(--wt-blur-main) !important;
+  -webkit-backdrop-filter: var(--wt-blur-main) !important;
+  border: 1px solid var(--wt-surface-main-border) !important;
+  box-shadow: var(--wt-surface-main-shadow) !important;
+}
+
+.sn-page .m1-card::before,
+html:has(.sn-page) .m1-card::before {
+  display: none !important;
+}
+
+/* Override glass-card to white */
+.sn-page .glass-card,
+html:has(.sn-page) .glass-card {
+  background: var(--wt-surface-secondary) !important;
+  backdrop-filter: var(--wt-blur-secondary) !important;
+  -webkit-backdrop-filter: var(--wt-blur-secondary) !important;
+  border: 1px solid var(--wt-surface-secondary-border) !important;
+  box-shadow: var(--wt-surface-secondary-shadow) !important;
+}
+
+/* Override m1ssion-glass-card */
+.sn-page .m1ssion-glass-card,
+html:has(.sn-page) .m1ssion-glass-card {
+  background: var(--wt-surface-main) !important;
+  backdrop-filter: var(--wt-blur-main) !important;
+  -webkit-backdrop-filter: var(--wt-blur-main) !important;
+  border: 1px solid var(--wt-surface-main-border) !important;
+  box-shadow: var(--wt-surface-main-shadow) !important;
+}
+
+/* Override m1-app-bg to transparent */
+.sn-page .m1-app-bg,
+html:has(.sn-page) .m1-app-bg {
+  background: transparent !important;
+}
+
+/* Override dark text to readable dark on light */
+.sn-page .text-white,
+html:has(.sn-page) .text-white {
+  color: var(--wt-text-primary) !important;
+}
+
+.sn-page .text-white\/70,
+.sn-page .text-white\/80,
+html:has(.sn-page) .text-white\/70,
+html:has(.sn-page) .text-white\/80 {
+  color: var(--wt-text-secondary) !important;
+}
+
+.sn-page .text-white\/60,
+.sn-page .text-white\/50,
+html:has(.sn-page) .text-white\/60,
+html:has(.sn-page) .text-white\/50 {
+  color: var(--wt-text-tertiary) !important;
+}
+
+/* Progress bars - change from black to gray */
+.sn-page .bg-black\/30,
+html:has(.sn-page) .bg-black\/30 {
+  background: rgba(0, 0, 0, 0.08) !important;
+}
+
+.sn-page .bg-black\/50,
+html:has(.sn-page) .bg-black\/50 {
+  background: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Neon text adjustments for readability on white */
+.sn-page .neon-text-cyan,
+html:has(.sn-page) .neon-text-cyan {
+  color: var(--wt-accent-cyan) !important;
+  text-shadow: none !important;
+}
+
+.sn-page .neon-text-magenta,
+html:has(.sn-page) .neon-text-magenta {
+  color: #9333EA !important;
+  text-shadow: none !important;
 }
 
 /* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
