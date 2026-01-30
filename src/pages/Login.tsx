@@ -1,7 +1,7 @@
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// 🎬 LOGIN v9: "RUNWAY-STYLE" - Video Background + Sign Up / Log In
-// UI appears IMMEDIATELY on mount (no tap required, no video dependency)
+// 🎬 LOGIN v10: "RUNWAY-STYLE" - Video Background + Sign Up / Log In
+// UI appears IMMEDIATELY on mount - Video path FIXED for iOS (lowercase)
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
@@ -19,6 +19,9 @@ import { Capacitor } from "@capacitor/core";
 // Screen types for the login flow
 type LoginScreen = 'opening' | 'signup' | 'login';
 
+// 🔧 FIX: Correct video path (lowercase 'video' folder)
+const VIDEO_SRC = '/assets/video/M1SSION_INTRO.mp4';
+
 const Login = () => {
   const [currentScreen, setCurrentScreen] = useState<LoginScreen>('opening');
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
@@ -32,16 +35,24 @@ const Login = () => {
   const redirectAttemptedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // 🔍 Debug log on mount
+  // 🔍 Debug log on mount + programmatic play for iOS
   useEffect(() => {
     const platform = Capacitor.isNativePlatform() ? 'capacitor' : 'web';
-    const videoSrc = '/assets/VIDEO/M1SSION_INTRO.mp4';
-    console.log('🎬 [Login] Mount debug:', { platform, videoSrc });
+    console.log('🎬 [Login] Mount debug:', { platform, videoSrc: VIDEO_SRC });
     
-    // Try to play video programmatically (helps with some iOS edge cases)
-    if (videoRef.current) {
-      videoRef.current.play().catch(err => {
-        console.warn('🎬 [Login] Video autoplay blocked:', err);
+    // Try to play video programmatically (helps with iOS edge cases)
+    const video = videoRef.current;
+    if (video) {
+      video.play().catch(err => {
+        console.warn('🎬 [Login] Video autoplay issue:', err.message);
+      });
+      
+      // Debug: log video state
+      video.addEventListener('loadeddata', () => {
+        console.log('🎬 [Login] Video loadeddata - readyState:', video.readyState);
+      });
+      video.addEventListener('error', (e) => {
+        console.error('🎬 [Login] Video error:', video.error?.code, video.error?.message);
       });
     }
   }, []);
@@ -68,15 +79,6 @@ const Login = () => {
     }
   }, []);
 
-  // Video handlers (logging only, no state dependency)
-  const handleVideoLoad = useCallback(() => {
-    console.log('🎬 [Login] Video loaded successfully');
-  }, []);
-
-  const handleVideoError = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
-    console.error('🎬 [Login] Video failed to load:', e);
-  }, []);
-
   // Navigation handlers
   const handleSignUp = useCallback(() => setCurrentScreen('signup'), []);
   const handleLogIn = useCallback(() => setCurrentScreen('login'), []);
@@ -92,7 +94,7 @@ const Login = () => {
   }, [signInWithGoogle]);
 
   // ============================================================================
-  // RENDER: Opening Screen (Photo 3 - "Runway Style")
+  // RENDER: Opening Screen (RUNWAY Style - headline LEFT, M1SSION branding)
   // ============================================================================
   const renderOpeningScreen = () => (
     <motion.div
@@ -119,14 +121,14 @@ const Login = () => {
         </span>
       </motion.div>
 
-      {/* Large Headline - Center (like "Tools for Human Imagination") */}
+      {/* Large Headline - LEFT aligned (RUNWAY style) */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.6 }}
-        className="flex-1 flex items-center justify-center"
+        className="flex-1 flex items-center"
       >
-        <h1 className="text-5xl sm:text-6xl font-orbitron font-black text-white leading-tight text-center">
+        <h1 className="text-5xl sm:text-6xl font-orbitron font-black text-white leading-tight text-left">
           <span className="block">Tools for</span>
           <span className="block">Real-World</span>
           <span className="block text-[#00D1FF] drop-shadow-[0_0_20px_rgba(0,209,255,0.6)]">Treasure Hunting</span>
@@ -138,7 +140,7 @@ const Login = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.6 }}
-        className="w-full max-w-sm mx-auto space-y-4"
+        className="w-full max-w-sm space-y-4"
       >
         {/* Sign Up Button - Primary */}
         <button
@@ -165,7 +167,7 @@ const Login = () => {
         </button>
 
         {/* Terms Notice - Runway Style */}
-        <p className="text-center text-white/40 text-xs mt-6 px-2 leading-relaxed">
+        <p className="text-white/40 text-xs mt-6 leading-relaxed">
           By tapping "Sign Up", you agree to our{' '}
           <a href="/terms" className="text-white/60 underline">Terms of Use</a>
           {' '}and acknowledge that you have read and understand our{' '}
@@ -176,7 +178,7 @@ const Login = () => {
   );
 
   // ============================================================================
-  // RENDER: Sign Up Screen (Photo 4 - Provider options)
+  // RENDER: Sign Up Screen (Provider options)
   // ============================================================================
   const renderSignUpScreen = () => (
     <motion.div
@@ -332,6 +334,7 @@ const Login = () => {
   return createPortal(
     <div className="fixed inset-0 z-[100] overflow-hidden bg-black">
       {/* 🎬 Video Background - Full Screen Cover (z-index: 0) */}
+      {/* FIX: Using lowercase 'video' path + no poster (file didn't exist) */}
       <video
         ref={videoRef}
         autoPlay
@@ -339,13 +342,13 @@ const Login = () => {
         loop
         playsInline
         preload="auto"
-        onLoadedData={handleVideoLoad}
-        onError={handleVideoError}
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ zIndex: 0 }}
-        poster="/assets/m1-logo-dark.png"
+        style={{ 
+          zIndex: 0,
+          transform: 'translateZ(0)' // GPU acceleration for iOS
+        }}
       >
-        <source src="/assets/VIDEO/M1SSION_INTRO.mp4" type="video/mp4" />
+        <source src={VIDEO_SRC} type="video/mp4" />
       </video>
 
       {/* Gradient overlay for readability (z-index: 1) */}
