@@ -1,25 +1,29 @@
 # LOGIN OPENING IMPLEMENTATION
 
 ## Overview
-Nuova pagina login con video background e OAuth (Apple, Google, Email).
+Nuova pagina login "Runway-Style" con video background e 2 CTA (Sign Up / Log In).
 
 **Data**: 2026-01-30
-**Branch**: `fix/login-opening-video-bg`
-**Tag Rollback**: `rollback-pre-login-opening-video-bg-20260130-0607`
+**Branch**: `fix/login-opening-runway`
+**Tag Rollback**: `rollback-pre-runway-login-20260130-0730`
+
+### Version History
+- v8: Video bg + 3 CTA (broken - UI required tap/video load)
+- **v9**: "Runway-Style" - UI appears immediately, 2 CTA buttons
 
 ---
 
 ## Rollback
 
 ```bash
-# Tornare al tag di rollback
-git checkout rollback-pre-login-opening-video-bg-20260130-0607
+# Tornare al tag di rollback (PRIMA del fix runway)
+git checkout rollback-pre-runway-login-20260130-0730
 
-# Oppure tornare al branch precedente
-git checkout fix/native-iap-option2-ui-catalog
+# Oppure tornare al branch precedente (v8 - broken)
+git checkout fix/login-opening-video-bg
 
-# Se vuoi cancellare il branch
-git branch -D fix/login-opening-video-bg
+# Per cancellare il branch runway
+git branch -D fix/login-opening-runway
 ```
 
 ---
