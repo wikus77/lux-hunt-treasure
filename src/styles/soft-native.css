@@ -50,27 +50,48 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    ROOT OVERRIDE - CRITICAL FOR iOS SAFE AREA
    When a page uses .sn-page, override the dark html background
+   🔧 FIX 30/01/2026: Enhanced for iOS overscroll - solid background-color fills safe-area
    ═══════════════════════════════════════════════════════════════════════════ */
 
 html:has(.sn-page),
 body:has(.sn-page) {
+  /* CRITICAL: background-color fills safe-area during iOS overscroll */
+  background-color: #FFFFFF !important;
   background: linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%) !important;
+  background-attachment: scroll !important; /* NOT fixed - moves with content on bounce */
+}
+
+/* 🔧 iOS Native App Fix: Ensure light background even when body.is-native */
+body.is-native:has(.sn-page) {
+  background-color: #FFFFFF !important;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%) !important;
+}
+
+/* Override the dark theme for native iOS when .sn-page is present */
+html.capacitor-ios:has(.sn-page),
+html[data-capacitor="ios"]:has(.sn-page) {
+  background-color: #FFFFFF !important;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%) !important;
+  background-image: linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%) !important;
 }
 
 /* Fallback for browsers without :has() support */
 .sn-page-root {
   position: fixed;
   inset: 0;
+  background-color: #FFFFFF;
   background: linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%);
   z-index: -1;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PAGE CONTAINER
+   🔧 FIX 30/01/2026: Page transparent to show html/body light background through
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .sn-page {
-  background: linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%);
+  /* Let html/body light background show through - ensures safe-area coverage */
+  background: transparent;
   min-height: 100dvh;
   position: relative;
 }
@@ -469,3 +490,77 @@ body:has(.sn-page) {
   margin-top: 16px;
   overflow: hidden;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🔧 iOS SAFE-AREA & OVERSCROLL FIX (30/01/2026)
+   Ensures LIGHT background fills safe-area and header/nav are never covered
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Ensure .sn-page containers don't create competing backgrounds */
+body.is-native .sn-page,
+html.capacitor-ios .sn-page,
+html[data-capacitor="ios"] .sn-page {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* #root and wrappers transparent when showing .sn-page */
+body:has(.sn-page) #root,
+body:has(.sn-page) .safe-area-wrapper,
+body:has(.sn-page) .global-layout-content {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Native iOS: same transparency rule */
+body.is-native:has(.sn-page) #root,
+body.is-native:has(.sn-page) .safe-area-wrapper,
+body.is-native:has(.sn-page) .global-layout-content {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HEADER & BOTTOM NAV z-index GUARANTEE
+   These elements must ALWAYS be above page content, even during overscroll
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Header always on top */
+.sn-page ~ .unified-header-wrapper,
+body:has(.sn-page) .unified-header-wrapper,
+body:has(.sn-page) header[class*="fixed"] {
+  z-index: 9999 !important;
+  isolation: isolate !important;
+}
+
+/* Bottom nav always on top */
+.sn-page ~ .bottom-navigation-ios,
+body:has(.sn-page) .bottom-navigation-ios,
+body:has(.sn-page) #m1-bottom-nav {
+  z-index: 9999 !important;
+  isolation: isolate !important;
+}
+
+/* GPU acceleration for fixed elements during overscroll */
+body:has(.sn-page) .unified-header-wrapper,
+body:has(.sn-page) .bottom-navigation-ios,
+body:has(.sn-page) header[class*="fixed"],
+body:has(.sn-page) nav[class*="fixed"] {
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+  will-change: transform !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   OVERSCROLL BEHAVIOR - PREVENT DARK BLEED-THROUGH
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Allow native iOS bounce but with light background */
+body:has(.sn-page),
+body:has(.sn-page) main,
+body:has(.sn-page) .global-layout-content {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: auto; /* Allow native bounce */
+}
+
+/* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
