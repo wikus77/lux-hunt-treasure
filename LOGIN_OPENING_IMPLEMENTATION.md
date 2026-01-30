@@ -4,27 +4,59 @@
 Nuova pagina login "Runway-Style" con video background e 2 CTA (Sign Up / Log In).
 
 **Data**: 2026-01-30
-**Branch**: `fix/login-opening-runway`
-**Tag Rollback**: `rollback-pre-runway-login-20260130-0730`
+**Branch**: `fix/login-runway-layout-video`
+**Tag Rollback**: `rollback-pre-login-runway-layout-video-20260130-0830`
 
 ### Version History
 - v8: Video bg + 3 CTA (broken - UI required tap/video load)
-- **v9**: "Runway-Style" - UI appears immediately, 2 CTA buttons
+- v9: "Runway-Style" - UI appears immediately, 2 CTA buttons (video still not visible)
+- **v10**: Video FIXED (case-sensitive path), headline LEFT-aligned (Runway style)
 
 ---
 
 ## Rollback
 
 ```bash
-# Tornare al tag di rollback (PRIMA del fix runway)
-git checkout rollback-pre-runway-login-20260130-0730
+# Tornare al tag di rollback
+git checkout rollback-pre-login-runway-layout-video-20260130-0830
 
-# Oppure tornare al branch precedente (v8 - broken)
-git checkout fix/login-opening-video-bg
+# Oppure tornare al branch precedente
+git checkout fix/login-video-visible-copy
 
-# Per cancellare il branch runway
-git branch -D fix/login-opening-runway
+# Per cancellare il branch corrente
+git branch -D fix/login-runway-layout-video
 ```
+
+---
+
+## Root Cause (Video non visibile su iOS)
+
+**CAUSA**: Case-sensitivity nel path del video
+- Codice usava: `/assets/VIDEO/M1SSION_INTRO.mp4` (uppercase)
+- Folder nel bundle iOS: `/assets/video/` (lowercase)
+- WKWebView è case-sensitive per il caricamento risorse!
+
+**FIX**: Cambiato `VIDEO_SRC` in `/assets/video/M1SSION_INTRO.mp4`
+
+---
+
+## Verifica su iPhone
+
+1. Build e sync:
+```bash
+npm run build
+npx cap sync ios
+npx cap open ios
+```
+
+2. Run su device/simulatore iOS
+
+3. Checklist:
+- [ ] Video visibile SUBITO (non nero)
+- [ ] Headline "Tools for Real-World Treasure Hunting" LEFT-aligned
+- [ ] Small "M1SSION" label top-left
+- [ ] CTA "Sign Up" / "Log In" funzionanti
+- [ ] Transizioni IDENTICHE a prima
 
 ---
 
