@@ -255,7 +255,12 @@ const WouterRoutes: React.FC = () => {
           */}
           <Route path="/">
             {isLoading ? (
-              <PageSkeleton variant="default" />
+              // 🔧 FIX: Native apps show seamless black bg (matches Login) instead of skeleton flash
+              isCapacitorApp ? (
+                <div className="fixed inset-0 bg-black z-[100]" aria-hidden="true" />
+              ) : (
+                <PageSkeleton variant="default" />
+              )
             ) : !isAuthenticated ? (
               // In native app, skip landing page - go directly to login
               isCapacitorApp ? <Redirect to="/login" /> : <LandingPage />
