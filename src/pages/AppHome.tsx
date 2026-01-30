@@ -273,7 +273,6 @@ const { isConnected } = useRealTimeNotifications();
                     >
                       <ShopPill />
                     </motion.div>
-                    {/* AgentEnergyPill spostato in CommandCenterHome - posizione floating come DNA Hub */}
                   </div>
                 </div>
 
@@ -409,8 +408,7 @@ const { isConnected } = useRealTimeNotifications();
       />
       </MissionSync>
       
-      {/* 🔧 FIX v8: M1UPill + StreakPill as FIXED OVERLAY (like Map page)
-          This prevents clipping of the animated orb rings
+      {/* 🔧 FIX v9: M1UPill + StreakPill as FIXED OVERLAY
           Position: fixed, left side, below header with safe area
           StreakPill positioned below M1UPill with gap-2 */}
       <div 

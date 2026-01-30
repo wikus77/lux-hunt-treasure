@@ -291,23 +291,24 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
     console.log(`🔥 M1SSION™ ProfileBottomSheet: Plan selected: ${plan}`);
     
     if (plan === 'Base') {
-      // Handle downgrade to Base
+      // Handle downgrade to Base via secure RPC
       setIsProcessing(true);
       try {
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (currentUser) {
-          await supabase
-            .from('profiles')
-            .update({ subscription_plan: 'Base', subscription_tier: 'Base' })
-            .eq('id', currentUser.id);
-          
+        // 🔐 SECURITY: Use secure RPC instead of direct write
+        const { data, error } = await supabase.rpc('downgrade_to_free');
+        
+        if (error) {
+          // Fallback to upgradeSubscription which now uses RPC internally
+          console.warn('⚠️ downgrade_to_free failed, using fallback:', error);
           await upgradeSubscription('Base');
-          
-          sonnerToast.success('Piano Base attivato', {
-            description: 'Stai utilizzando il piano gratuito',
-            duration: 4000
-          });
+        } else {
+          console.log('✅ M1SSION™ Downgrade via RPC:', data);
         }
+        
+        sonnerToast.success('Piano Base attivato', {
+          description: 'Stai utilizzando il piano gratuito',
+          duration: 4000
+        });
       } catch (error) {
         console.error('❌ Downgrade error:', error);
         sonnerToast.error('Errore nel downgrade', {

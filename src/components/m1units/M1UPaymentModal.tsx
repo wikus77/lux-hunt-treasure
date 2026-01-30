@@ -1,15 +1,16 @@
 /**
  * M1U Payment Modal — In-App Checkout for M1 UNITS™
  * 
- * 🏪 STORE COMPLIANCE (28/01/2026):
+ * 🏪 STORE COMPLIANCE (29/01/2026):
+ * - Uses REAL Dialog component (not fake div overlay)
  * - Stripe checkout on WEB only
- * - Native platforms (iOS/Android) show "coming soon" placeholder
- * - Apple IAP / Google Play Billing to be implemented
+ * - Native platforms use Apple IAP / Google Play Billing
  * 
  * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import {
   Elements,
@@ -17,12 +18,12 @@ import {
   useStripe,
   useElements
 } from '@stripe/react-stripe-js';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
-import { X, ShoppingCart, AlertCircle } from 'lucide-react';
+import { X, ShoppingCart, AlertCircle, CreditCard, Smartphone } from 'lucide-react';
 import { getStripeSafe } from '@/lib/stripeFallback';
 import { isStripeAvailable } from '@/lib/stripe/stripeClient';
 import { isCapacitorNative, getCapacitorPlatform } from '@/utils/capacitor';
@@ -40,14 +41,14 @@ interface M1UPaymentModalProps {
   onCancel: () => void;
 }
 
-const CheckoutForm: React.FC<{ 
-  packName: string;
+// Stripe Checkout Content for Web
+const StripeCheckoutContent: React.FC<{ 
   packCode: string;
   m1uAmount: number;
   priceCents: number;
   onSuccess: () => void; 
   onCancel: () => void;
-}> = ({ packName, packCode, m1uAmount, priceCents, onSuccess, onCancel }) => {
+}> = ({ packCode, m1uAmount, priceCents, onSuccess, onCancel }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -60,26 +61,20 @@ const CheckoutForm: React.FC<{
 
     const createPaymentIntent = async () => {
       try {
-        console.log('[M1U MODAL] Creating payment intent:', {
-          packCode,
-          packName,
-          m1uAmount,
-          priceCents
-        });
+        console.log('[M1U MODAL] Creating payment intent:', { packCode, m1uAmount, priceCents });
 
         const { data, error } = await supabase.functions.invoke('create-payment-intent', {
           body: {
-            amount: priceCents, // Already in cents
+            amount: priceCents,
             currency: 'eur',
             payment_type: 'm1u_purchase',
             plan: packCode,
-            description: `M1 UNITS™ ${packName} - ${m1uAmount} M1U`,
+            description: `M1 UNITS™ ${packCode} - ${m1uAmount} M1U`,
             metadata: {
               pack_code: packCode,
-              pack_name: packName,
-              m1u_amount: String(m1uAmount), // Must be string for Stripe metadata
+              m1u_amount: String(m1uAmount),
               user_email: user.email || '',
-              user_id: user.id // Critical for webhook to credit M1U
+              user_id: user.id
             }
           }
         });
@@ -93,9 +88,8 @@ const CheckoutForm: React.FC<{
         const clientSecretValue = data?.client_secret || data?.clientSecret;
         if (clientSecretValue) {
           setClientSecret(clientSecretValue);
-          console.log('[M1U MODAL] ✅ Payment intent created:', data?.paymentIntentId || data?.payment_intent_id);
+          console.log('[M1U MODAL] ✅ Payment intent created');
         } else {
-          console.error('[M1U MODAL] No client secret received:', data);
           toast.error('Errore nella configurazione del pagamento');
         }
       } catch (error) {
@@ -105,7 +99,7 @@ const CheckoutForm: React.FC<{
     };
 
     createPaymentIntent();
-  }, [user, packCode, packName, m1uAmount, priceCents]);
+  }, [user, packCode, m1uAmount, priceCents]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -206,95 +200,66 @@ const CheckoutForm: React.FC<{
       base: {
         fontSize: '16px',
         color: '#ffffff',
-        '::placeholder': {
-          color: '#aab7c4',
-        },
+        '::placeholder': { color: '#aab7c4' },
         backgroundColor: 'transparent',
       },
-      invalid: {
-        color: '#fa755a',
-        iconColor: '#fa755a',
-      },
+      invalid: { color: '#fa755a', iconColor: '#fa755a' },
     },
     hidePostalCode: true,
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-black/95 border-[#00D1FF]/30 backdrop-blur-xl">
-      <CardHeader className="border-b border-white/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-[#00D1FF]" />
-            <CardTitle className="text-white font-orbitron">{packName}</CardTitle>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onCancel}
-            disabled={loading}
-            className="h-8 w-8 rounded-full hover:bg-white/10"
-          >
-            <X className="w-4 h-4" />
-          </Button>
+    <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Card input */}
+        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl mb-2">
+          <CreditCard className="w-5 h-5 text-[#00D1FF]" />
+          <span className="text-white/80 text-sm">Carta di credito</span>
         </div>
-        <div className="text-center mt-4">
-          <div className="text-3xl font-bold text-white mb-1">
-            {m1uAmount} <span className="text-[#00D1FF] text-lg">M1U</span>
-          </div>
-          <div className="text-2xl font-semibold text-[#FFD700]">
-            €{(priceCents / 100).toFixed(2)}
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4 pt-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-            <CardElement options={cardElementOptions} />
-          </div>
-          
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              className="flex-1 border-white/20 hover:bg-white/10"
-              disabled={loading}
-            >
-              Annulla
-            </Button>
-            <Button
-              type="submit"
-              disabled={!stripe || loading || !clientSecret}
-              className="flex-1 bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] hover:opacity-90 text-white font-semibold"
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Elaborazione...
-                </span>
-              ) : (
-                `Paga €${(priceCents / 100).toFixed(2)}`
-              )}
-            </Button>
-          </div>
-        </form>
         
-        <div className="text-xs text-white/50 text-center pt-2 border-t border-white/10">
-          🔒 Pagamento sicuro elaborato da Stripe
+        <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+          <CardElement options={cardElementOptions} />
         </div>
-      </CardContent>
-    </Card>
+        
+        <Button
+          type="submit"
+          disabled={!stripe || loading || !clientSecret}
+          className="w-full h-12 bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] hover:opacity-90 text-white font-bold text-lg"
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Elaborazione...
+            </span>
+          ) : (
+            `Paga €${(priceCents / 100).toFixed(2)}`
+          )}
+        </Button>
+        
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onCancel}
+          disabled={loading}
+          className="w-full text-white/60 hover:text-white"
+        >
+          Annulla
+        </Button>
+      </form>
+      
+      <p className="text-xs text-white/40 text-center pt-2 border-t border-white/10">
+        🔒 Pagamento sicuro elaborato da Stripe
+      </p>
+    </div>
   );
 };
 
-// 🏪 STORE COMPLIANT: Native IAP Checkout Component
-// 🔧 FIX 28/01/2026: Added timeout, product validation, better error states
-import { useIAP, M1U_PRODUCTS, getProductByCode } from '@/iap';
+// 🏪 STORE COMPLIANT: Native IAP Checkout Content (for Dialog)
+import { useIAP, getProductByCode } from '@/iap';
 
-const IAP_INIT_TIMEOUT_MS = 15000; // 15 seconds max for init
+const IAP_INIT_TIMEOUT_MS = 15000;
 
-const NativeIAPCheckout: React.FC<{
+const NativeIAPCheckoutContent: React.FC<{
   packName: string;
   packCode: string;
   m1uAmount: number;
@@ -317,90 +282,63 @@ const NativeIAPCheckout: React.FC<{
   const [initTimedOut, setInitTimedOut] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  // 🔧 FIX: Check product mapping exists IMMEDIATELY
   const mappedProduct = getProductByCode(packCode);
   const productMappingError = !mappedProduct 
-    ? `Prodotto non trovato: ${packCode}. Configura i prodotti IAP.`
+    ? `Prodotto non trovato: ${packCode}`
     : null;
 
-  // Get store-specific product ID for display
   const expectedStoreId = mappedProduct 
     ? (platform === 'ios' ? mappedProduct.appleProductId : mappedProduct.googleProductId)
     : null;
 
-  // 🔧 FIX: Log for debugging (native only)
   useEffect(() => {
-    console.log('[Native IAP] 🛒 Checkout opened:', {
-      packCode,
-      packName,
-      platform,
-      mappedProduct: !!mappedProduct,
-      expectedStoreId,
-      isNativeIAPAvailable: isNativeIAPAvailable(),
-    });
-  }, [packCode, packName, platform, mappedProduct, expectedStoreId, isNativeIAPAvailable]);
+    console.log('[Native IAP] 🛒 Checkout opened:', { packCode, platform, expectedStoreId });
+  }, [packCode, platform, expectedStoreId]);
 
-  // Initialize IAP on mount with timeout guard
   useEffect(() => {
     if (initAttempted || !isNativeIAPAvailable() || productMappingError) return;
     
     setInitAttempted(true);
     setLocalError(null);
     
-    // Start timeout
     const timeoutId = setTimeout(() => {
       if (status === 'initializing' || status === 'idle') {
-        console.error('[Native IAP] ⏰ Init timeout after', IAP_INIT_TIMEOUT_MS, 'ms');
         setInitTimedOut(true);
-        setLocalError('Connessione allo store scaduta. Riprova.');
+        setLocalError('Connessione allo store scaduta.');
       }
     }, IAP_INIT_TIMEOUT_MS);
     
     initIAP()
       .then(success => {
         clearTimeout(timeoutId);
-        if (!success) {
-          setLocalError('Impossibile connettersi allo store.');
-        }
+        if (!success) setLocalError('Impossibile connettersi allo store.');
       })
-      .catch(err => {
+      .catch(() => {
         clearTimeout(timeoutId);
-        console.error('[Native IAP] Init error:', err);
         setLocalError('Errore di connessione allo store.');
       });
     
     return () => clearTimeout(timeoutId);
   }, [initAttempted, initIAP, isNativeIAPAvailable, productMappingError, status]);
 
-  // Find the store product for display
   const storeProduct = products.find(p => p.productId === expectedStoreId);
-
   const displayPrice = storeProduct?.localizedPrice || `€${priceEur.toFixed(2)}`;
 
   const handlePurchase = async () => {
     if (!isIAPReady || purchasing || productMappingError) return;
-
     setPurchasing(true);
     setLocalError(null);
     
-    console.log('[Native IAP] 💳 Starting purchase:', { packCode, expectedStoreId });
-    
     try {
       const result = await purchase(packCode);
-      
       if (result.success) {
-        console.log('[Native IAP] ✅ Purchase successful:', result);
-        toast.success(`✅ ${m1uAmount} M1U aggiunti al tuo account!`);
+        toast.success(`✅ ${m1uAmount} M1U aggiunti!`);
         onSuccess();
       } else {
-        console.error('[Native IAP] ❌ Purchase failed:', result.error);
         setLocalError(result.error || 'Acquisto non completato');
-        toast.error(result.error || 'Acquisto non completato');
       }
-    } catch (err) {
-      console.error('[Native IAP] ❌ Purchase error:', err);
-      setLocalError('Errore durante l\'acquisto. Riprova.');
-      toast.error('Errore durante l\'acquisto');
+    } catch {
+      setLocalError('Errore durante l\'acquisto.');
     } finally {
       setPurchasing(false);
     }
@@ -416,164 +354,94 @@ const NativeIAPCheckout: React.FC<{
   const hasError = !!(error || localError || productMappingError || initTimedOut);
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-black/95 border-[#00D1FF]/30 backdrop-blur-xl">
-      <CardHeader className="border-b border-white/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-[#00D1FF]" />
-            <CardTitle className="text-white font-orbitron">{packName}</CardTitle>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onCancel}
-            disabled={purchasing}
-            className="h-8 w-8 rounded-full hover:bg-white/10"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-        <div className="text-center mt-4">
-          <div className="text-3xl font-bold text-white mb-1">
-            {m1uAmount} <span className="text-[#00D1FF] text-lg">M1U</span>
-          </div>
-          <div className="text-2xl font-semibold text-[#FFD700]">
-            {displayPrice}
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4 pt-6">
-        {/* 🔧 FIX: Product mapping error (critical) */}
-        {productMappingError && (
-          <div className="text-center p-4 bg-red-500/10 rounded-lg border border-red-500/30">
-            <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-            <p className="text-red-400 text-sm font-medium mb-2">Configurazione Richiesta</p>
-            <p className="text-white/60 text-xs mb-3">{productMappingError}</p>
-            <p className="text-white/40 text-xs">ID atteso: {expectedStoreId || 'N/A'}</p>
-            <Button
-              onClick={onCancel}
-              variant="outline"
-              size="sm"
-              className="mt-3"
-            >
+    <div className="space-y-4">
+      {/* Error state */}
+      {hasError && (
+        <div className="text-center p-4 bg-red-500/10 rounded-xl border border-red-500/30">
+          <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+          <p className="text-red-400 font-medium mb-2">
+            {localError || error || productMappingError || 'Errore connessione store'}
+          </p>
+          <p className="text-white/50 text-xs mb-4">
+            {platform === 'ios' 
+              ? 'Prodotti IAP in configurazione su App Store Connect.'
+              : 'Prodotti in configurazione su Google Play Console.'
+            }
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button onClick={handleRetry} variant="outline" size="sm">
+              Riprova
+            </Button>
+            <Button onClick={onCancel} variant="ghost" size="sm">
               Chiudi
             </Button>
           </div>
-        )}
-
-        {/* Loading state */}
-        {!productMappingError && status === 'initializing' && !initTimedOut && (
-          <div className="text-center p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
-            <div className="w-6 h-6 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin mx-auto mb-2" />
-            <p className="text-white/70 text-sm">Connessione allo store...</p>
-          </div>
-        )}
-
-        {/* Error state (including timeout) */}
-        {!productMappingError && hasError && (status === 'error' || initTimedOut || localError) && (
-          <div className="text-center p-4 bg-red-500/10 rounded-lg border border-red-500/30">
-            <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-            <p className="text-red-400 text-sm">{localError || error || 'Errore di connessione'}</p>
-            <div className="flex gap-2 justify-center mt-3">
-              <Button
-                onClick={handleRetry}
-                variant="outline"
-                size="sm"
-              >
-                Riprova
-              </Button>
-              <Button
-                onClick={onCancel}
-                variant="ghost"
-                size="sm"
-              >
-                Chiudi
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Ready to purchase */}
-        {!productMappingError && isIAPReady && !hasError && (
-          <div className="space-y-4">
-            <div className="text-center p-4 bg-green-500/10 rounded-lg border border-green-500/30">
-              <p className="text-white/70 text-sm">
-                {platform === 'ios' ? '🍎 Apple Pay' : '🤖 Google Play'}
-              </p>
-              <p className="text-white/50 text-xs mt-1">
-                Pagamento sicuro tramite {platform === 'ios' ? 'App Store' : 'Play Store'}
-              </p>
-              {!storeProduct && (
-                <p className="text-yellow-400/70 text-xs mt-2">
-                  ⚠️ Prodotto non ancora disponibile nello store
-                </p>
-              )}
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                className="flex-1 border-white/20 hover:bg-white/10"
-                disabled={purchasing}
-              >
-                Annulla
-              </Button>
-              <Button
-                onClick={handlePurchase}
-                disabled={purchasing || isLoading || !storeProduct}
-                className="flex-1 bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] hover:opacity-90 text-white font-semibold"
-              >
-                {purchasing ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Acquisto...
-                  </span>
-                ) : (
-                  `Acquista ${displayPrice}`
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Idle state - waiting for init (no error, not loading, not ready) */}
-        {!productMappingError && !isIAPReady && !hasError && status !== 'initializing' && (
-          <div className="text-center p-6 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
-            <AlertCircle className="w-10 h-10 text-yellow-400 mx-auto mb-3" />
-            <h3 className="text-md font-bold text-white mb-2">
-              {platform === 'ios' ? 'Apple In-App Purchase' : 'Google Play Billing'}
-            </h3>
-            <p className="text-white/70 text-sm mb-4">
-              Premi "Connetti" per avviare il pagamento
-            </p>
-            <div className="flex gap-2 justify-center">
-              <Button
-                onClick={handleRetry}
-                variant="default"
-                size="sm"
-                className="bg-gradient-to-r from-[#00D1FF] to-[#7C3AED]"
-              >
-                Connetti allo store
-              </Button>
-              <Button
-                onClick={onCancel}
-                variant="ghost"
-                size="sm"
-              >
-                Annulla
-              </Button>
-            </div>
-          </div>
-        )}
-        
-        <div className="text-xs text-white/50 text-center pt-2 border-t border-white/10">
-          🔒 Pagamento sicuro tramite {platform === 'ios' ? 'Apple' : 'Google'}
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      {/* Loading state */}
+      {!hasError && status === 'initializing' && (
+        <div className="text-center p-6">
+          <div className="w-8 h-8 border-2 border-[#00D1FF]/30 border-t-[#00D1FF] rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-white/70">Connessione allo store...</p>
+        </div>
+      )}
+
+      {/* Ready to purchase */}
+      {!hasError && isIAPReady && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-center gap-3 p-3 bg-white/5 rounded-xl">
+            <Smartphone className="w-6 h-6 text-[#00D1FF]" />
+            <span className="text-white/80">
+              {platform === 'ios' ? 'Apple Pay / Carta' : 'Google Pay / Carta'}
+            </span>
+          </div>
+
+          <Button
+            onClick={handlePurchase}
+            disabled={purchasing || isLoading || !storeProduct}
+            className="w-full h-12 bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] hover:opacity-90 text-white font-bold text-lg"
+          >
+            {purchasing ? (
+              <span className="flex items-center gap-2">
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Elaborazione...
+              </span>
+            ) : (
+              <>Paga {displayPrice}</>
+            )}
+          </Button>
+
+          <Button
+            onClick={onCancel}
+            variant="ghost"
+            className="w-full text-white/60 hover:text-white"
+          >
+            Annulla
+          </Button>
+        </div>
+      )}
+
+      {/* Idle - need to connect */}
+      {!hasError && !isIAPReady && status !== 'initializing' && (
+        <div className="space-y-4">
+          <Button
+            onClick={handleRetry}
+            className="w-full h-12 bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] hover:opacity-90 text-white font-bold"
+          >
+            <Smartphone className="w-5 h-5 mr-2" />
+            Connetti allo Store
+          </Button>
+          <Button onClick={onCancel} variant="ghost" className="w-full text-white/60">
+            Annulla
+          </Button>
+        </div>
+      )}
+
+      <p className="text-xs text-white/40 text-center pt-2 border-t border-white/10">
+        🔒 Pagamento sicuro tramite {platform === 'ios' ? 'Apple' : 'Google'}
+      </p>
+    </div>
   );
 };
 
@@ -590,23 +458,6 @@ export const M1UPaymentModal: React.FC<M1UPaymentModalProps> = ({
   // 🏪 STORE COMPLIANT: Check if on native platform
   const isNative = isCapacitorNative();
   const stripeAvailable = isStripeAvailable();
-  
-  // Close on ESC key
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        console.log('[M1U MODAL] ESC pressed - closing modal');
-        onCancel();
-      }
-    };
-
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onCancel]);
-
-  if (!isOpen) return null;
 
   const options: StripeElementsOptions = {
     appearance: {
@@ -624,44 +475,84 @@ export const M1UPaymentModal: React.FC<M1UPaymentModalProps> = ({
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 z-[10000] overflow-y-auto"
-      style={{ 
-        paddingTop: 'calc(env(safe-area-inset-top, 20px) + 20px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 20px) + 20px)',
-        maxHeight: '100dvh'
-      }}
-      onClick={(e) => {
-        // Close on backdrop click
-        if (e.target === e.currentTarget) {
-          console.log('[M1U MODAL] Backdrop clicked - closing modal');
-          onCancel();
-        }
-      }}
-    >
-      {/* 🏪 STORE COMPLIANT: Show native IAP or Stripe checkout */}
-      {isNative || !stripeAvailable ? (
-        <NativeIAPCheckout
-          packName={packName}
-          packCode={packCode}
-          m1uAmount={m1uAmount}
-          priceEur={priceEur}
-          onSuccess={onSuccess}
-          onCancel={onCancel}
-        />
-      ) : (
-        <Elements stripe={stripePromise} options={options}>
-          <CheckoutForm 
-            packName={packName}
-            packCode={packCode}
-            m1uAmount={m1uAmount}
-            priceCents={priceCents}
-            onSuccess={onSuccess} 
-            onCancel={onCancel} 
-          />
-        </Elements>
-      )}
-    </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent 
+        className="sm:max-w-md w-[calc(100vw-2rem)] p-0 bg-transparent border-0 [&>button]:hidden"
+      >
+        {/* Neon glass container with smooth entrance animation */}
+        <motion.div 
+          className="relative rounded-2xl p-[1.5px] bg-gradient-to-r from-[#00D1FF] via-[#7C3AED] to-[#00D1FF] shadow-[0_0_30px_rgba(124,58,237,0.35)]"
+          initial={{ opacity: 0, scale: 0.92, y: 30 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ 
+            duration: 0.5, 
+            ease: [0.16, 1, 0.3, 1],
+            opacity: { duration: 0.4 }
+          }}
+        >
+          <div className="rounded-2xl bg-black/95 backdrop-blur-xl p-6">
+            
+            {/* Close button */}
+            <button
+              onClick={onCancel}
+              aria-label="Chiudi"
+              className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 transition-all"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+
+            {/* Header */}
+            <DialogHeader className="mb-4">
+              <DialogTitle className="text-xl font-orbitron text-center">
+                <span className="bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] bg-clip-text text-transparent">
+                  ACQUISTA PACK
+                </span>
+              </DialogTitle>
+              <DialogDescription className="sr-only">
+                Finalizza acquisto {packName}
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Pack Info */}
+            <div className="text-center mb-6 py-4 bg-white/5 rounded-xl border border-white/10">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <ShoppingCart className="w-5 h-5 text-[#00D1FF]" />
+                <span className="text-lg font-semibold text-white">{packName}</span>
+              </div>
+              <div className="text-3xl font-bold text-white">
+                {m1uAmount} <span className="text-[#00D1FF] text-lg">M1U</span>
+              </div>
+              <div className="text-2xl font-semibold text-[#FFD700] mt-1">
+                €{priceEur.toFixed(2)}
+              </div>
+            </div>
+
+            {/* Payment Content */}
+            {isNative || !stripeAvailable ? (
+              <NativeIAPCheckoutContent
+                packName={packName}
+                packCode={packCode}
+                m1uAmount={m1uAmount}
+                priceEur={priceEur}
+                onSuccess={onSuccess}
+                onCancel={onCancel}
+              />
+            ) : (
+              <Elements stripe={stripePromise} options={options}>
+                <StripeCheckoutContent 
+                  packCode={packCode}
+                  m1uAmount={m1uAmount}
+                  priceCents={priceCents}
+                  onSuccess={onSuccess} 
+                  onCancel={onCancel} 
+                />
+              </Elements>
+            )}
+
+          </div>
+        </motion.div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

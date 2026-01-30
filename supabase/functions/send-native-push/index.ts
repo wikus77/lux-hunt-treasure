@@ -379,7 +379,7 @@ async function sendAPNSNotification(
   try {
     // Get APNs configuration from environment
     const teamId = Deno.env.get('APPLE_TEAM_ID');
-    const keyId = Deno.env.get('APPLE_KEY_ID');
+    const keyId = Deno.env.get('APPLE_KEY_ID_PUSH');
     const privateKey = Deno.env.get('APPLE_PRIVATE_KEY');
     const bundleId = Deno.env.get('APPLE_BUNDLE_ID') || 'eu.m1ssion.app';
     const apnsEnvironment = Deno.env.get('APNS_ENVIRONMENT') || 'development';
@@ -401,7 +401,7 @@ async function sendAPNSNotification(
           message: 'APNs configuration missing',
           missing: {
             APPLE_TEAM_ID: !teamId,
-            APPLE_KEY_ID: !keyId,
+            APPLE_KEY_ID_PUSH: !keyId,
             APPLE_PRIVATE_KEY: !privateKey
           }
         }

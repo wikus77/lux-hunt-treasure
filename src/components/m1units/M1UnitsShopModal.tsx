@@ -108,13 +108,15 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
       (window as any).plausible('checkout_start', { props: { pack: pack.id } });
     }
 
-    // 🔧 FIX FREEZE BUG: 
-    // 1. Set selected pack
-    // 2. Open payment modal (renders at z-10000, above shop)
-    // 3. Shop modal stays open but buttons are disabled
-    // 4. Payment modal handles success/cancel and cleans up
+    // 🔧 FIX: Close shop modal FIRST, then open payment modal
+    // This prevents confusing overlapping modals on iOS
     setSelectedPack(pack);
-    setShowPaymentModal(true);
+    onClose(); // Close shop modal
+    
+    // Small delay to ensure shop closes before payment opens
+    setTimeout(() => {
+      setShowPaymentModal(true);
+    }, 100);
   };
 
   const handlePaymentSuccess = () => {
@@ -142,15 +144,14 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
     }
     
     setSelectedPack(null);
-    onClose();
-    
-    // Toast is now handled by M1UPill's m1u-credited listener with slot machine animation
+    // Shop is already closed, no need to call onClose again
   };
 
   const handlePaymentCancel = () => {
-    console.log('[M1U SHOP] Payment cancelled');
+    console.log('[M1U SHOP] Payment cancelled - user can reopen shop');
     setShowPaymentModal(false);
     setSelectedPack(null);
+    // Don't reopen shop automatically - user can tap M1U pill again if they want
   };
 
   return (
@@ -158,10 +159,19 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent
           aria-label="M1 UNITS Shop"
-          className="sm:max-w-5xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-0 bg-transparent border-0"
+          className="sm:max-w-5xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-0 bg-transparent border-0 [&>button]:hidden"
         >
-          {/* Neon glass container with continuous gradient border */}
-          <div className="relative rounded-2xl p-[1.5px] bg-gradient-to-r from-[#00D1FF] via-[#7C3AED] to-[#00D1FF] shadow-[0_0_30px_rgba(124,58,237,0.35)]">
+          {/* Neon glass container with smooth entrance animation */}
+          <motion.div 
+            className="relative rounded-2xl p-[1.5px] bg-gradient-to-r from-[#00D1FF] via-[#7C3AED] to-[#00D1FF] shadow-[0_0_30px_rgba(124,58,237,0.35)]"
+            initial={{ opacity: 0, scale: 0.92, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ 
+              duration: 0.5, 
+              ease: [0.16, 1, 0.3, 1],
+              opacity: { duration: 0.4 }
+            }}
+          >
             <div className="rounded-2xl bg-black/90 backdrop-blur-xl border border-white/10 p-6">
               {/* Close Button "X" - top-right, accessible 44x44 tap target */}
               <button
@@ -235,9 +245,9 @@ export const M1UnitsShopModal = ({ isOpen, onClose }: M1UnitsShopModalProps) => 
                 })}
               </div>
 
-              <div className="text-center text-xs text-white/50 mt-4 pb-2">Pagamento sicuro tramite Stripe • M1U non scadono mai</div>
+              <div className="text-center text-xs text-white/50 mt-4 pb-2">Pagamento sicuro tramite Apple Pay • M1U non scadono mai</div>
             </div>
-          </div>
+          </motion.div>
         </DialogContent>
       </Dialog>
 

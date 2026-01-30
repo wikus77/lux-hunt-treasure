@@ -28,7 +28,17 @@ const corsHeaders = {
 // Environment variables
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+// Apple IAP validation secrets:
+// - APPLE_SHARED_SECRET: For legacy verifyReceipt API (deprecated but still works)
+// - APPLE_PRIVATE_KEY_V2: For App Store Server API v2 (JWT-based, recommended)
+// - APPLE_KEY_ID, APPLE_ISSUER_ID, APPLE_TEAM_ID: Required for Server API v2
 const APPLE_SHARED_SECRET = Deno.env.get('APPLE_SHARED_SECRET') || '';
+const APPLE_PRIVATE_KEY = Deno.env.get('APPLE_PRIVATE_KEY_V2') || '';
+const APPLE_KEY_ID = Deno.env.get('APPLE_KEY_ID') || '';
+const APPLE_ISSUER_ID = Deno.env.get('APPLE_ISSUER_ID') || '';
+
+// Google Play validation
 const GOOGLE_SERVICE_ACCOUNT_KEY = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY') || '';
 
 interface VerifyRequest {
@@ -474,19 +484,31 @@ serve(async (req) => {
 // APPLE VERIFICATION
 // =====================
 
+/**
+ * Verify Apple purchase - tries App Store Server API v2 first, then falls back to legacy verifyReceipt
+ */
 async function verifyApplePurchase(
   receiptData: string | undefined,
   transactionId: string,
   sharedSecret: string
 ): Promise<boolean> {
+  // Try App Store Server API v2 first (if configured)
+  if (APPLE_PRIVATE_KEY && APPLE_KEY_ID && APPLE_ISSUER_ID) {
+    console.log('[IAP] Trying App Store Server API v2...');
+    const v2Result = await verifyApplePurchaseV2(transactionId);
+    if (v2Result !== null) {
+      return v2Result;
+    }
+    console.log('[IAP] V2 failed, falling back to legacy verifyReceipt...');
+  }
+
+  // Fallback to legacy verifyReceipt
   if (!receiptData) {
     console.warn('[IAP] No receipt data for iOS verification');
-    // In sandbox/dev, we might allow without receipt
     return Deno.env.get('IAP_SANDBOX') === 'true';
   }
 
   try {
-    // Try production first
     let response = await fetch('https://buy.itunes.apple.com/verifyReceipt', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -513,13 +535,11 @@ async function verifyApplePurchase(
       result = await response.json();
     }
 
-    // Status 0 = valid
     if (result.status !== 0) {
       console.warn('[IAP] Apple verification failed:', result.status);
       return false;
     }
 
-    // Check if transaction_id matches
     const receipt = result.receipt;
     const inApp = receipt?.in_app || [];
     const found = inApp.some((item: any) => item.transaction_id === transactionId);
@@ -533,6 +553,119 @@ async function verifyApplePurchase(
   } catch (error) {
     console.error('[IAP] Apple verification error:', error);
     return false;
+  }
+}
+
+/**
+ * App Store Server API v2 verification (uses JWT with .p8 key)
+ * Returns null if API call fails (to allow fallback), true/false for validation result
+ */
+async function verifyApplePurchaseV2(transactionId: string): Promise<boolean | null> {
+  try {
+    // Generate JWT for App Store Server API
+    const jwt = await generateAppleJWT();
+    if (!jwt) {
+      console.warn('[IAP] Failed to generate Apple JWT');
+      return null;
+    }
+
+    // Get transaction info from App Store Server API
+    const bundleId = Deno.env.get('APPLE_BUNDLE_ID') || 'eu.m1ssion.app';
+    const isSandbox = Deno.env.get('IAP_SANDBOX') === 'true';
+    const baseUrl = isSandbox 
+      ? 'https://api.storekit-sandbox.itunes.apple.com' 
+      : 'https://api.storekit.itunes.apple.com';
+
+    const response = await fetch(
+      `${baseUrl}/inApps/v1/transactions/${transactionId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      console.warn('[IAP] App Store Server API v2 error:', response.status);
+      return null; // Allow fallback
+    }
+
+    const data = await response.json();
+    
+    // Check if transaction is valid
+    if (data.signedTransactionInfo) {
+      console.log('[IAP] ✅ Transaction verified via App Store Server API v2');
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('[IAP] App Store Server API v2 error:', error);
+    return null; // Allow fallback
+  }
+}
+
+/**
+ * Generate JWT for App Store Server API authentication
+ */
+async function generateAppleJWT(): Promise<string | null> {
+  try {
+    const header = {
+      alg: 'ES256',
+      kid: APPLE_KEY_ID,
+      typ: 'JWT'
+    };
+
+    const now = Math.floor(Date.now() / 1000);
+    const payload = {
+      iss: APPLE_ISSUER_ID,
+      iat: now,
+      exp: now + 3600, // 1 hour
+      aud: 'appstoreconnect-v1',
+      bid: Deno.env.get('APPLE_BUNDLE_ID') || 'eu.m1ssion.app'
+    };
+
+    // Base64url encode
+    const b64url = (obj: any) => {
+      const json = JSON.stringify(obj);
+      const b64 = btoa(json);
+      return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    };
+
+    const headerB64 = b64url(header);
+    const payloadB64 = b64url(payload);
+    const message = `${headerB64}.${payloadB64}`;
+
+    // Import the private key and sign
+    const privateKeyPem = APPLE_PRIVATE_KEY
+      .replace(/-----BEGIN PRIVATE KEY-----/, '')
+      .replace(/-----END PRIVATE KEY-----/, '')
+      .replace(/\s/g, '');
+
+    const keyData = Uint8Array.from(atob(privateKeyPem), c => c.charCodeAt(0));
+    
+    const cryptoKey = await crypto.subtle.importKey(
+      'pkcs8',
+      keyData,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['sign']
+    );
+
+    const signature = await crypto.subtle.sign(
+      { name: 'ECDSA', hash: 'SHA-256' },
+      cryptoKey,
+      new TextEncoder().encode(message)
+    );
+
+    const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+    return `${message}.${signatureB64}`;
+  } catch (error) {
+    console.error('[IAP] JWT generation error:', error);
+    return null;
   }
 }
 

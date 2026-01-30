@@ -335,14 +335,25 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
             </motion.div>
           </motion.button>
 
-          {/* Expandable content */}
+          {/* Expandable content with smooth spring animation */}
           <AnimatePresence>
             {isExpanded && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                transition={{ 
+                  height: {
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 30,
+                    mass: 1
+                  },
+                  opacity: { 
+                    duration: 0.25,
+                    ease: 'easeInOut'
+                  }
+                }}
                 className="overflow-hidden"
               >
                 <div className="px-4 pb-4 space-y-3">

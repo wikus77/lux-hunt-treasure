@@ -1,15 +1,20 @@
 // @ts-nocheck
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-import React, { useState } from 'react';
+// 🚫 SECURITY: This component is DISABLED in production
+// Use real Stripe checkout via Edge Function for paid subscriptions
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CreditCard, Lock, CheckCircle } from 'lucide-react';
+import { CreditCard, Lock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { supabase } from '@/integrations/supabase/client';
+
+// 🔐 SECURITY: Block in production
+const IS_PRODUCTION = import.meta.env.PROD || import.meta.env.MODE === 'production';
 
 interface FakeStripeCheckoutProps {
   planName: string;
@@ -33,59 +38,63 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
   const { toast } = useToast();
   const { navigate } = useWouterNavigation();
 
+  // 🚫 PRODUCTION BLOCK: Show error and redirect
+  useEffect(() => {
+    if (IS_PRODUCTION) {
+      console.error('🚫 FakeStripeCheckout is DISABLED in production');
+      toast({
+        title: "⚠️ Metodo non disponibile",
+        description: "Usa il checkout Stripe ufficiale per gli abbonamenti.",
+        variant: "destructive",
+      });
+      setTimeout(() => navigate('/subscriptions'), 1500);
+    }
+  }, []);
+
   // TASK B — FLUSSO handleUpgrade(tier)
   const handlePayment = async () => {
+    // 🚫 SECURITY: Block fake payments entirely
+    if (IS_PRODUCTION) {
+      toast({
+        title: "🚫 Non disponibile",
+        description: "Questo metodo di pagamento è disabilitato. Usa Stripe.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsProcessing(true);
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Simulated payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 🔐 SECURITY: In dev mode, only allow creating FREE subscription via RPC
+      console.warn('⚠️ DEV MODE: Creating free subscription only');
       
-      // Save subscription to Supabase
-      await supabase.from('subscriptions').upsert({
-        user_id: user.id,
-        tier: planName,
-        status: 'active',
-        start_date: new Date().toISOString(),
-        end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        provider: 'stripe',
-        updated_at: new Date().toISOString()
-      });
-
-      // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-      // TASK E — REGISTRAZIONE TRANSAZIONE - PREZZI SINCRONIZZATI CON CENTRALE
-      const { getPriceEur, getPriceCents } = await import('@/lib/constants/pricingConfig');
-      
-      await supabase.from('payment_transactions').insert({
-        user_id: user.id,
-        amount: getPriceCents(planName) || 0, // CRITICAL FIX: Use cents for Stripe compatibility
-        currency: 'EUR',
-        description: `Upgrade to ${planName} plan`,
-        status: 'success',
-        provider: 'stripe'
-      });
+      const { data, error } = await supabase.rpc('create_free_subscription');
+      if (error) {
+        throw new Error(`Subscription creation failed: ${error.message}`);
+      }
 
       // Save to localStorage for immediate sync
       const subscriptionData = {
-        plan: planName,
-        price: planPrice,
+        plan: 'Base',
+        price: '€0',
         activatedAt: new Date().toISOString(),
-        features: planFeatures
+        features: ['Accesso base']
       };
       
       localStorage.setItem('active_subscription', JSON.stringify(subscriptionData));
-      localStorage.setItem('subscription_plan', planName);
+      localStorage.setItem('subscription_plan', 'Base');
       window.dispatchEvent(new Event('storage'));
       
       setIsProcessing(false);
       setIsSuccess(true);
       
       toast({
-        title: "✅ Upgrade completato con successo!",
-        description: `Piano ${planName} attivato con successo.`,
+        title: "✅ Account creato!",
+        description: "Piano Base attivato. Per upgrade, usa Stripe.",
       });
 
       // Redirect to /profile after success with badge update
@@ -97,8 +106,8 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
       console.error('Payment error:', error);
       setIsProcessing(false);
       toast({
-        title: "❌ Errore durante l'upgrade. Riprova.",
-        description: "Si è verificato un errore durante il processo di pagamento.",
+        title: "❌ Errore",
+        description: "Si è verificato un errore. Riprova.",
         variant: "destructive",
       });
     }

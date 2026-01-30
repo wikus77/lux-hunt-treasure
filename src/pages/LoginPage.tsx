@@ -1,5 +1,5 @@
 // Pagina di autenticazione (Login/Register)
-// 🔧 FIX v11: Uses createPortal like LegalOnboarding for proper iOS WKWebView centering
+// 🔧 FIX v12: Converted to Dialog Modal style with neon glass container
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,7 +7,6 @@ import { Eye, EyeOff, Mail, Lock, User, Shield, ArrowRight } from 'lucide-react'
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { useAuth } from '@/hooks/use-auth';
 import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -204,24 +203,6 @@ const LoginPage: React.FC = () => {
     return 'Errore imprevisto. Riprova.';
   };
 
-  // 🔧 FIX v10: Removed transform variants (y: 20) - they break centering in WKWebView
-  // Using opacity-only animations to prevent transform stacking context issues
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.4,
-        staggerChildren: 0.05
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 }
-  };
-
   if (authLoading) {
     // 🔧 FIX v11: Use createPortal for loading state too
     return createPortal(
@@ -236,11 +217,11 @@ const LoginPage: React.FC = () => {
     );
   }
 
-  // 🔧 FIX v11: Use createPortal like LegalOnboarding for proper iOS WKWebView centering
-  // This ensures the modal is rendered at document.body level, avoiding transform stacking issues
+  // 🔧 FIX v12: Dialog Modal Style - Centered card with backdrop
+  // Matches M1UnitsShopModal visual style with neon glass container
   return createPortal(
     <div 
-      className="fixed inset-0 bg-background z-[100]"
+      className="fixed inset-0 z-[100]"
       style={{
         paddingTop: 'max(env(safe-area-inset-top, 16px), 16px)',
         paddingBottom: 'max(env(safe-area-inset-bottom, 16px), 16px)',
@@ -250,260 +231,255 @@ const LoginPage: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         overflowY: 'auto',
+        background: 'rgba(0,0,0,0.85)',
+        backdropFilter: 'blur(8px)',
       }}
     >
-      {/* Background Effects - inside fixed container */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(0,209,255,0.1),transparent)] pointer-events-none" />
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,209,255,0.08),transparent_60%)] pointer-events-none" />
       
+      {/* Modal Card with entrance animation */}
       <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
         className="relative z-10 w-full max-w-md my-auto"
       >
-        <motion.div variants={itemVariants} className="w-full max-w-md">
-          {/* Logo/Title */}
-          <motion.div variants={itemVariants} className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 mb-4">
-              <Shield className="w-8 h-8 text-primary" />
+        {/* Neon glass container */}
+        <div className="relative rounded-2xl p-[1.5px] bg-gradient-to-r from-[#00D1FF] via-[#7C3AED] to-[#00D1FF] shadow-[0_0_30px_rgba(124,58,237,0.35)]">
+          <div className="rounded-2xl bg-black/95 backdrop-blur-xl p-6">
+            
+            {/* Logo/Title */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#00D1FF]/20 to-[#7C3AED]/20 border border-[#00D1FF]/30 mb-4">
+                <Shield className="w-8 h-8 text-[#00D1FF]" />
+              </div>
+              <h1 className="text-2xl font-orbitron font-bold bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] bg-clip-text text-transparent mb-1">
+                M1SSION™
+              </h1>
+              <p className="text-white/60 text-sm">
+                {isLoginMode ? 'Accedi alla missione' : 'Unisciti agli agenti'}
+              </p>
             </div>
-            <h1 className="text-3xl font-orbitron font-bold text-foreground mb-2">
-              M1SSION™
-            </h1>
-            <p className="text-muted-foreground">
-              {isLoginMode ? 'Accedi alla missione' : 'Unisciti agli agenti'}
-            </p>
-          </motion.div>
 
-          {/* Form Card */}
-          <motion.div variants={itemVariants}>
-            <Card className="glass-card neon-border">
-              <CardHeader>
-                <CardTitle className="text-center font-orbitron">
-                  {isLoginMode ? 'Accesso Agente' : 'Registrazione Agente'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-white/80">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="agente@example.com"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className={`pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#00D1FF]/50 ${errors.email ? 'border-red-500/50' : ''}`}
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-red-400">{errors.email}</p>
+                )}
+              </div>
+
+              {/* Nome (solo registrazione) */}
+              <AnimatePresence>
+                {!isLoginMode && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-2 overflow-hidden"
+                  >
+                    <Label htmlFor="fullName" className="text-white/80">Nome Agente</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <User className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                       <Input
-                        id="email"
-                        type="email"
-                        placeholder="agente@example.com"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        className={`glass-input pl-10 ${errors.email ? 'border-destructive' : ''}`}
+                        id="fullName"
+                        type="text"
+                        placeholder="Il tuo nome"
+                        value={formData.fullName}
+                        onChange={(e) => handleInputChange('fullName', e.target.value)}
+                        className={`pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#00D1FF]/50 ${errors.fullName ? 'border-red-500/50' : ''}`}
                         disabled={isLoading}
                       />
                     </div>
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
+                    {errors.fullName && (
+                      <p className="text-sm text-red-400">{errors.fullName}</p>
                     )}
-                  </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-                  {/* Nome (solo registrazione) */}
-                  <AnimatePresence>
-                    {!isLoginMode && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-2"
-                      >
-                        <Label htmlFor="fullName">Nome Agente</Label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="fullName"
-                            type="text"
-                            placeholder="Il tuo nome"
-                            value={formData.fullName}
-                            onChange={(e) => handleInputChange('fullName', e.target.value)}
-                            className={`glass-input pl-10 ${errors.fullName ? 'border-destructive' : ''}`}
-                            disabled={isLoading}
-                          />
-                        </div>
-                        {errors.fullName && (
-                          <p className="text-sm text-destructive">{errors.fullName}</p>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+              {/* Password */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-white/80">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className={`pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#00D1FF]/50 ${errors.password ? 'border-red-500/50' : ''}`}
+                    disabled={isLoading}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 text-white/40 hover:text-white"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={isLoading}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-red-400">{errors.password}</p>
+                )}
+              </div>
 
-                  {/* Password */}
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+              {/* Conferma Password (solo registrazione) */}
+              <AnimatePresence>
+                {!isLoginMode && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-2 overflow-hidden"
+                  >
+                    <Label htmlFor="confirmPassword" className="text-white/80">Conferma Password</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-white/40" />
                       <Input
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
+                        id="confirmPassword"
+                        type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="••••••••"
-                        value={formData.password}
-                        onChange={(e) => handleInputChange('password', e.target.value)}
-                        className={`glass-input pl-10 pr-10 ${errors.password ? 'border-destructive' : ''}`}
+                        value={formData.confirmPassword}
+                        onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                        className={`pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#00D1FF]/50 ${errors.confirmPassword ? 'border-red-500/50' : ''}`}
                         disabled={isLoading}
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="absolute right-0 top-0 h-full px-3"
-                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-0 top-0 h-full px-3 text-white/40 hover:text-white"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         disabled={isLoading}
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                     </div>
-                    {errors.password && (
-                      <p className="text-sm text-destructive">{errors.password}</p>
+                    {errors.confirmPassword && (
+                      <p className="text-sm text-red-400">{errors.confirmPassword}</p>
                     )}
-                  </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-                  {/* Conferma Password (solo registrazione) */}
-                  <AnimatePresence>
-                    {!isLoginMode && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-2"
-                      >
-                        <Label htmlFor="confirmPassword">Conferma Password</Label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="confirmPassword"
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            placeholder="••••••••"
-                            value={formData.confirmPassword}
-                            onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                            className={`glass-input pl-10 pr-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
-                            disabled={isLoading}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full px-3"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            disabled={isLoading}
-                          >
-                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                        {errors.confirmPassword && (
-                          <p className="text-sm text-destructive">{errors.confirmPassword}</p>
-                        )}
-                      </motion.div>
-                    )}
-                   </AnimatePresence>
-
-                   {/* ToS Checkbox (solo registrazione) */}
-                   <AnimatePresence>
-                     {!isLoginMode && (
-                       <motion.div
-                         initial={{ height: 0, opacity: 0 }}
-                         animate={{ height: 'auto', opacity: 1 }}
-                         exit={{ height: 0, opacity: 0 }}
-                         transition={{ duration: 0.3 }}
-                         className="space-y-2"
-                       >
-                         <div className="flex items-start space-x-3">
-                           <input
-                             id="acceptTerms"
-                             type="checkbox"
-                             checked={formData.acceptTerms}
-                             onChange={(e) => handleInputChange('acceptTerms', e.target.checked)}
-                             className="mt-1 h-4 w-4 rounded border-muted-foreground focus:ring-primary"
-                             disabled={isLoading}
-                           />
-                           <Label htmlFor="acceptTerms" className="text-sm leading-relaxed cursor-pointer">
-                             Accetto i{' '}
-                             <button type="button" className="text-primary hover:underline" onClick={() => window.open('/terms', '_blank')}>
-                               Termini di Servizio
-                             </button>
-                             {' '}e la{' '}
-                             <button type="button" className="text-primary hover:underline" onClick={() => window.open('/privacy-policy', '_blank')}>
-                               Privacy Policy
-                             </button>
-                           </Label>
-                         </div>
-                         {errors.acceptTerms && (
-                           <p className="text-sm text-destructive">{errors.acceptTerms}</p>
-                         )}
-                       </motion.div>
-                     )}
-                   </AnimatePresence>
-
-                  {/* Errore generale */}
-                  {errors.general && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-3 rounded-lg bg-destructive/10 border border-destructive/20"
-                    >
-                      <p className="text-sm text-destructive">{errors.general}</p>
-                    </motion.div>
-                  )}
-
-                  {/* Submit Button */}
-                  <Button
-                    type="submit"
-                    className="w-full neon-border"
-                    disabled={isLoading}
+              {/* ToS Checkbox (solo registrazione) */}
+              <AnimatePresence>
+                {!isLoginMode && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-2 overflow-hidden"
                   >
-                    {isLoading ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
+                    <div className="flex items-start space-x-3">
+                      <input
+                        id="acceptTerms"
+                        type="checkbox"
+                        checked={formData.acceptTerms}
+                        onChange={(e) => handleInputChange('acceptTerms', e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-white/30 bg-white/5 focus:ring-[#00D1FF]"
+                        disabled={isLoading}
                       />
-                    ) : (
-                      <ArrowRight className="w-4 h-4 mr-2" />
+                      <Label htmlFor="acceptTerms" className="text-sm leading-relaxed cursor-pointer text-white/70">
+                        Accetto i{' '}
+                        <button type="button" className="text-[#00D1FF] hover:underline" onClick={() => window.open('/terms', '_blank')}>
+                          Termini di Servizio
+                        </button>
+                        {' '}e la{' '}
+                        <button type="button" className="text-[#00D1FF] hover:underline" onClick={() => window.open('/privacy-policy', '_blank')}>
+                          Privacy Policy
+                        </button>
+                      </Label>
+                    </div>
+                    {errors.acceptTerms && (
+                      <p className="text-sm text-red-400">{errors.acceptTerms}</p>
                     )}
-                    {isLoading 
-                      ? 'Elaborazione...' 
-                      : isLoginMode 
-                        ? 'Accedi' 
-                        : 'Registrati'
-                    }
-                  </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-                  {/* Toggle Mode */}
-                  <div className="text-center pt-4">
-                    <Button
-                      type="button"
-                      variant="link"
-                      onClick={toggleMode}
-                      disabled={isLoading}
-                      className="text-muted-foreground hover:text-primary"
-                    >
-                      {isLoginMode 
-                        ? 'Non hai un account? Registrati' 
-                        : 'Hai già un account? Accedi'
-                      }
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
+              {/* Errore generale */}
+              {errors.general && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 rounded-lg bg-red-500/10 border border-red-500/20"
+                >
+                  <p className="text-sm text-red-400">{errors.general}</p>
+                </motion.div>
+              )}
 
-          {/* Footer */}
-          <motion.div variants={itemVariants} className="text-center mt-8">
-            <p className="text-sm text-muted-foreground">
-              M1SSION™ è un'esperienza immersiva di realtà aumentata
-            </p>
-          </motion.div>
-        </motion.div>
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full h-12 bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] hover:opacity-90 text-white font-bold text-base"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full mr-2"
+                  />
+                ) : (
+                  <ArrowRight className="w-5 h-5 mr-2" />
+                )}
+                {isLoading 
+                  ? 'Elaborazione...' 
+                  : isLoginMode 
+                    ? 'Accedi' 
+                    : 'Registrati'
+                }
+              </Button>
+
+              {/* Toggle Mode */}
+              <div className="text-center pt-2">
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={toggleMode}
+                  disabled={isLoading}
+                  className="text-white/50 hover:text-[#00D1FF]"
+                >
+                  {isLoginMode 
+                    ? 'Non hai un account? Registrati' 
+                    : 'Hai già un account? Accedi'
+                  }
+                </Button>
+              </div>
+            </form>
+
+            {/* Footer */}
+            <div className="text-center mt-4 pt-4 border-t border-white/10">
+              <p className="text-xs text-white/40">
+                M1SSION™ è un'esperienza immersiva di realtà aumentata
+              </p>
+            </div>
+          </div>
+        </div>
       </motion.div>
     </div>,
     document.body

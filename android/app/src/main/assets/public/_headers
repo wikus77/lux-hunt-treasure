@@ -18,8 +18,8 @@
   Referrer-Policy: strict-origin-when-cross-origin
   
   # 🔒 Permissions Policy (restrict browser features)
-  # payment=(self) required for Stripe
-  Permissions-Policy: geolocation=(self), camera=(self), microphone=(), payment=(self), usb=()
+  # payment=* required for Stripe iframe checkout
+  Permissions-Policy: geolocation=(self), camera=(self), microphone=(), payment=*, usb=()
   
   # 🔒 Content Security Policy (prevent XSS, injection attacks)
   # Note: Supabase, Stripe, Google Maps, Firebase, Analytics, MapTiler, Leaflet, Carto, Plausible allowed

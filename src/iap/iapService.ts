@@ -172,23 +172,26 @@ export async function initIAP(): Promise<boolean> {
  * NOTE: This uses dynamic import with try/catch to avoid build errors
  * when native plugins are not installed. The plugins are only available
  * in Capacitor native builds.
+ * 
+ * Plugin options (in order of preference):
+ * 1. @capgo/native-purchases - Free, StoreKit 2, Google Play Billing 7.x
+ * 2. cordova-plugin-purchase - Fallback for older setups
  */
 async function loadPurchasesPlugin(): Promise<any> {
   try {
-    // Try to load native IAP plugin dynamically
-    // This will only succeed in native Capacitor builds with the plugin installed
-    const moduleName = '@capawesome-team/capacitor-purchases';
+    // Primary: @capgo/native-purchases (FREE, StoreKit 2, Google Play Billing 7.x)
+    const moduleName = '@capgo/native-purchases';
     const module = await import(/* @vite-ignore */ moduleName);
-    if (module?.Purchases) {
-      console.log('[IAP] ✅ Loaded capacitor-purchases plugin');
-      return module.Purchases;
+    if (module?.NativePurchases) {
+      console.log('[IAP] ✅ Loaded @capgo/native-purchases plugin');
+      return wrapCapgoPlugin(module.NativePurchases);
     }
   } catch (error) {
-    console.log('[IAP] capacitor-purchases not available, trying alternatives');
+    console.log('[IAP] @capgo/native-purchases not available, trying alternatives');
   }
 
   try {
-    // Fallback: try cordova-plugin-purchase
+    // Fallback: cordova-plugin-purchase
     const moduleName = 'cordova-plugin-purchase';
     const module = await import(/* @vite-ignore */ moduleName);
     if (module?.InAppPurchase2) {
@@ -200,13 +203,109 @@ async function loadPurchasesPlugin(): Promise<any> {
   }
 
   console.warn('[IAP] ⚠️ No IAP plugin available - native purchases will not work');
+  console.warn('[IAP] Install with: npm install @capgo/native-purchases && npx cap sync');
   return null;
 }
 
 /**
+ * Wrap @capgo/native-purchases to match our interface
+ */
+function wrapCapgoPlugin(NativePurchases: any): any {
+  const pendingTransactions: Map<string, any> = new Map();
+  
+  return {
+    setup: async ({ platform, products }: any) => {
+      // @capgo/native-purchases auto-initializes, just need to register products
+      console.log('[IAP Capgo] Setting up with products:', products);
+    },
+    getProducts: async ({ productIds }: any) => {
+      try {
+        const result = await NativePurchases.getProducts({ productIds });
+        return {
+          products: (result?.products || []).map((p: any) => ({
+            productId: p.productId || p.identifier,
+            title: p.title || p.localizedTitle || '',
+            description: p.description || p.localizedDescription || '',
+            price: p.price || p.localizedPrice || '',
+            priceAmount: p.priceValue || p.price || 0,
+            currency: p.currency || p.currencyCode || 'EUR',
+            localizedPrice: p.localizedPrice || p.priceString || '',
+          })),
+        };
+      } catch (error) {
+        console.error('[IAP Capgo] getProducts error:', error);
+        return { products: [] };
+      }
+    },
+    purchase: async ({ productId }: any) => {
+      try {
+        const result = await NativePurchases.purchaseProduct({ productId });
+        
+        if (!result?.transaction) {
+          throw new Error('No transaction returned');
+        }
+        
+        const txn = result.transaction;
+        const txnId = txn.transactionId || txn.transactionIdentifier;
+        
+        // Store for later finishing
+        pendingTransactions.set(txnId, txn);
+        
+        console.log('[IAP Capgo] Purchase approved (NOT finished yet):', txnId);
+        
+        return {
+          transactionId: txnId,
+          productId: txn.productId || productId,
+          receipt: txn.appStoreReceipt || txn.receipt || txn.receiptData,
+          originalTransactionId: txn.originalTransactionId,
+        };
+      } catch (error: any) {
+        // Handle user cancellation
+        if (error?.code === 'USER_CANCELLED' || error?.message?.includes('cancel')) {
+          throw new Error('Purchase cancelled by user');
+        }
+        throw error;
+      }
+    },
+    finishTransaction: async (transactionId: string) => {
+      try {
+        // @capgo/native-purchases uses finishTransaction
+        await NativePurchases.finishTransaction({ transactionId });
+        pendingTransactions.delete(transactionId);
+        console.log('[IAP Capgo] ✅ Transaction finished:', transactionId);
+        return true;
+      } catch (error) {
+        console.error('[IAP Capgo] finishTransaction error:', error);
+        return false;
+      }
+    },
+    restore: async () => {
+      try {
+        await NativePurchases.restorePurchases();
+        return { restored: true };
+      } catch (error) {
+        console.error('[IAP Capgo] restore error:', error);
+        return { restored: false };
+      }
+    },
+  };
+}
+
+/**
  * Wrap cordova-plugin-purchase to match our interface
+ * 
+ * ⚠️ CRITICAL: DO NOT call transaction.finish() until server validation is complete!
+ * The purchase flow is:
+ * 1. Client initiates purchase
+ * 2. Store returns transaction (NOT yet finished)
+ * 3. Client sends to server for validation
+ * 4. Server validates receipt and credits M1U
+ * 5. ONLY THEN client calls finishTransaction()
  */
 function wrapCordovaPlugin(store: any): any {
+  // Store pending transactions for later finish
+  const pendingTransactions: Map<string, any> = new Map();
+  
   return {
     setup: async ({ platform, products }: any) => {
       // Cordova plugin setup
@@ -243,12 +342,21 @@ function wrapCordovaPlugin(store: any): any {
         }
         
         product.once('approved', (transaction: any) => {
+          // ⚠️ CRITICAL: DO NOT finish() here! Wait for server validation.
+          // Store transaction for later finishing
+          const txnId = transaction.id || transaction.transactionId;
+          pendingTransactions.set(txnId, transaction);
+          
+          console.log('[IAP Cordova] Transaction approved (NOT finished yet):', txnId);
+          
           resolve({
-            transactionId: transaction.id,
-            productId: transaction.productId,
-            receipt: transaction.receipt,
+            transactionId: txnId,
+            productId: transaction.productId || productId,
+            receipt: transaction.appStoreReceipt || transaction.receipt,
+            // Keep reference to finish later
+            _pendingTransaction: transaction,
           });
-          transaction.finish();
+          // ❌ REMOVED: transaction.finish() - now called after server validation
         });
         
         product.once('error', (err: any) => {
@@ -257,6 +365,18 @@ function wrapCordovaPlugin(store: any): any {
         
         store.order(product);
       });
+    },
+    // New method to finish transaction after server validation
+    finishTransaction: async (transactionId: string) => {
+      const transaction = pendingTransactions.get(transactionId);
+      if (transaction) {
+        console.log('[IAP Cordova] ✅ Finishing transaction:', transactionId);
+        transaction.finish();
+        pendingTransactions.delete(transactionId);
+        return true;
+      }
+      console.warn('[IAP Cordova] ⚠️ Transaction not found for finish:', transactionId);
+      return false;
     },
     restore: async () => {
       return new Promise((resolve) => {
@@ -273,6 +393,17 @@ function wrapCordovaPlugin(store: any): any {
 
 /**
  * Purchase a product
+ * 
+ * ⚠️ CRITICAL FLOW:
+ * 1. Execute purchase with store
+ * 2. Store returns transaction (NOT finished yet)
+ * 3. Send receipt to server for validation
+ * 4. Server validates and credits M1U
+ * 5. ONLY THEN call finishTransaction()
+ * 
+ * This prevents:
+ * - Double charging (purchase finished but server failed)
+ * - Ghost purchases (transaction lost without credit)
  */
 export async function purchase(productCode: string): Promise<IAPPurchaseResult> {
   if (!iapState.initialized) {
@@ -288,76 +419,172 @@ export async function purchase(productCode: string): Promise<IAPPurchaseResult> 
   const storeProductId = getStoreProductId(product, platform);
 
   updateState({ status: 'purchasing' });
-  logComplianceEvent('iap_purchase_started', { productCode, storeProductId });
+  logComplianceEvent('iap_purchase_started', { productCode, storeProductId, platform });
+
+  let purchasesPlugin: any = null;
+  let purchaseResult: any = null;
 
   try {
-    const purchasesPlugin = await loadPurchasesPlugin();
+    purchasesPlugin = await loadPurchasesPlugin();
     if (!purchasesPlugin) {
       throw new Error('Purchases plugin not available');
     }
 
-    // Execute purchase
-    const result = await purchasesPlugin.purchase({ productId: storeProductId });
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 1: Execute purchase with store (transaction NOT finished yet)
+    // ═══════════════════════════════════════════════════════════════════
+    console.log('[IAP] Step 1: Executing purchase...', { productCode, storeProductId });
+    purchaseResult = await purchasesPlugin.purchase({ productId: storeProductId });
     
-    if (!result || !result.transactionId) {
-      throw new Error('Purchase did not complete');
+    if (!purchaseResult || !purchaseResult.transactionId) {
+      throw new Error('Purchase did not complete - no transaction ID');
     }
 
-    // Validate purchase server-side
+    console.log('[IAP] Step 1 complete: Purchase approved by store', {
+      transactionId: purchaseResult.transactionId,
+      hasReceipt: !!purchaseResult.receipt,
+    });
+
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 2: Validate with server (DO NOT finish transaction yet!)
+    // ═══════════════════════════════════════════════════════════════════
     updateState({ status: 'validating' });
+    console.log('[IAP] Step 2: Validating with server...');
     
-    const validationResult = await validatePurchase({
+    const validationResult = await validatePurchaseServerSide({
       platform,
       productCode,
       storeProductId,
-      transactionId: result.transactionId,
-      receipt: result.receipt,
+      transactionId: purchaseResult.transactionId,
+      receipt: purchaseResult.receipt || purchaseResult.appStoreReceipt,
+      originalTransactionId: purchaseResult.originalTransactionId,
     });
 
     if (!validationResult.success) {
-      throw new Error(validationResult.error || 'Validation failed');
+      // ⚠️ Server validation failed - DO NOT finish transaction
+      // User can retry, or transaction will be recoverable on next app launch
+      console.error('[IAP] Server validation failed - transaction NOT finished', validationResult.error);
+      throw new Error(validationResult.error || 'Server validation failed');
     }
 
+    console.log('[IAP] Step 2 complete: Server validated and credited', {
+      newBalance: validationResult.newBalance,
+    });
+
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 3: ONLY NOW finish the transaction with the store
+    // ═══════════════════════════════════════════════════════════════════
+    console.log('[IAP] Step 3: Finishing transaction with store...');
+    
+    if (purchasesPlugin.finishTransaction) {
+      await purchasesPlugin.finishTransaction(purchaseResult.transactionId);
+      console.log('[IAP] Step 3 complete: Transaction finished');
+    } else {
+      // Some plugins auto-finish, log warning
+      console.warn('[IAP] Plugin does not support finishTransaction - may auto-finish');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // SUCCESS
+    // ═══════════════════════════════════════════════════════════════════
     updateState({ status: 'ready' });
-    logComplianceEvent('iap_purchase_success', { productCode, transactionId: result.transactionId });
+    logComplianceEvent('iap_purchase_success', { 
+      productCode, 
+      transactionId: purchaseResult.transactionId,
+      platform,
+      newBalance: validationResult.newBalance,
+    });
 
     return {
       success: true,
-      transactionId: result.transactionId,
+      transactionId: purchaseResult.transactionId,
       productCode,
     };
+
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Purchase failed';
-    updateState({ status: 'ready', error: errorMessage });
-    logComplianceEvent('iap_purchase_error', { productCode, error: errorMessage });
     
+    // Log whether we have an unfinished transaction
+    if (purchaseResult?.transactionId) {
+      console.error('[IAP] ❌ Error after purchase - transaction NOT finished:', {
+        transactionId: purchaseResult.transactionId,
+        error: errorMessage,
+        canRetry: true,
+      });
+      logComplianceEvent('iap_purchase_error_unfinished', { 
+        productCode, 
+        transactionId: purchaseResult.transactionId,
+        error: errorMessage 
+      });
+    } else {
+      logComplianceEvent('iap_purchase_error', { productCode, error: errorMessage });
+    }
+    
+    updateState({ status: 'ready', error: errorMessage });
     return { success: false, error: errorMessage };
   }
 }
 
 /**
- * Validate purchase with Supabase backend
+ * Validate purchase with Supabase backend (V2 - with rate limiting & idempotency)
+ * 
+ * This calls the secure `verify-iap-purchase` edge function which:
+ * - Validates receipt with Apple/Google
+ * - Checks for replay attacks
+ * - Enforces idempotency (no double credits)
+ * - Credits M1U atomically
+ * - Returns new balance
  */
-async function validatePurchase(params: {
+async function validatePurchaseServerSide(params: {
   platform: 'ios' | 'android';
   productCode: string;
   storeProductId: string;
   transactionId: string;
   receipt?: string;
-}): Promise<{ success: boolean; error?: string }> {
+  originalTransactionId?: string;
+}): Promise<{ success: boolean; error?: string; newBalance?: number }> {
   try {
-    const { data, error } = await supabase.functions.invoke('validate-iap', {
-      body: params,
+    console.log('[IAP] Sending to server for validation:', {
+      platform: params.platform,
+      productCode: params.productCode,
+      transactionId: params.transactionId,
+      hasReceipt: !!params.receipt,
+    });
+
+    // Use V2 endpoint (verify-iap-purchase) with better security
+    const { data, error } = await supabase.functions.invoke('verify-iap-purchase', {
+      body: {
+        platform: params.platform,
+        product_id: params.storeProductId,
+        transaction_id: params.transactionId,
+        original_transaction_id: params.originalTransactionId,
+        purchase_token: params.platform === 'android' ? params.transactionId : undefined,
+        receipt_data: params.receipt,
+      },
     });
 
     if (error) {
-      console.error('[IAP] Validation error:', error);
+      console.error('[IAP] Server validation error:', error);
       return { success: false, error: error.message };
     }
 
-    return { success: data?.success === true, error: data?.error };
+    if (!data?.success) {
+      console.error('[IAP] Server returned failure:', data);
+      return { success: false, error: data?.error || 'Validation failed' };
+    }
+
+    console.log('[IAP] Server validation successful:', {
+      newBalance: data.new_balance,
+      transactionId: data.transaction_id,
+    });
+
+    return { 
+      success: true, 
+      newBalance: data.new_balance,
+    };
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Validation request failed';
+    console.error('[IAP] Validation request exception:', errorMessage);
     return { success: false, error: errorMessage };
   }
 }

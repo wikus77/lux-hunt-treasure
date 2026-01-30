@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
+import { getOAuthRedirectUrl } from '@/lib/authDeepLink';
 
 interface AppleAuthResult {
   success: boolean;
@@ -39,7 +40,7 @@ export const useAppleAuth = () => {
     try {
       console.log('🍎 Initiating Apple Auth sign-in...');
       
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+      const redirectUrl = getOAuthRedirectUrl();
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',

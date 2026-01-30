@@ -755,6 +755,17 @@ if (typeof window !== 'undefined') {
       });
     });
   }, 2500); // Longer delay for complete stability
+  
+  // 🔐 Initialize OAuth deep link handler for Capacitor native
+  setTimeout(() => {
+    import('./lib/authDeepLink').then(({ initDeepLinkAuth }) => {
+      initDeepLinkAuth().catch(err => {
+        console.warn('[MAIN] Auth deep link init failed (non-critical):', err);
+      });
+    }).catch(err => {
+      console.warn('[MAIN] Auth deep link module load failed:', err);
+    });
+  }, 1000); // Earlier than SW operations since auth is critical
 
   // Initialize interest signals tracking (post first paint, zero UI impact)
   const initInterestSignals = () => {

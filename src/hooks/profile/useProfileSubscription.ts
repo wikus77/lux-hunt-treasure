@@ -153,76 +153,57 @@ export const useProfileSubscription = () => {
     if (!currentUser) return;
 
     try {
-      console.warn(`🔥 M1SSION™ UPGRADE STARTED: ${newPlan} for user ${currentUser.id}`);
+      console.warn(`🔥 M1SSION™ SUBSCRIPTION CHANGE: ${newPlan} for user ${currentUser.id}`);
       
-      // 🚨 CRITICAL FIX: Cancel ALL existing subscriptions regardless of status
-      console.warn(`🧹 M1SSION™ CLEANUP: Canceling ALL existing subscriptions`);
-      const { error: cancelAllError } = await supabase
-        .from('subscriptions')
-        .update({ status: 'canceled', updated_at: new Date().toISOString() })
-        .eq('user_id', currentUser.id)
-        .neq('status', 'canceled');
+      // 🔐 SECURITY FIX: Only allow FREE tier changes via client
+      // Paid upgrades MUST go through Stripe/IAP payment flow
+      const normalizedPlan = newPlan.toLowerCase();
+      const isDowngradeToFree = normalizedPlan === 'base' || normalizedPlan === 'free';
       
-      if (cancelAllError) {
-        console.error('❌ M1SSION™ Error canceling existing subscriptions:', cancelAllError);
-      } else {
-        console.warn('✅ M1SSION™ All existing subscriptions canceled');
+      if (!isDowngradeToFree) {
+        // 🚫 BLOCKED: Paid plan upgrades must use payment flow
+        console.error('🚫 M1SSION™ SECURITY: Direct paid plan upgrade blocked');
+        console.error('🚫 Use Stripe checkout or IAP for paid subscriptions');
+        throw new Error('Paid plan upgrades require payment. Use the subscription page.');
       }
 
-      // 🚨 CRITICAL FIX: If downgrading to Base, force complete cleanup
-      if (newPlan === 'Base') {
-        console.warn('🔻 M1SSION™ FORCING BASE DOWNGRADE');
-        
-        try {
-          const { data: cancelData, error: cancelStripeError } = await supabase.functions.invoke('cancel-subscription');
-          if (cancelStripeError) {
-            console.error('❌ M1SSION™ Stripe cancel error:', cancelStripeError);
-          } else {
-            console.warn('✅ M1SSION™ Stripe cancellation completed:', cancelData);
-          }
-        } catch (stripeError) {
-          console.error('❌ M1SSION™ Stripe cancel failed:', stripeError);
+      // ✅ SAFE: Downgrade to free tier via secure RPC
+      console.warn('🔻 M1SSION™ DOWNGRADE TO FREE via secure RPC');
+      
+      // Call secure RPC that handles everything server-side
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('downgrade_to_free');
+      
+      if (rpcError) {
+        // Fallback: try create_free_subscription
+        console.warn('⚠️ downgrade_to_free failed, trying create_free_subscription');
+        const { data: freeResult, error: freeError } = await supabase.rpc('create_free_subscription');
+        if (freeError) {
+          console.error('❌ M1SSION™ Free subscription RPC failed:', freeError);
+          throw new Error(`Subscription change failed: ${freeError.message}`);
         }
+        console.warn('✅ M1SSION™ Free subscription created via RPC:', freeResult);
       } else {
-        // 🚨 CRITICAL FIX: For paid plans, create new subscription
-        console.warn(`💰 M1SSION™ CREATING NEW SUBSCRIPTION: ${newPlan}`);
-        const { error: insertError } = await supabase.from('subscriptions').insert({
-          user_id: currentUser.id,
-          tier: newPlan,
-          status: 'active',
-          start_date: new Date().toISOString(),
-          end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-          provider: 'stripe'
-        });
-
-        if (insertError) {
-          console.error('❌ M1SSION™ Error creating subscription:', insertError);
+        console.warn('✅ M1SSION™ Downgrade completed via secure RPC:', rpcResult);
+      }
+      
+      // Also try to cancel Stripe subscription if exists
+      try {
+        const { data: cancelData, error: cancelStripeError } = await supabase.functions.invoke('cancel-subscription');
+        if (cancelStripeError) {
+          console.warn('⚠️ M1SSION™ Stripe cancel (non-critical):', cancelStripeError);
         } else {
-          console.warn('✅ M1SSION™ New subscription created');
+          console.warn('✅ M1SSION™ Stripe cancellation completed:', cancelData);
         }
+      } catch (stripeError) {
+        console.warn('⚠️ M1SSION™ Stripe cancel skipped:', stripeError);
       }
 
-      // 🚨 CRITICAL FIX: FORCE profile update ALWAYS
-      console.warn(`🎯 M1SSION™ FORCING PROFILE UPDATE: ${newPlan}`);
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          subscription_tier: newPlan,
-          tier: newPlan,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', currentUser.id);
-
-      if (profileError) {
-        console.error('❌ M1SSION™ CRITICAL PROFILE UPDATE ERROR:', profileError);
-        throw new Error(`Profile update failed: ${profileError.message}`);
-      } else {
-        console.warn(`✅ M1SSION™ PROFILE FORCED TO: ${newPlan}`);
-      }
-
-      // 🚨 CRITICAL FIX: Force localStorage sync
-      localStorage.setItem('subscription_plan', newPlan);
-      localStorage.setItem('userTier', newPlan);
+      // 🔐 SECURITY: Profile tier is now updated by the RPC (SECURITY DEFINER)
+      // No direct client update needed - trust the server
+      
+      // ✅ SAFE: Force localStorage sync (local display only, not authoritative)
+      localStorage.setItem('subscription_plan', 'Base');
+      localStorage.setItem('userTier', 'base');
       
       // 🔧 v2: Single refresh after upgrade (not triple!)
       // Reset the guard to allow immediate fetch after upgrade

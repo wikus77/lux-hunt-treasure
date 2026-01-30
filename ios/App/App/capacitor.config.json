@@ -27,6 +27,7 @@
 		"HapticsPlugin",
 		"PushNotificationsPlugin",
 		"StatusBarPlugin",
+		"NativePurchasesPlugin",
 		"SafeAreaPlugin"
 	]
 }

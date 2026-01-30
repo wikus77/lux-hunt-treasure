@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
+import { getOAuthRedirectUrl } from '@/lib/authDeepLink';
 
 interface GoogleAuthResult {
   success: boolean;
@@ -23,7 +24,7 @@ export const useGoogleAuth = () => {
     try {
       console.log('🔐 Initiating Google Auth sign-in...');
       
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+      const redirectUrl = getOAuthRedirectUrl();
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',

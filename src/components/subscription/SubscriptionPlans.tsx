@@ -72,54 +72,24 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         
         console.log('👤 M1SSION™ User authenticated:', user.id);
         
-        // STEP 2: Force immediate profile update (CRITICAL)
-        console.log('🔄 M1SSION™ FORCING PROFILE UPDATE...');
-        const { data: profileUpdate, error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            subscription_tier: tier,
-            tier: tier,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id)
-          .select()
-          .single();
+        // 🔐 SECURITY FIX: Do NOT write directly to profiles/subscriptions from client
+        // The Stripe webhook already handles this via service_role
+        // Here we only verify and sync
         
-        if (profileError) {
-          console.error('❌ M1SSION™ Profile update error:', profileError);
-        } else {
-          console.log('✅ M1SSION™ Profile updated successfully:', profileUpdate);
-        }
-        
-        // STEP 3: Force subscription sync
-        console.log('🔄 M1SSION™ Invoking verify-subscription-sync...');
-        const { data: syncResult, error: syncError } = await supabase.functions.invoke('verify-subscription-sync');
+        // STEP 2: Force subscription sync (server-side verification)
+        console.log('🔄 M1SSION™ Invoking verify-subscription-sync (server-side)...');
+        const { data: syncResult, error: syncError } = await supabase.functions.invoke('verify-subscription-sync', {
+          body: { tier, userId: user.id }
+        });
         if (syncError) {
           console.error('❌ M1SSION™ Sync error:', syncError);
         } else {
           console.log('✅ M1SSION™ Sync result:', syncResult);
         }
         
-        // STEP 4: Create subscription record if needed
-        console.log('🔄 M1SSION™ Creating/updating subscription record...');
-        const { error: subscriptionError } = await supabase
-          .from('subscriptions')
-          .upsert({
-            user_id: user.id,
-            tier: tier,
-            status: 'active',
-            current_period_start: new Date().toISOString(),
-            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-            updated_at: new Date().toISOString()
-          }, { 
-            onConflict: 'user_id' 
-          });
-        
-        if (subscriptionError) {
-          console.error('❌ M1SSION™ Subscription upsert error:', subscriptionError);
-        } else {
-          console.log('✅ M1SSION™ Subscription record created/updated');
-        }
+        // 🔐 SECURITY: Profile & subscription updates now handled by Stripe webhook
+        // Client cannot escalate tier directly - blocked by DB trigger
+        console.log('✅ M1SSION™ Stripe webhook handles subscription/profile updates');
         
         // STEP 5: Update local state immediately
         console.log('🔄 M1SSION™ Updating local state...');
