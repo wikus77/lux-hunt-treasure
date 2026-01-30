@@ -1,7 +1,10 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// 🎬 VISUAL ALIGNMENT: Matches LoginPage input styling
 
 import { ChangeEvent, useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from 'lucide-react';
 
 interface FormFieldProps {
@@ -40,10 +43,10 @@ const FormField = ({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={id} className="text-white">{label}</Label>
+      <Label htmlFor={id} className="text-white/80">{label}</Label>
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">
+          <div className="absolute left-3 top-3 text-white/40">
             {icon}
           </div>
         )}
@@ -53,7 +56,7 @@ const FormField = ({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className={`bg-black/50 border-white/10 text-white ${icon ? 'pl-10' : 'pl-3'} ${isPasswordField ? 'pr-10' : ''}`}
+          className={`bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#00D1FF]/50 ${icon ? 'pl-10' : 'pl-3'} ${isPasswordField ? 'pr-10' : ''} ${error ? 'border-red-500/50' : ''}`}
           required={required}
           disabled={disabled}
           autoComplete={autoComplete}
@@ -61,24 +64,26 @@ const FormField = ({
           spellCheck={false}
           data-form-type="other"
         />
-        {/* Toggle visibilità password */}
+        {/* Toggle visibilità password - matches LoginPage style */}
         {isPasswordField && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80 transition-colors"
+            className="absolute right-0 top-0 h-full px-3 text-white/40 hover:text-white"
             tabIndex={-1}
-            aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+            disabled={disabled}
           >
             {showPassword ? (
               <EyeOff className="h-4 w-4" />
             ) : (
               <Eye className="h-4 w-4" />
             )}
-          </button>
+          </Button>
         )}
       </div>
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className="text-sm text-red-400">{error}</p>}
     </div>
   );
 };

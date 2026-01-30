@@ -1,13 +1,12 @@
-
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// 🎬 VISUAL ALIGNMENT: Matches LoginPage form styling
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useRegistration } from '@/hooks/use-registration';
-import { Mail, User, Lock } from 'lucide-react';
+import { Mail, User, Lock, ArrowRight } from 'lucide-react';
 import FormField from './form-field';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
 
 interface RegistrationFormProps {
   missionPreference: 'uomo' | 'donna' | null;
@@ -23,25 +22,23 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
   } = useRegistration();
 
   const handleSubmit = (e: React.FormEvent) => {
-    console.log('🔍 SUBMIT CLICKED - NO CAPTCHA REQUIRED');
-    console.log('📝 Form data submitted');
-    
     // Submit WITHOUT any captcha token - completely removed
     originalHandleSubmit(e, 'BYPASS_COMPLETELY_DISABLED', missionPreference);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Nome */}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Nome Agente */}
       <FormField
         id="name"
         type="text"
-        label="Nome"
-        placeholder="Inserisci il tuo nome"
+        label="Nome Agente"
+        placeholder="Il tuo nome"
         value={formData.name}
         onChange={handleChange}
         icon={<User className="h-4 w-4" />}
         error={errors.name}
+        disabled={isSubmitting}
       />
 
       {/* Email */}
@@ -49,11 +46,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
         id="email"
         type="email"
         label="Email"
-        placeholder="Inserisci la tua email"
+        placeholder="agente@example.com"
         value={formData.email}
         onChange={handleChange}
         icon={<Mail className="h-4 w-4" />}
         error={errors.email}
+        disabled={isSubmitting}
       />
 
       {/* Password */}
@@ -61,11 +59,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
         id="password"
         type="password"
         label="Password"
-        placeholder="Crea una password sicura"
+        placeholder="••••••••"
         value={formData.password}
         onChange={handleChange}
         icon={<Lock className="h-4 w-4" />}
         error={errors.password}
+        disabled={isSubmitting}
       />
 
       {/* Conferma Password */}
@@ -73,31 +72,31 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
         id="confirmPassword"
         type="password"
         label="Conferma Password"
-        placeholder="Ripeti la tua password"
+        placeholder="••••••••"
         value={formData.confirmPassword}
         onChange={handleChange}
         icon={<Lock className="h-4 w-4" />}
         error={errors.confirmPassword}
+        disabled={isSubmitting}
       />
 
-      {/* Bottone invio */}
-      <motion.div
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+      {/* Submit Button - matches LoginPage style */}
+      <Button
+        type="submit"
+        className="w-full h-12 bg-gradient-to-r from-[#00D1FF] to-[#7C3AED] hover:opacity-90 text-white font-bold text-base"
+        disabled={isSubmitting}
       >
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-glow"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {'Registrazione in corso...'}
-            </>
-          ) : 'Registrati'}
-        </Button>
-      </motion.div>
+        {isSubmitting ? (
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full mr-2"
+          />
+        ) : (
+          <ArrowRight className="w-5 h-5 mr-2" />
+        )}
+        {isSubmitting ? 'Registrazione...' : 'Registrati'}
+      </Button>
     </form>
   );
 };
