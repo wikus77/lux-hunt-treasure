@@ -93,6 +93,27 @@ const { isConnected } = useRealTimeNotifications();
     checkAccess();
   }, []);
 
+  // 🔧 FIX 30/01/2026: Force white theme on html element (bypass CSS :has() issues)
+  useEffect(() => {
+    // Hide dark background elements
+    const fullscreenBg = document.querySelector('.m1-fullscreen-bg') as HTMLElement;
+    const grain = document.querySelector('.m1-grain') as HTMLElement;
+    if (fullscreenBg) fullscreenBg.style.display = 'none';
+    if (grain) grain.style.display = 'none';
+    
+    // Set white background on html
+    document.documentElement.style.background = 'linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%)';
+    document.documentElement.style.backgroundColor = '#FFFFFF';
+    
+    return () => {
+      // Restore on unmount
+      if (fullscreenBg) fullscreenBg.style.display = '';
+      if (grain) grain.style.display = '';
+      document.documentElement.style.background = '';
+      document.documentElement.style.backgroundColor = '';
+    };
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true);
@@ -187,21 +208,19 @@ const { isConnected } = useRealTimeNotifications();
     );
   }
 
+  // 🔧 FIX 30/01/2026 v2: IDENTICO pattern di Notifications/Leaderboard
+  // - Background inline bianco (NON dipende da CSS :has())
+  // - RIMOSSO m1-grain (causa dark bleed)
+  // - RIMOSSO Fragment wrapper
   return (
-    <>
-      {/* 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
-          Content scrolls behind the glass header (no "band" under header).
-          First content element has margin-top for initial visibility.
-          🔧 FIX 30/01/2026: Added sn-page for iOS overscroll + white theme */}
       <div 
         className="sn-page relative m1-single-scroll-root"
         style={{
           position: 'relative',
           zIndex: 0,
+          background: 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)',
         }}
       >
-      {/* Micro-grain overlay - hidden by CSS when sn-page active */}
-      <div className="m1-grain" />
       
       <Helmet>
         <title>M1SSION™ - Home App</title>
@@ -426,7 +445,6 @@ const { isConnected } = useRealTimeNotifications();
         <StreakPill showLabel />
       </div>
     </div>
-    </>
   );
 };
 

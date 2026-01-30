@@ -2,7 +2,7 @@
 // M1SSION Intelligence Page - AION Entity + Chat Panel
 // Includes Shadow Protocol v2 Intercepts panel
 
-import React, { useRef, Suspense, lazy } from 'react';
+import React, { useRef, useEffect, Suspense, lazy } from 'react';
 // 🔥 CRITICAL: Lazy load AionEntity to prevent THREE.js hook errors during initial load
 const AionEntity = lazy(() => import('@/components/aion/AionEntity'));
 import type { AionEntityHandle } from '@/components/aion/AionEntity';
@@ -18,6 +18,27 @@ import { MotivationalPopup } from '@/components/feedback';
 
 const IntelligencePage: React.FC = () => {
   const aionRef = useRef<AionEntityHandle>(null);
+
+  // 🔧 FIX 30/01/2026: Force white theme on html element (bypass CSS :has() issues)
+  useEffect(() => {
+    // Hide dark background elements
+    const fullscreenBg = document.querySelector('.m1-fullscreen-bg') as HTMLElement;
+    const grain = document.querySelector('.m1-grain') as HTMLElement;
+    if (fullscreenBg) fullscreenBg.style.display = 'none';
+    if (grain) grain.style.display = 'none';
+    
+    // Set white background on html
+    document.documentElement.style.background = 'linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%)';
+    document.documentElement.style.backgroundColor = '#FFFFFF';
+    
+    return () => {
+      // Restore on unmount
+      if (fullscreenBg) fullscreenBg.style.display = '';
+      if (grain) grain.style.display = '';
+      document.documentElement.style.background = '';
+      document.documentElement.style.backgroundColor = '';
+    };
+  }, []);
 
   // 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
   // Content scrolls behind glass header, first element has margin-top
