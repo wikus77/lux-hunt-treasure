@@ -713,4 +713,251 @@ body.sn-page [data-vaul-drawer] * {
   color: #1C1C1E !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   🔧 OPTION B PHASE 2: HOME CONTAINERS WHITE THEME
+   31/01/2026 - Make containers WHITE like M1SSION PANEL
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ========================================
+   BOTTOM NAV - SAME WHITE GLASS AS HEADER
+   Matching header style (95% white opacity)
+   ======================================== */
+body.is-native .bottom-navigation-ios > div,
+body.is-native .bottom-navigation-ios .bottom-nav-pill {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ========================================
+   BOTTOM NAV ICON COLORS
+   BLACK when inactive (#1C1C1E)
+   NEON CYAN when active (#00D1FF)
+   ======================================== */
+
+/* Inactive icons - BLACK */
+body.is-native .bottom-navigation-ios .bottom-nav-inactive,
+body.is-native .bottom-navigation-ios .bottom-nav-inactive svg,
+body.is-native .bottom-navigation-ios .bottom-nav-inactive span,
+body.is-native .bottom-navigation-ios .bottom-nav-btn:not(.bottom-nav-active) {
+  color: #1C1C1E !important;
+}
+
+/* Active icons - NEON CYAN with glow */
+body.is-native .bottom-navigation-ios .bottom-nav-active,
+body.is-native .bottom-navigation-ios .bottom-nav-active svg,
+body.is-native .bottom-navigation-ios .bottom-nav-active span {
+  color: #00D1FF !important;
+}
+
+body.is-native .bottom-navigation-ios .bottom-nav-active svg {
+  filter: drop-shadow(0 0 4px rgba(0, 209, 255, 0.5)) !important;
+}
+
+/* Active indicator line - keep cyan glow */
+body.is-native .bottom-navigation-ios [style*="background-color: #00D1FF"],
+body.is-native .bottom-navigation-ios [style*="background-color: rgb(0, 209, 255)"] {
+  background-color: #00D1FF !important;
+  box-shadow: 0 0 8px #00D1FF, 0 0 16px #00D1FF !important;
+}
+
+/* Active background circle - lighter for white theme */
+body.is-native .bottom-navigation-ios [style*="background: rgba(0, 0, 0, 0.4)"] {
+  background: rgba(0, 209, 255, 0.12) !important;
+}
+
+/* ========================================
+   M1SSION PRIZE / AGENT / BATTLE / TEMPO RIMASTO
+   WHITE CONTAINERS with DARK visible text
+   ======================================== */
+
+/* Override m1-relief to WHITE GLASS for iOS native */
+body.is-native .m1-relief,
+body.is-native .m1-relief-sm {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-top-color: rgba(0, 0, 0, 0.06) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Override m1-card to WHITE for iOS native */
+body.is-native .m1-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Remove gradient border overlay for m1-card in iOS native */
+body.is-native .m1-card::before {
+  display: none !important;
+}
+
+/* Text colors inside containers - DARK for visibility */
+body.is-native .m1-relief h2,
+body.is-native .m1-relief h3,
+body.is-native .m1-relief-sm h2,
+body.is-native .m1-relief-sm h3,
+body.is-native .m1-card h2,
+body.is-native .m1-card h3 {
+  color: #1C1C1E !important;
+}
+
+body.is-native .m1-relief .text-white,
+body.is-native .m1-relief-sm .text-white,
+body.is-native .m1-card .text-white {
+  color: #1C1C1E !important;
+}
+
+body.is-native .m1-relief .text-white\/80,
+body.is-native .m1-relief-sm .text-white\/80,
+body.is-native .m1-card .text-white\/80 {
+  color: rgba(28, 28, 30, 0.8) !important;
+}
+
+body.is-native .m1-relief .text-white\/60,
+body.is-native .m1-relief-sm .text-white\/60,
+body.is-native .m1-card .text-white\/60 {
+  color: rgba(28, 28, 30, 0.6) !important;
+}
+
+body.is-native .m1-relief .text-white\/50,
+body.is-native .m1-relief-sm .text-white\/50,
+body.is-native .m1-card .text-white\/50 {
+  color: rgba(28, 28, 30, 0.5) !important;
+}
+
+body.is-native .m1-relief .text-white\/40,
+body.is-native .m1-relief-sm .text-white\/40,
+body.is-native .m1-card .text-white\/40 {
+  color: rgba(28, 28, 30, 0.4) !important;
+}
+
+/* Keep accent colors visible */
+body.is-native .m1-relief .text-\[\#00D1FF\],
+body.is-native .m1-relief-sm .text-\[\#00D1FF\],
+body.is-native .m1-card .text-\[\#00D1FF\] {
+  color: #0A84FF !important;
+}
+
+/* Status dots - keep their colors */
+body.is-native .m1-relief .bg-cyan-400,
+body.is-native .m1-relief-sm .bg-cyan-400 {
+  background-color: #00D1FF !important;
+}
+
+/* ========================================
+   🔴 TEMPO RIMASTO - PRESERVE RED BLINK EFFECT
+   The pulse animation must stay RED, only container is white
+   ======================================== */
+
+/* The pulse overlay for urgency - KEEP ORIGINAL COLORS */
+body.is-native .m1-relief-sm [data-section="time"] [class*="absolute"][class*="inset-0"],
+body.is-native [data-section="time"] [class*="pointer-events-none"] {
+  /* Let the original red/orange/amber pulse colors through */
+  /* Don't override these */
+}
+
+/* Keep amber/orange/red text colors for urgency indicators */
+body.is-native .m1-relief-sm .text-amber-400,
+body.is-native [data-section="time"] .text-amber-400 {
+  color: #FBBF24 !important;
+}
+
+body.is-native .m1-relief-sm .text-orange-400,
+body.is-native [data-section="time"] .text-orange-400 {
+  color: #F97316 !important;
+}
+
+body.is-native .m1-relief-sm .text-red-400,
+body.is-native [data-section="time"] .text-red-400 {
+  color: #EF4444 !important;
+}
+
+/* Keep urgency badge colors */
+body.is-native .m1-relief-sm .bg-amber-400,
+body.is-native [data-section="time"] .bg-amber-400 {
+  background-color: #FBBF24 !important;
+}
+
+body.is-native .m1-relief-sm .bg-orange-400,
+body.is-native [data-section="time"] .bg-orange-400 {
+  background-color: #F97316 !important;
+}
+
+body.is-native .m1-relief-sm .bg-red-500,
+body.is-native [data-section="time"] .bg-red-500 {
+  background-color: #EF4444 !important;
+}
+
+/* ========================================
+   PRIZE VISION CARD - Inline styles override
+   The PrizeVision has inline styles, need high specificity
+   ======================================== */
+
+body.is-native [data-section="cashback"] > div,
+body.is-native [data-onboarding="prize-vision"] > div {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Prize vision header text */
+body.is-native [data-section="cashback"] h2,
+body.is-native [data-onboarding="prize-vision"] h2 {
+  color: #1C1C1E !important;
+}
+
+body.is-native [data-section="cashback"] .text-\[\#00D1FF\],
+body.is-native [data-onboarding="prize-vision"] .text-\[\#00D1FF\] {
+  color: #0A84FF !important;
+}
+
+/* Keep other accent colors */
+body.is-native .m1-relief .text-blue-400,
+body.is-native .m1-relief-sm .text-blue-400,
+body.is-native .m1-card .text-blue-400 {
+  color: #3B82F6 !important;
+}
+
+body.is-native .m1-relief .text-green-400,
+body.is-native .m1-relief-sm .text-green-400,
+body.is-native .m1-card .text-green-400 {
+  color: #22C55E !important;
+}
+
+body.is-native .m1-relief .text-yellow-400,
+body.is-native .m1-relief-sm .text-yellow-400,
+body.is-native .m1-card .text-yellow-400 {
+  color: #FBBF24 !important;
+}
+
+body.is-native .m1-relief .text-purple-400,
+body.is-native .m1-relief-sm .text-purple-400,
+body.is-native .m1-card .text-purple-400 {
+  color: #A855F7 !important;
+}
+
+/* Keep glow strips colored */
+body.is-native .m1-relief .via-cyan-400,
+body.is-native .m1-relief-sm .via-cyan-400 {
+  --tw-gradient-via: #22D3EE !important;
+}
+
+body.is-native .m1-relief .via-\[\#FC1EFF\],
+body.is-native .m1-relief-sm .via-\[\#FC1EFF\] {
+  --tw-gradient-via: #FC1EFF !important;
+}
+
 /* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

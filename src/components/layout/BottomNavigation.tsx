@@ -240,6 +240,7 @@ const BottomNavigationComponent = () => {
       }}
     >
       <div
+        className="bottom-nav-pill"
         style={{
           display: "flex",
           alignItems: "center",
@@ -247,6 +248,8 @@ const BottomNavigationComponent = () => {
           width: "100%",
           maxWidth: "400px",
           height: "64px",
+          // 🔧 OPTION B: WHITE GLASS for iOS native (CSS overrides this)
+          // Default dark for web, CSS makes it white for body.is-native
           background: "rgba(15, 20, 30, 0.45)",
           backdropFilter: "blur(20px) saturate(180%)",
           WebkitBackdropFilter: "blur(20px) saturate(180%)",
@@ -264,7 +267,7 @@ const BottomNavigationComponent = () => {
             <motion.button
               key={link.path}
               onClick={(e) => handleNavigationPWA(link, e)}
-              className="relative flex flex-col items-center justify-center"
+              className={`relative flex flex-col items-center justify-center bottom-nav-btn ${isActive ? 'bottom-nav-active' : 'bottom-nav-inactive'}`}
               style={{
                 background: "none",
                 border: "none",
@@ -272,6 +275,8 @@ const BottomNavigationComponent = () => {
                 cursor: "pointer",
                 padding: "8px 12px",
                 WebkitTapHighlightColor: "transparent",
+                // 🔧 OPTION B: Color controlled via CSS for iOS native
+                // CSS uses .bottom-nav-active/.bottom-nav-inactive classes
                 color: isActive ? "#00D1FF" : "#8B9CAF",
               }}
               whileTap={{ scale: 0.9 }}
