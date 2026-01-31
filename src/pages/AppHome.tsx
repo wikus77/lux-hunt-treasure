@@ -199,6 +199,9 @@ const { isConnected } = useRealTimeNotifications();
       style={{
         position: 'relative',
         zIndex: 0,
+        // Allow hero to extend into safe area
+        marginTop: 'calc(-1 * env(safe-area-inset-top, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
       }}
     >
       <Helmet>
@@ -250,8 +253,8 @@ const { isConnected } = useRealTimeNotifications();
                 <div 
                   className="hero-content-spacer"
                   style={{ 
-                    height: '55vh', // Match hero height (60vh) minus some overlap
-                    minHeight: '300px',
+                    height: 'calc(60vh - 60px)', // Match hero height minus header overlap
+                    minHeight: '280px',
                     pointerEvents: 'none'
                   }}
                 />

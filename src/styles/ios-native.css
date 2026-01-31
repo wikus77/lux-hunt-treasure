@@ -993,13 +993,16 @@ body.is-native:has(.hero-home-page) .unified-header-wrapper svg {
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5)) !important;
 }
 
-/* Hero background - FIXED from absolute top */
+/* Hero background - ABSOLUTE so it scrolls with content */
 body.is-native .hero-prize-background {
-  position: fixed !important;
+  position: absolute !important;
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
   z-index: 1 !important;
+  /* Extend into iOS safe area */
+  margin-top: calc(-1 * env(safe-area-inset-top, 0px)) !important;
+  padding-top: env(safe-area-inset-top, 0px) !important;
 }
 
 /* Pills on hero - NO white background, just text with shadow */
