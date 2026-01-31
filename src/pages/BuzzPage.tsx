@@ -95,19 +95,9 @@ export const BuzzPage: React.FC = () => {
     return () => window.removeEventListener('buzzCompleted', handleBuzzCompleted);
   }, [loadDailyBuzzCounter, loadBuzzStats]);
 
-  // 🔧 FIX 30/01/2026 v2: Use CSS class only - NO inline styles on html
-  // REASON: Inline styles on <html> conflict with WKWebView native background during iOS overscroll
-  // The CSS dual selectors (html.sn-page, body.sn-page) now handle everything
-  useEffect(() => {
-    // Add sn-page class to html AND body for CSS gate (works on iOS where :has() fails)
-    document.documentElement.classList.add('sn-page');
-    document.body.classList.add('sn-page');
-    
-    return () => {
-      document.documentElement.classList.remove('sn-page');
-      document.body.classList.remove('sn-page');
-    };
-  }, []);
+  // 🔧 P0 FIX 31/01/2026: REMOVED html/body manipulation
+  // REASON: LeaderboardPage pattern - theme applied via container className="sn-page" only
+  // This ensures deterministic behavior without race conditions during navigation
 
   // 🚀 INSTANT RENDER: Never block the page with loading spinner
   // Data will load in background and update via realtime subscriptions
