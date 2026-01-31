@@ -202,6 +202,8 @@ const { isConnected } = useRealTimeNotifications();
         // NO padding/margin at top - hero handles safe area
         paddingTop: 0,
         marginTop: 0,
+        // Dark background to eliminate white band
+        backgroundColor: '#1a1a2e',
       }}
     >
       <Helmet>

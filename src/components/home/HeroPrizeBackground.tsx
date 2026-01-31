@@ -70,6 +70,7 @@ export function HeroPrizeBackground({
         overflow: 'hidden',
         zIndex: 1, // Above page background, below content
         cursor: 'pointer',
+        backgroundColor: '#1a1a2e', // Dark background - NO WHITE BAND
       }}
     >
       {/* Image Container */}
@@ -85,9 +86,11 @@ export function HeroPrizeBackground({
           <img
             src={missionPrizeImages[currentImageIndex]}
             alt={`M1SSION Prize ${currentImageIndex + 1}`}
-            className="w-full h-full object-cover"
+            className="w-full h-full"
             style={{
-              objectPosition: 'center top',
+              objectFit: 'contain', // Show full image without cropping
+              objectPosition: 'center center',
+              backgroundColor: '#1a1a2e', // Dark background behind image
             }}
           />
         </motion.div>

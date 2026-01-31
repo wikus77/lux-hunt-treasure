@@ -965,9 +965,9 @@ body.is-native .m1-relief-sm .via-\[\#FC1EFF\] {
    Image from iOS safe zone, content below gradient fade
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Hero home page - transparent background, NO padding at top */
+/* Hero home page - DARK background to match hero images */
 body.is-native .hero-home-page {
-  background: transparent !important;
+  background: #1a1a2e !important; /* Dark background like hero images */
   padding-top: 0 !important;
   margin-top: 0 !important;
 }
@@ -975,25 +975,39 @@ body.is-native .hero-home-page {
 /* Remove any safe area padding from hero home page */
 body.is-native .hero-home-page.sn-page {
   padding-top: 0 !important;
+  background: #1a1a2e !important;
+}
+
+/* Body/HTML dark for hero pages - fixes white band */
+body.is-native:has(.hero-home-page),
+html:has(.hero-home-page) {
+  background: #1a1a2e !important;
+  background-color: #1a1a2e !important;
 }
 
 /* GlobalLayout safe area - disable for hero home page */
 body.is-native:has(.hero-home-page) .global-layout-content {
   padding-top: 0 !important;
+  background: transparent !important;
 }
 
 body.is-native:has(.hero-home-page) .safe-area-wrapper {
   padding-top: 0 !important;
+  background: transparent !important;
 }
 
-/* Header TRANSPARENT on hero pages for iOS native */
+body.is-native:has(.hero-home-page) #root {
+  background: transparent !important;
+}
+
+/* Header SEMI-TRANSPARENT GLASS on hero pages for iOS native */
 body.is-native:has(.hero-home-page) .unified-header-wrapper,
 body.is-native:has(.hero-home-page) .unified-header-wrapper header {
-  background: transparent !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border: none !important;
-  box-shadow: none !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Header text WHITE with shadow for readability on hero */
