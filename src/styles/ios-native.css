@@ -359,10 +359,10 @@ html[data-capacitor="ios"] {
   background-attachment: scroll !important;
 }
 
-/* Body should NOT have any conflicting background */
+/* 🔧 OPTION B: Body WHITE for seamless overscroll */
 body.is-native {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
 }
 
 /* All containers transparent */
@@ -478,25 +478,30 @@ body.is-native #m1u-pill-map3d-slot {
    These rules ONLY apply when body.is-native (Capacitor iOS wrapper)
    ======================================== */
 
-/* Header pill - increased contrast for iOS native */
+/* 🔧 OPTION B: Header WHITE GLASS OPACO per iOS native
+   95% opacità per non mostrare overlay durante overscroll */
 body.is-native .unified-header-wrapper header,
 body.is-native .unified-header-wrapper [class*="header-pill"],
 body.is-native .unified-header-wrapper > div > div:first-child {
-  background: rgba(15, 20, 30, 0.85) !important;
-  backdrop-filter: blur(12px) saturate(150%) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(150%) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Ensure header text stays white and readable */
+/* 🔧 OPTION B: Header text DARK per contrasto su sfondo bianco */
 body.is-native .unified-header-wrapper header *,
 body.is-native .unified-header-wrapper [class*="text-white"] {
-  color: #FFFFFF !important;
+  color: #1C1C1E !important;
   opacity: 1 !important;
+  text-shadow: none !important;
 }
 
-/* Header icons visibility */
+/* 🔧 OPTION B: Header icons iOS blue per contrasto */
 body.is-native .unified-header-wrapper svg,
 body.is-native .unified-header-wrapper [class*="icon"] {
+  color: #0A84FF !important;
   opacity: 1 !important;
 }
 
@@ -504,17 +509,16 @@ body.is-native .unified-header-wrapper [class*="icon"] {
    Bottom Navigation Contrast Fix (iOS Native)
    ======================================== */
 
-/* 🔧 P2b FIX 31/01/2026: WHITE GLASS Bottom Nav by DEFAULT for iOS Native
-   Since most pages use white theme (.sn-page), make white glass the default
-   Dark theme pages can override if needed */
+/* 🔧 OPTION B: WHITE GLASS OPACO Bottom Nav per iOS Native
+   95% opacità per non mostrare overlay durante overscroll */
 body.is-native .bottom-navigation-ios nav,
 body.is-native .bottom-navigation-ios > div > nav,
 body.is-native #m1-bottom-nav nav {
-  background: rgba(255, 255, 255, 0.88) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(255,255,255,0.5) inset !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Bottom nav inactive icons - DARK for white glass background */

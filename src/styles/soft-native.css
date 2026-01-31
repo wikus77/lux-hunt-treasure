@@ -56,36 +56,34 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   🔧 P2 FIX 31/01/2026: OVERSCROLL FIX
-   html/body MUST be TRANSPARENT to prevent white overlay during iOS bounce
-   The white background is ONLY on the .sn-page container element (in index.css)
+   🔧 OPTION B FIX 31/01/2026: WHITE background for seamless overscroll
+   Native layer = WHITE, html = WHITE, body = WHITE
+   Header/Nav are OPAQUE white glass to not show overlay
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* html/body transparent - native dark layer shows during overscroll */
+/* html/body WHITE for seamless overscroll */
 html.sn-page,
 body.sn-page,
 html:has(.sn-page),
 body:has(.sn-page) {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
 }
 
-/* Also transparent for body.is-native */
+/* Also WHITE for body.is-native */
 body.is-native.sn-page,
 body.is-native:has(.sn-page) {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
 }
 
-/* Also transparent for Capacitor iOS variants */
+/* Also WHITE for Capacitor iOS variants */
 html.capacitor-ios.sn-page,
 html.capacitor-ios:has(.sn-page),
 html[data-capacitor="ios"].sn-page,
 html[data-capacitor="ios"]:has(.sn-page) {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
 }
 
 /* Fallback for browsers without :has() support */

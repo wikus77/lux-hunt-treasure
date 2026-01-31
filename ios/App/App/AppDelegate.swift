@@ -111,16 +111,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         webView.scrollView.bounces = true
         webView.scrollView.alwaysBounceVertical = true
         
-        // 🔧 P2b FIX 31/01/2026: DARK background for iOS bounce/overscroll
+        // 🔧 OPTION B FIX 31/01/2026: WHITE background for iOS bounce/overscroll
         // CRITICAL: This color shows during rubber-band bounce
-        // The white content is on .sn-page container (CSS), NOT on native layer
-        // Native layer must be DARK so overscroll reveals dark, not white flash
-        let bgColor = UIColor(red: 10/255, green: 11/255, blue: 15/255, alpha: 1.0) // #0a0b0f
-        webView.isOpaque = false  // Allow transparency through to native layer
+        // Native layer = WHITE so overscroll blends with white content
+        // Header/Nav must be OPAQUE white glass to not show overlay
+        let bgColor = UIColor.white // #FFFFFF
+        webView.isOpaque = true
         webView.backgroundColor = bgColor
         webView.scrollView.backgroundColor = bgColor
         
-        // Set root view background to same dark color
+        // Set root view background to WHITE
         if let rootView = webView.superview {
             rootView.backgroundColor = bgColor
         }
@@ -200,14 +200,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             document.documentElement.style.setProperty('--sat', '\(safeTop)px');
             document.documentElement.style.setProperty('--capacitor-safe-area-top', '\(safeTop)px');
             
-            // 🔧 P2b FIX 31/01/2026: NO white background on html - let CSS handle it
-            // html/body must be TRANSPARENT to show dark native layer during overscroll
-            // The white gradient is ONLY on .sn-page container elements (via CSS)
-            document.documentElement.style.setProperty('background', 'transparent', 'important');
-            document.documentElement.style.setProperty('background-color', 'transparent', 'important');
+            // 🔧 OPTION B FIX 31/01/2026: WHITE background on html for seamless overscroll
+            // Native layer = WHITE, html = WHITE, so overscroll shows white (blends with content)
+            document.documentElement.style.setProperty('background', '#FFFFFF', 'important');
+            document.documentElement.style.setProperty('background-color', '#FFFFFF', 'important');
             
-            // Keep capacitor-ios class but DO NOT add sn-page here
-            // Pages add sn-page to their container, not to html
+            // Also set body white for consistency
+            if (document.body) {
+                document.body.style.setProperty('background', '#FFFFFF', 'important');
+                document.body.style.setProperty('background-color', '#FFFFFF', 'important');
+            }
             
             // Inject layout CSS immediately
             var style = document.createElement('style');
