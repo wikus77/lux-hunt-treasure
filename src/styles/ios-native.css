@@ -504,35 +504,39 @@ body.is-native .unified-header-wrapper [class*="icon"] {
    Bottom Navigation Contrast Fix (iOS Native)
    ======================================== */
 
-/* Bottom nav pill - increased contrast */
+/* 🔧 P2b FIX 31/01/2026: WHITE GLASS Bottom Nav by DEFAULT for iOS Native
+   Since most pages use white theme (.sn-page), make white glass the default
+   Dark theme pages can override if needed */
 body.is-native .bottom-navigation-ios nav,
 body.is-native .bottom-navigation-ios > div > nav,
 body.is-native #m1-bottom-nav nav {
-  background: rgba(15, 20, 30, 0.85) !important;
-  backdrop-filter: blur(12px) saturate(150%) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(150%) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(255,255,255,0.5) inset !important;
 }
 
-/* Bottom nav inactive icons - brighter for visibility */
+/* Bottom nav inactive icons - DARK for white glass background */
 body.is-native .bottom-navigation-ios button:not([class*="active"]) svg,
 body.is-native .bottom-navigation-ios button[data-active="false"] svg,
 body.is-native #m1-bottom-nav button:not(.active) svg {
-  color: #B8C4D4 !important;
+  color: #6B7280 !important;
   opacity: 1 !important;
 }
 
-/* Bottom nav inactive text/labels - brighter */
+/* Bottom nav inactive text/labels - DARK for white glass */
 body.is-native .bottom-navigation-ios button:not([class*="active"]) span,
 body.is-native #m1-bottom-nav button:not(.active) span {
-  color: #B8C4D4 !important;
+  color: #6B7280 !important;
   opacity: 1 !important;
 }
 
-/* Ensure active state remains bright cyan */
+/* Active state - iOS blue accent */
 body.is-native .bottom-navigation-ios button[class*="active"] svg,
 body.is-native .bottom-navigation-ios button[data-active="true"] svg,
 body.is-native #m1-bottom-nav button.active svg {
-  color: #00D1FF !important;
+  color: #0A84FF !important;
 }
 
 /* ========================================

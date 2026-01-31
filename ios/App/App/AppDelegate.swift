@@ -111,12 +111,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         webView.scrollView.bounces = true
         webView.scrollView.alwaysBounceVertical = true
         
-        // 🔧 FIX 30/01/2026: WHITE background for iOS bounce/overscroll
-        // This color shows during iOS rubber-band bounce - MUST be WHITE to match white theme
-        let bgColor = UIColor.white // #FFFFFF
-        webView.isOpaque = true
+        // 🔧 P2b FIX 31/01/2026: DARK background for iOS bounce/overscroll
+        // CRITICAL: This color shows during rubber-band bounce
+        // The white content is on .sn-page container (CSS), NOT on native layer
+        // Native layer must be DARK so overscroll reveals dark, not white flash
+        let bgColor = UIColor(red: 10/255, green: 11/255, blue: 15/255, alpha: 1.0) // #0a0b0f
+        webView.isOpaque = false  // Allow transparency through to native layer
         webView.backgroundColor = bgColor
         webView.scrollView.backgroundColor = bgColor
+        
+        // Set root view background to same dark color
+        if let rootView = webView.superview {
+            rootView.backgroundColor = bgColor
+        }
         
         // 🔧 FIX 22/01/2026: Hide iOS keyboard accessory bar (toolbar)
         // This removes the shortcut bar / predictive text bar above the keyboard
@@ -193,14 +200,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             document.documentElement.style.setProperty('--sat', '\(safeTop)px');
             document.documentElement.style.setProperty('--capacitor-safe-area-top', '\(safeTop)px');
             
-            // 🔧 FIX 30/01/2026: WHITE background for overscroll
-            // Use setProperty with 'important' to override all CSS
-            document.documentElement.style.setProperty('background', 'linear-gradient(180deg, #FFFFFF 0%, #F5F5F7 50%, #EAEAEC 100%)', 'important');
-            document.documentElement.style.setProperty('background-color', '#FFFFFF', 'important');
-            document.documentElement.style.setProperty('background-attachment', 'scroll', 'important');
+            // 🔧 P2b FIX 31/01/2026: NO white background on html - let CSS handle it
+            // html/body must be TRANSPARENT to show dark native layer during overscroll
+            // The white gradient is ONLY on .sn-page container elements (via CSS)
+            document.documentElement.style.setProperty('background', 'transparent', 'important');
+            document.documentElement.style.setProperty('background-color', 'transparent', 'important');
             
-            // Also add sn-page class for CSS white theme gate
-            document.documentElement.classList.add('sn-page');
+            // Keep capacitor-ios class but DO NOT add sn-page here
+            // Pages add sn-page to their container, not to html
             
             // Inject layout CSS immediately
             var style = document.createElement('style');
