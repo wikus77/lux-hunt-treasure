@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🔧 v4: Bottom sheet with INLINE Stripe checkout (no navigation)
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -225,18 +225,6 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const { user, logout } = useAuth();
   const { navigate } = useWouterNavigation();
-  
-  // 🆕 Swipe-to-close
-  const dragY = useMotionValue(0);
-  const dragOpacity = useTransform(dragY, [0, 200], [1, 0.5]);
-  const SWIPE_THRESHOLD = 100;
-  
-  const handleDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.y > SWIPE_THRESHOLD || info.velocity.y > 500) {
-      onClose();
-    }
-    dragY.set(0);
-  }, [onClose, dragY]);
   const { toast } = useToast();
   const sheetRef = useRef<HTMLDivElement>(null);
   const { pulseEnergy, currentRank, nextRank, progressToNextRank, loading: peLoading } = usePulseEnergy();
@@ -428,49 +416,67 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
     },
   };
 
+  // 🎬 CINEMATIC ANIMATION TIMINGS (fedeli al video)
+  const cinematicEaseOpen = [0.22, 1, 0.36, 1]; // cubic-bezier
+  const cinematicEaseClose = [0.4, 0, 0.2, 1];
+  
   const sheetContent = (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop overlay */}
+          {/* Backdrop overlay - 🎬 CINEMATIC: blur 0→14px in 200ms */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99998]"
+            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(14px)' }}
+            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+            transition={{ 
+              duration: 0.2,
+              ease: cinematicEaseClose 
+            }}
+            className="fixed inset-0 bg-black/50 z-[99998]"
+            style={{ 
+              WebkitBackdropFilter: 'blur(14px)',
+              transform: 'translate3d(0,0,0)', // GPU acceleration iOS
+            }}
             onClick={onClose}
           />
 
-          {/* Bottom Sheet - SEMI-TRASPARENTE + SWIPE */}
+          {/* 🎬 CINEMATIC OVERLAY - Card scende dall'alto (fedele al video) */}
           <motion.div
             ref={sheetRef}
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-[99999] max-h-[90vh] overflow-hidden"
-            style={{
-              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-              opacity: dragOpacity,
-              y: dragY,
+            initial={{ 
+              opacity: 0, 
+              y: -12, 
+              scale: 0.98,
             }}
-            // 🆕 SWIPE-TO-CLOSE
-            drag="y"
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 0.5 }}
-            onDragEnd={handleDragEnd}
+            animate={{ 
+              opacity: 1, 
+              y: 0, 
+              scale: 1,
+            }}
+            exit={{ 
+              opacity: 0, 
+              y: -10,
+            }}
+            transition={{ 
+              duration: 0.28, // 280ms open
+              ease: cinematicEaseOpen,
+            }}
+            className="fixed inset-x-4 top-0 z-[99999] max-h-[85vh] overflow-hidden"
+            style={{
+              marginTop: 'calc(env(safe-area-inset-top, 47px) + 90px)', // Below header
+              transform: 'translate3d(0,0,0)', // GPU acceleration iOS
+              overscrollBehavior: 'none',
+            }}
           >
-            {/* 🆕 Background SEMI-TRASPARENTE */}
-            <div className="rounded-t-3xl bg-[#0a0a0f]/85 backdrop-blur-xl border-t border-x border-[#00D1FF]/30 shadow-2xl overflow-hidden"
+            {/* 🎬 CINEMATIC GLASS CARD - tutti i bordi arrotondati */}
+            <div className="rounded-3xl bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#00D1FF]/30 shadow-2xl overflow-hidden"
               style={{
-                boxShadow: '0 -10px 40px rgba(0, 209, 255, 0.15), 0 0 0 1px rgba(0, 209, 255, 0.1)',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 209, 255, 0.15), 0 0 40px rgba(0, 209, 255, 0.1)',
               }}
             >
-              {/* Drag handle - più visibile */}
-              <div className="flex justify-center pt-3 pb-2 cursor-grab">
-                <div className="w-12 h-1.5 rounded-full bg-white/30" />
-              </div>
+              {/* 🎬 Top accent line - effetto cinematico */}
+              <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#00D1FF]/60 to-transparent" />
 
               {/* Header */}
               <div className="flex items-center justify-between px-4 pb-3 border-b border-white/10">
@@ -492,8 +498,9 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
               <div 
                 className="overflow-y-auto overscroll-contain px-4 py-4 space-y-4"
                 style={{
-                  maxHeight: 'calc(90vh - 80px - env(safe-area-inset-bottom, 0px))',
+                  maxHeight: 'calc(85vh - 140px)',
                   WebkitOverflowScrolling: 'touch',
+                  overscrollBehavior: 'none',
                 }}
               >
                 {/* User Info */}
@@ -658,8 +665,8 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
                   </Button>
                 </div>
 
-                {/* Bottom spacer for safe area */}
-                <div className="h-4" />
+                {/* Bottom spacer */}
+                <div className="h-2" />
               </div>
             </div>
           </motion.div>
