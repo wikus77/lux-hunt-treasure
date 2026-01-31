@@ -61,18 +61,16 @@ export function HeroPrizeBackground({
       className="hero-prize-background"
       onClick={handleTap}
       style={{
-        position: 'absolute',
+        position: 'fixed', // FIXED to cover from absolute top
         top: 0,
         left: 0,
         right: 0,
         width: '100%',
         height: height,
         overflow: 'hidden',
-        zIndex: 0,
+        zIndex: 1, // Above page background, below content
         cursor: 'pointer',
-        // Extend behind safe area
-        marginTop: 'calc(-1 * env(safe-area-inset-top, 0px))',
-        paddingTop: 'env(safe-area-inset-top, 0px)',
+        // NO margin - start from absolute top (including safe area)
       }}
     >
       {/* Image Container */}

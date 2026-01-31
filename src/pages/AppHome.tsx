@@ -246,44 +246,15 @@ const { isConnected } = useRealTimeNotifications();
 
                   <div className="container mx-auto px-3 pb-20">
                 {/* 🔥 REVOLUT-STYLE: Spacer for hero background */}
-                {/* Content starts below hero fade zone */}
+                {/* This spacer equals the hero height so content starts BELOW gradient */}
                 <div 
                   className="hero-content-spacer"
                   style={{ 
-                    height: 'calc(45vh - env(safe-area-inset-top, 0px) - 80px)',
-                    minHeight: '180px',
+                    height: '55vh', // Match hero height (60vh) minus some overlap
+                    minHeight: '300px',
                     pointerEvents: 'none'
                   }}
                 />
-                
-                {/* 🚀 PILLS - Right side only (Left pills are fixed overlays)
-                    🔧 FIX v8: M1UPill + StreakPill moved to FIXED OVERLAY (see below)
-                    This prevents clipping and overlap issues */}
-                <div 
-                  className="flex justify-end items-start mb-4 overflow-visible"
-                  style={{ marginTop: '-40vh' }} /* Overlap with hero */
-                >
-                  {/* Colonna destra - sopra hero */}
-                  <div className="flex flex-col gap-2">
-                    <motion.div
-                      data-onboarding="cashback-pill"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, delay: 0.05 }}
-                    >
-                      <CashbackVaultPill />
-                    </motion.div>
-                    
-                    {/* 🎡 Fortune Wheel Pill - Once daily */}
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, delay: 0.08 }}
-                    >
-                      <ShopPill />
-                    </motion.div>
-                  </div>
-                </div>
 
                 {/* 🎯 PROSSIMA AZIONE: Container unificato espandibile */}
                 {/* 🔧 FIX 28/01/2026: Sostituito due card separate con container singolo */}
@@ -417,13 +388,11 @@ const { isConnected } = useRealTimeNotifications();
       />
       </MissionSync>
       
-      {/* 🔧 FIX v9: M1UPill + StreakPill as FIXED OVERLAY
-          Position: fixed, left side, below header with safe area
-          StreakPill positioned below M1UPill with gap-2 */}
+      {/* 🔧 FIX v9: M1UPill + StreakPill as FIXED OVERLAY - LEFT SIDE */}
       <div 
         id="m1u-pill-home-slot" 
         data-onboarding="m1u-pill"
-        className="fixed left-4 z-[1001] flex flex-col gap-2"
+        className="fixed left-4 z-[100] flex flex-col gap-2"
         style={{ 
           top: 'calc(env(safe-area-inset-top, 0px) + 80px)',
           paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
@@ -432,6 +401,33 @@ const { isConnected } = useRealTimeNotifications();
       >
         <M1UPill showLabel showPlusButton />
         <StreakPill showLabel />
+      </div>
+      
+      {/* 🔥 REVOLUT-STYLE: Right-side pills as FIXED OVERLAY */}
+      <div 
+        className="fixed right-4 z-[100] flex flex-col gap-2"
+        style={{ 
+          top: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+          paddingRight: 'max(0px, env(safe-area-inset-right, 0px))',
+          pointerEvents: 'auto' 
+        }}
+      >
+        <motion.div
+          data-onboarding="cashback-pill"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
+        >
+          <CashbackVaultPill />
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.08 }}
+        >
+          <ShopPill />
+        </motion.div>
       </div>
     </div>
   );
