@@ -145,9 +145,10 @@ const LegalSettings: React.FC = () => {
     }
   };
 
+  // 🔧 P1 FIX 31/01/2026: REMOVED duplicate UnifiedHeader/BottomNavigation
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
-      <UnifiedHeader profileImage={profileImage || user?.user_metadata?.avatar_url} />
+      {/* UnifiedHeader REMOVED - provided by GlobalLayout */}
       
       {/* 🔧 FIX 28/01/2026: Layout come Info App */}
       <main className="pt-16 pb-20 px-4">
@@ -314,7 +315,7 @@ const LegalSettings: React.FC = () => {
         </div>
       </main>
 
-      <BottomNavigation />
+      {/* BottomNavigation REMOVED - provided by GlobalLayout */}
     </div>
   );
 };

@@ -36,9 +36,10 @@ const AppInfoSettings = () => {
     { icon: Smartphone, title: "Multi-Platform", description: "Disponibile su tutti i dispositivi" }
   ];
 
+  // 🔧 P1 FIX 31/01/2026: REMOVED duplicate UnifiedHeader/BottomNavigation
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
-      <UnifiedHeader />
+      {/* UnifiedHeader REMOVED - provided by GlobalLayout */}
       
       <main className="pt-16 pb-20 px-4">
         <div className="max-w-lg mx-auto space-y-6">
@@ -150,7 +151,7 @@ const AppInfoSettings = () => {
         </div>
       </main>
 
-      <BottomNavigation />
+      {/* BottomNavigation REMOVED - provided by GlobalLayout */}
     </div>
   );
 };

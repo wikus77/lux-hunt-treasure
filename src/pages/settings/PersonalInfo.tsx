@@ -113,9 +113,10 @@ const PersonalInfo: React.FC = () => {
     }
   };
 
+  // 🔧 P1 FIX 31/01/2026: REMOVED duplicate UnifiedHeader/BottomNavigation
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0b0f] via-[#1a1b2e] to-[#0a0b0f]">
-      <UnifiedHeader />
+      {/* UnifiedHeader REMOVED - provided by GlobalLayout */}
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -294,7 +295,7 @@ const PersonalInfo: React.FC = () => {
       </Card>
     </motion.div>
     
-    <BottomNavigation />
+    {/* BottomNavigation REMOVED - provided by GlobalLayout */}
   </div>
   );
 };
