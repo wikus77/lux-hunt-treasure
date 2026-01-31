@@ -26,6 +26,8 @@ import MissionSync from "@/components/home/MissionSync";
 // import { InactivityHint } from "@/components/first-session";
 import { NextActionContainer, MotivationalPopup, FortuneWheel } from "@/components/feedback";
 import { SectionErrorBoundary } from "@/components/error/SectionErrorBoundary";
+// 🔥 REVOLUT-STYLE: Hero Prize Background
+import HeroPrizeBackground from "@/components/home/HeroPrizeBackground";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -193,7 +195,7 @@ const { isConnected } = useRealTimeNotifications();
 
   return (
     <div 
-      className="sn-page relative m1-single-scroll-root"
+      className="sn-page relative m1-single-scroll-root hero-home-page"
       style={{
         position: 'relative',
         zIndex: 0,
@@ -202,6 +204,9 @@ const { isConnected } = useRealTimeNotifications();
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
+      
+      {/* 🔥 REVOLUT-STYLE: Hero Prize Background - Full screen from safe area */}
+      <HeroPrizeBackground height="60vh" autoChangeInterval={6000} />
       
       {/* CRITICAL FIX: Remove duplicate header/nav - GlobalLayout handles these */}
       {/* 🔧 FIX 27/01/2026 v6: PTR RE-ENABLED with stricter conditions
@@ -240,18 +245,25 @@ const { isConnected } = useRealTimeNotifications();
               )}
 
                   <div className="container mx-auto px-3 pb-20">
-                {/* 🚀 PILLS - Layout flex, scorrono con pagina
+                {/* 🔥 REVOLUT-STYLE: Spacer for hero background */}
+                {/* Content starts below hero fade zone */}
+                <div 
+                  className="hero-content-spacer"
+                  style={{ 
+                    height: 'calc(45vh - env(safe-area-inset-top, 0px) - 80px)',
+                    minHeight: '180px',
+                    pointerEvents: 'none'
+                  }}
+                />
+                
+                {/* 🚀 PILLS - Right side only (Left pills are fixed overlays)
                     🔧 FIX v8: M1UPill + StreakPill moved to FIXED OVERLAY (see below)
                     This prevents clipping and overlap issues */}
                 <div 
-                  className="flex justify-between items-start mb-4 overflow-visible m1-first-content-offset"
+                  className="flex justify-end items-start mb-4 overflow-visible"
+                  style={{ marginTop: '-40vh' }} /* Overlap with hero */
                 >
-                  {/* Colonna sinistra - Empty now (pills are fixed overlays) */}
-                  <div className="flex flex-col gap-2 overflow-visible">
-                    {/* M1UPill + StreakPill are now fixed overlays below */}
-                  </div>
-                  
-                  {/* Colonna destra */}
+                  {/* Colonna destra - sopra hero */}
                   <div className="flex flex-col gap-2">
                     <motion.div
                       data-onboarding="cashback-pill"

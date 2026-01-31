@@ -201,22 +201,8 @@ export default function CommandCenterHome() {
 
   return (
     <div className="w-full">
-      {/* Full-width Prize Vision at the top - CASHBACK / M1U */}
-      <motion.div 
-        className="mb-6 w-full m1-card"
-        data-onboarding="prize-vision"
-        data-section="cashback"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-      <Suspense fallback={<PrizeVisionFallback />}>
-        <PrizeVision 
-          progress={progress} 
-          status={prizeUnlockStatus} 
-        />
-      </Suspense>
-    </motion.div>
+      {/* 🔥 REVOLUT-STYLE: PrizeVision rimosso - ora è HeroPrizeBackground in AppHome */}
+      {/* Le immagini dei premi sono visibili come sfondo full-screen */}
 
     {/* THE PULSE™ - Personal Energy Bar (PE per utente) */}
     {PULSE_ENABLED && (

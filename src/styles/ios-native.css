@@ -960,4 +960,79 @@ body.is-native .m1-relief-sm .via-\[\#FC1EFF\] {
   --tw-gradient-via: #FC1EFF !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   🔥 REVOLUT-STYLE: HERO PRIZE BACKGROUND
+   Header becomes transparent, content overlays hero image
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Hero home page - special layout */
+body.is-native .hero-home-page {
+  background: transparent !important;
+}
+
+/* Header TRANSPARENT on hero pages for iOS native */
+body.is-native .hero-home-page ~ .unified-header-wrapper header,
+body.is-native .hero-home-page .unified-header-wrapper header,
+body.is-native:has(.hero-home-page) .unified-header-wrapper header {
+  background: rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(12px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(150%) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Header text WHITE with shadow for readability on hero */
+body.is-native:has(.hero-home-page) .unified-header-wrapper header *,
+body.is-native:has(.hero-home-page) .unified-header-wrapper [class*="text"] {
+  color: #FFFFFF !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Header icons white on hero */
+body.is-native:has(.hero-home-page) .unified-header-wrapper svg {
+  color: #FFFFFF !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4)) !important;
+}
+
+/* Hero background container */
+body.is-native .hero-prize-background {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 0 !important;
+}
+
+/* Content area above hero - needs padding-top to clear hero */
+body.is-native .hero-home-page .m1-first-content-offset {
+  margin-top: calc(45vh) !important; /* Start content below hero fade zone */
+}
+
+/* Pills stay visible on hero with better contrast */
+body.is-native .hero-home-page #m1u-pill-home-slot {
+  z-index: 1001 !important;
+}
+
+body.is-native .hero-home-page #m1u-pill-home-slot > div {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Right-side pills (Cashback, Shop) - enhanced contrast */
+body.is-native .hero-home-page [data-onboarding="cashback-pill"] > div,
+body.is-native .hero-home-page [data-onboarding="cashback-pill"] button {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Bottom nav stays opaque white on hero pages */
+body.is-native .hero-home-page ~ .bottom-navigation-ios .bottom-nav-pill,
+body.is-native:has(.hero-home-page) .bottom-navigation-ios .bottom-nav-pill {
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
 /* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
