@@ -199,9 +199,9 @@ const { isConnected } = useRealTimeNotifications();
       style={{
         position: 'relative',
         zIndex: 0,
-        // Allow hero to extend into safe area
-        marginTop: 'calc(-1 * env(safe-area-inset-top, 0px))',
-        paddingTop: 'env(safe-area-inset-top, 0px)',
+        // NO padding/margin at top - hero handles safe area
+        paddingTop: 0,
+        marginTop: 0,
       }}
     >
       <Helmet>

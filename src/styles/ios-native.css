@@ -965,9 +965,25 @@ body.is-native .m1-relief-sm .via-\[\#FC1EFF\] {
    Image from iOS safe zone, content below gradient fade
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Hero home page - transparent background so image shows through */
+/* Hero home page - transparent background, NO padding at top */
 body.is-native .hero-home-page {
   background: transparent !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Remove any safe area padding from hero home page */
+body.is-native .hero-home-page.sn-page {
+  padding-top: 0 !important;
+}
+
+/* GlobalLayout safe area - disable for hero home page */
+body.is-native:has(.hero-home-page) .global-layout-content {
+  padding-top: 0 !important;
+}
+
+body.is-native:has(.hero-home-page) .safe-area-wrapper {
+  padding-top: 0 !important;
 }
 
 /* Header TRANSPARENT on hero pages for iOS native */
@@ -993,16 +1009,13 @@ body.is-native:has(.hero-home-page) .unified-header-wrapper svg {
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5)) !important;
 }
 
-/* Hero background - ABSOLUTE so it scrolls with content */
+/* Hero background - ABSOLUTE, starts from ABOVE safe area */
 body.is-native .hero-prize-background {
   position: absolute !important;
-  top: 0 !important;
+  top: calc(-1 * env(safe-area-inset-top, 47px)) !important;
   left: 0 !important;
   right: 0 !important;
   z-index: 1 !important;
-  /* Extend into iOS safe area */
-  margin-top: calc(-1 * env(safe-area-inset-top, 0px)) !important;
-  padding-top: env(safe-area-inset-top, 0px) !important;
 }
 
 /* Pills on hero - NO white background, just text with shadow */

@@ -62,17 +62,14 @@ export function HeroPrizeBackground({
       onClick={handleTap}
       style={{
         position: 'absolute', // ABSOLUTE - scrolls with page content
-        top: 0,
+        top: 'calc(-1 * env(safe-area-inset-top, 47px))', // Start ABOVE safe area
         left: 0,
         right: 0,
         width: '100%',
-        height: height,
+        height: `calc(${height} + env(safe-area-inset-top, 47px))`, // Extend height to cover safe area
         overflow: 'hidden',
         zIndex: 1, // Above page background, below content
         cursor: 'pointer',
-        // Extend into iOS safe area
-        marginTop: 'calc(-1 * env(safe-area-inset-top, 0px))',
-        paddingTop: 'env(safe-area-inset-top, 0px)',
       }}
     >
       {/* Image Container */}
