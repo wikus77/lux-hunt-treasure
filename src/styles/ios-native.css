@@ -965,9 +965,9 @@ body.is-native .m1-relief-sm .via-\[\#FC1EFF\] {
    Image from iOS safe zone, content below gradient fade
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Hero home page - DARK background to match hero images */
+/* Hero home page - WHITE background */
 body.is-native .hero-home-page {
-  background: #1a1a2e !important; /* Dark background like hero images */
+  background: #FFFFFF !important;
   padding-top: 0 !important;
   margin-top: 0 !important;
 }
@@ -975,92 +975,44 @@ body.is-native .hero-home-page {
 /* Remove any safe area padding from hero home page */
 body.is-native .hero-home-page.sn-page {
   padding-top: 0 !important;
-  background: #1a1a2e !important;
+  background: #FFFFFF !important;
 }
 
-/* Body/HTML dark for hero pages - fixes white band */
-body.is-native:has(.hero-home-page),
-html:has(.hero-home-page) {
-  background: #1a1a2e !important;
-  background-color: #1a1a2e !important;
-}
-
-/* GlobalLayout safe area - disable for hero home page */
-body.is-native:has(.hero-home-page) .global-layout-content {
-  padding-top: 0 !important;
-  background: transparent !important;
-}
-
-body.is-native:has(.hero-home-page) .safe-area-wrapper {
-  padding-top: 0 !important;
-  background: transparent !important;
-}
-
-body.is-native:has(.hero-home-page) #root {
-  background: transparent !important;
-}
-
-/* Header SEMI-TRANSPARENT GLASS on hero pages for iOS native */
+/* Header WHITE GLASS (semi-transparent) on hero pages for iOS native */
 body.is-native:has(.hero-home-page) .unified-header-wrapper,
 body.is-native:has(.hero-home-page) .unified-header-wrapper header {
-  background: rgba(0, 0, 0, 0.4) !important;
+  background: rgba(255, 255, 255, 0.7) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
 }
 
-/* Header text WHITE with shadow for readability on hero */
+/* Header text DARK for white glass background */
 body.is-native:has(.hero-home-page) .unified-header-wrapper header *,
 body.is-native:has(.hero-home-page) .unified-header-wrapper [class*="text"] {
-  color: #FFFFFF !important;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  color: #1C1C1E !important;
+  text-shadow: none !important;
 }
 
-/* Header icons white on hero */
+/* Header icons dark on hero */
 body.is-native:has(.hero-home-page) .unified-header-wrapper svg {
-  color: #FFFFFF !important;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5)) !important;
+  color: #0A84FF !important;
+  filter: none !important;
 }
 
-/* Hero background - ABSOLUTE, starts from ABOVE safe area */
+/* Hero background - ABSOLUTE */
 body.is-native .hero-prize-background {
   position: absolute !important;
-  top: calc(-1 * env(safe-area-inset-top, 47px)) !important;
+  top: 0 !important;
   left: 0 !important;
   right: 0 !important;
   z-index: 1 !important;
 }
 
-/* Pills on hero - NO white background, just text with shadow */
+/* Pills on hero - keep their original styles */
 body.is-native:has(.hero-home-page) #m1u-pill-home-slot {
   z-index: 100 !important;
-}
-
-/* Remove white backgrounds from all pills on hero */
-body.is-native:has(.hero-home-page) #m1u-pill-home-slot > div,
-body.is-native:has(.hero-home-page) #m1u-pill-home-slot button,
-body.is-native:has(.hero-home-page) #m1u-pill-home-slot [class*="pill"],
-body.is-native:has(.hero-home-page) [data-onboarding="cashback-pill"],
-body.is-native:has(.hero-home-page) [data-onboarding="cashback-pill"] > div {
-  background: transparent !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-/* Pills text white with shadow for visibility */
-body.is-native:has(.hero-home-page) #m1u-pill-home-slot *,
-body.is-native:has(.hero-home-page) [data-onboarding="cashback-pill"] * {
-  color: #FFFFFF !important;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
-}
-
-/* Pills icons with shadow */
-body.is-native:has(.hero-home-page) #m1u-pill-home-slot svg,
-body.is-native:has(.hero-home-page) [data-onboarding="cashback-pill"] svg {
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5)) !important;
 }
 
 /* Bottom nav stays opaque white */

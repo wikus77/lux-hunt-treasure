@@ -199,11 +199,9 @@ const { isConnected } = useRealTimeNotifications();
       style={{
         position: 'relative',
         zIndex: 0,
-        // NO padding/margin at top - hero handles safe area
         paddingTop: 0,
         marginTop: 0,
-        // Dark background to eliminate white band
-        backgroundColor: '#1a1a2e',
+        backgroundColor: '#FFFFFF', // WHITE background
       }}
     >
       <Helmet>

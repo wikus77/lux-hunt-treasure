@@ -61,16 +61,15 @@ export function HeroPrizeBackground({
       className="hero-prize-background"
       onClick={handleTap}
       style={{
-        position: 'absolute', // ABSOLUTE - scrolls with page content
-        top: 'calc(-1 * env(safe-area-inset-top, 47px))', // Start ABOVE safe area
+        position: 'absolute',
+        top: 0,
         left: 0,
         right: 0,
         width: '100%',
-        height: `calc(${height} + env(safe-area-inset-top, 47px))`, // Extend height to cover safe area
+        height: height,
         overflow: 'hidden',
-        zIndex: 1, // Above page background, below content
+        zIndex: 1,
         cursor: 'pointer',
-        backgroundColor: '#1a1a2e', // Dark background - NO WHITE BAND
       }}
     >
       {/* Image Container */}
@@ -88,9 +87,8 @@ export function HeroPrizeBackground({
             alt={`M1SSION Prize ${currentImageIndex + 1}`}
             className="w-full h-full"
             style={{
-              objectFit: 'contain', // Show full image without cropping
+              objectFit: 'cover',
               objectPosition: 'center center',
-              backgroundColor: '#1a1a2e', // Dark background behind image
             }}
           />
         </motion.div>
