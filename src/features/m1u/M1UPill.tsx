@@ -31,6 +31,7 @@ const M1UPill: React.FC<M1UPillProps> = ({
   const [pulseAnimation, setPulseAnimation] = useState(false);
   const [prevBalance, setPrevBalance] = useState<number | null>(null);
   const [showShopModal, setShowShopModal] = useState(false);
+  const [shopOriginRect, setShopOriginRect] = useState<DOMRect | null>(null);
   
   const { unitsData, isLoading, error, refetch } = useM1UnitsRealtime(userId);
   
@@ -184,7 +185,11 @@ const M1UPill: React.FC<M1UPillProps> = ({
   const balance = unitsData?.balance ?? 0;
   const lowBalance = balance < 100;
 
-  const handleOpenRecharge = () => {
+  const handleOpenRecharge = (e?: React.MouseEvent<HTMLElement>) => {
+    if (e) {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      setShopOriginRect(rect);
+    }
     setShowShopModal(true);
   };
 
@@ -198,8 +203,8 @@ const M1UPill: React.FC<M1UPillProps> = ({
             aria-label="Add M1U"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => {
-              handleOpenRecharge();
+            onClick={(e) => {
+              handleOpenRecharge(e);
             }}
           >
             <Plus className="w-4 h-4 text-cyan-100" />
@@ -221,7 +226,7 @@ const M1UPill: React.FC<M1UPillProps> = ({
           }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={handleOpenRecharge}
+          onClick={(e) => handleOpenRecharge(e)}
           animate={pulseAnimation ? { scale: [1, 1.05, 1] } : {}}
           transition={{ duration: 0.3 }}
         >
@@ -309,10 +314,11 @@ const M1UPill: React.FC<M1UPillProps> = ({
         </motion.div>
       </div>
 
-      {/* M1U Shop Modal */}
+      {/* M1U Shop Modal - FULLSCREEN con animazione FLIP */}
       <M1UnitsShopModal 
         isOpen={showShopModal}
         onClose={() => setShowShopModal(false)}
+        originRect={shopOriginRect}
       />
     </>
   );
