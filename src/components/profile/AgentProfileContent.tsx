@@ -66,18 +66,21 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
 
   const showUpgrade = tier?.toLowerCase() === 'base';
 
-  // 🎨 GLASS CARD STYLE - come Revolut
-  const glassCard = {
-    background: 'rgba(45, 45, 60, 0.85)',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
+  // 🎨 GLASS CARD STYLE - SEMI-TRASPARENTE come Revolut
+  const glassCard: React.CSSProperties = {
+    background: 'rgba(50, 50, 70, 0.45)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
   };
 
   return (
     <div 
       className="h-full flex flex-col"
       style={{ 
-        background: 'linear-gradient(180deg, #0d0d18 0%, #0a0a12 100%)',
+        background: 'linear-gradient(180deg, rgba(12, 12, 20, 0.92) 0%, rgba(8, 8, 14, 0.95) 100%)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
       }}
     >
       {/* ═══════════════════════════════════════════════════════════════

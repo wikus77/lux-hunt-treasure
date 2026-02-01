@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎬 REVOLUT-STYLE Overlay: nasce ESATTAMENTE dall'icona profilo
 // Timing REVOLUT: OPEN ~280ms spring, CLOSE ~220ms spring
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 
@@ -69,33 +69,22 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
     }, 250);
   }, [isClosing, onClose]);
 
-  // 🎯 CRITICAL: Calculate transform so panel STARTS from icon position
+  // 🎯 CRITICAL: Calculate clip-path from icon position
   const iconRect = savedRect || originRect;
   
-  const initialState = useMemo(() => {
+  // Calculate icon center position for clip-path
+  const getClipOrigin = () => {
     if (!iconRect) {
-      // Fallback if no rect - use top-right
-      return {
-        clipPath: 'circle(20px at calc(100% - 40px) 60px)',
-        opacity: 0,
-      };
+      // Fallback: top-right corner
+      return { x: 'calc(100% - 40px)', y: '60px', radius: '24px' };
     }
-    
-    // Icon center in viewport
-    const iconCenterX = iconRect.left + iconRect.width / 2;
-    const iconCenterY = iconRect.top + iconRect.height / 2;
-    const iconRadius = Math.max(iconRect.width, iconRect.height) / 2;
-    
-    return {
-      clipPath: `circle(${iconRadius}px at ${iconCenterX}px ${iconCenterY}px)`,
-      opacity: 0.5,
-    };
-  }, [iconRect]);
-
-  const finalState = {
-    clipPath: 'circle(150% at 50% 50%)',
-    opacity: 1,
+    const x = iconRect.left + iconRect.width / 2;
+    const y = iconRect.top + iconRect.height / 2;
+    const radius = Math.max(iconRect.width, iconRect.height) / 2;
+    return { x: `${x}px`, y: `${y}px`, radius: `${radius}px` };
   };
+  
+  const clipOrigin = getClipOrigin();
 
   if (!portalContainer) return null;
 
@@ -108,30 +97,44 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: isClosing ? 0.2 : 0.25 }}
+            transition={{ duration: isClosing ? 0.18 : 0.22 }}
             className="fixed inset-0 z-[99998]"
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
+              backgroundColor: 'rgba(0, 0, 0, 0.25)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
               pointerEvents: 'auto',
             }}
             onClick={handleClose}
           />
 
-          {/* 🎬 Panel - CLIP-PATH animation from icon */}
+          {/* 🎬 Panel - CLIP-PATH animation from icon (OPEN + CLOSE) */}
           <motion.div
-            initial={initialState}
-            animate={finalState}
-            exit={initialState}
+            initial={{ 
+              clipPath: `circle(${clipOrigin.radius} at ${clipOrigin.x} ${clipOrigin.y})`,
+              opacity: 1,
+            }}
+            animate={{ 
+              clipPath: `circle(150% at 50% 50%)`,
+              opacity: 1,
+            }}
+            exit={{ 
+              clipPath: `circle(${clipOrigin.radius} at ${clipOrigin.x} ${clipOrigin.y})`,
+              opacity: 1,
+            }}
             transition={{
-              duration: isClosing ? 0.22 : 0.28,
-              ease: [0.32, 0.72, 0, 1],
+              clipPath: {
+                duration: isClosing ? 0.22 : 0.28,
+                ease: [0.32, 0.72, 0, 1],
+              },
+              opacity: {
+                duration: 0.1,
+              }
             }}
             className="fixed inset-0 z-[99999]"
             style={{
               pointerEvents: 'auto',
-              willChange: 'clip-path, opacity',
+              willChange: 'clip-path',
             }}
             onClick={(e) => e.stopPropagation()}
           >
