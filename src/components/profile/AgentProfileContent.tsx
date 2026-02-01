@@ -1,8 +1,8 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
-// 🎨 Agent Profile Content - REVOLUT EXACT CLONE (TESTI LEGGIBILI + GLASS)
+// 🎨 Agent Profile Content - REVOLUT LOOK (vetro fumé + premium)
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LogOut, Crown, X, HelpCircle, User, FileText, GraduationCap, Mail, Shield, Eye, Bell, Zap, Users, Sparkles } from 'lucide-react';
+import { LogOut, Crown, X, HelpCircle, FileText, GraduationCap, Mail, Shield, Eye, Bell, Zap, Users, Sparkles } from 'lucide-react';
 import ProfileAvatar from '@/components/profile/ProfileAvatar';
 import { useAuth } from '@/hooks/use-auth';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
@@ -19,11 +19,11 @@ interface AgentProfileContentProps {
 // Stagger animation
 const stagger = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.04, delayChildren: 0.12 } }
+  visible: { opacity: 1, transition: { staggerChildren: 0.035, delayChildren: 0.1 } }
 };
 const fadeUp = {
-  hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.18 } }
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: 'easeOut' } }
 };
 
 export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
@@ -66,89 +66,81 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
 
   const showUpgrade = tier?.toLowerCase() === 'base';
 
-  // 🎨 GLASS CARD STYLE - MOLTO TRASPARENTE come Revolut
+  // 🎨 REVOLUT GLASS CARD - vetro fumé premium
   const glassCard: React.CSSProperties = {
-    background: 'rgba(40, 40, 55, 0.35)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)',
+    background: 'rgba(255, 255, 255, 0.08)',
+    backdropFilter: 'blur(24px) saturate(150%)',
+    WebkitBackdropFilter: 'blur(24px) saturate(150%)',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
   };
 
   return (
-    <div 
-      className="h-full flex flex-col"
-      style={{ 
-        // 🔥 FIX: Sfondo TRASPARENTE per vedere il blur del backdrop
-        background: 'transparent',
-      }}
-    >
+    <div className="h-full flex flex-col" style={{ background: 'rgba(15, 15, 22, 0.95)' }}>
       {/* ═══════════════════════════════════════════════════════════════
-          🎨 REVOLUT HEADER - Gradient purple/blue SEMI-TRASPARENTE
+          🎨 REVOLUT HEADER - Gradient purple premium
           ═══════════════════════════════════════════════════════════════ */}
       <div 
         className="relative flex-shrink-0"
         style={{
-          background: 'linear-gradient(180deg, rgba(30, 18, 80, 0.85) 0%, rgba(45, 26, 110, 0.8) 50%, rgba(26, 16, 64, 0.85) 100%)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
+          background: 'linear-gradient(180deg, rgba(45, 25, 100, 0.98) 0%, rgba(60, 35, 130, 0.95) 50%, rgba(35, 20, 75, 0.98) 100%)',
           paddingTop: 'env(safe-area-inset-top, 47px)',
-          paddingBottom: '32px',
+          paddingBottom: '28px',
         }}
       >
         {/* Top bar: X button + Upgrade */}
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
-          {/* Close X - Revolut style */}
+          {/* Close X - pulito, leggibile */}
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.15)' }}
+            className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-transform"
+            style={{ background: 'rgba(255,255,255,0.12)' }}
           >
-            <X className="w-5 h-5 text-white" strokeWidth={2.5} />
+            <X className="w-5 h-5 text-white/90" strokeWidth={2} />
           </button>
 
           {/* Upgrade button */}
           {showUpgrade ? (
             <button
               onClick={() => nav('/subscriptions')}
-              className="px-4 py-2 rounded-full flex items-center gap-2"
-              style={{ background: 'rgba(255,255,255,0.15)' }}
+              className="px-4 py-2 rounded-full flex items-center gap-2 active:scale-95 transition-transform"
+              style={{ background: 'rgba(255,255,255,0.12)' }}
             >
-              <Sparkles className="w-4 h-4 text-purple-200" />
-              <span className="text-white text-sm font-semibold">Fai l'upgrade</span>
+              <Sparkles className="w-4 h-4 text-purple-300" />
+              <span className="text-white/90 text-sm font-semibold">Fai l'upgrade</span>
             </button>
           ) : <div />}
         </div>
 
         {/* Centered Avatar + Badge + Name */}
-        <div className="flex flex-col items-center mt-4">
+        <div className="flex flex-col items-center mt-3">
           <div className="relative">
             <ProfileAvatar
               profileImage={profileImage}
-              className="w-[92px] h-[92px] border-[3px] border-white/30 shadow-xl"
+              className="w-[88px] h-[88px] border-[3px] border-white/25 shadow-2xl"
             />
             {/* Tier badge */}
             <div 
-              className={`absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs font-bold shadow-lg ${tierStyle.bg} ${tierStyle.text}`}
+              className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full text-[11px] font-bold shadow-lg ${tierStyle.bg} ${tierStyle.text}`}
             >
               {tierStyle.label}
             </div>
           </div>
 
-          {/* 🔥 NAME - BIANCO PURO, BEN VISIBILE */}
-          <h1 className="text-[28px] font-bold mt-7 tracking-tight" style={{ color: '#FFFFFF' }}>
+          {/* NAME - grande, leggibile */}
+          <h1 className="text-[26px] font-bold mt-6 tracking-tight text-white">
             {displayName}
           </h1>
           
-          {/* Username - grigio chiaro */}
-          <p className="text-[15px] mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          {/* Username */}
+          <p className="text-[14px] mt-1 text-white/55">
             @{username}
           </p>
         </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          🎨 REVOLUT CONTENT - Glass cards + Menu - SEMI-TRASPARENTE
+          🎨 REVOLUT CONTENT - Glass cards premium
           ═══════════════════════════════════════════════════════════════ */}
       <motion.div 
         variants={stagger}
@@ -158,36 +150,33 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'none',
-          paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 24px)',
-          background: 'rgba(10, 10, 18, 0.7)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)',
         }}
       >
-        {/* Quick action cards - GLASS EFFECT */}
+        {/* Quick action cards */}
         <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 mb-4">
           <div 
-            className="p-4 rounded-2xl cursor-pointer"
+            className="p-4 rounded-2xl cursor-pointer active:scale-[0.98] transition-transform"
             style={glassCard}
             onClick={() => nav('/subscriptions')}
           >
             <Crown className="w-7 h-7 text-amber-400 mb-2" />
-            <p className="font-semibold text-[15px]" style={{ color: '#FFFFFF' }}>{tierStyle.label}</p>
-            <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>Piano attivo</p>
+            <p className="font-semibold text-[15px] text-white">{tierStyle.label}</p>
+            <p className="text-[12px] mt-0.5 text-white/50">Piano attivo</p>
           </div>
           
           <div 
-            className="p-4 rounded-2xl cursor-pointer"
+            className="p-4 rounded-2xl cursor-pointer active:scale-[0.98] transition-transform"
             style={glassCard}
             onClick={() => nav('/referral')}
           >
             <Users className="w-7 h-7 text-blue-400 mb-2" />
-            <p className="font-semibold text-[15px]" style={{ color: '#FFFFFF' }}>Invita amici</p>
-            <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>Guadagna M1U</p>
+            <p className="font-semibold text-[15px] text-white">Invita amici</p>
+            <p className="text-[12px] mt-0.5 text-white/50">Guadagna M1U</p>
           </div>
         </motion.div>
 
-        {/* Pulse Energy - GLASS */}
+        {/* Pulse Energy */}
         {currentRank && (
           <motion.div 
             variants={fadeUp}
@@ -196,9 +185,9 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
           >
             <div className="flex items-center gap-2 mb-3">
               <Zap className="w-5 h-5 text-cyan-400" />
-              <span className="font-semibold text-[15px]" style={{ color: '#FFFFFF' }}>Pulse Energy</span>
+              <span className="font-semibold text-[15px] text-white">Pulse Energy</span>
               {pulseEnergy !== undefined && (
-                <span className="ml-auto font-bold text-[14px]" style={{ color: '#00D1FF' }}>
+                <span className="ml-auto font-bold text-[14px] text-cyan-400">
                   {pulseEnergy.toLocaleString()} PE
                 </span>
               )}
@@ -207,20 +196,19 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
           </motion.div>
         )}
 
-        {/* Menu section 1 - GLASS */}
+        {/* Menu section 1 - SENZA "Conto" */}
         <motion.div 
           variants={fadeUp}
           className="rounded-2xl overflow-hidden mb-4"
           style={glassCard}
         >
           <MenuItem icon={HelpCircle} label="Aiuto" onClick={() => nav('/help')} />
-          <MenuItem icon={User} label="Conto" onClick={() => nav('/settings')} />
-          <MenuItem icon={FileText} label="Documenti" onClick={() => nav('/documents')} />
+          <MenuItem icon={FileText} label="Documenti" onClick={() => nav('/legal')} />
           <MenuItem icon={GraduationCap} label="Impara" onClick={() => nav('/learn')} />
           <MenuItem icon={Mail} label="Posta in arrivo" onClick={() => nav('/notifications')} badge={3} last />
         </motion.div>
 
-        {/* Menu section 2 - GLASS */}
+        {/* Menu section 2 - Collegamenti CORRETTI */}
         <motion.div 
           variants={fadeUp}
           className="rounded-2xl overflow-hidden mb-4"
@@ -228,18 +216,18 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
         >
           <MenuItem icon={Shield} label="Sicurezza" onClick={() => nav('/security')} />
           <MenuItem icon={Eye} label="Privacy" onClick={() => nav('/privacy')} />
-          <MenuItem icon={Bell} label="Impostazioni di notifica" onClick={() => nav('/notification-settings')} last />
+          <MenuItem icon={Bell} label="Impostazioni di notifica" onClick={() => nav('/notifications')} last />
         </motion.div>
 
         {/* Logout */}
         <motion.div variants={fadeUp}>
           <button
             onClick={handleLogout}
-            className="w-full p-4 rounded-2xl flex items-center gap-3"
+            className="w-full p-4 rounded-2xl flex items-center gap-3 active:scale-[0.98] transition-transform"
             style={glassCard}
           >
             <LogOut className="w-5 h-5 text-red-400" />
-            <span className="font-medium text-[16px]" style={{ color: '#F87171' }}>Esci</span>
+            <span className="font-medium text-[16px] text-red-400">Esci</span>
           </button>
         </motion.div>
       </motion.div>
@@ -247,7 +235,7 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
   );
 };
 
-// 🎨 Menu item - TESTI BIANCHI LEGGIBILI
+// 🎨 Menu item - REVOLUT style
 const MenuItem: React.FC<{
   icon: React.ElementType;
   label: string;
@@ -257,18 +245,14 @@ const MenuItem: React.FC<{
 }> = ({ icon: Icon, label, onClick, badge, last }) => (
   <button
     onClick={onClick}
-    className={`w-full px-4 py-[16px] flex items-center justify-between ${!last ? 'border-b' : ''}`}
-    style={{ borderColor: 'rgba(255,255,255,0.08)' }}
+    className={`w-full px-4 py-[15px] flex items-center justify-between active:bg-white/5 transition-colors ${!last ? 'border-b border-white/[0.06]' : ''}`}
   >
     <div className="flex items-center gap-3">
-      <Icon className="w-[22px] h-[22px]" style={{ color: 'rgba(255,255,255,0.7)' }} />
-      <span className="text-[16px]" style={{ color: '#FFFFFF' }}>{label}</span>
+      <Icon className="w-[21px] h-[21px] text-white/65" />
+      <span className="text-[15px] text-white">{label}</span>
     </div>
     {badge !== undefined && badge > 0 && (
-      <span 
-        className="px-2.5 py-0.5 rounded-full text-[12px] font-bold min-w-[24px] text-center"
-        style={{ background: '#3B82F6', color: '#FFFFFF' }}
-      >
+      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold min-w-[22px] text-center bg-blue-500 text-white">
         {badge}
       </span>
     )}
