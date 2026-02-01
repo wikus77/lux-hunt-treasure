@@ -202,16 +202,16 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
         {/* Menu 1 */}
         <GlassCard style={{ marginBottom: '16px', padding: 0 }}>
           <MenuItem icon={HelpCircle} label="Aiuto" onClick={() => goTo('/help')} />
-          <MenuItem icon={FileText} label="Documenti" onClick={() => goTo('/legal')} />
+          <MenuItem icon={FileText} label="Documenti Legali" onClick={() => goTo('/settings/legal')} />
           <MenuItem icon={GraduationCap} label="Impara" onClick={() => goTo('/learn')} />
           <MenuItem icon={Mail} label="Posta in arrivo" onClick={() => goTo('/notifications')} badge={3} last />
         </GlassCard>
 
         {/* Menu 2 */}
         <GlassCard style={{ marginBottom: '16px', padding: 0 }}>
-          <MenuItem icon={Shield} label="Sicurezza" onClick={() => goTo('/security')} />
-          <MenuItem icon={Eye} label="Privacy" onClick={() => goTo('/privacy')} />
-          <MenuItem icon={Bell} label="Notifiche" onClick={() => goTo('/notifications')} last />
+          <MenuItem icon={Shield} label="Sicurezza" onClick={() => goTo('/settings/security')} />
+          <MenuItem icon={Eye} label="Privacy" onClick={() => goTo('/settings/privacy')} />
+          <MenuItem icon={Bell} label="Notifiche" onClick={() => goTo('/settings/notifications')} last />
         </GlassCard>
 
         {/* Logout */}
