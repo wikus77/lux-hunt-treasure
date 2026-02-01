@@ -88,7 +88,7 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
     <AnimatePresence mode="wait">
       {open && (
         <>
-          {/* BACKDROP - sfocato scuro */}
+          {/* BACKDROP - REVOLUT STYLE: più trasparente, blur più forte */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -99,9 +99,10 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
               position: 'fixed',
               inset: 0,
               zIndex: 99998,
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+              // REVOLUT: meno opaco, più blur per vedere attraverso
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(30px)',
+              WebkitBackdropFilter: 'blur(30px)',
               pointerEvents: 'auto',
             }}
           />

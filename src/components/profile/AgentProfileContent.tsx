@@ -57,14 +57,18 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        background: '#0f0f16',
+        // REVOLUT STYLE: sfondo semi-trasparente (vedi attraverso)
+        background: 'rgba(15, 15, 22, 0.85)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
       }}
     >
-      {/* HEADER - Gradient viola */}
+      {/* HEADER - REVOLUT STYLE: più sottile e sfumato */}
       <div 
         style={{
           flexShrink: 0,
-          background: 'linear-gradient(180deg, #2d1964 0%, #3c2382 50%, #231450 100%)',
+          // Gradiente più sottile come Revolut
+          background: 'linear-gradient(180deg, rgba(45, 25, 100, 0.9) 0%, rgba(35, 20, 80, 0.7) 100%)',
           paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
           paddingBottom: '28px',
           paddingLeft: '16px',
@@ -226,7 +230,7 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
   );
 };
 
-// GLASS CARD - iOS optimized
+// GLASS CARD - REVOLUT STYLE: semi-trasparente con effetto vetro
 const GlassCard: React.FC<{
   children: React.ReactNode;
   onClick?: () => void;
@@ -235,11 +239,16 @@ const GlassCard: React.FC<{
   <div
     onClick={onClick}
     style={{
-      background: 'rgba(45, 45, 65, 0.65)',
+      // REVOLUT: più trasparente, effetto vetro fumé
+      background: 'rgba(35, 35, 50, 0.55)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
       borderRadius: '16px',
       padding: '16px',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+      // Bordo più visibile come Revolut
+      border: '1px solid rgba(255, 255, 255, 0.12)',
+      // Ombra più morbida
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
       cursor: onClick ? 'pointer' : 'default',
       ...style,
     }}
