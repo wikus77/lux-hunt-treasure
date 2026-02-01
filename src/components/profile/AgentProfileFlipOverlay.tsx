@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
-// 🎬 FLIP Overlay: nasce dall'icona profilo, ritorna all'icona in chiusura
-// Timing: OPEN ~230ms, CLOSE ~200ms (fedeli al video reference)
+// 🎬 REVOLUT-STYLE Overlay: nasce dall'icona profilo, ritorna all'icona in chiusura
+// Timing REVOLUT: OPEN ~280ms spring, CLOSE ~220ms spring
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
@@ -31,10 +31,10 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
 
   // Create portal container
   useEffect(() => {
-    let container = document.getElementById('m1-flip-overlay-portal');
+    let container = document.getElementById('m1-revolut-overlay-portal');
     if (!container) {
       container = document.createElement('div');
-      container.id = 'm1-flip-overlay-portal';
+      container.id = 'm1-revolut-overlay-portal';
       container.style.cssText = 'position:fixed;inset:0;z-index:99999;pointer-events:none;';
       document.body.appendChild(container);
     }
@@ -59,42 +59,54 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
     }
   }, [open, isClosing]);
 
-  // Close handler - 200ms animation
+  // Close handler - Revolut ~220ms
   const handleClose = useCallback(() => {
     if (isClosing) return;
     setIsClosing(true);
     setTimeout(() => {
       onClose();
       setIsClosing(false);
-    }, 200);
+    }, 220);
   }, [isClosing, onClose]);
 
-  // Calculate FLIP transform from origin rect
-  const getTransform = () => {
+  // Calculate origin transform from icon rect
+  const getOriginTransform = () => {
     const rect = savedRect || originRect;
     if (!rect) {
-      // Fallback: top-right
-      return { x: window.innerWidth / 2 - 20, y: -window.innerHeight / 2 + 40, scale: 0.02 };
+      // Fallback: top-right corner
+      return { 
+        x: window.innerWidth / 2 - 24, 
+        y: -window.innerHeight / 2 + 60, 
+        scale: 0.03,
+        originX: 1,
+        originY: 0
+      };
     }
     
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     
-    // Origin center
-    const ox = rect.left + rect.width / 2;
-    const oy = rect.top + rect.height / 2;
+    // Icon center position
+    const iconCenterX = rect.left + rect.width / 2;
+    const iconCenterY = rect.top + rect.height / 2;
     
     // Offset from viewport center
-    const offsetX = ox - vw / 2;
-    const offsetY = oy - vh / 2;
+    const offsetX = iconCenterX - vw / 2;
+    const offsetY = iconCenterY - vh / 2;
     
-    // Scale ratio
-    const scale = Math.max(rect.width / vw, rect.height / vh, 0.02);
+    // Scale based on icon size
+    const scale = Math.max(rect.width / vw, 0.03);
     
-    return { x: offsetX, y: offsetY, scale };
+    return { 
+      x: offsetX, 
+      y: offsetY, 
+      scale,
+      originX: iconCenterX / vw,
+      originY: iconCenterY / vh
+    };
   };
 
-  const transform = getTransform();
+  const origin = getOriginTransform();
 
   if (!portalContainer) return null;
 
@@ -102,60 +114,69 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
     <AnimatePresence mode="wait">
       {open && (
         <>
-          {/* Backdrop - fade + blur */}
+          {/* Backdrop - Revolut dark blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: isClosing ? 0.16 : 0.18, ease: 'easeOut' }}
+            transition={{ 
+              duration: isClosing ? 0.18 : 0.22, 
+              ease: [0.32, 0.72, 0, 1] 
+            }}
             className="fixed inset-0 z-[99998]"
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
               pointerEvents: 'auto',
             }}
             onClick={handleClose}
           />
 
-          {/* FLIP Panel - OPEN 230ms / CLOSE 200ms */}
+          {/* REVOLUT Panel - expand from icon */}
           <motion.div
             initial={{
               opacity: 0,
-              x: transform.x,
-              y: transform.y,
-              scale: transform.scale,
+              scale: origin.scale,
+              x: origin.x,
+              y: origin.y,
             }}
             animate={{
               opacity: 1,
+              scale: 1,
               x: 0,
               y: 0,
-              scale: 1,
             }}
             exit={{
               opacity: 0,
-              x: transform.x,
-              y: transform.y,
-              scale: transform.scale,
+              scale: origin.scale,
+              x: origin.x,
+              y: origin.y,
             }}
             transition={{
-              duration: isClosing ? 0.2 : 0.23,
-              ease: [0.16, 1, 0.3, 1], // cubic-bezier easeOut
+              type: 'spring',
+              stiffness: isClosing ? 400 : 340,
+              damping: isClosing ? 32 : 28,
+              mass: 0.8,
             }}
             className="fixed inset-0 z-[99999]"
             style={{
               pointerEvents: 'auto',
               willChange: 'transform, opacity',
-              transform: 'translate3d(0,0,0)',
+              transformOrigin: `${origin.originX * 100}% ${origin.originY * 100}%`,
             }}
           >
-            {/* Full screen content */}
-            <div 
+            {/* Full screen content container */}
+            <motion.div 
               className="w-full h-full overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12, delay: isClosing ? 0 : 0.08 }}
               onClick={(e) => e.stopPropagation()}
             >
               {children}
-            </div>
+            </motion.div>
           </motion.div>
         </>
       )}
