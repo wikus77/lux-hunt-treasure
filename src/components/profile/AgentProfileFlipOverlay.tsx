@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
-// 🎬 REVOLUT-STYLE Overlay: nasce dall'icona profilo, ritorna all'icona in chiusura
+// 🎬 REVOLUT-STYLE Overlay: nasce ESATTAMENTE dall'icona profilo
 // Timing REVOLUT: OPEN ~280ms spring, CLOSE ~220ms spring
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 
@@ -22,7 +22,7 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const [savedRect, setSavedRect] = useState<DOMRect | null>(null);
 
-  // Save rect when opening
+  // Save rect when opening - CRITICAL for return animation
   useEffect(() => {
     if (open && originRect) {
       setSavedRect(originRect);
@@ -59,54 +59,43 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
     }
   }, [open, isClosing]);
 
-  // Close handler - Revolut ~220ms
+  // Close handler
   const handleClose = useCallback(() => {
     if (isClosing) return;
     setIsClosing(true);
     setTimeout(() => {
       onClose();
       setIsClosing(false);
-    }, 220);
+    }, 250);
   }, [isClosing, onClose]);
 
-  // Calculate origin transform from icon rect
-  const getOriginTransform = () => {
-    const rect = savedRect || originRect;
-    if (!rect) {
-      // Fallback: top-right corner
-      return { 
-        x: window.innerWidth / 2 - 24, 
-        y: -window.innerHeight / 2 + 60, 
-        scale: 0.03,
-        originX: 1,
-        originY: 0
+  // 🎯 CRITICAL: Calculate transform so panel STARTS from icon position
+  const iconRect = savedRect || originRect;
+  
+  const initialState = useMemo(() => {
+    if (!iconRect) {
+      // Fallback if no rect - use top-right
+      return {
+        clipPath: 'circle(20px at calc(100% - 40px) 60px)',
+        opacity: 0,
       };
     }
     
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    // Icon center in viewport
+    const iconCenterX = iconRect.left + iconRect.width / 2;
+    const iconCenterY = iconRect.top + iconRect.height / 2;
+    const iconRadius = Math.max(iconRect.width, iconRect.height) / 2;
     
-    // Icon center position
-    const iconCenterX = rect.left + rect.width / 2;
-    const iconCenterY = rect.top + rect.height / 2;
-    
-    // Offset from viewport center
-    const offsetX = iconCenterX - vw / 2;
-    const offsetY = iconCenterY - vh / 2;
-    
-    // Scale based on icon size
-    const scale = Math.max(rect.width / vw, 0.03);
-    
-    return { 
-      x: offsetX, 
-      y: offsetY, 
-      scale,
-      originX: iconCenterX / vw,
-      originY: iconCenterY / vh
+    return {
+      clipPath: `circle(${iconRadius}px at ${iconCenterX}px ${iconCenterY}px)`,
+      opacity: 0.5,
     };
-  };
+  }, [iconRect]);
 
-  const origin = getOriginTransform();
+  const finalState = {
+    clipPath: 'circle(150% at 50% 50%)',
+    opacity: 1,
+  };
 
   if (!portalContainer) return null;
 
@@ -114,69 +103,39 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
     <AnimatePresence mode="wait">
       {open && (
         <>
-          {/* Backdrop - Revolut dark blur */}
+          {/* Backdrop - blur behind */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ 
-              duration: isClosing ? 0.18 : 0.22, 
-              ease: [0.32, 0.72, 0, 1] 
-            }}
+            transition={{ duration: isClosing ? 0.2 : 0.25 }}
             className="fixed inset-0 z-[99998]"
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.4)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
               pointerEvents: 'auto',
             }}
             onClick={handleClose}
           />
 
-          {/* REVOLUT Panel - expand from icon */}
+          {/* 🎬 Panel - CLIP-PATH animation from icon */}
           <motion.div
-            initial={{
-              opacity: 0,
-              scale: origin.scale,
-              x: origin.x,
-              y: origin.y,
-            }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-              x: 0,
-              y: 0,
-            }}
-            exit={{
-              opacity: 0,
-              scale: origin.scale,
-              x: origin.x,
-              y: origin.y,
-            }}
+            initial={initialState}
+            animate={finalState}
+            exit={initialState}
             transition={{
-              type: 'spring',
-              stiffness: isClosing ? 400 : 340,
-              damping: isClosing ? 32 : 28,
-              mass: 0.8,
+              duration: isClosing ? 0.22 : 0.28,
+              ease: [0.32, 0.72, 0, 1],
             }}
             className="fixed inset-0 z-[99999]"
             style={{
               pointerEvents: 'auto',
-              willChange: 'transform, opacity',
-              transformOrigin: `${origin.originX * 100}% ${origin.originY * 100}%`,
+              willChange: 'clip-path, opacity',
             }}
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Full screen content container */}
-            <motion.div 
-              className="w-full h-full overflow-hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.12, delay: isClosing ? 0 : 0.08 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {children}
-            </motion.div>
+            {children}
           </motion.div>
         </>
       )}
