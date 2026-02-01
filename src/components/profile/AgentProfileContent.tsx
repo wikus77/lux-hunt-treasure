@@ -57,18 +57,18 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        // REVOLUT STYLE: sfondo semi-trasparente (vedi attraverso)
-        background: 'rgba(15, 15, 22, 0.85)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)',
+        // REVOLUT: TRASPARENTE - il blur viene dal backdrop overlay
+        background: 'transparent',
       }}
     >
-      {/* HEADER - REVOLUT STYLE: più sottile e sfumato */}
+      {/* HEADER - REVOLUT STYLE: semi-trasparente glass */}
       <div 
         style={{
           flexShrink: 0,
-          // Gradiente più sottile come Revolut
-          background: 'linear-gradient(180deg, rgba(45, 25, 100, 0.9) 0%, rgba(35, 20, 80, 0.7) 100%)',
+          // Gradiente MOLTO più trasparente come Revolut
+          background: 'linear-gradient(180deg, rgba(60, 35, 130, 0.75) 0%, rgba(30, 20, 60, 0.5) 100%)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
           paddingBottom: '28px',
           paddingLeft: '16px',
@@ -230,7 +230,7 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
   );
 };
 
-// GLASS CARD - REVOLUT STYLE: semi-trasparente con effetto vetro
+// GLASS CARD - REVOLUT STYLE: vetro fumé semi-trasparente
 const GlassCard: React.FC<{
   children: React.ReactNode;
   onClick?: () => void;
@@ -239,16 +239,16 @@ const GlassCard: React.FC<{
   <div
     onClick={onClick}
     style={{
-      // REVOLUT: più trasparente, effetto vetro fumé
-      background: 'rgba(35, 35, 50, 0.55)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      borderRadius: '16px',
+      // REVOLUT: vetro fumé scuro semi-trasparente
+      background: 'rgba(25, 25, 35, 0.7)',
+      backdropFilter: 'blur(24px)',
+      WebkitBackdropFilter: 'blur(24px)',
+      borderRadius: '14px',
       padding: '16px',
-      // Bordo più visibile come Revolut
-      border: '1px solid rgba(255, 255, 255, 0.12)',
-      // Ombra più morbida
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
+      // Bordo sottile visibile
+      border: '1px solid rgba(255, 255, 255, 0.08)',
+      // Ombra morbida
+      boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
       cursor: onClick ? 'pointer' : 'default',
       ...style,
     }}
