@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🔧 v4: Bottom sheet with INLINE Stripe checkout (no navigation)
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -225,37 +225,35 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const { user, logout } = useAuth();
   const { navigate } = useWouterNavigation();
-  
-  // 🆕 Swipe-to-close
-  const dragY = useMotionValue(0);
-  const dragOpacity = useTransform(dragY, [0, 200], [1, 0.5]);
-  const SWIPE_THRESHOLD = 100;
-  
-  const handleDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.y > SWIPE_THRESHOLD || info.velocity.y > 500) {
-      onClose();
-    }
-    dragY.set(0);
-  }, [onClose, dragY]);
   const { toast } = useToast();
   const sheetRef = useRef<HTMLDivElement>(null);
   const { pulseEnergy, currentRank, nextRank, progressToNextRank, loading: peLoading } = usePulseEnergy();
   const { subscription, upgradeSubscription } = useProfileSubscription();
 
-  // Lock body scroll when open
+  // Lock body scroll when open + ESC key handler
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       setShowUpgradePanel(false);
       setSelectedPlan(null);
       setShowStripeCheckout(false);
+      
+      // 🍎 ESC key to close
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', handleEsc);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleEsc);
+      };
     } else {
       document.body.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   const handleLogout = async () => {
     try {
@@ -428,93 +426,155 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
     },
   };
 
+  // 🍎 APPLE-STYLE ANIMATION VARIANTS
+  const backdropVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 },
+    exit: { opacity: 0 }
+  };
+  
+  const panelVariants = {
+    hidden: { 
+      opacity: 0, 
+      scale: 0.92, 
+      y: -18,
+    },
+    visible: { 
+      opacity: 1, 
+      scale: 1, 
+      y: 0,
+    },
+    exit: { 
+      opacity: 0, 
+      scale: 0.98, 
+      y: -10,
+    }
+  };
+  
+  // Stagger container for content items
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.045,
+        delayChildren: 0.1,
+      }
+    }
+  };
+  
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.18, ease: 'easeOut' }
+    }
+  };
+
   const sheetContent = (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop overlay */}
+          {/* 🍎 APPLE-STYLE: Backdrop with blur ramp */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99998]"
+            variants={backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ 
+              opacity: { duration: 0.18, ease: 'easeOut' },
+            }}
+            className="fixed inset-0 z-[99998]"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+            }}
             onClick={onClose}
           />
 
-          {/* Bottom Sheet - SEMI-TRASPARENTE + SWIPE */}
+          {/* 🍎 APPLE-STYLE: Panel from top-right with spring */}
           <motion.div
             ref={sheetRef}
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-[99999] max-h-[90vh] overflow-hidden"
-            style={{
-              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-              opacity: dragOpacity,
-              y: dragY,
+            variants={panelVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ 
+              type: 'spring', 
+              stiffness: 360, 
+              damping: 30, 
+              mass: 0.9,
             }}
-            // 🆕 SWIPE-TO-CLOSE
-            drag="y"
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 0.5 }}
-            onDragEnd={handleDragEnd}
+            className="fixed z-[99999] overflow-hidden"
+            style={{
+              top: 'calc(env(safe-area-inset-top, 47px) + 80px)',
+              right: '16px',
+              left: '16px',
+              maxHeight: 'calc(85vh - env(safe-area-inset-top, 47px) - 100px)',
+              transformOrigin: 'top right', // 🍎 KEY: nasce dall'avatar
+              overscrollBehavior: 'none',
+            }}
           >
-            {/* 🆕 Background SEMI-TRASPARENTE */}
-            <div className="rounded-t-3xl bg-[#0a0a0f]/85 backdrop-blur-xl border-t border-x border-[#00D1FF]/30 shadow-2xl overflow-hidden"
+            {/* 🍎 Glass card con bordi arrotondati */}
+            <div className="rounded-3xl bg-[#0a0a0f]/92 backdrop-blur-2xl border border-[#00D1FF]/25 shadow-2xl overflow-hidden"
               style={{
-                boxShadow: '0 -10px 40px rgba(0, 209, 255, 0.15), 0 0 0 1px rgba(0, 209, 255, 0.1)',
+                boxShadow: '0 25px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 209, 255, 0.12), 0 0 60px rgba(0, 209, 255, 0.08)',
               }}
             >
-              {/* Drag handle - più visibile */}
-              <div className="flex justify-center pt-3 pb-2 cursor-grab">
-                <div className="w-12 h-1.5 rounded-full bg-white/30" />
-              </div>
+              {/* 🍎 Top accent glow line */}
+              <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#00D1FF]/50 to-transparent" />
 
               {/* Header */}
-              <div className="flex items-center justify-between px-4 pb-3 border-b border-white/10">
-                <div className="flex items-center space-x-2">
-                  <User className="w-5 h-5 text-[#00D1FF]" />
-                  <h3 className="font-orbitron font-bold text-white">PROFILO AGENTE</h3>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#00D1FF]/20 to-[#00D1FF]/5 flex items-center justify-center">
+                    <User className="w-4 h-4 text-[#00D1FF]" />
+                  </div>
+                  <h3 className="font-semibold text-white text-base tracking-wide">PROFILO AGENTE</h3>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full hover:bg-white/10"
+                  className="w-9 h-9 rounded-full hover:bg-white/10 transition-colors"
                 >
-                  <X className="w-4 h-4 text-white/70" />
+                  <X className="w-5 h-5 text-white/60" />
                 </Button>
               </div>
 
-              {/* Content - Scrollable */}
-              <div 
-                className="overflow-y-auto overscroll-contain px-4 py-4 space-y-4"
+              {/* 🍎 Content with stagger animation */}
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="overflow-y-auto overscroll-contain px-5 py-5 space-y-4"
                 style={{
-                  maxHeight: 'calc(90vh - 80px - env(safe-area-inset-bottom, 0px))',
+                  maxHeight: 'calc(85vh - env(safe-area-inset-top, 47px) - 180px)',
                   WebkitOverflowScrolling: 'touch',
+                  overscrollBehavior: 'none',
                 }}
               >
-                {/* User Info */}
-                <div className="flex items-center space-x-4 p-3 rounded-xl bg-[#1a1a1a] border border-white/10">
+                {/* 🍎 User Info - stagger item */}
+                <motion.div variants={itemVariants} className="flex items-center space-x-4 p-4 rounded-2xl bg-white/5 border border-white/8">
                   <ProfileAvatar
                     profileImage={profileImage}
-                    className="w-14 h-14 border-2 border-[#00D1FF]/50"
+                    className="w-14 h-14 border-2 border-[#00D1FF]/40"
                   />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-white text-base truncate">{displayName}</h3>
-                    <p className="text-white/60 text-sm truncate">{email}</p>
-                    <p className="text-white/40 text-xs">ID: {userId}</p>
+                    <p className="text-white/55 text-sm truncate">{email}</p>
+                    <p className="text-white/35 text-xs mt-0.5">ID: {userId}</p>
                   </div>
-                </div>
+                </motion.div>
 
-                {/* PE + Rank System */}
+                {/* 🍎 PE + Rank System - stagger item */}
                 {!peLoading && currentRank && (
-                  <div className="p-3 rounded-xl bg-[#1a1a1a] border border-white/10 space-y-3">
+                  <motion.div variants={itemVariants} className="p-4 rounded-2xl bg-white/5 border border-white/8 space-y-3">
                     <div className="flex items-center space-x-2">
                       <Zap className="w-4 h-4 text-[#00D1FF]" />
-                      <span className="text-white/70 text-sm font-medium">Pulse Energy</span>
+                      <span className="text-white/65 text-sm font-medium">Pulse Energy</span>
                     </div>
                     <PulseEnergyBadge rank={currentRank} showCode={true} />
                     <PulseEnergyProgressBar
@@ -523,12 +583,12 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
                       progressPercent={progressToNextRank}
                       currentPE={pulseEnergy}
                     />
-                  </div>
+                  </motion.div>
                 )}
 
-                {/* Subscription Tier with Upgrade - HIDDEN when SUBSCRIPTIONS_STEALTH is true */}
+                {/* 🍎 Subscription Tier - stagger item */}
                 {!SUBSCRIPTIONS_STEALTH && (
-                <div className="p-3 rounded-xl bg-[#1a1a1a] border border-white/10 space-y-3">
+                <motion.div variants={itemVariants} className="p-4 rounded-2xl bg-white/5 border border-white/8 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Crown className="w-4 h-4 text-amber-400" />
@@ -634,14 +694,14 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </div>
+                </motion.div>
                 )}
 
-                {/* Action Buttons */}
-                <div className="space-y-2">
+                {/* 🍎 Action Buttons - stagger item */}
+                <motion.div variants={itemVariants} className="space-y-2 pt-2">
                   <Button
                     variant="ghost"
-                    className="w-full justify-start text-white/80 hover:bg-white/10 hover:text-white"
+                    className="w-full justify-start text-white/75 hover:bg-white/8 hover:text-white rounded-xl py-3"
                     onClick={handleSettingsClick}
                   >
                     <Settings className="w-4 h-4 mr-3" />
@@ -650,17 +710,17 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
 
                   <Button
                     variant="ghost"
-                    className="w-full justify-start text-red-400 hover:bg-red-500/10"
+                    className="w-full justify-start text-red-400/80 hover:bg-red-500/10 hover:text-red-400 rounded-xl py-3"
                     onClick={handleLogout}
                   >
                     <LogOut className="w-4 h-4 mr-3" />
                     Esci
                   </Button>
-                </div>
+                </motion.div>
 
-                {/* Bottom spacer for safe area */}
-                <div className="h-4" />
-              </div>
+                {/* Bottom spacer */}
+                <div className="h-2" />
+              </motion.div>
             </div>
           </motion.div>
         </>
