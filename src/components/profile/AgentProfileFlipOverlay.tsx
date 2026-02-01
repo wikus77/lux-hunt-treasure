@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎬 FLIP Overlay: nasce dall'icona profilo, ritorna all'icona in chiusura
+// Timing: OPEN ~230ms, CLOSE ~200ms (fedeli al video reference)
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
@@ -19,6 +20,14 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
 }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+  const [savedRect, setSavedRect] = useState<DOMRect | null>(null);
+
+  // Save rect when opening
+  useEffect(() => {
+    if (open && originRect) {
+      setSavedRect(originRect);
+    }
+  }, [open, originRect]);
 
   // Create portal container
   useEffect(() => {
@@ -26,6 +35,7 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
     if (!container) {
       container = document.createElement('div');
       container.id = 'm1-flip-overlay-portal';
+      container.style.cssText = 'position:fixed;inset:0;z-index:99999;pointer-events:none;';
       document.body.appendChild(container);
     }
     setPortalContainer(container);
@@ -37,7 +47,6 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       
-      // ESC key to close
       const handleEsc = (e: KeyboardEvent) => {
         if (e.key === 'Escape' && !isClosing) handleClose();
       };
@@ -50,87 +59,42 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
     }
   }, [open, isClosing]);
 
-  // Close handler with animation lock
+  // Close handler - 200ms animation
   const handleClose = useCallback(() => {
     if (isClosing) return;
     setIsClosing(true);
-    // Wait for exit animation then call onClose
     setTimeout(() => {
       onClose();
       setIsClosing(false);
-    }, 450); // Match close animation duration
+    }, 200);
   }, [isClosing, onClose]);
 
   // Calculate FLIP transform from origin rect
-  const getInitialTransform = () => {
-    if (!originRect) {
-      return { x: 0, y: -50, scale: 0.9 };
+  const getTransform = () => {
+    const rect = savedRect || originRect;
+    if (!rect) {
+      // Fallback: top-right
+      return { x: window.innerWidth / 2 - 20, y: -window.innerHeight / 2 + 40, scale: 0.02 };
     }
     
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
     
-    // Target is center of viewport
-    const targetX = viewportWidth / 2;
-    const targetY = viewportHeight / 2;
+    // Origin center
+    const ox = rect.left + rect.width / 2;
+    const oy = rect.top + rect.height / 2;
     
-    // Origin is center of the icon
-    const originX = originRect.left + originRect.width / 2;
-    const originY = originRect.top + originRect.height / 2;
+    // Offset from viewport center
+    const offsetX = ox - vw / 2;
+    const offsetY = oy - vh / 2;
     
-    // Calculate offset from center
-    const offsetX = originX - targetX;
-    const offsetY = originY - targetY;
-    
-    // Scale based on icon size vs panel size
-    const scaleX = originRect.width / viewportWidth;
-    const scaleY = originRect.height / viewportHeight;
-    const scale = Math.max(scaleX, scaleY, 0.05);
+    // Scale ratio
+    const scale = Math.max(rect.width / vw, rect.height / vh, 0.02);
     
     return { x: offsetX, y: offsetY, scale };
   };
 
-  const initialTransform = getInitialTransform();
-
-  // Animation variants
-  const backdropVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 },
-    exit: { opacity: 0 }
-  };
-
-  const panelVariants = {
-    hidden: {
-      opacity: 0,
-      x: initialTransform.x,
-      y: initialTransform.y,
-      scale: initialTransform.scale,
-    },
-    visible: {
-      opacity: 1,
-      x: 0,
-      y: 0,
-      scale: 1,
-    },
-    exit: {
-      opacity: 0,
-      x: initialTransform.x,
-      y: initialTransform.y,
-      scale: initialTransform.scale,
-    }
-  };
-
-  const contentVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        delayChildren: 0.12,
-        staggerChildren: 0.035,
-      }
-    },
-    exit: { opacity: 0 }
-  };
+  const transform = getTransform();
 
   if (!portalContainer) return null;
 
@@ -138,60 +102,60 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
     <AnimatePresence mode="wait">
       {open && (
         <>
-          {/* Backdrop with blur */}
+          {/* Backdrop - fade + blur */}
           <motion.div
-            variants={backdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            transition={{ 
-              duration: 0.14, 
-              ease: 'easeOut',
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: isClosing ? 0.16 : 0.18, ease: 'easeOut' }}
             className="fixed inset-0 z-[99998]"
             style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              pointerEvents: 'auto',
             }}
             onClick={handleClose}
           />
 
-          {/* FLIP Panel - nasce dall'icona */}
+          {/* FLIP Panel - OPEN 230ms / CLOSE 200ms */}
           <motion.div
-            variants={panelVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            transition={{
-              type: 'spring',
-              stiffness: isClosing ? 560 : 520,
-              damping: isClosing ? 46 : 42,
-              mass: 0.9,
+            initial={{
+              opacity: 0,
+              x: transform.x,
+              y: transform.y,
+              scale: transform.scale,
             }}
-            className="fixed inset-0 z-[99999] flex items-center justify-center"
+            animate={{
+              opacity: 1,
+              x: 0,
+              y: 0,
+              scale: 1,
+            }}
+            exit={{
+              opacity: 0,
+              x: transform.x,
+              y: transform.y,
+              scale: transform.scale,
+            }}
+            transition={{
+              duration: isClosing ? 0.2 : 0.23,
+              ease: [0.16, 1, 0.3, 1], // cubic-bezier easeOut
+            }}
+            className="fixed inset-0 z-[99999]"
             style={{
-              paddingTop: 'env(safe-area-inset-top, 47px)',
-              paddingBottom: 'env(safe-area-inset-bottom, 34px)',
-              paddingLeft: '0',
-              paddingRight: '0',
+              pointerEvents: 'auto',
+              willChange: 'transform, opacity',
+              transform: 'translate3d(0,0,0)',
             }}
           >
-            {/* Glass Panel - FULL SCREEN */}
-            <motion.div
-              variants={contentVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              transition={{ duration: 0.12 }}
+            {/* Full screen content */}
+            <div 
               className="w-full h-full overflow-hidden"
-              style={{
-                background: 'linear-gradient(180deg, #0d0d14 0%, #0a0a10 100%)',
-              }}
               onClick={(e) => e.stopPropagation()}
             >
               {children}
-            </motion.div>
+            </div>
           </motion.div>
         </>
       )}
