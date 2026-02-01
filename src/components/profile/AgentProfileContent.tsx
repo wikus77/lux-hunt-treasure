@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
-// 🎨 Agent Profile Content - REVOLUT LOOK (vetro fumé + premium)
+// 🎨 Agent Profile Content - REVOLUT STYLE (iOS WKWebView OPTIMIZED)
 import React from 'react';
 import { motion } from 'framer-motion';
 import { LogOut, Crown, X, HelpCircle, FileText, GraduationCap, Mail, Shield, Eye, Bell, Zap, Users, Sparkles } from 'lucide-react';
@@ -15,16 +15,6 @@ interface AgentProfileContentProps {
   profileImage?: string | null;
   onClose: () => void;
 }
-
-// Stagger animation
-const stagger = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.035, delayChildren: 0.1 } }
-};
-const fadeUp = {
-  hidden: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: 'easeOut' } }
-};
 
 export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
   profileImage,
@@ -47,7 +37,10 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
     }
   };
 
-  const nav = (path: string) => { onClose(); navigate(path); };
+  const goTo = (path: string) => { 
+    onClose(); 
+    setTimeout(() => navigate(path), 50);
+  };
 
   // User info
   const displayName = user?.user_metadata?.full_name || 
@@ -56,186 +49,206 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
 
   // Tier
   const tier = subscription?.plan || user?.user_metadata?.subscription_tier || 'Base';
-  const tierStyle = {
-    silver: { label: 'Silver', bg: 'bg-gradient-to-r from-gray-300 to-gray-400', text: 'text-gray-900' },
-    gold: { label: 'Gold', bg: 'bg-gradient-to-r from-amber-400 to-yellow-500', text: 'text-amber-900' },
-    black: { label: 'Black', bg: 'bg-gray-800', text: 'text-white' },
-    titanium: { label: 'Titanium', bg: 'bg-gradient-to-r from-purple-500 to-cyan-400', text: 'text-white' },
-    base: { label: 'Base', bg: 'bg-blue-500', text: 'text-white' },
-  }[tier?.toLowerCase()] || { label: 'Base', bg: 'bg-blue-500', text: 'text-white' };
-
-  const showUpgrade = tier?.toLowerCase() === 'base';
-
-  // 🎨 REVOLUT GLASS CARD - vetro fumé premium
-  const glassCard: React.CSSProperties = {
-    background: 'rgba(255, 255, 255, 0.08)',
-    backdropFilter: 'blur(24px) saturate(150%)',
-    WebkitBackdropFilter: 'blur(24px) saturate(150%)',
-    border: '1px solid rgba(255, 255, 255, 0.12)',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
-  };
+  const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase();
 
   return (
-    <div className="h-full flex flex-col" style={{ background: 'rgba(15, 15, 22, 0.95)' }}>
-      {/* ═══════════════════════════════════════════════════════════════
-          🎨 REVOLUT HEADER - Gradient purple premium
-          ═══════════════════════════════════════════════════════════════ */}
+    <div 
+      style={{ 
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#0f0f16',
+      }}
+    >
+      {/* HEADER - Gradient viola */}
       <div 
-        className="relative flex-shrink-0"
         style={{
-          background: 'linear-gradient(180deg, rgba(45, 25, 100, 0.98) 0%, rgba(60, 35, 130, 0.95) 50%, rgba(35, 20, 75, 0.98) 100%)',
-          paddingTop: 'env(safe-area-inset-top, 47px)',
+          flexShrink: 0,
+          background: 'linear-gradient(180deg, #2d1964 0%, #3c2382 50%, #231450 100%)',
+          paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
           paddingBottom: '28px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}
       >
-        {/* Top bar: X button + Upgrade */}
-        <div className="flex items-center justify-between px-4 pt-3 pb-2">
-          {/* Close X - pulito, leggibile */}
+        {/* Top bar */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          {/* X button */}
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-transform"
-            style={{ background: 'rgba(255,255,255,0.12)' }}
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.15)',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
           >
-            <X className="w-5 h-5 text-white/90" strokeWidth={2} />
+            <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
           </button>
 
-          {/* Upgrade button */}
-          {showUpgrade ? (
+          {/* Upgrade */}
+          {tier.toLowerCase() === 'base' && (
             <button
-              onClick={() => nav('/subscriptions')}
-              className="px-4 py-2 rounded-full flex items-center gap-2 active:scale-95 transition-transform"
-              style={{ background: 'rgba(255,255,255,0.12)' }}
+              onClick={() => goTo('/subscriptions')}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '20px',
+                background: 'rgba(255,255,255,0.15)',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+              }}
             >
-              <Sparkles className="w-4 h-4 text-purple-300" />
-              <span className="text-white/90 text-sm font-semibold">Fai l'upgrade</span>
+              <Sparkles style={{ width: '16px', height: '16px', color: '#c4b5fd' }} />
+              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600 }}>Fai l'upgrade</span>
             </button>
-          ) : <div />}
+          )}
         </div>
 
-        {/* Centered Avatar + Badge + Name */}
-        <div className="flex flex-col items-center mt-3">
-          <div className="relative">
+        {/* Avatar + Name */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
             <ProfileAvatar
               profileImage={profileImage}
-              className="w-[88px] h-[88px] border-[3px] border-white/25 shadow-2xl"
+              className="w-[88px] h-[88px]"
+              style={{ border: '3px solid rgba(255,255,255,0.25)' }}
             />
-            {/* Tier badge */}
             <div 
-              className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full text-[11px] font-bold shadow-lg ${tierStyle.bg} ${tierStyle.text}`}
+              style={{
+                position: 'absolute',
+                bottom: '-10px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                padding: '4px 14px',
+                borderRadius: '20px',
+                background: '#3b82f6',
+                color: '#FFFFFF',
+                fontSize: '11px',
+                fontWeight: 700,
+              }}
             >
-              {tierStyle.label}
+              {tierLabel}
             </div>
           </div>
 
-          {/* NAME - grande, leggibile */}
-          <h1 className="text-[26px] font-bold mt-6 tracking-tight text-white">
+          <h1 style={{ 
+            color: '#FFFFFF', 
+            fontSize: '26px', 
+            fontWeight: 700, 
+            marginTop: '24px',
+            textAlign: 'center',
+          }}>
             {displayName}
           </h1>
           
-          {/* Username */}
-          <p className="text-[14px] mt-1 text-white/55">
+          <p style={{ 
+            color: 'rgba(255,255,255,0.55)', 
+            fontSize: '14px', 
+            marginTop: '4px' 
+          }}>
             @{username}
           </p>
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════
-          🎨 REVOLUT CONTENT - Glass cards premium
-          ═══════════════════════════════════════════════════════════════ */}
-      <motion.div 
-        variants={stagger}
-        initial="hidden"
-        animate="visible"
-        className="flex-1 overflow-y-auto px-4 pt-5"
+      {/* CONTENT */}
+      <div 
         style={{ 
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'none',
+          flex: 1,
+          overflowY: 'auto',
+          padding: '20px 16px',
           paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)',
+          WebkitOverflowScrolling: 'touch',
         }}
       >
         {/* Quick action cards */}
-        <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 mb-4">
-          <div 
-            className="p-4 rounded-2xl cursor-pointer active:scale-[0.98] transition-transform"
-            style={glassCard}
-            onClick={() => nav('/subscriptions')}
-          >
-            <Crown className="w-7 h-7 text-amber-400 mb-2" />
-            <p className="font-semibold text-[15px] text-white">{tierStyle.label}</p>
-            <p className="text-[12px] mt-0.5 text-white/50">Piano attivo</p>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+          <GlassCard onClick={() => goTo('/subscriptions')}>
+            <Crown style={{ width: '28px', height: '28px', color: '#fbbf24', marginBottom: '8px' }} />
+            <p style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 600 }}>{tierLabel}</p>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '2px' }}>Piano attivo</p>
+          </GlassCard>
           
-          <div 
-            className="p-4 rounded-2xl cursor-pointer active:scale-[0.98] transition-transform"
-            style={glassCard}
-            onClick={() => nav('/referral')}
-          >
-            <Users className="w-7 h-7 text-blue-400 mb-2" />
-            <p className="font-semibold text-[15px] text-white">Invita amici</p>
-            <p className="text-[12px] mt-0.5 text-white/50">Guadagna M1U</p>
-          </div>
-        </motion.div>
+          <GlassCard onClick={() => goTo('/referral')}>
+            <Users style={{ width: '28px', height: '28px', color: '#60a5fa', marginBottom: '8px' }} />
+            <p style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 600 }}>Invita amici</p>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '2px' }}>Guadagna M1U</p>
+          </GlassCard>
+        </div>
 
         {/* Pulse Energy */}
         {currentRank && (
-          <motion.div 
-            variants={fadeUp}
-            className="p-4 rounded-2xl mb-4"
-            style={glassCard}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <Zap className="w-5 h-5 text-cyan-400" />
-              <span className="font-semibold text-[15px] text-white">Pulse Energy</span>
+          <GlassCard style={{ marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <Zap style={{ width: '20px', height: '20px', color: '#22d3ee' }} />
+              <span style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 600 }}>Pulse Energy</span>
               {pulseEnergy !== undefined && (
-                <span className="ml-auto font-bold text-[14px] text-cyan-400">
+                <span style={{ marginLeft: 'auto', color: '#22d3ee', fontSize: '14px', fontWeight: 700 }}>
                   {pulseEnergy.toLocaleString()} PE
                 </span>
               )}
             </div>
             <PulseEnergyBadge rank={currentRank} showCode={true} />
-          </motion.div>
+          </GlassCard>
         )}
 
-        {/* Menu section 1 - SENZA "Conto" */}
-        <motion.div 
-          variants={fadeUp}
-          className="rounded-2xl overflow-hidden mb-4"
-          style={glassCard}
-        >
-          <MenuItem icon={HelpCircle} label="Aiuto" onClick={() => nav('/help')} />
-          <MenuItem icon={FileText} label="Documenti" onClick={() => nav('/legal')} />
-          <MenuItem icon={GraduationCap} label="Impara" onClick={() => nav('/learn')} />
-          <MenuItem icon={Mail} label="Posta in arrivo" onClick={() => nav('/notifications')} badge={3} last />
-        </motion.div>
+        {/* Menu 1 */}
+        <GlassCard style={{ marginBottom: '16px', padding: 0 }}>
+          <MenuItem icon={HelpCircle} label="Aiuto" onClick={() => goTo('/help')} />
+          <MenuItem icon={FileText} label="Documenti" onClick={() => goTo('/legal')} />
+          <MenuItem icon={GraduationCap} label="Impara" onClick={() => goTo('/learn')} />
+          <MenuItem icon={Mail} label="Posta in arrivo" onClick={() => goTo('/notifications')} badge={3} last />
+        </GlassCard>
 
-        {/* Menu section 2 - Collegamenti CORRETTI */}
-        <motion.div 
-          variants={fadeUp}
-          className="rounded-2xl overflow-hidden mb-4"
-          style={glassCard}
-        >
-          <MenuItem icon={Shield} label="Sicurezza" onClick={() => nav('/security')} />
-          <MenuItem icon={Eye} label="Privacy" onClick={() => nav('/privacy')} />
-          <MenuItem icon={Bell} label="Impostazioni di notifica" onClick={() => nav('/notifications')} last />
-        </motion.div>
+        {/* Menu 2 */}
+        <GlassCard style={{ marginBottom: '16px', padding: 0 }}>
+          <MenuItem icon={Shield} label="Sicurezza" onClick={() => goTo('/security')} />
+          <MenuItem icon={Eye} label="Privacy" onClick={() => goTo('/privacy')} />
+          <MenuItem icon={Bell} label="Notifiche" onClick={() => goTo('/notifications')} last />
+        </GlassCard>
 
         {/* Logout */}
-        <motion.div variants={fadeUp}>
-          <button
-            onClick={handleLogout}
-            className="w-full p-4 rounded-2xl flex items-center gap-3 active:scale-[0.98] transition-transform"
-            style={glassCard}
-          >
-            <LogOut className="w-5 h-5 text-red-400" />
-            <span className="font-medium text-[16px] text-red-400">Esci</span>
-          </button>
-        </motion.div>
-      </motion.div>
+        <GlassCard onClick={handleLogout}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <LogOut style={{ width: '20px', height: '20px', color: '#f87171' }} />
+            <span style={{ color: '#f87171', fontSize: '16px', fontWeight: 500 }}>Esci</span>
+          </div>
+        </GlassCard>
+      </div>
     </div>
   );
 };
 
-// 🎨 Menu item - REVOLUT style
+// GLASS CARD - iOS optimized
+const GlassCard: React.FC<{
+  children: React.ReactNode;
+  onClick?: () => void;
+  style?: React.CSSProperties;
+}> = ({ children, onClick, style }) => (
+  <div
+    onClick={onClick}
+    style={{
+      background: 'rgba(45, 45, 65, 0.65)',
+      borderRadius: '16px',
+      padding: '16px',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+      cursor: onClick ? 'pointer' : 'default',
+      ...style,
+    }}
+  >
+    {children}
+  </div>
+);
+
+// MENU ITEM
 const MenuItem: React.FC<{
   icon: React.ElementType;
   label: string;
@@ -245,14 +258,31 @@ const MenuItem: React.FC<{
 }> = ({ icon: Icon, label, onClick, badge, last }) => (
   <button
     onClick={onClick}
-    className={`w-full px-4 py-[15px] flex items-center justify-between active:bg-white/5 transition-colors ${!last ? 'border-b border-white/[0.06]' : ''}`}
+    style={{
+      width: '100%',
+      padding: '15px 16px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      background: 'transparent',
+      border: 'none',
+      borderBottom: last ? 'none' : '1px solid rgba(255,255,255,0.06)',
+      cursor: 'pointer',
+    }}
   >
-    <div className="flex items-center gap-3">
-      <Icon className="w-[21px] h-[21px] text-white/65" />
-      <span className="text-[15px] text-white">{label}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <Icon style={{ width: '21px', height: '21px', color: 'rgba(255,255,255,0.7)' }} />
+      <span style={{ color: '#FFFFFF', fontSize: '15px' }}>{label}</span>
     </div>
     {badge !== undefined && badge > 0 && (
-      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold min-w-[22px] text-center bg-blue-500 text-white">
+      <span style={{
+        padding: '2px 10px',
+        borderRadius: '12px',
+        background: '#3b82f6',
+        color: '#FFFFFF',
+        fontSize: '11px',
+        fontWeight: 700,
+      }}>
         {badge}
       </span>
     )}
