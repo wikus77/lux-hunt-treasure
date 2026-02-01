@@ -22,12 +22,12 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const [savedRect, setSavedRect] = useState<DOMRect | null>(null);
 
-  // Save rect when opening - CRITICAL for return animation
+  // 🔥 FIX: Salva rect IMMEDIATAMENTE quando cambia (non solo quando open)
   useEffect(() => {
-    if (open && originRect) {
+    if (originRect) {
       setSavedRect(originRect);
     }
-  }, [open, originRect]);
+  }, [originRect]);
 
   // Create portal container
   useEffect(() => {
@@ -69,22 +69,24 @@ export const AgentProfileFlipOverlay: React.FC<AgentProfileFlipOverlayProps> = (
     }, 250);
   }, [isClosing, onClose]);
 
-  // 🎯 CRITICAL: Calculate clip-path from icon position
-  const iconRect = savedRect || originRect;
+  // 🎯 FIX: Usa originRect per OPEN (primo render), savedRect per CLOSE
+  // originRect è passato al click, savedRect è salvato per la chiusura
+  const activeRect = originRect || savedRect;
   
   // Calculate icon center position for clip-path
-  const getClipOrigin = () => {
-    if (!iconRect) {
-      // Fallback: top-right corner
+  const getClipOrigin = (rect: DOMRect | null) => {
+    if (!rect) {
+      // Fallback: top-right corner (NON dovrebbe mai succedere)
+      console.warn('[AgentProfileFlipOverlay] No rect available, using fallback');
       return { x: 'calc(100% - 40px)', y: '60px', radius: '24px' };
     }
-    const x = iconRect.left + iconRect.width / 2;
-    const y = iconRect.top + iconRect.height / 2;
-    const radius = Math.max(iconRect.width, iconRect.height) / 2;
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const radius = Math.max(rect.width, rect.height) / 2;
     return { x: `${x}px`, y: `${y}px`, radius: `${radius}px` };
   };
   
-  const clipOrigin = getClipOrigin();
+  const clipOrigin = getClipOrigin(activeRect);
 
   if (!portalContainer) return null;
 

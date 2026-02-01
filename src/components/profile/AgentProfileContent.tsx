@@ -66,30 +66,32 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
 
   const showUpgrade = tier?.toLowerCase() === 'base';
 
-  // 🎨 GLASS CARD STYLE - SEMI-TRASPARENTE come Revolut
+  // 🎨 GLASS CARD STYLE - MOLTO TRASPARENTE come Revolut
   const glassCard: React.CSSProperties = {
-    background: 'rgba(50, 50, 70, 0.45)',
-    backdropFilter: 'blur(16px)',
-    WebkitBackdropFilter: 'blur(16px)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    background: 'rgba(40, 40, 55, 0.35)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)',
   };
 
   return (
     <div 
       className="h-full flex flex-col"
       style={{ 
-        background: 'linear-gradient(180deg, rgba(12, 12, 20, 0.92) 0%, rgba(8, 8, 14, 0.95) 100%)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
+        // 🔥 FIX: Sfondo TRASPARENTE per vedere il blur del backdrop
+        background: 'transparent',
       }}
     >
       {/* ═══════════════════════════════════════════════════════════════
-          🎨 REVOLUT HEADER - Gradient purple/blue + centered avatar
+          🎨 REVOLUT HEADER - Gradient purple/blue SEMI-TRASPARENTE
           ═══════════════════════════════════════════════════════════════ */}
       <div 
         className="relative flex-shrink-0"
         style={{
-          background: 'linear-gradient(180deg, #1e1250 0%, #2d1a6e 50%, #1a1040 100%)',
+          background: 'linear-gradient(180deg, rgba(30, 18, 80, 0.85) 0%, rgba(45, 26, 110, 0.8) 50%, rgba(26, 16, 64, 0.85) 100%)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
           paddingTop: 'env(safe-area-inset-top, 47px)',
           paddingBottom: '32px',
         }}
@@ -146,7 +148,7 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          🎨 REVOLUT CONTENT - Glass cards + Menu
+          🎨 REVOLUT CONTENT - Glass cards + Menu - SEMI-TRASPARENTE
           ═══════════════════════════════════════════════════════════════ */}
       <motion.div 
         variants={stagger}
@@ -157,6 +159,9 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'none',
           paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 24px)',
+          background: 'rgba(10, 10, 18, 0.7)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
         }}
       >
         {/* Quick action cards - GLASS EFFECT */}
