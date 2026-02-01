@@ -69,6 +69,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [mapHide, setMapHide] = useState(false);
   const [homeHide, setHomeHide] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [settingsOriginRect, setSettingsOriginRect] = useState<DOMRect | null>(null);
   
   // 🛡️ BUZZ ROUTE GUARD: Disable scroll-hide on /buzz to prevent freeze
   const hideHeader = isBuzzRoute ? false : (isMapRoute ? mapHide : (isHomeRoute ? homeHide : windowHide));
@@ -404,13 +405,15 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
             {/* Right Section */}
             <div className="flex items-center space-x-1 sm:space-x-3">
-              {/* Settings - 🚀 NATIVE: Apre modal popup */}
+              {/* Settings - 🚀 NATIVE: Apre modal FULLSCREEN con animazione FLIP */}
               <Button
                 variant="ghost"
                 size="icon"
                 className="rounded-xl hover:bg-white/10 unified-header-btn w-11 h-11 m1-touch-feedback"
-                onClick={() => {
+                onClick={(e) => {
                   hapticLight();
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  setSettingsOriginRect(rect);
                   setIsSettingsModalOpen(true);
                 }}
               >
@@ -443,10 +446,11 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       </header>
       </motion.div>
       
-      {/* Settings Modal */}
+      {/* Settings Modal - FULLSCREEN con animazione FLIP */}
       <SettingsModal 
         isOpen={isSettingsModalOpen} 
-        onClose={() => setIsSettingsModalOpen(false)} 
+        onClose={() => setIsSettingsModalOpen(false)}
+        originRect={settingsOriginRect}
       />
     </>
   );
