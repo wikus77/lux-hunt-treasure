@@ -15,6 +15,11 @@ import ReferralCodeDisplay from "@/components/layout/header/ReferralCodeDisplay"
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import MinimalHeaderStrip from "@/components/layout/MinimalHeaderStrip";
 import { SettingsModal } from "@/components/settings/SettingsModal";
+// 🆕 Import pills for unified header
+import M1UPill from "@/features/m1u/M1UPill";
+import StreakPill from "@/components/gamification/StreakPill";
+import ShopPill from "@/components/shop/ShopPill";
+import CashbackVaultPill from "@/components/home/CashbackVaultPill";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -277,7 +282,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         {/* Hidden - Legacy support */}
       </MinimalHeaderStrip>
       
-      {/* 🆕 NEW HEADER LAYOUT - Minimal z-index, transparent with floating elements */}
+      {/* 🆕 ALL HEADER ELEMENTS IN SAME CONTAINER - No stacking context issues */}
       <motion.div
         className="unified-header-wrapper"
         initial={{ y: 0 }}
@@ -286,10 +291,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         style={{
           position: 'fixed',
           top: 0,
+          left: 0,
           right: 0,
-          zIndex: 50, // Same as pills, no overlay issues
+          zIndex: 9999,
           // M1SSION™ WRAP FIX: Use safe-area for both PWA and Capacitor native
           paddingTop: (isPWA || isCapacitor) ? 'calc(env(safe-area-inset-top, 0px) + 12px)' : '16px',
+          paddingLeft: '16px',
           paddingRight: '16px',
           pointerEvents: 'none',
           // 🔧 PWA FIX: GPU layer promotion per stabilità durante scroll
@@ -297,57 +304,135 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           WebkitBackfaceVisibility: 'hidden',
         }}
       >
-        {/* TOP ROW - Settings + Profile (right side only) */}
+        {/* ROW 1: M1UPill | AgentCode | Settings | Profile */}
         <div 
           style={{
             display: 'flex',
-            justifyContent: 'flex-end',
+            justifyContent: 'space-between',
             alignItems: 'center',
-            gap: '8px',
-            pointerEvents: 'auto',
+            marginBottom: '8px',
           }}
         >
-          {/* Settings - VERY transparent glass pill, same size as Profile */}
-          <motion.button
-            onClick={(e) => {
-              hapticLight();
-              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              setSettingsOriginRect(rect);
-              setIsSettingsModalOpen(true);
-            }}
+          {/* Left: M1UPill */}
+          <div style={{ pointerEvents: 'auto' }} data-onboarding="m1u-pill">
+            <M1UPill showLabel showPlusButton={false} />
+          </div>
+          
+          {/* Center: Agent Code Pill (transparent) */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
+              gap: '6px',
+              padding: '6px 12px',
+              background: 'rgba(255, 255, 255, 0.06)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              borderRadius: '18px',
+              border: '1px solid rgba(0, 209, 255, 0.15)',
+              pointerEvents: 'auto',
             }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
+            {/* Pulsating dot */}
             <motion.div
-              animate={{ 
-                rotate: [0, 360],
+              style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: '#00D1FF',
+                boxShadow: '0 0 8px rgba(0, 209, 255, 0.8)',
               }}
-              transition={{ 
-                rotate: { duration: reduceAnimations ? 1.6 : 12, repeat: reduceAnimations ? 0 : Infinity, ease: "linear" },
+              animate={{
+                scale: [1, 1.3, 1],
+                opacity: [1, 0.7, 1],
               }}
+              transition={{
+                duration: 1.6,
+                repeat: reduceAnimations ? 0 : Infinity,
+                ease: "easeInOut"
+              }}
+            />
+            {/* CODE label */}
+            <span style={{
+              fontSize: '9px',
+              fontWeight: 700,
+              color: 'rgba(255, 255, 255, 0.5)',
+              letterSpacing: '1px',
+              fontFamily: 'Orbitron, sans-serif',
+            }}>
+              CODE
+            </span>
+            {/* ReferralCode */}
+            <ReferralCodeDisplay />
+          </motion.div>
+          
+          {/* Right: Settings + Profile */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Settings - transparent glass pill */}
+            <motion.button
+              onClick={(e) => {
+                hapticLight();
+                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                setSettingsOriginRect(rect);
+                setIsSettingsModalOpen(true);
+              }}
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.06)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                pointerEvents: 'auto',
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <Settings className="w-5 h-5 text-[#00D1FF]" style={{ filter: 'drop-shadow(0 0 4px rgba(0, 209, 255, 0.6))' }} />
-            </motion.div>
-          </motion.button>
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ 
+                  rotate: { duration: reduceAnimations ? 1.6 : 12, repeat: reduceAnimations ? 0 : Infinity, ease: "linear" },
+                }}
+              >
+                <Settings className="w-5 h-5 text-[#00D1FF]" style={{ filter: 'drop-shadow(0 0 4px rgba(0, 209, 255, 0.5))' }} />
+              </motion.div>
+            </motion.button>
 
-          {/* Profile Avatar */}
-          <ProfileDropdown
-            profileImage={currentProfileImage}
-            className="cursor-pointer"
-          />
+            {/* Profile Avatar */}
+            <div style={{ pointerEvents: 'auto' }}>
+              <ProfileDropdown
+                profileImage={currentProfileImage}
+                className="cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* ROW 2: StreakPill | ShopPill | CashbackPill */}
+        <div 
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <div style={{ pointerEvents: 'auto' }}>
+            <StreakPill showLabel />
+          </div>
+          <div style={{ pointerEvents: 'auto' }}>
+            <ShopPill />
+          </div>
+          <div style={{ pointerEvents: 'auto', transform: 'scale(0.85)' }}>
+            <CashbackVaultPill variant="compact" />
+          </div>
         </div>
       </motion.div>
       

@@ -240,8 +240,8 @@ const { isConnected } = useRealTimeNotifications();
               )}
 
                   <div className="container mx-auto px-3 pb-20">
-                {/* 🆕 Pills now in fixed header - increased offset for 2 rows */}
-                <div className="m1-first-content-offset" style={{ height: '100px' }} />
+                {/* 🆕 ALL Pills in UnifiedHeader - offset for 2 header rows */}
+                <div className="m1-first-content-offset" style={{ height: '110px' }} />
 
                 {/* 🎯 PROSSIMA AZIONE: Container unificato espandibile */}
                 {/* 🔧 FIX 28/01/2026: Sostituito due card separate con container singolo */}
@@ -375,104 +375,7 @@ const { isConnected } = useRealTimeNotifications();
       />
       </MissionSync>
       
-      {/* 🆕 HEADER ROW 1: M1UPill + AgentCode + Settings + Profile (all aligned) */}
-      <div 
-        className="fixed left-4 right-4 z-[50] flex items-center justify-between"
-        style={{ 
-          top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
-          pointerEvents: 'none' 
-        }}
-      >
-        {/* Left: M1UPill */}
-        <div 
-          id="m1u-pill-home-slot" 
-          data-onboarding="m1u-pill"
-          style={{ pointerEvents: 'auto' }}
-        >
-          <M1UPill showLabel showPlusButton={false} />
-        </div>
-        
-        {/* Center: Agent Code Pill (more transparent) */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '6px 12px',
-            background: 'rgba(15, 20, 30, 0.35)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            borderRadius: '18px',
-            border: '1px solid rgba(0, 209, 255, 0.2)',
-            pointerEvents: 'auto',
-          }}
-        >
-          {/* Pulsating dot */}
-          <motion.div
-            style={{
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              background: '#00D1FF',
-              boxShadow: '0 0 8px rgba(0, 209, 255, 0.8)',
-            }}
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [1, 0.7, 1],
-            }}
-            transition={{
-              duration: 1.6,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          {/* CODE label */}
-          <span style={{
-            fontSize: '9px',
-            fontWeight: 700,
-            color: 'rgba(255, 255, 255, 0.6)',
-            letterSpacing: '1px',
-            fontFamily: 'Orbitron, sans-serif',
-          }}>
-            CODE
-          </span>
-          {/* ReferralCode */}
-          <span style={{
-            fontSize: '12px',
-            fontWeight: 700,
-            color: '#00D1FF',
-            letterSpacing: '1px',
-            fontFamily: 'Orbitron, sans-serif',
-          }}>
-            {user?.user_metadata?.referral_code || 'MCP'}
-          </span>
-        </motion.div>
-        
-        {/* Right side pills are handled by UnifiedHeader (Settings + Profile) */}
-        <div style={{ width: '100px' }} /> {/* Spacer for right elements */}
-      </div>
-      
-      {/* HEADER ROW 2: StreakPill + ShopPill + CashbackPill */}
-      <div 
-        className="fixed left-4 right-4 z-[50] flex items-center gap-2"
-        style={{ 
-          top: 'calc(env(safe-area-inset-top, 0px) + 60px)',
-          pointerEvents: 'none' 
-        }}
-      >
-        <div style={{ pointerEvents: 'auto' }}>
-          <StreakPill showLabel />
-        </div>
-        <div style={{ pointerEvents: 'auto' }}>
-          <ShopPill />
-        </div>
-        <div style={{ pointerEvents: 'auto', transform: 'scale(0.9)' }}>
-          <CashbackVaultPill variant="compact" />
-        </div>
-      </div>
+      {/* 🆕 ALL PILLS moved to UnifiedHeader to avoid stacking context issues */}
     </div>
   );
 };
