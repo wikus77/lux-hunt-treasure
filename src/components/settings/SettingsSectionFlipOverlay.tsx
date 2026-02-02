@@ -88,7 +88,7 @@ export const SettingsSectionFlipOverlay: React.FC<SettingsSectionFlipOverlayProp
     <AnimatePresence mode="wait">
       {open && (
         <>
-          {/* BACKDROP - REVOLUT: vetro fumé con blur forte */}
+          {/* BACKDROP - Fully opaque to cover parent modal */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -99,8 +99,8 @@ export const SettingsSectionFlipOverlay: React.FC<SettingsSectionFlipOverlayProp
               position: 'fixed',
               inset: 0,
               zIndex: 100000,
-              // REVOLUT: sfondo scuro semi-trasparente + blur forte
-              backgroundColor: 'rgba(10, 10, 15, 0.75)',
+              // FIX: Background completamente opaco per coprire modal parent
+              backgroundColor: 'rgba(10, 10, 15, 0.98)',
               backdropFilter: 'blur(50px) saturate(180%)',
               WebkitBackdropFilter: 'blur(50px) saturate(180%)',
               pointerEvents: 'auto',
@@ -135,6 +135,8 @@ export const SettingsSectionFlipOverlay: React.FC<SettingsSectionFlipOverlayProp
               transformOrigin: `${origin.x} ${origin.y}`,
               willChange: 'transform, opacity',
               overflow: 'hidden',
+              // FIX: Background opaco per coprire modal parent
+              background: 'linear-gradient(180deg, #0a0a0f 0%, #12121a 50%, #0a0a0f 100%)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
