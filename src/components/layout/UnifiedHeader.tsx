@@ -296,6 +296,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           paddingLeft: '16px',
           paddingRight: '16px',
           pointerEvents: 'none',
+          // 🔧 FIX: Transparent background - no white rectangle
+          background: 'transparent',
+          backgroundColor: 'transparent',
           // 🔧 PWA FIX: GPU layer promotion per stabilità durante scroll
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',

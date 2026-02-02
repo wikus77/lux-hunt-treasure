@@ -202,32 +202,35 @@ const { isConnected } = useRealTimeNotifications();
 
   return (
     <div 
-      className="sn-page relative m1-single-scroll-root"
+      className="relative m1-single-scroll-root"
       style={{
         position: 'relative',
         zIndex: 0,
+        minHeight: '100dvh',
+        background: '#0a0f1a', // Dark base for safe area
       }}
     >
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
+      {/* 🎨 FIXED BACKGROUND: Dark top, gradient to white bottom */}
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'linear-gradient(180deg, #0a0f1a 0%, #0a0f1a 40%, #1a2535 55%, #f5f5f5 85%, #f5f5f5 100%)',
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}
+      />
+      
       <MissionSync onRefresh={handleMissionSync}>
       {/* 🆕 REVOLUT-STYLE LAYOUT */}
-      <div className="relative">
-        {/* 🎨 BACKGROUND: Dark color covering iOS safe area from TOP:0 */}
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '70vh',
-            background: 'linear-gradient(180deg, #0a0f1a 0%, #0a0f1a 50%, #0d1320 70%, #f8f8f8 100%)',
-            zIndex: -1,
-            pointerEvents: 'none',
-          }}
-        />
+      <div className="relative" style={{ zIndex: 1 }}>
         
         <AnimatePresence>
           {isLoaded && (
