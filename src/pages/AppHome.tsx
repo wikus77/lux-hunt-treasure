@@ -240,8 +240,8 @@ const { isConnected } = useRealTimeNotifications();
               )}
 
                   <div className="container mx-auto px-3 pb-20">
-                {/* 🆕 Pills now in fixed header - this space is for content offset */}
-                <div className="m1-first-content-offset" style={{ height: '80px' }} />
+                {/* 🆕 Pills now in fixed header - increased offset for 2 rows */}
+                <div className="m1-first-content-offset" style={{ height: '100px' }} />
 
                 {/* 🎯 PROSSIMA AZIONE: Container unificato espandibile */}
                 {/* 🔧 FIX 28/01/2026: Sostituito due card separate con container singolo */}
@@ -375,32 +375,24 @@ const { isConnected } = useRealTimeNotifications();
       />
       </MissionSync>
       
-      {/* 🆕 NEW HEADER ELEMENTS - Distributed layout */}
-      {/* Left: M1UPill (no + button) */}
+      {/* 🆕 HEADER ROW 1: M1UPill + AgentCode + Settings + Profile (all aligned) */}
       <div 
-        id="m1u-pill-home-slot" 
-        data-onboarding="m1u-pill"
-        className="fixed left-4 z-[1001]"
+        className="fixed left-4 right-4 z-[50] flex items-center justify-between"
         style={{ 
-          top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
-          paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
-          pointerEvents: 'auto' 
+          top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+          pointerEvents: 'none' 
         }}
       >
-        <M1UPill showLabel showPlusButton={false} />
-      </div>
-      
-      {/* Center: Agent Code Pill + Cashback Pill (smaller) */}
-      <div 
-        className="fixed z-[1001] flex items-center gap-2"
-        style={{ 
-          top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          pointerEvents: 'auto' 
-        }}
-      >
-        {/* Agent Code Pill */}
+        {/* Left: M1UPill */}
+        <div 
+          id="m1u-pill-home-slot" 
+          data-onboarding="m1u-pill"
+          style={{ pointerEvents: 'auto' }}
+        >
+          <M1UPill showLabel showPlusButton={false} />
+        </div>
+        
+        {/* Center: Agent Code Pill (more transparent) */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -408,24 +400,24 @@ const { isConnected } = useRealTimeNotifications();
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            padding: '8px 14px',
-            background: 'rgba(15, 20, 30, 0.7)',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            borderRadius: '20px',
-            border: '1px solid rgba(0, 209, 255, 0.3)',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 209, 255, 0.15)',
+            gap: '6px',
+            padding: '6px 12px',
+            background: 'rgba(15, 20, 30, 0.35)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderRadius: '18px',
+            border: '1px solid rgba(0, 209, 255, 0.2)',
+            pointerEvents: 'auto',
           }}
         >
           {/* Pulsating dot */}
           <motion.div
             style={{
-              width: '8px',
-              height: '8px',
+              width: '6px',
+              height: '6px',
               borderRadius: '50%',
               background: '#00D1FF',
-              boxShadow: '0 0 10px rgba(0, 209, 255, 0.8)',
+              boxShadow: '0 0 8px rgba(0, 209, 255, 0.8)',
             }}
             animate={{
               scale: [1, 1.3, 1],
@@ -439,49 +431,47 @@ const { isConnected } = useRealTimeNotifications();
           />
           {/* CODE label */}
           <span style={{
-            fontSize: '10px',
+            fontSize: '9px',
             fontWeight: 700,
-            color: 'rgba(255, 255, 255, 0.7)',
+            color: 'rgba(255, 255, 255, 0.6)',
             letterSpacing: '1px',
             fontFamily: 'Orbitron, sans-serif',
           }}>
             CODE
           </span>
-          {/* ReferralCodeDisplay inline */}
+          {/* ReferralCode */}
           <span style={{
-            fontSize: '13px',
+            fontSize: '12px',
             fontWeight: 700,
             color: '#00D1FF',
             letterSpacing: '1px',
             fontFamily: 'Orbitron, sans-serif',
-            textShadow: '0 0 10px rgba(0, 209, 255, 0.6)',
           }}>
             {user?.user_metadata?.referral_code || 'MCP'}
           </span>
         </motion.div>
         
-        {/* Cashback Pill (smaller) */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          style={{ transform: 'scale(0.85)' }}
-        >
-          <CashbackVaultPill variant="compact" />
-        </motion.div>
+        {/* Right side pills are handled by UnifiedHeader (Settings + Profile) */}
+        <div style={{ width: '100px' }} /> {/* Spacer for right elements */}
       </div>
       
-      {/* Below header: StreakPill + ShopPill */}
+      {/* HEADER ROW 2: StreakPill + ShopPill + CashbackPill */}
       <div 
-        className="fixed left-4 z-[1001] flex items-center gap-2"
+        className="fixed left-4 right-4 z-[50] flex items-center gap-2"
         style={{ 
-          top: 'calc(env(safe-area-inset-top, 0px) + 72px)',
-          paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
-          pointerEvents: 'auto' 
+          top: 'calc(env(safe-area-inset-top, 0px) + 60px)',
+          pointerEvents: 'none' 
         }}
       >
-        <StreakPill showLabel />
-        <ShopPill />
+        <div style={{ pointerEvents: 'auto' }}>
+          <StreakPill showLabel />
+        </div>
+        <div style={{ pointerEvents: 'auto' }}>
+          <ShopPill />
+        </div>
+        <div style={{ pointerEvents: 'auto', transform: 'scale(0.9)' }}>
+          <CashbackVaultPill variant="compact" />
+        </div>
       </div>
     </div>
   );

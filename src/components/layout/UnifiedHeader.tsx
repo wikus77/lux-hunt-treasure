@@ -277,7 +277,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         {/* Hidden - Legacy support */}
       </MinimalHeaderStrip>
       
-      {/* 🆕 NEW HEADER LAYOUT - No background pill, transparent with floating elements */}
+      {/* 🆕 NEW HEADER LAYOUT - Minimal z-index, transparent with floating elements */}
       <motion.div
         className="unified-header-wrapper"
         initial={{ y: 0 }}
@@ -286,20 +286,18 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         style={{
           position: 'fixed',
           top: 0,
-          left: 0,
           right: 0,
-          zIndex: 9999,
+          zIndex: 50, // Same as pills, no overlay issues
           // M1SSION™ WRAP FIX: Use safe-area for both PWA and Capacitor native
           paddingTop: (isPWA || isCapacitor) ? 'calc(env(safe-area-inset-top, 0px) + 12px)' : '16px',
-          paddingLeft: '16px',
           paddingRight: '16px',
           pointerEvents: 'none',
           // 🔧 PWA FIX: GPU layer promotion per stabilità durante scroll
           backfaceVisibility: 'hidden',
-          WebkitBackdropVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
         }}
       >
-        {/* TOP ROW - Profile + Settings (right side) */}
+        {/* TOP ROW - Settings + Profile (right side only) */}
         <div 
           style={{
             display: 'flex',
@@ -309,7 +307,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             pointerEvents: 'auto',
           }}
         >
-          {/* Settings - Glass Pill */}
+          {/* Settings - VERY transparent glass pill, same size as Profile */}
           <motion.button
             onClick={(e) => {
               hapticLight();
@@ -318,14 +316,13 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               setIsSettingsModalOpen(true);
             }}
             style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '22px',
-              background: 'rgba(15, 20, 30, 0.6)',
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -341,11 +338,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               transition={{ 
                 rotate: { duration: reduceAnimations ? 1.6 : 12, repeat: reduceAnimations ? 0 : Infinity, ease: "linear" },
               }}
-              style={{
-                filter: "drop-shadow(0 0 8px rgba(0, 209, 255, 0.5))"
-              }}
             >
-              <Settings className="w-5 h-5 text-[#00D1FF]" />
+              <Settings className="w-5 h-5 text-[#00D1FF]" style={{ filter: 'drop-shadow(0 0 4px rgba(0, 209, 255, 0.6))' }} />
             </motion.div>
           </motion.button>
 
