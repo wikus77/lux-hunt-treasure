@@ -200,12 +200,11 @@ const { isConnected } = useRealTimeNotifications();
   const [progress] = useLocalStorage<number>("mission-progress", 0);
   const prizeProgress = missionStatus?.progressPercent || progress || 46;
 
-  // 🔧 PATTERN: Same as LeaderboardPage - NO useEffect body manipulation
-  // NO absolute overlays - just sn-page class + simple structure
+  // 🔧 FULL SCREEN M1SSION PRIZE - Come foto riferimento
   
   return (
     <div 
-      className="w-full overflow-x-hidden p-4 space-y-4 sn-page"
+      className="w-full overflow-x-hidden sn-page"
       style={{
         position: 'relative',
         zIndex: 0,
@@ -226,17 +225,17 @@ const { isConnected } = useRealTimeNotifications();
               transition={{ duration: 0.5 }}
             >
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 1️⃣ M1SSION PRIZE with Pills INSIDE */}
+              {/* 1️⃣ M1SSION PRIZE - FULL WIDTH, FULL SCREEN */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div 
                 className="m1-first-content-offset-compact"
                 style={{
                   position: 'relative',
                   width: '100%',
-                  // 🎨 Dark gradient background for M1SSION PRIZE section
+                  // 🎨 FULL WIDTH dark gradient - NO borderRadius, NO side margins
                   background: 'linear-gradient(180deg, #0a0f1a 0%, #0d1525 50%, #1a2535 80%, transparent 100%)',
-                  borderRadius: '16px',
                   padding: '16px',
+                  paddingTop: '8px',
                   marginBottom: '16px',
                 }}
               >
@@ -267,7 +266,7 @@ const { isConnected } = useRealTimeNotifications();
               {/* ═══════════════════════════════════════════════════════════════ */}
               {/* 2️⃣ PROSSIMI PASSI Container */}
               {/* ═══════════════════════════════════════════════════════════════ */}
-              <div style={{ padding: '0 16px', marginBottom: '16px' }}>
+              <div style={{ padding: '0 16px', marginBottom: '16px', marginTop: '8px' }}>
                 <SectionErrorBoundary section="Prossima Azione" fallbackHeight="80px">
                   <NextActionContainer />
                 </SectionErrorBoundary>
