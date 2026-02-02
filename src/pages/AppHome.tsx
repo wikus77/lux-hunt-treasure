@@ -200,21 +200,53 @@ const { isConnected } = useRealTimeNotifications();
   const [progress] = useLocalStorage<number>("mission-progress", 0);
   const prizeProgress = missionStatus?.progressPercent || progress || 46;
 
+  // 🔧 FIX: Set body background dark when on Home page
+  useEffect(() => {
+    document.body.style.setProperty('background', '#0a0f1a', 'important');
+    document.body.style.setProperty('background-color', '#0a0f1a', 'important');
+    document.documentElement.style.setProperty('background', '#0a0f1a', 'important');
+    document.documentElement.style.setProperty('background-color', '#0a0f1a', 'important');
+    
+    return () => {
+      // Reset to white when leaving Home
+      document.body.style.setProperty('background', '#FFFFFF', 'important');
+      document.body.style.setProperty('background-color', '#FFFFFF', 'important');
+      document.documentElement.style.setProperty('background', '#FFFFFF', 'important');
+      document.documentElement.style.setProperty('background-color', '#FFFFFF', 'important');
+    };
+  }, []);
+  
   return (
     <div 
-      className="relative m1-single-scroll-root sn-page"
+      className="relative m1-single-scroll-root m1-home-page"
       style={{
         position: 'relative',
         minHeight: '100dvh',
+        // 🎨 Base dark background for safe area
+        background: '#0a0f1a',
       }}
     >
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
+      {/* 🎨 GRADIENT OVERLAY - Dark top fading to white bottom */}
+      <div 
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'linear-gradient(180deg, #0a0f1a 0%, #0d1525 25%, #1a2535 45%, #f5f5f5 70%, #f5f5f5 100%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
+      />
+      
       <MissionSync onRefresh={handleMissionSync}>
       {/* 🆕 REVOLUT-STYLE LAYOUT */}
-      <div className="relative">
+      <div className="relative" style={{ zIndex: 1 }}>
         
         <AnimatePresence>
           {isLoaded && (
@@ -225,7 +257,7 @@ const { isConnected } = useRealTimeNotifications();
               transition={{ duration: 0.5 }}
             >
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 1️⃣ M1SSION PRIZE with Pills INSIDE - DARK BACKGROUND SECTION */}
+              {/* 1️⃣ M1SSION PRIZE with Pills INSIDE */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div 
                 style={{
@@ -234,14 +266,7 @@ const { isConnected } = useRealTimeNotifications();
                   paddingLeft: '16px',
                   paddingRight: '16px',
                   paddingBottom: '20px',
-                  // 🎨 DARK BACKGROUND for M1SSION PRIZE section
-                  // This section has its own dark gradient that fades to transparent
-                  background: 'linear-gradient(180deg, #0a0f1a 0%, #0d1525 60%, #1a2535 85%, transparent 100%)',
-                  // 🔧 FIX: Extend dark area into iOS safe zone
-                  // Negative margin pulls section UP into safe area
-                  // Extra padding compensates so content stays in correct position
-                  marginTop: 'calc(-1 * (env(safe-area-inset-top, 47px) + 55px))',
-                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 55px + 16px)',
+                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 55px)',
                 }}
               >
                 <Suspense fallback={
