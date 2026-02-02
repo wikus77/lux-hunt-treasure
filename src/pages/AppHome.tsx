@@ -215,6 +215,20 @@ const { isConnected } = useRealTimeNotifications();
       <MissionSync onRefresh={handleMissionSync}>
       {/* 🆕 REVOLUT-STYLE LAYOUT */}
       <div className="relative">
+        {/* 🎨 BACKGROUND: Dark color covering iOS safe area from TOP:0 */}
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '70vh',
+            background: 'linear-gradient(180deg, #0a0f1a 0%, #0a0f1a 50%, #0d1320 70%, #f8f8f8 100%)',
+            zIndex: -1,
+            pointerEvents: 'none',
+          }}
+        />
+        
         <AnimatePresence>
           {isLoaded && (
             <motion.div
@@ -224,15 +238,15 @@ const { isConnected } = useRealTimeNotifications();
               transition={{ duration: 0.5 }}
             >
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 1️⃣ M1SSION PRIZE with Pills INSIDE + gradient fade to white */}
+              {/* 1️⃣ M1SSION PRIZE with Pills INSIDE */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div 
                 style={{
+                  position: 'relative',
                   width: '100%',
                   paddingTop: 'calc(env(safe-area-inset-top, 47px) + 70px)',
                   paddingLeft: '16px',
                   paddingRight: '16px',
-                  background: 'linear-gradient(180deg, #0a0f1a 0%, #0d1320 70%, #ffffff 100%)',
                 }}
               >
                 <Suspense fallback={
