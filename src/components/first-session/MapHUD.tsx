@@ -112,19 +112,14 @@ export default function MapHUD({ mapContainerId = 'ml-sandbox', onDismiss }: Map
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
-          onClick={handleDismiss}
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            top: 'calc(env(safe-area-inset-top, 47px) + 70px)', // Posizionato sotto la header
+            left: '50%',
+            transform: 'translateX(-50%)',
             padding: '16px',
-            zIndex: 800, // Sotto i popup esistenti (10003)
-            pointerEvents: 'none',
+            zIndex: 800,
+            pointerEvents: 'none', // Container non interattivo
           }}
         >
           <motion.div
