@@ -248,59 +248,107 @@ function SwipeableConversationItem({ conversation, onClick, onDelete, index }: S
     }
   };
 
+  // 🔧 FIX: Colore bordo sinistro in base all'index (come leaderboard)
+  const getBorderColor = () => {
+    if (hasUnread) return 'linear-gradient(180deg, #00D1FF 0%, #3B82F6 100%)';
+    if (index === 0) return 'linear-gradient(180deg, #FFD700 0%, #FFA500 100%)';
+    if (index === 1) return 'linear-gradient(180deg, #C0C0C0 0%, #A0A0A0 100%)';
+    if (index === 2) return 'linear-gradient(180deg, #CD7F32 0%, #8B4513 100%)';
+    return 'linear-gradient(180deg, #00D1FF 0%, #0891B2 100%)';
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -100, height: 0 }}
       transition={{ delay: index * 0.03 }}
-      className="relative overflow-hidden rounded-xl"
+      style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px' }}
     >
       {/* Delete background */}
       <motion.div 
-        className="absolute inset-y-0 right-0 flex items-center justify-end pr-4 bg-red-600 rounded-xl"
-        style={{ opacity: deleteOpacity }}
+        style={{ 
+          position: 'absolute', 
+          top: 0, 
+          bottom: 0, 
+          right: 0, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'flex-end', 
+          paddingRight: '16px', 
+          background: '#DC2626', 
+          borderRadius: '16px',
+          opacity: deleteOpacity 
+        }}
       >
-        <motion.div style={{ scale: deleteScale }} className="flex items-center gap-2 text-white">
-          <Trash2 className="w-5 h-5" />
-          <span className="text-sm font-medium">Elimina</span>
+        <motion.div style={{ scale: deleteScale, display: 'flex', alignItems: 'center', gap: '8px', color: '#FFFFFF' }}>
+          <Trash2 style={{ width: '20px', height: '20px' }} />
+          <span style={{ fontSize: '14px', fontWeight: 500 }}>Elimina</span>
         </motion.div>
       </motion.div>
 
-      {/* Swipeable card */}
+      {/* Swipeable card - 🔧 FIX: Stile Leaderboard (sfondo chiaro, bordo colorato a sinistra) */}
       <motion.div
         drag="x"
         dragConstraints={{ left: -100, right: 0 }}
         dragElastic={0.1}
         onDragStart={() => setIsDragging(true)}
         onDragEnd={handleDragEnd}
-        style={{ x }}
+        style={{ 
+          x,
+          position: 'relative',
+          padding: '14px 16px',
+          borderRadius: '16px',
+          cursor: 'pointer',
+          // 🔧 FIX: Sfondo chiaro come Leaderboard
+          background: '#FFFFFF',
+          border: '1px solid rgba(0, 0, 0, 0.06)',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02)',
+          overflow: 'hidden',
+        }}
         onClick={handleClick}
-        className={`relative p-4 rounded-xl border transition-colors cursor-pointer ${
-          hasUnread
-            ? 'bg-cyan-500/10 border-cyan-500/30'
-            : 'bg-gray-900/80 border-white/10'
-        }`}
       >
-        <div className="flex items-center gap-3">
+        {/* 🔧 FIX: Bordo colorato a sinistra come Leaderboard */}
+        <div style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: '4px',
+          background: getBorderColor(),
+          borderRadius: '4px 0 0 4px',
+        }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {/* Avatar */}
-          <div className="relative flex-shrink-0">
+          <div style={{ position: 'relative', flexShrink: 0 }}>
             {conversation.other_user_avatar ? (
               <img
                 src={conversation.other_user_avatar}
                 alt={displayName}
-                className="w-12 h-12 rounded-full object-cover border-2 border-cyan-500/30"
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '2px solid rgba(0, 209, 255, 0.3)',
+                }}
               />
             ) : (
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                isGroup 
-                  ? 'bg-purple-500/20 border-2 border-purple-500/30' 
-                  : 'bg-cyan-500/20 border-2 border-cyan-500/30'
-              }`}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: isGroup ? 'rgba(168, 85, 247, 0.15)' : 'rgba(0, 209, 255, 0.15)',
+                border: `2px solid ${isGroup ? 'rgba(168, 85, 247, 0.3)' : 'rgba(0, 209, 255, 0.3)'}`,
+              }}>
                 {isGroup ? (
-                  <Users className="w-5 h-5 text-purple-400" />
+                  <Users style={{ width: '20px', height: '20px', color: '#A855F7' }} />
                 ) : (
-                  <span className="text-lg font-bold text-cyan-400">
+                  <span style={{ fontSize: '18px', fontWeight: 700, color: '#0891B2' }}>
                     {displayName.charAt(0).toUpperCase()}
                   </span>
                 )}
@@ -309,39 +357,65 @@ function SwipeableConversationItem({ conversation, onClick, onDelete, index }: S
             
             {/* Unread badge */}
             {hasUnread && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-cyan-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white">
+              <span style={{
+                position: 'absolute',
+                top: '-4px',
+                right: '-4px',
+                width: '20px',
+                height: '20px',
+                background: '#00D1FF',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '10px',
+                fontWeight: 700,
+                color: '#FFFFFF',
+              }}>
                 {conversation.unread_count > 9 ? '9+' : conversation.unread_count}
               </span>
             )}
           </div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <span className={`font-semibold truncate ${hasUnread ? 'text-white' : 'text-gray-200'}`}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+              <span style={{ 
+                fontWeight: 600, 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap',
+                // 🔧 FIX: Testo scuro su sfondo chiaro
+                color: hasUnread ? '#111827' : '#374151',
+                fontSize: '15px',
+              }}>
                 {displayName}
               </span>
               {timeAgo && (
-                <span className="text-xs text-gray-500 whitespace-nowrap">
+                <span style={{ fontSize: '12px', color: '#9CA3AF', whiteSpace: 'nowrap' }}>
                   {timeAgo}
                 </span>
               )}
             </div>
             
             {conversation.last_message && (
-              <p className={`text-sm truncate mt-0.5 ${hasUnread ? 'text-gray-300 font-medium' : 'text-gray-500'}`}>
+              <p style={{ 
+                fontSize: '13px', 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap',
+                marginTop: '2px',
+                // 🔧 FIX: Testo scuro su sfondo chiaro
+                color: hasUnread ? '#4B5563' : '#9CA3AF',
+                fontWeight: hasUnread ? 500 : 400,
+              }}>
                 {conversation.last_message}
               </p>
             )}
           </div>
 
           {/* Arrow */}
-          <ChevronRight className="w-5 h-5 text-gray-500 flex-shrink-0" />
-        </div>
-
-        {/* Swipe hint on mobile */}
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 hidden sm:block pointer-events-none">
-          ← scorri
+          <ChevronRight style={{ width: '20px', height: '20px', color: '#9CA3AF', flexShrink: 0 }} />
         </div>
       </motion.div>
     </motion.div>

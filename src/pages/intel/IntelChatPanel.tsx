@@ -503,31 +503,29 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         {status === 'idle' && '✨ Pronto'}
       </div>
 
-      {/* Input - 🔧 FIX v12: SINGLE input bar, NEVER remounts
-          Uses position:fixed + transform to dock to keyboard without remounting
+      {/* Input - 🔧 FIX v13: Same keyboard anchoring as Chat
           CRITICAL: iOS requires the same DOM node to maintain focus session
           🔧 FIX 30/01/2026: WHITE theme styling */}
       <div 
-        className="p-3 mx-2 mb-2 rounded-2xl"
         style={{
-          // 🔧 FIX v12: Always fixed positioning, use transform to move
           position: 'fixed',
-          left: 0,
-          right: 0,
-          // When keyboard open: move up by keyboardInset
-          // When keyboard closed: stay at bottom with safe-area
-          bottom: isKeyboardOpen ? `${keyboardInset + 8}px` : 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
+          left: '8px',
+          right: '8px',
+          // 🔧 FIX v13: Stesso ancoraggio tastiera del Chat - più in basso quando chiusa
+          bottom: isKeyboardOpen ? `${keyboardInset + 8}px` : '100px',
           zIndex: 60000,
           transition: 'bottom 0.15s ease-out',
           // WHITE Glass style
           background: 'rgba(255, 255, 255, 0.98)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(0, 0, 0, 0.08)',
-          boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.08), 0 -1px 3px rgba(0, 0, 0, 0.04)',
+          border: '1px solid rgba(0, 209, 255, 0.2)',
+          borderRadius: '16px',
+          boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.08), 0 0 20px rgba(0, 209, 255, 0.1)',
+          padding: '12px',
         }}
       >
-        <div className="flex items-center gap-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <textarea
             ref={inputRef}
             value={input}
@@ -548,15 +546,39 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
             data-form-type="other"
             data-lpignore="true"
             data-chat-input="true"
-            className="flex-1 bg-gray-100 border border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 transition-all disabled:opacity-50 resize-none overflow-y-auto"
-            style={{ maxHeight: '120px', minHeight: '40px' }}
+            style={{
+              flex: 1,
+              background: 'rgba(243, 244, 246, 0.9)',
+              border: '1px solid rgba(0, 209, 255, 0.2)',
+              borderRadius: '12px',
+              padding: '10px 16px',
+              color: '#1F2937',
+              fontSize: '15px',
+              maxHeight: '120px',
+              minHeight: '40px',
+              resize: 'none',
+              overflowY: 'auto',
+              outline: 'none',
+              WebkitAppearance: 'none',
+            }}
           />
           <button
-            onClick={sendMessage}
+            onClick={() => sendMessage()}
             disabled={!input.trim() || isLoading}
-            className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
+            style={{
+              padding: '10px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #00D1FF 0%, #3B82F6 100%)',
+              border: 'none',
+              cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
+              opacity: !input.trim() || isLoading ? 0.5 : 1,
+              boxShadow: '0 4px 12px rgba(0, 209, 255, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            <Send className="w-5 h-5" />
+            <Send style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
           </button>
         </div>
       </div>
