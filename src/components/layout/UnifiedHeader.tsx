@@ -274,39 +274,10 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   return (
     <>
       <MinimalHeaderStrip show={false}>
-        {/* Center section - Agent Code Vertical Layout - © 2025 Joseph MULÉ – M1SSION™ */}
-        <div className="flex flex-col items-center gap-1">
-          {/* CODE con pallino pulsante */}
-          <div className="flex items-center gap-2">
-            <motion.div
-              className="w-2 h-2 bg-[#00D1FF] rounded-full"
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [1, 0.7, 1],
-              }}
-              transition={{
-                duration: 1.6,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              style={{
-                boxShadow: "0 0 8px rgba(0, 209, 255, 0.6), 0 0 16px rgba(0, 209, 255, 0.4)"
-              }}
-            />
-            <span 
-              className="text-xs font-orbitron font-bold text-white tracking-wider"
-              style={{
-                textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-              }}
-            >
-              CODE
-            </span>
-          </div>
-          {/* Codice Agente sotto */}
-          <ReferralCodeDisplay />
-        </div>
+        {/* Hidden - Legacy support */}
       </MinimalHeaderStrip>
-      {/* FLOATING PILL HEADER - Same style as bottom nav */}
+      
+      {/* 🆕 NEW HEADER LAYOUT - No background pill, transparent with floating elements */}
       <motion.div
         className="unified-header-wrapper"
         initial={{ y: 0 }}
@@ -318,8 +289,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           left: 0,
           right: 0,
           zIndex: 9999,
-          display: 'flex',
-          justifyContent: 'center',
           // M1SSION™ WRAP FIX: Use safe-area for both PWA and Capacitor native
           paddingTop: (isPWA || isCapacitor) ? 'calc(env(safe-area-inset-top, 0px) + 12px)' : '16px',
           paddingLeft: '16px',
@@ -327,123 +296,65 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           pointerEvents: 'none',
           // 🔧 PWA FIX: GPU layer promotion per stabilità durante scroll
           backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
+          WebkitBackdropVisibility: 'hidden',
         }}
       >
-      <header
-        style={{
-          width: '100%',
-          maxWidth: '600px',
-          height: '64px',
-          background: 'rgba(15, 20, 30, 0.45)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          borderRadius: '32px',
-          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255,255,255,0.08)',
-          pointerEvents: 'auto',
-          position: 'relative',
-          isolation: 'isolate',
-        }}
-      >
-        {/* Hidden background div for compatibility */}
-        <div className="hidden" />
-        <div className="h-full w-full relative">
-          {/* Main Header Row */}
-          <div className="flex items-center justify-between h-full px-4 sm:px-6 relative">
-            {/* Left Section */}
-            <div className="flex items-center">
-              {leftComponent ? (
-                leftComponent
-              ) : (
-                <div className="flex items-center">
-                  {/* 🔧 FIX 28/01/2026: Back button REMOVED from header - now handled by individual pages below header */}
-                  
-                  <Link
-                    to="/home"
-                    className="text-2xl sm:text-[1.75rem] font-orbitron font-bold m1ssion-logo m1-text-glow"
-                  >
-                    <span className="text-[#00D1FF]" style={{ 
-                      textShadow: "0 0 12px rgba(0, 209, 255, 0.7), 0 0 24px rgba(0, 209, 255, 0.4)"
-                    }}>M1</span>
-                    <span className="text-white">SSION<span className="text-[10px] align-top ml-0.5">™</span></span>
-                  </Link>
-                </div>
-              )}
-            </div>
+        {/* TOP ROW - Profile + Settings (right side) */}
+        <div 
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: '8px',
+            pointerEvents: 'auto',
+          }}
+        >
+          {/* Settings - Glass Pill */}
+          <motion.button
+            onClick={(e) => {
+              hapticLight();
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              setSettingsOriginRect(rect);
+              setIsSettingsModalOpen(true);
+            }}
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '22px',
+              background: 'rgba(15, 20, 30, 0.6)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <motion.div
+              animate={{ 
+                rotate: [0, 360],
+              }}
+              transition={{ 
+                rotate: { duration: reduceAnimations ? 1.6 : 12, repeat: reduceAnimations ? 0 : Infinity, ease: "linear" },
+              }}
+              style={{
+                filter: "drop-shadow(0 0 8px rgba(0, 209, 255, 0.5))"
+              }}
+            >
+              <Settings className="w-5 h-5 text-[#00D1FF]" />
+            </motion.div>
+          </motion.button>
 
-            {/* Center section - Agent Code Vertical Layout - 🚀 NATIVE: Badge più visibile */}
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5">
-              {/* CODE con pallino pulsante */}
-              <div className="flex items-center gap-2">
-                <motion.div
-                  className="w-2.5 h-2.5 bg-[#00D1FF] rounded-full m1-glow-pulse"
-                  animate={{
-                    scale: [1, 1.3, 1],
-                    opacity: [1, 0.8, 1],
-                  }}
-                  transition={{
-                    duration: 1.6,
-                    repeat: reduceAnimations ? 0 : Infinity,
-                    ease: "easeInOut"
-                  }}
-                  style={{
-                    boxShadow: "0 0 10px rgba(0, 209, 255, 0.7), 0 0 20px rgba(0, 209, 255, 0.5)"
-                  }}
-                />
-                <span 
-                  className="text-[11px] font-orbitron font-bold text-white tracking-widest"
-                  style={{
-                    textShadow: "0 0 12px rgba(0, 209, 255, 0.7), 0 0 24px rgba(0, 209, 255, 0.4)"
-                  }}
-                >
-                  CODE
-                </span>
-              </div>
-              {/* Codice Agente sotto */}
-              <ReferralCodeDisplay />
-            </div>
-
-            {/* Right Section */}
-            <div className="flex items-center space-x-1 sm:space-x-3">
-              {/* Settings - 🚀 NATIVE: Apre modal FULLSCREEN con animazione FLIP */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-xl hover:bg-white/10 unified-header-btn w-11 h-11 m1-touch-feedback"
-                onClick={(e) => {
-                  hapticLight();
-                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  setSettingsOriginRect(rect);
-                  setIsSettingsModalOpen(true);
-                }}
-              >
-                <motion.div
-                  animate={{ 
-                    rotate: [0, 360],
-                    scale: [1, 1.08, 1]
-                  }}
-                  transition={{ 
-                    rotate: { duration: reduceAnimations ? 1.6 : 8, repeat: reduceAnimations ? 0 : Infinity, ease: "linear" },
-                    scale: { duration: reduceAnimations ? 1.2 : 4, repeat: reduceAnimations ? 0 : Infinity, ease: "easeInOut" }
-                  }}
-                  style={{
-                    filter: "drop-shadow(0 0 10px rgba(0, 209, 255, 0.5))"
-                  }}
-                >
-                  <Settings className="w-6 h-6 text-[#00D1FF]" />
-                </motion.div>
-              </Button>
-
-              {/* Profile Dropdown - 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
-              <ProfileDropdown
-                profileImage={currentProfileImage}
-                className="cursor-pointer"
-              />
-            </div>
-          </div>
-
+          {/* Profile Avatar */}
+          <ProfileDropdown
+            profileImage={currentProfileImage}
+            className="cursor-pointer"
+          />
         </div>
-      </header>
       </motion.div>
       
       {/* Settings Modal - FULLSCREEN con animazione FLIP */}

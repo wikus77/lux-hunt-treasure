@@ -240,38 +240,8 @@ const { isConnected } = useRealTimeNotifications();
               )}
 
                   <div className="container mx-auto px-3 pb-20">
-                {/* 🚀 PILLS - Layout flex, scorrono con pagina
-                    🔧 FIX v8: M1UPill + StreakPill moved to FIXED OVERLAY (see below)
-                    This prevents clipping and overlap issues */}
-                <div 
-                  className="flex justify-between items-start mb-4 overflow-visible m1-first-content-offset"
-                >
-                  {/* Colonna sinistra - Empty now (pills are fixed overlays) */}
-                  <div className="flex flex-col gap-2 overflow-visible">
-                    {/* M1UPill + StreakPill are now fixed overlays below */}
-                  </div>
-                  
-                  {/* Colonna destra */}
-                  <div className="flex flex-col gap-2">
-                    <motion.div
-                      data-onboarding="cashback-pill"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, delay: 0.05 }}
-                    >
-                      <CashbackVaultPill />
-                    </motion.div>
-                    
-                    {/* 🎡 Fortune Wheel Pill - Once daily */}
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, delay: 0.08 }}
-                    >
-                      <ShopPill />
-                    </motion.div>
-                  </div>
-                </div>
+                {/* 🆕 Pills now in fixed header - this space is for content offset */}
+                <div className="m1-first-content-offset" style={{ height: '80px' }} />
 
                 {/* 🎯 PROSSIMA AZIONE: Container unificato espandibile */}
                 {/* 🔧 FIX 28/01/2026: Sostituito due card separate con container singolo */}
@@ -405,21 +375,113 @@ const { isConnected } = useRealTimeNotifications();
       />
       </MissionSync>
       
-      {/* 🔧 FIX v9: M1UPill + StreakPill as FIXED OVERLAY
-          Position: fixed, left side, below header with safe area
-          StreakPill positioned below M1UPill with gap-2 */}
+      {/* 🆕 NEW HEADER ELEMENTS - Distributed layout */}
+      {/* Left: M1UPill (no + button) */}
       <div 
         id="m1u-pill-home-slot" 
         data-onboarding="m1u-pill"
-        className="fixed left-4 z-[1001] flex flex-col gap-2"
+        className="fixed left-4 z-[1001]"
         style={{ 
-          top: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+          top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
           paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
           pointerEvents: 'auto' 
         }}
       >
-        <M1UPill showLabel showPlusButton />
+        <M1UPill showLabel showPlusButton={false} />
+      </div>
+      
+      {/* Center: Agent Code Pill + Cashback Pill (smaller) */}
+      <div 
+        className="fixed z-[1001] flex items-center gap-2"
+        style={{ 
+          top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          pointerEvents: 'auto' 
+        }}
+      >
+        {/* Agent Code Pill */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 14px',
+            background: 'rgba(15, 20, 30, 0.7)',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            borderRadius: '20px',
+            border: '1px solid rgba(0, 209, 255, 0.3)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 209, 255, 0.15)',
+          }}
+        >
+          {/* Pulsating dot */}
+          <motion.div
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#00D1FF',
+              boxShadow: '0 0 10px rgba(0, 209, 255, 0.8)',
+            }}
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [1, 0.7, 1],
+            }}
+            transition={{
+              duration: 1.6,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          {/* CODE label */}
+          <span style={{
+            fontSize: '10px',
+            fontWeight: 700,
+            color: 'rgba(255, 255, 255, 0.7)',
+            letterSpacing: '1px',
+            fontFamily: 'Orbitron, sans-serif',
+          }}>
+            CODE
+          </span>
+          {/* ReferralCodeDisplay inline */}
+          <span style={{
+            fontSize: '13px',
+            fontWeight: 700,
+            color: '#00D1FF',
+            letterSpacing: '1px',
+            fontFamily: 'Orbitron, sans-serif',
+            textShadow: '0 0 10px rgba(0, 209, 255, 0.6)',
+          }}>
+            {user?.user_metadata?.referral_code || 'MCP'}
+          </span>
+        </motion.div>
+        
+        {/* Cashback Pill (smaller) */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          style={{ transform: 'scale(0.85)' }}
+        >
+          <CashbackVaultPill variant="compact" />
+        </motion.div>
+      </div>
+      
+      {/* Below header: StreakPill + ShopPill */}
+      <div 
+        className="fixed left-4 z-[1001] flex items-center gap-2"
+        style={{ 
+          top: 'calc(env(safe-area-inset-top, 0px) + 72px)',
+          paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
+          pointerEvents: 'auto' 
+        }}
+      >
         <StreakPill showLabel />
+        <ShopPill />
       </div>
     </div>
   );
