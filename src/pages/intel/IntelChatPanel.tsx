@@ -12,6 +12,7 @@ import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION C
 import { useAionDynamicIsland } from '@/hooks/useAionDynamicIsland'; // 🎙️ DI SOLO per AION
 import type { AionEntityHandle, Viseme } from '@/components/aion/AionEntity';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset'; // 🔧 FIX v12: For keyboard positioning
+import { useLocation } from 'wouter'; // 🔧 FIX v17: Route check
 
 interface Message {
   id: string;
@@ -73,6 +74,10 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   
   // 🔧 FIX v11: Use unified keyboard inset hook
   const { isOpen: isKeyboardOpen, inset: keyboardInset } = useKeyboardInset();
+  
+  // 🔧 FIX v17: Check route - hide portal when navigated away completely
+  const [location] = useLocation();
+  const isOnAionPage = location === '/intelligence' || location.startsWith('/intelligence/');
   
   const { speak, stop: stopTTS, isSpeaking, unlockAudio } = useTTS();
   const { accrueFromAion } = useCashbackWallet(); // 🆕 M1SSION Cashback Vault™
@@ -504,99 +509,29 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         {status === 'idle' && '✨ Pronto'}
       </div>
 
-      {/* Input - 🔧 FIX v16: Portal SOLO quando tastiera aperta
-          Quando tastiera chiusa: render normale (coperto dai modal)
-          Quando tastiera aperta: portal per ancoraggio corretto */}
-      {isKeyboardOpen ? (
-        // 🔧 Keyboard OPEN: Use portal for proper anchoring
-        createPortal(
-          <div 
-            style={{
-              position: 'fixed',
-              left: '8px',
-              right: '8px',
-              bottom: `${keyboardInset + 8}px`,
-              zIndex: 99999,
-              transition: 'bottom 0.15s ease-out',
-              background: 'rgba(255, 255, 255, 0.98)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(0, 209, 255, 0.2)',
-              borderRadius: '16px',
-              boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.08), 0 0 20px rgba(0, 209, 255, 0.1)',
-              padding: '12px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-                }}
-                onKeyDown={handleKeyPress}
-                placeholder="Scrivi un messaggio..."
-                disabled={isLoading}
-                rows={1}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="sentences"
-                spellCheck={false}
-                inputMode="text"
-                data-form-type="other"
-                data-lpignore="true"
-                data-chat-input="true"
-                style={{
-                  flex: 1,
-                  background: 'rgba(243, 244, 246, 0.9)',
-                  border: '1px solid rgba(0, 209, 255, 0.2)',
-                  borderRadius: '12px',
-                  padding: '10px 16px',
-                  color: '#1F2937',
-                  fontSize: '15px',
-                  maxHeight: '120px',
-                  minHeight: '40px',
-                  resize: 'none',
-                  overflowY: 'auto',
-                  outline: 'none',
-                  WebkitAppearance: 'none',
-                }}
-              />
-              <button
-                onClick={() => sendMessage()}
-                disabled={!input.trim() || isLoading}
-                style={{
-                  padding: '10px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #00D1FF 0%, #3B82F6 100%)',
-                  border: 'none',
-                  cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
-                  opacity: !input.trim() || isLoading ? 0.5 : 1,
-                  boxShadow: '0 4px 12px rgba(0, 209, 255, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Send style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
-              </button>
-            </div>
-          </div>,
-          document.body
-        )
-      ) : (
-        // 🔧 Keyboard CLOSED: Normal render (will be covered by modals)
+      {/* Input - 🔧 FIX v17: SEMPRE portal con z-index BASSO (1000)
+          - z-index 1000 = sotto i modal (99998+) ma sopra contenuti normali
+          - Nessun switch di render = nessuna perdita di focus
+          - Tastiera: bottom si adatta con keyboardInset
+          - isOnAionPage: nasconde quando navighi via (route diversa) */}
+      {isOnAionPage && createPortal(
         <div 
-          className="p-3 mx-2 mb-2 rounded-2xl"
           style={{
+            position: 'fixed',
+            left: '8px',
+            right: '8px',
+            // Posizione: sopra bottom nav quando chiusa, ancorata alla tastiera quando aperta
+            bottom: isKeyboardOpen ? `${keyboardInset + 8}px` : '100px',
+            // z-index 1000 = SOTTO i modal (99998+) ma sopra contenuti pagina
+            zIndex: 1000,
+            transition: 'bottom 0.15s ease-out',
             background: 'rgba(255, 255, 255, 0.98)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             border: '1px solid rgba(0, 209, 255, 0.2)',
             borderRadius: '16px',
             boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.08), 0 0 20px rgba(0, 209, 255, 0.1)',
+            padding: '12px',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -655,7 +590,8 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
               <Send style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
