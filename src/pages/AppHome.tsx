@@ -202,35 +202,23 @@ const { isConnected } = useRealTimeNotifications();
 
   return (
     <div 
-      className="relative m1-single-scroll-root"
+      className="relative m1-single-scroll-root m1-home-dark-top"
       style={{
         position: 'relative',
-        zIndex: 0,
         minHeight: '100dvh',
-        background: '#0a0f1a', // Dark base for safe area
+        // 🔧 NO OVERLAY - Background gradient directly on container
+        background: 'linear-gradient(180deg, #0a0f1a 0%, #0a0f1a 35%, #1a2535 50%, #f5f5f5 75%, #f5f5f5 100%)',
       }}
     >
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
-      {/* 🎨 FIXED BACKGROUND: Dark top, gradient to white bottom */}
-      <div 
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'linear-gradient(180deg, #0a0f1a 0%, #0a0f1a 40%, #1a2535 55%, #f5f5f5 85%, #f5f5f5 100%)',
-          zIndex: 0,
-          pointerEvents: 'none',
-        }}
-      />
+      {/* 🚫 REMOVED: Fixed background div that was causing overlay */}
       
       <MissionSync onRefresh={handleMissionSync}>
-      {/* 🆕 REVOLUT-STYLE LAYOUT */}
-      <div className="relative" style={{ zIndex: 1 }}>
+      {/* 🆕 REVOLUT-STYLE LAYOUT - NO zIndex conflicts */}
+      <div className="relative">
         
         <AnimatePresence>
           {isLoaded && (
@@ -247,7 +235,8 @@ const { isConnected } = useRealTimeNotifications();
                 style={{
                   position: 'relative',
                   width: '100%',
-                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 70px)',
+                  // 🔧 FIX: Reduced padding - M1SSION PRIZE starts right below header
+                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 55px)',
                   paddingLeft: '16px',
                   paddingRight: '16px',
                 }}

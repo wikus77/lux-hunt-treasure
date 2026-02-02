@@ -365,6 +365,26 @@ body.is-native {
   background-color: #FFFFFF !important;
 }
 
+/* ========================================
+   🔧 FIX 02/02/2026: AppHome Dark Top Background
+   
+   PROBLEM: AppHome needs dark background extending into safe area
+   but body is forced WHITE for other pages.
+   
+   SOLUTION: When .m1-home-dark-top is present, override body background
+   to match the dark gradient at the top.
+   ======================================== */
+body.is-native:has(.m1-home-dark-top) {
+  background: #0a0f1a !important;
+  background-color: #0a0f1a !important;
+}
+
+html.capacitor-ios:has(.m1-home-dark-top),
+html[data-capacitor="ios"]:has(.m1-home-dark-top) {
+  background: #0a0f1a !important;
+  background-color: #0a0f1a !important;
+}
+
 /* All containers transparent */
 body.is-native #root,
 body.is-native .safe-area-wrapper,
