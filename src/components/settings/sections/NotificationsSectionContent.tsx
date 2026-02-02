@@ -1,11 +1,24 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // Notifiche - Section Modal Content (Revolut-style glass design)
-import React, { useState, useEffect } from 'react';
-import { X, Bell, Volume2, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { X, Bell, Volume2, RefreshCw, Smartphone, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { Capacitor } from '@capacitor/core';
+
+// Lazy load push components
+const NativePushDiagnostic = lazy(() => import('@/components/push/NativePushDiagnostic').then(m => ({ default: m.NativePushDiagnostic })));
+
+// Platform check
+const isNativePlatform = (): boolean => {
+  try {
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+};
 
 interface NotificationsSectionContentProps {
   onClose: () => void;
@@ -191,6 +204,34 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
               </div>
             ))}
           </div>
+        </GlassCard>
+
+        {/* Push Notifications */}
+        <GlassCard style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <Smartphone style={{ width: '20px', height: '20px', color: '#22C55E' }} />
+            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Notifiche Push</span>
+          </div>
+
+          {isNativePlatform() ? (
+            <Suspense fallback={
+              <div style={{ padding: '20px', textAlign: 'center' }}>
+                <div style={{ width: '24px', height: '24px', border: '2px solid rgba(34, 197, 94, 0.3)', borderTopColor: '#22C55E', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '8px' }}>Caricamento diagnostica push...</p>
+              </div>
+            }>
+              <NativePushDiagnostic />
+            </Suspense>
+          ) : (
+            <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlertCircle style={{ width: '18px', height: '18px', color: '#F59E0B' }} />
+                <span style={{ color: '#F59E0B', fontSize: '13px' }}>
+                  Le notifiche push native sono disponibili solo su app iOS/Android.
+                </span>
+              </div>
+            </div>
+          )}
         </GlassCard>
 
         {/* Sound */}

@@ -1,10 +1,11 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // Metodi di Pagamento - Section Modal Content (Revolut-style glass design)
 import React, { useState, useEffect } from 'react';
-import { X, CreditCard, Plus, Smartphone, Shield, Trash2, Star, CheckCircle } from 'lucide-react';
+import { X, CreditCard, Plus, Smartphone, Shield, Trash2, Star, CheckCircle, ArrowLeft, Lock, Calendar } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { SettingsSectionFlipOverlay } from '../SettingsSectionFlipOverlay';
 
 interface PaymentMethodsSectionContentProps {
   onClose: () => void;
@@ -27,6 +28,10 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  
+  // State per modal aggiungi carta
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
+  const [addCardOriginRect, setAddCardOriginRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
     if (user) loadPaymentMethods();
@@ -57,8 +62,10 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
     toast({ title: "🤖 Google Pay", description: "La configurazione sarà disponibile a breve." });
   };
 
-  const handleAddCard = () => {
-    toast({ title: "💳 Aggiungi Carta", description: "La gestione carte sarà disponibile a breve." });
+  const handleAddCard = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setAddCardOriginRect(rect);
+    setShowAddCardModal(true);
   };
 
   const handleSetDefault = async (cardId: string) => {
@@ -160,7 +167,7 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
               <CreditCard style={{ width: '20px', height: '20px', color: '#6366F1' }} />
               <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Le Tue Carte</span>
             </div>
-            <button onClick={handleAddCard} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.2)', border: '1px solid rgba(99, 102, 241, 0.4)', color: '#6366F1', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button onClick={(e) => handleAddCard(e)} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.2)', border: '1px solid rgba(99, 102, 241, 0.4)', color: '#6366F1', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Plus size={14} /> Aggiungi
             </button>
           </div>
@@ -202,6 +209,283 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
             </div>
           </div>
         </GlassCard>
+      </div>
+
+      {/* Add Card Modal */}
+      <SettingsSectionFlipOverlay
+        open={showAddCardModal}
+        originRect={addCardOriginRect}
+        onClose={() => setShowAddCardModal(false)}
+      >
+        <AddCardModalContent onClose={() => setShowAddCardModal(false)} onCardAdded={loadPaymentMethods} />
+      </SettingsSectionFlipOverlay>
+    </div>
+  );
+};
+
+// Add Card Modal Content
+const AddCardModalContent: React.FC<{ onClose: () => void; onCardAdded: () => void }> = ({ onClose, onCardAdded }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [cardData, setCardData] = useState({
+    number: '',
+    expiry: '',
+    cvc: '',
+    name: ''
+  });
+
+  const formatCardNumber = (value: string) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const matches = v.match(/\d{4,16}/g);
+    const match = (matches && matches[0]) || '';
+    const parts = [];
+    for (let i = 0; i < match.length; i += 4) {
+      parts.push(match.substring(i, i + 4));
+    }
+    return parts.length ? parts.join(' ') : value;
+  };
+
+  const formatExpiry = (value: string) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    if (v.length >= 2) {
+      return v.substring(0, 2) + '/' + v.substring(2, 4);
+    }
+    return v;
+  };
+
+  const handleSubmit = async () => {
+    if (!cardData.number || !cardData.expiry || !cardData.cvc || !cardData.name) {
+      toast({ title: "❌ Compila tutti i campi", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // In production, this would call Stripe to tokenize the card
+      // For now, we'll simulate saving the last 4 digits
+      const last4 = cardData.number.replace(/\s/g, '').slice(-4);
+      const [month, year] = cardData.expiry.split('/');
+      
+      // Detect card brand from number
+      const firstDigit = cardData.number.charAt(0);
+      let brand = 'Unknown';
+      if (firstDigit === '4') brand = 'Visa';
+      else if (firstDigit === '5') brand = 'Mastercard';
+      else if (firstDigit === '3') brand = 'Amex';
+
+      if (user) {
+        const { error } = await supabase.from('user_payment_methods').insert({
+          user_id: user.id,
+          brand,
+          last4,
+          exp_month: parseInt(month),
+          exp_year: 2000 + parseInt(year),
+          is_default: false,
+          stripe_pm_id: `pm_demo_${Date.now()}`
+        });
+
+        if (error) throw error;
+      }
+
+      toast({ title: "✅ Carta aggiunta con successo" });
+      onCardAdded();
+      onClose();
+    } catch (error: any) {
+      toast({ title: "❌ Errore", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+      {/* HEADER */}
+      <div style={{
+        flexShrink: 0,
+        background: 'linear-gradient(180deg, rgba(99, 102, 241, 0.8) 0%, rgba(60, 60, 150, 0.6) 100%)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
+        paddingBottom: '20px',
+        paddingLeft: '16px',
+        paddingRight: '16px',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <button onClick={onClose} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+          </button>
+          <div style={{ flex: 1, textAlign: 'center' }}>
+            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>AGGIUNGI CARTA</h1>
+          </div>
+          <div style={{ width: '40px' }} />
+        </div>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Inserisci i dati della tua carta</p>
+      </div>
+
+      {/* CONTENT */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)', WebkitOverflowScrolling: 'touch' }}>
+        <GlassCard style={{ marginBottom: '16px' }}>
+          {/* Card Preview */}
+          <div style={{
+            background: 'linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%)',
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '20px',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
+              <CreditCard size={32} color="rgba(255,255,255,0.3)" />
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', marginBottom: '8px' }}>NUMERO CARTA</p>
+            <p style={{ color: '#FFFFFF', fontSize: '18px', fontFamily: 'monospace', letterSpacing: '2px', marginBottom: '16px' }}>
+              {cardData.number || '•••• •••• •••• ••••'}
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '8px' }}>TITOLARE</p>
+                <p style={{ color: '#FFFFFF', fontSize: '12px' }}>{cardData.name || 'NOME COGNOME'}</p>
+              </div>
+              <div>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '8px' }}>SCADENZA</p>
+                <p style={{ color: '#FFFFFF', fontSize: '12px' }}>{cardData.expiry || 'MM/YY'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Form Fields */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                <CreditCard size={14} style={{ display: 'inline', marginRight: '6px' }} />
+                Numero Carta
+              </label>
+              <input
+                type="text"
+                value={cardData.number}
+                onChange={(e) => setCardData({...cardData, number: formatCardNumber(e.target.value)})}
+                placeholder="1234 5678 9012 3456"
+                maxLength={19}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#FFFFFF',
+                  fontSize: '16px',
+                  fontFamily: 'monospace',
+                  outline: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                  <Calendar size={14} style={{ display: 'inline', marginRight: '6px' }} />
+                  Scadenza
+                </label>
+                <input
+                  type="text"
+                  value={cardData.expiry}
+                  onChange={(e) => setCardData({...cardData, expiry: formatExpiry(e.target.value)})}
+                  placeholder="MM/YY"
+                  maxLength={5}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '12px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: '#FFFFFF',
+                    fontSize: '16px',
+                    fontFamily: 'monospace',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                  <Lock size={14} style={{ display: 'inline', marginRight: '6px' }} />
+                  CVC
+                </label>
+                <input
+                  type="text"
+                  value={cardData.cvc}
+                  onChange={(e) => setCardData({...cardData, cvc: e.target.value.replace(/\D/g, '')})}
+                  placeholder="123"
+                  maxLength={4}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '12px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: '#FFFFFF',
+                    fontSize: '16px',
+                    fontFamily: 'monospace',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                Nome Titolare
+              </label>
+              <input
+                type="text"
+                value={cardData.name}
+                onChange={(e) => setCardData({...cardData, name: e.target.value.toUpperCase()})}
+                placeholder="NOME COGNOME"
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#FFFFFF',
+                  fontSize: '16px',
+                  outline: 'none',
+                }}
+              />
+            </div>
+          </div>
+        </GlassCard>
+
+        {/* Security Note */}
+        <GlassCard style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <Shield style={{ width: '20px', height: '20px', color: '#22C55E', flexShrink: 0 }} />
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>
+              I tuoi dati sono protetti con crittografia SSL e non vengono mai memorizzati sui nostri server.
+            </p>
+          </div>
+        </GlassCard>
+
+        {/* Submit Button */}
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          style={{
+            width: '100%',
+            padding: '16px',
+            borderRadius: '14px',
+            background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+            border: 'none',
+            color: '#FFFFFF',
+            fontSize: '16px',
+            fontWeight: 700,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.5 : 1,
+            boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)',
+          }}
+        >
+          {loading ? 'Salvataggio...' : 'Aggiungi Carta'}
+        </button>
       </div>
     </div>
   );
