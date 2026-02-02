@@ -1,7 +1,8 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // Legale - Section Modal Content (Revolut-style glass design)
-import React, { useState, useEffect } from 'react';
-import { X, FileText, Shield, Settings, Copyright, Award, ExternalLink, Trash2, AlertTriangle, ChevronRight, Loader2 } from 'lucide-react';
+// Now with full legal content and IT/EN language switcher
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { X, FileText, Shield, Settings, Copyright, Award, ExternalLink, Trash2, AlertTriangle, ChevronRight, Loader2, Globe } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,11 +15,14 @@ interface LegalSectionContentProps {
 interface LegalLink {
   id: string;
   title: string;
+  titleEn: string;
   description: string;
+  descriptionEn: string;
   icon: React.ElementType;
-  type: string; // For Supabase query
   color: string;
 }
+
+type Language = 'it' | 'en';
 
 const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) => {
   const { user } = useAuth();
@@ -31,13 +35,13 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
   const [documentOriginRect, setDocumentOriginRect] = useState<DOMRect | null>(null);
 
   const legalLinks: LegalLink[] = [
-    { id: 'terms', title: 'Termini di Servizio', description: "Condizioni d'uso dell'applicazione", type: 'terms_of_service', icon: FileText, color: '#00D1FF' },
-    { id: 'privacy', title: 'Privacy Policy', description: 'Come raccogliamo e utilizziamo i tuoi dati', type: 'privacy_policy', icon: Shield, color: '#22C55E' },
-    { id: 'cookie', title: 'Cookie Policy', description: 'Come utilizziamo i cookie', type: 'cookie_policy', icon: Settings, color: '#F59E0B' },
-    { id: 'rules', title: 'Regolamento M1SSION™', description: 'Modalità di gioco, premi, meccaniche', type: 'game_rules', icon: FileText, color: '#A855F7' },
-    { id: 'policies', title: 'Game Policies', description: 'Disclaimers, virtual currencies', type: 'game_policies', icon: Shield, color: '#EF4444' },
-    { id: 'safecreative', title: 'SafeCreative', description: 'Certificazione proprietà intellettuale', type: 'safecreative', icon: Copyright, color: '#EC4899' },
-    { id: 'euipo', title: 'EUIPO – Marchio Registrato', description: 'Registrazione marchio EU', type: 'euipo_trademark', icon: Award, color: '#6366F1' },
+    { id: 'terms', title: 'Termini di Servizio', titleEn: 'Terms of Service', description: "Condizioni d'uso dell'applicazione", descriptionEn: 'Application usage conditions', icon: FileText, color: '#00D1FF' },
+    { id: 'privacy', title: 'Privacy Policy', titleEn: 'Privacy Policy', description: 'Come raccogliamo e utilizziamo i tuoi dati', descriptionEn: 'How we collect and use your data', icon: Shield, color: '#22C55E' },
+    { id: 'cookie', title: 'Cookie Policy', titleEn: 'Cookie Policy', description: 'Come utilizziamo i cookie', descriptionEn: 'How we use cookies', icon: Settings, color: '#F59E0B' },
+    { id: 'rules', title: 'Regolamento M1SSION™', titleEn: 'M1SSION™ Rules', description: 'Modalità di gioco, premi, meccaniche', descriptionEn: 'Gameplay, prizes, mechanics', icon: FileText, color: '#A855F7' },
+    { id: 'policies', title: 'Game Policies', titleEn: 'Game Policies', description: 'Disclaimers, virtual currencies', descriptionEn: 'Disclaimers, virtual currencies', icon: Shield, color: '#EF4444' },
+    { id: 'safecreative', title: 'SafeCreative', titleEn: 'SafeCreative', description: 'Certificazione proprietà intellettuale', descriptionEn: 'Intellectual property certification', icon: Copyright, color: '#EC4899' },
+    { id: 'euipo', title: 'EUIPO – Marchio Registrato', titleEn: 'EUIPO – Registered Trademark', description: 'Registrazione marchio EU', descriptionEn: 'EU trademark registration', icon: Award, color: '#6366F1' },
   ];
 
   const openDocumentModal = (link: LegalLink, e: React.MouseEvent) => {
@@ -236,6 +240,7 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
           onClose={() => setOpenDocument(null)}
         >
           <LegalDocumentModalContent 
+            documentId={openDocument.id}
             document={openDocument} 
             onClose={() => setOpenDocument(null)} 
           />
@@ -245,85 +250,17 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
   );
 };
 
-// Legal Document Modal Content
-const LegalDocumentModalContent: React.FC<{ document: LegalLink; onClose: () => void }> = ({ document, onClose }) => {
-  const [content, setContent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+// Legal Document Modal Content with Language Switcher
+const LegalDocumentModalContent: React.FC<{ documentId: string; document: LegalLink; onClose: () => void }> = ({ documentId, document, onClose }) => {
+  const [lang, setLang] = useState<Language>('it');
   const Icon = document.icon;
 
-  useEffect(() => {
-    loadDocument();
-  }, [document.type]);
-
-  const loadDocument = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('legal_documents')
-        .select('*')
-        .eq('type', document.type)
-        .eq('is_active', true)
-        .maybeSingle();
-
-      if (!error && data) {
-        setContent(data);
-      }
-    } catch (error) {
-      console.error('Error loading document:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fallback content for documents not in database
-  const getFallbackContent = () => {
-    switch (document.id) {
-      case 'safecreative':
-        return {
-          title: 'SafeCreative - Certificazione',
-          content: `
-            <h3>Registrazione Proprietà Intellettuale</h3>
-            <p>M1SSION™ è registrato presso SafeCreative per la protezione della proprietà intellettuale.</p>
-            <br/>
-            <h4>Certificati Registrati:</h4>
-            <ul>
-              <li>Codice sorgente dell'applicazione</li>
-              <li>Design e interfaccia utente</li>
-              <li>Contenuti testuali e grafici</li>
-              <li>Meccaniche di gioco originali</li>
-            </ul>
-            <br/>
-            <p><strong>Titolare:</strong> Joseph MULÉ / NIYVORA KFT™</p>
-            <p><strong>Anno:</strong> 2025</p>
-          `
-        };
-      case 'euipo':
-        return {
-          title: 'EUIPO - Marchio Registrato',
-          content: `
-            <h3>Marchio Registrato dell'Unione Europea</h3>
-            <p>M1SSION™ è un marchio registrato presso l'Ufficio dell'Unione Europea per la Proprietà Intellettuale (EUIPO).</p>
-            <br/>
-            <h4>Dettagli Registrazione:</h4>
-            <ul>
-              <li><strong>Numero:</strong> 019289272</li>
-              <li><strong>Classe:</strong> 9, 41, 42</li>
-              <li><strong>Titolare:</strong> NIYVORA KFT™</li>
-              <li><strong>Stato:</strong> Registrato</li>
-            </ul>
-            <br/>
-            <p>L'uso non autorizzato del marchio M1SSION™ è vietato e perseguibile per legge.</p>
-          `
-        };
-      default:
-        return null;
-    }
-  };
-
-  const displayContent = content || getFallbackContent();
+  const title = lang === 'it' ? document.title : document.titleEn;
+  const description = lang === 'it' ? document.description : document.descriptionEn;
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
-      {/* HEADER */}
+      {/* HEADER with Language Switcher */}
       <div style={{
         flexShrink: 0,
         background: `linear-gradient(180deg, ${document.color}CC 0%, ${document.color}66 100%)`,
@@ -338,50 +275,433 @@ const LegalDocumentModalContent: React.FC<{ document: LegalLink; onClose: () => 
           <button onClick={onClose} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
           </button>
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <h1 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 700, letterSpacing: '1px' }}>
-              {document.title.toUpperCase()}
-            </h1>
+          
+          {/* Language Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.3)', borderRadius: '20px', padding: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <button
+              onClick={() => setLang('it')}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '16px',
+                border: 'none',
+                background: lang === 'it' ? '#00D1FF' : 'transparent',
+                color: lang === 'it' ? '#000' : 'rgba(255,255,255,0.6)',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              🇮🇹 IT
+            </button>
+            <button
+              onClick={() => setLang('en')}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '16px',
+                border: 'none',
+                background: lang === 'en' ? '#00D1FF' : 'transparent',
+                color: lang === 'en' ? '#000' : 'rgba(255,255,255,0.6)',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              🇬🇧 EN
+            </button>
           </div>
+          
           <div style={{ width: '40px' }} />
         </div>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>{document.description}</p>
+        <h1 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 700, letterSpacing: '1px', textAlign: 'center' }}>
+          {title.toUpperCase()}
+        </h1>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center', marginTop: '4px' }}>{description}</p>
       </div>
 
       {/* CONTENT */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)', WebkitOverflowScrolling: 'touch' }}>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <Loader2 style={{ width: '32px', height: '32px', color: document.color, animation: 'spin 1s linear infinite', margin: '0 auto' }} />
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', marginTop: '12px' }}>Caricamento documento...</p>
-          </div>
-        ) : displayContent ? (
-          <GlassCard>
-            <h2 style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: 700, marginBottom: '16px' }}>
-              {displayContent.title}
-            </h2>
-            <div 
-              style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', lineHeight: '1.7' }}
-              dangerouslySetInnerHTML={{ 
-                __html: (displayContent.content_md || displayContent.content || '').replace(/\n/g, '<br />') 
-              }}
-            />
-          </GlassCard>
-        ) : (
-          <GlassCard>
-            <div style={{ textAlign: 'center', padding: '20px' }}>
-              <Icon style={{ width: '48px', height: '48px', color: 'rgba(255,255,255,0.2)', margin: '0 auto 16px' }} />
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>Documento non disponibile</p>
-              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', marginTop: '8px' }}>
-                Il contenuto sarà disponibile a breve.
-              </p>
-            </div>
-          </GlassCard>
-        )}
+        {renderDocumentContent(documentId, lang)}
       </div>
     </div>
   );
 };
+
+// Render document content based on ID
+const renderDocumentContent = (documentId: string, lang: Language) => {
+  switch (documentId) {
+    case 'terms':
+      return <TermsContent lang={lang} />;
+    case 'privacy':
+      return <PrivacyContent lang={lang} />;
+    case 'cookie':
+      return <CookieContent lang={lang} />;
+    case 'rules':
+      return <GameRulesContent lang={lang} />;
+    case 'policies':
+      return <PoliciesContent lang={lang} />;
+    case 'safecreative':
+      return <SafeCreativeContent lang={lang} />;
+    case 'euipo':
+      return <EuipoContent lang={lang} />;
+    default:
+      return <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.5)' }}>Documento non disponibile</div>;
+  }
+};
+
+// ============ TERMS CONTENT ============
+const TermsContent: React.FC<{ lang: Language }> = ({ lang }) => {
+  const content = lang === 'it' ? {
+    title: "Termini e Condizioni d'Uso",
+    lastUpdate: "Ultimo aggiornamento: 5 Dicembre 2025",
+    sections: [
+      { title: "1. Oggetto del Servizio", content: "I presenti Termini e Condizioni (\"Termini\") regolano l'accesso e l'utilizzo dell'applicazione M1SSION™, di proprietà di NIYVORA KFT™. Utilizzando l'applicazione, l'Utente accetta integralmente questi Termini." },
+      { title: "2. Requisiti di Accesso", content: "Per utilizzare M1SSION™, l'Utente deve: avere almeno 13 anni di età, fornire informazioni accurate durante la registrazione, mantenere la riservatezza delle credenziali, utilizzare un solo account personale." },
+      { title: "3. Servizi di Gioco", content: "M1SSION™ offre: Buzz Map (mappa 3D interattiva), Missioni (sfide fisiche e digitali), Indizi (elementi narrativi), Classifiche, Premi, Community e AION (assistente AI)." },
+      { title: "4. Valute Virtuali", content: "M1U e PE sono valute virtuali senza valore monetario reale. NON sono scambiabili, vendibili o convertibili in valuta legale. NON sono rimborsabili." },
+      { title: "5. Pulse Breaker", content: "Pulse Breaker è un mini-gioco di PURO INTRATTENIMENTO. NON è un gioco d'azzardo. Le puntate avvengono SOLO con valute virtuali. NON esiste possibilità di prelievo o conversione in denaro." },
+      { title: "6. Divieti", content: "È vietato: utilizzare l'app per attività illegali, violare proprietà private, condividere/vendere account, creare account multipli, hackerare l'applicazione, usare bot/script, manipolare classifiche." },
+      { title: "7. Proprietà Intellettuale", content: "Tutti i contenuti di M1SSION™ sono di esclusiva proprietà di Joseph Mulé e NIYVORA KFT™, protetti dalle leggi sul copyright." },
+      { title: "8. Limitazione Responsabilità", content: "M1SSION™ è fornito \"così com'è\". L'Utente è responsabile della propria sicurezza durante le missioni fisiche." },
+      { title: "9. Privacy e AION", content: "La raccolta dati è regolata dalla Privacy Policy. AION elabora dati per fornire assistenza contestuale." },
+      { title: "10. Modifiche", content: "NIYVORA KFT™ si riserva il diritto di modificare Termini, funzionalità e meccaniche di gioco in qualsiasi momento." },
+      { title: "11. Giurisdizione", content: "Termini regolati dalla legge italiana. Foro competente: Tribunale di Milano." },
+      { title: "12. Contatti", content: "Per comunicazioni legali: legal@m1ssion.app | NIYVORA KFT™, Budapest, Hungary" }
+    ]
+  } : {
+    title: "Terms and Conditions of Use",
+    lastUpdate: "Last updated: December 5, 2025",
+    sections: [
+      { title: "1. Subject Matter", content: "These Terms and Conditions (\"Terms\") govern access to and use of the M1SSION™ application, owned by NIYVORA KFT™. By using the application, the User fully accepts these Terms." },
+      { title: "2. Access Requirements", content: "To use M1SSION™, the User must: be at least 13 years old, provide accurate information during registration, maintain credential confidentiality, use only one personal account." },
+      { title: "3. Gaming Services", content: "M1SSION™ offers: Buzz Map (interactive 3D map), Missions (physical and digital challenges), Clues (narrative elements), Leaderboards, Prizes, Community and AION (AI assistant)." },
+      { title: "4. Virtual Currencies", content: "M1U and PE are virtual currencies with no real monetary value. They are NOT exchangeable, sellable or convertible to legal currency. They are NOT refundable." },
+      { title: "5. Pulse Breaker", content: "Pulse Breaker is a PURELY ENTERTAINMENT mini-game. It is NOT gambling. Bets are made ONLY with virtual currencies. There is NO possibility of withdrawal or conversion to money." },
+      { title: "6. Prohibitions", content: "It is prohibited to: use the app for illegal activities, trespass on private property, share/sell accounts, create multiple accounts, hack the application, use bots/scripts, manipulate leaderboards." },
+      { title: "7. Intellectual Property", content: "All M1SSION™ content is the exclusive property of Joseph Mulé and NIYVORA KFT™, protected by copyright laws." },
+      { title: "8. Limitation of Liability", content: "M1SSION™ is provided \"as is\". The User is responsible for their own safety during physical missions." },
+      { title: "9. Privacy and AION", content: "Data collection is governed by the Privacy Policy. AION processes data to provide contextual assistance." },
+      { title: "10. Changes", content: "NIYVORA KFT™ reserves the right to modify Terms, features and game mechanics at any time." },
+      { title: "11. Jurisdiction", content: "Terms governed by Italian law. Exclusive jurisdiction: Court of Milan." },
+      { title: "12. Contacts", content: "For legal communications: legal@m1ssion.app | NIYVORA KFT™, Budapest, Hungary" }
+    ]
+  };
+
+  return (
+    <>
+      <GlassCard style={{ marginBottom: '16px' }}>
+        <h2 style={{ color: '#00D1FF', fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>{content.title}</h2>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{content.lastUpdate}</p>
+      </GlassCard>
+      {content.sections.map((section, i) => (
+        <GlassCard key={i} style={{ marginBottom: '12px' }}>
+          <h3 style={{ color: '#00D1FF', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>{section.title}</h3>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', lineHeight: '1.6' }}>{section.content}</p>
+        </GlassCard>
+      ))}
+      <LegalFooter lang={lang} />
+    </>
+  );
+};
+
+// ============ PRIVACY CONTENT ============
+const PrivacyContent: React.FC<{ lang: Language }> = ({ lang }) => {
+  const content = lang === 'it' ? {
+    title: "Informativa sulla Privacy",
+    lastUpdate: "Ultimo aggiornamento: 5 Dicembre 2025",
+    sections: [
+      { title: "1. Titolare del Trattamento", content: "NIYVORA KFT™, Budapest, Hungary. DPO: Joseph Mulé - contact@m1ssion.com" },
+      { title: "2. Dati Raccolti", content: "Dati di account (nome, email, password crittografata), dati di geolocalizzazione (GPS per Buzz Map), dati di utilizzo (progressi, punteggi, M1U/PE), dati tecnici (IP, dispositivo, crash report)." },
+      { title: "3. Geolocalizzazione", content: "La geolocalizzazione è ESSENZIALE per M1SSION™. Serve per: visualizzare la Buzz Map, verificare missioni fisiche, generare indizi contestuali. I dati in tempo reale NON vengono memorizzati permanentemente." },
+      { title: "4. Basi Giuridiche (GDPR)", content: "Contratto (Art. 6.1.b): necessario per il servizio. Consenso (Art. 6.1.a): per notifiche e marketing. Legittimo Interesse (Art. 6.1.f): sicurezza e prevenzione frodi." },
+      { title: "5. AI AION", content: "AION elabora messaggi e dati di gioco per fornire assistenza. Nessun dato viene utilizzato per addestrare modelli esterni. Le risposte sono per intrattenimento." },
+      { title: "6. M1U e Pulse Breaker", content: "M1U e PE sono valute virtuali senza valore monetario. Pulse Breaker è intrattenimento, NON gambling. Nessun dato condiviso con piattaforme di betting." },
+      { title: "7. Condivisione Dati", content: "Condivisi con: Supabase (database), Cloudflare (CDN), Apple/Google (notifiche), OpenAI (AI), Stripe (pagamenti). NON vendiamo MAI i dati." },
+      { title: "8. Trasferimenti Extra-UE", content: "Tramite clausole contrattuali standard (SCC) e misure tecniche supplementari (crittografia)." },
+      { title: "9. Sicurezza", content: "SSL/TLS, crittografia AES-256, hashing password bcrypt, 2FA disponibile, accesso limitato." },
+      { title: "10. Cookie", content: "Cookie tecnici essenziali, localStorage per preferenze. Vedi Cookie Policy completa." },
+      { title: "11. Conservazione", content: "Account: durata attiva + 30 giorni. Log tecnici: 90 giorni. Fatturazione: 10 anni." },
+      { title: "12. Diritti GDPR", content: "Accesso, rettifica, cancellazione, limitazione, portabilità, opposizione, revoca consenso. Contatta: contact@m1ssion.com" }
+    ]
+  } : {
+    title: "Privacy Policy",
+    lastUpdate: "Last updated: December 5, 2025",
+    sections: [
+      { title: "1. Data Controller", content: "NIYVORA KFT™, Budapest, Hungary. DPO: Joseph Mulé - contact@m1ssion.com" },
+      { title: "2. Data Collected", content: "Account data (name, email, encrypted password), geolocation data (GPS for Buzz Map), usage data (progress, scores, M1U/PE), technical data (IP, device, crash reports)." },
+      { title: "3. Geolocation", content: "Geolocation is ESSENTIAL for M1SSION™. Used for: displaying Buzz Map, verifying physical missions, generating contextual clues. Real-time data is NOT permanently stored." },
+      { title: "4. Legal Bases (GDPR)", content: "Contract (Art. 6.1.b): necessary for service. Consent (Art. 6.1.a): for notifications and marketing. Legitimate Interest (Art. 6.1.f): security and fraud prevention." },
+      { title: "5. AI AION", content: "AION processes messages and game data to provide assistance. No data is used to train external models. Responses are for entertainment." },
+      { title: "6. M1U and Pulse Breaker", content: "M1U and PE are virtual currencies with no monetary value. Pulse Breaker is entertainment, NOT gambling. No data shared with betting platforms." },
+      { title: "7. Data Sharing", content: "Shared with: Supabase (database), Cloudflare (CDN), Apple/Google (notifications), OpenAI (AI), Stripe (payments). We NEVER sell data." },
+      { title: "8. Extra-EU Transfers", content: "Through standard contractual clauses (SCCs) and supplementary technical measures (encryption)." },
+      { title: "9. Security", content: "SSL/TLS, AES-256 encryption, bcrypt password hashing, 2FA available, limited access." },
+      { title: "10. Cookies", content: "Essential technical cookies, localStorage for preferences. See complete Cookie Policy." },
+      { title: "11. Retention", content: "Account: active duration + 30 days. Technical logs: 90 days. Billing: 10 years." },
+      { title: "12. GDPR Rights", content: "Access, rectification, erasure, restriction, portability, objection, consent withdrawal. Contact: contact@m1ssion.com" }
+    ]
+  };
+
+  return (
+    <>
+      <GlassCard style={{ marginBottom: '16px' }}>
+        <h2 style={{ color: '#22C55E', fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>{content.title}</h2>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{content.lastUpdate}</p>
+        <div style={{ marginTop: '12px', padding: '10px', borderRadius: '8px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+          <p style={{ color: '#22C55E', fontSize: '11px' }}>GDPR Compliant - Reg. UE 2016/679</p>
+        </div>
+      </GlassCard>
+      {content.sections.map((section, i) => (
+        <GlassCard key={i} style={{ marginBottom: '12px' }}>
+          <h3 style={{ color: '#22C55E', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>{section.title}</h3>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', lineHeight: '1.6' }}>{section.content}</p>
+        </GlassCard>
+      ))}
+      <LegalFooter lang={lang} />
+    </>
+  );
+};
+
+// ============ COOKIE CONTENT ============
+const CookieContent: React.FC<{ lang: Language }> = ({ lang }) => {
+  const content = lang === 'it' ? {
+    title: "Cookie Policy",
+    lastUpdate: "Ultimo aggiornamento: 5 Dicembre 2025",
+    sections: [
+      { title: "1. Cosa sono i Cookie", content: "I cookie sono piccoli file di testo memorizzati sul dispositivo. Servono a memorizzare preferenze e migliorare l'esperienza utente." },
+      { title: "2. Cookie Tecnici (Essenziali)", content: "sb-*-auth-token (Supabase): autenticazione. __cf_bm (Cloudflare): protezione DDoS. __stripe_mid (Stripe): prevenzione frodi. Questi NON possono essere disabilitati." },
+      { title: "3. Cookie Funzionali", content: "m1:language (lingua), m1:theme (tema), m1:onboarding_complete (tutorial), m1:sound_enabled (audio). Memorizzano le tue preferenze." },
+      { title: "4. Cookie Analitici", content: "_ga, _gid (Google Analytics): statistiche anonimizzate. Richiedono consenso. IP anonimizzato." },
+      { title: "5. Cookie Marketing", content: "Attualmente M1SSION™ NON utilizza cookie di marketing o profilazione di terze parti." },
+      { title: "6. LocalStorage", content: "m1:cookie_consent (consenso), m1:push_token (notifiche), m1:last_sync (sincronizzazione), m1:buzz_cache (cache indizi)." },
+      { title: "7. Gestione Preferenze", content: "Puoi gestire i cookie tramite: banner cookie, impostazioni app, impostazioni browser, revoca consenso." },
+      { title: "8. Diritti", content: "Revocare consenso, richiedere informazioni, richiedere cancellazione, presentare reclamo al Garante Privacy." }
+    ]
+  } : {
+    title: "Cookie Policy",
+    lastUpdate: "Last updated: December 5, 2025",
+    sections: [
+      { title: "1. What are Cookies", content: "Cookies are small text files stored on your device. They store preferences and improve user experience." },
+      { title: "2. Technical Cookies (Essential)", content: "sb-*-auth-token (Supabase): authentication. __cf_bm (Cloudflare): DDoS protection. __stripe_mid (Stripe): fraud prevention. These CANNOT be disabled." },
+      { title: "3. Functional Cookies", content: "m1:language (language), m1:theme (theme), m1:onboarding_complete (tutorial), m1:sound_enabled (audio). Store your preferences." },
+      { title: "4. Analytics Cookies", content: "_ga, _gid (Google Analytics): anonymized statistics. Require consent. Anonymized IP." },
+      { title: "5. Marketing Cookies", content: "Currently M1SSION™ does NOT use third-party marketing or profiling cookies." },
+      { title: "6. LocalStorage", content: "m1:cookie_consent (consent), m1:push_token (notifications), m1:last_sync (sync), m1:buzz_cache (clue cache)." },
+      { title: "7. Preference Management", content: "You can manage cookies via: cookie banner, app settings, browser settings, consent withdrawal." },
+      { title: "8. Rights", content: "Withdraw consent, request information, request deletion, file complaint with Data Protection Authority." }
+    ]
+  };
+
+  return (
+    <>
+      <GlassCard style={{ marginBottom: '16px' }}>
+        <h2 style={{ color: '#F59E0B', fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>{content.title}</h2>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{content.lastUpdate}</p>
+      </GlassCard>
+      {content.sections.map((section, i) => (
+        <GlassCard key={i} style={{ marginBottom: '12px' }}>
+          <h3 style={{ color: '#F59E0B', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>{section.title}</h3>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', lineHeight: '1.6' }}>{section.content}</p>
+        </GlassCard>
+      ))}
+      <LegalFooter lang={lang} />
+    </>
+  );
+};
+
+// ============ GAME RULES CONTENT ============
+const GameRulesContent: React.FC<{ lang: Language }> = ({ lang }) => {
+  const content = lang === 'it' ? {
+    title: "Regolamento Ufficiale M1SSION™",
+    lastUpdate: "Versione 1.2 – Dicembre 2025",
+    antiGambling: "⚠️ CLAUSOLA ANTI-GAMBLING: M1SSION™ è un GIOCO A PROGRESSIONE DETERMINISTICA. NON è un gioco d'azzardo. La progressione dipende dall'impegno del giocatore.",
+    sections: [
+      { title: "Art. 1 — Oggetto del Gioco", content: "M1SSION™ è un gioco di abilità e investigazione (skill-based) che consiste nella ricerca di premi reali attraverso l'interpretazione di indizi e l'analisi di coordinate geografiche. NON è basato sulla fortuna o RNG." },
+      { title: "Art. 2 — Partecipazione", content: "Requisiti: 18+ anni, email verificata, accettazione termini, un solo account per persona. Account multipli = squalifica permanente." },
+      { title: "Art. 3 — Abbonamenti", content: "FREE: accesso base, indizi limitati, 1 BUZZ/giorno. PREMIUM (Silver, Gold, Black, Titanium): più indizi, BUZZ multipli, contenuti esclusivi." },
+      { title: "Art. 4 — Indizi e BUZZ", content: "Gli indizi sono elementi narrativi geolocalizzati. Il BUZZ segnala la prossimità ai POI. La precisione dipende dalle abilità del giocatore." },
+      { title: "Art. 5 — Premi", content: "Premi reali e digitali assegnati per raggiungimento obiettivi. NON sono vincite d'azzardo. Richiedono verifica identità per ritiro." },
+      { title: "Art. 6 — M1U e PE", content: "Valute virtuali SENZA valore monetario. M1U acquistabili ma NON convertibili. PE guadagnabili solo giocando." },
+      { title: "Art. 7 — Divieti", content: "Vietato: cheating, exploit, sharing account, manipolazione, comportamenti illegali, violazione copyright." },
+      { title: "Art. 8 — Sanzioni", content: "Warning → Sospensione temporanea → Ban permanente → Azioni legali" }
+    ]
+  } : {
+    title: "Official M1SSION™ Regulation",
+    lastUpdate: "Version 1.2 – December 2025",
+    antiGambling: "⚠️ ANTI-GAMBLING CLAUSE: M1SSION™ is a DETERMINISTIC PROGRESSION GAME. It is NOT gambling. Progression depends on player effort.",
+    sections: [
+      { title: "Art. 1 — Game Object", content: "M1SSION™ is a skill-based investigation game consisting of searching for real prizes through clue interpretation and geographical coordinate analysis. It is NOT based on luck or RNG." },
+      { title: "Art. 2 — Participation", content: "Requirements: 18+ years, verified email, terms acceptance, one account per person. Multiple accounts = permanent disqualification." },
+      { title: "Art. 3 — Subscriptions", content: "FREE: basic access, limited clues, 1 BUZZ/day. PREMIUM (Silver, Gold, Black, Titanium): more clues, multiple BUZZ, exclusive content." },
+      { title: "Art. 4 — Clues and BUZZ", content: "Clues are geolocated narrative elements. BUZZ signals proximity to POIs. Accuracy depends on player skills." },
+      { title: "Art. 5 — Prizes", content: "Real and digital prizes awarded for achieving objectives. They are NOT gambling winnings. Identity verification required for collection." },
+      { title: "Art. 6 — M1U and PE", content: "Virtual currencies with NO monetary value. M1U purchasable but NOT convertible. PE only earned through gameplay." },
+      { title: "Art. 7 — Prohibitions", content: "Prohibited: cheating, exploits, account sharing, manipulation, illegal behavior, copyright violation." },
+      { title: "Art. 8 — Sanctions", content: "Warning → Temporary suspension → Permanent ban → Legal action" }
+    ]
+  };
+
+  return (
+    <>
+      <GlassCard style={{ marginBottom: '16px' }}>
+        <h2 style={{ color: '#A855F7', fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>{content.title}</h2>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{content.lastUpdate}</p>
+      </GlassCard>
+      <GlassCard style={{ marginBottom: '16px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+        <p style={{ color: '#EF4444', fontSize: '13px', fontWeight: 600 }}>{content.antiGambling}</p>
+      </GlassCard>
+      {content.sections.map((section, i) => (
+        <GlassCard key={i} style={{ marginBottom: '12px' }}>
+          <h3 style={{ color: '#A855F7', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>{section.title}</h3>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', lineHeight: '1.6' }}>{section.content}</p>
+        </GlassCard>
+      ))}
+      <LegalFooter lang={lang} />
+    </>
+  );
+};
+
+// ============ POLICIES CONTENT ============
+const PoliciesContent: React.FC<{ lang: Language }> = ({ lang }) => {
+  const content = lang === 'it' ? {
+    title: "Policy & Disclaimer",
+    lastUpdate: "Ultimo aggiornamento: Dicembre 2025",
+    antiGambling: "🚫 M1SSION™ NON è un'applicazione di gioco d'azzardo. Non offre scommesse, puntate o giochi basati sulla fortuna che coinvolgono denaro reale.",
+    sections: [
+      { title: "Natura dell'App", content: "M1SSION™ è un'applicazione di intrattenimento interattivo: gioco di simulazione investigativa, puzzle/mistero, basato sulla posizione. Puramente per divertimento." },
+      { title: "Valute Virtuali", content: "M1U e PE NON hanno valore monetario reale. NON possono essere venduti, scambiati o convertiti in denaro. NON possono essere prelevati. Acquisti non rimborsabili." },
+      { title: "Pulse Breaker", content: "Mini-gioco di INTRATTENIMENTO. NON è gambling. Usa solo valute virtuali. Nessuna possibilità di vincere denaro reale." },
+      { title: "Nessun Gambling", content: "Nessun deposito per scommesse, nessun prelievo di vincite, nessun riscatto per denaro, nessun servizio di casinò o lotterie." },
+      { title: "Responsabilità", content: "L'utente è responsabile della propria sicurezza. Non entrare in proprietà private. Rispettare le leggi locali." },
+      { title: "AION AI", content: "Assistente AI per intrattenimento. NON fornisce consulenze professionali, legali o finanziarie." }
+    ]
+  } : {
+    title: "Policy & Disclaimer",
+    lastUpdate: "Last updated: December 2025",
+    antiGambling: "🚫 M1SSION™ is NOT a gambling application. It does not offer betting, wagers or luck-based games involving real money.",
+    sections: [
+      { title: "App Nature", content: "M1SSION™ is an interactive entertainment application: investigative simulation game, puzzle/mystery, location-based. Purely for fun." },
+      { title: "Virtual Currencies", content: "M1U and PE have NO real monetary value. They CANNOT be sold, exchanged or converted to money. They CANNOT be withdrawn. Purchases are non-refundable." },
+      { title: "Pulse Breaker", content: "ENTERTAINMENT mini-game. It is NOT gambling. Uses only virtual currencies. No possibility of winning real money." },
+      { title: "No Gambling", content: "No deposits for betting, no withdrawal of winnings, no redemption for money, no casino or lottery services." },
+      { title: "Responsibility", content: "User is responsible for their own safety. Do not trespass on private property. Respect local laws." },
+      { title: "AION AI", content: "AI assistant for entertainment. Does NOT provide professional, legal or financial advice." }
+    ]
+  };
+
+  return (
+    <>
+      <GlassCard style={{ marginBottom: '16px' }}>
+        <h2 style={{ color: '#EF4444', fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>{content.title}</h2>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{content.lastUpdate}</p>
+      </GlassCard>
+      <GlassCard style={{ marginBottom: '16px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+        <p style={{ color: '#EF4444', fontSize: '13px', fontWeight: 600 }}>{content.antiGambling}</p>
+      </GlassCard>
+      {content.sections.map((section, i) => (
+        <GlassCard key={i} style={{ marginBottom: '12px' }}>
+          <h3 style={{ color: '#EF4444', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>{section.title}</h3>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', lineHeight: '1.6' }}>{section.content}</p>
+        </GlassCard>
+      ))}
+      <LegalFooter lang={lang} />
+    </>
+  );
+};
+
+// ============ SAFECREATIVE CONTENT ============
+const SafeCreativeContent: React.FC<{ lang: Language }> = ({ lang }) => {
+  const content = lang === 'it' ? {
+    title: "SafeCreative - Certificazione Copyright",
+    sections: [
+      { title: "Certificazione Ufficiale", content: "🔐 M1SSION™ | Autore: Joseph Mulé | Data: 2025 | Tipologia: Applicazione Mobile iOS | Stato: Registrata e Protetta" },
+      { title: "Elementi Protetti", content: "Nome e Logo M1SSION™, Codice Sorgente e algoritmi, Design Interface UI/UX, Game Mechanics (caccia al tesoro geolocalizzato), Contenuti (testi, indizi, narrazioni), Documentazione." },
+      { title: "Tecnologie Proprietarie", content: "Sistema di generazione indizi AI, Algoritmo posizionamento geografico, Framework gamification multi-tier, Sistema sicurezza avanzato, Interfaccia Capacitor iOS." },
+      { title: "Dichiarazione di Originalità", content: "L'autore Joseph Mulé dichiara che M1SSION™ è un'opera completamente originale, sviluppata autonomamente, senza violazione di diritti di terzi." },
+      { title: "Certificati SafeCreative", content: "2505261861325 | 2512103987648 | 2512103988744" }
+    ]
+  } : {
+    title: "SafeCreative - Copyright Certification",
+    sections: [
+      { title: "Official Certification", content: "🔐 M1SSION™ | Author: Joseph Mulé | Date: 2025 | Type: iOS Mobile Application | Status: Registered and Protected" },
+      { title: "Protected Elements", content: "M1SSION™ Name and Logo, Source Code and algorithms, UI/UX Interface Design, Game Mechanics (geolocated treasure hunt), Content (texts, clues, narratives), Documentation." },
+      { title: "Proprietary Technologies", content: "AI clue generation system, Geographic positioning algorithm, Multi-tier gamification framework, Advanced security system, Capacitor iOS interface." },
+      { title: "Originality Statement", content: "Author Joseph Mulé declares that M1SSION™ is a completely original work, independently developed, without violation of third-party rights." },
+      { title: "SafeCreative Certificates", content: "2505261861325 | 2512103987648 | 2512103988744" }
+    ]
+  };
+
+  return (
+    <>
+      <GlassCard style={{ marginBottom: '16px' }}>
+        <h2 style={{ color: '#EC4899', fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>{content.title}</h2>
+      </GlassCard>
+      {content.sections.map((section, i) => (
+        <GlassCard key={i} style={{ marginBottom: '12px' }}>
+          <h3 style={{ color: '#EC4899', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>{section.title}</h3>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', lineHeight: '1.6' }}>{section.content}</p>
+        </GlassCard>
+      ))}
+      <LegalFooter lang={lang} />
+    </>
+  );
+};
+
+// ============ EUIPO CONTENT ============
+const EuipoContent: React.FC<{ lang: Language }> = ({ lang }) => {
+  const content = lang === 'it' ? {
+    title: "EUIPO – Marchio Registrato UE",
+    sections: [
+      { title: "Registrazione Marchio", content: "M1SSION™ è un marchio registrato presso l'Ufficio dell'Unione Europea per la Proprietà Intellettuale (EUIPO). Titolare: NIYVORA KFT™" },
+      { title: "Classe 9 – Software & App", content: "Software applicativo mobile, software per intrattenimento interattivo, software per giochi a premi, applicazioni smartphone/tablet, software geolocalizzazione, software AR." },
+      { title: "Classe 28 – Giochi", content: "Giochi elettronici, giochi di società, giochi interattivi, giocattoli elettronici, giochi a premi (non d'azzardo)." },
+      { title: "Classe 41 – Intrattenimento", content: "Servizi di intrattenimento interattivo, organizzazione concorsi, servizi giochi online, produzione contenuti multimediali." },
+      { title: "Classe 42 – Tecnologia", content: "Progettazione e sviluppo software, SaaS, PaaS, hosting piattaforme, cloud computing, sviluppo app mobile." },
+      { title: "Protezione", content: "L'uso non autorizzato del marchio M1SSION™ è vietato e perseguibile per legge su tutto il territorio dell'Unione Europea." }
+    ]
+  } : {
+    title: "EUIPO – EU Registered Trademark",
+    sections: [
+      { title: "Trademark Registration", content: "M1SSION™ is a trademark registered with the European Union Intellectual Property Office (EUIPO). Owner: NIYVORA KFT™" },
+      { title: "Class 9 – Software & Apps", content: "Mobile application software, interactive entertainment software, prize game software, smartphone/tablet applications, geolocation software, AR software." },
+      { title: "Class 28 – Games", content: "Electronic games, board games, interactive games, electronic toys, prize games (non-gambling)." },
+      { title: "Class 41 – Entertainment", content: "Interactive entertainment services, contest organization, online gaming services, multimedia content production." },
+      { title: "Class 42 – Technology", content: "Software design and development, SaaS, PaaS, platform hosting, cloud computing, mobile app development." },
+      { title: "Protection", content: "Unauthorized use of the M1SSION™ trademark is prohibited and legally prosecutable throughout the European Union." }
+    ]
+  };
+
+  return (
+    <>
+      <GlassCard style={{ marginBottom: '16px' }}>
+        <h2 style={{ color: '#6366F1', fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>{content.title}</h2>
+      </GlassCard>
+      {content.sections.map((section, i) => (
+        <GlassCard key={i} style={{ marginBottom: '12px' }}>
+          <h3 style={{ color: '#6366F1', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>{section.title}</h3>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', lineHeight: '1.6' }}>{section.content}</p>
+        </GlassCard>
+      ))}
+      <LegalFooter lang={lang} />
+    </>
+  );
+};
+
+// ============ LEGAL FOOTER ============
+const LegalFooter: React.FC<{ lang: Language }> = ({ lang }) => (
+  <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
+    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginBottom: '8px' }}>
+      © 2025 M1SSION™ – {lang === 'it' ? 'Tutti i diritti riservati' : 'All Rights Reserved'}
+    </p>
+    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginBottom: '4px' }}>
+      NIYVORA KFT™ – Budapest, Hungary
+    </p>
+    <p style={{ color: 'rgba(0, 209, 255, 0.4)', fontSize: '9px' }}>
+      SafeCreative: 2505261861325 | EUIPO: M1SSION™
+    </p>
+  </div>
+);
 
 // Glass Card
 const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
