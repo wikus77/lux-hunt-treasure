@@ -12,6 +12,7 @@ import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION C
 import { useAionDynamicIsland } from '@/hooks/useAionDynamicIsland'; // 🎙️ DI SOLO per AION
 import type { AionEntityHandle, Viseme } from '@/components/aion/AionEntity';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset'; // 🔧 FIX v12: For keyboard positioning
+import { useLocation } from 'wouter'; // 🔧 FIX v15: Check if on AION page
 
 interface Message {
   id: string;
@@ -73,6 +74,10 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   
   // 🔧 FIX v11: Use unified keyboard inset hook
   const { isOpen: isKeyboardOpen, inset: keyboardInset } = useKeyboardInset();
+  
+  // 🔧 FIX v15: Check if on AION page - only render portal when on this page
+  const [location] = useLocation();
+  const isOnAionPage = location === '/aion' || location === '/intelligence' || location.startsWith('/aion') || location.startsWith('/intelligence');
   
   const { speak, stop: stopTTS, isSpeaking, unlockAudio } = useTTS();
   const { accrueFromAion } = useCashbackWallet(); // 🆕 M1SSION Cashback Vault™
@@ -504,10 +509,10 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         {status === 'idle' && '✨ Pronto'}
       </div>
 
-      {/* Input - 🔧 FIX v14: Use createPortal for keyboard anchoring
-          CRITICAL: createPortal bypasses container transforms that break fixed positioning
+      {/* Input - 🔧 FIX v15: Use createPortal for keyboard anchoring
+          CRITICAL: Only render when on AION page to prevent appearing on other pages
           🔧 FIX 30/01/2026: WHITE theme styling */}
-      {createPortal(
+      {isOnAionPage && createPortal(
         <div 
           style={{
             position: 'fixed',
