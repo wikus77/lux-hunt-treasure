@@ -18,10 +18,10 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
   duration = 4500 // 4.5 seconds default
 }) => {
   const [isVisible, setIsVisible] = useState(true);
-  const [isFadingIn, setIsFadingIn] = useState(true);  // Start with fade-in
-  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false); // Only fade-out, container starts opaque
   const [videoError, setVideoError] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [contentVisible, setContentVisible] = useState(false); // For video fade-in
   const videoRef = useRef<HTMLVideoElement>(null);
   const hasEndedRef = useRef(false);
 
@@ -40,14 +40,14 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
     }, 800);
   };
 
-  // Fade-in complete after mount
+  // Start showing content after a tiny delay (ensures black screen is visible first)
   useEffect(() => {
-    const fadeInTimer = setTimeout(() => {
-      setIsFadingIn(false);
-      console.log('🎬 [Splash] Fade-in complete');
-    }, 600);
+    const showContentTimer = setTimeout(() => {
+      setContentVisible(true);
+      console.log('🎬 [Splash] Content fade-in started');
+    }, 100); // 100ms delay to ensure black screen shows first
     
-    return () => clearTimeout(fadeInTimer);
+    return () => clearTimeout(showContentTimer);
   }, []);
 
   // Main duration timer
@@ -110,14 +110,14 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#000000',
+            backgroundColor: '#000000', // Always black background
             overflow: 'hidden',
           }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isFadingIn ? 0 : isFadingOut ? 0 : 1 }}
+          initial={{ opacity: 1 }} // START FULLY OPAQUE - no flash of Home
+          animate={{ opacity: isFadingOut ? 0 : 1 }} // Only fade out at the end
           exit={{ opacity: 0 }}
           transition={{ 
-            duration: isFadingIn ? 0.6 : isFadingOut ? 0.8 : 0.3,
+            duration: isFadingOut ? 0.8 : 0.1, // Fast initial, slow fade-out
             ease: 'easeInOut'
           }}
         >
@@ -144,8 +144,9 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
                   objectFit: 'cover',
                   backgroundColor: '#000000',
                   zIndex: 1,
-                  opacity: videoLoaded ? 1 : 0,
-                  transition: 'opacity 0.3s ease-in',
+                  // Fade in: only show when content is visible AND video is loaded
+                  opacity: contentVisible && videoLoaded ? 1 : 0,
+                  transition: 'opacity 0.6s ease-in', // Smooth fade-in
                 }}
                 src={VIDEO_SRC}
               />
@@ -158,6 +159,8 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
                   background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%)',
                   pointerEvents: 'none',
                   zIndex: 2,
+                  opacity: contentVisible && videoLoaded ? 1 : 0,
+                  transition: 'opacity 0.6s ease-in',
                 }}
               />
 
@@ -172,8 +175,8 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
                   zIndex: 10,
                 }}
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: videoLoaded ? 1 : 0, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.6 }}
+                animate={{ opacity: contentVisible && videoLoaded ? 1 : 0, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
               >
                 <p 
                   style={{ 
@@ -198,7 +201,7 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
                 justifyContent: 'center',
               }}
               initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
+              animate={{ opacity: contentVisible ? 1 : 0, scale: contentVisible ? 1 : 0.8 }}
               transition={{ duration: 0.5 }}
             >
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px' }}>
@@ -239,8 +242,8 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
             </motion.div>
           )}
 
-          {/* Loading indicator while video loads */}
-          {!videoLoaded && !videoError && (
+          {/* Loading indicator while video loads - only show after content fade-in starts */}
+          {!videoLoaded && !videoError && contentVisible && (
             <motion.div
               style={{
                 position: 'absolute',
@@ -251,8 +254,9 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
                 backgroundColor: '#000000',
                 zIndex: 5,
               }}
-              initial={{ opacity: 1 }}
+              initial={{ opacity: 0 }}
               animate={{ opacity: videoLoaded ? 0 : 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
               <div 
