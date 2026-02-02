@@ -1,27 +1,25 @@
 /**
- * M1SSION™ Shop Pill
+ * M1SSION™ Shop Pill - FULLSCREEN REVOLUT STYLE
  * Il centro acquisti dell'app: Scratch & Win, Gira la Ruota, Lotteria
- * 
- * Sostituisce il vecchio FortuneWheelPill con un sistema più completo
  * 
  * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Sparkles, Trophy } from 'lucide-react';
 import { SectionErrorBoundary } from '@/components/error/SectionErrorBoundary';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
-
-// Lazy load ShopModal per ridurre memory footprint iniziale
-const ShopModal = lazy(() => import('@/components/shop/ShopModal'));
+import { ShopFlipOverlay } from '@/components/shop/ShopFlipOverlay';
+import { ShopContent } from '@/components/shop/ShopContent';
 
 const WHEEL_STORAGE_KEY = 'm1_fortune_wheel_last_spin';
 
 export const ShopPill: React.FC = () => {
   const { user } = useUnifiedAuth();
   const [showShop, setShowShop] = useState(false);
+  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const [hasNotification, setHasNotification] = useState(false);
   const [hasPendingWins, setHasPendingWins] = useState(false);
 
@@ -63,10 +61,23 @@ export const ShopPill: React.FC = () => {
     };
   }, [user]);
 
+  const handleOpenShop = (e: React.MouseEvent<HTMLButtonElement>) => {
+    setOriginRect(e.currentTarget.getBoundingClientRect());
+    setShowShop(true);
+  };
+
+  const handleCloseShop = () => {
+    setShowShop(false);
+    // Recheck notifications after closing
+    const lastSpin = localStorage.getItem(WHEEL_STORAGE_KEY);
+    const canSpin = !lastSpin || new Date(lastSpin).toDateString() !== new Date().toDateString();
+    setHasNotification(canSpin);
+  };
+
   return (
     <>
       <motion.button
-        onClick={() => setShowShop(true)}
+        onClick={handleOpenShop}
         className="flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer relative"
         style={{
           background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.25), rgba(236, 72, 153, 0.2))',
@@ -135,20 +146,15 @@ export const ShopPill: React.FC = () => {
         </AnimatePresence>
       </motion.button>
 
-      {/* Shop Modal */}
+      {/* Shop Modal - FULLSCREEN REVOLUT STYLE */}
       <SectionErrorBoundary section="Shop" fallbackHeight="0px" showRetry={false}>
-        <Suspense fallback={null}>
-          <ShopModal 
-            isOpen={showShop} 
-            onClose={() => {
-              setShowShop(false);
-              // Recheck notifications after closing
-              const lastSpin = localStorage.getItem(WHEEL_STORAGE_KEY);
-              const canSpin = !lastSpin || new Date(lastSpin).toDateString() !== new Date().toDateString();
-              setHasNotification(canSpin);
-            }} 
-          />
-        </Suspense>
+        <ShopFlipOverlay
+          open={showShop}
+          originRect={originRect}
+          onClose={handleCloseShop}
+        >
+          <ShopContent onClose={handleCloseShop} />
+        </ShopFlipOverlay>
       </SectionErrorBoundary>
     </>
   );
