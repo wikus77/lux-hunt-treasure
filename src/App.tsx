@@ -194,7 +194,7 @@ function App() {
   
   return (
     <div className="app-shell relative">
-      {/* 🚀 M1 LOGO SPLASH - Shows on EVERY app launch (native feel) */}
+      {/* 🚀 M1 INTRO SPLASH - Shows M1SSION_INTRO.mp4 on EVERY app launch (native feel) */}
       {showSplash && (
         <M1LogoSplash 
           onComplete={() => {
@@ -202,7 +202,7 @@ function App() {
             // Mark splash as shown for this session (clears when app closes)
             sessionStorage.setItem('m1_splash_shown_session', 'true');
           }} 
-          duration={3000} // 3 seconds (reduced from 5s for better UX)
+          duration={4500} // 4.5 seconds - loads user data in background
         />
       )}
       
