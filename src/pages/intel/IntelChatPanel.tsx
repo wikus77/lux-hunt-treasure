@@ -3,6 +3,7 @@
 // 🔧 FIX v11 (22/01/2026): Unified KeyboardDock for iOS keyboard handling
 
 import React, { useState, useRef, useEffect, RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, MicOff, RotateCw, MoreHorizontal, Loader2, Brain, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -503,85 +504,88 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         {status === 'idle' && '✨ Pronto'}
       </div>
 
-      {/* Input - 🔧 FIX v13: Same keyboard anchoring as Chat
-          CRITICAL: iOS requires the same DOM node to maintain focus session
+      {/* Input - 🔧 FIX v14: Use createPortal for keyboard anchoring
+          CRITICAL: createPortal bypasses container transforms that break fixed positioning
           🔧 FIX 30/01/2026: WHITE theme styling */}
-      <div 
-        style={{
-          position: 'fixed',
-          left: '8px',
-          right: '8px',
-          // 🔧 FIX v13: Stesso ancoraggio tastiera del Chat - più in basso quando chiusa
-          bottom: isKeyboardOpen ? `${keyboardInset + 8}px` : '100px',
-          zIndex: 60000,
-          transition: 'bottom 0.15s ease-out',
-          // WHITE Glass style
-          background: 'rgba(255, 255, 255, 0.98)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(0, 209, 255, 0.2)',
-          borderRadius: '16px',
-          boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.08), 0 0 20px rgba(0, 209, 255, 0.1)',
-          padding: '12px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              e.target.style.height = 'auto';
-              e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-            }}
-            onKeyDown={handleKeyPress}
-            placeholder="Scrivi un messaggio..."
-            disabled={isLoading}
-            rows={1}
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="sentences"
-            spellCheck={false}
-            inputMode="text"
-            data-form-type="other"
-            data-lpignore="true"
-            data-chat-input="true"
-            style={{
-              flex: 1,
-              background: 'rgba(243, 244, 246, 0.9)',
-              border: '1px solid rgba(0, 209, 255, 0.2)',
-              borderRadius: '12px',
-              padding: '10px 16px',
-              color: '#1F2937',
-              fontSize: '15px',
-              maxHeight: '120px',
-              minHeight: '40px',
-              resize: 'none',
-              overflowY: 'auto',
-              outline: 'none',
-              WebkitAppearance: 'none',
-            }}
-          />
-          <button
-            onClick={() => sendMessage()}
-            disabled={!input.trim() || isLoading}
-            style={{
-              padding: '10px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #00D1FF 0%, #3B82F6 100%)',
-              border: 'none',
-              cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
-              opacity: !input.trim() || isLoading ? 0.5 : 1,
-              boxShadow: '0 4px 12px rgba(0, 209, 255, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Send style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
-          </button>
-        </div>
-      </div>
+      {createPortal(
+        <div 
+          style={{
+            position: 'fixed',
+            left: '8px',
+            right: '8px',
+            // 🔧 FIX v14: Stesso ancoraggio tastiera del Chat - ancorato alla tastiera
+            bottom: isKeyboardOpen ? `${keyboardInset + 8}px` : '100px',
+            zIndex: 99999,
+            transition: 'bottom 0.15s ease-out',
+            // WHITE Glass style
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(0, 209, 255, 0.2)',
+            borderRadius: '16px',
+            boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.08), 0 0 20px rgba(0, 209, 255, 0.1)',
+            padding: '12px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+              }}
+              onKeyDown={handleKeyPress}
+              placeholder="Scrivi un messaggio..."
+              disabled={isLoading}
+              rows={1}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="sentences"
+              spellCheck={false}
+              inputMode="text"
+              data-form-type="other"
+              data-lpignore="true"
+              data-chat-input="true"
+              style={{
+                flex: 1,
+                background: 'rgba(243, 244, 246, 0.9)',
+                border: '1px solid rgba(0, 209, 255, 0.2)',
+                borderRadius: '12px',
+                padding: '10px 16px',
+                color: '#1F2937',
+                fontSize: '15px',
+                maxHeight: '120px',
+                minHeight: '40px',
+                resize: 'none',
+                overflowY: 'auto',
+                outline: 'none',
+                WebkitAppearance: 'none',
+              }}
+            />
+            <button
+              onClick={() => sendMessage()}
+              disabled={!input.trim() || isLoading}
+              style={{
+                padding: '10px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #00D1FF 0%, #3B82F6 100%)',
+                border: 'none',
+                cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
+                opacity: !input.trim() || isLoading ? 0.5 : 1,
+                boxShadow: '0 4px 12px rgba(0, 209, 255, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Send style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
