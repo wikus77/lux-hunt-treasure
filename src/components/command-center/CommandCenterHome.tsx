@@ -201,22 +201,7 @@ export default function CommandCenterHome() {
 
   return (
     <div className="w-full">
-      {/* Full-width Prize Vision at the top - CASHBACK / M1U */}
-      <motion.div 
-        className="mb-6 w-full m1-card"
-        data-onboarding="prize-vision"
-        data-section="cashback"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-      <Suspense fallback={<PrizeVisionFallback />}>
-        <PrizeVision 
-          progress={progress} 
-          status={prizeUnlockStatus} 
-        />
-      </Suspense>
-    </motion.div>
+      {/* 🆕 PrizeVision moved to AppHome for Revolut-style layout */}
 
     {/* THE PULSE™ - Personal Energy Bar (PE per utente) */}
     {PULSE_ENABLED && (

@@ -15,11 +15,8 @@ import ReferralCodeDisplay from "@/components/layout/header/ReferralCodeDisplay"
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import MinimalHeaderStrip from "@/components/layout/MinimalHeaderStrip";
 import { SettingsModal } from "@/components/settings/SettingsModal";
-// 🆕 Import pills for unified header
+// 🆕 Import M1UPill for header
 import M1UPill from "@/features/m1u/M1UPill";
-import StreakPill from "@/components/gamification/StreakPill";
-import ShopPill from "@/components/shop/ShopPill";
-import CashbackVaultPill from "@/components/home/CashbackVaultPill";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -416,24 +413,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           </div>
         </div>
         
-        {/* ROW 2: StreakPill | ShopPill | CashbackPill */}
-        <div 
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <div style={{ pointerEvents: 'auto' }}>
-            <StreakPill showLabel />
-          </div>
-          <div style={{ pointerEvents: 'auto' }}>
-            <ShopPill />
-          </div>
-          <div style={{ pointerEvents: 'auto', transform: 'scale(0.85)' }}>
-            <CashbackVaultPill variant="compact" />
-          </div>
-        </div>
+        {/* ROW 2: Pills moved to AppHome Revolut-style layout */}
       </motion.div>
       
       {/* Settings Modal - FULLSCREEN con animazione FLIP */}

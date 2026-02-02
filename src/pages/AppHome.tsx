@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CommandCenterHome from "@/components/command-center/CommandCenterHome";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useLocation } from "wouter";
-import { Cpu } from "lucide-react";
+import { Cpu, Target } from "lucide-react";
 import { useDeepLinkQR } from "@/hooks/useDeepLinkQR";
 import M1UPill from "@/features/m1u/M1UPill";
 import { PageSkeleton } from "@/components/ui/skeleton-loader";
@@ -26,6 +26,10 @@ import MissionSync from "@/components/home/MissionSync";
 // import { InactivityHint } from "@/components/first-session";
 import { NextActionContainer, MotivationalPopup, FortuneWheel } from "@/components/feedback";
 import { SectionErrorBoundary } from "@/components/error/SectionErrorBoundary";
+// 🆕 REVOLUT LAYOUT: Prize carousel at top
+const PrizeVision = lazy(() => import("@/components/command-center/home-sections/PrizeVision").then(m => ({ default: m.PrizeVision })));
+import { useMissionStatus } from "@/hooks/useMissionStatus";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -191,6 +195,11 @@ const { isConnected } = useRealTimeNotifications();
   // REASON: LeaderboardPage pattern - theme applied via container className="sn-page" only
   // This ensures deterministic behavior without race conditions during navigation
 
+  // 🆕 REVOLUT LAYOUT: Get mission data for PrizeVision
+  const { missionStatus } = useMissionStatus();
+  const [progress] = useLocalStorage<number>("mission-progress", 0);
+  const prizeProgress = missionStatus?.progressPercent || progress || 46;
+
   return (
     <div 
       className="sn-page relative m1-single-scroll-root"
@@ -203,12 +212,9 @@ const { isConnected } = useRealTimeNotifications();
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
-      {/* CRITICAL FIX: Remove duplicate header/nav - GlobalLayout handles these */}
-      {/* 🔧 FIX 27/01/2026 v6: PTR RE-ENABLED with stricter conditions
-          REVERTED disabled={isCapacitor} - user wants PTR on native iOS
-          MissionSync now has pressDelay + stricter thresholds to prevent ghost triggers */}
       <MissionSync onRefresh={handleMissionSync}>
-      <div className="px-4 space-y-6 relative z-10">
+      {/* 🆕 REVOLUT-STYLE LAYOUT */}
+      <div className="relative">
         <AnimatePresence>
           {isLoaded && (
             <motion.div
@@ -217,6 +223,117 @@ const { isConnected } = useRealTimeNotifications();
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* 1️⃣ M1SSION PRIZE CAROUSEL - LARGE, starts from safe area */}
+              {/* Like the purple Revolut element */}
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              <div 
+                style={{
+                  width: '100%',
+                  minHeight: '45vh',
+                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 70px)', // Space for header overlay
+                  paddingLeft: '16px',
+                  paddingRight: '16px',
+                  paddingBottom: '20px',
+                  background: 'linear-gradient(180deg, rgba(15, 25, 45, 0.95) 0%, rgba(5, 10, 25, 0.98) 100%)',
+                }}
+              >
+                <Suspense fallback={
+                  <div className="w-full h-64 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-xl animate-pulse flex items-center justify-center">
+                    <div className="text-white/40 text-sm">Caricamento...</div>
+                  </div>
+                }>
+                  <PrizeVision progress={prizeProgress} />
+                </Suspense>
+              </div>
+
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* 2️⃣ PILLS ROW - Like Trading, Ricevi, Invia, Altro in Revolut */}
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              <div 
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  padding: '16px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                  <StreakPill showLabel={false} />
+                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Streak</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                  <ShopPill />
+                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Shop</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                  <CashbackVaultPill variant="compact" />
+                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Cashback</span>
+                </div>
+              </div>
+
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* 3️⃣ ON M1SSION BUTTON - Like "Scegli le criptovalute" in Revolut */}
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              <div style={{ padding: '0 16px', marginBottom: '16px' }}>
+                <motion.button
+                  onClick={() => navigate('/buzz')}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  style={{
+                    width: '100%',
+                    padding: '16px 20px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.15) 0%, rgba(123, 46, 255, 0.15) 100%)',
+                    border: '1px solid rgba(0, 209, 255, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #00D1FF 0%, #7B2EFF 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      <Target className="w-5 h-5 text-white" />
+                    </div>
+                    <div style={{ textAlign: 'left' }}>
+                      <p style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 600, marginBottom: '2px' }}>
+                        ON M1SSION
+                      </p>
+                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>
+                        Cerca indizi e vinci premi
+                      </p>
+                    </div>
+                  </div>
+                  <motion.div
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    style={{ color: '#00D1FF', fontSize: '20px' }}
+                  >
+                    →
+                  </motion.div>
+                </motion.button>
+              </div>
+
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* 4️⃣ PROSSIMI PASSI Container */}
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              <div style={{ padding: '0 16px', marginBottom: '16px' }}>
+                <SectionErrorBoundary section="Prossima Azione" fallbackHeight="80px">
+                  <NextActionContainer />
+                </SectionErrorBoundary>
+              </div>
+
+              {/* Notifications Banner */}
               {notificationsBannerOpen && (
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
@@ -239,61 +356,20 @@ const { isConnected } = useRealTimeNotifications();
                 </motion.div>
               )}
 
-                  <div className="container mx-auto px-3 pb-20">
-                {/* 🆕 ALL Pills in UnifiedHeader - offset for 2 header rows */}
-                <div className="m1-first-content-offset" style={{ height: '110px' }} />
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              {/* 5️⃣ REST OF CONTENT - CommandCenterHome (senza PrizeVision) */}
+              {/* ═══════════════════════════════════════════════════════════════ */}
+              <div style={{ padding: '0 16px' }}>
+                {/* Hidden title for accessibility */}
+                <h1 id="m1-home-title" className="sr-only">M1SSION Centro di Comando</h1>
+                <div id="mission-status-badge-portal" data-anchor="m1-header-badge" data-persistent="true" className="flex justify-center my-2 sm:my-3" />
 
-                {/* 🎯 PROSSIMA AZIONE: Container unificato espandibile */}
-                {/* 🔧 FIX 28/01/2026: Sostituito due card separate con container singolo */}
-                <div className="mb-4">
-                  <SectionErrorBoundary section="Prossima Azione" fallbackHeight="80px">
-                    <NextActionContainer />
-                  </SectionErrorBoundary>
-                </div>
-
-                {/* 🎯 CONTENT_BELOW_BLOCK: contenuto sotto i pill */}
-                <motion.div
-                  className="relative text-center home-content-below-pills"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.5 }}
-                  data-page="home"
-                >
-                  {/* 🎯 H1 TITLE - HIDDEN but required for MissionBadgeInjector to anchor the badge */}
-                  <h1 
-                    id="m1-home-title"
-                    aria-label="Centro di Comando Agente M1SSION"
-                    className="sr-only"
-                  >
-                    M1SSION Centro di Comando
-                  </h1>
-
-                  {/* ON M1SSION Badge Portal - Fixed slot for MissionBadgeInjector */}
-                  {/* 🔥 FIX: Rimosso "Centro di Comando Agente" - badge ora è il titolo principale */}
-                  <div 
-                    id="mission-status-badge-portal" 
-                    data-anchor="m1-header-badge"
-                    data-persistent="true"
-                    className="flex justify-center my-2 sm:my-3"
-                  />
-                </motion.div>
-
-
-                <main 
-                  id="main-content" 
-                  className="max-w-screen-xl mx-auto"
-                  role="main"
-                  aria-label="Contenuto principale"
-                >
-                  {/* 🔥 CONTAINER OTTIMIZZATO: Eliminato min-h per evitare overflow */}
-                  {/* 🔧 FIX: Error boundary per CommandCenter - sezione critica */}
+                <main id="main-content" className="max-w-screen-xl mx-auto pb-20" role="main">
                   <SectionErrorBoundary section="Centro Comando" fallbackHeight="400px">
-                    <div>
-                      <CommandCenterHome />
-                    </div>
+                    <CommandCenterHome />
                   </SectionErrorBoundary>
                   
-                  {/* M1SSION PANEL™ Button - Only for Admin/Developer - SENZA MARGINI */}
+                  {/* M1SSION PANEL™ Button - Admin/Developer only */}
                   {showPanelButton && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
@@ -304,31 +380,22 @@ const { isConnected } = useRealTimeNotifications();
                       <motion.button
                         onClick={() => navigate('/panel-access')}
                         className="w-full glass-card p-4 border border-[#4361ee]/30 bg-gradient-to-r from-[#4361ee]/10 to-[#7209b7]/10 rounded-xl group relative overflow-hidden"
-                        whileHover={{ 
-                          scale: 1.02,
-                          borderColor: 'rgba(67, 97, 238, 0.6)'
-                        }}
+                        whileHover={{ scale: 1.02, borderColor: 'rgba(67, 97, 238, 0.6)' }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        {/* Animated border pulse */}
                         <div className="absolute inset-0 rounded-xl border border-[#4361ee]/50 animate-pulse group-hover:border-[#4361ee]/80 transition-colors" />
-                        
                         <div className="relative flex items-center justify-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Cpu className="w-5 h-5 text-white" />
                           </div>
-                          
                           <div className="text-left">
                             <h3 className="text-lg font-orbitron font-bold">
                               <span className="text-[#4361ee]">M1SSION</span>
                               <span className="text-white"> PANEL</span>
                               <span className="text-xs align-top text-[#7209b7]">™</span>
                             </h3>
-                            <p className="text-gray-400 text-sm">
-                              Centro AI Generativo - Accesso Test
-                            </p>
+                            <p className="text-gray-400 text-sm">Centro AI Generativo - Accesso Test</p>
                           </div>
-                          
                           <div className="ml-auto">
                             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                           </div>
