@@ -13,7 +13,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 interface ChatListProps {
-  onSelectConversation: (conversationId: string, name: string, avatar: string | null) => void;
+  onSelectConversation: (conversationId: string, name: string, avatar: string | null, originRect: DOMRect | null) => void;
   onNewChat: () => void;
   onNewGroup?: () => void;
 }
@@ -127,12 +127,14 @@ export function ChatList({ onSelectConversation, onNewChat, onNewGroup }: ChatLi
               <SwipeableConversationItem
                 key={conversation.conversation_id}
                 conversation={conversation}
-                onClick={() => {
+                onClick={(e: React.MouseEvent) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
                   console.log('[ChatList] Selected:', displayName || 'Chat');
                   onSelectConversation(
                     conversation.conversation_id, 
                     displayName || 'Chat',
-                    conversation.other_user_avatar
+                    conversation.other_user_avatar,
+                    rect
                   );
                 }}
                 onDelete={() => setDeleteConfirm(conversation.conversation_id)}
@@ -208,7 +210,7 @@ export function ChatList({ onSelectConversation, onNewChat, onNewGroup }: ChatLi
 
 interface SwipeableConversationItemProps {
   conversation: Conversation;
-  onClick: () => void;
+  onClick: (e: React.MouseEvent) => void;
   onDelete: () => void;
   index: number;
 }
@@ -240,9 +242,9 @@ function SwipeableConversationItem({ conversation, onClick, onDelete, index }: S
     }
   };
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
     if (!isDragging) {
-      onClick();
+      onClick(e);
     }
   };
 

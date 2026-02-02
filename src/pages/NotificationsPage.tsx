@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import { ChatList } from '@/components/chat/ChatList';
 import { ChatView } from '@/components/chat/ChatView';
+import { ChatFlipOverlay } from '@/components/chat/ChatFlipOverlay';
 import { NewChatModal } from '@/components/chat/NewChatModal';
 import { NewGroupChatModal } from '@/components/chat/NewGroupChatModal';
 import { useChat } from '@/hooks/useChat';
@@ -57,6 +58,7 @@ export const NotificationsPage: React.FC = () => {
     name: string;
     avatar: string | null;
   } | null>(null);
+  const [chatOriginRect, setChatOriginRect] = useState<DOMRect | null>(null);
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const { totalUnreadCount: chatUnreadCount, conversations } = useChat();
@@ -376,7 +378,8 @@ export const NotificationsPage: React.FC = () => {
   }
 
   // Handle chat conversation selection
-  const handleSelectConversation = (conversationId: string, name: string, avatar: string | null) => {
+  const handleSelectConversation = (conversationId: string, name: string, avatar: string | null, originRect: DOMRect | null) => {
+    setChatOriginRect(originRect);
     setSelectedConversation({
       id: conversationId,
       name: name,
@@ -385,6 +388,7 @@ export const NotificationsPage: React.FC = () => {
   };
 
   const handleChatCreated = (conversationId: string, recipientName: string, recipientAvatar: string | null) => {
+    setChatOriginRect(null); // From modal, no origin
     setSelectedConversation({
       id: conversationId,
       name: recipientName,
@@ -393,6 +397,7 @@ export const NotificationsPage: React.FC = () => {
   };
 
   const handleGroupCreated = (conversationId: string, groupName: string) => {
+    setChatOriginRect(null); // From modal, no origin
     setSelectedConversation({
       id: conversationId,
       name: groupName,
@@ -400,35 +405,10 @@ export const NotificationsPage: React.FC = () => {
     });
   };
 
-  // If viewing a chat conversation - ✅ NO BOTTOM NAV in chat view
-  if (selectedConversation) {
-    return (
-      <div 
-        className="min-h-screen m1-app-bg relative flex flex-col" 
-        style={{ 
-          paddingTop: 'calc(var(--header-height, 80px) + var(--safe-top, env(safe-area-inset-top, 0px)) + 24px)', 
-          paddingBottom: '20px', // ✅ Ridotto - no bottom nav
-          width: '100vw',
-          maxWidth: '100vw',
-          overflowX: 'hidden'
-        }}
-      >
-        <div className="m1-grain" />
-        <div className="flex-1 container mx-auto" style={{
-          paddingLeft: 'max(8px, env(safe-area-inset-left, 8px))',
-          paddingRight: 'max(8px, env(safe-area-inset-right, 8px))'
-        }}>
-          <ChatView
-            conversationId={selectedConversation.id}
-            recipientName={selectedConversation.name}
-            recipientAvatar={selectedConversation.avatar}
-            onBack={() => setSelectedConversation(null)}
-          />
-        </div>
-        {/* ✅ RIMOSSA BOTTOM NAV - chat fullscreen come WhatsApp/Telegram */}
-      </div>
-    );
-  }
+  const handleCloseChat = () => {
+    setSelectedConversation(null);
+    setChatOriginRect(null);
+  };
 
   return (
     <div 
@@ -640,7 +620,7 @@ export const NotificationsPage: React.FC = () => {
             {/* Messages Tab Content */}
             <TabsContent value="messages" className="mt-0 p-4">
               <ChatList 
-                onSelectConversation={handleSelectConversation}
+                onSelectConversation={(id, name, avatar, rect) => handleSelectConversation(id, name, avatar, rect)}
                 onNewChat={() => setShowNewChatModal(true)}
                 onNewGroup={() => setShowNewGroupModal(true)}
               />
@@ -662,6 +642,22 @@ export const NotificationsPage: React.FC = () => {
         onClose={() => setShowNewGroupModal(false)}
         onGroupCreated={handleGroupCreated}
       />
+
+      {/* Chat Flip Overlay - Revolut-style fullscreen modal */}
+      <ChatFlipOverlay
+        open={!!selectedConversation}
+        onClose={handleCloseChat}
+        originRect={chatOriginRect}
+      >
+        {selectedConversation && (
+          <ChatView
+            conversationId={selectedConversation.id}
+            recipientName={selectedConversation.name}
+            recipientAvatar={selectedConversation.avatar}
+            onBack={handleCloseChat}
+          />
+        )}
+      </ChatFlipOverlay>
       
       </div>
       

@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ChatList } from '@/components/chat/ChatList';
 import { ChatView } from '@/components/chat/ChatView';
+import { ChatFlipOverlay } from '@/components/chat/ChatFlipOverlay';
 import { NewChatModal } from '@/components/chat/NewChatModal';
 import { NewGroupModal } from '@/components/chat/NewGroupModal';
 import { useChat } from '@/hooks/useChat';
@@ -33,6 +34,7 @@ const Notifications = () => {
     name: string;
     avatar: string | null;
   } | null>(null);
+  const [chatOriginRect, setChatOriginRect] = useState<DOMRect | null>(null);
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
   const { totalUnreadCount: chatUnreadCount } = useChat();
@@ -74,15 +76,17 @@ const Notifications = () => {
   };
 
   // Chat handlers
-  const handleSelectConversation = (conversationId: string) => {
+  const handleSelectConversation = (conversationId: string, name: string, avatar: string | null, originRect: DOMRect | null) => {
+    setChatOriginRect(originRect);
     setSelectedConversation({
       id: conversationId,
-      name: 'Chat',
-      avatar: null
+      name: name || 'Chat',
+      avatar: avatar
     });
   };
 
   const handleChatCreated = (conversationId: string, recipientName: string, recipientAvatar: string | null) => {
+    setChatOriginRect(null); // From modal, no origin
     setSelectedConversation({
       id: conversationId,
       name: recipientName,
@@ -91,29 +95,21 @@ const Notifications = () => {
   };
 
   const handleGroupCreated = (conversationId: string, groupName: string) => {
+    setChatOriginRect(null); // From modal, no origin
     setSelectedConversation({
       id: conversationId,
       name: groupName,
       avatar: null
     });
   };
+  
+  const handleCloseChat = () => {
+    setSelectedConversation(null);
+    setChatOriginRect(null);
+  };
 
   // Count unread notifications
   const unreadNotificationsCount = notifications.filter(n => !n.isRead).length;
-
-  // If viewing a chat conversation - NO header/nav, GlobalLayout li gestisce
-  if (selectedConversation) {
-    return (
-      <div className="w-full">
-        <ChatView
-          conversationId={selectedConversation.id}
-          recipientName={selectedConversation.name}
-          recipientAvatar={selectedConversation.avatar}
-          onBack={() => setSelectedConversation(null)}
-        />
-      </div>
-    );
-  }
 
   // Main notifications/messages page - GlobalLayout gestisce Header e BottomNav
   // 🔧 FIX v6 (22/01/2026): AION-LIKE SCROLL UNDER HEADER
@@ -183,7 +179,7 @@ const Notifications = () => {
 
             <TabsContent value="messages" className="mt-0">
               <ChatList
-                onSelectConversation={handleSelectConversation}
+                onSelectConversation={(id, name, avatar, rect) => handleSelectConversation(id, name, avatar, rect)}
                 onNewChat={() => setShowNewChatModal(true)}
                 onNewGroup={() => setShowNewGroupModal(true)}
               />
@@ -203,6 +199,22 @@ const Notifications = () => {
           onClose={() => setShowNewGroupModal(false)}
           onGroupCreated={handleGroupCreated}
         />
+
+        {/* Chat Flip Overlay - Revolut-style fullscreen modal */}
+        <ChatFlipOverlay
+          open={!!selectedConversation}
+          onClose={handleCloseChat}
+          originRect={chatOriginRect}
+        >
+          {selectedConversation && (
+            <ChatView
+              conversationId={selectedConversation.id}
+              recipientName={selectedConversation.name}
+              recipientAvatar={selectedConversation.avatar}
+              onBack={handleCloseChat}
+            />
+          )}
+        </ChatFlipOverlay>
       </div>
   );
 };
