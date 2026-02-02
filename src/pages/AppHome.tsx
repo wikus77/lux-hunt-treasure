@@ -200,54 +200,23 @@ const { isConnected } = useRealTimeNotifications();
   const [progress] = useLocalStorage<number>("mission-progress", 0);
   const prizeProgress = missionStatus?.progressPercent || progress || 46;
 
-  // 🔧 FIX: Set body background dark when on Home page
-  useEffect(() => {
-    document.body.style.setProperty('background', '#0a0f1a', 'important');
-    document.body.style.setProperty('background-color', '#0a0f1a', 'important');
-    document.documentElement.style.setProperty('background', '#0a0f1a', 'important');
-    document.documentElement.style.setProperty('background-color', '#0a0f1a', 'important');
-    
-    return () => {
-      // Reset to white when leaving Home
-      document.body.style.setProperty('background', '#FFFFFF', 'important');
-      document.body.style.setProperty('background-color', '#FFFFFF', 'important');
-      document.documentElement.style.setProperty('background', '#FFFFFF', 'important');
-      document.documentElement.style.setProperty('background-color', '#FFFFFF', 'important');
-    };
-  }, []);
+  // 🔧 PATTERN: Same as LeaderboardPage - NO useEffect body manipulation
+  // NO absolute overlays - just sn-page class + simple structure
   
   return (
     <div 
-      className="relative m1-single-scroll-root m1-home-page"
+      className="w-full overflow-x-hidden p-4 space-y-4 sn-page"
       style={{
         position: 'relative',
-        minHeight: '100dvh',
-        // 🎨 Base dark background for safe area
-        background: '#0a0f1a',
+        zIndex: 0,
       }}
     >
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
-      {/* 🎨 GRADIENT OVERLAY - Dark top fading to white bottom */}
-      <div 
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'linear-gradient(180deg, #0a0f1a 0%, #0d1525 25%, #1a2535 45%, #f5f5f5 70%, #f5f5f5 100%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
-      
       <MissionSync onRefresh={handleMissionSync}>
-      {/* 🆕 REVOLUT-STYLE LAYOUT */}
-      <div className="relative" style={{ zIndex: 1 }}>
-        
+      
         <AnimatePresence>
           {isLoaded && (
             <motion.div
@@ -260,13 +229,15 @@ const { isConnected } = useRealTimeNotifications();
               {/* 1️⃣ M1SSION PRIZE with Pills INSIDE */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div 
+                className="m1-first-content-offset-compact"
                 style={{
                   position: 'relative',
                   width: '100%',
-                  paddingLeft: '16px',
-                  paddingRight: '16px',
-                  paddingBottom: '20px',
-                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 55px)',
+                  // 🎨 Dark gradient background for M1SSION PRIZE section
+                  background: 'linear-gradient(180deg, #0a0f1a 0%, #0d1525 50%, #1a2535 80%, transparent 100%)',
+                  borderRadius: '16px',
+                  padding: '16px',
+                  marginBottom: '16px',
                 }}
               >
                 <Suspense fallback={
@@ -396,7 +367,7 @@ const { isConnected } = useRealTimeNotifications();
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      
       {/* 🆕 STANDBY: Hint per utenti inattivi disabilitato
       <InactivityHint type="home" />
       */}
