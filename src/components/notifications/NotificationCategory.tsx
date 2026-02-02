@@ -2,13 +2,13 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, Bell } from "lucide-react";
-import NotificationItem from "./NotificationItem";
 import type { Notification } from "@/hooks/useNotifications";
 import { getCategoryInfo } from "@/utils/notificationCategories";
-import { GlassModal } from "@/components/ui/GlassModal";
+import { NotificationCategoryFlipOverlay } from "./NotificationCategoryFlipOverlay";
+import { NotificationCategoryContent } from "./NotificationCategoryContent";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// NOTIFICATION CATEGORY COMPONENT (with Glass Modal)
+// NOTIFICATION CATEGORY COMPONENT - REVOLUT STYLE FULLSCREEN MODAL
 // ═══════════════════════════════════════════════════════════════════════════
 interface NotificationCategoryProps {
   category: string;
@@ -24,6 +24,7 @@ const NotificationCategory: React.FC<NotificationCategoryProps> = ({
   onDelete
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const categoryInfo = getCategoryInfo(category);
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -40,7 +41,8 @@ const NotificationCategory: React.FC<NotificationCategoryProps> = ({
     }
   };
 
-  const handleOpenModal = () => {
+  const handleOpenModal = (e: React.MouseEvent<HTMLDivElement>) => {
+    setOriginRect(e.currentTarget.getBoundingClientRect());
     setIsModalOpen(true);
   };
 
@@ -87,63 +89,22 @@ const NotificationCategory: React.FC<NotificationCategoryProps> = ({
         </div>
       </motion.div>
 
-      {/* Glass Modal */}
-      <GlassModal
-        isOpen={isModalOpen}
+      {/* Fullscreen Modal - REVOLUT STYLE */}
+      <NotificationCategoryFlipOverlay
+        open={isModalOpen}
+        originRect={originRect}
         onClose={() => setIsModalOpen(false)}
-        accentColor={getAccentColor()}
-        title={categoryInfo.title}
-        subtitle={`${notifications.length} ${notifications.length === 1 ? 'notifica' : 'notifiche'}${unreadCount > 0 ? ` • ${unreadCount} non lette` : ''}`}
       >
-        {/* Stats Summary */}
-        <div 
-          className="rounded-2xl p-4 mb-5"
-          style={{
-            background: `linear-gradient(135deg, ${getAccentColor()}15 0%, rgba(0, 209, 255, 0.05) 100%)`,
-            border: `1px solid ${getAccentColor()}25`,
-            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-          }}
-        >
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center">
-              <p className="text-3xl font-bold" style={{ color: getAccentColor() }}>{notifications.length}</p>
-              <p className="text-xs text-white/50 mt-1">Totali</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-cyan-400">{unreadCount}</p>
-              <p className="text-xs text-white/50 mt-1">Non lette</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Notifications List */}
-        <div className="space-y-3">
-          {notifications.length > 0 ? (
-            notifications.map((notification, index) => (
-              <motion.div
-                key={notification.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: index * 0.03 }}
-              >
-                <NotificationItem
-                  notification={notification}
-                  onSelect={() => onSelect(notification.id)}
-                  onDelete={() => onDelete(notification.id)}
-                />
-              </motion.div>
-            ))
-          ) : (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'rgba(255, 255, 255, 0.05)' }}>
-                <Bell className="w-8 h-8 text-white/30" />
-              </div>
-              <p className="text-white/60 mb-2">Nessuna notifica</p>
-              <p className="text-sm text-white/40">Le nuove notifiche appariranno qui</p>
-            </div>
-          )}
-        </div>
-      </GlassModal>
+        <NotificationCategoryContent
+          title={categoryInfo.title}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          accentColor={getAccentColor()}
+          onClose={() => setIsModalOpen(false)}
+          onSelect={onSelect}
+          onDelete={onDelete}
+        />
+      </NotificationCategoryFlipOverlay>
     </>
   );
 };
