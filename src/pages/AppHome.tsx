@@ -202,22 +202,18 @@ const { isConnected } = useRealTimeNotifications();
 
   return (
     <div 
-      className="relative m1-single-scroll-root m1-home-dark-top"
+      className="relative m1-single-scroll-root sn-page"
       style={{
         position: 'relative',
         minHeight: '100dvh',
-        // 🔧 NO OVERLAY - Background gradient directly on container
-        background: 'linear-gradient(180deg, #0a0f1a 0%, #0a0f1a 35%, #1a2535 50%, #f5f5f5 75%, #f5f5f5 100%)',
       }}
     >
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
-      {/* 🚫 REMOVED: Fixed background div that was causing overlay */}
-      
       <MissionSync onRefresh={handleMissionSync}>
-      {/* 🆕 REVOLUT-STYLE LAYOUT - NO zIndex conflicts */}
+      {/* 🆕 REVOLUT-STYLE LAYOUT */}
       <div className="relative">
         
         <AnimatePresence>
@@ -229,16 +225,23 @@ const { isConnected } = useRealTimeNotifications();
               transition={{ duration: 0.5 }}
             >
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 1️⃣ M1SSION PRIZE with Pills INSIDE */}
+              {/* 1️⃣ M1SSION PRIZE with Pills INSIDE - DARK BACKGROUND SECTION */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div 
                 style={{
                   position: 'relative',
                   width: '100%',
-                  // 🔧 FIX: Reduced padding - M1SSION PRIZE starts right below header
-                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 55px)',
                   paddingLeft: '16px',
                   paddingRight: '16px',
+                  paddingBottom: '20px',
+                  // 🎨 DARK BACKGROUND for M1SSION PRIZE section
+                  // This section has its own dark gradient that fades to transparent
+                  background: 'linear-gradient(180deg, #0a0f1a 0%, #0d1525 60%, #1a2535 85%, transparent 100%)',
+                  // 🔧 FIX: Extend dark area into iOS safe zone
+                  // Negative margin pulls section UP into safe area
+                  // Extra padding compensates so content stays in correct position
+                  marginTop: 'calc(-1 * (env(safe-area-inset-top, 47px) + 55px))',
+                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 55px + 16px)',
                 }}
               >
                 <Suspense fallback={
