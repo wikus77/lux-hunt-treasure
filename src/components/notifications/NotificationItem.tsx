@@ -1,10 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
 import type { Notification } from "@/hooks/useNotifications";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, ChevronDown } from "lucide-react";
+import { Trash2, ChevronDown, Copy, Check } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -18,6 +19,9 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   onDelete 
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const { toast } = useToast();
 
   const formattedDate = formatDistanceToNow(new Date(notification.date), {
     addSuffix: true,
@@ -41,6 +45,32 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     setIsExpanded(!isExpanded);
     if (!notification.read) {
       onSelect();
+    }
+  };
+
+  // Long press to copy functionality
+  const handleCopyContent = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(notification.description);
+      setCopied(true);
+      toast({ title: "📋 Contenuto copiato!", description: "Il testo è stato copiato negli appunti." });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast({ title: "❌ Errore", description: "Impossibile copiare il testo.", variant: "destructive" });
+    }
+  }, [notification.description, toast]);
+
+  const handleLongPressStart = (e: React.TouchEvent | React.MouseEvent) => {
+    e.stopPropagation();
+    longPressTimerRef.current = setTimeout(() => {
+      handleCopyContent();
+    }, 500);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
     }
   };
 
@@ -107,25 +137,62 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
               className="overflow-hidden mt-4"
             >
               <div className="space-y-4">
-                {/* Full description */}
-                <div className="p-4 rounded-[16px] bg-[#0a0a0a]/50">
-                  <h4 className="text-sm font-medium text-white/80 mb-2 font-orbitron">Contenuto completo</h4>
-                  <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">
+                {/* Full description - READABLE TEXT + LONG PRESS TO COPY */}
+                <div 
+                  className="p-4 rounded-[16px] relative"
+                  style={{ background: 'rgba(60, 60, 70, 0.9)' }}
+                  onTouchStart={handleLongPressStart}
+                  onTouchEnd={handleLongPressEnd}
+                  onTouchCancel={handleLongPressEnd}
+                  onMouseDown={handleLongPressStart}
+                  onMouseUp={handleLongPressEnd}
+                  onMouseLeave={handleLongPressEnd}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 600 }}>Contenuto completo</h4>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleCopyContent(); }}
+                      style={{
+                        padding: '4px 8px', borderRadius: '6px', border: 'none',
+                        background: copied ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255,255,255,0.1)',
+                        display: 'flex', alignItems: 'center', gap: '4px',
+                        cursor: 'pointer', fontSize: '11px', color: copied ? '#22C55E' : 'rgba(255,255,255,0.7)',
+                      }}
+                    >
+                      {copied ? <Check style={{ width: '12px', height: '12px' }} /> : <Copy style={{ width: '12px', height: '12px' }} />}
+                      {copied ? 'Copiato!' : 'Copia'}
+                    </button>
+                  </div>
+                  <p style={{ 
+                    color: '#00D1FF', 
+                    fontSize: '14px', 
+                    lineHeight: '1.6', 
+                    whiteSpace: 'pre-wrap',
+                    userSelect: 'text',
+                    WebkitUserSelect: 'text',
+                  }}>
                     {notification.description}
+                  </p>
+                  <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', marginTop: '8px' }}>
+                    💡 Tieni premuto per copiare
                   </p>
                 </div>
 
-                {/* Notification details */}
+                {/* Notification details - READABLE TEXT */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="p-4 rounded-[16px] bg-[#0a0a0a]/30">
-                    <span className="text-xs font-medium text-white/60 font-orbitron">Data completa</span>
-                    <p className="text-sm text-white/80 mt-1">{fullFormattedDate}</p>
+                  <div className="p-4 rounded-[16px]" style={{ background: 'rgba(60, 60, 70, 0.9)' }}>
+                    <span style={{ color: '#FFFFFF', fontSize: '12px', fontWeight: 600 }}>Data completa</span>
+                    <p style={{ color: '#FFFFFF', fontSize: '14px', marginTop: '4px' }}>{fullFormattedDate}</p>
                   </div>
 
-                  <div className="p-4 rounded-[16px] bg-[#0a0a0a]/30">
-                    <span className="text-xs font-medium text-white/60 font-orbitron">Stato</span>
+                  <div className="p-4 rounded-[16px]" style={{ background: 'rgba(60, 60, 70, 0.9)' }}>
+                    <span style={{ color: '#FFFFFF', fontSize: '12px', fontWeight: 600 }}>Stato</span>
                     <div className="flex items-center space-x-2 mt-1">
-                      <span className={`text-sm ${notification.read ? 'text-green-400' : 'text-yellow-400'}`}>
+                      <span style={{ 
+                        color: notification.read ? '#22C55E' : '#FBBF24', 
+                        fontSize: '14px', 
+                        fontWeight: 500 
+                      }}>
                         {notification.read ? 'Letta' : 'Non letta'}
                       </span>
                       {!notification.read && (
