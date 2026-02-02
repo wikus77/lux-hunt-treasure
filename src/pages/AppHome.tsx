@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useLocation } from "wouter";
-import { Cpu, Target } from "lucide-react";
+import { Cpu } from "lucide-react";
 import { useDeepLinkQR } from "@/hooks/useDeepLinkQR";
 import M1UPill from "@/features/m1u/M1UPill";
 import { PageSkeleton } from "@/components/ui/skeleton-loader";
@@ -224,18 +224,15 @@ const { isConnected } = useRealTimeNotifications();
               transition={{ duration: 0.5 }}
             >
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 1️⃣ M1SSION PRIZE CAROUSEL - LARGE, starts from safe area */}
-              {/* Like the purple Revolut element */}
+              {/* 1️⃣ M1SSION PRIZE with Pills INSIDE + gradient fade to white */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div 
                 style={{
                   width: '100%',
-                  minHeight: '45vh',
-                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 70px)', // Space for header overlay
+                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 70px)',
                   paddingLeft: '16px',
                   paddingRight: '16px',
-                  paddingBottom: '20px',
-                  background: 'linear-gradient(180deg, rgba(15, 25, 45, 0.95) 0%, rgba(5, 10, 25, 0.98) 100%)',
+                  background: 'linear-gradient(180deg, #0a0f1a 0%, #0d1320 70%, #ffffff 100%)',
                 }}
               >
                 <Suspense fallback={
@@ -245,87 +242,25 @@ const { isConnected } = useRealTimeNotifications();
                 }>
                   <PrizeVision progress={prizeProgress} />
                 </Suspense>
-              </div>
-
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 2️⃣ PILLS ROW - Like Trading, Ricevi, Invia, Altro in Revolut */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              <div 
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: '12px',
-                  padding: '16px',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                  <StreakPill showLabel={false} />
-                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Streak</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                  <ShopPill />
-                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Shop</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                  <CashbackVaultPill variant="compact" />
-                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Cashback</span>
-                </div>
-              </div>
-
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 3️⃣ ON M1SSION BUTTON - Like "Scegli le criptovalute" in Revolut */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              <div style={{ padding: '0 16px', marginBottom: '16px' }}>
-                <motion.button
-                  onClick={() => navigate('/buzz')}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                
+                {/* Pills INSIDE M1SSION PRIZE area */}
+                <div 
                   style={{
-                    width: '100%',
-                    padding: '16px 20px',
-                    borderRadius: '16px',
-                    background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.15) 0%, rgba(123, 46, 255, 0.15) 100%)',
-                    border: '1px solid rgba(0, 209, 255, 0.3)',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    padding: '16px 0',
+                    flexWrap: 'wrap',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #00D1FF 0%, #7B2EFF 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}>
-                      <Target className="w-5 h-5 text-white" />
-                    </div>
-                    <div style={{ textAlign: 'left' }}>
-                      <p style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 600, marginBottom: '2px' }}>
-                        ON M1SSION
-                      </p>
-                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>
-                        Cerca indizi e vinci premi
-                      </p>
-                    </div>
-                  </div>
-                  <motion.div
-                    animate={{ x: [0, 5, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                    style={{ color: '#00D1FF', fontSize: '20px' }}
-                  >
-                    →
-                  </motion.div>
-                </motion.button>
+                  <StreakPill showLabel />
+                  <ShopPill />
+                  <CashbackVaultPill variant="compact" />
+                </div>
               </div>
 
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 4️⃣ PROSSIMI PASSI Container */}
+              {/* 2️⃣ PROSSIMI PASSI Container */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div style={{ padding: '0 16px', marginBottom: '16px' }}>
                 <SectionErrorBoundary section="Prossima Azione" fallbackHeight="80px">
