@@ -1,151 +1,30 @@
 // @ts-nocheck
 /**
- * M1SSION BATTLE Console - TUTTO nel modal, NIENTE navigazione
- * Tap container → apre modal → clicca INIZIA BATTAGLIA → gioco NEL modal
+ * M1SSION BATTLE Console - FULLSCREEN modals REVOLUT STYLE
+ * Tap container → Lobby modal → INIZIA BATTAGLIA → Game modal
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Swords, ChevronDown, Trophy, Users, Zap, Target, Play, ArrowLeft } from "lucide-react";
+import { motion } from "framer-motion";
+import { Swords, ChevronDown, Trophy, Users, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { GlassModal } from "@/components/ui/GlassModal";
-import { PracticeMode } from "@/components/battle/PracticeMode";
+import { BattleConsoleFlipOverlay } from "./BattleConsoleFlipOverlay";
+import { BattleGameFlipOverlay } from "./BattleGameFlipOverlay";
+import { BattleConsoleLobbyContent } from "./BattleConsoleLobbyContent";
+import { BattleGameContent } from "./BattleGameContent";
 
 interface BattleConsoleProps {
   className?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// BATTLE LOBBY - Vista iniziale nel modal (stats + bottone INIZIA)
-// ═══════════════════════════════════════════════════════════════════════════
-interface BattleLobbyProps {
-  stats: any;
-  onStartBattle: () => void;
-}
-
-function BattleLobby({ stats, onStartBattle }: BattleLobbyProps) {
-  return (
-    <div className="space-y-4">
-      {/* Stats Overview */}
-      <div 
-        className="rounded-2xl p-4"
-        style={{
-          background: 'linear-gradient(135deg, rgba(252, 30, 255, 0.1) 0%, rgba(0, 209, 255, 0.08) 100%)',
-          border: '1px solid rgba(252, 30, 255, 0.25)',
-        }}
-      >
-        <div className="grid grid-cols-3 gap-3">
-          <div className="text-center">
-            <Trophy className="w-5 h-5 text-yellow-400 mx-auto mb-1" />
-            <p className="text-xl font-bold text-white">{stats?.total_wins || 0}</p>
-            <p className="text-[10px] text-white/50">Vittorie</p>
-          </div>
-          <div className="text-center">
-            <Users className="w-5 h-5 text-red-400 mx-auto mb-1" />
-            <p className="text-xl font-bold text-white">{stats?.total_losses || 0}</p>
-            <p className="text-[10px] text-white/50">Sconfitte</p>
-          </div>
-          <div className="text-center">
-            <Target className="w-5 h-5 text-cyan-400 mx-auto mb-1" />
-            <p className="text-xl font-bold text-cyan-400">{stats?.win_rate || 0}%</p>
-            <p className="text-[10px] text-white/50">Win Rate</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Battle Arena Info */}
-      <div 
-        className="rounded-2xl p-4"
-        style={{
-          background: 'rgba(255, 255, 255, 0.04)',
-          border: '1px solid rgba(255, 255, 255, 0.1)'
-        }}
-      >
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FC1EFF] to-[#00D1FF] flex items-center justify-center flex-shrink-0">
-            <Swords className="w-5 h-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-white font-bold text-base mb-1">Battle Arena</h3>
-            {/* 🏪 STORE COMPLIANT: Earn, not win */}
-            <p className="text-white/60 text-sm leading-relaxed">
-              Sfida i bot AI e metti alla prova i tuoi riflessi. Ottieni M1U o PE (max 5).
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Start Battle Button */}
-      <motion.button
-        onClick={onStartBattle}
-        className="w-full py-3.5 rounded-2xl font-orbitron font-bold text-white text-base flex items-center justify-center gap-2"
-        style={{
-          background: 'linear-gradient(135deg, #FC1EFF 0%, #00D1FF 100%)',
-          boxShadow: '0 4px 20px rgba(252, 30, 255, 0.4)'
-        }}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        <Play className="w-5 h-5" />
-        INIZIA BATTAGLIA
-      </motion.button>
-
-      {/* Best Times */}
-      {stats?.best_reaction_ms > 0 && (
-        <div className="grid grid-cols-2 gap-3">
-          <div 
-            className="rounded-xl p-3 text-center"
-            style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
-          >
-            <p className="text-xl font-bold text-[#FC1EFF]">{stats.best_reaction_ms}ms</p>
-            <p className="text-[10px] text-white/50">Miglior Tempo</p>
-          </div>
-          <div 
-            className="rounded-xl p-3 text-center"
-            style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
-          >
-            <p className="text-xl font-bold text-yellow-400">{stats.avg_reaction_ms || 0}ms</p>
-            <p className="text-[10px] text-white/50">Tempo Medio</p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// BATTLE GAME VIEW - PracticeMode embedded nel modal
-// ═══════════════════════════════════════════════════════════════════════════
-interface BattleGameViewProps {
-  userId: string;
-  onBack: () => void;
-}
-
-function BattleGameView({ userId, onBack }: BattleGameViewProps) {
-  return (
-    <div className="space-y-3">
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm mb-2"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Torna alla lobby
-      </button>
-      
-      {/* PracticeMode Component - TUTTO QUI */}
-      <PracticeMode userId={userId} />
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════
 export function BattleConsole({ className }: BattleConsoleProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false); // false = lobby, true = game
+  const [isLobbyOpen, setIsLobbyOpen] = useState(false);
+  const [isGameOpen, setIsGameOpen] = useState(false);
+  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [stats, setStats] = useState<any>(null);
@@ -221,14 +100,13 @@ export function BattleConsole({ className }: BattleConsoleProps) {
     }
   };
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-    setIsPlaying(false); // Sempre inizia dalla lobby
+  const handleOpenLobby = (e: React.MouseEvent<HTMLDivElement>) => {
+    setOriginRect(e.currentTarget.getBoundingClientRect());
+    setIsLobbyOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setIsPlaying(false);
+  const handleCloseLobby = () => {
+    setIsLobbyOpen(false);
     // Ricarica stats quando chiudi
     if (userId) {
       loadStats(userId);
@@ -236,12 +114,27 @@ export function BattleConsole({ className }: BattleConsoleProps) {
   };
 
   const handleStartBattle = () => {
-    // NON navigare via! Mostra il gioco NEL modal
-    setIsPlaying(true);
+    // Chiudi lobby e apri game modal
+    setIsLobbyOpen(false);
+    setTimeout(() => {
+      setIsGameOpen(true);
+    }, 100);
+  };
+
+  const handleCloseGame = () => {
+    setIsGameOpen(false);
+    // Ricarica stats quando chiudi
+    if (userId) {
+      loadStats(userId);
+    }
   };
 
   const handleBackToLobby = () => {
-    setIsPlaying(false);
+    // Chiudi game e riapri lobby
+    setIsGameOpen(false);
+    setTimeout(() => {
+      setIsLobbyOpen(true);
+    }, 100);
     // Ricarica stats
     if (userId) {
       loadStats(userId);
@@ -250,10 +143,10 @@ export function BattleConsole({ className }: BattleConsoleProps) {
 
   return (
     <>
-      {/* Compact Card - Tap to open modal */}
+      {/* Compact Card - Tap to open lobby modal */}
       <motion.div 
         className={`m1-relief rounded-[20px] overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 mb-4 relative ${className}`}
-        onClick={handleOpenModal}
+        onClick={handleOpenLobby}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
@@ -323,40 +216,32 @@ export function BattleConsole({ className }: BattleConsoleProps) {
         </div>
       </motion.div>
 
-      {/* Battle Modal - TUTTO qui dentro */}
-      <GlassModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        accentColor="#FC1EFF"
-        title={isPlaying ? "BATTLE ARENA" : "M1SSION BATTLE"}
-        subtitle={isPlaying ? "Test your reflexes!" : "Arena di sfida tra agenti"}
+      {/* Battle Lobby Modal - FULLSCREEN REVOLUT STYLE */}
+      <BattleConsoleFlipOverlay
+        open={isLobbyOpen}
+        originRect={originRect}
+        onClose={handleCloseLobby}
       >
-        <AnimatePresence mode="wait">
-          {!isPlaying ? (
-            <motion.div
-              key="lobby"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <BattleLobby stats={stats} onStartBattle={handleStartBattle} />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="game"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-            >
-              {userId && (
-                <BattleGameView userId={userId} onBack={handleBackToLobby} />
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </GlassModal>
+        <BattleConsoleLobbyContent
+          stats={stats}
+          onClose={handleCloseLobby}
+          onStartBattle={handleStartBattle}
+        />
+      </BattleConsoleFlipOverlay>
+
+      {/* Battle Game Modal - FULLSCREEN REVOLUT STYLE */}
+      <BattleGameFlipOverlay
+        open={isGameOpen}
+        onClose={handleCloseGame}
+      >
+        {userId && (
+          <BattleGameContent
+            userId={userId}
+            onClose={handleCloseGame}
+            onBack={handleBackToLobby}
+          />
+        )}
+      </BattleGameFlipOverlay>
     </>
   );
 }
