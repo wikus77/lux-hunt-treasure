@@ -105,7 +105,8 @@ export function ChatView({
   }, {} as Record<string, ChatMessage[]>);
 
   // Calculate heights for proper layout
-  const headerHeight = 60;
+  // 🔧 FIX: Hero 15% bigger (60 * 1.15 = 69)
+  const headerHeight = 69;
   const inputHeight = 56;
   const safeAreaTop = 'env(safe-area-inset-top, 47px)';
   const safeAreaBottom = 'env(safe-area-inset-bottom, 34px)';
@@ -117,53 +118,90 @@ export function ChatView({
         zIndex: 50000,
       }}
     >
-      {/* Chat Header - FIXED ASSOLUTO (non si muove MAI) */}
+      {/* Chat Header - FIXED ASSOLUTO (non si muove MAI) 
+          🔧 FIX: Hero 15% bigger and higher up */}
       <div 
-        className="fixed left-0 right-0 flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-gray-900/95 backdrop-blur-sm"
         style={{ 
-          top: `calc(72px + ${safeAreaTop})`,
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          top: `calc(${safeAreaTop} + 8px)`,
           height: `${headerHeight}px`,
           zIndex: 60001,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '14px',
+          padding: '0 16px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'rgba(15, 23, 42, 0.95)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
         }}
       >
         <Button
           variant="ghost"
           size="sm"
           onClick={onBack}
-          className="p-2 hover:bg-white/10"
+          style={{ padding: '8px', background: 'transparent' }}
         >
-          <ArrowLeft className="w-5 h-5 text-white" />
+          <ArrowLeft style={{ width: '22px', height: '22px', color: '#FFFFFF' }} />
         </Button>
         
         {recipientAvatar ? (
           <img
             src={recipientAvatar}
             alt={recipientName}
-            className="w-10 h-10 rounded-full object-cover border-2 border-cyan-500/30"
+            style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '2px solid rgba(0, 209, 255, 0.4)',
+            }}
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-cyan-500/20 border-2 border-cyan-500/30 flex items-center justify-center">
-            <User className="w-5 h-5 text-cyan-400" />
+          <div style={{
+            width: '46px',
+            height: '46px',
+            borderRadius: '50%',
+            background: 'rgba(0, 209, 255, 0.15)',
+            border: '2px solid rgba(0, 209, 255, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <User style={{ width: '24px', height: '24px', color: '#00D1FF' }} />
           </div>
         )}
         
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-white truncate">{recipientName}</h3>
-          <div className="flex items-center gap-1 text-xs text-green-400">
-            <Lock className="w-3 h-3" />
-            <span>Crittografato</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3 style={{ 
+            fontWeight: 600, 
+            color: '#FFFFFF', 
+            fontSize: '18px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>{recipientName}</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Lock style={{ width: '12px', height: '12px', color: '#22C55E' }} />
+            <span style={{ fontSize: '12px', color: '#22C55E' }}>Crittografato</span>
           </div>
         </div>
       </div>
 
       {/* Messages Container - SCROLLABLE ONLY THIS PART 
-          🔧 FIX v9: Adjust bottom based on keyboard state */}
+          🔧 FIX: Adjust top for new hero, bottom for keyboard */}
       <div 
-        className="absolute left-0 right-0 overflow-y-auto overscroll-contain"
         style={{
-          top: `calc(72px + ${safeAreaTop} + ${headerHeight}px)`, // Sotto UnifiedHeader + Chat Header
-          // 🔧 FIX v9: When keyboard open, messages area shrinks properly
-          bottom: isKeyboardOpen ? `${inputHeight + 8}px` : `${inputHeight + 108}px`, // Sopra input bar (+ bottom nav se visibile)
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          overflowY: 'auto',
+          overscrollBehavior: 'contain',
+          top: `calc(${safeAreaTop} + 8px + ${headerHeight}px + 8px)`,
+          // 🔧 FIX: Input bar più in basso, si ancora alla tastiera
+          bottom: isKeyboardOpen ? `${keyboardInset + inputHeight + 16}px` : `${inputHeight + 24}px`,
           paddingTop: '8px',
           paddingBottom: '16px',
           transition: 'bottom 0.15s ease-out',
@@ -213,34 +251,41 @@ export function ChatView({
       </div>
 
       {/* Input Bar - GLASS STYLE 
-          🔧 FIX v12: SINGLE input bar, NEVER remounts
-          Uses position:fixed + bottom transition to dock to keyboard
-          CRITICAL: iOS requires the same DOM node to maintain focus session */}
+          🔧 FIX: Input bar più in basso, si ancora alla tastiera, testo leggibile */}
       <div 
-        className="fixed left-0 right-0 mx-2 rounded-2xl overflow-hidden"
         style={{ 
-          // 🔧 FIX v12: Transition bottom position based on keyboard state
-          bottom: isKeyboardOpen ? `${keyboardInset + 8}px` : '108px',
+          position: 'fixed',
+          left: '8px',
+          right: '8px',
+          // 🔧 FIX: Più in basso quando tastiera chiusa, ancorata alla tastiera quando aperta
+          bottom: isKeyboardOpen ? `${keyboardInset + 8}px` : '16px',
           minHeight: `${inputHeight}px`,
           zIndex: 60000,
           transition: 'bottom 0.15s ease-out',
-          background: 'rgba(15, 23, 42, 0.95)',
+          background: 'rgba(15, 23, 42, 0.98)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(0, 212, 255, 0.25)',
-          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 212, 255, 0.1)',
+          border: '1px solid rgba(0, 212, 255, 0.35)',
+          borderRadius: '16px',
+          boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 212, 255, 0.15)',
+          overflow: 'hidden',
         }}
       >
-        <div className="flex items-center gap-2 px-3 py-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px' }}>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleShareLocation}
             disabled={!position || isSending}
-            className="p-2 hover:bg-white/10 flex-shrink-0 rounded-full"
+            style={{ 
+              padding: '8px', 
+              background: 'transparent', 
+              borderRadius: '50%',
+              flexShrink: 0,
+            }}
             title="Condividi posizione"
           >
-            <MapPin className="w-5 h-5 text-cyan-400" />
+            <MapPin style={{ width: '20px', height: '20px', color: '#00D1FF' }} />
           </Button>
           
           <textarea
@@ -263,20 +308,44 @@ export function ChatView({
             data-form-type="other"
             data-lpignore="true"
             data-chat-input="true"
-            className="flex-1 bg-slate-800/50 border border-cyan-500/20 rounded-xl px-4 py-2.5 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 transition-all disabled:opacity-50 resize-none overflow-y-auto"
-            style={{ maxHeight: '120px', minHeight: '38px' }}
+            style={{
+              flex: 1,
+              background: 'rgba(30, 41, 59, 0.8)',
+              border: '1px solid rgba(0, 212, 255, 0.3)',
+              borderRadius: '12px',
+              padding: '10px 16px',
+              // 🔧 FIX: Testo digitato LEGGIBILE - bianco brillante
+              color: '#FFFFFF',
+              fontSize: '15px',
+              fontWeight: 400,
+              lineHeight: 1.4,
+              maxHeight: '120px',
+              minHeight: '40px',
+              resize: 'none',
+              overflowY: 'auto',
+              outline: 'none',
+              transition: 'border-color 0.2s',
+              WebkitAppearance: 'none',
+            }}
           />
           
           <Button
             onClick={handleSend}
             disabled={!inputValue.trim() || isSending}
             size="sm"
-            className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 flex-shrink-0 shadow-lg shadow-cyan-500/20"
+            style={{
+              padding: '10px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #00D1FF 0%, #3B82F6 100%)',
+              flexShrink: 0,
+              boxShadow: '0 4px 12px rgba(0, 209, 255, 0.3)',
+              opacity: !inputValue.trim() || isSending ? 0.5 : 1,
+            }}
           >
             {isSending ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 style={{ width: '20px', height: '20px', animation: 'spin 1s linear infinite' }} />
             ) : (
-              <Send className="w-5 h-5" />
+              <Send style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
             )}
           </Button>
         </div>
@@ -299,20 +368,34 @@ function MessageBubble({ message, showAvatar }: MessageBubbleProps) {
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
-      className={`flex items-end gap-2 mb-1 ${isOwn ? 'justify-end' : 'justify-start'}`}
+      style={{
+        display: 'flex',
+        alignItems: 'flex-end',
+        gap: '8px',
+        marginBottom: '4px',
+        justifyContent: isOwn ? 'flex-end' : 'flex-start',
+      }}
     >
       {!isOwn && (
-        <div className="w-7 h-7 flex-shrink-0">
+        <div style={{ width: '28px', height: '28px', flexShrink: 0 }}>
           {showAvatar && (
             message.sender_avatar ? (
               <img
                 src={message.sender_avatar}
                 alt={message.sender_username}
-                className="w-7 h-7 rounded-full object-cover"
+                style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }}
               />
             ) : (
-              <div className="w-7 h-7 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <span className="text-xs font-bold text-purple-400">
+              <div style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                background: 'rgba(168, 85, 247, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#A855F7' }}>
                   {message.sender_username?.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -321,47 +404,82 @@ function MessageBubble({ message, showAvatar }: MessageBubbleProps) {
         </div>
       )}
       
-      <div className="flex flex-col max-w-[75%]">
-        {/* ✅ FIX: Mostra nome mittente per messaggi non propri (utile in gruppi) */}
+      <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '75%' }}>
+        {/* Nome mittente per messaggi non propri */}
         {!isOwn && showAvatar && message.sender_username && (
-          <span className="text-[11px] text-purple-400 font-medium mb-0.5 ml-1 truncate">
+          <span style={{ 
+            fontSize: '11px', 
+            color: '#A855F7', 
+            fontWeight: 500, 
+            marginBottom: '2px', 
+            marginLeft: '4px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
             {message.sender_username}
           </span>
         )}
         
         <div
-          className={`px-3 py-2 rounded-2xl ${
-            isOwn
-              ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-br-sm'
-              : 'bg-gray-800/90 text-white border border-white/5 rounded-bl-sm'
-          }`}
+          style={{
+            padding: '10px 14px',
+            borderRadius: isOwn ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+            // 🔧 FIX: Testi più leggibili
+            background: isOwn 
+              ? 'linear-gradient(135deg, #0891B2 0%, #2563EB 100%)' 
+              : 'rgba(55, 65, 81, 0.95)',
+            border: isOwn ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+          }}
         >
           {isLocation && message.metadata?.lat && message.metadata?.lng ? (
             <a
               href={`https://www.google.com/maps?q=${message.metadata.lat},${message.metadata.lng}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm hover:underline"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '14px',
+                color: '#FFFFFF',
+                textDecoration: 'none',
+              }}
             >
-              <MapPin className="w-4 h-4" />
+              <MapPin style={{ width: '16px', height: '16px' }} />
               <span>📍 Apri posizione</span>
             </a>
           ) : (
-            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+            <p style={{
+              // 🔧 FIX: Testo BIANCO BRILLANTE per leggibilità
+              color: '#FFFFFF',
+              fontSize: '15px',
+              lineHeight: 1.5,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              margin: 0,
+            }}>
               {message.content}
             </p>
           )}
           
-          <div className={`flex items-center justify-end gap-1 mt-0.5 ${isOwn ? 'text-white/60' : 'text-gray-500'}`}>
-            <span className="text-[10px]">
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: '4px',
+            marginTop: '4px',
+            color: isOwn ? 'rgba(255, 255, 255, 0.7)' : 'rgba(156, 163, 175, 0.8)',
+          }}>
+            <span style={{ fontSize: '10px' }}>
               {format(new Date(message.created_at), 'HH:mm')}
             </span>
-            {/* ✅ Spunte lettura solo per messaggi propri */}
+            {/* Spunte lettura solo per messaggi propri */}
             {isOwn && (
               message.read_by && message.read_by.length > 0 ? (
-                <CheckCheck className="w-3.5 h-3.5 text-cyan-400" /> 
+                <CheckCheck style={{ width: '14px', height: '14px', color: '#00D1FF' }} /> 
               ) : (
-                <Check className="w-3.5 h-3.5" />
+                <Check style={{ width: '14px', height: '14px' }} />
               )
             )}
           </div>
