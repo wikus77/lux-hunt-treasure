@@ -1,14 +1,15 @@
 /**
  * Reward Counter Pill - Shows available vs claimed marker rewards
- * Glassmorphism style like BattleShopPill
+ * Revolut-style fullscreen modal (Jan 2026 update)
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Gift, X, MapPin, CheckCircle, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { MapPillFlipOverlay } from './MapPillFlipOverlay';
 import '@/features/m1u/m1u-ui.css';
 
 interface RewardStats {
@@ -23,6 +24,7 @@ interface RewardCounterPillProps {
 
 export function RewardCounterPill({ className = '' }: RewardCounterPillProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const [stats, setStats] = useState<RewardStats>({ total: 0, claimed: 0, available: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -108,12 +110,18 @@ export function RewardCounterPill({ className = '' }: RewardCounterPillProps) {
 
   const availablePercent = stats.total > 0 ? Math.round((stats.available / stats.total) * 100) : 0;
 
+  const handlePillClick = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setOriginRect(rect);
+    setIsOpen(true);
+  };
+
   return (
     <>
-      {/* Glassmorphism Reward Pill */}
+      {/* Reward Pill */}
       <motion.button
         className={`pill-orb ${className}`}
-        onClick={() => setIsOpen(true)}
+        onClick={handlePillClick}
         aria-label="Marker Rewards disponibili"
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
@@ -124,7 +132,6 @@ export function RewardCounterPill({ className = '' }: RewardCounterPillProps) {
         <Gift className="w-5 h-5 text-yellow-300" />
         <span className="dot" style={{ background: '#ffd700', boxShadow: '0 0 8px #ffd700' }} />
         
-        {/* Available count badge - shows X/99 format */}
         {!isLoading && (
           <Badge
             className="absolute -top-1 -right-1 h-5 min-w-[28px] px-1.5 flex items-center justify-center text-[9px] bg-gradient-to-br from-yellow-500 to-orange-600 border-2 border-background font-bold"
@@ -134,142 +141,115 @@ export function RewardCounterPill({ className = '' }: RewardCounterPillProps) {
         )}
       </motion.button>
 
-      {/* Stats Modal */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed inset-0 z-[5000] flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            {/* Backdrop */}
-            <motion.div
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-              onClick={() => setIsOpen(false)}
-            />
+      {/* Revolut-style Fullscreen Modal */}
+      <MapPillFlipOverlay
+        open={isOpen}
+        originRect={originRect}
+        onClose={() => setIsOpen(false)}
+      >
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+          {/* HEADER */}
+          <div style={{
+            flexShrink: 0,
+            background: 'linear-gradient(180deg, rgba(255, 215, 0, 0.8) 0%, rgba(200, 150, 0, 0.6) 100%)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
+            paddingBottom: '20px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <button onClick={() => setIsOpen(false)} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(0,0,0,0.3)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+              </button>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <h1 style={{ color: '#000000', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>REWARDS</h1>
+              </div>
+              <div style={{ width: '40px' }} />
+            </div>
+            <p style={{ color: 'rgba(0,0,0,0.7)', fontSize: '13px', textAlign: 'center' }}>Premi disponibili sulla mappa</p>
+          </div>
 
-            {/* Modal Content */}
-            <motion.div
-              className="relative w-full max-w-sm overflow-hidden rounded-2xl"
-              style={{
-                background: 'linear-gradient(180deg, rgba(15,23,42,0.98) 0%, rgba(30,41,59,0.98) 100%)',
-                border: '1px solid rgba(255, 215, 0, 0.3)',
-                boxShadow: '0 0 40px rgba(255, 215, 0, 0.15), 0 25px 50px rgba(0, 0, 0, 0.5)',
-              }}
-              initial={{ scale: 0.9, y: 20, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: 20, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25 }}
-            >
-              {/* Header */}
-              <div className="relative px-6 py-4 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="p-2.5 rounded-xl"
-                    style={{
-                      background: 'radial-gradient(circle at 30% 30%, rgba(255,215,0,0.2), rgba(255,165,0,0.3) 80%)',
-                      border: '1px solid rgba(255, 215, 0, 0.3)',
-                    }}
-                  >
-                    <Gift className="w-5 h-5 text-yellow-400" />
+          {/* CONTENT */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)', WebkitOverflowScrolling: 'touch' }}>
+            {isLoading ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0' }}>
+                <div style={{ width: '32px', height: '32px', border: '2px solid rgba(255, 215, 0, 0.3)', borderTopColor: '#FFD700', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              </div>
+            ) : (
+              <>
+                {/* Progress Circle Card */}
+                <GlassCard style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
+                  <div style={{ position: 'relative', width: '140px', height: '140px' }}>
+                    <svg style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+                      <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="10" />
+                      <circle cx="70" cy="70" r="60" fill="none" stroke="url(#rewardGradient2)" strokeWidth="10" strokeLinecap="round" strokeDasharray={`${availablePercent * 3.77} 377`} />
+                      <defs>
+                        <linearGradient id="rewardGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#ffd700" />
+                          <stop offset="100%" stopColor="#ff8c00" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: '36px', fontWeight: 700, color: '#FFD700' }}>{stats.available}</span>
+                      <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>disponibili</span>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-white font-orbitron">Rewards</h2>
-                    <p className="text-xs text-gray-400">Premi sulla Mappa</p>
-                  </div>
+                </GlassCard>
+
+                {/* Stats Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                  <GlassCard style={{ textAlign: 'center', padding: '14px 8px' }}>
+                    <MapPin style={{ width: '24px', height: '24px', color: '#FFD700', margin: '0 auto 8px' }} />
+                    <div style={{ fontSize: '22px', fontWeight: 700, color: '#FFFFFF' }}>{stats.total}</div>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>Totali</div>
+                  </GlassCard>
+                  
+                  <GlassCard style={{ textAlign: 'center', padding: '14px 8px', background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                    <CheckCircle style={{ width: '24px', height: '24px', color: '#22C55E', margin: '0 auto 8px' }} />
+                    <div style={{ fontSize: '22px', fontWeight: 700, color: '#22C55E' }}>{stats.claimed}</div>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>Riscattati</div>
+                  </GlassCard>
+                  
+                  <GlassCard style={{ textAlign: 'center', padding: '14px 8px', background: 'rgba(255, 215, 0, 0.15)', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
+                    <Clock style={{ width: '24px', height: '24px', color: '#FFD700', margin: '0 auto 8px' }} />
+                    <div style={{ fontSize: '22px', fontWeight: 700, color: '#FFD700' }}>{stats.available}</div>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>Disponibili</div>
+                  </GlassCard>
                 </div>
 
-                {/* Close button */}
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-400" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 space-y-6">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
-                  </div>
-                ) : (
-                  <>
-                    {/* Progress Circle */}
-                    <div className="flex justify-center">
-                      <div className="relative w-32 h-32">
-                        <svg className="w-full h-full transform -rotate-90">
-                          <circle
-                            cx="64"
-                            cy="64"
-                            r="56"
-                            fill="none"
-                            stroke="rgba(255,255,255,0.1)"
-                            strokeWidth="8"
-                          />
-                          <circle
-                            cx="64"
-                            cy="64"
-                            r="56"
-                            fill="none"
-                            stroke="url(#rewardGradient)"
-                            strokeWidth="8"
-                            strokeLinecap="round"
-                            strokeDasharray={`${availablePercent * 3.52} 352`}
-                          />
-                          <defs>
-                            <linearGradient id="rewardGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#ffd700" />
-                              <stop offset="100%" stopColor="#ff8c00" />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <span className="text-3xl font-bold text-yellow-400">{stats.available}</span>
-                          <span className="text-xs text-gray-400">disponibili</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="bg-white/5 rounded-xl p-3 text-center border border-white/10">
-                        <MapPin className="w-5 h-5 text-yellow-400 mx-auto mb-1" />
-                        <div className="text-xl font-bold text-white">{stats.total}</div>
-                        <div className="text-[10px] text-gray-400 uppercase">Totali</div>
-                      </div>
-                      
-                      <div className="bg-green-500/10 rounded-xl p-3 text-center border border-green-500/20">
-                        <CheckCircle className="w-5 h-5 text-green-400 mx-auto mb-1" />
-                        <div className="text-xl font-bold text-green-400">{stats.claimed}</div>
-                        <div className="text-[10px] text-gray-400 uppercase">Riscattati</div>
-                      </div>
-                      
-                      <div className="bg-yellow-500/10 rounded-xl p-3 text-center border border-yellow-500/20">
-                        <Clock className="w-5 h-5 text-yellow-400 mx-auto mb-1" />
-                        <div className="text-xl font-bold text-yellow-400">{stats.available}</div>
-                        <div className="text-[10px] text-gray-400 uppercase">Disponibili</div>
-                      </div>
-                    </div>
-
-                    {/* Info */}
-                    <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
-                      <p className="text-sm text-emerald-200/80 text-center">
-                        🎁 Trova i marker <span className="text-emerald-400 font-semibold">verdi</span> sulla mappa per riscattare premi istantanei!
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                {/* Info Card */}
+                <GlassCard style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                  <p style={{ color: 'rgba(167, 243, 208, 0.9)', fontSize: '14px', textAlign: 'center', lineHeight: '1.6' }}>
+                    🎁 Trova i marker <span style={{ color: '#10B981', fontWeight: 600 }}>verdi</span> sulla mappa per riscattare premi istantanei!
+                  </p>
+                </GlassCard>
+              </>
+            )}
+          </div>
+        </div>
+      </MapPillFlipOverlay>
     </>
   );
 }
+
+// Glass Card component
+const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
+  <div style={{ 
+    background: 'rgba(25, 25, 35, 0.7)', 
+    backdropFilter: 'blur(24px)', 
+    WebkitBackdropFilter: 'blur(24px)', 
+    borderRadius: '14px', 
+    padding: '16px', 
+    border: '1px solid rgba(255, 255, 255, 0.08)', 
+    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)', 
+    ...style 
+  }}>
+    {children}
+  </div>
+);
 
 export default RewardCounterPill;
 

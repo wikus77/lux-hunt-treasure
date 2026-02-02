@@ -1,7 +1,7 @@
 // @ts-nocheck
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// DevAreasPanel.tsx - Modal popup with Tabs for Punti/Aree
-// Uses official GlassModal pattern for M1SSION™ consistent UX
+// DevAreasPanel.tsx - Revolut-style fullscreen modal for Punti/Aree
+// Jan 2026 update: Now uses MapPillFlipOverlay
 // BUG FIX: Radius picker is now INLINE (no modal), points render on map
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -9,8 +9,7 @@ import type { Map as MLMap } from 'maplibre-gl';
 import maplibregl from 'maplibre-gl';
 import { Button } from '@/components/ui/button';
 import { MapPin, Trash2, Plus, Target, Crosshair, Edit2, Save, X, ChevronLeft } from 'lucide-react';
-import { GlassModal } from '@/components/ui/GlassModal';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { MapPillFlipOverlay } from '@/components/map/MapPillFlipOverlay';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { toast } from 'sonner';
@@ -42,6 +41,7 @@ const DevAreasPanel: React.FC<DevAreasPanelProps> = ({
   onCreateAreaDirect
 }) => {
   const [open, setOpen] = useState<boolean>(false);
+  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const [activeTab, setActiveTab] = useState<string>('aree');
   
   // INLINE radius picker state (no modal)
@@ -447,6 +447,12 @@ const DevAreasPanel: React.FC<DevAreasPanelProps> = ({
 
   const totalCount = (searchAreas?.length || 0) + mapPoints.length;
 
+  const handlePillClick = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setOriginRect(rect);
+    setOpen(true);
+  };
+
   return (
     <>
       {/* Pill Button - Fixed position */}
@@ -461,7 +467,7 @@ const DevAreasPanel: React.FC<DevAreasPanelProps> = ({
       >
         <div
           className="m1x-pill m1x-pill--areas"
-          onClick={() => setOpen(true)}
+          onClick={handlePillClick}
           title="Punti/Aree"
           style={{ transform: 'scale(0.75)' }}
         >
@@ -474,343 +480,192 @@ const DevAreasPanel: React.FC<DevAreasPanelProps> = ({
         </div>
       </div>
 
-      {/* GlassModal - Official M1SSION Pattern */}
-      <GlassModal
-        isOpen={open}
+      {/* Revolut-style Fullscreen Modal */}
+      <MapPillFlipOverlay
+        open={open}
+        originRect={originRect}
         onClose={() => { setOpen(false); setShowRadiusPickerInline(false); }}
-        title="PUNTI E AREE"
-        subtitle="Gestisci i tuoi punti di interesse"
-        accentColor="#7B2EFF"
       >
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-[#0a0a0a] border border-white/10 rounded-xl p-1 mb-4">
-            <TabsTrigger 
-              value="aree" 
-              className="rounded-lg data-[state=active]:bg-[#7B2EFF] data-[state=active]:text-white text-white/60 font-medium transition-all"
-            >
-              <Target className="h-4 w-4 mr-2" />
-              Aree ({searchAreas?.length || 0})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="punti"
-              className="rounded-lg data-[state=active]:bg-[#00D1FF] data-[state=active]:text-black text-white/60 font-medium transition-all"
-            >
-              <MapPin className="h-4 w-4 mr-2" />
-              Punti ({mapPoints.length})
-            </TabsTrigger>
-          </TabsList>
-
-          {/* AREE Tab */}
-          <TabsContent value="aree" className="mt-0 space-y-4">
-            {/* INLINE Radius Picker (BUG FIX 1: No more modal!) */}
-            {showRadiusPickerInline ? (
-              <div className="space-y-4 p-4 bg-[#0a0a0a] border border-white/10 rounded-xl">
-                {/* Back button + Title */}
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleCancelRadiusPicker}
-                    className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                  >
-                    <ChevronLeft className="h-4 w-4 text-white" />
-                  </button>
-                  <span className="text-white font-medium">Seleziona dimensione area</span>
-                </div>
-                
-                {/* Radius/Diameter Toggle */}
-                <div className="flex justify-center">
-                  <div className="bg-black/50 border border-white/10 rounded-xl p-1 flex gap-1">
-                    <button
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        radiusMode === 'radius' 
-                          ? 'bg-[#7B2EFF] text-white' 
-                          : 'text-white/50 hover:text-white'
-                      }`}
-                      onClick={() => setRadiusMode('radius')}
-                    >
-                      Raggio
-                    </button>
-                    <button
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        radiusMode === 'diameter' 
-                          ? 'bg-[#7B2EFF] text-white' 
-                          : 'text-white/50 hover:text-white'
-                      }`}
-                      onClick={() => setRadiusMode('diameter')}
-                    >
-                      Diametro
-                    </button>
-                  </div>
-                </div>
-
-                {/* Options Grid */}
-                <div className="grid grid-cols-3 gap-2">
-                  {radiusOptions.map(option => {
-                    const displayValue = radiusMode === 'diameter' ? option.value * 2 : option.value;
-                    const displayLabel = displayValue >= 1000 
-                      ? `${(displayValue / 1000).toFixed(displayValue % 1000 === 0 ? 0 : 1)}km` 
-                      : `${displayValue}m`;
-                    
-                    return (
-                      <button
-                        key={option.value}
-                        className={`p-3 rounded-xl text-center transition-all font-medium text-sm ${
-                          selectedRadius === option.value && !showCustomInput
-                            ? 'bg-[#7B2EFF] text-white shadow-lg shadow-[#7B2EFF]/30'
-                            : 'bg-black/30 border border-white/10 text-white/60 hover:bg-white/5 hover:text-white'
-                        }`}
-                        onClick={() => {
-                          setSelectedRadius(option.value);
-                          setShowCustomInput(false);
-                          setCustomRadiusValue('');
-                        }}
-                      >
-                        {displayLabel}
-                      </button>
-                    );
-                  })}
-                  
-                  {/* Custom Input Button */}
-                  <button
-                    className={`p-3 rounded-xl text-center transition-all font-medium text-sm ${
-                      showCustomInput
-                        ? 'bg-[#7B2EFF] text-white shadow-lg shadow-[#7B2EFF]/30'
-                        : 'bg-black/30 border border-white/10 text-white/60 hover:bg-white/5 hover:text-white'
-                    }`}
-                    onClick={() => setShowCustomInput(true)}
-                  >
-                    ✏️ Custom
-                  </button>
-                </div>
-
-                {/* Custom Radius/Diameter Input */}
-                {showCustomInput && (
-                  <div className="mt-3 p-3 bg-black/40 border border-[#7B2EFF]/30 rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min="50"
-                        step="100"
-                        className="flex-1 p-3 bg-black/50 border border-[#7B2EFF]/40 rounded-xl text-white text-sm font-medium text-center focus:outline-none focus:border-[#7B2EFF] transition-colors"
-                        placeholder={radiusMode === 'diameter' ? 'Diametro in metri' : 'Raggio in metri'}
-                        value={customRadiusValue}
-                        onChange={(e) => {
-                          setCustomRadiusValue(e.target.value);
-                          const val = parseInt(e.target.value, 10);
-                          if (!isNaN(val) && val >= 50) {
-                            // Update selectedRadius for preview (no max limit)
-                            setSelectedRadius(radiusMode === 'diameter' ? Math.round(val / 2) : val);
-                          }
-                        }}
-                        autoFocus
-                      />
-                      <span className="text-white/50 text-sm font-medium min-w-[20px]">m</span>
-                    </div>
-                    <div className="text-xs text-white/40 mt-2 text-center">
-                      Min: 50m • Es: 5000m = 5km, 50000m = 50km
-                    </div>
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex gap-3 pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleCancelRadiusPicker}
-                    className="flex-1 border-white/20 text-white hover:bg-white/10 rounded-xl h-10"
-                  >
-                    Annulla
-                  </Button>
-                  <Button
-                    onClick={handleConfirmRadiusInline}
-                    className="flex-1 bg-[#7B2EFF] hover:bg-[#7B2EFF]/80 text-white font-semibold rounded-xl h-10"
-                  >
-                    Conferma
-                  </Button>
-                </div>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+          {/* HEADER */}
+          <div style={{
+            flexShrink: 0,
+            background: 'linear-gradient(180deg, rgba(123, 46, 255, 0.8) 0%, rgba(80, 30, 180, 0.6) 100%)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
+            paddingBottom: '20px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <button onClick={() => { setOpen(false); setShowRadiusPickerInline(false); }} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+              </button>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>PUNTI E AREE</h1>
               </div>
-            ) : (
-              <>
-                <Button
-                  onClick={handleAddAreaClick}
-                  className="w-full bg-[#7B2EFF] hover:bg-[#7B2EFF]/80 text-white font-semibold rounded-xl h-11"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nuova area di ricerca
-                </Button>
+              <div style={{ width: '40px' }} />
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Gestisci i tuoi punti di interesse</p>
+          </div>
 
-                <div className="space-y-3">
-                  {(!searchAreas || searchAreas.length === 0) ? (
-                    <div className="text-center text-white/50 py-6 text-sm">
-                      Nessuna area. Clicca "Nuova" e poi tocca sulla mappa.
+          {/* TABS */}
+          <div style={{ display: 'flex', margin: '16px', gap: '8px' }}>
+            <button onClick={() => setActiveTab('aree')} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: activeTab === 'aree' ? '#7B2EFF' : 'rgba(255,255,255,0.1)', border: 'none', color: activeTab === 'aree' ? '#FFFFFF' : 'rgba(255,255,255,0.6)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <Target style={{ width: '16px', height: '16px' }} /> Aree ({searchAreas?.length || 0})
+            </button>
+            <button onClick={() => setActiveTab('punti')} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: activeTab === 'punti' ? '#00D1FF' : 'rgba(255,255,255,0.1)', border: 'none', color: activeTab === 'punti' ? '#000000' : 'rgba(255,255,255,0.6)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <MapPin style={{ width: '16px', height: '16px' }} /> Punti ({mapPoints.length})
+            </button>
+          </div>
+
+          {/* CONTENT */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px', paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)', WebkitOverflowScrolling: 'touch' }}>
+
+            {/* AREE Tab Content */}
+            {activeTab === 'aree' && (
+              <>
+                {showRadiusPickerInline ? (
+                  <GlassCard>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                      <button onClick={handleCancelRadiusPicker} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer' }}>
+                        <ChevronLeft style={{ width: '16px', height: '16px', color: '#FFFFFF' }} />
+                      </button>
+                      <span style={{ color: '#FFFFFF', fontWeight: 500 }}>Seleziona dimensione area</span>
                     </div>
-                  ) : (
-                    searchAreas.map(area => (
-                      <div 
-                        key={area.id} 
-                        className="p-3 bg-[#0a0a0a] border border-white/5 rounded-xl hover:border-white/10 transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-white text-sm">
-                              {area.label || 'Area di ricerca'}
-                            </div>
-                            <div className="text-xs text-white/50 mt-0.5">
-                              Raggio: {(area.radius / 1000).toFixed(1)} km
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => { onFocus(area.id); flyToArea(area); }}
-                              className="h-8 px-3 text-[#7B2EFF] hover:text-[#7B2EFF] hover:bg-[#7B2EFF]/10 rounded-lg text-xs font-medium"
-                            >
-                              <Crosshair className="h-3 w-3 mr-1" />
-                              Focus
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => onDelete(area.id)}
-                              className="h-8 px-3 text-red-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg text-xs font-medium"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                      <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '4px', display: 'flex', gap: '4px' }}>
+                        <button onClick={() => setRadiusMode('radius')} style={{ padding: '10px 16px', borderRadius: '10px', background: radiusMode === 'radius' ? '#7B2EFF' : 'transparent', border: 'none', color: radiusMode === 'radius' ? '#FFF' : 'rgba(255,255,255,0.5)', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>Raggio</button>
+                        <button onClick={() => setRadiusMode('diameter')} style={{ padding: '10px 16px', borderRadius: '10px', background: radiusMode === 'diameter' ? '#7B2EFF' : 'transparent', border: 'none', color: radiusMode === 'diameter' ? '#FFF' : 'rgba(255,255,255,0.5)', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>Diametro</button>
                       </div>
-                    ))
-                  )}
-                </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
+                      {radiusOptions.map(option => {
+                        const displayValue = radiusMode === 'diameter' ? option.value * 2 : option.value;
+                        const displayLabel = displayValue >= 1000 ? `${(displayValue / 1000).toFixed(displayValue % 1000 === 0 ? 0 : 1)}km` : `${displayValue}m`;
+                        const isSelected = selectedRadius === option.value && !showCustomInput;
+                        return (
+                          <button key={option.value} onClick={() => { setSelectedRadius(option.value); setShowCustomInput(false); setCustomRadiusValue(''); }} style={{ padding: '14px', borderRadius: '12px', background: isSelected ? '#7B2EFF' : 'rgba(0,0,0,0.3)', border: isSelected ? 'none' : '1px solid rgba(255,255,255,0.1)', color: isSelected ? '#FFF' : 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: 500, cursor: 'pointer', boxShadow: isSelected ? '0 0 20px rgba(123, 46, 255, 0.3)' : 'none' }}>
+                            {displayLabel}
+                          </button>
+                        );
+                      })}
+                      <button onClick={() => setShowCustomInput(true)} style={{ padding: '14px', borderRadius: '12px', background: showCustomInput ? '#7B2EFF' : 'rgba(0,0,0,0.3)', border: showCustomInput ? 'none' : '1px solid rgba(255,255,255,0.1)', color: showCustomInput ? '#FFF' : 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>✏️ Custom</button>
+                    </div>
+
+                    {showCustomInput && (
+                      <div style={{ padding: '12px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(123,46,255,0.3)', borderRadius: '12px', marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <input type="number" min="50" step="100" placeholder={radiusMode === 'diameter' ? 'Diametro in metri' : 'Raggio in metri'} value={customRadiusValue} onChange={(e) => { setCustomRadiusValue(e.target.value); const val = parseInt(e.target.value, 10); if (!isNaN(val) && val >= 50) { setSelectedRadius(radiusMode === 'diameter' ? Math.round(val / 2) : val); }}} autoFocus style={{ flex: 1, padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(123,46,255,0.4)', borderRadius: '10px', color: '#FFF', fontSize: '14px', textAlign: 'center', outline: 'none' }} />
+                          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>m</span>
+                        </div>
+                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '8px', textAlign: 'center' }}>Min: 50m • Es: 5000m = 5km</p>
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <button onClick={handleCancelRadiusPicker} style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF', fontSize: '14px', cursor: 'pointer' }}>Annulla</button>
+                      <button onClick={handleConfirmRadiusInline} style={{ flex: 1, padding: '14px', borderRadius: '12px', background: '#7B2EFF', border: 'none', color: '#FFF', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>Conferma</button>
+                    </div>
+                  </GlassCard>
+                ) : (
+                  <>
+                    <button onClick={handleAddAreaClick} style={{ width: '100%', padding: '14px', marginBottom: '16px', borderRadius: '12px', background: '#7B2EFF', border: 'none', color: '#FFF', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <Plus style={{ width: '16px', height: '16px' }} /> Nuova area di ricerca
+                    </button>
+
+                    {(!searchAreas || searchAreas.length === 0) ? (
+                      <GlassCard><p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>Nessuna area. Clicca "Nuova" e poi tocca sulla mappa.</p></GlassCard>
+                    ) : (
+                      searchAreas.map(area => (
+                        <GlassCard key={area.id} style={{ marginBottom: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div>
+                              <p style={{ color: '#FFF', fontSize: '14px', fontWeight: 500 }}>{area.label || 'Area di ricerca'}</p>
+                              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '4px' }}>Raggio: {(area.radius / 1000).toFixed(1)} km</p>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button onClick={() => { onFocus(area.id); flyToArea(area); }} style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(123,46,255,0.1)', border: 'none', color: '#7B2EFF', fontSize: '12px', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Crosshair style={{ width: '12px', height: '12px' }} /> Focus
+                              </button>
+                              <button onClick={() => onDelete(area.id)} style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.1)', border: 'none', color: '#EF4444', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                                <Trash2 style={{ width: '12px', height: '12px' }} />
+                              </button>
+                            </div>
+                          </div>
+                        </GlassCard>
+                      ))
+                    )}
+                  </>
+                )}
               </>
             )}
-          </TabsContent>
 
-          {/* PUNTI Tab */}
-          <TabsContent value="punti" className="mt-0 space-y-4">
-            <Button
-              onClick={handleStartAddPoint}
-              disabled={!isAuthenticated}
-              className="w-full bg-[#00D1FF] hover:bg-[#00D1FF]/80 text-black font-semibold rounded-xl h-11"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Aggiungi punto sulla mappa
-            </Button>
+            {/* PUNTI Tab Content */}
+            {activeTab === 'punti' && (
+              <>
+                <button onClick={handleStartAddPoint} disabled={!isAuthenticated} style={{ width: '100%', padding: '14px', marginBottom: '16px', borderRadius: '12px', background: '#00D1FF', border: 'none', color: '#000', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: !isAuthenticated ? 0.5 : 1 }}>
+                  <Plus style={{ width: '16px', height: '16px' }} /> Aggiungi punto sulla mappa
+                </button>
 
-            <div className="space-y-3">
-              {!isAuthenticated ? (
-                <div className="text-center text-white/50 py-6 text-sm">
-                  Accedi per salvare i tuoi punti.
-                </div>
-              ) : loadingPoints ? (
-                <div className="text-center text-white/50 py-6 text-sm">
-                  <div className="inline-block w-5 h-5 border-2 border-[#00D1FF] border-t-transparent rounded-full animate-spin mb-2" />
-                  <div>Caricamento...</div>
-                </div>
-              ) : mapPoints.length === 0 ? (
-                <div className="text-center text-white/50 py-6 text-sm">
-                  Nessun punto salvato. Clicca "Aggiungi" e poi tocca sulla mappa.
-                </div>
-              ) : (
-                mapPoints.map(point => (
-                  <div 
-                    key={point.id} 
-                    className="p-3 bg-[#0a0a0a] border border-white/5 rounded-xl hover:border-white/10 transition-colors"
-                  >
-                    {editingPointId === point.id ? (
-                      <div className="space-y-3">
-                        <input
-                          type="text"
-                          className="w-full p-3 bg-black/50 border border-[#00D1FF]/30 rounded-xl text-white text-sm focus:outline-none focus:border-[#00D1FF]/60 transition-colors"
-                          placeholder="Titolo del punto"
-                          value={editPointTitle}
-                          onChange={(e) => setEditPointTitle(e.target.value)}
-                          autoFocus
-                        />
-                        <textarea
-                          className="w-full h-20 p-3 bg-black/50 border border-[#00D1FF]/30 rounded-xl text-white text-sm resize-none focus:outline-none focus:border-[#00D1FF]/60 transition-colors"
-                          placeholder="Note sul punto..."
-                          value={editPointNote}
-                          onChange={(e) => setEditPointNote(e.target.value)}
-                        />
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleUpdatePoint(point.id)}
-                            className="flex-1 bg-[#00D1FF] hover:bg-[#00D1FF]/80 text-black font-semibold rounded-lg h-9"
-                          >
-                            <Save className="h-3 w-3 mr-1" />
-                            Salva
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => { setEditingPointId(null); setEditPointTitle(''); setEditPointNote(''); }}
-                            className="flex-1 border-white/20 text-white hover:bg-white/10 rounded-lg h-9"
-                          >
-                            <X className="h-3 w-3 mr-1" />
-                            Annulla
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1">
-                            <div className="font-medium text-white text-sm">
-                              {point.title || 'Punto senza titolo'}
-                            </div>
-                            {point.note && (
-                              <div className="text-xs text-white/50 mt-1 line-clamp-2">
-                                {point.note}
-                              </div>
-                            )}
-                            <div className="text-xs text-white/30 mt-1 font-mono">
-                              {point.lat.toFixed(5)}, {point.lng.toFixed(5)}
-                            </div>
+                {!isAuthenticated ? (
+                  <GlassCard><p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>Accedi per salvare i tuoi punti.</p></GlassCard>
+                ) : loadingPoints ? (
+                  <GlassCard style={{ textAlign: 'center', padding: '30px 0' }}>
+                    <div style={{ width: '24px', height: '24px', border: '2px solid rgba(0,209,255,0.3)', borderTopColor: '#00D1FF', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
+                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>Caricamento...</p>
+                  </GlassCard>
+                ) : mapPoints.length === 0 ? (
+                  <GlassCard><p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>Nessun punto salvato. Clicca "Aggiungi" e poi tocca sulla mappa.</p></GlassCard>
+                ) : (
+                  mapPoints.map(point => (
+                    <GlassCard key={point.id} style={{ marginBottom: '12px' }}>
+                      {editingPointId === point.id ? (
+                        <div>
+                          <input type="text" placeholder="Titolo del punto" value={editPointTitle} onChange={(e) => setEditPointTitle(e.target.value)} autoFocus style={{ width: '100%', padding: '12px', marginBottom: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,209,255,0.3)', borderRadius: '10px', color: '#FFF', fontSize: '14px', outline: 'none' }} />
+                          <textarea placeholder="Note sul punto..." value={editPointNote} onChange={(e) => setEditPointNote(e.target.value)} style={{ width: '100%', height: '80px', padding: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,209,255,0.3)', borderRadius: '10px', color: '#FFF', fontSize: '14px', resize: 'none', outline: 'none' }} />
+                          <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+                            <button onClick={() => handleUpdatePoint(point.id)} style={{ flex: 1, padding: '10px', borderRadius: '10px', background: '#00D1FF', border: 'none', color: '#000', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                              <Save style={{ width: '14px', height: '14px', display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />Salva
+                            </button>
+                            <button onClick={() => { setEditingPointId(null); setEditPointTitle(''); setEditPointNote(''); }} style={{ flex: 1, padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF', fontSize: '13px', cursor: 'pointer' }}>
+                              <X style={{ width: '14px', height: '14px', display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />Annulla
+                            </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => flyToPoint(point)}
-                            className="h-8 px-3 text-[#00D1FF] hover:text-[#00D1FF] hover:bg-[#00D1FF]/10 rounded-lg text-xs font-medium"
-                          >
-                            <Crosshair className="h-3 w-3 mr-1" />
-                            Focus
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => { 
-                              setEditingPointId(point.id); 
-                              setEditPointTitle(point.title); 
-                              setEditPointNote(point.note || ''); 
-                            }}
-                            className="h-8 px-3 text-[#00D1FF] hover:text-[#00D1FF] hover:bg-[#00D1FF]/10 rounded-lg text-xs font-medium"
-                          >
-                            <Edit2 className="h-3 w-3 mr-1" />
-                            Modifica
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDeletePoint(point.id)}
-                            className="h-8 px-3 text-red-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg text-xs font-medium"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </GlassModal>
+                      ) : (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                            <div style={{ flex: 1 }}>
+                              <p style={{ color: '#FFF', fontSize: '14px', fontWeight: 500 }}>{point.title || 'Punto senza titolo'}</p>
+                              {point.note && <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '4px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{point.note}</p>}
+                              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', marginTop: '4px', fontFamily: 'monospace' }}>{point.lat.toFixed(5)}, {point.lng.toFixed(5)}</p>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                            <button onClick={() => flyToPoint(point)} style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(0,209,255,0.1)', border: 'none', color: '#00D1FF', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                              <Crosshair style={{ width: '12px', height: '12px', display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />Focus
+                            </button>
+                            <button onClick={() => { setEditingPointId(point.id); setEditPointTitle(point.title); setEditPointNote(point.note || ''); }} style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(0,209,255,0.1)', border: 'none', color: '#00D1FF', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                              <Edit2 style={{ width: '12px', height: '12px', display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />Modifica
+                            </button>
+                            <button onClick={() => handleDeletePoint(point.id)} style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.1)', border: 'none', color: '#EF4444', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                              <Trash2 style={{ width: '12px', height: '12px' }} />
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </GlassCard>
+                  ))
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </MapPillFlipOverlay>
 
       {/* Adding Point Mode Indicator */}
       {isAddingPoint && (
@@ -872,5 +727,10 @@ const DevAreasPanel: React.FC<DevAreasPanelProps> = ({
     </>
   );
 };
+
+// Glass Card component
+const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
+  <div style={{ background: 'rgba(25, 25, 35, 0.7)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: '14px', padding: '16px', border: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)', ...style }}>{children}</div>
+);
 
 export default DevAreasPanel;

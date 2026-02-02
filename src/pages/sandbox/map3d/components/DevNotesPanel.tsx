@@ -1,13 +1,13 @@
 // @ts-nocheck
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// DevNotesPanel.tsx - Modal popup for user notes with Supabase persistence
-// Uses official GlassModal pattern for M1SSION™ consistent UX
+// DevNotesPanel.tsx - Revolut-style fullscreen modal for user notes
+// Jan 2026 update: Now uses MapPillFlipOverlay
 
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';
 import { Button } from '@/components/ui/button';
 import { FileText, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
-import { GlassModal } from '@/components/ui/GlassModal';
+import { MapPillFlipOverlay } from '@/components/map/MapPillFlipOverlay';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { toast } from 'sonner';
@@ -26,6 +26,7 @@ interface NoteItem {
 
 const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
   const [open, setOpen] = useState<boolean>(false);
+  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
@@ -198,6 +199,12 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
 
   const count = notes.length;
 
+  const handlePillClick = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setOriginRect(rect);
+    setOpen(true);
+  };
+
   return (
     <>
       {/* Pill Button - Fixed position */}
@@ -212,7 +219,7 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
       >
         <div
           className="m1x-pill m1x-pill--note"
-          onClick={() => setOpen(true)}
+          onClick={handlePillClick}
           title="Note"
           style={{ transform: 'scale(0.75)' }}
         >
@@ -225,124 +232,116 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
         </div>
       </div>
 
-      {/* GlassModal - Official M1SSION Pattern */}
-      <GlassModal
-        isOpen={open}
+      {/* Revolut-style Fullscreen Modal */}
+      <MapPillFlipOverlay
+        open={open}
+        originRect={originRect}
         onClose={() => setOpen(false)}
-        title="NOTE"
-        subtitle="Salva appunti sulla tua ricerca"
-        accentColor="#00D1FF"
       >
-        <div className="space-y-4">
-          {/* Add new note */}
-          <div className="space-y-3">
-            <textarea
-              className="w-full h-20 p-3 bg-[#0a0a0a] border border-white/10 rounded-xl text-white text-sm resize-none focus:outline-none focus:border-[#00D1FF]/50 placeholder:text-white/40 transition-colors"
-              placeholder="Scrivi una nuova nota..."
-              value={newNoteText}
-              onChange={(e) => setNewNoteText(e.target.value)}
-              disabled={!isAuthenticated}
-            />
-            <Button
-              onClick={handleAddNote}
-              disabled={!newNoteText.trim() || saving || !isAuthenticated}
-              className="w-full bg-[#00D1FF] hover:bg-[#00D1FF]/80 text-black font-semibold rounded-xl h-11"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              {saving ? 'Salvataggio...' : 'Aggiungi nota'}
-            </Button>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+          {/* HEADER */}
+          <div style={{
+            flexShrink: 0,
+            background: 'linear-gradient(180deg, rgba(0, 209, 255, 0.8) 0%, rgba(0, 100, 150, 0.6) 100%)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
+            paddingBottom: '20px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <button onClick={() => setOpen(false)} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+              </button>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>NOTE</h1>
+              </div>
+              <div style={{ width: '40px' }} />
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Salva appunti sulla tua ricerca</p>
           </div>
 
-          {/* Notes list */}
-          <div className="space-y-3">
+          {/* CONTENT */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)', WebkitOverflowScrolling: 'touch' }}>
+            {/* Add new note */}
+            <GlassCard style={{ marginBottom: '16px' }}>
+              <textarea
+                style={{ width: '100%', height: '80px', padding: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#FFFFFF', fontSize: '14px', resize: 'none', outline: 'none' }}
+                placeholder="Scrivi una nuova nota..."
+                value={newNoteText}
+                onChange={(e) => setNewNoteText(e.target.value)}
+                disabled={!isAuthenticated}
+              />
+              <button
+                onClick={handleAddNote}
+                disabled={!newNoteText.trim() || saving || !isAuthenticated}
+                style={{ width: '100%', marginTop: '12px', padding: '14px', borderRadius: '12px', background: '#00D1FF', border: 'none', color: '#000000', fontSize: '14px', fontWeight: 600, cursor: 'pointer', opacity: (!newNoteText.trim() || saving || !isAuthenticated) ? 0.5 : 1 }}
+              >
+                <Plus style={{ width: '16px', height: '16px', display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
+                {saving ? 'Salvataggio...' : 'Aggiungi nota'}
+              </button>
+            </GlassCard>
+
+            {/* Notes list */}
             {!isAuthenticated ? (
-              <div className="text-center text-white/50 py-6 text-sm">
-                Accedi per salvare le tue note.
-              </div>
+              <GlassCard><p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>Accedi per salvare le tue note.</p></GlassCard>
             ) : loading ? (
-              <div className="text-center text-white/50 py-6 text-sm">
-                <div className="inline-block w-5 h-5 border-2 border-[#00D1FF] border-t-transparent rounded-full animate-spin mb-2" />
-                <div>Caricamento...</div>
-              </div>
+              <GlassCard style={{ textAlign: 'center', padding: '30px 0' }}>
+                <div style={{ width: '24px', height: '24px', border: '2px solid rgba(0, 209, 255, 0.3)', borderTopColor: '#00D1FF', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>Caricamento...</p>
+              </GlassCard>
             ) : notes.length === 0 ? (
-              <div className="text-center text-white/50 py-6 text-sm">
-                Nessuna nota. Aggiungi la tua prima nota sopra.
-              </div>
+              <GlassCard><p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>Nessuna nota. Aggiungi la tua prima nota sopra.</p></GlassCard>
             ) : (
               notes.map(note => (
-                <div 
-                  key={note.id} 
-                  className="p-3 bg-[#0a0a0a] border border-white/5 rounded-xl hover:border-white/10 transition-colors"
-                >
+                <GlassCard key={note.id} style={{ marginBottom: '12px' }}>
                   {editingId === note.id ? (
-                    <div className="space-y-3">
+                    <div>
                       <textarea
-                        className="w-full h-20 p-3 bg-black/50 border border-[#00D1FF]/30 rounded-xl text-white text-sm resize-none focus:outline-none focus:border-[#00D1FF]/60"
+                        style={{ width: '100%', height: '80px', padding: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0, 209, 255, 0.3)', borderRadius: '12px', color: '#FFFFFF', fontSize: '14px', resize: 'none', outline: 'none' }}
                         value={editText}
                         onChange={(e) => setEditText(e.target.value)}
                         autoFocus
                       />
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleUpdateNote(note.id)}
-                          disabled={saving || !editText.trim()}
-                          className="flex-1 bg-[#00D1FF] hover:bg-[#00D1FF]/80 text-black font-semibold rounded-lg h-9"
-                        >
-                          <Save className="h-3 w-3 mr-1" />
-                          Salva
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => { setEditingId(null); setEditText(''); }}
-                          className="flex-1 border-white/20 text-white hover:bg-white/10 rounded-lg h-9"
-                        >
-                          <X className="h-3 w-3 mr-1" />
-                          Annulla
-                        </Button>
+                      <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+                        <button onClick={() => handleUpdateNote(note.id)} disabled={saving || !editText.trim()} style={{ flex: 1, padding: '10px', borderRadius: '10px', background: '#00D1FF', border: 'none', color: '#000', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                          <Save style={{ width: '14px', height: '14px', display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />Salva
+                        </button>
+                        <button onClick={() => { setEditingId(null); setEditText(''); }} style={{ flex: 1, padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#FFFFFF', fontSize: '13px', cursor: 'pointer' }}>
+                          <X style={{ width: '14px', height: '14px', display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />Annulla
+                        </button>
                       </div>
                     </div>
                   ) : (
                     <>
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="text-sm text-white/90 flex-1 leading-relaxed">{note.text}</p>
-                        <button
-                          onClick={() => handleToggleImportance(note.id)}
-                          className={`w-3 h-3 rounded-full ${getImportanceColor(note.importance)} flex-shrink-0 mt-1 cursor-pointer hover:ring-2 hover:ring-white/30 transition-all`}
-                          title={`Priorità: ${note.importance}`}
-                        />
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                        <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', flex: 1, lineHeight: '1.5' }}>{note.text}</p>
+                        <button onClick={() => handleToggleImportance(note.id)} style={{ width: '14px', height: '14px', borderRadius: '50%', border: 'none', cursor: 'pointer', flexShrink: 0, marginTop: '4px' }} className={getImportanceColor(note.importance)} title={`Priorità: ${note.importance}`} />
                       </div>
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => { setEditingId(note.id); setEditText(note.text); }}
-                          className="h-8 px-3 text-[#00D1FF] hover:text-[#00D1FF] hover:bg-[#00D1FF]/10 rounded-lg text-xs font-medium"
-                        >
-                          <Edit2 className="h-3 w-3 mr-1.5" />
-                          Modifica
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteNote(note.id)}
-                          className="h-8 px-3 text-red-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg text-xs font-medium"
-                        >
-                          <Trash2 className="h-3 w-3 mr-1.5" />
-                          Elimina
-                        </Button>
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                        <button onClick={() => { setEditingId(note.id); setEditText(note.text); }} style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(0, 209, 255, 0.1)', border: 'none', color: '#00D1FF', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                          <Edit2 style={{ width: '12px', height: '12px', display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />Modifica
+                        </button>
+                        <button onClick={() => handleDeleteNote(note.id)} style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#EF4444', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                          <Trash2 style={{ width: '12px', height: '12px', display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />Elimina
+                        </button>
                       </div>
                     </>
                   )}
-                </div>
+                </GlassCard>
               ))
             )}
           </div>
         </div>
-      </GlassModal>
+      </MapPillFlipOverlay>
     </>
   );
 };
+
+// Glass Card component
+const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
+  <div style={{ background: 'rgba(25, 25, 35, 0.7)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: '14px', padding: '16px', border: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)', ...style }}>{children}</div>
+);
 
 export default DevNotesPanel;
