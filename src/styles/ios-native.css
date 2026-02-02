@@ -365,6 +365,19 @@ body.is-native {
   background-color: #FFFFFF !important;
 }
 
+/* ========================================
+   🔧 FIX 02/02/2026: HOME PAGE DARK SAFE AREA
+   
+   Override white background ONLY when Home page is active.
+   Home page adds .m1-home-dark class to html element.
+   ======================================== */
+html.m1-home-dark,
+html.m1-home-dark body,
+html.m1-home-dark body.is-native {
+  background: #0a0f1a !important;
+  background-color: #0a0f1a !important;
+}
+
 /* All containers transparent */
 body.is-native #root,
 body.is-native .safe-area-wrapper,

@@ -202,6 +202,14 @@ const { isConnected } = useRealTimeNotifications();
 
   // 🔧 FULL SCREEN M1SSION PRIZE - Come foto riferimento
   
+  // 🎨 Add dark class to html for iOS safe area
+  useEffect(() => {
+    document.documentElement.classList.add('m1-home-dark');
+    return () => {
+      document.documentElement.classList.remove('m1-home-dark');
+    };
+  }, []);
+  
   return (
     <div 
       className="w-full overflow-x-hidden sn-page"
