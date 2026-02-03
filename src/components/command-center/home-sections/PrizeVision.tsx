@@ -180,23 +180,22 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
     setIsDecryptionMode(prev => !prev);
   };
 
-  // Card container styles (shared between front and back)
+  // Card container styles (shared between front and back) — WHITE GLASS EFFECT
   const cardContainerStyles: React.CSSProperties = {
-    background: 'linear-gradient(160deg, rgba(15, 25, 45, 0.95) 0%, rgba(5, 10, 25, 0.98) 50%, rgba(10, 20, 40, 0.95) 100%)',
+    background: 'linear-gradient(160deg, rgba(255, 255, 255, 0.92) 0%, rgba(245, 248, 255, 0.88) 50%, rgba(240, 245, 255, 0.85) 100%)',
     backdropFilter: 'blur(40px)',
     WebkitBackdropFilter: 'blur(40px)',
-    border: '2px solid rgba(0, 209, 255, 0.4)',
+    border: '2px solid rgba(0, 180, 220, 0.5)',
     borderTop: '2px solid rgba(0, 209, 255, 0.6)',
-    borderBottom: '2px solid rgba(0, 150, 200, 0.3)',
+    borderBottom: '2px solid rgba(0, 150, 200, 0.4)',
     boxShadow: `
-      0 25px 80px rgba(0, 0, 0, 0.7),
-      0 15px 40px rgba(0, 0, 0, 0.5),
-      0 5px 20px rgba(0, 0, 0, 0.4),
-      inset 0 2px 4px rgba(255, 255, 255, 0.15),
-      inset 0 -2px 4px rgba(0, 0, 0, 0.4),
-      0 0 30px rgba(0, 209, 255, 0.25),
-      0 0 60px rgba(0, 209, 255, 0.15),
-      0 -5px 30px rgba(0, 209, 255, 0.1)
+      0 25px 80px rgba(0, 0, 0, 0.15),
+      0 15px 40px rgba(0, 0, 0, 0.1),
+      0 5px 20px rgba(0, 0, 0, 0.08),
+      inset 0 2px 4px rgba(255, 255, 255, 0.9),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+      0 0 30px rgba(0, 209, 255, 0.15),
+      0 0 60px rgba(0, 209, 255, 0.08)
     `
   };
 
@@ -277,24 +276,24 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
 
               {/* Header - Clickable for Flip */}
               <div
-                className="p-4 border-b border-white/10 flex justify-between items-center cursor-pointer select-none"
+                className="p-4 border-b border-gray-300/50 flex justify-between items-center cursor-pointer select-none"
                 onClick={toggleDecryptionMode}
               >
                 <h2 className="text-lg md:text-xl font-orbitron font-bold">
-                  <span className="text-[#00D1FF]" style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}>M1</span>
-                  <span className="text-white">SSION<span className="text-xs align-top">™</span> PRIZE</span>
+                  <span className="text-[#0088AA]" style={{ textShadow: "0 0 10px rgba(0, 150, 180, 0.4)" }}>M1</span>
+                  <span className="text-gray-800">SSION<span className="text-xs align-top">™</span> PRIZE</span>
                 </h2>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs text-white/70">Visibilità: {progress}%</span>
-                  <span className="text-xs text-white/50">({currentImageIndex + 1}/{missionPrizeImages.length})</span>
+                  <span className="text-xs text-gray-700 font-medium">Visibilità: {progress}%</span>
+                  <span className="text-xs text-gray-500">({currentImageIndex + 1}/{missionPrizeImages.length})</span>
                   {/* Flip indicator icon */}
                   <motion.div 
-                    className="ml-2 w-6 h-6 rounded-full bg-[#00D1FF]/20 border border-[#00D1FF]/40 flex items-center justify-center"
+                    className="ml-2 w-6 h-6 rounded-full bg-[#0088AA]/20 border border-[#0088AA]/50 flex items-center justify-center"
                     animate={{ rotateY: [0, 180, 0] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" stroke="#00D1FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" stroke="#0088AA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </motion.div>
                 </div>
