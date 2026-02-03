@@ -227,28 +227,33 @@ const { isConnected } = useRealTimeNotifications();
               transition={{ duration: 0.5 }}
             >
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 1️⃣ M1SSION PRIZE - FULL WIDTH, FULL SCREEN */}
+              {/* 1️⃣ M1SSION PRIZE - ESTESO FINO A SAFE ZONE iOS */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div 
-                className="m1-first-content-offset-compact"
                 style={{
                   position: 'relative',
                   width: '100%',
-                  // 🎨 Gradient SCURO → BIANCO (non trasparente!)
+                  // 🎨 Gradient SCURO → BIANCO - Parte dall'alto, fade più graduale
                   background: `linear-gradient(180deg, 
                     #0a0f1a 0%, 
-                    #0a0f1a 25%, 
-                    #0d1525 40%, 
-                    #1a2535 55%, 
-                    #3d4a5c 68%, 
-                    #7a8599 78%, 
-                    #b8bcc5 86%, 
-                    #e8e9eb 93%, 
+                    #0a0f1a 15%, 
+                    #0d1525 25%, 
+                    #1a2535 38%, 
+                    #3d4a5c 52%, 
+                    #6a7385 65%, 
+                    #9aa3b0 76%, 
+                    #c8cdd5 86%, 
+                    #e8eaed 94%, 
                     #f5f5f5 100%
                   )`,
-                  padding: '16px',
-                  paddingTop: '8px',
-                  paddingBottom: '40px',
+                  // 🔧 ESTENSIONE VERSO ALTO: Il container si estende nella safe zone
+                  // marginTop negativo "tira" il container SU
+                  marginTop: 'calc(-1 * (80px + env(safe-area-inset-top, 47px) + 8px))',
+                  // paddingTop compensa per mantenere il contenuto nella posizione corretta
+                  paddingTop: 'calc(80px + env(safe-area-inset-top, 47px) + 8px + 16px)',
+                  paddingLeft: '16px',
+                  paddingRight: '16px',
+                  paddingBottom: '60px', // Più spazio per fade graduale
                   marginBottom: '0px',
                 }}
               >
