@@ -250,11 +250,10 @@ const { isConnected } = useRealTimeNotifications();
                     #f5f5f5 85%,
                     #f5f5f5 100%
                   )`,
-                  // 🔧 SALE DEL 20%: marginTop negativo tira SU nella safe zone
-                  // Tira su di: safe-area (47px) + 20% extra
-                  marginTop: 'calc(-1 * (env(safe-area-inset-top, 47px) + 20px))',
-                  // paddingTop compensa: safe-area + header + spacing + quello che abbiamo tolto
-                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 80px + 8px + env(safe-area-inset-top, 47px) + 20px)',
+                  // 🔧 SALE AGGRESSIVO: marginTop -150px tira SU nella safe zone
+                  marginTop: '-150px',
+                  // paddingTop compensa: 150px + header (80px) + spacing
+                  paddingTop: 'calc(150px + 80px + 16px)',
                   paddingLeft: '16px',
                   paddingRight: '16px',
                   paddingBottom: '40px',
