@@ -31,7 +31,6 @@ import { SectionErrorBoundary } from "@/components/error/SectionErrorBoundary";
 const PrizeVision = lazy(() => import("@/components/command-center/home-sections/PrizeVision").then(m => ({ default: m.PrizeVision })));
 import { useMissionStatus } from "@/hooks/useMissionStatus";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import '@/features/pulse/styles/pulse-pill.css';
 
 const AppHome = () => {
   // AppHome component rendering
@@ -258,7 +257,29 @@ const { isConnected } = useRealTimeNotifications();
                     <PrizeVision progress={prizeProgress} />
                   </Suspense>
                   
-                  {/* Pills spostati in posizione FIXED laterale sinistra (come Map page) */}
+                  {/* Pills DENTRO M1SSION PRIZE (parte bassa) */}
+                  <div 
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      gap: '12px',
+                      padding: '20px 0 0 0',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <StreakPill showLabel={false} />
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Streak</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <ShopPill />
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Shop</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <CashbackVaultPill variant="compact" />
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Cashback</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
@@ -392,66 +413,6 @@ const { isConnected } = useRealTimeNotifications();
         <M1UPill showLabel showPlusButton />
       </div>
       
-      {/* 🔧 FIX 03/02/2026: Pills laterali FIXED - STILE ORB (come Invita Amico) */}
-      <div 
-        className="fixed left-4 z-[1000] flex flex-col gap-3"
-        style={{ 
-          top: 'calc(env(safe-area-inset-top, 0px) + 130px)',
-          paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
-          pointerEvents: 'auto' 
-        }}
-      >
-        {/* Streak Orb - stile pe-pill-orb */}
-        <motion.div
-          className="pe-pill-orb"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          style={{ 
-            width: '44px', 
-            height: '44px',
-            background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.08), rgba(0,0,0,0.4) 80%)',
-            border: '1px solid rgba(255,165,0,0.3)',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.35), 0 0 20px rgba(255,165,0,0.15) inset',
-          }}
-        >
-          <StreakPill showLabel={false} />
-          <span className="pe-dot" style={{ background: 'linear-gradient(135deg, #ffa500, #ff6b00)' }} />
-        </motion.div>
-        
-        {/* Shop Orb - stile pe-pill-orb */}
-        <motion.div
-          className="pe-pill-orb"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          style={{ 
-            width: '44px', 
-            height: '44px',
-            background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.08), rgba(0,0,0,0.4) 80%)',
-            border: '1px solid rgba(0,209,255,0.3)',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.35), 0 0 20px rgba(0,209,255,0.15) inset',
-          }}
-        >
-          <ShopPill />
-          <span className="pe-dot" style={{ background: 'linear-gradient(135deg, #00d1ff, #0099ff)' }} />
-        </motion.div>
-        
-        {/* Cashback Orb - stile pe-pill-orb */}
-        <motion.div
-          className="pe-pill-orb"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          style={{ 
-            width: '44px', 
-            height: '44px',
-            background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.08), rgba(0,0,0,0.4) 80%)',
-            border: '1px solid rgba(0,255,136,0.3)',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.35), 0 0 20px rgba(0,255,136,0.15) inset',
-          }}
-        >
-          <CashbackVaultPill variant="compact" />
-          <span className="pe-dot" style={{ background: 'linear-gradient(135deg, #00ff88, #00cc66)' }} />
-        </motion.div>
-      </div>
     </div>
   );
 };

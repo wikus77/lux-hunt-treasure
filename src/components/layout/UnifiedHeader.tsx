@@ -419,8 +419,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               >
                 <div 
                   style={{
-                    width: '24px',
-                    height: '24px',
+                    width: '28px',
+                    height: '28px',
                     borderRadius: '50%',
                     background: '#000',
                     display: 'flex',
