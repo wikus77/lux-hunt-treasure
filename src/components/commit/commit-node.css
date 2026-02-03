@@ -352,4 +352,25 @@
   100% { background: radial-gradient(circle, rgba(0, 255, 255, 0) 0%, transparent 70%); }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   AION ENTITY WRAPPER (for CommitNodeTrigger)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.commit-node-aion-wrapper {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.commit-node-aion-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.commit-aion-entity {
+  width: 100%;
+  height: 100%;
+}
+
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

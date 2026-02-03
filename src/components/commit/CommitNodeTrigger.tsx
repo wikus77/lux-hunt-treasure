@@ -1,31 +1,30 @@
 /**
- * COMMIT NODE TRIGGER — AION Bubble (alive organism)
- * Morph, energy, particles, breathing - opens fullscreen modal
+ * COMMIT NODE TRIGGER — Uses AION Entity Blob
+ * Same visual as Intelligence page, scaled to fit
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, Suspense, lazy } from 'react';
 import { CommitModal } from './CommitModal';
 import './commit-node.css';
 
+// Lazy load AionEntity to prevent THREE.js issues
+const AionEntity = lazy(() => import('@/components/aion/AionEntity'));
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// FINGERPRINT SVG (Abstract vector)
+// LOADING FALLBACK
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const FingerprintSVG: React.FC = () => (
-  <svg viewBox="0 0 64 64" width="40" height="40">
-    <g fill="none" stroke="rgba(0, 255, 255, 0.55)" strokeWidth="1.2" strokeLinecap="round">
-      <path d="M32 28c0 4 2 8 0 12" />
-      <path d="M28 26c-2 6 0 14 4 16" />
-      <path d="M36 26c2 6 0 14 -4 16" />
-      <path d="M24 24c-4 8 -2 18 8 22" />
-      <path d="M40 24c4 8 2 18 -8 22" />
-      <path d="M20 22c-6 10 -2 22 12 26" opacity="0.7" />
-      <path d="M44 22c6 10 2 22 -12 26" opacity="0.7" />
-      <path d="M18 20c-4 6 -4 16 2 24" opacity="0.4" />
-      <path d="M46 20c4 6 4 16 -2 24" opacity="0.4" />
-    </g>
-  </svg>
+const LoadingFallback: React.FC = () => (
+  <div 
+    style={{
+      width: '100%',
+      height: '100%',
+      borderRadius: '50%',
+      background: 'radial-gradient(circle, rgba(0, 255, 255, 0.15) 0%, transparent 70%)',
+      animation: 'pulse 2s ease-in-out infinite',
+    }}
+  />
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -35,7 +34,7 @@ const FingerprintSVG: React.FC = () => (
 export const CommitNodeTrigger: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [originRect, setOriginRect] = useState<DOMRect | null>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
 
   const handleOpen = useCallback(() => {
     if (triggerRef.current) {
@@ -50,47 +49,29 @@ export const CommitNodeTrigger: React.FC = () => {
 
   return (
     <>
-      {/* AION Bubble Wrapper */}
-      <div className="commit-node-wrapper">
-        {/* Main Button */}
-        <button
-          ref={triggerRef}
-          onClick={handleOpen}
-          className="commit-node-button"
-          aria-label="Commit Ritual"
-        >
-          {/* Glow layer (outermost) */}
-          <div className="commit-node-glow" />
-
-          {/* Energy ring (rotating conic gradient) */}
-          <div className="commit-node-ring" />
-
-          {/* Blob skin (morphing organic shape) */}
-          <div className="commit-node-blob" />
-
-          {/* Core (deep black center) */}
-          <div className="commit-node-core" />
-
-          {/* Orbiting particles */}
-          <div className="commit-node-particles">
-            <span className="commit-node-particle" />
-            <span className="commit-node-particle" />
-            <span className="commit-node-particle" />
-            <span className="commit-node-particle" />
-            <span className="commit-node-particle" />
-            <span className="commit-node-particle" />
-            <span className="commit-node-particle" />
-            <span className="commit-node-particle" />
-          </div>
-
-          {/* Center energy dot */}
-          <div className="commit-node-center" />
-
-          {/* Fingerprint overlay */}
-          <div className="commit-node-fingerprint">
-            <FingerprintSVG />
-          </div>
-        </button>
+      {/* AION Entity Container */}
+      <div
+        ref={triggerRef}
+        onClick={handleOpen}
+        className="commit-node-aion-wrapper"
+        style={{
+          width: '88px',
+          height: '88px',
+          cursor: 'pointer',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'visible',
+        }}
+      >
+        <Suspense fallback={<LoadingFallback />}>
+          <AionEntity 
+            intensity={0.8}
+            idleSpeed={0.5}
+            className="commit-aion-entity"
+          />
+        </Suspense>
       </div>
 
       {/* Modal */}
