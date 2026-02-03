@@ -225,16 +225,7 @@ const { isConnected } = useRealTimeNotifications();
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
               >
-                {/* ═══════════════════════════════════════════════════════════════ */}
-                {/* ON M1SSION BADGE — Moved above M1SSION PRIZE */}
-                {/* ═══════════════════════════════════════════════════════════════ */}
-                <div 
-                  id="mission-status-badge-portal" 
-                  data-anchor="m1-header-badge" 
-                  data-persistent="true" 
-                  className="flex justify-center"
-                  style={{ marginBottom: '6px' }}
-                />
+                {/* ON M1SSION BADGE — Positioned in header area (removed from scroll flow) */}
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 {/* 1️⃣ M1SSION PRIZE - Container con gradient interno */}
@@ -266,29 +257,7 @@ const { isConnected } = useRealTimeNotifications();
                     <PrizeVision progress={prizeProgress} />
                   </Suspense>
                   
-                  {/* Pills DENTRO M1SSION PRIZE */}
-                  <div 
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      gap: '12px',
-                      padding: '20px 0 0 0',
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                      <StreakPill showLabel={false} />
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Streak</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                      <ShopPill />
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Shop</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                      <CashbackVaultPill variant="compact" />
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Cashback</span>
-                    </div>
-                  </div>
+                  {/* Pills spostati in posizione FIXED laterale sinistra (come Map page) */}
                 </div>
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
@@ -413,6 +382,20 @@ const { isConnected } = useRealTimeNotifications();
       />
       </MissionSync>
       
+      {/* 🔧 FIX 03/02/2026: ON M1SSION badge - FIXED in header area */}
+      <div 
+        id="mission-status-badge-portal" 
+        data-anchor="m1-header-badge" 
+        data-persistent="true" 
+        className="fixed z-[1002] flex justify-center"
+        style={{ 
+          top: 'calc(env(safe-area-inset-top, 0px) + 52px)',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          pointerEvents: 'auto' 
+        }}
+      />
+      
       {/* 🔧 FIX 03/02/2026: M1UPill come OVERLAY FISSO (come BuzzPage) */}
       <div 
         id="m1u-pill-home-slot" 
@@ -425,6 +408,29 @@ const { isConnected } = useRealTimeNotifications();
         }}
       >
         <M1UPill showLabel showPlusButton />
+      </div>
+      
+      {/* 🔧 FIX 03/02/2026: Pills laterali FIXED (come Map page) */}
+      <div 
+        className="fixed left-4 z-[1000] flex flex-col gap-2"
+        style={{ 
+          top: 'calc(env(safe-area-inset-top, 0px) + 130px)',
+          paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
+          pointerEvents: 'auto' 
+        }}
+      >
+        <div className="flex items-center gap-2 px-3 py-2 rounded-full" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}>
+          <StreakPill showLabel={false} />
+          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>Streak</span>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-full" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}>
+          <ShopPill />
+          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>Shop</span>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-full" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}>
+          <CashbackVaultPill variant="compact" />
+          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>Cashback</span>
+        </div>
       </div>
     </div>
   );

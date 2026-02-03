@@ -417,7 +417,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                   rotate: { duration: reduceAnimations ? 1.6 : 12, repeat: reduceAnimations ? 0 : Infinity, ease: "linear" },
                 }}
               >
-                <Settings className="w-5 h-5 text-[#00D1FF]" style={{ filter: 'drop-shadow(0 0 4px rgba(0, 209, 255, 0.5))' }} />
+                <img 
+                  src="/icons/settings-custom.png" 
+                  alt="Settings" 
+                  className="w-5 h-5"
+                  style={{ filter: 'brightness(0) invert(1)' }}
+                />
               </motion.div>
             </motion.button>
 
