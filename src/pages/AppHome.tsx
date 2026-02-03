@@ -236,16 +236,15 @@ const { isConnected } = useRealTimeNotifications();
                     borderRadius: '24px',
                     overflow: 'hidden',
                     marginBottom: '16px',
-                    background: `linear-gradient(180deg, 
-                      rgba(10, 18, 35, 0.95) 0%, 
-                      rgba(12, 20, 38, 0.88) 20%, 
-                      rgba(18, 28, 48, 0.75) 40%, 
-                      rgba(35, 45, 65, 0.55) 60%, 
-                      rgba(80, 90, 110, 0.30) 75%, 
-                      rgba(180, 185, 195, 0.12) 88%, 
-                      rgba(255, 255, 255, 0) 100%
+                    background: `linear-gradient(160deg, 
+                      rgba(20, 60, 120, 0.92) 0%, 
+                      rgba(25, 80, 130, 0.88) 25%, 
+                      rgba(30, 100, 120, 0.82) 50%, 
+                      rgba(35, 120, 100, 0.75) 75%, 
+                      rgba(40, 140, 90, 0.65) 100%
                     )`,
                     padding: '20px 16px 40px 16px',
+                    boxShadow: '0 4px 20px rgba(0, 100, 150, 0.3)',
                   }}
                 >
                   {/* PrizeVision */}
@@ -269,15 +268,15 @@ const { isConnected } = useRealTimeNotifications();
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                       <StreakPill showLabel={false} />
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Streak</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.95)', fontWeight: 600, textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>Streak</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                       <ShopPill />
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Shop</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.95)', fontWeight: 600, textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>Shop</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                       <CashbackVaultPill variant="compact" />
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Cashback</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.95)', fontWeight: 600, textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>Cashback</span>
                     </div>
                   </div>
                 </div>
