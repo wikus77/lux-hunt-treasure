@@ -202,23 +202,14 @@ const { isConnected } = useRealTimeNotifications();
 
   // 🔧 FULL SCREEN M1SSION PRIZE - Come foto riferimento
   
-  // 🎨 Add dark class to html for iOS safe area
-  useEffect(() => {
-    document.documentElement.classList.add('m1-home-dark');
-    return () => {
-      document.documentElement.classList.remove('m1-home-dark');
-    };
-  }, []);
+  // 🔧 NO dark body class - keeps white for overscroll
   
   return (
     <div 
-      className="w-full overflow-x-hidden"
+      className="w-full overflow-x-hidden sn-page"
       style={{
         position: 'relative',
         zIndex: 0,
-        minHeight: '100dvh',
-        // 🎨 Sfondo trasparente - lascia vedere il colore scuro del body
-        background: 'transparent',
       }}
     >
       <Helmet>
@@ -243,20 +234,21 @@ const { isConnected } = useRealTimeNotifications();
                 style={{
                   position: 'relative',
                   width: '100%',
-                  // 🎨 FULL WIDTH dark gradient - FADE PIÙ PROGRESSIVO E LUNGO
+                  // 🎨 Gradient SCURO → BIANCO (non trasparente!)
                   background: `linear-gradient(180deg, 
                     #0a0f1a 0%, 
-                    #0a0f1a 30%, 
-                    #0d1525 45%, 
-                    #1a2535 60%, 
-                    #3d4a5c 75%, 
-                    #7a8599 85%, 
-                    #c4c9d4 92%, 
+                    #0a0f1a 25%, 
+                    #0d1525 40%, 
+                    #1a2535 55%, 
+                    #3d4a5c 68%, 
+                    #7a8599 78%, 
+                    #b8bcc5 86%, 
+                    #e8e9eb 93%, 
                     #f5f5f5 100%
                   )`,
                   padding: '16px',
                   paddingTop: '8px',
-                  paddingBottom: '60px', // Più spazio per il fade
+                  paddingBottom: '40px',
                   marginBottom: '0px',
                 }}
               >
