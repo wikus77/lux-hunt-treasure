@@ -128,13 +128,13 @@ export const BuzzPage: React.FC = () => {
             {/* Placeholder for scroll offset - pill is now fixed overlay */}
           </div>
 
-          {/* 🎨 FADE ZONE - IDENTICA alla Home page (POSITION ABSOLUTE - non sposta il tasto BUZZ) */}
+          {/* 🎨 FADE ZONE - PIENA LARGHEZZA come Home (non sposta il tasto BUZZ) */}
           <div 
             style={{
               position: 'absolute',
               top: 0,
-              left: '16px',
-              right: '16px',
+              left: 0,
+              right: 0,
               borderRadius: '24px',
               overflow: 'hidden',
               minHeight: '380px',
