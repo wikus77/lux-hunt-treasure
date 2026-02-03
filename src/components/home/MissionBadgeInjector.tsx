@@ -94,26 +94,27 @@ export const MissionBadgeInjector = () => {
         return false;
       }
 
+      // 🔧 FIX 30/01/2026: Check if portal exists in AppHome (above M1SSION PRIZE)
+      // If it already exists in DOM, DON'T move it - just use it as-is
+      const existingPortal = document.getElementById('mission-status-badge-portal');
+      if (existingPortal) {
+        badgeNodeRef = existingPortal;
+        setPortalReady(true);
+        return true;
+      }
+
+      // Fallback: create portal if not found (legacy behavior)
       const { headerH1, headerWrapper, subtitle } = getHeaderContext();
       if (!headerH1 || !headerWrapper) return false;
 
       if (!badgeNodeRef) {
-        badgeNodeRef = document.getElementById('mission-status-badge-portal');
-        if (!badgeNodeRef) {
-          badgeNodeRef = document.createElement('div');
-          badgeNodeRef.id = 'mission-status-badge-portal';
-          badgeNodeRef.setAttribute('data-anchor', 'm1-header-badge');
-          badgeNodeRef.className = 'flex justify-center my-3';
-          badgeNodeRef.setAttribute('data-persistent', 'true');
-        }
-      }
-
-      // Anchor strategy: before subtitle if exists, else right after H1
-      const isCorrectlyPositioned = subtitle 
-        ? badgeNodeRef.nextSibling === subtitle && badgeNodeRef.parentElement === headerWrapper
-        : badgeNodeRef.previousElementSibling === headerH1 && badgeNodeRef.parentElement === headerWrapper;
-
-      if (!isCorrectlyPositioned) {
+        badgeNodeRef = document.createElement('div');
+        badgeNodeRef.id = 'mission-status-badge-portal';
+        badgeNodeRef.setAttribute('data-anchor', 'm1-header-badge');
+        badgeNodeRef.className = 'flex justify-center my-3';
+        badgeNodeRef.setAttribute('data-persistent', 'true');
+        
+        // Only insert if we created it
         if (subtitle) {
           headerWrapper.insertBefore(badgeNodeRef, subtitle);
         } else {

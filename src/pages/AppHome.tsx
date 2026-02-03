@@ -22,7 +22,7 @@ import StreakPill from "@/components/gamification/StreakPill";
 import CashbackVaultPill from "@/components/home/CashbackVaultPill";
 import ShopPill from "@/components/shop/ShopPill";
 import MissionSync from "@/components/home/MissionSync";
-import { CommitNodeTrigger } from "@/components/commit";
+import { CommitNodeTrigger, CommitNodeSide } from "@/components/commit";
 // STANDBY: Sistema hint inattività disabilitato - riattivare se necessario
 // import { InactivityHint } from "@/components/first-session";
 import { NextActionContainer, MotivationalPopup, FortuneWheel } from "@/components/feedback";
@@ -305,18 +305,14 @@ const { isConnected } = useRealTimeNotifications();
                     marginBottom: '8px',
                   }}
                 >
-                  {/* Left AION - Black/Gray/White gradient */}
-                  <div className="commit-node-left" style={{ filter: 'grayscale(100%) brightness(0.7)' }}>
-                    <CommitNodeTrigger />
-                  </div>
+                  {/* Left AION - Black/Gray/White gradient (visual only) */}
+                  <CommitNodeSide />
                   
-                  {/* Center AION - Original cyan */}
+                  {/* Center AION - Original cyan (clickable) */}
                   <CommitNodeTrigger />
                   
-                  {/* Right AION - Black/Gray/White gradient */}
-                  <div className="commit-node-right" style={{ filter: 'grayscale(100%) brightness(0.7)' }}>
-                    <CommitNodeTrigger />
-                  </div>
+                  {/* Right AION - Black/Gray/White gradient (visual only) */}
+                  <CommitNodeSide />
                 </div>
                 
                 {/* PROSSIMA AZIONE - sfondo bianco (sn-page) */}

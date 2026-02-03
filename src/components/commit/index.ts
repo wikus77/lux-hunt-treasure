@@ -7,6 +7,7 @@ export { CommitRitual } from './CommitRitual';
 export { CommitFlipOverlay } from './CommitFlipOverlay';
 export { CommitModal } from './CommitModal';
 export { CommitNodeTrigger } from './CommitNodeTrigger';
+export { CommitNodeSide } from './CommitNodeSide';
 
 // Default export for lazy loading
 export { CommitNodeTrigger as default } from './CommitNodeTrigger';
