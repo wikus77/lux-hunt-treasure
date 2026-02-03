@@ -22,7 +22,7 @@ import StreakPill from "@/components/gamification/StreakPill";
 import CashbackVaultPill from "@/components/home/CashbackVaultPill";
 import ShopPill from "@/components/shop/ShopPill";
 import MissionSync from "@/components/home/MissionSync";
-import { CommitNodeTrigger, CommitNodeSide } from "@/components/commit";
+import { CommitNodesContainer } from "@/components/commit";
 // STANDBY: Sistema hint inattività disabilitato - riattivare se necessario
 // import { InactivityHint } from "@/components/first-session";
 import { NextActionContainer, MotivationalPopup, FortuneWheel } from "@/components/feedback";
@@ -262,28 +262,9 @@ const { isConnected } = useRealTimeNotifications();
                 </div>
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                {/* COMMIT NODES — Triple AION Bubbles (between PRIZE and PROSSIMA AZIONE) */}
+                {/* COMMIT NODES — 3→1 Merge on Slow Scroll */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                <div 
-                  className="commit-node-slot"
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: '16px',
-                    marginTop: '-46px',
-                    marginBottom: '8px',
-                  }}
-                >
-                  {/* Left AION - Black/Gray/White gradient (visual only) */}
-                  <CommitNodeSide />
-                  
-                  {/* Center AION - Original cyan (clickable) */}
-                  <CommitNodeTrigger />
-                  
-                  {/* Right AION - Black/Gray/White gradient (visual only) */}
-                  <CommitNodeSide />
-                </div>
+                <CommitNodesContainer />
                 
                 {/* PROSSIMA AZIONE - sfondo bianco (sn-page) */}
                 <div style={{ marginBottom: '16px' }}>
