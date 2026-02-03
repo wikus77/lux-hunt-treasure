@@ -288,7 +288,8 @@ const { isConnected } = useRealTimeNotifications();
                   style={{
                     display: 'flex',
                     justifyContent: 'center',
-                    padding: '8px 0 12px 0',
+                    marginTop: '-20px',
+                    paddingBottom: '8px',
                   }}
                 >
                   <CommitNodeTrigger />
