@@ -111,18 +111,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         webView.scrollView.bounces = true
         webView.scrollView.alwaysBounceVertical = true
         
-        // 🔧 FIX 30/01/2026: DARK background for iOS safe zone + bounce
-        // CRITICAL: This color shows in safe zone AND during rubber-band bounce
-        // Dark (#0a0f1a) matches Home page gradient top
-        let bgColor = UIColor(red: 10/255, green: 15/255, blue: 26/255, alpha: 1.0) // #0a0f1a
-        webView.isOpaque = false // Allow transparency
-        webView.backgroundColor = bgColor
-        webView.scrollView.backgroundColor = bgColor
+        // 🔧 FIX 30/01/2026: WHITE background + GRADIENT TOP per iOS safe zone
+        // CRITICAL: Base layer = WHITE, gradient overlay per safe zone
+        let bgWhite = UIColor.white
+        webView.isOpaque = true
+        webView.backgroundColor = bgWhite
+        webView.scrollView.backgroundColor = bgWhite
         
-        // Set root view background to DARK
+        // Set root view background to WHITE
         if let rootView = webView.superview {
-            rootView.backgroundColor = bgColor
+            rootView.backgroundColor = bgWhite
+            
+            // 🎨 ADD TOP GRADIENT VIEW (M1SSION style blue/purple → transparent)
+            addTopGradientView(to: rootView, safeAreaTop: CGFloat(safeTop))
         }
+        
+        // Set window background to WHITE
+        window?.backgroundColor = bgWhite
         
         // 🔧 FIX 22/01/2026: Hide iOS keyboard accessory bar (toolbar)
         // This removes the shortcut bar / predictive text bar above the keyboard
@@ -136,6 +141,53 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         webViewConfigured = true
         return true
+    }
+    
+    // MARK: - Top Gradient View (M1SSION Safe Area Fix)
+    
+    private var topGradientView: UIView?
+    
+    /// Adds a gradient view at the top that covers safe area and fades into content
+    private func addTopGradientView(to parentView: UIView, safeAreaTop: CGFloat) {
+        // Remove existing if any
+        topGradientView?.removeFromSuperview()
+        
+        // Height: safe area + extra for smooth fade (total ~220px)
+        let gradientHeight: CGFloat = safeAreaTop + 180
+        
+        // Create gradient view
+        let gradientView = UIView(frame: CGRect(x: 0, y: 0, width: parentView.bounds.width, height: gradientHeight))
+        gradientView.autoresizingMask = [.flexibleWidth]
+        gradientView.isUserInteractionEnabled = false // Pass through touches
+        gradientView.tag = 999 // Identifier
+        
+        // Create gradient layer
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = gradientView.bounds
+        
+        // M1SSION colors: Blue/Purple (#4361ee / #7209b7) with alpha → transparent
+        let topColor = UIColor(red: 67/255, green: 97/255, blue: 238/255, alpha: 0.85) // #4361ee
+        let midColor = UIColor(red: 114/255, green: 9/255, blue: 183/255, alpha: 0.5) // #7209b7
+        let bottomColor = UIColor.clear
+        
+        gradientLayer.colors = [
+            topColor.cgColor,
+            midColor.cgColor,
+            bottomColor.cgColor
+        ]
+        gradientLayer.locations = [0.0, 0.4, 1.0]
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
+        
+        gradientView.layer.insertSublayer(gradientLayer, at: 0)
+        
+        // Insert at front (above webview but behind content)
+        // Use z-position to ensure it's behind web content
+        gradientView.layer.zPosition = -1
+        parentView.insertSubview(gradientView, at: 0)
+        
+        topGradientView = gradientView
+        print("✅ M1SSION™ WRAP: Top gradient view added (height: \(gradientHeight)px)")
     }
     
     // MARK: - Keyboard Accessory Bar Fix

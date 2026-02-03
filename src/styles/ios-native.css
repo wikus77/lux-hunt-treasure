@@ -359,10 +359,10 @@ html[data-capacitor="ios"] {
   background-attachment: scroll !important;
 }
 
-/* 🔧 FIX 30/01/2026: Body DARK for safe zone coverage */
+/* 🔧 FIX 30/01/2026: Body WHITE - native gradient handles safe zone */
 body.is-native {
-  background: #0a0f1a !important;
-  background-color: #0a0f1a !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
 }
 
 /* ========================================

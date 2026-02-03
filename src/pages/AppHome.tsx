@@ -206,12 +206,10 @@ const { isConnected } = useRealTimeNotifications();
   
   return (
     <div 
-      className="w-full overflow-x-hidden"
+      className="w-full overflow-x-hidden sn-page"
       style={{
         position: 'relative',
         zIndex: 0,
-        // Background trasparente: lascia vedere il nativo scuro (#0a0f1a)
-        background: 'transparent',
       }}
     >
       <Helmet>
@@ -230,32 +228,13 @@ const { isConnected } = useRealTimeNotifications();
               style={{ position: 'relative', zIndex: 2 }}
             >
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 1️⃣ M1SSION PRIZE - SALE DEL 20% per coprire safe zone */}
-              {/* marginTop NEGATIVO tira il contenuto SU */}
-              {/* paddingTop compensa per tenere contenuto visibile sotto header */}
+              {/* 1️⃣ M1SSION PRIZE - Standard layout (native gradient handles top) */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div 
+                className="m1-first-content-offset-compact"
                 style={{
                   position: 'relative',
                   width: '100%',
-                  // 🎨 GRADIENT 10 PARTI direttamente sul container
-                  background: `linear-gradient(180deg, 
-                    #0a0f1a 0%,
-                    #0a0f1a 8%,
-                    #222630 16%,
-                    #393d46 24%,
-                    #50545c 32%,
-                    #686b72 40%,
-                    #808288 48%,
-                    #97999d 56%,
-                    #c6c7c9 70%,
-                    #f5f5f5 85%,
-                    #f5f5f5 100%
-                  )`,
-                  // 🔧 SALE AGGRESSIVO: marginTop -150px tira SU nella safe zone
-                  marginTop: '-150px',
-                  // paddingTop compensa: 150px + header (80px) + spacing
-                  paddingTop: 'calc(150px + 80px + 16px)',
                   paddingLeft: '16px',
                   paddingRight: '16px',
                   paddingBottom: '40px',
