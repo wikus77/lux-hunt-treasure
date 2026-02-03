@@ -17,13 +17,7 @@ const AionEntity = lazy(() => import('@/components/aion/AionEntity'));
 
 const LoadingFallback: React.FC = () => (
   <div 
-    style={{
-      width: '100%',
-      height: '100%',
-      borderRadius: '50%',
-      background: 'radial-gradient(circle, rgba(0, 255, 255, 0.2) 0%, rgba(0, 100, 150, 0.1) 50%, transparent 70%)',
-      animation: 'pulse 2s ease-in-out infinite',
-    }}
+    className="w-18 h-18 rounded-full bg-cyan-500/20 animate-pulse"
   />
 );
 
@@ -50,40 +44,45 @@ export const CommitNodeTrigger: React.FC = () => {
   return (
     <>
       {/* 
-        AION Entity Container 
-        - Inner container is 180x180px to give AionEntity enough space to render
-        - Outer wrapper scales it down to ~90px visually using transform
-        - overflow: visible allows the blob glow to extend
+        Outer wrapper - defines the visual size (100x100px)
+        The inner AION container is 280x280px, scaled down to fit
       */}
       <div
         ref={triggerRef}
         onClick={handleOpen}
         className="commit-node-aion-wrapper"
         style={{
-          width: '100px',
-          height: '100px',
+          width: '110px',
+          height: '110px',
           cursor: 'pointer',
           position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'visible',
+          overflow: 'hidden', // Clip the scaled content
+          borderRadius: '50%', // Round clipping
         }}
       >
-        {/* Scaled-down inner container for AionEntity */}
+        {/* 
+          Inner container - EXACT same setup as IntelligencePage
+          280x280px scaled down by 0.39 to fit in ~110px
+        */}
         <div
           style={{
-            width: '200px',
-            height: '200px',
-            transform: 'scale(0.5)',
+            width: '280px',
+            height: '280px',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%) scale(0.39)',
             transformOrigin: 'center center',
-            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           <Suspense fallback={<LoadingFallback />}>
             <AionEntity 
-              intensity={0.9}
-              idleSpeed={0.6}
+              intensity={1.0}
+              idleSpeed={0.7}
+              className="mx-auto"
             />
           </Suspense>
         </div>
