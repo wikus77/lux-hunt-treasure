@@ -206,10 +206,12 @@ const { isConnected } = useRealTimeNotifications();
   
   return (
     <div 
-      className="w-full overflow-x-hidden sn-page"
+      className="w-full overflow-x-hidden"
       style={{
         position: 'relative',
         zIndex: 0,
+        // Background trasparente: lascia vedere il nativo scuro (#0a0f1a)
+        background: 'transparent',
       }}
     >
       <Helmet>

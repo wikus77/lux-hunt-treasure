@@ -359,10 +359,10 @@ html[data-capacitor="ios"] {
   background-attachment: scroll !important;
 }
 
-/* 🔧 OPTION B: Body WHITE for seamless overscroll */
+/* 🔧 FIX 30/01/2026: Body DARK for safe zone coverage */
 body.is-native {
-  background: #FFFFFF !important;
-  background-color: #FFFFFF !important;
+  background: #0a0f1a !important;
+  background-color: #0a0f1a !important;
 }
 
 /* ========================================

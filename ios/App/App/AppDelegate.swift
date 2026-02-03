@@ -111,16 +111,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         webView.scrollView.bounces = true
         webView.scrollView.alwaysBounceVertical = true
         
-        // 🔧 OPTION B FIX 31/01/2026: WHITE background for iOS bounce/overscroll
-        // CRITICAL: This color shows during rubber-band bounce
-        // Native layer = WHITE so overscroll blends with white content
-        // Header/Nav must be OPAQUE white glass to not show overlay
-        let bgColor = UIColor.white // #FFFFFF
-        webView.isOpaque = true
+        // 🔧 FIX 30/01/2026: DARK background for iOS safe zone + bounce
+        // CRITICAL: This color shows in safe zone AND during rubber-band bounce
+        // Dark (#0a0f1a) matches Home page gradient top
+        let bgColor = UIColor(red: 10/255, green: 15/255, blue: 26/255, alpha: 1.0) // #0a0f1a
+        webView.isOpaque = false // Allow transparency
         webView.backgroundColor = bgColor
         webView.scrollView.backgroundColor = bgColor
         
-        // Set root view background to WHITE
+        // Set root view background to DARK
         if let rootView = webView.superview {
             rootView.backgroundColor = bgColor
         }
