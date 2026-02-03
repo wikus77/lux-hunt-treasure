@@ -22,6 +22,7 @@ import StreakPill from "@/components/gamification/StreakPill";
 import CashbackVaultPill from "@/components/home/CashbackVaultPill";
 import ShopPill from "@/components/shop/ShopPill";
 import MissionSync from "@/components/home/MissionSync";
+import { TheCommitTrigger } from "@/components/commit";
 // STANDBY: Sistema hint inattività disabilitato - riattivare se necessario
 // import { InactivityHint } from "@/components/first-session";
 import { NextActionContainer, MotivationalPopup, FortuneWheel } from "@/components/feedback";
@@ -277,6 +278,19 @@ const { isConnected } = useRealTimeNotifications();
                       <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Cashback</span>
                     </div>
                   </div>
+                </div>
+
+                {/* ═══════════════════════════════════════════════════════════════ */}
+                {/* THE COMMIT — Ritual trigger (between PRIZE and PROSSIMA AZIONE) */}
+                {/* ═══════════════════════════════════════════════════════════════ */}
+                <div 
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    padding: '16px 0',
+                  }}
+                >
+                  <TheCommitTrigger />
                 </div>
                 
                 {/* PROSSIMA AZIONE - sfondo bianco (sn-page) */}
