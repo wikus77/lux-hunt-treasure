@@ -281,14 +281,15 @@ const { isConnected } = useRealTimeNotifications();
                 </div>
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                {/* COMMIT NODE — AION Bubble (between PRIZE and PROSSIMA AZIONE) */}
+                {/* COMMIT NODE — 3D Torus (between PRIZE and PROSSIMA AZIONE) */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 <div 
                   className="commit-node-slot"
                   style={{
                     display: 'flex',
                     justifyContent: 'center',
-                    padding: '12px 0 14px 0',
+                    padding: '4px 0 8px 0',
+                    marginTop: '-8px',
                   }}
                 >
                   <CommitNodeTrigger />
