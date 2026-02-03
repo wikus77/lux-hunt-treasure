@@ -417,12 +417,28 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                   rotate: { duration: reduceAnimations ? 1.6 : 12, repeat: reduceAnimations ? 0 : Infinity, ease: "linear" },
                 }}
               >
-                <img 
-                  src="/icons/settings-custom.png" 
-                  alt="Settings" 
-                  className="w-5 h-5"
-                  style={{ filter: 'brightness(0) invert(1)' }}
-                />
+                <div 
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: '#000',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <img 
+                    src="/icons/settings-custom.png" 
+                    alt="Settings" 
+                    style={{ 
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                </div>
               </motion.div>
             </motion.button>
 
