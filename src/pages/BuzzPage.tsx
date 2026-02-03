@@ -128,13 +128,15 @@ export const BuzzPage: React.FC = () => {
             {/* Placeholder for scroll offset - pill is now fixed overlay */}
           </div>
 
-          {/* 🎨 FADE ZONE - IDENTICA alla Home page (forma, dimensioni, sostanza) */}
+          {/* 🎨 FADE ZONE - IDENTICA alla Home page (POSITION ABSOLUTE - non sposta il tasto BUZZ) */}
           <div 
             style={{
-              width: '100%',
+              position: 'absolute',
+              top: 0,
+              left: '16px',
+              right: '16px',
               borderRadius: '24px',
               overflow: 'hidden',
-              marginBottom: '16px',
               minHeight: '380px',
               background: `linear-gradient(180deg, 
                 rgba(10, 18, 35, 0.95) 0%, 
@@ -146,11 +148,13 @@ export const BuzzPage: React.FC = () => {
                 rgba(255, 255, 255, 0) 100%
               )`,
               padding: '20px 16px 40px 16px',
+              zIndex: 0,
+              pointerEvents: 'none',
             }}
           />
 
           {/* Container centrato - 🔧 FIX v2: Simpler layout, no calc that can break */}
-          <div className="flex flex-col items-center justify-center py-4">
+          <div className="flex flex-col items-center justify-center py-4" style={{ position: 'relative', zIndex: 1 }}>
             
             {/* 🚨 START M1SSION GATE: Show overlay when not enrolled (V4: no flash) */}
             <AnimatePresence mode="wait">
