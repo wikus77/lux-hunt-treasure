@@ -301,7 +301,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           WebkitBackfaceVisibility: 'hidden',
         }}
       >
-        {/* ROW 1: M1UPill | AgentCode | Settings | Profile */}
+        {/* ROW 1: AgentCode | Settings | Profile */}
+        {/* 🔧 FIX 03/02/2026: M1UPill spostato come overlay fisso in AppHome (come BuzzPage) */}
         <div 
           style={{
             display: 'flex',
@@ -310,10 +311,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             marginBottom: '8px',
           }}
         >
-          {/* Left: M1UPill */}
-          <div style={{ pointerEvents: 'auto' }} data-onboarding="m1u-pill">
-            <M1UPill showLabel showPlusButton={false} />
-          </div>
+          {/* Left: Spacer (M1UPill è ora overlay fisso in pagina) */}
+          <div style={{ width: '60px' }} />
           
           {/* Center: Agent Code Pill (transparent) */}
           <motion.div
