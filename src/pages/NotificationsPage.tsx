@@ -421,6 +421,30 @@ export const NotificationsPage: React.FC = () => {
         overflowX: 'hidden'
       }}
     >
+      {/* 🎨 FADE ZONE - IDENTICA a Home/Buzz */}
+      <div 
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          borderRadius: '24px',
+          overflow: 'hidden',
+          minHeight: '380px',
+          background: `linear-gradient(180deg, 
+            rgba(10, 18, 35, 0.95) 0%, 
+            rgba(12, 20, 38, 0.88) 20%, 
+            rgba(18, 28, 48, 0.75) 40%, 
+            rgba(35, 45, 65, 0.55) 60%, 
+            rgba(80, 90, 110, 0.30) 75%, 
+            rgba(180, 185, 195, 0.12) 88%, 
+            rgba(255, 255, 255, 0) 100%
+          )`,
+          padding: '20px 16px 40px 16px',
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}
+      />
       {/* Micro-grain overlay for depth */}
       <div className="m1-grain" />
       <div className="container mx-auto px-3" style={{
