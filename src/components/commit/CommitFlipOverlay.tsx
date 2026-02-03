@@ -1,6 +1,6 @@
 /**
- * THE COMMIT — Fullscreen Flip Overlay
- * Identical pattern to M1UShopFlipOverlay
+ * COMMIT FLIP OVERLAY — Fullscreen overlay (M1U pattern)
+ * Portal, z-index, scroll-lock, FLIP animation
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
@@ -8,14 +8,14 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 
-interface TheCommitFlipOverlayProps {
+interface CommitFlipOverlayProps {
   open: boolean;
   originRect: DOMRect | null;
   onClose: () => void;
   children: React.ReactNode;
 }
 
-export const TheCommitFlipOverlay: React.FC<TheCommitFlipOverlayProps> = ({
+export const CommitFlipOverlay: React.FC<CommitFlipOverlayProps> = ({
   open,
   originRect,
   onClose,
@@ -25,7 +25,6 @@ export const TheCommitFlipOverlay: React.FC<TheCommitFlipOverlayProps> = ({
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const savedRectRef = useRef<DOMRect | null>(null);
 
-  // Save rect when passed
   useEffect(() => {
     if (originRect) {
       savedRectRef.current = originRect;
@@ -62,7 +61,6 @@ export const TheCommitFlipOverlay: React.FC<TheCommitFlipOverlayProps> = ({
     }
   }, [open, isClosing]);
 
-  // Close handler with animation
   const handleClose = useCallback(() => {
     if (isClosing) return;
     setIsClosing(true);
@@ -72,11 +70,9 @@ export const TheCommitFlipOverlay: React.FC<TheCommitFlipOverlayProps> = ({
     }, 280);
   }, [isClosing, onClose]);
 
-  // Calculate transform origin from trigger element
   const getOrigin = () => {
     const rect = originRect || savedRectRef.current;
     if (!rect) return { x: '50%', y: '50%' };
-
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const x = ((rect.left + rect.width / 2) / vw) * 100;
@@ -103,15 +99,15 @@ export const TheCommitFlipOverlay: React.FC<TheCommitFlipOverlayProps> = ({
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(0, 0, 0, 0.85)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+              background: 'rgba(0, 0, 0, 0.92)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
               zIndex: 99998,
               pointerEvents: 'auto',
             }}
           />
 
-          {/* Content panel (fullscreen) */}
+          {/* Content panel */}
           <motion.div
             initial={{
               opacity: 0,
@@ -164,8 +160,8 @@ export const TheCommitFlipOverlay: React.FC<TheCommitFlipOverlayProps> = ({
                 width: '44px',
                 height: '44px',
                 borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: 'none',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -174,10 +170,10 @@ export const TheCommitFlipOverlay: React.FC<TheCommitFlipOverlayProps> = ({
                 transition: 'background 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
               }}
             >
               <svg
@@ -185,7 +181,7 @@ export const TheCommitFlipOverlay: React.FC<TheCommitFlipOverlayProps> = ({
                 height="20"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="rgba(255, 255, 255, 0.8)"
+                stroke="rgba(255, 255, 255, 0.7)"
                 strokeWidth="2"
                 strokeLinecap="round"
               >
@@ -221,6 +217,6 @@ export const TheCommitFlipOverlay: React.FC<TheCommitFlipOverlayProps> = ({
   );
 };
 
-export default TheCommitFlipOverlay;
+export default CommitFlipOverlay;
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

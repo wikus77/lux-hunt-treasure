@@ -1,0 +1,160 @@
+/**
+ * COMMIT NODE — CSS Animations
+ * Breathing, glow, fingerprint effects
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   BREATHING ANIMATION (4-5s cycle, subtle)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes commit-node-breathe {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 
+      0 0 15px rgba(0, 255, 255, 0.15),
+      0 0 30px rgba(0, 255, 255, 0.08),
+      inset 0 0 10px rgba(0, 255, 255, 0.05);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 
+      0 0 20px rgba(0, 255, 255, 0.25),
+      0 0 40px rgba(0, 255, 255, 0.12),
+      inset 0 0 15px rgba(0, 255, 255, 0.08);
+  }
+}
+
+.commit-node-idle {
+  animation: commit-node-breathe 4.5s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   RING MICRO-IRREGULARITY (alive effect)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes commit-ring-jitter {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  25% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.65;
+  }
+  75% {
+    opacity: 0.58;
+  }
+}
+
+.commit-ring-alive {
+  animation: commit-ring-jitter 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   FINGERPRINT FADE-IN
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes fingerprint-emerge {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+}
+
+.fingerprint-emerging {
+  animation: fingerprint-emerge 0.8s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SUCCESS IMPLOSION
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes commit-implosion {
+  0% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.85);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.commit-implosion {
+  animation: commit-implosion 0.4s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CENTER FLASH
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes commit-flash {
+  0% {
+    background: radial-gradient(circle, rgba(0, 255, 255, 0) 0%, transparent 70%);
+  }
+  30% {
+    background: radial-gradient(circle, rgba(0, 255, 255, 0.9) 0%, rgba(0, 255, 255, 0.3) 40%, transparent 70%);
+  }
+  100% {
+    background: radial-gradient(circle, rgba(0, 255, 255, 0) 0%, transparent 70%);
+  }
+}
+
+.commit-flash {
+  animation: commit-flash 0.35s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   COPY TEXT ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.copy-fade-in {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.copy-fade-out {
+  animation: fade-out 0.4s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   DISABLE SELECTION & TOUCH CALLOUT
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.commit-node-container {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

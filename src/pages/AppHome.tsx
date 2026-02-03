@@ -22,7 +22,7 @@ import StreakPill from "@/components/gamification/StreakPill";
 import CashbackVaultPill from "@/components/home/CashbackVaultPill";
 import ShopPill from "@/components/shop/ShopPill";
 import MissionSync from "@/components/home/MissionSync";
-import { TheCommitTrigger } from "@/components/commit";
+import { CommitNodeTrigger } from "@/components/commit";
 // STANDBY: Sistema hint inattività disabilitato - riattivare se necessario
 // import { InactivityHint } from "@/components/first-session";
 import { NextActionContainer, MotivationalPopup, FortuneWheel } from "@/components/feedback";
@@ -281,16 +281,16 @@ const { isConnected } = useRealTimeNotifications();
                 </div>
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                {/* THE COMMIT — Ritual trigger (between PRIZE and PROSSIMA AZIONE) */}
+                {/* COMMIT NODE — Ritual trigger (between PRIZE and PROSSIMA AZIONE) */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 <div 
                   style={{
                     display: 'flex',
                     justifyContent: 'center',
-                    padding: '16px 0',
+                    padding: '20px 0',
                   }}
                 >
-                  <TheCommitTrigger />
+                  <CommitNodeTrigger />
                 </div>
                 
                 {/* PROSSIMA AZIONE - sfondo bianco (sn-page) */}

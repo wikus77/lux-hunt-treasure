@@ -1,27 +1,26 @@
 /**
- * THE COMMIT MODAL — Fullscreen ritual container
- * Handles ritual flow, Supabase RPC calls, M1U updates
+ * COMMIT MODAL — Fullscreen ritual container
+ * Handles ritual flow, Supabase RPC, M1U updates
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { TheCommitFlipOverlay } from './TheCommitFlipOverlay';
+import { motion } from 'framer-motion';
+import { CommitFlipOverlay } from './CommitFlipOverlay';
 import { CommitRitual } from './CommitRitual';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-interface TheCommitModalProps {
+interface CommitModalProps {
   isOpen: boolean;
   onClose: () => void;
   originRect?: DOMRect | null;
 }
 
-type RitualState = 'checking' | 'ready' | 'in_progress' | 'processing' | 'result' | 'unavailable';
+type ModalState = 'checking' | 'ready' | 'processing' | 'result' | 'unavailable';
 
 interface RitualResult {
   success: boolean;
@@ -34,48 +33,24 @@ interface RitualResult {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// FIRST TIME FLAG (localStorage)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const FIRST_TIME_KEY = 'm1ssion_commit_first_time_shown';
-
-const getIsFirstTime = (): boolean => {
-  try {
-    return !localStorage.getItem(FIRST_TIME_KEY);
-  } catch {
-    return true;
-  }
-};
-
-const markFirstTimeShown = (): void => {
-  try {
-    localStorage.setItem(FIRST_TIME_KEY, 'true');
-  } catch {
-    // Ignore
-  }
-};
-
-// ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export const TheCommitModal: React.FC<TheCommitModalProps> = ({
+export const CommitModal: React.FC<CommitModalProps> = ({
   isOpen,
   onClose,
   originRect = null,
 }) => {
-  const [state, setState] = useState<RitualState>('checking');
+  const [state, setState] = useState<ModalState>('checking');
   const [result, setResult] = useState<RitualResult | null>(null);
-  const [isFirstTime, setIsFirstTime] = useState(false);
   const [unavailableReason, setUnavailableReason] = useState<string>('');
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // CHECK AVAILABILITY ON OPEN
+  // CHECK AVAILABILITY
   // ─────────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!isOpen) {
-      // Reset state when closed
       setState('checking');
       setResult(null);
       return;
@@ -88,14 +63,13 @@ export const TheCommitModal: React.FC<TheCommitModalProps> = ({
         const { data, error } = await supabase.rpc('check_commit_ritual_status');
 
         if (error) {
-          console.error('[TheCommit] Status check error:', error);
+          console.error('[Commit] Status check error:', error);
           setUnavailableReason('Errore di connessione.');
           setState('unavailable');
           return;
         }
 
         if (data?.available) {
-          setIsFirstTime(getIsFirstTime());
           setState('ready');
         } else if (data?.already_done_today) {
           setUnavailableReason('Già eseguito oggi.');
@@ -108,7 +82,7 @@ export const TheCommitModal: React.FC<TheCommitModalProps> = ({
           setState('unavailable');
         }
       } catch (err) {
-        console.error('[TheCommit] Check failed:', err);
+        console.error('[Commit] Check failed:', err);
         setUnavailableReason('Errore di connessione.');
         setState('unavailable');
       }
@@ -118,31 +92,20 @@ export const TheCommitModal: React.FC<TheCommitModalProps> = ({
   }, [isOpen]);
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // RITUAL COMPLETION HANDLER
+  // RITUAL HANDLERS
   // ─────────────────────────────────────────────────────────────────────────────
 
   const handleComplete = useCallback(async (durationMs: number) => {
     setState('processing');
 
-    // Mark first time shown
-    if (isFirstTime) {
-      markFirstTimeShown();
-      setIsFirstTime(false);
-    }
-
     try {
-      // Call server RPC (server validates duration, applies delta)
       const { data, error } = await supabase.rpc('apply_commit_ritual', {
         p_duration_ms: durationMs,
       });
 
       if (error) {
-        console.error('[TheCommit] RPC error:', error);
-        setResult({
-          success: false,
-          error_code: 'rpc_error',
-          message: 'Errore di sincronizzazione.',
-        });
+        console.error('[Commit] RPC error:', error);
+        setResult({ success: false, error_code: 'rpc_error', message: 'Errore.' });
         setState('result');
         return;
       }
@@ -151,7 +114,7 @@ export const TheCommitModal: React.FC<TheCommitModalProps> = ({
       setResult(response);
       setState('result');
 
-      // Emit event to update M1U pill
+      // Update M1U pill
       if (response.success && response.new_balance !== undefined) {
         window.dispatchEvent(
           new CustomEvent('m1u-balance-update', {
@@ -160,44 +123,26 @@ export const TheCommitModal: React.FC<TheCommitModalProps> = ({
         );
       }
 
-      // Close modal after showing result briefly (success case already shows "Noted.")
-      setTimeout(() => {
-        onClose();
-      }, response.outcome === 'success' ? 3500 : 2000);
+      // Close after delay
+      setTimeout(() => onClose(), 3000);
     } catch (err) {
-      console.error('[TheCommit] Exception:', err);
-      setResult({
-        success: false,
-        error_code: 'exception',
-        message: 'Errore imprevisto.',
-      });
+      console.error('[Commit] Exception:', err);
+      setResult({ success: false, error_code: 'exception', message: 'Errore.' });
       setState('result');
     }
-  }, [isFirstTime, onClose]);
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // RITUAL FAIL HANDLER
-  // ─────────────────────────────────────────────────────────────────────────────
+  }, [onClose]);
 
   const handleFail = useCallback(async (durationMs: number) => {
     setState('processing');
 
-    // Mark first time shown
-    if (isFirstTime) {
-      markFirstTimeShown();
-      setIsFirstTime(false);
-    }
-
     try {
-      // Call server RPC (server will return fail outcome with -5 delta)
       const { data, error } = await supabase.rpc('apply_commit_ritual', {
         p_duration_ms: durationMs,
       });
 
       if (error) {
-        console.error('[TheCommit] RPC error on fail:', error);
-        // Still close gracefully
-        setTimeout(() => onClose(), 1500);
+        console.error('[Commit] RPC error on fail:', error);
+        setTimeout(() => onClose(), 2000);
         return;
       }
 
@@ -205,7 +150,7 @@ export const TheCommitModal: React.FC<TheCommitModalProps> = ({
       setResult(response);
       setState('result');
 
-      // Emit event to update M1U pill
+      // Update M1U pill
       if (response.success && response.new_balance !== undefined) {
         window.dispatchEvent(
           new CustomEvent('m1u-balance-update', {
@@ -214,18 +159,15 @@ export const TheCommitModal: React.FC<TheCommitModalProps> = ({
         );
       }
 
-      // Close modal after brief pause (no theatrical fail message)
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+      setTimeout(() => onClose(), 2500);
     } catch (err) {
-      console.error('[TheCommit] Exception on fail:', err);
-      setTimeout(() => onClose(), 1500);
+      console.error('[Commit] Exception on fail:', err);
+      setTimeout(() => onClose(), 2000);
     }
-  }, [isFirstTime, onClose]);
+  }, [onClose]);
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // RENDER CONTENT
+  // RENDER
   // ─────────────────────────────────────────────────────────────────────────────
 
   const renderContent = () => {
@@ -245,8 +187,8 @@ export const TheCommitModal: React.FC<TheCommitModalProps> = ({
               animate={{ opacity: [0.3, 0.8, 0.3] }}
               transition={{ duration: 1.5, repeat: Infinity }}
               style={{
-                width: '40px',
-                height: '40px',
+                width: '50px',
+                height: '50px',
                 borderRadius: '50%',
                 border: '2px solid rgba(0, 255, 255, 0.3)',
               }}
@@ -281,68 +223,14 @@ export const TheCommitModal: React.FC<TheCommitModalProps> = ({
         );
 
       case 'ready':
-      case 'in_progress':
+      case 'processing':
+      case 'result':
         return (
           <CommitRitual
             onComplete={handleComplete}
             onFail={handleFail}
-            disabled={state !== 'ready' && state !== 'in_progress'}
-            isFirstTime={isFirstTime}
+            disabled={state === 'processing' || state === 'result'}
           />
-        );
-
-      case 'processing':
-        return (
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#000000',
-            }}
-          >
-            <motion.div
-              animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 1, repeat: Infinity }}
-              style={{
-                width: '60px',
-                height: '60px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(0,255,255,0.2) 0%, transparent 70%)',
-              }}
-            />
-          </div>
-        );
-
-      case 'result':
-        // Silent result - the CommitRitual already shows "Noted." for success
-        // For fail, we just show the updated balance subtly
-        return (
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#000000',
-            }}
-          >
-            {result?.outcome === 'fail' && result?.delta && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.5 }}
-                style={{
-                  color: 'rgba(255, 100, 100, 0.6)',
-                  fontSize: '13px',
-                  letterSpacing: '1px',
-                }}
-              >
-                {result.delta} M1U
-              </motion.div>
-            )}
-          </div>
         );
 
       default:
@@ -351,12 +239,12 @@ export const TheCommitModal: React.FC<TheCommitModalProps> = ({
   };
 
   return (
-    <TheCommitFlipOverlay open={isOpen} originRect={originRect} onClose={onClose}>
+    <CommitFlipOverlay open={isOpen} originRect={originRect} onClose={onClose}>
       {renderContent()}
-    </TheCommitFlipOverlay>
+    </CommitFlipOverlay>
   );
 };
 
-export default TheCommitModal;
+export default CommitModal;
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
