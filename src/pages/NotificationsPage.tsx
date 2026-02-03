@@ -412,7 +412,7 @@ export const NotificationsPage: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen m1-app-bg relative" 
+      className="min-h-screen sn-page relative" 
       style={{ 
         paddingTop: '90px', 
         paddingBottom: '100px',

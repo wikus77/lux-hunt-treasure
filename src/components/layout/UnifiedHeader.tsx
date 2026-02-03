@@ -301,16 +301,38 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           WebkitBackfaceVisibility: 'hidden',
         }}
       >
-        {/* ROW 1: AgentCode | Settings | Profile */}
+        {/* ROW 1: M1SSION | AgentCode | Settings | Profile */}
         <div 
           style={{
             display: 'flex',
-            justifyContent: 'center',
+            justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '8px',
-            gap: '12px',
           }}
         >
+          {/* Left: M1SSION text */}
+          <div 
+            style={{ 
+              pointerEvents: 'auto',
+              padding: '6px 12px',
+              background: 'rgba(255, 255, 255, 0.85)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderRadius: '18px',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+            }}
+          >
+            <span style={{
+              fontFamily: 'Orbitron, sans-serif',
+              fontWeight: 700,
+              fontSize: '14px',
+              letterSpacing: '2px',
+              color: '#1C1C1E',
+            }}>
+              M1SSION
+            </span>
+          </div>
+          
           {/* Center: Agent Code Pill (transparent) */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
