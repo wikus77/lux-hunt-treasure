@@ -128,6 +128,26 @@ export const BuzzPage: React.FC = () => {
             {/* Placeholder for scroll offset - pill is now fixed overlay */}
           </div>
 
+          {/* 🎨 FADE ZONE - stesso colore della Home page */}
+          <div 
+            style={{
+              width: 'calc(100% + 32px)',
+              marginLeft: '-16px',
+              marginRight: '-16px',
+              marginBottom: '16px',
+              padding: '20px 16px 40px 16px',
+              borderRadius: '0 0 24px 24px',
+              background: `linear-gradient(180deg, 
+                rgba(10, 18, 35, 0.95) 0%, 
+                rgba(12, 20, 38, 0.88) 20%, 
+                rgba(18, 28, 48, 0.75) 40%, 
+                rgba(35, 45, 65, 0.55) 60%, 
+                rgba(80, 90, 110, 0.30) 75%, 
+                rgba(180, 185, 195, 0.12) 88%, 
+                rgba(255, 255, 255, 0) 100%
+              )`,
+            }}
+          />
 
           {/* Container centrato - 🔧 FIX v2: Simpler layout, no calc that can break */}
           <div className="flex flex-col items-center justify-center py-4">
