@@ -1,5 +1,5 @@
 /**
- * COMMIT NODE TRIGGER — Uses AION Entity Blob
+ * COMMIT NODE TRIGGER — Uses AION Entity Blob (scaled down)
  * Same visual as Intelligence page, scaled to fit
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
@@ -21,7 +21,7 @@ const LoadingFallback: React.FC = () => (
       width: '100%',
       height: '100%',
       borderRadius: '50%',
-      background: 'radial-gradient(circle, rgba(0, 255, 255, 0.15) 0%, transparent 70%)',
+      background: 'radial-gradient(circle, rgba(0, 255, 255, 0.2) 0%, rgba(0, 100, 150, 0.1) 50%, transparent 70%)',
       animation: 'pulse 2s ease-in-out infinite',
     }}
   />
@@ -49,14 +49,19 @@ export const CommitNodeTrigger: React.FC = () => {
 
   return (
     <>
-      {/* AION Entity Container */}
+      {/* 
+        AION Entity Container 
+        - Inner container is 180x180px to give AionEntity enough space to render
+        - Outer wrapper scales it down to ~90px visually using transform
+        - overflow: visible allows the blob glow to extend
+      */}
       <div
         ref={triggerRef}
         onClick={handleOpen}
         className="commit-node-aion-wrapper"
         style={{
-          width: '88px',
-          height: '88px',
+          width: '100px',
+          height: '100px',
           cursor: 'pointer',
           position: 'relative',
           display: 'flex',
@@ -65,13 +70,23 @@ export const CommitNodeTrigger: React.FC = () => {
           overflow: 'visible',
         }}
       >
-        <Suspense fallback={<LoadingFallback />}>
-          <AionEntity 
-            intensity={0.8}
-            idleSpeed={0.5}
-            className="commit-aion-entity"
-          />
-        </Suspense>
+        {/* Scaled-down inner container for AionEntity */}
+        <div
+          style={{
+            width: '200px',
+            height: '200px',
+            transform: 'scale(0.5)',
+            transformOrigin: 'center center',
+            position: 'relative',
+          }}
+        >
+          <Suspense fallback={<LoadingFallback />}>
+            <AionEntity 
+              intensity={0.9}
+              idleSpeed={0.6}
+            />
+          </Suspense>
+        </div>
       </div>
 
       {/* Modal */}
