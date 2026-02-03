@@ -30,8 +30,6 @@ import { SectionErrorBoundary } from "@/components/error/SectionErrorBoundary";
 const PrizeVision = lazy(() => import("@/components/command-center/home-sections/PrizeVision").then(m => ({ default: m.PrizeVision })));
 import { useMissionStatus } from "@/hooks/useMissionStatus";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-// 🎨 Web-first gradient overlay for iOS safe area
-import { TopSafeGradient } from "@/components/ui/TopSafeGradient";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -217,9 +215,6 @@ const { isConnected } = useRealTimeNotifications();
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
-      
-      {/* 🎨 Web-first gradient overlay: copre safe area iOS */}
-      <TopSafeGradient height={160} />
       
       <MissionSync onRefresh={handleMissionSync}>
       
