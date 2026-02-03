@@ -359,23 +359,23 @@ html[data-capacitor="ios"] {
   background-attachment: scroll !important;
 }
 
-/* 🔧 FIX 30/01/2026: Body WHITE - native gradient handles safe zone */
-body.is-native {
-  background: #FFFFFF !important;
-  background-color: #FFFFFF !important;
-}
-
-/* ========================================
-   🔧 FIX 02/02/2026: HOME PAGE DARK SAFE AREA
+/* ═══════════════════════════════════════════════════════════════════════════
+   🔧 FIX 03/02/2026: ROOT GRADIENT TAKEOVER
    
-   Override white background ONLY when Home page is active.
-   Home page adds .m1-home-dark class to html element.
-   ======================================== */
-html.m1-home-dark,
-html.m1-home-dark body,
-html.m1-home-dark body.is-native {
-  background: #0a0f1a !important;
-  background-color: #0a0f1a !important;
+   M1SSION gradient is THE root background for iOS native.
+   WKWebView is transparent, native layer is black - web gradient shows through.
+   This eliminates white safe-area forever.
+   ═══════════════════════════════════════════════════════════════════════════ */
+html,
+body,
+body.is-native {
+  background:
+    radial-gradient(ellipse 1200px 800px at 85% -10%, rgba(0, 229, 255, 0.35), transparent 50%),
+    radial-gradient(ellipse 1000px 700px at -15% 25%, rgba(123, 46, 255, 0.30), transparent 50%),
+    radial-gradient(ellipse 800px 500px at 50% 90%, rgba(252, 30, 255, 0.15), transparent 45%),
+    linear-gradient(180deg, #0a0b0f 0%, #0c0e14 25%, #0e1118 50%, #0a0c10 75%, #080a0d 100%) !important;
+  background-color: #0a0b0f !important;
+  background-attachment: fixed !important;
 }
 
 /* All containers transparent */
@@ -491,30 +491,29 @@ body.is-native #m1u-pill-map3d-slot {
    These rules ONLY apply when body.is-native (Capacitor iOS wrapper)
    ======================================== */
 
-/* 🔧 OPTION B: Header WHITE GLASS OPACO per iOS native
-   95% opacità per non mostrare overlay durante overscroll */
+/* 🔧 FIX 03/02/2026: Header DARK GLASS per root gradient background */
 body.is-native .unified-header-wrapper header,
 body.is-native .unified-header-wrapper [class*="header-pill"],
 body.is-native .unified-header-wrapper > div > div:first-child {
-  background: rgba(255, 255, 255, 0.95) !important;
+  background: rgba(10, 11, 15, 0.85) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* 🔧 OPTION B: Header text DARK per contrasto su sfondo bianco */
+/* 🔧 FIX 03/02/2026: Header text WHITE per contrasto */
 body.is-native .unified-header-wrapper header *,
 body.is-native .unified-header-wrapper [class*="text-white"] {
-  color: #1C1C1E !important;
+  color: #FFFFFF !important;
   opacity: 1 !important;
-  text-shadow: none !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* 🔧 OPTION B: Header icons iOS blue per contrasto */
+/* 🔧 FIX 03/02/2026: Header icons CYAN per contrasto */
 body.is-native .unified-header-wrapper svg,
 body.is-native .unified-header-wrapper [class*="icon"] {
-  color: #0A84FF !important;
+  color: #00D1FF !important;
   opacity: 1 !important;
 }
 
@@ -522,38 +521,37 @@ body.is-native .unified-header-wrapper [class*="icon"] {
    Bottom Navigation Contrast Fix (iOS Native)
    ======================================== */
 
-/* 🔧 OPTION B: WHITE GLASS OPACO Bottom Nav per iOS Native
-   95% opacità per non mostrare overlay durante overscroll */
+/* 🔧 FIX 03/02/2026: DARK GLASS Bottom Nav per root gradient background */
 body.is-native .bottom-navigation-ios nav,
 body.is-native .bottom-navigation-ios > div > nav,
 body.is-native #m1-bottom-nav nav {
-  background: rgba(255, 255, 255, 0.95) !important;
+  background: rgba(10, 11, 15, 0.85) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Bottom nav inactive icons - DARK for white glass background */
+/* Bottom nav inactive icons - LIGHT for dark glass background */
 body.is-native .bottom-navigation-ios button:not([class*="active"]) svg,
 body.is-native .bottom-navigation-ios button[data-active="false"] svg,
 body.is-native #m1-bottom-nav button:not(.active) svg {
-  color: #6B7280 !important;
+  color: rgba(255, 255, 255, 0.6) !important;
   opacity: 1 !important;
 }
 
-/* Bottom nav inactive text/labels - DARK for white glass */
+/* Bottom nav inactive text/labels - LIGHT for dark glass */
 body.is-native .bottom-navigation-ios button:not([class*="active"]) span,
 body.is-native #m1-bottom-nav button:not(.active) span {
-  color: #6B7280 !important;
+  color: rgba(255, 255, 255, 0.6) !important;
   opacity: 1 !important;
 }
 
-/* Active state - iOS blue accent */
+/* Active state - CYAN accent */
 body.is-native .bottom-navigation-ios button[class*="active"] svg,
 body.is-native .bottom-navigation-ios button[data-active="true"] svg,
 body.is-native #m1-bottom-nav button.active svg {
-  color: #0A84FF !important;
+  color: #00D1FF !important;
 }
 
 /* ========================================
@@ -732,30 +730,29 @@ body.sn-page [data-vaul-drawer] * {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ========================================
-   BOTTOM NAV - SAME WHITE GLASS AS HEADER
-   Matching header style (95% white opacity)
+   BOTTOM NAV - DARK GLASS (matches root gradient)
    ======================================== */
 body.is-native .bottom-navigation-ios > div,
 body.is-native .bottom-navigation-ios .bottom-nav-pill {
-  background: rgba(255, 255, 255, 0.95) !important;
+  background: rgba(10, 11, 15, 0.85) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* ========================================
    BOTTOM NAV ICON COLORS
-   BLACK when inactive (#1C1C1E)
+   LIGHT when inactive
    NEON CYAN when active (#00D1FF)
    ======================================== */
 
-/* Inactive icons - BLACK */
+/* Inactive icons - LIGHT */
 body.is-native .bottom-navigation-ios .bottom-nav-inactive,
 body.is-native .bottom-navigation-ios .bottom-nav-inactive svg,
 body.is-native .bottom-navigation-ios .bottom-nav-inactive span,
 body.is-native .bottom-navigation-ios .bottom-nav-btn:not(.bottom-nav-active) {
-  color: #1C1C1E !important;
+  color: rgba(255, 255, 255, 0.6) !important;
 }
 
 /* Active icons - NEON CYAN with glow */

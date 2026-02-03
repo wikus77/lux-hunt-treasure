@@ -61,37 +61,48 @@
    Header/Nav are OPAQUE white glass to not show overlay
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* html/body WHITE for seamless overscroll */
+/* ═══════════════════════════════════════════════════════════════════════════
+   🔧 FIX 03/02/2026: ROOT GRADIENT TAKEOVER
+   
+   sn-page containers are TRANSPARENT - root M1SSION gradient shows through.
+   This eliminates white safe-area forever on iOS native.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* sn-page containers: transparent to show root gradient */
 html.sn-page,
 body.sn-page,
 html:has(.sn-page),
 body:has(.sn-page) {
-  background: #FFFFFF !important;
-  background-color: #FFFFFF !important;
+  /* Transparent - let root gradient show through */
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
-/* Also WHITE for body.is-native */
+/* iOS native: also transparent */
 body.is-native.sn-page,
 body.is-native:has(.sn-page) {
-  background: #FFFFFF !important;
-  background-color: #FFFFFF !important;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
-/* Also WHITE for Capacitor iOS variants */
+/* Capacitor iOS: also transparent */
 html.capacitor-ios.sn-page,
 html.capacitor-ios:has(.sn-page),
 html[data-capacitor="ios"].sn-page,
 html[data-capacitor="ios"]:has(.sn-page) {
-  background: #FFFFFF !important;
-  background-color: #FFFFFF !important;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
-/* Fallback for browsers without :has() support */
+/* Fallback root - use M1SSION gradient */
 .sn-page-root {
   position: fixed;
   inset: 0;
-  background-color: #FFFFFF;
-  background: linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%);
+  background:
+    radial-gradient(ellipse 1200px 800px at 85% -10%, rgba(0, 229, 255, 0.35), transparent 50%),
+    radial-gradient(ellipse 1000px 700px at -15% 25%, rgba(123, 46, 255, 0.30), transparent 50%),
+    linear-gradient(180deg, #0a0b0f 0%, #0c0e14 50%, #080a0d 100%);
+  background-color: #0a0b0f;
   z-index: -1;
 }
 
