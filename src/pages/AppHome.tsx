@@ -206,12 +206,10 @@ const { isConnected } = useRealTimeNotifications();
   
   return (
     <div 
-      className="w-full overflow-x-hidden"
+      className="w-full overflow-x-hidden sn-page"
       style={{
         position: 'relative',
         zIndex: 0,
-        // 🔧 RIMUOVO sn-page - provo sfondo scuro diretto
-        background: '#0a0f1a',
       }}
     >
       <Helmet>
@@ -220,7 +218,7 @@ const { isConnected } = useRealTimeNotifications();
       
       {/* ═══════════════════════════════════════════════════════════════════════════ */}
       {/* 🎨 FIXED HERO BACKGROUND - Copre safe zone iOS + header area */}
-      {/* z-index: 9998 → SOTTO header (9999) ma SOPRA tutto il resto */}
+      {/* z-index: -1 → DIETRO tutto il contenuto */}
       {/* ═══════════════════════════════════════════════════════════════════════════ */}
       <div 
         style={{
@@ -228,8 +226,8 @@ const { isConnected } = useRealTimeNotifications();
           top: 0,
           left: 0,
           right: 0,
-          // Altezza: copre TUTTO il viewport
-          height: '100vh',
+          // Altezza: copre area superiore
+          height: '60vh',
           // 🎨 GRADIENT 10 PARTI: da scuro 100% a bianco 0%
           background: `linear-gradient(180deg, 
             #0a0f1a 0%,
@@ -244,9 +242,9 @@ const { isConnected } = useRealTimeNotifications();
             #f5f5f5 85%,
             #f5f5f5 100%
           )`,
-          // z-index: MOLTO ALTO ma sotto header
-          zIndex: 9998,
-          // Permette click passthrough al contenuto sotto
+          // z-index: DIETRO contenuto
+          zIndex: -1,
+          // Permette click passthrough
           pointerEvents: 'none',
         }}
         aria-hidden="true"
@@ -265,16 +263,13 @@ const { isConnected } = useRealTimeNotifications();
             >
               {/* ═══════════════════════════════════════════════════════════════ */}
               {/* 1️⃣ M1SSION PRIZE - Contenuto sopra il gradient fixed */}
-              {/* 🔧 SPOSTATO 25% PIÙ IN ALTO: ridotto paddingTop */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div 
                 style={{
                   position: 'relative',
                   width: '100%',
-                  // 🔧 Header offset RIDOTTO: solo safe-area + header minimo
-                  // Era: calc(env(safe-area-inset-top, 47px) + 80px + 8px) = ~135px
-                  // Ora: calc(env(safe-area-inset-top, 47px) + 55px) = ~102px (-25%)
-                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 55px)',
+                  // Header offset: safe-area + header height + spacing
+                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 80px + 8px)',
                   paddingLeft: '16px',
                   paddingRight: '16px',
                   paddingBottom: '40px',
