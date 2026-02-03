@@ -207,109 +207,111 @@ const { isConnected } = useRealTimeNotifications();
       </Helmet>
       
       <MissionSync onRefresh={handleMissionSync}>
-      {/* 🔧 FIX 03/02/2026: Layout come BuzzPage - sn-page only, no m1-single-scroll-root */}
+      {/* 🔧 FIX 03/02/2026: ESATTAMENTE come BuzzPage - sn-page (bianco), NO gradient sul container */}
       <main className="relative" style={{ zIndex: 0 }}>
-        <AnimatePresence>
-          {isLoaded && (
-            <motion.div
-              className="relative"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 1️⃣ M1SSION PRIZE + Pills + PROSSIMA AZIONE - Tutto con gradient */}
-              {/* Gradient progressivo: scuro → bianco (fino a fine PROSSIMA AZIONE) */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              <div 
-                className="m1-first-content-offset-compact"
-                style={{
-                  width: '100%',
-                  paddingLeft: '16px',
-                  paddingRight: '16px',
-                  paddingBottom: '32px',
-                  background: `linear-gradient(180deg, 
-                    rgba(10, 15, 30, 1) 0%, 
-                    rgba(10, 15, 30, 0.98) 15%, 
-                    rgba(10, 15, 30, 0.92) 30%, 
-                    rgba(15, 20, 35, 0.80) 45%, 
-                    rgba(30, 40, 60, 0.60) 55%, 
-                    rgba(80, 90, 110, 0.35) 65%, 
-                    rgba(150, 155, 165, 0.18) 75%, 
-                    rgba(220, 222, 225, 0.08) 85%, 
-                    rgba(245, 246, 248, 0.02) 92%, 
-                    rgba(255, 255, 255, 0) 100%
-                  )`,
-                }}
+        <div className="container mx-auto px-4">
+          
+          {/* Offset per header - ESATTAMENTE come BuzzPage */}
+          <div className="m1-first-content-offset-compact mb-4">
+            {/* Placeholder for scroll offset */}
+          </div>
+
+          <AnimatePresence>
+            {isLoaded && (
+              <motion.div
+                className="relative"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
               >
-                {/* PrizeVision */}
-                <Suspense fallback={
-                  <div className="w-full h-64 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-xl animate-pulse flex items-center justify-center">
-                    <div className="text-white/40 text-sm">Caricamento...</div>
-                  </div>
-                }>
-                  <PrizeVision progress={prizeProgress} />
-                </Suspense>
-                
-                {/* Pills DENTRO M1SSION PRIZE */}
+                {/* ═══════════════════════════════════════════════════════════════ */}
+                {/* 1️⃣ M1SSION PRIZE - Container con gradient interno */}
+                {/* ═══════════════════════════════════════════════════════════════ */}
                 <div 
                   style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: '12px',
-                    padding: '20px 0 24px 0',
-                    flexWrap: 'wrap',
+                    width: '100%',
+                    borderRadius: '24px',
+                    overflow: 'hidden',
+                    marginBottom: '16px',
+                    background: `linear-gradient(180deg, 
+                      rgba(10, 18, 35, 0.95) 0%, 
+                      rgba(12, 20, 38, 0.88) 20%, 
+                      rgba(18, 28, 48, 0.75) 40%, 
+                      rgba(35, 45, 65, 0.55) 60%, 
+                      rgba(80, 90, 110, 0.30) 75%, 
+                      rgba(180, 185, 195, 0.12) 88%, 
+                      rgba(255, 255, 255, 0) 100%
+                    )`,
+                    padding: '20px 16px 40px 16px',
                   }}
                 >
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                    <StreakPill showLabel={false} />
-                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Streak</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                    <ShopPill />
-                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Shop</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                    <CashbackVaultPill variant="compact" />
-                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Cashback</span>
+                  {/* PrizeVision */}
+                  <Suspense fallback={
+                    <div className="w-full h-64 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-xl animate-pulse flex items-center justify-center">
+                      <div className="text-white/40 text-sm">Caricamento...</div>
+                    </div>
+                  }>
+                    <PrizeVision progress={prizeProgress} />
+                  </Suspense>
+                  
+                  {/* Pills DENTRO M1SSION PRIZE */}
+                  <div 
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      gap: '12px',
+                      padding: '20px 0 0 0',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <StreakPill showLabel={false} />
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Streak</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <ShopPill />
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Shop</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <CashbackVaultPill variant="compact" />
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Cashback</span>
+                    </div>
                   </div>
                 </div>
                 
-                {/* PROSSIMA AZIONE - dentro il gradient */}
-                <div style={{ marginTop: '8px' }}>
+                {/* PROSSIMA AZIONE - sfondo bianco (sn-page) */}
+                <div style={{ marginBottom: '16px' }}>
                   <SectionErrorBoundary section="Prossima Azione" fallbackHeight="80px">
                     <NextActionContainer />
                   </SectionErrorBoundary>
                 </div>
-              </div>
 
-              {/* Notifications Banner */}
-              {notificationsBannerOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="fixed inset-x-0 z-40 px-2 md:px-4"
-                  style={{ 
-                    top: 'calc(72px + 47px + env(safe-area-inset-top, 0px))'
-                  }}
-                >
-                  <NotificationsBanner
-                    notifications={notifications}
-                    open={notificationsBannerOpen}
-                    unreadCount={unreadCount}
-                    onClose={closeNotificationsBanner}
-                    onMarkAllAsRead={markAllAsRead}
-                    onDeleteNotification={deleteNotification}
-                  />
-                </motion.div>
-              )}
+                {/* Notifications Banner */}
+                {notificationsBannerOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="fixed inset-x-0 z-40 px-2 md:px-4"
+                    style={{ 
+                      top: 'calc(72px + 47px + env(safe-area-inset-top, 0px))'
+                    }}
+                  >
+                    <NotificationsBanner
+                      notifications={notifications}
+                      open={notificationsBannerOpen}
+                      unreadCount={unreadCount}
+                      onClose={closeNotificationsBanner}
+                      onMarkAllAsRead={markAllAsRead}
+                      onDeleteNotification={deleteNotification}
+                    />
+                  </motion.div>
+                )}
 
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 2️⃣ REST OF CONTENT - CommandCenterHome (sfondo bianco sn-page) */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              <div className="container mx-auto px-4">
+                {/* ═══════════════════════════════════════════════════════════════ */}
+                {/* 2️⃣ REST OF CONTENT - CommandCenterHome */}
+                {/* ═══════════════════════════════════════════════════════════════ */}
                 {/* Hidden title for accessibility */}
                 <h1 id="m1-home-title" className="sr-only">M1SSION Centro di Comando</h1>
                 <div id="mission-status-badge-portal" data-anchor="m1-header-badge" data-persistent="true" className="flex justify-center my-2 sm:my-3" />
@@ -357,12 +359,10 @@ const { isConnected } = useRealTimeNotifications();
                     </motion.div>
                   )}
                 </div>
-              </div>
-              
-              {/* 🔧 FIX: RIMOSSO decorative gradient fixed - causava overlay in overscroll */}
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </main>
       {/* 🆕 STANDBY: Hint per utenti inattivi disabilitato
       <InactivityHint type="home" />

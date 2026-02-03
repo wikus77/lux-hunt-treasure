@@ -302,18 +302,15 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         }}
       >
         {/* ROW 1: AgentCode | Settings | Profile */}
-        {/* 🔧 FIX 03/02/2026: M1UPill spostato come overlay fisso in AppHome (come BuzzPage) */}
         <div 
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
+            justifyContent: 'center',
             alignItems: 'center',
             marginBottom: '8px',
+            gap: '12px',
           }}
         >
-          {/* Left: Spacer (M1UPill è ora overlay fisso in pagina) */}
-          <div style={{ width: '60px' }} />
-          
           {/* Center: Agent Code Pill (transparent) */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
