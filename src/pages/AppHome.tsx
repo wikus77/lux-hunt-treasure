@@ -226,6 +226,17 @@ const { isConnected } = useRealTimeNotifications();
                 transition={{ duration: 0.5 }}
               >
                 {/* ═══════════════════════════════════════════════════════════════ */}
+                {/* ON M1SSION BADGE — Moved above M1SSION PRIZE */}
+                {/* ═══════════════════════════════════════════════════════════════ */}
+                <div 
+                  id="mission-status-badge-portal" 
+                  data-anchor="m1-header-badge" 
+                  data-persistent="true" 
+                  className="flex justify-center"
+                  style={{ marginBottom: '6px' }}
+                />
+
+                {/* ═══════════════════════════════════════════════════════════════ */}
                 {/* 1️⃣ M1SSION PRIZE - Container con gradient interno */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 <div 
@@ -281,18 +292,31 @@ const { isConnected } = useRealTimeNotifications();
                 </div>
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                {/* COMMIT NODE — AION Bubble (between PRIZE and PROSSIMA AZIONE) */}
+                {/* COMMIT NODES — Triple AION Bubbles (between PRIZE and PROSSIMA AZIONE) */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 <div 
                   className="commit-node-slot"
                   style={{
                     display: 'flex',
                     justifyContent: 'center',
-                    marginTop: '-40px',
+                    alignItems: 'center',
+                    gap: '16px',
+                    marginTop: '-46px',
                     marginBottom: '8px',
                   }}
                 >
+                  {/* Left AION - Black/Gray/White gradient */}
+                  <div className="commit-node-left" style={{ filter: 'grayscale(100%) brightness(0.7)' }}>
+                    <CommitNodeTrigger />
+                  </div>
+                  
+                  {/* Center AION - Original cyan */}
                   <CommitNodeTrigger />
+                  
+                  {/* Right AION - Black/Gray/White gradient */}
+                  <div className="commit-node-right" style={{ filter: 'grayscale(100%) brightness(0.7)' }}>
+                    <CommitNodeTrigger />
+                  </div>
                 </div>
                 
                 {/* PROSSIMA AZIONE - sfondo bianco (sn-page) */}
@@ -330,7 +354,6 @@ const { isConnected } = useRealTimeNotifications();
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 {/* Hidden title for accessibility */}
                 <h1 id="m1-home-title" className="sr-only">M1SSION Centro di Comando</h1>
-                <div id="mission-status-badge-portal" data-anchor="m1-header-badge" data-persistent="true" className="flex justify-center my-2 sm:my-3" />
 
                 <div id="main-content" className="max-w-screen-xl mx-auto pb-20" role="main">
                   <SectionErrorBoundary section="Centro Comando" fallbackHeight="400px">
