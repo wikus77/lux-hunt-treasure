@@ -218,6 +218,33 @@ const { isConnected } = useRealTimeNotifications();
       
       <MissionSync onRefresh={handleMissionSync}>
       
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        {/* 🎨 HERO SECTION - Copre safe zone iOS con gradient fade 10 parti */}
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        <div 
+          style={{
+            position: 'relative',
+            width: '100%',
+            // 🎨 GRADIENT 10 PARTI: da scuro 100% a bianco 0%
+            // Parte 1: 100% scuro, Parte 2: 80%, ... Parte 10: 0% (bianco)
+            background: `linear-gradient(180deg, 
+              #0a0f1a 0%,
+              #0a0f1a 10%,
+              #222630 20%,
+              #393d46 30%,
+              #50545c 40%,
+              #686b72 50%,
+              #808288 60%,
+              #97999d 70%,
+              #aeb0b3 80%,
+              #c6c7c9 90%,
+              #f5f5f5 100%
+            )`,
+            // Parte dal TOP assoluto (copre safe zone)
+            paddingTop: 'env(safe-area-inset-top, 47px)',
+          }}
+        >
+        
         <AnimatePresence>
           {isLoaded && (
             <motion.div
@@ -227,34 +254,17 @@ const { isConnected } = useRealTimeNotifications();
               transition={{ duration: 0.5 }}
             >
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 1️⃣ M1SSION PRIZE - ESTESO FINO A SAFE ZONE iOS */}
+              {/* 1️⃣ M1SSION PRIZE - Dentro la HERO con gradient */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div 
                 style={{
                   position: 'relative',
                   width: '100%',
-                  // 🎨 Gradient SCURO → BIANCO - Parte dall'alto, fade più graduale
-                  background: `linear-gradient(180deg, 
-                    #0a0f1a 0%, 
-                    #0a0f1a 15%, 
-                    #0d1525 25%, 
-                    #1a2535 38%, 
-                    #3d4a5c 52%, 
-                    #6a7385 65%, 
-                    #9aa3b0 76%, 
-                    #c8cdd5 86%, 
-                    #e8eaed 94%, 
-                    #f5f5f5 100%
-                  )`,
-                  // 🔧 ESTENSIONE VERSO ALTO: Il container si estende nella safe zone
-                  // marginTop negativo "tira" il container SU
-                  marginTop: 'calc(-1 * (80px + env(safe-area-inset-top, 47px) + 8px))',
-                  // paddingTop compensa per mantenere il contenuto nella posizione corretta
-                  paddingTop: 'calc(80px + env(safe-area-inset-top, 47px) + 8px + 16px)',
+                  // Header offset (80px + 8px spacing)
+                  paddingTop: '88px',
                   paddingLeft: '16px',
                   paddingRight: '16px',
-                  paddingBottom: '60px', // Più spazio per fade graduale
-                  marginBottom: '0px',
+                  paddingBottom: '40px',
                 }}
               >
                 <Suspense fallback={
@@ -280,9 +290,24 @@ const { isConnected } = useRealTimeNotifications();
                   <CashbackVaultPill variant="compact" />
                 </div>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        </div>
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        {/* FINE HERO - Da qui sfondo BIANCO */}
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
 
+        <AnimatePresence>
+          {isLoaded && (
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 2️⃣ PROSSIMI PASSI Container */}
+              {/* 2️⃣ PROSSIMI PASSI Container - Su sfondo BIANCO */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div style={{ padding: '0 16px', marginBottom: '16px', marginTop: '8px' }}>
                 <SectionErrorBoundary section="Prossima Azione" fallbackHeight="80px">
