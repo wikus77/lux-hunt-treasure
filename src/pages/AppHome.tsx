@@ -212,10 +212,13 @@ const { isConnected } = useRealTimeNotifications();
   
   return (
     <div 
-      className="w-full overflow-x-hidden sn-page"
+      className="w-full overflow-x-hidden"
       style={{
         position: 'relative',
         zIndex: 0,
+        minHeight: '100dvh',
+        // 🎨 Sfondo trasparente - lascia vedere il colore scuro del body
+        background: 'transparent',
       }}
     >
       <Helmet>
@@ -240,11 +243,21 @@ const { isConnected } = useRealTimeNotifications();
                 style={{
                   position: 'relative',
                   width: '100%',
-                  // 🎨 FULL WIDTH dark gradient - NO borderRadius, NO side margins
-                  background: 'linear-gradient(180deg, #0a0f1a 0%, #0d1525 50%, #1a2535 80%, transparent 100%)',
+                  // 🎨 FULL WIDTH dark gradient - FADE PIÙ PROGRESSIVO E LUNGO
+                  background: `linear-gradient(180deg, 
+                    #0a0f1a 0%, 
+                    #0a0f1a 30%, 
+                    #0d1525 45%, 
+                    #1a2535 60%, 
+                    #3d4a5c 75%, 
+                    #7a8599 85%, 
+                    #c4c9d4 92%, 
+                    #f5f5f5 100%
+                  )`,
                   padding: '16px',
                   paddingTop: '8px',
-                  marginBottom: '16px',
+                  paddingBottom: '60px', // Più spazio per il fade
+                  marginBottom: '0px',
                 }}
               >
                 <Suspense fallback={
