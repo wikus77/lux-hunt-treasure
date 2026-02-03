@@ -216,40 +216,6 @@ const { isConnected } = useRealTimeNotifications();
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
-      {/* ═══════════════════════════════════════════════════════════════════════════ */}
-      {/* 🎨 FIXED HERO BACKGROUND - Copre safe zone iOS + header area */}
-      {/* z-index: -1 → DIETRO tutto il contenuto */}
-      {/* ═══════════════════════════════════════════════════════════════════════════ */}
-      <div 
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          // Altezza: copre area superiore
-          height: '60vh',
-          // 🎨 GRADIENT 10 PARTI: da scuro 100% a bianco 0%
-          background: `linear-gradient(180deg, 
-            #0a0f1a 0%,
-            #0a0f1a 8%,
-            #222630 16%,
-            #393d46 24%,
-            #50545c 32%,
-            #686b72 40%,
-            #808288 48%,
-            #97999d 56%,
-            #c6c7c9 70%,
-            #f5f5f5 85%,
-            #f5f5f5 100%
-          )`,
-          // z-index: DIETRO contenuto
-          zIndex: -1,
-          // Permette click passthrough
-          pointerEvents: 'none',
-        }}
-        aria-hidden="true"
-      />
-      
       <MissionSync onRefresh={handleMissionSync}>
       
         <AnimatePresence>
@@ -262,14 +228,33 @@ const { isConnected } = useRealTimeNotifications();
               style={{ position: 'relative', zIndex: 2 }}
             >
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 1️⃣ M1SSION PRIZE - Contenuto sopra il gradient fixed */}
+              {/* 1️⃣ M1SSION PRIZE - SALE DEL 20% per coprire safe zone */}
+              {/* marginTop NEGATIVO tira il contenuto SU */}
+              {/* paddingTop compensa per tenere contenuto visibile sotto header */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div 
                 style={{
                   position: 'relative',
                   width: '100%',
-                  // Header offset: safe-area + header height + spacing
-                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 80px + 8px)',
+                  // 🎨 GRADIENT 10 PARTI direttamente sul container
+                  background: `linear-gradient(180deg, 
+                    #0a0f1a 0%,
+                    #0a0f1a 8%,
+                    #222630 16%,
+                    #393d46 24%,
+                    #50545c 32%,
+                    #686b72 40%,
+                    #808288 48%,
+                    #97999d 56%,
+                    #c6c7c9 70%,
+                    #f5f5f5 85%,
+                    #f5f5f5 100%
+                  )`,
+                  // 🔧 SALE DEL 20%: marginTop negativo tira SU nella safe zone
+                  // Tira su di: safe-area (47px) + 20% extra
+                  marginTop: 'calc(-1 * (env(safe-area-inset-top, 47px) + 20px))',
+                  // paddingTop compensa: safe-area + header + spacing + quello che abbiamo tolto
+                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 80px + 8px + env(safe-area-inset-top, 47px) + 20px)',
                   paddingLeft: '16px',
                   paddingRight: '16px',
                   paddingBottom: '40px',
