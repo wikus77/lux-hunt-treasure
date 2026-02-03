@@ -201,20 +201,14 @@ const { isConnected } = useRealTimeNotifications();
   const prizeProgress = missionStatus?.progressPercent || progress || 46;
 
   return (
-    <div 
-      className="sn-page relative m1-single-scroll-root"
-      style={{
-        position: 'relative',
-        zIndex: 0,
-      }}
-    >
+    <div className="w-full relative sn-page">
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
       <MissionSync onRefresh={handleMissionSync}>
-      {/* 🆕 REVOLUT-STYLE LAYOUT */}
-      <div className="relative">
+      {/* 🔧 FIX 03/02/2026: Layout come BuzzPage - sn-page only, no m1-single-scroll-root */}
+      <main className="relative" style={{ zIndex: 0 }}>
         <AnimatePresence>
           {isLoaded && (
             <motion.div
@@ -224,18 +218,31 @@ const { isConnected } = useRealTimeNotifications();
               transition={{ duration: 0.5 }}
             >
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 1️⃣ M1SSION PRIZE - Con pills DENTRO e gradient fade finale */}
+              {/* 1️⃣ M1SSION PRIZE + Pills + PROSSIMA AZIONE - Tutto con gradient */}
+              {/* Gradient progressivo: scuro → bianco (fino a fine PROSSIMA AZIONE) */}
               {/* ═══════════════════════════════════════════════════════════════ */}
               <div 
+                className="m1-first-content-offset-compact"
                 style={{
                   width: '100%',
-                  paddingTop: 'calc(env(safe-area-inset-top, 47px) + 70px)',
                   paddingLeft: '16px',
                   paddingRight: '16px',
-                  paddingBottom: '0',
-                  background: 'linear-gradient(180deg, rgba(15, 25, 45, 0.95) 0%, rgba(5, 10, 25, 0.98) 70%, rgba(255, 255, 255, 0) 100%)',
+                  paddingBottom: '32px',
+                  background: `linear-gradient(180deg, 
+                    rgba(10, 15, 30, 1) 0%, 
+                    rgba(10, 15, 30, 0.98) 15%, 
+                    rgba(10, 15, 30, 0.92) 30%, 
+                    rgba(15, 20, 35, 0.80) 45%, 
+                    rgba(30, 40, 60, 0.60) 55%, 
+                    rgba(80, 90, 110, 0.35) 65%, 
+                    rgba(150, 155, 165, 0.18) 75%, 
+                    rgba(220, 222, 225, 0.08) 85%, 
+                    rgba(245, 246, 248, 0.02) 92%, 
+                    rgba(255, 255, 255, 0) 100%
+                  )`,
                 }}
               >
+                {/* PrizeVision */}
                 <Suspense fallback={
                   <div className="w-full h-64 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-xl animate-pulse flex items-center justify-center">
                     <div className="text-white/40 text-sm">Caricamento...</div>
@@ -267,25 +274,13 @@ const { isConnected } = useRealTimeNotifications();
                     <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Cashback</span>
                   </div>
                 </div>
-              </div>
-              
-              {/* Gradient fade da M1SSION PRIZE verso sfondo bianco */}
-              <div 
-                style={{
-                  width: '100%',
-                  height: '60px',
-                  background: 'linear-gradient(180deg, rgba(5, 10, 25, 0.6) 0%, rgba(255, 255, 255, 0.3) 40%, rgba(255, 255, 255, 0.8) 70%, #FFFFFF 100%)',
-                  marginTop: '-30px',
-                }}
-              />
-
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 2️⃣ PROSSIMI PASSI Container */}
-              {/* ═══════════════════════════════════════════════════════════════ */}
-              <div style={{ padding: '0 16px', marginBottom: '16px' }}>
-                <SectionErrorBoundary section="Prossima Azione" fallbackHeight="80px">
-                  <NextActionContainer />
-                </SectionErrorBoundary>
+                
+                {/* PROSSIMA AZIONE - dentro il gradient */}
+                <div style={{ marginTop: '8px' }}>
+                  <SectionErrorBoundary section="Prossima Azione" fallbackHeight="80px">
+                    <NextActionContainer />
+                  </SectionErrorBoundary>
+                </div>
               </div>
 
               {/* Notifications Banner */}
@@ -312,14 +307,14 @@ const { isConnected } = useRealTimeNotifications();
               )}
 
               {/* ═══════════════════════════════════════════════════════════════ */}
-              {/* 5️⃣ REST OF CONTENT - CommandCenterHome (senza PrizeVision) */}
+              {/* 2️⃣ REST OF CONTENT - CommandCenterHome (sfondo bianco sn-page) */}
               {/* ═══════════════════════════════════════════════════════════════ */}
-              <div style={{ padding: '0 16px' }}>
+              <div className="container mx-auto px-4">
                 {/* Hidden title for accessibility */}
                 <h1 id="m1-home-title" className="sr-only">M1SSION Centro di Comando</h1>
                 <div id="mission-status-badge-portal" data-anchor="m1-header-badge" data-persistent="true" className="flex justify-center my-2 sm:my-3" />
 
-                <main id="main-content" className="max-w-screen-xl mx-auto pb-20" role="main">
+                <div id="main-content" className="max-w-screen-xl mx-auto pb-20" role="main">
                   <SectionErrorBoundary section="Centro Comando" fallbackHeight="400px">
                     <CommandCenterHome />
                   </SectionErrorBoundary>
@@ -361,28 +356,14 @@ const { isConnected } = useRealTimeNotifications();
                       </motion.button>
                     </motion.div>
                   )}
-                </main>
+                </div>
               </div>
               
-              {/* Decorative gradient effect at bottom like top */}
-              <motion.div
-                className="fixed bottom-24 left-0 right-0 h-32 pointer-events-none z-[9]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5, duration: 0.8 }}
-                style={{
-                  background: `
-                    radial-gradient(ellipse at 50% 100%, rgba(0, 209, 255, 0.18), transparent 70%),
-                    radial-gradient(ellipse at 20% 100%, rgba(123, 92, 255, 0.15), transparent 60%),
-                    radial-gradient(ellipse at 80% 100%, rgba(240, 89, 255, 0.12), transparent 65%)
-                  `,
-                  filter: 'blur(20px)'
-                }}
-              />
+              {/* 🔧 FIX: RIMOSSO decorative gradient fixed - causava overlay in overscroll */}
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </main>
       {/* 🆕 STANDBY: Hint per utenti inattivi disabilitato
       <InactivityHint type="home" />
       */}
