@@ -128,13 +128,14 @@ export const BuzzPage: React.FC = () => {
             {/* Placeholder for scroll offset - pill is now fixed overlay */}
           </div>
 
-          {/* 🎨 FADE ZONE - IDENTICA alla Home page (forma e sostanza) */}
+          {/* 🎨 FADE ZONE - IDENTICA alla Home page (forma, dimensioni, sostanza) */}
           <div 
             style={{
               width: '100%',
               borderRadius: '24px',
               overflow: 'hidden',
               marginBottom: '16px',
+              minHeight: '380px',
               background: `linear-gradient(180deg, 
                 rgba(10, 18, 35, 0.95) 0%, 
                 rgba(12, 20, 38, 0.88) 20%, 
