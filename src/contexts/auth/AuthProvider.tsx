@@ -21,6 +21,8 @@ import { isAdminEmail } from '@/config/adminConfig';
 import { setPrizeIntroUserId } from '@/stores/prizeIntroStore';
 // 📊 M1SSION Analytics
 import { track, setAnalyticsUserId } from '@/lib/analytics';
+// 🔐 Face ID credentials clear on logout
+import { clearFaceIDCredentials } from '@/hooks/useFaceIDLogin';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -474,6 +476,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // 🚀 Clear auth cache
       cacheSession(null, null);
+      
+      // 🔐 Clear Face ID credentials (iOS native only, no-op otherwise)
+      clearFaceIDCredentials();
       
       // Clear mission intro session to force replay on next login
       sessionStorage.removeItem('hasSeenPostLoginIntro');

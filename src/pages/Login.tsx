@@ -15,6 +15,7 @@ import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import { postLoginRedirectFixed } from "@/utils/postLoginRedirectFixed";
 import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
 import { Capacitor } from "@capacitor/core";
+import { useFaceIDLogin } from "@/hooks/useFaceIDLogin";
 
 // Screen types for the login flow
 type LoginScreen = 'opening' | 'signup' | 'login';
@@ -34,6 +35,10 @@ const Login = () => {
   const searchParams = new URLSearchParams(window.location.search);
   const redirectAttemptedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // 🔐 FACE ID: Trigger Face ID when login screen is visible (iOS native only)
+  // This is NON-INVASIVE: no UI changes, no auth flow changes, only adds Face ID prompt
+  useFaceIDLogin(currentScreen === 'login');
 
   // 🔍 Debug log on mount + programmatic play for iOS
   useEffect(() => {

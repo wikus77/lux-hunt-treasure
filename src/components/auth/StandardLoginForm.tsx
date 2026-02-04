@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import FormField from './form-field';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuthContext } from '@/contexts/auth';
+import { saveFaceIDCredentials } from '@/hooks/useFaceIDLogin';
 
 interface StandardLoginFormProps {
   verificationStatus?: string | null;
@@ -63,6 +64,12 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
       toast.success('Login effettuato con successo', {
         description: 'Benvenuto in M1SSION™!'
       });
+
+      // 🔐 FACE ID: Save credentials for future Face ID login (iOS native only)
+      // This is NON-INVASIVE: only saves if on iOS native, no-op otherwise
+      if (result.session?.access_token) {
+        saveFaceIDCredentials(result.session.access_token);
+      }
       
       // Emit custom auth success event for PWA compatibility
       window.dispatchEvent(new CustomEvent('auth-success', { 
