@@ -93,13 +93,19 @@ export function useFaceIDLogin(
   const hasTriggeredRef = useRef(false);
   const isProcessingRef = useRef(false);
   const mountedRef = useRef(true);
+  const lastTriggerTimeRef = useRef(0);
 
   // Check if we're on iOS native
   const isNativeiOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
 
-  // Cleanup on unmount
+  // CRITICAL: Reset refs on mount to ensure fresh state
   useEffect(() => {
     mountedRef.current = true;
+    // Reset trigger state on mount - allows Face ID to trigger
+    hasTriggeredRef.current = false;
+    isProcessingRef.current = false;
+    console.log('🔐 [FaceID] Hook mounted - refs reset');
+    
     return () => {
       mountedRef.current = false;
     };
@@ -129,9 +135,10 @@ export function useFaceIDLogin(
           return;
         }
 
-        // Mark as triggered
+        // Mark as triggered with timestamp
         hasTriggeredRef.current = true;
         isProcessingRef.current = true;
+        lastTriggerTimeRef.current = Date.now();
 
         console.log('🔐 [FaceID] Triggering Face ID prompt...');
         
@@ -257,11 +264,20 @@ export function useFaceIDLogin(
     triggerFaceID();
   }, [isLoginVisible, isNativeiOS, navigate, onSuccess, onFallback]);
 
-  // Reset trigger when login screen is hidden (navigated away)
+  // CRITICAL: Reset trigger when login screen visibility changes
   useEffect(() => {
-    if (!isLoginVisible) {
-      // Don't reset hasTriggeredRef here anymore - 
-      // we reset it on failure/cancel instead
+    if (isLoginVisible) {
+      // When login screen becomes visible, check if we should allow retrigger
+      const now = Date.now();
+      const timeSinceLastTrigger = now - lastTriggerTimeRef.current;
+      
+      // Allow retrigger if:
+      // 1. More than 2 seconds since last trigger (user navigated away and back)
+      // 2. Not currently processing
+      if (timeSinceLastTrigger > 2000 && !isProcessingRef.current) {
+        console.log('🔐 [FaceID] Login visible - resetting trigger (time since last:', timeSinceLastTrigger, 'ms)');
+        hasTriggeredRef.current = false;
+      }
     }
   }, [isLoginVisible]);
 
