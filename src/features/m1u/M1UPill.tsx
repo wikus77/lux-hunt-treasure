@@ -161,15 +161,31 @@ const M1UPill: React.FC<M1UPillProps> = ({
   }, [unitsData?.balance, isAnimating, displayedBalance]);
 
   // Trigger pulse animation on balance change (for non-event changes)
+  // 🔧 FIX: Only animate for REAL changes during session, not initial load
   useEffect(() => {
-    if (unitsData?.balance !== undefined && prevBalance !== null && unitsData.balance !== prevBalance) {
-      // Only animate if difference is significant and not already animating
-      if (!isAnimating && Math.abs(unitsData.balance - prevBalance) >= 5) {
-        animateBalance(prevBalance, unitsData.balance, 1500);
-      }
-    }
     if (unitsData?.balance !== undefined) {
-      setPrevBalance(unitsData.balance);
+      // First time setting prevBalance - don't animate, just sync
+      if (prevBalance === null) {
+        setPrevBalance(unitsData.balance);
+        setDisplayedBalance(unitsData.balance);
+        return;
+      }
+      
+      // Only animate if:
+      // 1. Balance actually changed
+      // 2. Change is significant (>=5 M1U) but not massive (initial load detection)
+      // 3. Not already animating
+      const diff = Math.abs(unitsData.balance - prevBalance);
+      if (unitsData.balance !== prevBalance) {
+        // If diff is > 1000, it's likely initial load mismatch - don't animate
+        if (!isAnimating && diff >= 5 && diff < 1000) {
+          animateBalance(prevBalance, unitsData.balance, 1500);
+        } else {
+          // Just sync without animation
+          setDisplayedBalance(unitsData.balance);
+        }
+        setPrevBalance(unitsData.balance);
+      }
     }
   }, [unitsData?.balance, prevBalance, isAnimating]);
   

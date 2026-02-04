@@ -79,9 +79,29 @@ export const useAuth = () => {
     // IMPORTANT: Preserve all user-specific keys that shouldn't reset on logout
     const keysToPreserve: string[] = [];
     const prefixesToPreserve = [
+      // Core app state
       'm1_quiz_last_skip',
       'm1ssion_legal_consent',
-      'm1ssion_welcome_bonus_shown', // 🔑 Prevent re-granting welcome bonus!
+      
+      // 🔑 CRITICAL: Prevent re-granting bonuses!
+      'm1ssion_welcome_bonus_shown',  // Welcome bonus (500 M1U)
+      'm1ssion_hasSeenPrizeIntro',    // Prize intro overlay
+      'm1ssion_lastPrizeIntroMissionId',
+      'm1ssion_prizeIntroSeenAt',
+      
+      // 🎰 Prevent false slot machine animation
+      'm1ssion_m1u_cache',
+      
+      // Other onboarding states
+      'm1ssion_onboarding',
+      'm1ssion_first_session',
+      
+      // Micro-missions (client-side tracking, server-side is protected)
+      'm1_micro_missions',
+      
+      // Streak (prevent re-claiming daily bonus)
+      'm1ssion_streak',
+      'm1_streak',
     ];
     
     // Collect all keys to preserve (including user-specific ones like m1ssion_welcome_bonus_shown:uuid)
