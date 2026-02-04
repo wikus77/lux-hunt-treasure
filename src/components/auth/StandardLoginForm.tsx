@@ -65,10 +65,10 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         description: 'Benvenuto in M1SSION™!'
       });
 
-      // 🔐 FACE ID: Save credentials for future Face ID login (iOS native only)
+      // 🔐 FACE ID: Save BOTH tokens for future Face ID login (iOS native only)
       // This is NON-INVASIVE: only saves if on iOS native, no-op otherwise
-      if (result.session?.access_token) {
-        saveFaceIDCredentials(result.session.access_token);
+      if (result.session?.access_token && result.session?.refresh_token) {
+        saveFaceIDCredentials(result.session.access_token, result.session.refresh_token);
       }
       
       // Emit custom auth success event for PWA compatibility

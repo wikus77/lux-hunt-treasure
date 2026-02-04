@@ -9,11 +9,19 @@
  * - Credentials stored in iOS Keychain (encrypted, hardware-backed)
  * - No credentials exposed to JavaScript
  * - Biometric data never leaves device
+ *
+ * UPDATED: Now stores both access_token AND refresh_token for proper session restore
  */
 
 import Foundation
 import LocalAuthentication
 import Security
+
+// Session tokens structure
+struct AuthTokens: Codable {
+    let accessToken: String
+    let refreshToken: String
+}
 
 class FaceIDManager {
     
@@ -21,8 +29,7 @@ class FaceIDManager {
     
     // Keychain service identifier
     private let keychainService = "eu.m1ssion.app.credentials"
-    private let keychainAccountEmail = "m1ssion_user_email"
-    private let keychainAccountToken = "m1ssion_auth_token"
+    private let keychainAccountTokens = "m1ssion_auth_tokens"
     
     private init() {}
     
@@ -56,26 +63,26 @@ class FaceIDManager {
     
     /// Check if we have stored credentials for Face ID login
     func hasStoredCredentials() -> Bool {
-        return getStoredToken() != nil
+        return getStoredTokens() != nil
     }
     
     // MARK: - Biometric Authentication
     
     /// Authenticate with Face ID / Touch ID
-    /// - Parameter completion: Returns (success, token, error message)
-    func authenticateWithBiometric(reason: String = "Accedi a M1SSION", completion: @escaping (Bool, String?, String?) -> Void) {
+    /// - Parameter completion: Returns (success, accessToken, refreshToken, error message)
+    func authenticateWithBiometric(reason: String = "Accedi a M1SSION", completion: @escaping (Bool, String?, String?, String?) -> Void) {
         let context = LAContext()
         var error: NSError?
         
         // Check if biometric is available
         guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
-            completion(false, nil, "Biometric non disponibile: \(error?.localizedDescription ?? "errore sconosciuto")")
+            completion(false, nil, nil, "Biometric non disponibile: \(error?.localizedDescription ?? "errore sconosciuto")")
             return
         }
         
         // Check if we have stored credentials
-        guard let storedToken = getStoredToken() else {
-            completion(false, nil, "no_credentials")
+        guard let tokens = getStoredTokens() else {
+            completion(false, nil, nil, "no_credentials")
             return
         }
         
@@ -84,7 +91,7 @@ class FaceIDManager {
             DispatchQueue.main.async {
                 if success {
                     print("✅ FaceIDManager: Biometric authentication successful")
-                    completion(true, storedToken, nil)
+                    completion(true, tokens.accessToken, tokens.refreshToken, nil)
                 } else {
                     let errorMessage: String
                     if let laError = authError as? LAError {
@@ -106,7 +113,7 @@ class FaceIDManager {
                         errorMessage = "unknown_error"
                     }
                     print("❌ FaceIDManager: Authentication failed - \(errorMessage)")
-                    completion(false, nil, errorMessage)
+                    completion(false, nil, nil, errorMessage)
                 }
             }
         }
@@ -114,14 +121,17 @@ class FaceIDManager {
     
     // MARK: - Keychain Operations (Secure Storage)
     
-    /// Save auth token to Keychain (called after successful login)
-    func saveCredentials(token: String) -> Bool {
-        // Delete any existing token first
+    /// Save both auth tokens to Keychain (called after successful login)
+    func saveCredentials(accessToken: String, refreshToken: String) -> Bool {
+        // Delete any existing tokens first
         deleteCredentials()
         
-        // Prepare token data
-        guard let tokenData = token.data(using: .utf8) else {
-            print("❌ FaceIDManager: Failed to encode token")
+        // Create tokens structure
+        let tokens = AuthTokens(accessToken: accessToken, refreshToken: refreshToken)
+        
+        // Encode to JSON
+        guard let tokenData = try? JSONEncoder().encode(tokens) else {
+            print("❌ FaceIDManager: Failed to encode tokens")
             return false
         }
         
@@ -129,7 +139,7 @@ class FaceIDManager {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: keychainAccountToken,
+            kSecAttrAccount as String: keychainAccountTokens,
             kSecValueData as String: tokenData,
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
         ]
@@ -137,20 +147,20 @@ class FaceIDManager {
         let status = SecItemAdd(query as CFDictionary, nil)
         
         if status == errSecSuccess {
-            print("✅ FaceIDManager: Credentials saved to Keychain")
+            print("✅ FaceIDManager: Both tokens saved to Keychain")
             return true
         } else {
-            print("❌ FaceIDManager: Failed to save credentials - status: \(status)")
+            print("❌ FaceIDManager: Failed to save tokens - status: \(status)")
             return false
         }
     }
     
-    /// Retrieve auth token from Keychain
-    private func getStoredToken() -> String? {
+    /// Retrieve auth tokens from Keychain
+    private func getStoredTokens() -> AuthTokens? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: keychainAccountToken,
+            kSecAttrAccount as String: keychainAccountTokens,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
@@ -158,8 +168,14 @@ class FaceIDManager {
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         
-        if status == errSecSuccess, let data = result as? Data, let token = String(data: data, encoding: .utf8) {
-            return token
+        if status == errSecSuccess, let data = result as? Data {
+            do {
+                let tokens = try JSONDecoder().decode(AuthTokens.self, from: data)
+                return tokens
+            } catch {
+                print("❌ FaceIDManager: Failed to decode tokens - \(error)")
+                return nil
+            }
         }
         
         return nil
@@ -170,7 +186,7 @@ class FaceIDManager {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: keychainAccountToken
+            kSecAttrAccount as String: keychainAccountTokens
         ]
         
         let status = SecItemDelete(query as CFDictionary)

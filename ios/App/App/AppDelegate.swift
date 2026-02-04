@@ -157,7 +157,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Inject JS bridge for Face ID
         let faceIDJS = """
         (function() {
-            // M1SSION™ Face ID Bridge
+            // M1SSION™ Face ID Bridge v2 - Dual Token Support
             window.M1SSIONFaceID = {
                 // Check if Face ID is available
                 checkAvailability: function() {
@@ -165,12 +165,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                         window.webkit.messageHandlers.m1ssionFaceID.postMessage({
                             action: 'checkAvailability'
                         });
-                        // Store resolve function for callback
                         window._m1ssionFaceIDResolve = resolve;
                     });
                 },
                 
-                // Trigger Face ID authentication
+                // Trigger Face ID authentication - returns { accessToken, refreshToken }
                 authenticate: function() {
                     return new Promise(function(resolve) {
                         window.webkit.messageHandlers.m1ssionFaceID.postMessage({
@@ -180,8 +179,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     });
                 },
                 
-                // Save token after successful login (for future Face ID logins)
+                // NEW: Save BOTH tokens after successful login
+                saveTokens: function(accessToken, refreshToken) {
+                    window.webkit.messageHandlers.m1ssionFaceID.postMessage({
+                        action: 'saveTokens',
+                        accessToken: accessToken,
+                        refreshToken: refreshToken
+                    });
+                },
+                
+                // LEGACY: Keep for backwards compatibility
                 saveToken: function(token) {
+                    console.warn('⚠️ M1SSIONFaceID.saveToken is deprecated, use saveTokens(accessToken, refreshToken)');
                     window.webkit.messageHandlers.m1ssionFaceID.postMessage({
                         action: 'saveToken',
                         token: token
@@ -196,7 +205,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
             };
             
-            console.log('✅ M1SSION™ Face ID Bridge initialized');
+            console.log('✅ M1SSION™ Face ID Bridge v2 initialized (dual token support)');
         })();
         """
         
@@ -414,9 +423,18 @@ class FaceIDMessageHandler: NSObject, WKScriptMessageHandler {
         case "authenticate":
             handleAuthenticate(webView: webView)
             
+        case "saveTokens":
+            // NEW: Save both access_token and refresh_token
+            if let accessToken = body["accessToken"] as? String,
+               let refreshToken = body["refreshToken"] as? String {
+                handleSaveTokens(accessToken: accessToken, refreshToken: refreshToken)
+            }
+            
         case "saveToken":
+            // LEGACY: Keep for backwards compatibility (will not work properly)
             if let token = body["token"] as? String {
-                handleSaveToken(token: token)
+                print("⚠️ FaceIDMessageHandler: Using legacy saveToken - should use saveTokens")
+                _ = FaceIDManager.shared.saveCredentials(accessToken: token, refreshToken: token)
             }
             
         case "clearCredentials":
@@ -440,11 +458,13 @@ class FaceIDMessageHandler: NSObject, WKScriptMessageHandler {
     }
     
     private func handleAuthenticate(webView: WKWebView?) {
-        FaceIDManager.shared.authenticateWithBiometric { success, token, error in
+        // UPDATED: Now returns both access_token and refresh_token
+        FaceIDManager.shared.authenticateWithBiometric { success, accessToken, refreshToken, error in
             let result: String
-            if success, let token = token {
+            if success, let accessToken = accessToken, let refreshToken = refreshToken {
+                // Return both tokens for proper session restoration
                 result = """
-                { "success": true, "token": "\(token)" }
+                { "success": true, "accessToken": "\(accessToken)", "refreshToken": "\(refreshToken)" }
                 """
             } else {
                 let errorStr = error ?? "unknown"
@@ -461,9 +481,9 @@ class FaceIDMessageHandler: NSObject, WKScriptMessageHandler {
         }
     }
     
-    private func handleSaveToken(token: String) {
-        let success = FaceIDManager.shared.saveCredentials(token: token)
-        print("✅ FaceIDMessageHandler: Token save - \(success ? "success" : "failed")")
+    private func handleSaveTokens(accessToken: String, refreshToken: String) {
+        let success = FaceIDManager.shared.saveCredentials(accessToken: accessToken, refreshToken: refreshToken)
+        print("✅ FaceIDMessageHandler: Tokens save - \(success ? "success" : "failed")")
     }
     
     private func handleClearCredentials() {

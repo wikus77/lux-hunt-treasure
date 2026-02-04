@@ -1,11 +1,13 @@
 /**
- * M1SSION™ Face ID Login Hook
+ * M1SSION™ Face ID Login Hook v2
  * © 2026 Joseph MULÉ – NIYVORA KFT – ALL RIGHTS RESERVED
  * 
  * PURPOSE:
  * - Triggers Face ID when login screen is visible
- * - Handles auto-login on Face ID success
+ * - Handles auto-login on Face ID success using BOTH tokens
  * - Saves credentials after successful manual login
+ * 
+ * UPDATED: Now saves and restores both access_token AND refresh_token
  * 
  * CONSTRAINTS:
  * - NO UI modifications
@@ -20,7 +22,7 @@ import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// Type for Face ID bridge
+// Type for Face ID bridge v2
 declare global {
   interface Window {
     M1SSIONFaceID?: {
@@ -29,11 +31,16 @@ declare global {
         biometryType: string;
         hasStoredCredentials: boolean;
       }>;
+      // UPDATED: Now returns both tokens
       authenticate: () => Promise<{
         success: boolean;
-        token?: string;
+        accessToken?: string;
+        refreshToken?: string;
         error?: string;
       }>;
+      // NEW: Save both tokens
+      saveTokens: (accessToken: string, refreshToken: string) => void;
+      // LEGACY: Keep for backwards compatibility
       saveToken: (token: string) => void;
       clearCredentials: () => void;
     };
@@ -102,17 +109,18 @@ export function useFaceIDLogin(
         // Trigger Face ID authentication
         const result = await window.M1SSIONFaceID.authenticate();
         
-        if (result.success && result.token) {
-          console.log('✅ [useFaceIDLogin] Face ID SUCCESS');
+        if (result.success && result.accessToken && result.refreshToken) {
+          console.log('✅ [useFaceIDLogin] Face ID SUCCESS - Restoring session...');
           
-          // Auto-login with stored token using Supabase
-          // The token is stored as a refresh token, use it to get a new session
+          // Restore session using BOTH tokens
           const { data, error } = await supabase.auth.setSession({
-            access_token: result.token,
-            refresh_token: result.token
+            access_token: result.accessToken,
+            refresh_token: result.refreshToken
           });
           
           if (data.session && !error) {
+            console.log('✅ [useFaceIDLogin] Session restored successfully');
+            
             toast.success('Login effettuato', {
               description: 'Accesso tramite Face ID'
             });
@@ -126,10 +134,43 @@ export function useFaceIDLogin(
             navigate('/map-3d-tiler');
             onSuccess?.();
           } else {
-            console.warn('⚠️ [useFaceIDLogin] Token login failed, fallback to manual', error);
-            // Clear invalid credentials
-            window.M1SSIONFaceID?.clearCredentials();
-            onFallback?.();
+            console.warn('⚠️ [useFaceIDLogin] Session restore failed:', error?.message);
+            
+            // Try refreshing with the refresh token
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+              refresh_token: result.refreshToken
+            });
+            
+            if (refreshData.session && !refreshError) {
+              console.log('✅ [useFaceIDLogin] Session refreshed successfully');
+              
+              // Update stored tokens with new ones
+              if (window.M1SSIONFaceID && refreshData.session.access_token && refreshData.session.refresh_token) {
+                window.M1SSIONFaceID.saveTokens(
+                  refreshData.session.access_token,
+                  refreshData.session.refresh_token
+                );
+              }
+              
+              toast.success('Login effettuato', {
+                description: 'Accesso tramite Face ID'
+              });
+              
+              window.dispatchEvent(new CustomEvent('auth-success', { 
+                detail: { timestamp: Date.now(), method: 'faceid' } 
+              }));
+              
+              navigate('/map-3d-tiler');
+              onSuccess?.();
+            } else {
+              console.error('❌ [useFaceIDLogin] Refresh also failed:', refreshError?.message);
+              // Clear invalid credentials
+              window.M1SSIONFaceID?.clearCredentials();
+              toast.error('Sessione scaduta', {
+                description: 'Effettua il login manualmente'
+              });
+              onFallback?.();
+            }
           }
         } else {
           console.log('🔐 [useFaceIDLogin] Face ID cancelled/failed:', result.error);
@@ -161,21 +202,26 @@ export function useFaceIDLogin(
 }
 
 /**
- * Save credentials to Keychain after successful login
+ * Save BOTH tokens to Keychain after successful login
  * Call this AFTER successful email/password login
  * 
- * @param token - The auth token to save
+ * @param accessToken - The access token
+ * @param refreshToken - The refresh token
  */
-export function saveFaceIDCredentials(token: string): void {
+export function saveFaceIDCredentials(accessToken: string, refreshToken: string): void {
   // Only on iOS native
   if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'ios') {
     return;
   }
 
   try {
-    if (window.M1SSIONFaceID) {
-      window.M1SSIONFaceID.saveToken(token);
-      console.log('✅ [saveFaceIDCredentials] Token saved for Face ID');
+    if (window.M1SSIONFaceID?.saveTokens) {
+      window.M1SSIONFaceID.saveTokens(accessToken, refreshToken);
+      console.log('✅ [saveFaceIDCredentials] Both tokens saved for Face ID');
+    } else if (window.M1SSIONFaceID?.saveToken) {
+      // Fallback to legacy (won't work properly but won't crash)
+      console.warn('⚠️ [saveFaceIDCredentials] Using legacy saveToken - session restore may fail');
+      window.M1SSIONFaceID.saveToken(accessToken);
     }
   } catch (err) {
     console.warn('⚠️ [saveFaceIDCredentials] Failed to save:', err);
