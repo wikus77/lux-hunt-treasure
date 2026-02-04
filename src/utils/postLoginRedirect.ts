@@ -274,8 +274,10 @@ export const handleLogoutRedirect = preserveFunctionName(async (navigate: Naviga
     localStorage.removeItem('developer_user');
     localStorage.removeItem('paymentRedirected');
     
-    // Supabase logout
-    await supabase.auth.signOut();
+    // 🔐 FIX: Use scope: 'local' to preserve Face ID tokens
+    // signOut() without scope REVOKES the refresh_token server-side
+    console.log('🔐 [handleLogoutRedirect] signOut({ scope: "local" }) - preserving Face ID tokens');
+    await supabase.auth.signOut({ scope: 'local' });
     
     // Navigate to login
     navigate('/login', { replace: true });

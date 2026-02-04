@@ -540,8 +540,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // 🔄 FORCE LOADING STATE per evitare race conditions
       setIsLoading(true);
       
-      // Supabase signOut - NO localStorage cleanup manuale
-      await supabase.auth.signOut();
+      // 🔐 FIX: Use scope: 'local' to preserve Face ID tokens!
+      // signOut() without scope REVOKES the refresh_token server-side,
+      // which breaks Face ID auto-login after logout.
+      // With scope: 'local', only the JS session is cleared, but the
+      // Keychain tokens remain valid for Face ID restore.
+      console.log('🔐 [AuthProvider] signOut({ scope: "local" }) - preserving Face ID tokens');
+      await supabase.auth.signOut({ scope: 'local' });
       
       // Cleanup stato locale IMMEDIATO + sessionStorage
       setUser(null);

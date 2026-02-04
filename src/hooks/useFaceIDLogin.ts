@@ -130,7 +130,12 @@ export function useFaceIDLogin(
     window._m1ssionFaceIDLastAttempt = Date.now();
     window._m1ssionFaceIDProcessing = true;
     
-    console.log(`🔐 [FaceID] Triggered from: ${source}`);
+    // 🔬 FORENSIC: Correlation ID for this attempt
+    const attemptId = `${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+    console.log('🔐 ════════════════════════════════════════════════════════════');
+    console.log(`🔐 [FaceID] ATTEMPT START: ${attemptId}`);
+    console.log(`🔐 [FaceID] Source: ${source}`);
+    console.log('🔐 ════════════════════════════════════════════════════════════');
 
     try {
       // Wait for bridge
@@ -275,25 +280,30 @@ export function useFaceIDLogin(
         // Save fresh tokens for next time
         if (newSession.access_token && newSession.refresh_token) {
           window.M1SSIONFaceID?.saveTokens(newSession.access_token, newSession.refresh_token);
-          console.log('🔐 [FaceID] Fresh tokens saved to Keychain');
+          console.log(`🔐 [FaceID][${attemptId}] Fresh tokens saved to Keychain`);
         }
         
         // 🔥 CRITICAL: Emit session-restored event for AuthProvider to re-hydrate
-        console.log('🔐 [FaceID] Emitting m1ssion:session-restored event');
+        console.log(`🔐 [FaceID][${attemptId}] Emitting m1ssion:session-restored event`);
         window.dispatchEvent(new CustomEvent('m1ssion:session-restored', { 
           detail: { 
             timestamp: Date.now(), 
             method: 'faceid',
-            userId: newSession.user?.id 
+            userId: newSession.user?.id,
+            attemptId
           }
         }));
         
         // Also emit auth-success for other listeners
         window.dispatchEvent(new CustomEvent('auth-success', { 
-          detail: { timestamp: Date.now(), method: 'faceid' }
+          detail: { timestamp: Date.now(), method: 'faceid', attemptId }
         }));
         
         toast.success('Login effettuato', { description: 'Accesso tramite Face ID' });
+        
+        console.log('🔐 ════════════════════════════════════════════════════════════');
+        console.log(`🔐 [FaceID] ATTEMPT SUCCESS: ${attemptId}`);
+        console.log('🔐 ════════════════════════════════════════════════════════════');
         
         // Small delay then navigate
         await new Promise(resolve => setTimeout(resolve, 300));
@@ -304,14 +314,20 @@ export function useFaceIDLogin(
         }
       } else {
         // Session invalid - clear credentials
-        console.log('🔐 [FaceID] Session restore failed - tokens expired');
+        console.log(`🔐 [FaceID][${attemptId}] Session restore FAILED - tokens likely revoked/expired`);
+        console.log('🔐 ════════════════════════════════════════════════════════════');
+        console.log(`🔐 [FaceID] ATTEMPT FAILED: ${attemptId} (invalid session)`);
+        console.log('🔐 ════════════════════════════════════════════════════════════');
         window.M1SSIONFaceID?.clearCredentials();
         toast.error('Sessione scaduta', { description: 'Effettua il login manualmente' });
         onFallback?.();
       }
 
     } catch (err) {
-      console.error('🔐 [FaceID] Unexpected error:', err);
+      console.error(`🔐 [FaceID][${attemptId}] Unexpected error:`, err);
+      console.log('🔐 ════════════════════════════════════════════════════════════');
+      console.log(`🔐 [FaceID] ATTEMPT ERROR: ${attemptId}`);
+      console.log('🔐 ════════════════════════════════════════════════════════════');
       onFallback?.();
     } finally {
       window._m1ssionFaceIDProcessing = false;

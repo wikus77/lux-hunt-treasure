@@ -170,11 +170,11 @@ export const useAuthSessionManager = (): SessionManagerResult => {
     setSession(null);
     setUser(null);
     localStorage.removeItem(getAuthTokenKey());
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.log('Logout error (expected):', error);
-    }
+    // ⚠️ FIX: DO NOT call signOut() here!
+    // The calling code (use-auth.ts) already calls signOut({ scope: 'local' })
+    // A second signOut() without scope would REVOKE the refresh token server-side,
+    // breaking Face ID auto-login after logout.
+    console.log('✅ Session cleared locally (no server signOut - preserves Face ID tokens)');
   };
 
   // Enhanced session initialization with comprehensive diagnostics
