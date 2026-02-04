@@ -182,10 +182,42 @@ export const useAuth = () => {
       console.log("⚠️ Map store not found, skipping reset");
     }
     
-    // Sign out from Supabase
-    await supabase.auth.signOut();
+    // ═══════════════════════════════════════════════════════════════════
+    // 🔬 FORENSIC: Supabase signOut with DETAILED logging
+    // ═══════════════════════════════════════════════════════════════════
+    console.log('🔐 [Logout] ══════════════════════════════════════════');
+    console.log('🔐 [Logout] SUPABASE SIGNOUT START');
+    
+    // Log session BEFORE signOut
+    const beforeSession = await supabase.auth.getSession();
+    console.log('🔐 [Logout] Session BEFORE signOut:', {
+      hasSession: !!beforeSession.data.session,
+      userId: beforeSession.data.session?.user?.id || 'none',
+      refreshTokenLen: beforeSession.data.session?.refresh_token?.length || 0
+    });
+    
+    // ⚠️ CRITICAL: signOut() WITHOUT scope option REVOKES refresh_token server-side!
+    // This is why Face ID fails after logout - the Keychain token is invalidated.
+    // 
+    // Options:
+    // - signOut() = default = revokes current session token (BREAKS FACEID)
+    // - signOut({ scope: 'local' }) = local-only, keeps server token valid (FACEID WORKS)
+    // - signOut({ scope: 'global' }) = revokes ALL tokens
+    //
+    // 🔐 FIX: Use 'local' scope to preserve Keychain token validity for Face ID
+    console.log('🔐 [Logout] Calling signOut({ scope: "local" }) to preserve Face ID token...');
+    await supabase.auth.signOut({ scope: 'local' });
+    
+    // Log session AFTER signOut
+    const afterSession = await supabase.auth.getSession();
+    console.log('🔐 [Logout] Session AFTER signOut:', {
+      hasSession: !!afterSession.data.session,
+      userId: afterSession.data.session?.user?.id || 'none'
+    });
+    console.log('🔐 [Logout] ══════════════════════════════════════════');
+    
     await sessionManager.clearSession();
-    console.log('✅ LOGOUT COMPLETED');
+    console.log('✅ LOGOUT COMPLETED (local-only, Face ID token preserved)');
   };
 
   const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {

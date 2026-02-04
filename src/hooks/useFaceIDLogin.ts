@@ -176,47 +176,100 @@ export function useFaceIDLogin(
         return;
       }
 
-      // Restore session - prefer refreshSession (more robust)
-      console.log('🔐 [FaceID] Restoring session...');
+      // ═══════════════════════════════════════════════════════════════════
+      // 🔬 FORENSIC: Session Restore with DETAILED logging
+      // ═══════════════════════════════════════════════════════════════════
+      console.log('🔐 [FaceID] ══════════════════════════════════════════');
+      console.log('🔐 [FaceID] SESSION RESTORE START');
+      console.log('🔐 [FaceID] ══════════════════════════════════════════');
+      
+      // Log token info (length only, not actual token)
+      console.log('🔐 [FaceID] Tokens from Keychain:', {
+        accessToken: result.accessToken ? `present (${result.accessToken.length} chars)` : 'MISSING',
+        refreshToken: result.refreshToken ? `present (${result.refreshToken.length} chars)` : 'MISSING'
+      });
+      
+      // Log current session state BEFORE restore attempt
+      const beforeSession = await supabase.auth.getSession();
+      console.log('🔐 [FaceID] Session BEFORE restore:', {
+        hasSession: !!beforeSession.data.session,
+        userId: beforeSession.data.session?.user?.id || 'none',
+        expiresAt: beforeSession.data.session?.expires_at || 'none'
+      });
+      
       let sessionRestored = false;
       let newSession: any = null;
 
       // Try refreshSession first (more robust against clock drift/expired tokens)
+      console.log('🔐 [FaceID] Attempting refreshSession...');
       try {
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
           refresh_token: result.refreshToken
         });
 
+        console.log('🔐 [FaceID] refreshSession result:', {
+          hasSession: !!refreshData.session,
+          userId: refreshData.session?.user?.id || 'none',
+          expiresAt: refreshData.session?.expires_at || 'none',
+          error: refreshError ? {
+            name: refreshError.name,
+            message: refreshError.message,
+            status: (refreshError as any).status || 'unknown'
+          } : null
+        });
+
         if (refreshData.session && !refreshError) {
           sessionRestored = true;
           newSession = refreshData.session;
-          console.log('🔐 [FaceID] Session restored via refreshSession');
+          console.log('✅ [FaceID] Session restored via refreshSession');
         } else if (refreshError) {
-          console.log('🔐 [FaceID] refreshSession error:', refreshError.message);
+          console.log('❌ [FaceID] refreshSession FAILED:', refreshError.message);
+          // 🔬 FORENSIC: This is likely "Invalid Refresh Token" if token was revoked
         }
-      } catch (e) {
-        console.log('🔐 [FaceID] refreshSession exception:', e);
+      } catch (e: any) {
+        console.log('💥 [FaceID] refreshSession EXCEPTION:', e?.message || e);
       }
 
       // Fallback: try setSession
       if (!sessionRestored) {
+        console.log('🔐 [FaceID] Fallback: Attempting setSession...');
         try {
           const { data, error } = await supabase.auth.setSession({
             access_token: result.accessToken,
             refresh_token: result.refreshToken
           });
 
+          console.log('🔐 [FaceID] setSession result:', {
+            hasSession: !!data.session,
+            userId: data.session?.user?.id || 'none',
+            error: error ? {
+              name: error.name,
+              message: error.message,
+              status: (error as any).status || 'unknown'
+            } : null
+          });
+
           if (data.session && !error) {
             sessionRestored = true;
             newSession = data.session;
-            console.log('🔐 [FaceID] Session restored via setSession');
+            console.log('✅ [FaceID] Session restored via setSession');
           } else if (error) {
-            console.log('🔐 [FaceID] setSession error:', error.message);
+            console.log('❌ [FaceID] setSession FAILED:', error.message);
           }
-        } catch (e) {
-          console.log('🔐 [FaceID] setSession exception:', e);
+        } catch (e: any) {
+          console.log('💥 [FaceID] setSession EXCEPTION:', e?.message || e);
         }
       }
+      
+      // Log session state AFTER restore attempt
+      const afterSession = await supabase.auth.getSession();
+      console.log('🔐 [FaceID] Session AFTER restore:', {
+        hasSession: !!afterSession.data.session,
+        userId: afterSession.data.session?.user?.id || 'none',
+        expiresAt: afterSession.data.session?.expires_at || 'none',
+        restored: sessionRestored
+      });
+      console.log('🔐 [FaceID] ══════════════════════════════════════════');
 
       if (sessionRestored && newSession) {
         // Save fresh tokens for next time

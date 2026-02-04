@@ -175,6 +175,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
+        // 🔬 FORENSIC: Detailed auth event logging
+        const timestamp = new Date().toISOString();
+        console.log('🔐 [AuthProvider] ══════════════════════════════════════════');
+        console.log(`🔐 [AuthProvider] AUTH EVENT: ${event} @ ${timestamp}`);
+        console.log('🔐 [AuthProvider] Session:', {
+          hasSession: !!newSession,
+          userId: newSession?.user?.id || 'none',
+          email: newSession?.user?.email || 'none',
+          expiresAt: newSession?.expires_at || 'none'
+        });
+        console.log('🔐 [AuthProvider] ══════════════════════════════════════════');
+        
         log(`Auth event: ${event}`, newSession?.user?.email || 'NO USER');
         
         // CRITICAL FIX: Use functional updates to prevent setState during render
