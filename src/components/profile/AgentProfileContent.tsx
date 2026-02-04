@@ -31,7 +31,8 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
       await logout();
       toast({ title: "✅ Logout", description: "Disconnesso." });
       onClose();
-      navigate('/auth');
+      // 🔐 FIX: Use /login (correct route) instead of /auth (404)
+      navigate('/login');
     } catch {
       toast({ title: "❌ Errore", variant: "destructive" });
     }

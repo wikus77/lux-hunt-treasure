@@ -158,7 +158,8 @@ const SettingsPage: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/auth');
+      // 🔐 FIX: Use /login (correct route) instead of /auth (404)
+      navigate('/login');
     } catch (error) {
       toast({
         title: 'Errore',

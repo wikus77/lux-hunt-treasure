@@ -265,7 +265,8 @@ const ProfileBottomSheet: React.FC<ProfileBottomSheetProps> = ({
         description: "Sei stato disconnesso con successo.",
       });
       onClose();
-      navigate('/auth');
+      // 🔐 FIX: Use /login (correct route) instead of /auth (404)
+      navigate('/login');
     } catch (error) {
       toast({
         title: "❌ Errore logout",
