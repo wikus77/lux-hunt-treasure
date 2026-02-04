@@ -75,17 +75,28 @@ export const useAuth = () => {
   const logout = async (): Promise<void> => {
     console.log('🚪 LOGOUT STARTING');
     
-    // 🧹 LOGOUT CACHE CLEANUP - Clear storage but preserve daily quiz skip key
-    const quizSkipKey = 'm1_quiz_last_skip';
-    const quizSkipValue = localStorage.getItem(quizSkipKey);
+    // 🧹 LOGOUT CACHE CLEANUP - Clear storage but preserve important keys
+    const keysToPreserve = [
+      'm1_quiz_last_skip',
+      'm1ssion_legal_consent',
+      'm1ssion_legal_consent_date'
+    ];
+    
+    const preserved: Record<string, string | null> = {};
+    keysToPreserve.forEach(key => {
+      preserved[key] = localStorage.getItem(key);
+    });
     
     localStorage.clear();
     sessionStorage.clear();
     
-    if (quizSkipValue) {
-      localStorage.setItem(quizSkipKey, quizSkipValue);
-      console.log('🛡️ Preserved daily quiz skip after logout');
-    }
+    // Restore preserved keys
+    keysToPreserve.forEach(key => {
+      if (preserved[key]) {
+        localStorage.setItem(key, preserved[key]!);
+      }
+    });
+    console.log('🛡️ Preserved keys after logout:', keysToPreserve.filter(k => preserved[k]));
     
     // Reset any existing state stores
     try {

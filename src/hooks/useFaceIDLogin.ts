@@ -1,11 +1,11 @@
 /**
- * M1SSION™ Face ID Login Hook v5
+ * M1SSION™ Face ID Login Hook v6
  * © 2026 Joseph MULÉ – NIYVORA KFT – ALL RIGHTS RESERVED
  * 
- * v5: Time-based cooldown instead of ref tracking
- * - No more race conditions
- * - No more ref persistence issues
- * - Simple: if enough time passed, trigger again
+ * v6: Interval-based trigger + timestamp cooldown
+ * - Polls every 500ms when login visible
+ * - Triggers if cooldown passed (5 seconds)
+ * - Works even if React doesn't re-run effect
  */
 
 import { useEffect, useRef } from 'react';
@@ -32,8 +32,8 @@ declare global {
       saveToken: (token: string) => void;
       clearCredentials: () => void;
     };
-    // Global timestamp to persist across component mounts
     _m1ssionFaceIDLastAttempt?: number;
+    _m1ssionFaceIDLastSuccess?: number;
   }
 }
 
@@ -42,8 +42,8 @@ interface UseFaceIDLoginOptions {
   onFallback?: () => void;
 }
 
-// Cooldown: minimum time between Face ID attempts (ms)
-const FACEID_COOLDOWN_MS = 3000;
+const COOLDOWN_MS = 5000; // 5 seconds between attempts
+const POLL_INTERVAL_MS = 500; // Check every 500ms
 
 async function waitForBridge(maxAttempts = 10, intervalMs = 100): Promise<boolean> {
   for (let i = 0; i < maxAttempts; i++) {
@@ -56,10 +56,11 @@ async function waitForBridge(maxAttempts = 10, intervalMs = 100): Promise<boolea
 function forceNavigate(path: string, navigate: (path: string) => void): void {
   navigate(path);
   setTimeout(() => {
-    if (window.location.pathname === '/login' || window.location.pathname === '/') {
+    const currentPath = window.location.pathname;
+    if (currentPath === '/login' || currentPath === '/' || currentPath === '') {
       window.location.href = path;
     }
-  }, 500);
+  }, 600);
 }
 
 export function useFaceIDLogin(
@@ -69,55 +70,61 @@ export function useFaceIDLogin(
   const { onSuccess, onFallback } = options;
   const { navigate } = useWouterNavigation();
   const isProcessingRef = useRef(false);
+  const hasTriggeredThisSessionRef = useRef(false);
 
   const isNativeiOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
 
   useEffect(() => {
-    // Guard: only on iOS native when login is visible
+    // Reset session flag when login becomes visible
+    if (isLoginVisible) {
+      const now = Date.now();
+      const lastSuccess = window._m1ssionFaceIDLastSuccess || 0;
+      // If last success was more than 10 seconds ago, allow new trigger
+      if (now - lastSuccess > 10000) {
+        hasTriggeredThisSessionRef.current = false;
+      }
+    }
+  }, [isLoginVisible]);
+
+  useEffect(() => {
     if (!isNativeiOS || !isLoginVisible) {
       return;
     }
 
-    // Guard: already processing
-    if (isProcessingRef.current) {
-      console.log('🔐 [FaceID] Skip - already processing');
-      return;
-    }
+    const attemptFaceID = async () => {
+      // Guards
+      if (!isLoginVisible) return;
+      if (isProcessingRef.current) return;
+      if (hasTriggeredThisSessionRef.current) return;
 
-    // Guard: cooldown check (uses global window property to persist across mounts)
-    const now = Date.now();
-    const lastAttempt = window._m1ssionFaceIDLastAttempt || 0;
-    const timeSinceLastAttempt = now - lastAttempt;
-    
-    if (timeSinceLastAttempt < FACEID_COOLDOWN_MS) {
-      console.log(`🔐 [FaceID] Skip - cooldown (${timeSinceLastAttempt}ms < ${FACEID_COOLDOWN_MS}ms)`);
-      return;
-    }
+      const now = Date.now();
+      const lastAttempt = window._m1ssionFaceIDLastAttempt || 0;
+      
+      if (now - lastAttempt < COOLDOWN_MS) {
+        return; // Still in cooldown
+      }
 
-    // Mark attempt time BEFORE async operations
-    window._m1ssionFaceIDLastAttempt = now;
-
-    const triggerFaceID = async () => {
-      const bridgeReady = await waitForBridge();
-      if (!bridgeReady) {
-        console.log('⚠️ [FaceID] Bridge not available');
-        return;
+      // Check bridge
+      if (!window.M1SSIONFaceID) {
+        await waitForBridge();
+        if (!window.M1SSIONFaceID) return;
       }
 
       try {
-        const availability = await window.M1SSIONFaceID!.checkAvailability();
-        console.log('🔐 [FaceID] Availability:', JSON.stringify(availability));
-
+        const availability = await window.M1SSIONFaceID.checkAvailability();
+        
         if (!availability.available || !availability.hasStoredCredentials) {
-          console.log('🔐 [FaceID] Not available or no credentials');
           return;
         }
 
+        // Mark attempt
+        window._m1ssionFaceIDLastAttempt = now;
+        hasTriggeredThisSessionRef.current = true;
         isProcessingRef.current = true;
+
         console.log('🔐 [FaceID] Triggering...');
         
-        const result = await window.M1SSIONFaceID!.authenticate();
-        console.log('🔐 [FaceID] Result:', result.success ? 'SUCCESS' : result.error);
+        const result = await window.M1SSIONFaceID.authenticate();
 
         if (result.success && result.accessToken && result.refreshToken) {
           let sessionRestored = false;
@@ -130,14 +137,13 @@ export function useFaceIDLogin(
             });
             
             if (data.session && !error) {
-              console.log('✅ [FaceID] setSession OK');
               sessionRestored = true;
               if (data.session.access_token && data.session.refresh_token) {
                 window.M1SSIONFaceID?.saveTokens(data.session.access_token, data.session.refresh_token);
               }
             }
           } catch (e) {
-            console.warn('⚠️ [FaceID] setSession error');
+            // Try refresh as fallback
           }
 
           // Fallback: refreshSession
@@ -148,46 +154,56 @@ export function useFaceIDLogin(
               });
               
               if (refreshData.session && !refreshError) {
-                console.log('✅ [FaceID] refreshSession OK');
                 sessionRestored = true;
                 if (refreshData.session.access_token && refreshData.session.refresh_token) {
                   window.M1SSIONFaceID?.saveTokens(refreshData.session.access_token, refreshData.session.refresh_token);
                 }
               }
             } catch (e) {
-              console.warn('⚠️ [FaceID] refreshSession error');
+              // Failed
             }
           }
 
           if (sessionRestored) {
+            window._m1ssionFaceIDLastSuccess = Date.now();
             toast.success('Login effettuato', { description: 'Accesso tramite Face ID' });
             window.dispatchEvent(new CustomEvent('auth-success', { detail: { timestamp: Date.now(), method: 'faceid' } }));
-            await new Promise(resolve => setTimeout(resolve, 150));
+            await new Promise(resolve => setTimeout(resolve, 200));
             forceNavigate('/map-3d-tiler', navigate);
             onSuccess?.();
           } else {
-            console.error('❌ [FaceID] Session restore failed');
             window.M1SSIONFaceID?.clearCredentials();
             toast.error('Sessione scaduta', { description: 'Effettua il login manualmente' });
+            hasTriggeredThisSessionRef.current = false; // Allow retry
             onFallback?.();
           }
         } else {
-          console.log('🔐 [FaceID] Cancelled/failed:', result.error);
+          // Cancelled or failed - allow retry after cooldown
+          hasTriggeredThisSessionRef.current = false;
           onFallback?.();
         }
       } catch (err) {
         console.error('❌ [FaceID] Error:', err);
+        hasTriggeredThisSessionRef.current = false;
         onFallback?.();
       } finally {
         isProcessingRef.current = false;
       }
     };
 
-    // Small delay for component stability
-    const timeoutId = setTimeout(triggerFaceID, 200);
-    
+    // Initial attempt after small delay
+    const initialTimeout = setTimeout(attemptFaceID, 300);
+
+    // Poll periodically in case React doesn't re-run effect
+    const pollInterval = setInterval(() => {
+      if (isLoginVisible && !isProcessingRef.current && !hasTriggeredThisSessionRef.current) {
+        attemptFaceID();
+      }
+    }, POLL_INTERVAL_MS);
+
     return () => {
-      clearTimeout(timeoutId);
+      clearTimeout(initialTimeout);
+      clearInterval(pollInterval);
     };
   }, [isLoginVisible, isNativeiOS, navigate, onSuccess, onFallback]);
 
@@ -212,11 +228,11 @@ export function clearFaceIDCredentials(): void {
   
   try {
     window.M1SSIONFaceID?.clearCredentials();
-    // Also reset cooldown so Face ID can trigger on next login
     window._m1ssionFaceIDLastAttempt = 0;
+    window._m1ssionFaceIDLastSuccess = 0;
     console.log('✅ [FaceID] Credentials cleared');
   } catch (e) {
-    console.warn('⚠️ [FaceID] Clear failed');
+    // Ignore
   }
 }
 
