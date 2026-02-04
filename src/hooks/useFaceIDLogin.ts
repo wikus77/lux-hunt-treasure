@@ -68,17 +68,41 @@ function forceNavigate(path: string, navigate: (path: string) => void): void {
 }
 
 /**
+ * 🔐 Reset Face ID runtime guards (call on logout!)
+ * This ensures Face ID can trigger immediately after logout → login
+ */
+export function resetFaceIDRuntimeGuards(): void {
+  console.log('🔐 [FaceID] Resetting runtime guards (logout cleanup)');
+  window._m1ssionFaceIDLastAttempt = 0;
+  window._m1ssionFaceIDProcessing = false;
+  console.log('✅ [FaceID] Runtime guards reset: lastAttempt=0, processing=false');
+}
+
+/**
  * Check if Face ID attempt is allowed (cooldown + not processing)
+ * Enhanced with verbose logging for forensic debugging
  */
 function canAttemptFaceID(): boolean {
-  if (window._m1ssionFaceIDProcessing) {
-    console.log('🔐 [FaceID] Skip - already processing');
-    return false;
-  }
-  
   const now = Date.now();
   const lastAttempt = window._m1ssionFaceIDLastAttempt || 0;
   const timeSinceLastAttempt = now - lastAttempt;
+  const isProcessing = window._m1ssionFaceIDProcessing || false;
+  const willPass = !isProcessing && timeSinceLastAttempt >= FACEID_COOLDOWN_MS;
+  
+  // FACEID_FORENSIC_LOG: Verbose logging for debugging
+  console.log('🔐 [FaceID] canAttemptFaceID check:', {
+    lastAttempt,
+    now,
+    diff: timeSinceLastAttempt,
+    cooldown: FACEID_COOLDOWN_MS,
+    isProcessing,
+    willPass
+  });
+  
+  if (isProcessing) {
+    console.log('🔐 [FaceID] Skip - already processing');
+    return false;
+  }
   
   if (timeSinceLastAttempt < FACEID_COOLDOWN_MS) {
     console.log(`🔐 [FaceID] Skip - cooldown (${timeSinceLastAttempt}ms < ${FACEID_COOLDOWN_MS}ms)`);
@@ -271,6 +295,23 @@ export function useFaceIDLogin(
       window.removeEventListener('m1ssion:app-foreground', handleForeground as EventListener);
     };
   }, [isNativeiOS, isLoginVisible, triggerFaceID]);
+
+  // 🔐 FIX: Listen for explicit "login-visible" event (from Login.tsx after logout)
+  // This ensures Face ID triggers even when coming from logout without app background
+  useEffect(() => {
+    if (!isNativeiOS) return;
+    
+    const handleLoginVisible = (event: CustomEvent) => {
+      console.log('🔐 [FaceID] Login-visible event received (from logout flow)');
+      triggerFaceID('login-visible-event');
+    };
+    
+    window.addEventListener('m1ssion:login-visible', handleLoginVisible as EventListener);
+    
+    return () => {
+      window.removeEventListener('m1ssion:login-visible', handleLoginVisible as EventListener);
+    };
+  }, [isNativeiOS, triggerFaceID]);
 
   // Cleanup
   useEffect(() => {

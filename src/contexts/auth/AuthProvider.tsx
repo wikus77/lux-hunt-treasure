@@ -21,8 +21,8 @@ import { isAdminEmail } from '@/config/adminConfig';
 import { setPrizeIntroUserId } from '@/stores/prizeIntroStore';
 // 📊 M1SSION Analytics
 import { track, setAnalyticsUserId } from '@/lib/analytics';
-// 🔐 Face ID credentials clear on logout
-import { clearFaceIDCredentials } from '@/hooks/useFaceIDLogin';
+// 🔐 Face ID: Import both clear (for expired tokens) and reset (for logout guards)
+import { clearFaceIDCredentials, resetFaceIDRuntimeGuards } from '@/hooks/useFaceIDLogin';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -229,6 +229,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // }
         } else if (event === 'SIGNED_OUT') {
           log("Utente disconnesso");
+          
+          // 🔐 FIX: Reset Face ID runtime guards on SIGNED_OUT event
+          // This is a BACKUP - use-auth.ts also resets, but this catches edge cases
+          resetFaceIDRuntimeGuards();
+          log("Face ID runtime guards reset on SIGNED_OUT");
           
           // 📊 M1SSION Analytics - Track logout
           track('logout', {});

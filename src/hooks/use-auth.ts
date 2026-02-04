@@ -2,6 +2,7 @@
 import React from 'react';
 import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
+import { resetFaceIDRuntimeGuards } from './useFaceIDLogin';
 
 // Mask email for secure logging (show first 2 chars + domain)
 const maskEmail = (email: string): string => {
@@ -75,6 +76,16 @@ export const useAuth = () => {
   const logout = async (): Promise<void> => {
     console.log('🚪 LOGOUT STARTING');
     
+    // 🔐 FIX: Reset Face ID runtime guards BEFORE anything else
+    // This ensures Face ID can trigger immediately on next login (no cooldown block)
+    resetFaceIDRuntimeGuards();
+    console.log('✅ [Logout] Face ID runtime guards reset');
+    
+    // 🔐 FIX: Set logout reason BEFORE clearing sessionStorage
+    // Login.tsx will check this and skip 'opening' screen → go straight to 'login'
+    sessionStorage.setItem('m1ssion_login_reason', 'logout');
+    console.log('✅ [Logout] Login reason set: logout');
+    
     // 🧹 SELECTIVE LOGOUT - Clear ONLY auth-related keys, preserve everything else
     // This is more robust than localStorage.clear() + restore
     
@@ -143,7 +154,13 @@ export const useAuth = () => {
     console.log('🗑️ Removed auth keys:', keysToRemove.length);
     
     // Clear sessionStorage (it's session-specific anyway)
+    // BUT preserve the login_reason flag we just set!
+    const loginReason = sessionStorage.getItem('m1ssion_login_reason');
     sessionStorage.clear();
+    if (loginReason) {
+      sessionStorage.setItem('m1ssion_login_reason', loginReason);
+      console.log('✅ [Logout] Preserved login_reason in sessionStorage');
+    }
     
     // Restore any critical keys that might have been accidentally removed
     Object.entries(backup).forEach(([key, value]) => {

@@ -24,7 +24,19 @@ type LoginScreen = 'opening' | 'signup' | 'login';
 const VIDEO_SRC = '/assets/video/M1SSION_INTRO.mp4';
 
 const Login = () => {
-  const [currentScreen, setCurrentScreen] = useState<LoginScreen>('opening');
+  // 🔐 FIX: Check if coming from logout → skip 'opening', go straight to 'login'
+  const getInitialScreen = (): LoginScreen => {
+    const loginReason = sessionStorage.getItem('m1ssion_login_reason');
+    if (loginReason === 'logout') {
+      console.log('🔐 [Login] Detected login_reason=logout → forcing currentScreen=login');
+      // Clear the flag immediately (one-time use)
+      sessionStorage.removeItem('m1ssion_login_reason');
+      return 'login';
+    }
+    return 'opening';
+  };
+  
+  const [currentScreen, setCurrentScreen] = useState<LoginScreen>(getInitialScreen);
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   
   const { navigate } = useWouterNavigation();
@@ -35,10 +47,31 @@ const Login = () => {
   const searchParams = new URLSearchParams(window.location.search);
   const redirectAttemptedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hasDispatchedLoginVisibleRef = useRef(false);
 
   // 🔐 FACE ID: Trigger Face ID when login screen is visible (iOS native only)
   // This is NON-INVASIVE: no UI changes, no auth flow changes, only adds Face ID prompt
   useFaceIDLogin(currentScreen === 'login');
+
+  // 🔐 FIX: Dispatch event when login screen becomes visible (for Face ID hook)
+  // This ensures Face ID triggers even when coming from logout (no native foreground event)
+  useEffect(() => {
+    if (currentScreen === 'login' && !hasDispatchedLoginVisibleRef.current) {
+      console.log('🔐 [Login] Dispatching m1ssion:login-visible event');
+      hasDispatchedLoginVisibleRef.current = true;
+      // Small delay to ensure Face ID hook listener is mounted
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('m1ssion:login-visible', {
+          detail: { timestamp: Date.now(), source: 'login-screen-mount' }
+        }));
+      }, 100);
+    }
+    
+    // Reset flag when leaving login screen
+    if (currentScreen !== 'login') {
+      hasDispatchedLoginVisibleRef.current = false;
+    }
+  }, [currentScreen]);
 
   // 🔍 Debug log on mount + programmatic play for iOS
   useEffect(() => {
