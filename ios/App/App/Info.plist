@@ -22,6 +22,8 @@
 	<string>20260127051624</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>M1SSION uses Face ID for quick and secure login to your account.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>M1SSION needs your location to show nearby treasure on the map and verify your discoveries.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

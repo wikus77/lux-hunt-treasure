@@ -2,6 +2,7 @@ import UIKit
 import Capacitor
 import WebKit
 import UserNotifications
+import LocalAuthentication
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -9,6 +10,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     private var webViewConfigured = false
     private var userScriptAdded = false
+    private var faceIDHandlerAdded = false
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // © 2026 M1SSION™ — NIYVORA KFT — Joseph MULÉ
@@ -135,8 +137,77 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             userScriptAdded = true
         }
         
+        // 🔐 FACE ID: Add message handler for JS → Native communication
+        if !faceIDHandlerAdded {
+            setupFaceIDMessageHandler(webView: webView)
+            faceIDHandlerAdded = true
+        }
+        
         webViewConfigured = true
         return true
+    }
+    
+    // MARK: - 🔐 FACE ID MESSAGE HANDLER (JS → Native)
+    
+    /// Sets up message handler for Face ID requests from WebView
+    private func setupFaceIDMessageHandler(webView: WKWebView) {
+        // Add message handler for Face ID operations
+        webView.configuration.userContentController.add(FaceIDMessageHandler(), name: "m1ssionFaceID")
+        
+        // Inject JS bridge for Face ID
+        let faceIDJS = """
+        (function() {
+            // M1SSION™ Face ID Bridge
+            window.M1SSIONFaceID = {
+                // Check if Face ID is available
+                checkAvailability: function() {
+                    return new Promise(function(resolve) {
+                        window.webkit.messageHandlers.m1ssionFaceID.postMessage({
+                            action: 'checkAvailability'
+                        });
+                        // Store resolve function for callback
+                        window._m1ssionFaceIDResolve = resolve;
+                    });
+                },
+                
+                // Trigger Face ID authentication
+                authenticate: function() {
+                    return new Promise(function(resolve) {
+                        window.webkit.messageHandlers.m1ssionFaceID.postMessage({
+                            action: 'authenticate'
+                        });
+                        window._m1ssionFaceIDAuthResolve = resolve;
+                    });
+                },
+                
+                // Save token after successful login (for future Face ID logins)
+                saveToken: function(token) {
+                    window.webkit.messageHandlers.m1ssionFaceID.postMessage({
+                        action: 'saveToken',
+                        token: token
+                    });
+                },
+                
+                // Clear stored credentials (on logout)
+                clearCredentials: function() {
+                    window.webkit.messageHandlers.m1ssionFaceID.postMessage({
+                        action: 'clearCredentials'
+                    });
+                }
+            };
+            
+            console.log('✅ M1SSION™ Face ID Bridge initialized');
+        })();
+        """
+        
+        let userScript = WKUserScript(
+            source: faceIDJS,
+            injectionTime: .atDocumentEnd,
+            forMainFrameOnly: true
+        )
+        
+        webView.configuration.userContentController.addUserScript(userScript)
+        print("✅ M1SSION™ Face ID: Message handler configured")
     }
     
     // MARK: - Keyboard Accessory Bar Fix
@@ -321,6 +392,84 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+}
+
+// MARK: - 🔐 FACE ID MESSAGE HANDLER CLASS
+/// Handles messages from WebView for Face ID operations
+class FaceIDMessageHandler: NSObject, WKScriptMessageHandler {
+    
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard let body = message.body as? [String: Any],
+              let action = body["action"] as? String else {
+            print("⚠️ FaceIDMessageHandler: Invalid message format")
+            return
+        }
+        
+        let webView = message.webView
+        
+        switch action {
+        case "checkAvailability":
+            handleCheckAvailability(webView: webView)
+            
+        case "authenticate":
+            handleAuthenticate(webView: webView)
+            
+        case "saveToken":
+            if let token = body["token"] as? String {
+                handleSaveToken(token: token)
+            }
+            
+        case "clearCredentials":
+            handleClearCredentials()
+            
+        default:
+            print("⚠️ FaceIDMessageHandler: Unknown action - \(action)")
+        }
+    }
+    
+    // MARK: - Action Handlers
+    
+    private func handleCheckAvailability(webView: WKWebView?) {
+        let json = FaceIDManager.shared.availabilityJSON()
+        let js = "if(window._m1ssionFaceIDResolve) { window._m1ssionFaceIDResolve(\(json)); window._m1ssionFaceIDResolve = null; }"
+        
+        DispatchQueue.main.async {
+            webView?.evaluateJavaScript(js, completionHandler: nil)
+        }
+        print("✅ FaceIDMessageHandler: Availability check - \(json)")
+    }
+    
+    private func handleAuthenticate(webView: WKWebView?) {
+        FaceIDManager.shared.authenticateWithBiometric { success, token, error in
+            let result: String
+            if success, let token = token {
+                result = """
+                { "success": true, "token": "\(token)" }
+                """
+            } else {
+                let errorStr = error ?? "unknown"
+                result = """
+                { "success": false, "error": "\(errorStr)" }
+                """
+            }
+            
+            let js = "if(window._m1ssionFaceIDAuthResolve) { window._m1ssionFaceIDAuthResolve(\(result)); window._m1ssionFaceIDAuthResolve = null; }"
+            
+            DispatchQueue.main.async {
+                webView?.evaluateJavaScript(js, completionHandler: nil)
+            }
+        }
+    }
+    
+    private func handleSaveToken(token: String) {
+        let success = FaceIDManager.shared.saveCredentials(token: token)
+        print("✅ FaceIDMessageHandler: Token save - \(success ? "success" : "failed")")
+    }
+    
+    private func handleClearCredentials() {
+        FaceIDManager.shared.deleteCredentials()
+        print("✅ FaceIDMessageHandler: Credentials cleared")
+    }
 }
 
 // MARK: - UNUserNotificationCenterDelegate
