@@ -260,6 +260,64 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
+  // 🔐 FACE ID SESSION RESTORE HANDLER
+  // Listens for m1ssion:session-restored event from Face ID hook
+  // Re-fetches user data to ensure profile is fully hydrated
+  useEffect(() => {
+    const handleSessionRestored = async (event: CustomEvent) => {
+      log("🔐 Face ID session restored event received", event.detail);
+      
+      try {
+        // Re-fetch current session to ensure state is synced
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        if (currentSession?.user) {
+          log("🔐 Re-hydrating user data after Face ID restore");
+          
+          // Update state
+          setSession(currentSession);
+          setUser(currentSession.user);
+          cacheSession(currentSession.user, currentSession);
+          
+          // 📊 Analytics
+          setAnalyticsUserId(currentSession.user.id);
+          
+          // Sync prize intro state
+          setPrizeIntroUserId(currentSession.user.id);
+          
+          // Fetch user roles
+          setIsRoleLoading(true);
+          try {
+            const { data: rolesData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', currentSession.user.id);
+            
+            const roles = rolesData?.map(r => r.role) || [];
+            setUserRoles(roles);
+            log("🔐 User roles loaded after Face ID:", roles);
+          } catch (roleErr) {
+            log("⚠️ Failed to load roles after Face ID:", roleErr);
+          } finally {
+            setIsRoleLoading(false);
+          }
+          
+          setIsLoading(false);
+          log("✅ Face ID session restore complete - user data hydrated");
+        }
+      } catch (err) {
+        log("❌ Error handling Face ID session restore:", err);
+        setIsLoading(false);
+      }
+    };
+    
+    window.addEventListener('m1ssion:session-restored', handleSessionRestored as EventListener);
+    
+    return () => {
+      window.removeEventListener('m1ssion:session-restored', handleSessionRestored as EventListener);
+    };
+  }, []);
+
   // PWA VISIBILITY HANDLER - Safari iOS ottimizzato + MEMORY LEAK FIX
   useEffect(() => {
     const abortController = new AbortController();

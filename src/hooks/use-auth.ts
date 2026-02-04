@@ -75,60 +75,86 @@ export const useAuth = () => {
   const logout = async (): Promise<void> => {
     console.log('🚪 LOGOUT STARTING');
     
-    // 🧹 LOGOUT CACHE CLEANUP - Clear storage but preserve important keys
-    // IMPORTANT: Preserve all user-specific keys that shouldn't reset on logout
-    const keysToPreserve: string[] = [];
-    const prefixesToPreserve = [
-      // Core app state
-      'm1_quiz_last_skip',
+    // 🧹 SELECTIVE LOGOUT - Clear ONLY auth-related keys, preserve everything else
+    // This is more robust than localStorage.clear() + restore
+    
+    const authKeysToRemove = [
+      // Supabase auth keys (usually start with 'sb-')
+      'sb-',
+      'supabase.',
+      // Our auth cache
+      'm1ssion_auth_cache',
+      'm1ssion_session_cache',
+      // Session-specific flags (should reset on logout)
+      'auth_reload_done',
+      'hasSeenPostLoginIntro',
+    ];
+    
+    // Keys that MUST be preserved (for safety, list explicitly what to keep)
+    const criticalKeysToPreserve = [
+      // Legal consent - never reset
       'm1ssion_legal_consent',
       
-      // 🔑 CRITICAL: Prevent re-granting bonuses!
-      'm1ssion_welcome_bonus_shown',  // Welcome bonus (500 M1U)
-      'm1ssion_hasSeenPrizeIntro',    // Prize intro overlay
-      'm1ssion_lastPrizeIntroMissionId',
+      // 🔑 BONUSES: Prevent re-granting
+      'm1ssion_welcome_bonus_shown',
+      'm1ssion_hasSeenPrizeIntro',
+      'm1ssion_lastPrizeIntroMissionId', 
       'm1ssion_prizeIntroSeenAt',
       
-      // 🎰 Prevent false slot machine animation
+      // 🎰 M1U Cache: Prevent fake slot machine animation
       'm1ssion_m1u_cache',
       
-      // Other onboarding states
+      // Onboarding states
       'm1ssion_onboarding',
       'm1ssion_first_session',
-      
-      // Micro-missions (client-side tracking, server-side is protected)
       'm1_micro_missions',
       
-      // Streak (prevent re-claiming daily bonus)
+      // Quiz/streak
+      'm1_quiz_last_skip',
       'm1ssion_streak',
       'm1_streak',
     ];
     
-    // Collect all keys to preserve (including user-specific ones like m1ssion_welcome_bonus_shown:uuid)
+    // Backup critical keys first
+    const backup: Record<string, string | null> = {};
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && prefixesToPreserve.some(prefix => key.startsWith(prefix))) {
-        keysToPreserve.push(key);
+      if (key) {
+        // Check if this key matches any critical prefix
+        const isCritical = criticalKeysToPreserve.some(prefix => key.startsWith(prefix));
+        if (isCritical) {
+          backup[key] = localStorage.getItem(key);
+        }
       }
     }
     
-    const preserved: Record<string, string | null> = {};
-    keysToPreserve.forEach(key => {
-      preserved[key] = localStorage.getItem(key);
-    });
+    console.log('🛡️ Backing up critical keys:', Object.keys(backup).length);
     
-    localStorage.clear();
+    // Remove only auth-related keys (safer than clear())
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && authKeysToRemove.some(prefix => key.startsWith(prefix))) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    console.log('🗑️ Removed auth keys:', keysToRemove.length);
+    
+    // Clear sessionStorage (it's session-specific anyway)
     sessionStorage.clear();
     
-    // Restore preserved keys
-    keysToPreserve.forEach(key => {
-      if (preserved[key]) {
-        localStorage.setItem(key, preserved[key]!);
+    // Restore any critical keys that might have been accidentally removed
+    Object.entries(backup).forEach(([key, value]) => {
+      if (value && !localStorage.getItem(key)) {
+        localStorage.setItem(key, value);
       }
     });
-    console.log('🛡️ Preserved keys after logout:', keysToPreserve.filter(k => preserved[k]));
     
-    // Reset any existing state stores
+    console.log('✅ Critical keys preserved:', Object.keys(backup).filter(k => backup[k]));
+    
+    // Reset map store if exists
     try {
       const mapStoreModule = await import("@/stores/mapStore").catch(() => null);
       if (mapStoreModule?.useMapStore) {
@@ -139,6 +165,7 @@ export const useAuth = () => {
       console.log("⚠️ Map store not found, skipping reset");
     }
     
+    // Sign out from Supabase
     await supabase.auth.signOut();
     await sessionManager.clearSession();
     console.log('✅ LOGOUT COMPLETED');

@@ -362,6 +362,40 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
+        print("🔐 [AppDelegate] applicationWillEnterForeground - checking Face ID")
+        // Notify WebView that app is entering foreground (for Face ID trigger)
+        notifyWebViewForeground()
+    }
+    
+    /// Notify WebView about foreground event for Face ID auto-restore
+    private func notifyWebViewForeground() {
+        guard let rootVC = window?.rootViewController,
+              let webView = findWebView(in: rootVC.view) else {
+            print("⚠️ [AppDelegate] WebView not found for foreground notification")
+            return
+        }
+        
+        // Dispatch event to JS for potential Face ID trigger
+        let js = """
+        (function() {
+            console.log('🔐 [Native] App entered foreground');
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('m1ssion:app-foreground', { 
+                    detail: { timestamp: Date.now() }
+                }));
+            }
+        })();
+        """
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            webView.evaluateJavaScript(js) { _, error in
+                if let error = error {
+                    print("⚠️ [AppDelegate] Foreground notification error: \(error)")
+                } else {
+                    print("✅ [AppDelegate] Foreground notification sent to JS")
+                }
+            }
+        }
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
