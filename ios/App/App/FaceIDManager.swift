@@ -43,6 +43,8 @@ class FaceIDManager {
                 return (true, "touchID")
             case .opticID:
                 return (true, "opticID")
+            case .none:
+                return (false, "none")
             @unknown default:
                 return (true, "biometric")
             }
