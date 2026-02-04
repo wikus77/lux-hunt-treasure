@@ -1,14 +1,14 @@
 /**
- * M1SSION™ Face ID Login Hook v6
+ * M1SSION™ Face ID Login Hook v7
  * © 2026 Joseph MULÉ – NIYVORA KFT – ALL RIGHTS RESERVED
  * 
- * v6: Interval-based trigger + timestamp cooldown
- * - Polls every 500ms when login visible
- * - Triggers if cooldown passed (5 seconds)
- * - Works even if React doesn't re-run effect
+ * v7: Simplified trigger + persistent credentials
+ * - Face ID credentials persist across logout (protected by biometrics)
+ * - Triggers when login visible with stored credentials
+ * - Clears credentials only when session restoration fails
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,8 +32,6 @@ declare global {
       saveToken: (token: string) => void;
       clearCredentials: () => void;
     };
-    _m1ssionFaceIDLastAttempt?: number;
-    _m1ssionFaceIDLastSuccess?: number;
   }
 }
 
@@ -42,10 +40,7 @@ interface UseFaceIDLoginOptions {
   onFallback?: () => void;
 }
 
-const COOLDOWN_MS = 5000; // 5 seconds between attempts
-const POLL_INTERVAL_MS = 500; // Check every 500ms
-
-async function waitForBridge(maxAttempts = 10, intervalMs = 100): Promise<boolean> {
+async function waitForBridge(maxAttempts = 15, intervalMs = 100): Promise<boolean> {
   for (let i = 0; i < maxAttempts; i++) {
     if (window.M1SSIONFaceID) return true;
     await new Promise(resolve => setTimeout(resolve, intervalMs));
@@ -56,11 +51,10 @@ async function waitForBridge(maxAttempts = 10, intervalMs = 100): Promise<boolea
 function forceNavigate(path: string, navigate: (path: string) => void): void {
   navigate(path);
   setTimeout(() => {
-    const currentPath = window.location.pathname;
-    if (currentPath === '/login' || currentPath === '/' || currentPath === '') {
+    if (window.location.pathname.includes('login') || window.location.pathname === '/') {
       window.location.href = path;
     }
-  }, 600);
+  }, 500);
 }
 
 export function useFaceIDLogin(
@@ -70,154 +64,147 @@ export function useFaceIDLogin(
   const { onSuccess, onFallback } = options;
   const { navigate } = useWouterNavigation();
   const isProcessingRef = useRef(false);
-  const hasTriggeredThisSessionRef = useRef(false);
+  const lastVisibleRef = useRef(false);
 
   const isNativeiOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
 
-  useEffect(() => {
-    // Reset session flag when login becomes visible
-    if (isLoginVisible) {
-      const now = Date.now();
-      const lastSuccess = window._m1ssionFaceIDLastSuccess || 0;
-      // If last success was more than 10 seconds ago, allow new trigger
-      if (now - lastSuccess > 10000) {
-        hasTriggeredThisSessionRef.current = false;
-      }
-    }
-  }, [isLoginVisible]);
+  const triggerFaceID = useCallback(async () => {
+    if (!isNativeiOS) return;
+    if (isProcessingRef.current) return;
 
-  useEffect(() => {
-    if (!isNativeiOS || !isLoginVisible) {
+    // Wait for bridge
+    const bridgeReady = await waitForBridge();
+    if (!bridgeReady || !window.M1SSIONFaceID) {
+      console.log('🔐 [FaceID] Bridge not available');
       return;
     }
 
-    const attemptFaceID = async () => {
-      // Guards
-      if (!isLoginVisible) return;
-      if (isProcessingRef.current) return;
-      if (hasTriggeredThisSessionRef.current) return;
+    try {
+      // Check availability
+      const availability = await window.M1SSIONFaceID.checkAvailability();
+      console.log('🔐 [FaceID] Availability:', availability);
 
-      const now = Date.now();
-      const lastAttempt = window._m1ssionFaceIDLastAttempt || 0;
-      
-      if (now - lastAttempt < COOLDOWN_MS) {
-        return; // Still in cooldown
+      if (!availability.available) {
+        console.log('🔐 [FaceID] Not available on device');
+        return;
       }
 
-      // Check bridge
-      if (!window.M1SSIONFaceID) {
-        await waitForBridge();
-        if (!window.M1SSIONFaceID) return;
+      if (!availability.hasStoredCredentials) {
+        console.log('🔐 [FaceID] No stored credentials');
+        return;
       }
 
-      try {
-        const availability = await window.M1SSIONFaceID.checkAvailability();
-        
-        if (!availability.available || !availability.hasStoredCredentials) {
-          return;
-        }
+      // Start authentication
+      isProcessingRef.current = true;
+      console.log('🔐 [FaceID] Starting authentication...');
 
-        // Mark attempt
-        window._m1ssionFaceIDLastAttempt = now;
-        hasTriggeredThisSessionRef.current = true;
-        isProcessingRef.current = true;
+      const result = await window.M1SSIONFaceID.authenticate();
+      console.log('🔐 [FaceID] Auth result:', { success: result.success, hasTokens: !!result.accessToken });
 
-        console.log('🔐 [FaceID] Triggering...');
-        
-        const result = await window.M1SSIONFaceID.authenticate();
-
-        if (result.success && result.accessToken && result.refreshToken) {
-          let sessionRestored = false;
-
-          // Try setSession
-          try {
-            const { data, error } = await supabase.auth.setSession({
-              access_token: result.accessToken,
-              refresh_token: result.refreshToken
-            });
-            
-            if (data.session && !error) {
-              sessionRestored = true;
-              if (data.session.access_token && data.session.refresh_token) {
-                window.M1SSIONFaceID?.saveTokens(data.session.access_token, data.session.refresh_token);
-              }
-            }
-          } catch (e) {
-            // Try refresh as fallback
-          }
-
-          // Fallback: refreshSession
-          if (!sessionRestored) {
-            try {
-              const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
-                refresh_token: result.refreshToken
-              });
-              
-              if (refreshData.session && !refreshError) {
-                sessionRestored = true;
-                if (refreshData.session.access_token && refreshData.session.refresh_token) {
-                  window.M1SSIONFaceID?.saveTokens(refreshData.session.access_token, refreshData.session.refresh_token);
-                }
-              }
-            } catch (e) {
-              // Failed
-            }
-          }
-
-          if (sessionRestored) {
-            window._m1ssionFaceIDLastSuccess = Date.now();
-            toast.success('Login effettuato', { description: 'Accesso tramite Face ID' });
-            window.dispatchEvent(new CustomEvent('auth-success', { detail: { timestamp: Date.now(), method: 'faceid' } }));
-            await new Promise(resolve => setTimeout(resolve, 200));
-            forceNavigate('/map-3d-tiler', navigate);
-            onSuccess?.();
-          } else {
-            window.M1SSIONFaceID?.clearCredentials();
-            toast.error('Sessione scaduta', { description: 'Effettua il login manualmente' });
-            hasTriggeredThisSessionRef.current = false; // Allow retry
-            onFallback?.();
-          }
-        } else {
-          // Cancelled or failed - allow retry after cooldown
-          hasTriggeredThisSessionRef.current = false;
-          onFallback?.();
-        }
-      } catch (err) {
-        console.error('❌ [FaceID] Error:', err);
-        hasTriggeredThisSessionRef.current = false;
-        onFallback?.();
-      } finally {
+      if (!result.success) {
+        console.log('🔐 [FaceID] Auth cancelled or failed');
         isProcessingRef.current = false;
+        onFallback?.();
+        return;
       }
-    };
 
-    // Initial attempt after small delay
-    const initialTimeout = setTimeout(attemptFaceID, 300);
-
-    // Poll periodically in case React doesn't re-run effect
-    const pollInterval = setInterval(() => {
-      if (isLoginVisible && !isProcessingRef.current && !hasTriggeredThisSessionRef.current) {
-        attemptFaceID();
+      if (!result.accessToken || !result.refreshToken) {
+        console.log('🔐 [FaceID] No tokens returned');
+        isProcessingRef.current = false;
+        onFallback?.();
+        return;
       }
-    }, POLL_INTERVAL_MS);
 
-    return () => {
-      clearTimeout(initialTimeout);
-      clearInterval(pollInterval);
-    };
-  }, [isLoginVisible, isNativeiOS, navigate, onSuccess, onFallback]);
+      // Restore session
+      let sessionRestored = false;
 
-  return { isNativeiOS, isProcessing: isProcessingRef.current };
+      // Try setSession
+      try {
+        const { data, error } = await supabase.auth.setSession({
+          access_token: result.accessToken,
+          refresh_token: result.refreshToken
+        });
+
+        if (data.session && !error) {
+          sessionRestored = true;
+          // Update stored tokens with fresh ones
+          if (data.session.access_token && data.session.refresh_token) {
+            window.M1SSIONFaceID?.saveTokens(data.session.access_token, data.session.refresh_token);
+          }
+          console.log('🔐 [FaceID] Session restored via setSession');
+        }
+      } catch (e) {
+        console.log('🔐 [FaceID] setSession failed, trying refresh...');
+      }
+
+      // Fallback: refreshSession
+      if (!sessionRestored) {
+        try {
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+            refresh_token: result.refreshToken
+          });
+
+          if (refreshData.session && !refreshError) {
+            sessionRestored = true;
+            if (refreshData.session.access_token && refreshData.session.refresh_token) {
+              window.M1SSIONFaceID?.saveTokens(refreshData.session.access_token, refreshData.session.refresh_token);
+            }
+            console.log('🔐 [FaceID] Session restored via refreshSession');
+          }
+        } catch (e) {
+          console.log('🔐 [FaceID] refreshSession failed');
+        }
+      }
+
+      if (sessionRestored) {
+        toast.success('Login effettuato', { description: 'Accesso tramite Face ID' });
+        window.dispatchEvent(new CustomEvent('auth-success', { detail: { timestamp: Date.now(), method: 'faceid' } }));
+        await new Promise(resolve => setTimeout(resolve, 200));
+        forceNavigate('/map-3d-tiler', navigate);
+        onSuccess?.();
+      } else {
+        // Session invalid - clear credentials so user must login manually
+        console.log('🔐 [FaceID] Session expired, clearing credentials');
+        window.M1SSIONFaceID?.clearCredentials();
+        toast.error('Sessione scaduta', { description: 'Effettua il login manualmente' });
+        onFallback?.();
+      }
+
+    } catch (err) {
+      console.error('🔐 [FaceID] Error:', err);
+      onFallback?.();
+    } finally {
+      isProcessingRef.current = false;
+    }
+  }, [isNativeiOS, navigate, onSuccess, onFallback]);
+
+  // Trigger Face ID when login becomes visible
+  useEffect(() => {
+    // Detect transition: NOT visible -> visible
+    const wasVisible = lastVisibleRef.current;
+    lastVisibleRef.current = isLoginVisible;
+
+    if (!wasVisible && isLoginVisible && isNativeiOS) {
+      console.log('🔐 [FaceID] Login screen became visible, triggering...');
+      // Small delay for component stability
+      const timeoutId = setTimeout(() => {
+        triggerFaceID();
+      }, 400);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isLoginVisible, isNativeiOS, triggerFaceID]);
+
+  return { isNativeiOS, triggerFaceID };
 }
 
 export function saveFaceIDCredentials(accessToken: string, refreshToken: string): void {
   if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'ios') return;
 
   const attemptSave = async () => {
-    const bridgeReady = await waitForBridge(5, 100);
+    const bridgeReady = await waitForBridge(10, 100);
     if (bridgeReady && window.M1SSIONFaceID?.saveTokens) {
       window.M1SSIONFaceID.saveTokens(accessToken, refreshToken);
-      console.log('✅ [FaceID] Tokens saved');
+      console.log('✅ [FaceID] Tokens saved to Keychain');
     }
   };
   attemptSave();
@@ -225,11 +212,9 @@ export function saveFaceIDCredentials(accessToken: string, refreshToken: string)
 
 export function clearFaceIDCredentials(): void {
   if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'ios') return;
-  
+
   try {
     window.M1SSIONFaceID?.clearCredentials();
-    window._m1ssionFaceIDLastAttempt = 0;
-    window._m1ssionFaceIDLastSuccess = 0;
     console.log('✅ [FaceID] Credentials cleared');
   } catch (e) {
     // Ignore

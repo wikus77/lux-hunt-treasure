@@ -477,8 +477,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // 🚀 Clear auth cache
       cacheSession(null, null);
       
-      // 🔐 Clear Face ID credentials (iOS native only, no-op otherwise)
-      clearFaceIDCredentials();
+      // 🔐 Face ID credentials: DO NOT CLEAR on logout!
+      // Credentials are protected by biometrics and should persist.
+      // They will only be cleared if session restoration fails (expired tokens).
+      // This allows Face ID to work immediately after logout+login.
+      // clearFaceIDCredentials(); // REMOVED - see useFaceIDLogin.ts for auto-clear on invalid session
       
       // Clear mission intro session to force replay on next login
       sessionStorage.removeItem('hasSeenPostLoginIntro');

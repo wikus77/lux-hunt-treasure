@@ -76,11 +76,21 @@ export const useAuth = () => {
     console.log('🚪 LOGOUT STARTING');
     
     // 🧹 LOGOUT CACHE CLEANUP - Clear storage but preserve important keys
-    const keysToPreserve = [
+    // IMPORTANT: Preserve all user-specific keys that shouldn't reset on logout
+    const keysToPreserve: string[] = [];
+    const prefixesToPreserve = [
       'm1_quiz_last_skip',
       'm1ssion_legal_consent',
-      'm1ssion_legal_consent_date'
+      'm1ssion_welcome_bonus_shown', // 🔑 Prevent re-granting welcome bonus!
     ];
+    
+    // Collect all keys to preserve (including user-specific ones like m1ssion_welcome_bonus_shown:uuid)
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && prefixesToPreserve.some(prefix => key.startsWith(prefix))) {
+        keysToPreserve.push(key);
+      }
+    }
     
     const preserved: Record<string, string | null> = {};
     keysToPreserve.forEach(key => {
