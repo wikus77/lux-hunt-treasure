@@ -117,12 +117,13 @@ export function AgentDiary() {
         whileTap={{ scale: 0.98 }}
         {...longPressHandlers}
       >
-        {/* Animated glow strip */}
+        {/* Animated glow strip - WHITE MICRO-ENERGY */}
         <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
           <div 
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"
+            className="absolute inset-0 opacity-50"
             style={{
-              animation: 'slideGlowAgent 3s ease-in-out infinite',
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.7) 50%, transparent 100%)',
+              animation: 'slideGlowAgent 4s ease-in-out infinite',
               width: '200%',
               left: '-100%'
             }}

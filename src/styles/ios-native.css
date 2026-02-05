@@ -34,6 +34,74 @@ main,
   background-color: transparent !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌟 WHITE MICRO-ENERGY CARDS - Home containers (Agent, Tempo, Battle)
+   Soft white glow emanating from cards with subtle breathing animation
+   ═══════════════════════════════════════════════════════════════════════════ */
+.card-glass-white-energy {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Micro-energy highlight overlay */
+.card-glass-white-energy::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  /* Soft radial highlight - top-left white glow + linear sheen */
+  background: 
+    radial-gradient(ellipse 80% 60% at 15% 15%, rgba(255, 255, 255, 0.08) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 50%);
+  opacity: 0.65;
+  animation: energyBreath 8s ease-in-out infinite;
+}
+
+/* Breathing animation - subtle opacity pulse */
+@keyframes energyBreath {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.75; }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .card-glass-white-energy::before {
+    animation: none;
+    opacity: 0.65;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌊 BOTTOM NAV - iOS Folder Glass Effect (enhanced)
+   Semi-transparent glass with blur, like iOS folder background
+   ═══════════════════════════════════════════════════════════════════════════ */
+.bottom-nav-pill {
+  /* iOS Folder-style glass - semi-transparent dark */
+  background: rgba(18, 18, 22, 0.38) !important;
+  backdrop-filter: blur(22px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(170%) !important;
+  /* Refined border */
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  /* Soft shadow for depth */
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    0 0 0 0.5px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Subtle noise texture overlay for glass effect */
+.bottom-nav-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+  z-index: 0;
+}
+
 @tailwind utilities;
 
 @layer utilities {

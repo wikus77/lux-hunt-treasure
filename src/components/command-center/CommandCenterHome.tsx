@@ -227,30 +227,32 @@ export default function CommandCenterHome() {
 
 
     {/* ═══════════════════════════════════════════════════════════════ */}
-    {/* M1SSION AGENT - BLACK GLASS + NEON (BLACK OPS) */}
+    {/* M1SSION AGENT - BLACK GLASS + WHITE MICRO-ENERGY */}
     {/* ═══════════════════════════════════════════════════════════════ */}
     <div 
+      className="card-glass-white-energy"
       style={{
         width: '100%',
         borderRadius: '24px',
         overflow: 'hidden',
         marginBottom: '16px',
-        /* BLACK GLASS background */
+        /* BLACK GLASS background - deeper */
         background: `linear-gradient(160deg, 
-          rgba(8, 12, 20, 0.75) 0%, 
-          rgba(10, 16, 28, 0.70) 50%, 
-          rgba(8, 12, 20, 0.75) 100%
+          rgba(10, 10, 12, 0.82) 0%, 
+          rgba(12, 14, 20, 0.78) 50%, 
+          rgba(10, 10, 12, 0.82) 100%
         )`,
-        backdropFilter: 'blur(18px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+        backdropFilter: 'blur(20px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(150%)',
         padding: '16px',
-        /* NEON BORDER */
-        border: '1px solid rgba(0, 209, 255, 0.25)',
+        /* WHITE MICRO-ENERGY BORDER */
+        border: '1px solid rgba(255, 255, 255, 0.12)',
         boxShadow: `
-          0 0 18px rgba(0, 209, 255, 0.15),
-          0 0 35px rgba(0, 150, 255, 0.08),
-          0 4px 24px rgba(0, 0, 0, 0.4),
-          inset 0 1px 0 rgba(255, 255, 255, 0.04)
+          0 0 20px rgba(255, 255, 255, 0.08),
+          0 0 40px rgba(255, 255, 255, 0.04),
+          0 4px 28px rgba(0, 0, 0, 0.5),
+          inset 0 0 24px rgba(255, 255, 255, 0.03),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06)
         `,
       }}
     >
@@ -265,30 +267,32 @@ export default function CommandCenterHome() {
     </div>
 
     {/* ═══════════════════════════════════════════════════════════════ */}
-    {/* TEMPO RIMASTO - BLACK GLASS + NEON (BLACK OPS) */}
+    {/* TEMPO RIMASTO - BLACK GLASS + WHITE MICRO-ENERGY */}
     {/* ═══════════════════════════════════════════════════════════════ */}
     <div 
+      className="card-glass-white-energy"
       style={{
         width: '100%',
         borderRadius: '24px',
         overflow: 'hidden',
         marginBottom: '16px',
-        /* BLACK GLASS background */
+        /* BLACK GLASS background - deeper */
         background: `linear-gradient(160deg, 
-          rgba(8, 12, 20, 0.75) 0%, 
-          rgba(10, 16, 28, 0.70) 50%, 
-          rgba(8, 12, 20, 0.75) 100%
+          rgba(10, 10, 12, 0.82) 0%, 
+          rgba(12, 14, 20, 0.78) 50%, 
+          rgba(10, 10, 12, 0.82) 100%
         )`,
-        backdropFilter: 'blur(18px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+        backdropFilter: 'blur(20px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(150%)',
         padding: '20px 16px 24px 16px',
-        /* NEON BORDER */
-        border: '1px solid rgba(0, 209, 255, 0.25)',
+        /* WHITE MICRO-ENERGY BORDER */
+        border: '1px solid rgba(255, 255, 255, 0.12)',
         boxShadow: `
-          0 0 18px rgba(0, 209, 255, 0.15),
-          0 0 35px rgba(0, 150, 255, 0.08),
-          0 4px 24px rgba(0, 0, 0, 0.4),
-          inset 0 1px 0 rgba(255, 255, 255, 0.04)
+          0 0 20px rgba(255, 255, 255, 0.08),
+          0 0 40px rgba(255, 255, 255, 0.04),
+          0 4px 28px rgba(0, 0, 0, 0.5),
+          inset 0 0 24px rgba(255, 255, 255, 0.03),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06)
         `,
       }}
     >
@@ -309,30 +313,32 @@ export default function CommandCenterHome() {
     </div>
 
     {/* ═══════════════════════════════════════════════════════════════ */}
-    {/* M1SSION BATTLE - BLACK GLASS + NEON (BLACK OPS) */}
+    {/* M1SSION BATTLE - BLACK GLASS + WHITE MICRO-ENERGY */}
     {/* ═══════════════════════════════════════════════════════════════ */}
     <div 
+      className="card-glass-white-energy"
       style={{
         width: '100%',
         borderRadius: '24px',
         overflow: 'hidden',
         marginBottom: '16px',
-        /* BLACK GLASS background */
+        /* BLACK GLASS background - deeper */
         background: `linear-gradient(160deg, 
-          rgba(8, 12, 20, 0.75) 0%, 
-          rgba(10, 16, 28, 0.70) 50%, 
-          rgba(8, 12, 20, 0.75) 100%
+          rgba(10, 10, 12, 0.82) 0%, 
+          rgba(12, 14, 20, 0.78) 50%, 
+          rgba(10, 10, 12, 0.82) 100%
         )`,
-        backdropFilter: 'blur(18px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+        backdropFilter: 'blur(20px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(150%)',
         padding: '20px 16px 24px 16px',
-        /* NEON BORDER */
-        border: '1px solid rgba(0, 209, 255, 0.25)',
+        /* WHITE MICRO-ENERGY BORDER */
+        border: '1px solid rgba(255, 255, 255, 0.12)',
         boxShadow: `
-          0 0 18px rgba(0, 209, 255, 0.15),
-          0 0 35px rgba(0, 150, 255, 0.08),
-          0 4px 24px rgba(0, 0, 0, 0.4),
-          inset 0 1px 0 rgba(255, 255, 255, 0.04)
+          0 0 20px rgba(255, 255, 255, 0.08),
+          0 0 40px rgba(255, 255, 255, 0.04),
+          0 4px 28px rgba(0, 0, 0, 0.5),
+          inset 0 0 24px rgba(255, 255, 255, 0.03),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06)
         `,
       }}
     >
