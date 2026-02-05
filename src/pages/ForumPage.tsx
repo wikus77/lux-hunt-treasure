@@ -6,7 +6,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import GenericVideoModal from '@/components/shared/GenericVideoModal';
+// 🎬 Unified fullscreen briefing modal (same as all other briefings)
+import BriefingFlipOverlay from '@/components/shared/BriefingFlipOverlay';
 import { trackScreen } from '@/lib/analytics';
 import { 
   MessageSquare, Plus, ThumbsUp, ThumbsDown, Eye, 
@@ -623,9 +624,9 @@ export const ForumPage: React.FC = () => {
       </motion.div>
       </div>
       
-      {/* 🎬 Video Intro Modal */}
-      <GenericVideoModal
-        isOpen={showVideoModal}
+      {/* 🎬 Video Intro Modal - Unified fullscreen (same as all other briefings) */}
+      <BriefingFlipOverlay
+        open={showVideoModal}
         onClose={() => setShowVideoModal(false)}
         userEmail={user?.email}
         onContinue={handleVideoContinue}
@@ -633,7 +634,6 @@ export const ForumPage: React.FC = () => {
         storageKey={FORUM_VIDEO_STORAGE_KEY}
         title="M1SSION FORUM"
         subtitle="Briefing: Benvenuto nella community degli agenti"
-        accentColor="#00D1FF"
       />
     </div>
   );
