@@ -8,9 +8,8 @@ import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { hapticLight } from "@/utils/haptics";
 import { subscribeAudioEvent } from "@/utils/audioController";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
-// 🎬 FIX: Replaced bottom-sheet with fullscreen FlipOverlay (M1U Pill style)
-import BuzzBriefingFlipOverlay from "@/components/buzz/BuzzBriefingFlipOverlay";
-import GenericVideoModal from "@/components/shared/GenericVideoModal";
+// 🎬 UNIFIED: Tutti i briefing ora usano lo stesso fullscreen modal
+import BriefingFlipOverlay from "@/components/shared/BriefingFlipOverlay";
 import { AudioManager } from "@/lib/audio/AudioManager"; // 🔧 FIX: Singleton Audio
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // PWA Navigation Component - Floating Pill Style - SIMPLIFIED
@@ -21,6 +20,7 @@ const BUZZ_BOOM_SOUND = '/assets/audio/DSGNBoom-Create_an_intense_ci-Elevenlabs.
 const HOME_SOUND = '/assets/audio/m1-home.mp3';
 
 // 🎬 Video paths for briefing videos
+const BUZZ_VIDEO = '/assets/video/BUZZ-BRIF-VIDEO-01.mp4';
 const HOME_VIDEO = '/assets/video/HOME-BRIF-VIDEO.mp4';
 const MAP_VIDEO = '/assets/video/BUZZ-BRIF-VIDEO.mp4';
 const AION_VIDEO = '/assets/video/AION-BRIF-VIDEO.mp4';
@@ -348,17 +348,20 @@ const BottomNavigationComponent = () => {
         })}
       </div>
       
-      {/* 🎬 Modal Video Briefings */}
-      {/* 🔧 FIX: Buzz briefing now uses fullscreen FlipOverlay (M1U Pill style) */}
-      <BuzzBriefingFlipOverlay
+      {/* 🎬 UNIFIED Modal Video Briefings - Tutti fullscreen con CTA bianco glass */}
+      <BriefingFlipOverlay
         open={showBuzzVideoModal}
         onClose={() => setShowBuzzVideoModal(false)}
         userEmail={user?.email}
         onContinue={handleBuzzVideoContinue}
+        videoSrc={BUZZ_VIDEO}
+        storageKey="m1_buzz_video_modal_dismissed"
+        title="BRIEFING BUZZ"
+        subtitle="Guarda il video introduttivo prima di iniziare"
       />
       
-      <GenericVideoModal
-        isOpen={showHomeVideoModal}
+      <BriefingFlipOverlay
+        open={showHomeVideoModal}
         onClose={() => setShowHomeVideoModal(false)}
         userEmail={user?.email}
         onContinue={handleHomeVideoContinue}
@@ -366,11 +369,10 @@ const BottomNavigationComponent = () => {
         storageKey="m1_home_video_dismissed"
         title="M1SSION HOME"
         subtitle="Briefing: Benvenuto nel tuo quartier generale"
-        accentColor="#00D1FF"
       />
       
-      <GenericVideoModal
-        isOpen={showMapVideoModal}
+      <BriefingFlipOverlay
+        open={showMapVideoModal}
         onClose={() => setShowMapVideoModal(false)}
         userEmail={user?.email}
         onContinue={handleMapVideoContinue}
@@ -378,11 +380,10 @@ const BottomNavigationComponent = () => {
         storageKey="m1_map_video_dismissed"
         title="BUZZ MAP"
         subtitle="Briefing: La mappa della missione"
-        accentColor="#00FFAA"
       />
       
-      <GenericVideoModal
-        isOpen={showAionVideoModal}
+      <BriefingFlipOverlay
+        open={showAionVideoModal}
         onClose={() => setShowAionVideoModal(false)}
         userEmail={user?.email}
         onContinue={handleAionVideoContinue}
@@ -390,11 +391,10 @@ const BottomNavigationComponent = () => {
         storageKey="m1_aion_video_dismissed"
         title="AION AI"
         subtitle="Briefing: L'intelligenza artificiale al tuo servizio"
-        accentColor="#FF6B00"
       />
       
-      <GenericVideoModal
-        isOpen={showClassificaVideoModal}
+      <BriefingFlipOverlay
+        open={showClassificaVideoModal}
         onClose={() => setShowClassificaVideoModal(false)}
         userEmail={user?.email}
         onContinue={handleClassificaVideoContinue}
@@ -402,11 +402,10 @@ const BottomNavigationComponent = () => {
         storageKey="m1_classifica_video_dismissed"
         title="CLASSIFICA"
         subtitle="Briefing: La classifica dei migliori agenti"
-        accentColor="#FF59F8"
       />
       
-      <GenericVideoModal
-        isOpen={showNotificheVideoModal}
+      <BriefingFlipOverlay
+        open={showNotificheVideoModal}
         onClose={() => setShowNotificheVideoModal(false)}
         userEmail={user?.email}
         onContinue={handleNotificheVideoContinue}
@@ -414,7 +413,6 @@ const BottomNavigationComponent = () => {
         storageKey="m1_notifiche_video_dismissed"
         title="NOTIFICHE"
         subtitle="Briefing: Le notifiche della missione"
-        accentColor="#FFD700"
       />
     </div>
   );
