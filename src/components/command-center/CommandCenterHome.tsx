@@ -226,20 +226,8 @@ export default function CommandCenterHome() {
 )}
 
 
-    {/* M1SSION AGENT - Moved ABOVE Indizi trovati */}
-    <motion.div 
-      className="mb-6"
-      data-section="agent"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
-    >
-      <AgentDiary />
-    </motion.div>
-
     {/* ═══════════════════════════════════════════════════════════════ */}
-    {/* PANNELLO COLORATO — Wrapper per ActiveMissionBox (Tempo rimasto) */}
-    {/* Stile identico a M1SSION PRIZE in Home */}
+    {/* M1SSION AGENT - BLACK GLASS + NEON (BLACK OPS) */}
     {/* ═══════════════════════════════════════════════════════════════ */}
     <div 
       style={{
@@ -247,15 +235,61 @@ export default function CommandCenterHome() {
         borderRadius: '24px',
         overflow: 'hidden',
         marginBottom: '16px',
+        /* BLACK GLASS background */
         background: `linear-gradient(160deg, 
-          rgba(20, 60, 120, 0.92) 0%, 
-          rgba(25, 80, 130, 0.88) 25%, 
-          rgba(30, 100, 120, 0.82) 50%, 
-          rgba(35, 120, 100, 0.75) 75%, 
-          rgba(40, 140, 90, 0.65) 100%
+          rgba(8, 12, 20, 0.75) 0%, 
+          rgba(10, 16, 28, 0.70) 50%, 
+          rgba(8, 12, 20, 0.75) 100%
         )`,
+        backdropFilter: 'blur(18px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+        padding: '16px',
+        /* NEON BORDER */
+        border: '1px solid rgba(0, 209, 255, 0.25)',
+        boxShadow: `
+          0 0 18px rgba(0, 209, 255, 0.15),
+          0 0 35px rgba(0, 150, 255, 0.08),
+          0 4px 24px rgba(0, 0, 0, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.04)
+        `,
+      }}
+    >
+      <motion.div 
+        data-section="agent"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <AgentDiary />
+      </motion.div>
+    </div>
+
+    {/* ═══════════════════════════════════════════════════════════════ */}
+    {/* TEMPO RIMASTO - BLACK GLASS + NEON (BLACK OPS) */}
+    {/* ═══════════════════════════════════════════════════════════════ */}
+    <div 
+      style={{
+        width: '100%',
+        borderRadius: '24px',
+        overflow: 'hidden',
+        marginBottom: '16px',
+        /* BLACK GLASS background */
+        background: `linear-gradient(160deg, 
+          rgba(8, 12, 20, 0.75) 0%, 
+          rgba(10, 16, 28, 0.70) 50%, 
+          rgba(8, 12, 20, 0.75) 100%
+        )`,
+        backdropFilter: 'blur(18px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(18px) saturate(140%)',
         padding: '20px 16px 24px 16px',
-        boxShadow: '0 4px 20px rgba(0, 100, 150, 0.3)',
+        /* NEON BORDER */
+        border: '1px solid rgba(0, 209, 255, 0.25)',
+        boxShadow: `
+          0 0 18px rgba(0, 209, 255, 0.15),
+          0 0 35px rgba(0, 150, 255, 0.08),
+          0 4px 24px rgba(0, 0, 0, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.04)
+        `,
       }}
     >
       {/* Active Mission Box (contains Indizi trovati, Tempo rimasto, Stato missione) */}
@@ -275,8 +309,7 @@ export default function CommandCenterHome() {
     </div>
 
     {/* ═══════════════════════════════════════════════════════════════ */}
-    {/* PANNELLO COLORATO — Wrapper per BattleConsole (M1SSION BATTLE) */}
-    {/* Stile identico a M1SSION PRIZE in Home */}
+    {/* M1SSION BATTLE - BLACK GLASS + NEON (BLACK OPS) */}
     {/* ═══════════════════════════════════════════════════════════════ */}
     <div 
       style={{
@@ -284,15 +317,23 @@ export default function CommandCenterHome() {
         borderRadius: '24px',
         overflow: 'hidden',
         marginBottom: '16px',
+        /* BLACK GLASS background */
         background: `linear-gradient(160deg, 
-          rgba(20, 60, 120, 0.92) 0%, 
-          rgba(25, 80, 130, 0.88) 25%, 
-          rgba(30, 100, 120, 0.82) 50%, 
-          rgba(35, 120, 100, 0.75) 75%, 
-          rgba(40, 140, 90, 0.65) 100%
+          rgba(8, 12, 20, 0.75) 0%, 
+          rgba(10, 16, 28, 0.70) 50%, 
+          rgba(8, 12, 20, 0.75) 100%
         )`,
+        backdropFilter: 'blur(18px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(18px) saturate(140%)',
         padding: '20px 16px 24px 16px',
-        boxShadow: '0 4px 20px rgba(0, 100, 150, 0.3)',
+        /* NEON BORDER */
+        border: '1px solid rgba(0, 209, 255, 0.25)',
+        boxShadow: `
+          0 0 18px rgba(0, 209, 255, 0.15),
+          0 0 35px rgba(0, 150, 255, 0.08),
+          0 4px 24px rgba(0, 0, 0, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.04)
+        `,
       }}
     >
       {/* M1SSION BATTLE (Battle Console) - Full width below */}

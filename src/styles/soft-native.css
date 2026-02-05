@@ -609,4 +609,137 @@ body:has(.sn-page) .global-layout-content {
   overscroll-behavior: auto; /* Allow native bounce */
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎬 BLACK OPS THEME - DARK HOME PAGE
+   Override white theme for Home page only via .sn-page-dark modifier
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* html/body DARK for Home page */
+html.sn-page-dark,
+body.sn-page-dark,
+html:has(.sn-page-dark),
+body:has(.sn-page-dark) {
+  background: linear-gradient(180deg, #05060A 0%, #070A12 50%, #04040A 100%) !important;
+  background-color: #05060A !important;
+}
+
+/* iOS native dark */
+body.is-native.sn-page-dark,
+body.is-native:has(.sn-page-dark) {
+  background: linear-gradient(180deg, #05060A 0%, #070A12 50%, #04040A 100%) !important;
+  background-color: #05060A !important;
+}
+
+/* Capacitor iOS dark */
+html.capacitor-ios.sn-page-dark,
+html.capacitor-ios:has(.sn-page-dark),
+html[data-capacitor="ios"].sn-page-dark,
+html[data-capacitor="ios"]:has(.sn-page-dark) {
+  background: linear-gradient(180deg, #05060A 0%, #070A12 50%, #04040A 100%) !important;
+  background-color: #05060A !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK HEADER - Glass dark for .sn-page-dark
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.sn-page-dark .unified-header-wrapper header,
+body.sn-page-dark .unified-header-wrapper header,
+body:has(.sn-page-dark) .unified-header-wrapper header {
+  background: rgba(8, 10, 18, 0.88) !important;
+  backdrop-filter: blur(20px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+  border: 1px solid rgba(0, 209, 255, 0.15) !important;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.03) !important;
+}
+
+/* Dark header text - light for contrast */
+html.sn-page-dark .unified-header-wrapper header *,
+body.sn-page-dark .unified-header-wrapper header *,
+body:has(.sn-page-dark) .unified-header-wrapper header * {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Dark header icons */
+html.sn-page-dark .unified-header-wrapper header svg,
+body.sn-page-dark .unified-header-wrapper header svg {
+  color: #00D1FF !important;
+}
+
+/* M1SSION logo on dark */
+html.sn-page-dark .unified-header-wrapper .m1ssion-logo span:first-child,
+body.sn-page-dark .unified-header-wrapper .m1ssion-logo span:first-child {
+  color: #00D1FF !important;
+  text-shadow: 0 0 10px rgba(0, 209, 255, 0.5) !important;
+}
+
+html.sn-page-dark .unified-header-wrapper .m1ssion-logo span:last-child,
+body.sn-page-dark .unified-header-wrapper .m1ssion-logo span:last-child {
+  color: #FFFFFF !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK BOTTOM NAV - Glass dark for .sn-page-dark
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.sn-page-dark .bottom-navigation-ios nav,
+body.sn-page-dark .bottom-navigation-ios nav,
+html.sn-page-dark #m1-bottom-nav nav,
+body.sn-page-dark #m1-bottom-nav nav,
+body:has(.sn-page-dark) .bottom-navigation-ios nav,
+body:has(.sn-page-dark) #m1-bottom-nav nav,
+body.is-native.sn-page-dark .bottom-navigation-ios nav,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios nav {
+  background: rgba(8, 10, 18, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+  border-top: 1px solid rgba(0, 209, 255, 0.18) !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(0, 209, 255, 0.08) !important;
+}
+
+/* Dark nav inactive icons */
+html.sn-page-dark .bottom-navigation-ios button:not([class*="active"]) svg,
+body.sn-page-dark .bottom-navigation-ios button:not([class*="active"]) svg,
+body:has(.sn-page-dark) .bottom-navigation-ios button:not([class*="active"]) svg {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Dark nav active icons - neon cyan */
+html.sn-page-dark .bottom-navigation-ios button[class*="active"] svg,
+body.sn-page-dark .bottom-navigation-ios button[class*="active"] svg,
+body:has(.sn-page-dark) .bottom-navigation-ios button[class*="active"] svg {
+  color: #00D1FF !important;
+  filter: drop-shadow(0 0 6px rgba(0, 209, 255, 0.6)) !important;
+}
+
+/* Dark nav text */
+html.sn-page-dark .bottom-navigation-ios button span,
+body.sn-page-dark .bottom-navigation-ios button span,
+body:has(.sn-page-dark) .bottom-navigation-ios button span {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+html.sn-page-dark .bottom-navigation-ios button[class*="active"] span,
+body.sn-page-dark .bottom-navigation-ios button[class*="active"] span,
+body:has(.sn-page-dark) .bottom-navigation-ios button[class*="active"] span {
+  color: #00D1FF !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   M1 GLASS CARD - Reusable dark glass + neon border
+   ═══════════════════════════════════════════════════════════════════════════ */
+.m1-glass-card-dark {
+  background: rgba(10, 12, 20, 0.55) !important;
+  backdrop-filter: blur(18px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+  border: 1px solid rgba(0, 209, 255, 0.25) !important;
+  border-radius: 20px !important;
+  box-shadow: 
+    0 0 20px rgba(0, 209, 255, 0.12),
+    0 0 40px rgba(0, 150, 255, 0.08),
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
 /* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

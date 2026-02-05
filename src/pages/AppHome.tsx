@@ -202,7 +202,7 @@ const { isConnected } = useRealTimeNotifications();
   const prizeProgress = missionStatus?.progressPercent || progress || 46;
 
   return (
-    <div className="w-full relative sn-page">
+    <div className="w-full relative sn-page sn-page-dark">
       <Helmet>
         <title>M1SSION™ - Home App</title>
       </Helmet>
@@ -315,8 +315,34 @@ const { isConnected } = useRealTimeNotifications();
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 <CommitNodesContainer />
                 
-                {/* PROSSIMA AZIONE - sfondo bianco (sn-page) */}
-                <div style={{ marginBottom: '16px' }}>
+                {/* ═══════════════════════════════════════════════════════════════ */}
+                {/* PROSSIMA AZIONE - BLACK GLASS + NEON (BLACK OPS) */}
+                {/* ═══════════════════════════════════════════════════════════════ */}
+                <div 
+                  style={{
+                    width: '100%',
+                    borderRadius: '24px',
+                    overflow: 'hidden',
+                    marginBottom: '16px',
+                    /* BLACK GLASS background */
+                    background: `linear-gradient(160deg, 
+                      rgba(8, 12, 20, 0.75) 0%, 
+                      rgba(10, 16, 28, 0.70) 50%, 
+                      rgba(8, 12, 20, 0.75) 100%
+                    )`,
+                    backdropFilter: 'blur(18px) saturate(140%)',
+                    WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+                    padding: '16px',
+                    /* NEON BORDER */
+                    border: '1px solid rgba(0, 209, 255, 0.25)',
+                    boxShadow: `
+                      0 0 18px rgba(0, 209, 255, 0.15),
+                      0 0 35px rgba(0, 150, 255, 0.08),
+                      0 4px 24px rgba(0, 0, 0, 0.4),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.04)
+                    `,
+                  }}
+                >
                   <SectionErrorBoundary section="Prossima Azione" fallbackHeight="80px">
                     <NextActionContainer />
                   </SectionErrorBoundary>
