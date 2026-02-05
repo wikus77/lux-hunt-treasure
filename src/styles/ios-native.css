@@ -36,23 +36,56 @@ main,
 
 /* ═══════════════════════════════════════════════════════════════════════════
    🌟 WHITE MICRO-ENERGY CARDS - Home containers (Agent, Tempo, Battle)
-   Soft white glow emanating from cards with subtle breathing animation
-   NO CYAN/BLUE - pure white energy
+   🔧 FIX 30/01/2026: DEPTH BLOBS - Profondità e "energia" dietro le cards
+   - Back halo (diffuso sotto)
+   - Highlight speculare (in alto)
+   - Colore NON full-black (grigio scuro con trasparenza)
+   - Breathing animation sottile
    ═══════════════════════════════════════════════════════════════════════════ */
 .card-glass-white-energy {
   position: relative;
   isolation: isolate;
-  /* Override any cyan/blue shadows with white */
+  /* 🔧 DEPTH: Sfondo non completamente nero */
+  background: rgba(18, 18, 24, 0.82) !important;
+  /* 🔧 DEPTH: Multi-layer shadows per profondità */
   box-shadow: 
-    0 0 22px rgba(255, 255, 255, 0.10),
-    0 0 45px rgba(255, 255, 255, 0.05),
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    inset 0 0 28px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    /* Back halo - energia diffusa DIETRO la card */
+    0 20px 60px rgba(255, 255, 255, 0.06),
+    0 30px 80px rgba(200, 220, 255, 0.04),
+    /* Ombra principale - profondità */
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    /* Inner glow - energia interna */
+    inset 0 0 30px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  /* GPU acceleration for smooth scroll */
+  transform: translateZ(0);
+  will-change: transform, opacity;
 }
 
-/* Micro-energy highlight overlay - radial glow + top sheen */
+/* 🔧 DEPTH: Back-halo layer - energia che "emana" da dietro */
+.card-glass-white-energy::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: calc(inherit + 8px);
+  pointer-events: none;
+  z-index: -1;
+  /* Soft diffused halo behind the card */
+  background: radial-gradient(
+    ellipse 120% 100% at 50% 50%,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(180, 200, 255, 0.02) 40%,
+    transparent 70%
+  );
+  filter: blur(12px);
+  opacity: 0.8;
+  animation: haloBreath 10s ease-in-out infinite;
+}
+
+/* Micro-energy highlight overlay - specular highlight + top sheen */
 .card-glass-white-energy::before {
   content: '';
   position: absolute;
@@ -60,12 +93,17 @@ main,
   border-radius: inherit;
   pointer-events: none;
   z-index: 1;
-  /* Soft radial highlight - top-left white glow + linear sheen */
+  /* 🔧 DEPTH: Enhanced specular highlights */
   background: 
-    radial-gradient(ellipse 90% 70% at 10% 10%, rgba(255, 255, 255, 0.12) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 90% 90%, rgba(255, 255, 255, 0.06) 0%, transparent 50%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%);
-  opacity: 0.65;
+    /* Specular highlight top-left */
+    radial-gradient(ellipse 80% 60% at 15% 10%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+    /* Secondary glow bottom-right */
+    radial-gradient(ellipse 70% 50% at 85% 85%, rgba(255, 255, 255, 0.08) 0%, transparent 45%),
+    /* Top edge sheen */
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 25%),
+    /* Diagonal energy sweep */
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 50%);
+  opacity: 0.7;
   animation: energyBreath 8s ease-in-out infinite;
 }
 
@@ -75,11 +113,18 @@ main,
   50% { opacity: 0.78; }
 }
 
+/* Back halo breathing - slower, more subtle */
+@keyframes haloBreath {
+  0%, 100% { opacity: 0.6; filter: blur(12px); }
+  50% { opacity: 0.85; filter: blur(14px); }
+}
+
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  .card-glass-white-energy::before {
+  .card-glass-white-energy::before,
+  .card-glass-white-energy::after {
     animation: none;
-    opacity: 0.65;
+    opacity: 0.7;
   }
 }
 
@@ -837,13 +882,15 @@ body.sn-page [data-vaul-drawer] * {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ========================================
-   BOTTOM NAV PILL - DARK FIRST, WHITE FALLBACK
+   BOTTOM NAV PILL - UNIFIED DARK GLASS ALL PAGES
+   🔧 FIX 30/01/2026: SEMPRE dark glass, non dipende da .sn-page-dark
+   Questo assicura aspetto identico su Home, Map, Buzz, Intelligence, ecc.
    ======================================== */
-html.sn-page-dark body.is-native .bottom-navigation-ios > div,
-html.sn-page-dark body.is-native .bottom-navigation-ios .bottom-nav-pill,
-body.is-native.sn-page-dark .bottom-navigation-ios > div,
-body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-pill {
-  /* iOS Folder Glass - dark mode - WHITE glow (no cyan) */
+body.is-native .bottom-navigation-ios > div,
+body.is-native .bottom-navigation-ios .bottom-nav-pill,
+.bottom-navigation-ios > div,
+.bottom-navigation-ios .bottom-nav-pill {
+  /* iOS Folder Glass - SEMPRE dark - WHITE glow (no cyan) */
   background: rgba(10, 10, 12, 0.22) !important;
   backdrop-filter: blur(18px) saturate(160%) !important;
   -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
@@ -851,51 +898,63 @@ body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-pill {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
-/* White nav pill ONLY if NOT dark */
-body.is-native:not(.sn-page-dark) .bottom-navigation-ios > div,
-body.is-native:not(.sn-page-dark) .bottom-navigation-ios .bottom-nav-pill {
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+/* Subtle top sheen overlay - unified */
+.bottom-navigation-ios .bottom-nav-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 40%);
+  z-index: 0;
 }
 
 /* ========================================
-   BOTTOM NAV ICON COLORS
-   BLACK when inactive (#1C1C1E)
+   BOTTOM NAV ICON COLORS - UNIFIED ALL PAGES
+   🔧 FIX 30/01/2026: WHITE inactive (non nero) per dark glass
    NEON CYAN when active (#00D1FF)
    ======================================== */
 
-/* Inactive icons - BLACK */
+/* Inactive icons - WHITE/GRAY for dark glass background */
 body.is-native .bottom-navigation-ios .bottom-nav-inactive,
 body.is-native .bottom-navigation-ios .bottom-nav-inactive svg,
 body.is-native .bottom-navigation-ios .bottom-nav-inactive span,
-body.is-native .bottom-navigation-ios .bottom-nav-btn:not(.bottom-nav-active) {
-  color: #1C1C1E !important;
+body.is-native .bottom-navigation-ios .bottom-nav-btn:not(.bottom-nav-active),
+.bottom-navigation-ios .bottom-nav-inactive,
+.bottom-navigation-ios .bottom-nav-inactive svg,
+.bottom-navigation-ios .bottom-nav-inactive span,
+.bottom-navigation-ios .bottom-nav-btn:not(.bottom-nav-active) {
+  color: rgba(255, 255, 255, 0.65) !important;
 }
 
-/* Active icons - NEON CYAN with glow */
+/* Active icons - NEON CYAN with glow - UNIFIED ALL PAGES */
 body.is-native .bottom-navigation-ios .bottom-nav-active,
 body.is-native .bottom-navigation-ios .bottom-nav-active svg,
-body.is-native .bottom-navigation-ios .bottom-nav-active span {
+body.is-native .bottom-navigation-ios .bottom-nav-active span,
+.bottom-navigation-ios .bottom-nav-active,
+.bottom-navigation-ios .bottom-nav-active svg,
+.bottom-navigation-ios .bottom-nav-active span {
   color: #00D1FF !important;
 }
 
-body.is-native .bottom-navigation-ios .bottom-nav-active svg {
+body.is-native .bottom-navigation-ios .bottom-nav-active svg,
+.bottom-navigation-ios .bottom-nav-active svg {
   filter: drop-shadow(0 0 4px rgba(0, 209, 255, 0.5)) !important;
 }
 
 /* Active indicator line - keep cyan glow */
 body.is-native .bottom-navigation-ios [style*="background-color: #00D1FF"],
-body.is-native .bottom-navigation-ios [style*="background-color: rgb(0, 209, 255)"] {
+body.is-native .bottom-navigation-ios [style*="background-color: rgb(0, 209, 255)"],
+.bottom-navigation-ios [style*="background-color: #00D1FF"],
+.bottom-navigation-ios [style*="background-color: rgb(0, 209, 255)"] {
   background-color: #00D1FF !important;
   box-shadow: 0 0 8px #00D1FF, 0 0 16px #00D1FF !important;
 }
 
-/* Active background circle - lighter for white theme */
-body.is-native .bottom-navigation-ios [style*="background: rgba(0, 0, 0, 0.4)"] {
-  background: rgba(0, 209, 255, 0.12) !important;
+/* Active background circle - dark for dark glass theme */
+body.is-native .bottom-navigation-ios [style*="background: rgba(0, 0, 0, 0.4)"],
+.bottom-navigation-ios [style*="background: rgba(0, 0, 0, 0.4)"] {
+  background: rgba(0, 0, 0, 0.4) !important;
 }
 
 /* ========================================
@@ -1429,6 +1488,84 @@ body.is-native.sn-page-dark .m1u-display,
 body.sn-page-dark .m1u-display {
   background: rgba(10, 12, 20, 0.85) !important;
   border-color: rgba(0, 209, 255, 0.3) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🚀 iOS SCROLL PERFORMANCE - FASE 4 FIX 30/01/2026
+   Riduzione costo filtri per scroll fluido senza micro-freeze
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 🔧 GPU Acceleration for scroll containers */
+body.is-native .m1-single-scroll-root,
+body.is-native .global-layout-content,
+body.is-native main {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* Hint to browser for upcoming transforms during scroll */
+  will-change: scroll-position;
+}
+
+/* 🔧 Optimize cards with backdrop-filter during scroll */
+body.is-native .card-glass-white-energy,
+body.is-native .m1-relief,
+body.is-native .m1-relief-sm,
+body.is-native .m1-card {
+  /* GPU layer promotion */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  /* Contain repainting to this element */
+  contain: layout style paint;
+  /* Hint for transform changes */
+  will-change: transform;
+}
+
+/* 🔧 Reduce blur complexity during active scroll on iOS */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari: Use lighter blur values */
+  body.is-native .card-glass-white-energy,
+  body.is-native [style*="backdrop-filter"] {
+    /* Reduce blur from 20-24px to 14px for better performance */
+    -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
+    backdrop-filter: blur(14px) saturate(140%) !important;
+  }
+  
+  /* Keep header/nav with slightly higher blur (they're fixed, not scrolling) */
+  body.is-native .bottom-nav-pill,
+  body.is-native .unified-header-wrapper header {
+    -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+    backdrop-filter: blur(18px) saturate(160%) !important;
+  }
+}
+
+/* 🔧 Disable expensive animations during scroll */
+@media (prefers-reduced-motion: reduce) {
+  body.is-native .card-glass-white-energy::before,
+  body.is-native .card-glass-white-energy::after {
+    animation: none !important;
+  }
+}
+
+/* 🔧 Optimize box-shadow rendering */
+body.is-native .card-glass-white-energy {
+  /* Simpler shadow for scroll performance - full effect on hover/tap */
+  box-shadow: 
+    0 15px 50px rgba(255, 255, 255, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 🔧 Restore full effect on focus/active (user interaction) */
+body.is-native .card-glass-white-energy:active,
+body.is-native .card-glass-white-energy:focus-within {
+  box-shadow: 
+    0 20px 60px rgba(255, 255, 255, 0.06),
+    0 30px 80px rgba(200, 220, 255, 0.04),
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    inset 0 0 30px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
 }
 
 /* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
