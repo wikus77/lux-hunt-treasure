@@ -452,14 +452,42 @@ export const NotificationsPage: React.FC = () => {
         paddingRight: 'max(16px, env(safe-area-inset-right, 16px))'
       }}>
       
-      {/* Header with Tabs */}
-      <div data-onboarding="notice-page" className="mb-6">
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="m1-panel relative"
-        >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90" />
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* PANNELLO COLORATO — Identico a M1SSION PRIZE in Home */}
+      {/* DEVE avere position:relative e z-index:1 per essere sopra FADE ZONE */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <div 
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          width: '100%',
+          borderRadius: '24px',
+          overflow: 'hidden',
+          marginBottom: '16px',
+          background: `linear-gradient(160deg, 
+            rgba(20, 60, 120, 0.92) 0%, 
+            rgba(25, 80, 130, 0.88) 25%, 
+            rgba(30, 100, 120, 0.82) 50%, 
+            rgba(35, 120, 100, 0.75) 75%, 
+            rgba(40, 140, 90, 0.65) 100%
+          )`,
+          padding: '16px',
+          boxShadow: '0 4px 20px rgba(0, 100, 150, 0.3)',
+        }}
+      >
+        {/* Header with Tabs - DENTRO il pannello colorato */}
+        <div data-onboarding="notice-page">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="m1-panel relative"
+            style={{ 
+              background: 'rgba(0, 0, 0, 0.3)', 
+              backdropFilter: 'blur(12px)',
+              borderRadius: '16px',
+            }}
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90 rounded-t-2xl" />
           
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'notifications' | 'messages')} className="w-full">
@@ -652,6 +680,10 @@ export const NotificationsPage: React.FC = () => {
           </Tabs>
         </motion.div>
       </div>
+      </div>
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* FINE PANNELLO COLORATO */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
 
       {/* New Chat Modal */}
       <NewChatModal
