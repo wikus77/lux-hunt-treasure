@@ -37,13 +37,22 @@ main,
 /* ═══════════════════════════════════════════════════════════════════════════
    🌟 WHITE MICRO-ENERGY CARDS - Home containers (Agent, Tempo, Battle)
    Soft white glow emanating from cards with subtle breathing animation
+   NO CYAN/BLUE - pure white energy
    ═══════════════════════════════════════════════════════════════════════════ */
 .card-glass-white-energy {
   position: relative;
   isolation: isolate;
+  /* Override any cyan/blue shadows with white */
+  box-shadow: 
+    0 0 22px rgba(255, 255, 255, 0.10),
+    0 0 45px rgba(255, 255, 255, 0.05),
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 0 28px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
-/* Micro-energy highlight overlay */
+/* Micro-energy highlight overlay - radial glow + top sheen */
 .card-glass-white-energy::before {
   content: '';
   position: absolute;
@@ -53,16 +62,17 @@ main,
   z-index: 1;
   /* Soft radial highlight - top-left white glow + linear sheen */
   background: 
-    radial-gradient(ellipse 80% 60% at 15% 15%, rgba(255, 255, 255, 0.08) 0%, transparent 60%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 50%);
+    radial-gradient(ellipse 90% 70% at 10% 10%, rgba(255, 255, 255, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 90% 90%, rgba(255, 255, 255, 0.06) 0%, transparent 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%);
   opacity: 0.65;
   animation: energyBreath 8s ease-in-out infinite;
 }
 
-/* Breathing animation - subtle opacity pulse */
+/* Breathing animation - subtle opacity pulse (very slow) */
 @keyframes energyBreath {
   0%, 100% { opacity: 0.55; }
-  50% { opacity: 0.75; }
+  50% { opacity: 0.78; }
 }
 
 /* Respect reduced motion preferences */
@@ -74,31 +84,33 @@ main,
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   🌊 BOTTOM NAV - iOS Folder Glass Effect (enhanced)
+   🌊 BOTTOM NAV - iOS Folder Glass Effect (GLOBAL - all pages)
    Semi-transparent glass with blur, like iOS folder background
+   White micro-energy glow (no cyan)
    ═══════════════════════════════════════════════════════════════════════════ */
 .bottom-nav-pill {
-  /* iOS Folder-style glass - semi-transparent dark */
-  background: rgba(18, 18, 22, 0.38) !important;
-  backdrop-filter: blur(22px) saturate(170%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(170%) !important;
-  /* Refined border */
+  /* iOS Folder-style glass - MORE TRANSPARENT */
+  background: rgba(10, 10, 12, 0.22) !important;
+  backdrop-filter: blur(18px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+  /* Refined WHITE border */
   border: 1px solid rgba(255, 255, 255, 0.10) !important;
-  /* Soft shadow for depth */
+  /* Deep shadow + white inner sheen */
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.45),
-    0 0 0 0.5px rgba(255, 255, 255, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+    0 10px 40px rgba(0, 0, 0, 0.55),
+    0 0 0 0.5px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 20px rgba(255, 255, 255, 0.02) !important;
 }
 
-/* Subtle noise texture overlay for glass effect */
+/* Subtle top sheen overlay for glass effect */
 .bottom-nav-pill::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 40%);
   z-index: 0;
 }
 
@@ -831,11 +843,12 @@ html.sn-page-dark body.is-native .bottom-navigation-ios > div,
 html.sn-page-dark body.is-native .bottom-navigation-ios .bottom-nav-pill,
 body.is-native.sn-page-dark .bottom-navigation-ios > div,
 body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-pill {
-  background: rgba(5, 8, 15, 0.95) !important;
-  backdrop-filter: blur(20px) saturate(150%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
-  border: 1px solid rgba(0, 209, 255, 0.2) !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 209, 255, 0.12) !important;
+  /* iOS Folder Glass - dark mode - WHITE glow (no cyan) */
+  background: rgba(10, 10, 12, 0.22) !important;
+  backdrop-filter: blur(18px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
 /* White nav pill ONLY if NOT dark */
@@ -1177,8 +1190,9 @@ body.sn-page-dark .unified-header-wrapper .m1ssion-logo span:last-child {
 }
 
 /* ========================================
-   DARK BOTTOM NAV - GLASS SATIN NERO + ICONE BIANCHE
+   DARK BOTTOM NAV - iOS FOLDER GLASS + ICONE BIANCHE
    Cerchio colorato active MANTENUTO (non toccato)
+   WHITE glow (no cyan) - MORE TRANSPARENT
    ======================================== */
 body.is-native.sn-page-dark .bottom-navigation-ios > div,
 body.is-native.sn-page-dark .bottom-navigation-ios > div,
@@ -1186,14 +1200,15 @@ body.sn-page-dark .bottom-navigation-ios > div,
 body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-pill,
 body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-pill,
 body.sn-page-dark .bottom-navigation-ios .bottom-nav-pill {
-  background: rgba(8, 10, 18, 0.92) !important;
-  backdrop-filter: blur(20px) saturate(150%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
-  border: 1px solid rgba(0, 209, 255, 0.18) !important;
+  /* iOS Folder Glass - VERY TRANSPARENT like folder on homescreen */
+  background: rgba(10, 10, 12, 0.22) !important;
+  backdrop-filter: blur(18px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
   box-shadow: 
-    0 -4px 24px rgba(0, 0, 0, 0.5),
-    0 0 15px rgba(0, 209, 255, 0.06),
-    inset 0 1px 0 rgba(0, 209, 255, 0.08) !important;
+    0 10px 40px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 20px rgba(255, 255, 255, 0.02) !important;
 }
 
 /* Inactive icons - WHITE (era nero prima) */

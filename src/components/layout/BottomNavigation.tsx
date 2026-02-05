@@ -249,15 +249,16 @@ const BottomNavigationComponent = () => {
           width: "100%",
           maxWidth: "400px",
           height: "64px",
-          // 🎨 DARK GLASS THEME - Semi-trasparente uniforme in tutte le pagine
-          background: "rgba(10, 10, 15, 0.65)",
-          backdropFilter: "blur(24px) saturate(180%)",
-          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          // 🎨 iOS FOLDER GLASS - Semi-trasparente uniforme in tutte le pagine
+          // Stili base - CSS in ios-native.css fa override con !important
+          background: "rgba(10, 10, 12, 0.22)",
+          backdropFilter: "blur(18px) saturate(160%)",
+          WebkitBackdropFilter: "blur(18px) saturate(160%)",
           borderRadius: "32px",
           padding: "0 8px",
-          boxShadow: "0 4px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 209, 255, 0.15), inset 0 1px 0 rgba(255,255,255,0.05)",
+          boxShadow: "0 10px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255,255,255,0.06)",
           pointerEvents: "auto",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
+          border: "1px solid rgba(255, 255, 255, 0.10)",
         }}
       >
         {links.map((link) => {
