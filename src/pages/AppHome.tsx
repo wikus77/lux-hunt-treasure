@@ -208,8 +208,27 @@ const { isConnected } = useRealTimeNotifications();
       </Helmet>
       
       <MissionSync onRefresh={handleMissionSync}>
-      {/* 🔧 FIX 03/02/2026: ESATTAMENTE come BuzzPage - sn-page (bianco), NO gradient sul container */}
+      {/* 🎬 BLACK OPS UI: Sfondo nero cinematic con gradient */}
       <main className="relative" style={{ zIndex: 0 }}>
+        {/* BLACKOPS BACKGROUND - Gradient scuro cinematic */}
+        <div 
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: -1,
+            pointerEvents: 'none',
+            background: `linear-gradient(180deg,
+              #05070B 0%,
+              #080C14 15%,
+              #0A1018 35%,
+              #0C1420 55%,
+              #0A1018 75%,
+              #080C14 90%,
+              #05070B 100%
+            )`,
+            minHeight: '100%',
+          }}
+        />
         <div className="container mx-auto px-4">
           
           {/* Offset per header - ESATTAMENTE come BuzzPage */}
@@ -228,23 +247,33 @@ const { isConnected } = useRealTimeNotifications();
                 {/* ON M1SSION BADGE — Positioned in header area (removed from scroll flow) */}
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                {/* 1️⃣ M1SSION PRIZE - Container con gradient interno */}
+                {/* 1️⃣ M1SSION PRIZE - BLACK GLASS + NEON BORDER (BLACK OPS) */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 <div 
                   style={{
+                    position: 'relative',
                     width: '100%',
                     borderRadius: '24px',
                     overflow: 'hidden',
                     marginBottom: '16px',
+                    /* BLACK GLASS background */
                     background: `linear-gradient(160deg, 
-                      rgba(20, 60, 120, 0.92) 0%, 
-                      rgba(25, 80, 130, 0.88) 25%, 
-                      rgba(30, 100, 120, 0.82) 50%, 
-                      rgba(35, 120, 100, 0.75) 75%, 
-                      rgba(40, 140, 90, 0.65) 100%
+                      rgba(8, 12, 20, 0.85) 0%, 
+                      rgba(10, 16, 28, 0.82) 50%, 
+                      rgba(8, 12, 20, 0.85) 100%
                     )`,
+                    backdropFilter: 'blur(20px) saturate(150%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(150%)',
                     padding: '20px 16px 40px 16px',
-                    boxShadow: '0 4px 20px rgba(0, 100, 150, 0.3)',
+                    /* NEON BORDER: cyan/blue glow + purple edge */
+                    border: '1px solid rgba(0, 209, 255, 0.35)',
+                    boxShadow: `
+                      0 0 20px rgba(0, 209, 255, 0.25),
+                      0 0 40px rgba(0, 150, 255, 0.15),
+                      0 0 60px rgba(123, 92, 255, 0.08),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                      inset 0 0 20px rgba(0, 209, 255, 0.03)
+                    `,
                   }}
                 >
                   {/* PrizeVision */}
