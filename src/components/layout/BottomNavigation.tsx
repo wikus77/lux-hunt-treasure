@@ -249,15 +249,15 @@ const BottomNavigationComponent = () => {
           width: "100%",
           maxWidth: "400px",
           height: "64px",
-          // 🔧 OPTION B: WHITE GLASS for iOS native (CSS overrides this)
-          // Default dark for web, CSS makes it white for body.is-native
-          background: "rgba(15, 20, 30, 0.45)",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          // 🎨 DARK GLASS THEME - Semi-trasparente uniforme in tutte le pagine
+          background: "rgba(10, 10, 15, 0.65)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
           borderRadius: "32px",
           padding: "0 8px",
-          boxShadow: "0 4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255,255,255,0.08)",
+          boxShadow: "0 4px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 209, 255, 0.15), inset 0 1px 0 rgba(255,255,255,0.05)",
           pointerEvents: "auto",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
         }}
       >
         {links.map((link) => {

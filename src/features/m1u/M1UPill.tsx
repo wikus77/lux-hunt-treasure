@@ -232,12 +232,13 @@ const M1UPill: React.FC<M1UPillProps> = ({
         <motion.div
           className="m1u-pill-main flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer"
           style={{
-            background:
-              'radial-gradient(120% 120% at 50% 10%, rgba(255,255,255,.08), rgba(0,0,0,.2) 58%)',
-            border: '1px solid rgba(255, 255, 255, 0.18)',
+            // 🎨 DARK GLASS SEMI-TRASPARENTE - Testo bianco visibile
+            background: 'rgba(10, 10, 15, 0.7)',
+            border: '1px solid rgba(0, 209, 255, 0.2)',
             boxShadow:
-              '0 2px 12px rgba(0,0,0,.35), 0 0 20px rgba(255, 215, 0, 0.12) inset',
-            backdropFilter: 'blur(12px)',
+              '0 4px 16px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 215, 0, 0.15) inset, inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+            backdropFilter: 'blur(16px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(16px) saturate(150%)',
             minHeight: 40,
           }}
           whileHover={{ scale: 1.02 }}
@@ -291,16 +292,23 @@ const M1UPill: React.FC<M1UPillProps> = ({
                 exit={{ opacity: 0, y: 10 }}
               >
                 {showLabel && (
-                  <span className="text-sm font-semibold text-white/90 font-orbitron">M1U</span>
+                  <span 
+                    className="text-sm font-semibold font-orbitron"
+                    style={{ 
+                      color: '#FFFFFF',
+                      textShadow: '0 0 8px rgba(255, 255, 255, 0.3)'
+                    }}
+                  >M1U</span>
                 )}
                 <span 
                   className={`text-sm font-bold font-orbitron tracking-wide transition-all ${
                     isAnimating 
                       ? 'text-[#FFD700] scale-110 drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]' 
-                      : 'text-white'
+                      : ''
                   }`}
                   style={{
-                    textShadow: isAnimating ? '0 0 10px rgba(255, 215, 0, 0.9)' : 'none'
+                    color: isAnimating ? '#FFD700' : '#FFFFFF',
+                    textShadow: isAnimating ? '0 0 10px rgba(255, 215, 0, 0.9)' : '0 0 6px rgba(255, 255, 255, 0.2)'
                   }}
                 >
                   {displayedBalance.toLocaleString('it-IT')}

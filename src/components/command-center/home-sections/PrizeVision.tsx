@@ -269,16 +269,17 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
 
               {/* Header - Clickable for Flip */}
               <div
-                className="p-4 border-b border-gray-300/50 flex justify-between items-center cursor-pointer select-none"
+                className="p-4 border-b border-cyan-500/20 flex justify-between items-center cursor-pointer select-none"
                 onClick={toggleDecryptionMode}
               >
                 <h2 className="text-lg md:text-xl font-orbitron font-bold">
-                  <span className="text-[#0088AA]" style={{ textShadow: "0 0 10px rgba(0, 150, 180, 0.4)" }}>M1</span>
-                  <span className="text-gray-800">SSION<span className="text-xs align-top">™</span> PRIZE</span>
+                  {/* 🎨 M1 CYAN + SSION BIANCO + PRIZE BIANCO - ALTA VISIBILITÀ */}
+                  <span style={{ color: '#00D1FF', textShadow: '0 0 12px rgba(0, 209, 255, 0.7)' }}>M1</span>
+                  <span style={{ color: '#FFFFFF', textShadow: '0 0 6px rgba(255, 255, 255, 0.4)' }}>SSION<span className="text-xs align-top">™</span> PRIZE</span>
                 </h2>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs text-gray-700 font-medium">Visibilità: {progress}%</span>
-                  <span className="text-xs text-gray-500">({currentImageIndex + 1}/{missionPrizeImages.length})</span>
+                  <span className="text-xs font-medium" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>Visibilità: {progress}%</span>
+                  <span className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>({currentImageIndex + 1}/{missionPrizeImages.length})</span>
                   {/* Flip indicator icon */}
                   <motion.div 
                     className="ml-2 w-6 h-6 rounded-full bg-[#0088AA]/20 border border-[#0088AA]/50 flex items-center justify-center"
@@ -645,7 +646,7 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
         onClose={() => setShowInfoModal(false)}
         title="M1SSION PRIZE"
         subtitle="Il tuo tesoro ti aspetta!"
-        accentColor="#FFD700"
+        accentColor="#00D1FF"
         content={
           <div className="space-y-3">
             <div className="flex items-center gap-3">

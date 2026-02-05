@@ -310,28 +310,34 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             marginBottom: '8px',
           }}
         >
-          {/* Left: M1SSION text */}
-          <div 
-            style={{ 
-              pointerEvents: 'auto',
-              padding: '6px 12px',
-              background: 'rgba(255, 255, 255, 0.85)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              borderRadius: '18px',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-            }}
-          >
-            <span style={{
-              fontFamily: 'Orbitron, sans-serif',
-              fontWeight: 700,
-              fontSize: '14px',
-              letterSpacing: '2px',
-              color: '#1C1C1E',
-            }}>
-              M1SSION
-            </span>
-          </div>
+          {/* Left: M1SSION text - CLICCABILE per tornare in HOME */}
+          <Link href="/home" onClick={() => hapticLight()}>
+            <div 
+              style={{ 
+                pointerEvents: 'auto',
+                padding: '6px 12px',
+                // 🎨 DARK GLASS SEMI-TRASPARENTE
+                background: 'rgba(10, 10, 15, 0.7)',
+                backdropFilter: 'blur(20px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+                borderRadius: '18px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 209, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{
+                fontFamily: 'Orbitron, sans-serif',
+                fontWeight: 700,
+                fontSize: '14px',
+                letterSpacing: '2px',
+              }}>
+                {/* M1 CYAN + SSION BIANCO */}
+                <span style={{ color: '#00D1FF', textShadow: '0 0 10px rgba(0, 209, 255, 0.6)' }}>M1</span>
+                <span style={{ color: '#FFFFFF', textShadow: '0 0 6px rgba(255, 255, 255, 0.3)' }}>SSION</span>
+              </span>
+            </div>
+          </Link>
           
           {/* Center: Agent Code Pill (transparent) */}
           <motion.div

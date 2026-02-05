@@ -113,16 +113,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         webView.scrollView.bounces = true
         webView.scrollView.alwaysBounceVertical = true
         
-        // 🔧 OPTION B FIX 31/01/2026: WHITE background for iOS bounce/overscroll
+        // 🎬 GLOBAL DARK FIX 05/02/2026: BLACK background for iOS bounce/overscroll
         // CRITICAL: This color shows during rubber-band bounce
-        // Native layer = WHITE so overscroll blends with white content
-        // Header/Nav must be OPAQUE white glass to not show overlay
-        let bgColor = UIColor.white // #FFFFFF
+        // Native layer = BLACK (Briefing Buzz style) for dark theme
+        let bgColor = UIColor(red: 10/255, green: 10/255, blue: 15/255, alpha: 1.0) // #0a0a0f
         webView.isOpaque = true
         webView.backgroundColor = bgColor
         webView.scrollView.backgroundColor = bgColor
         
-        // Set root view background to WHITE
+        // Set root view background to BLACK
         if let rootView = webView.superview {
             rootView.backgroundColor = bgColor
         }
@@ -280,15 +279,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             document.documentElement.style.setProperty('--sat', '\(safeTop)px');
             document.documentElement.style.setProperty('--capacitor-safe-area-top', '\(safeTop)px');
             
-            // 🔧 OPTION B FIX 31/01/2026: WHITE background on html for seamless overscroll
-            // Native layer = WHITE, html = WHITE, so overscroll shows white (blends with content)
-            document.documentElement.style.setProperty('background', '#FFFFFF', 'important');
-            document.documentElement.style.setProperty('background-color', '#FFFFFF', 'important');
+            // 🎬 GLOBAL DARK FIX 05/02/2026: BLACK background on html for dark theme
+            // Native layer = BLACK (#0a0a0f), html = BLACK, so overscroll shows black
+            document.documentElement.style.setProperty('background', '#0a0a0f', 'important');
+            document.documentElement.style.setProperty('background-color', '#0a0a0f', 'important');
             
-            // Also set body white for consistency
+            // Also set body to dark gradient for consistency
             if (document.body) {
-                document.body.style.setProperty('background', '#FFFFFF', 'important');
-                document.body.style.setProperty('background-color', '#FFFFFF', 'important');
+                document.body.style.setProperty('background', 'linear-gradient(180deg, #0a0a0f 0%, #0d1117 50%, #0a0a0f 100%)', 'important');
+                document.body.style.setProperty('background-color', '#0a0a0f', 'important');
             }
             
             // Inject layout CSS immediately
@@ -303,11 +302,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 document.documentElement.appendChild(style);
             }
             
-            // 🔧 FIX v8.8: Also run when body is available to ensure coverage
+            // 🎬 GLOBAL DARK FIX: Ensure body has dark background and is-native class
             function fixBodyBackground() {
                 if (document.body) {
-                    document.body.style.setProperty('background', 'transparent', 'important');
-                    document.body.style.setProperty('background-color', 'transparent', 'important');
+                    document.body.style.setProperty('background', 'linear-gradient(180deg, #0a0a0f 0%, #0d1117 50%, #0a0a0f 100%)', 'important');
+                    document.body.style.setProperty('background-color', '#0a0a0f', 'important');
                     document.body.classList.add('is-native');
                 }
             }
