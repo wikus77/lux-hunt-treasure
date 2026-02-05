@@ -7,7 +7,7 @@
 @import './styles/theme.css';
 @import './styles/mobile-optimizations.css';
 @import './styles/ios-safe-area-fixes.css';
-@import './styles/ios-native.css';
+/* ⚠️ ios-native.css REMOVED - now imported LAST in main.tsx for highest priority */
 @import './styles/norah-modal.css';
 @import './styles/prize-modal.css';
 @import './styles/map-dock.css';

@@ -59,29 +59,34 @@
    🔧 OPTION B FIX 31/01/2026: WHITE background for seamless overscroll
    Native layer = WHITE, html = WHITE, body = WHITE
    Header/Nav are OPAQUE white glass to not show overlay
+   
+   ⚠️ CRITICAL FIX 05/02/2026: DO NOT apply WHITE when .sn-page-dark is present
+   The :not(.sn-page-dark) selector ensures dark theme pages stay dark
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* html/body WHITE for seamless overscroll */
-html.sn-page,
-body.sn-page,
-html:has(.sn-page),
-body:has(.sn-page) {
+/* html/body WHITE for seamless overscroll - ONLY if NOT dark theme */
+html.sn-page:not(.sn-page-dark),
+body.sn-page:not(.sn-page-dark) {
   background: #FFFFFF !important;
   background-color: #FFFFFF !important;
 }
 
-/* Also WHITE for body.is-native */
-body.is-native.sn-page,
-body.is-native:has(.sn-page) {
+/* :has() fallback for pages with .sn-page child - EXCLUDE dark theme */
+html:not(.sn-page-dark):has(.sn-page:not(.sn-page-dark)),
+body:not(.sn-page-dark):has(.sn-page:not(.sn-page-dark)) {
   background: #FFFFFF !important;
   background-color: #FFFFFF !important;
 }
 
-/* Also WHITE for Capacitor iOS variants */
-html.capacitor-ios.sn-page,
-html.capacitor-ios:has(.sn-page),
-html[data-capacitor="ios"].sn-page,
-html[data-capacitor="ios"]:has(.sn-page) {
+/* Also WHITE for body.is-native - ONLY if NOT dark theme */
+body.is-native.sn-page:not(.sn-page-dark) {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+}
+
+/* Also WHITE for Capacitor iOS variants - ONLY if NOT dark theme */
+html.capacitor-ios.sn-page:not(.sn-page-dark),
+html[data-capacitor="ios"].sn-page:not(.sn-page-dark) {
   background: #FFFFFF !important;
   background-color: #FFFFFF !important;
 }

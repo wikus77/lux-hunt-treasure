@@ -2,9 +2,9 @@
 /* M1SSION™ AG-X0197 */
 import './styles/map.css';
 import './styles/effects/ritual-distortion.css';
-import './styles/ios-native.css';
 import './styles/motion-tokens.css'; // 🎬 Native Feel: Unified motion system
 import './styles/soft-native.css'; // 🎨 Soft Native: Apple-like design system
+import './styles/ios-native.css'; // 📱 iOS Native: MUST BE LAST - highest priority for native app
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/supabase/clientUtils';
 
 // ✅ TASK 4: Auto-register SW on all hosts (not just *.pages.dev)
