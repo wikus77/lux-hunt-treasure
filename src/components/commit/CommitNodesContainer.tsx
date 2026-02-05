@@ -378,7 +378,7 @@ export const CommitNodesContainer: React.FC = () => {
   return (
     <div 
       ref={containerRef}
-      className="commit-node-slot"
+      className="commit-node-slot m1-entity-glow-container"
       style={{
         display: 'flex',
         justifyContent: 'center',

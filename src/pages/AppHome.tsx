@@ -247,32 +247,26 @@ const { isConnected } = useRealTimeNotifications();
                 {/* ON M1SSION BADGE — Positioned in header area (removed from scroll flow) */}
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                {/* 1️⃣ M1SSION PRIZE - BLACK GLASS + NEON BORDER (BLACK OPS) */}
+                {/* 1️⃣ M1SSION PRIZE - BLACK GLASS + ANIMATED NEON BORDER (BLACK OPS) */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 <div 
+                  className="m1-neon-border-animated"
                   style={{
                     position: 'relative',
                     width: '100%',
                     borderRadius: '24px',
-                    overflow: 'visible',
                     marginBottom: '16px',
                     /* BLACK GLASS SATIN background */
                     background: `linear-gradient(160deg, 
-                      rgba(8, 12, 20, 0.92) 0%, 
-                      rgba(10, 16, 28, 0.88) 50%, 
-                      rgba(8, 12, 20, 0.92) 100%
+                      rgba(8, 12, 20, 0.94) 0%, 
+                      rgba(10, 16, 28, 0.90) 50%, 
+                      rgba(8, 12, 20, 0.94) 100%
                     )`,
                     backdropFilter: 'blur(24px) saturate(160%)',
                     WebkitBackdropFilter: 'blur(24px) saturate(160%)',
                     padding: '20px 16px 40px 16px',
-                    /* NEON BORDER FORTE: cyan/blue + purple edge come foto 4 */
-                    border: '2px solid transparent',
-                    backgroundClip: 'padding-box',
+                    /* Static neon glow (animated via CSS class) */
                     boxShadow: `
-                      0 0 0 2px rgba(0, 209, 255, 0.5),
-                      0 0 25px rgba(0, 209, 255, 0.35),
-                      0 0 50px rgba(0, 180, 255, 0.2),
-                      0 0 80px rgba(123, 92, 255, 0.12),
                       inset 0 1px 0 rgba(255, 255, 255, 0.06),
                       inset 0 0 30px rgba(0, 209, 255, 0.05)
                     `,

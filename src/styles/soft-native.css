@@ -742,4 +742,165 @@ body:has(.sn-page-dark) .bottom-navigation-ios button[class*="active"] span {
     inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎬 M1SSION PRIZE - ANIMATED NEON BORDER SHIMMER
+   Slow rotating gradient border effect
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes m1-neon-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes m1-neon-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animated neon border container (apply to M1SSION PRIZE wrapper) */
+.m1-neon-border-animated {
+  position: relative;
+  border-radius: 24px;
+  overflow: visible;
+}
+
+/* The animated border pseudo-element */
+.m1-neon-border-animated::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 26px;
+  padding: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 209, 255, 0.8) 0%,
+    rgba(0, 150, 255, 0.6) 20%,
+    rgba(123, 92, 255, 0.7) 40%,
+    rgba(255, 0, 200, 0.5) 60%,
+    rgba(123, 92, 255, 0.7) 80%,
+    rgba(0, 209, 255, 0.8) 100%
+  );
+  background-size: 300% 100%;
+  animation: m1-neon-shimmer 6s ease-in-out infinite;
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Outer glow layer */
+.m1-neon-border-animated::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 28px;
+  background: transparent;
+  box-shadow: 
+    0 0 30px rgba(0, 209, 255, 0.4),
+    0 0 60px rgba(0, 180, 255, 0.25),
+    0 0 100px rgba(123, 92, 255, 0.15);
+  pointer-events: none;
+  z-index: -2;
+  animation: m1-neon-pulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes m1-neon-pulse {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.01);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌟 ENTITY GLOW - Radial light behind blobs/AION entities
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.m1-entity-glow-container {
+  position: relative;
+}
+
+/* Dual-color radial glow behind entities */
+.m1-entity-glow-container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 280px;
+  height: 200px;
+  background: 
+    radial-gradient(ellipse at 40% 50%, rgba(0, 209, 255, 0.25) 0%, transparent 55%),
+    radial-gradient(ellipse at 60% 50%, rgba(255, 0, 200, 0.15) 0%, transparent 55%);
+  filter: blur(30px);
+  pointer-events: none;
+  z-index: -1;
+  animation: m1-glow-breathe 4s ease-in-out infinite alternate;
+}
+
+@keyframes m1-glow-breathe {
+  0% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎯 PROSSIMA AZIONE - Consistent dark glass + subtle glow
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.m1-next-action-dark {
+  background: linear-gradient(160deg, 
+    rgba(8, 12, 20, 0.85) 0%, 
+    rgba(10, 16, 28, 0.80) 50%, 
+    rgba(8, 12, 20, 0.85) 100%
+  );
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(0, 209, 255, 0.3);
+  border-radius: 24px;
+  box-shadow: 
+    0 0 20px rgba(0, 209, 255, 0.18),
+    0 0 40px rgba(0, 150, 255, 0.1),
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Inner highlight accent */
+.m1-next-action-dark::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(0, 209, 255, 0.4) 50%, 
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
 /* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
