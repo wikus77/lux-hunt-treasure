@@ -359,27 +359,20 @@ html[data-capacitor="ios"] {
   background-attachment: scroll !important;
 }
 
-/* 🎬 BLACK OPS PRIORITY: Dark background FIRST (will be overridden by white if NOT dark) */
-body.is-native.sn-page-dark {
-  background: linear-gradient(180deg, #030508 0%, #050810 50%, #030508 100%) !important;
-  background-color: #030508 !important;
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎬 GLOBAL DARK THEME - Briefing Buzz Style
+   ALL pages are dark - no white backgrounds anywhere
+   © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-html.sn-page-dark {
-  background: linear-gradient(180deg, #030508 0%, #050810 50%, #030508 100%) !important;
-  background-color: #030508 !important;
-}
-
-html.sn-page-dark body,
-html.sn-page-dark body.is-native {
-  background: linear-gradient(180deg, #030508 0%, #050810 50%, #030508 100%) !important;
-  background-color: #030508 !important;
-}
-
-/* White ONLY if NOT sn-page-dark on body */
-body.is-native:not(.sn-page-dark) {
-  background: #FFFFFF !important;
-  background-color: #FFFFFF !important;
+/* GLOBAL DARK: ALL native pages use dark gradient */
+html,
+body,
+body.is-native,
+html.capacitor-ios,
+html[data-capacitor="ios"] {
+  background: linear-gradient(180deg, #0a0a0f 0%, #0d1117 50%, #0a0a0f 100%) !important;
+  background-color: #0a0a0f !important;
 }
 
 /* All containers transparent */
@@ -484,123 +477,77 @@ body.is-native #m1u-pill-map3d-slot {
 }
 
 /* ========================================
-   🔧 FIX 30/01/2026: HEADER & BOTTOM NAV CONTRAST FIX (iOS Native)
-   
-   PROBLEM: Header pill has only 45% opacity + 20px blur = washed out text
-   Bottom nav inactive icons too dim (#8B9CAF)
-   
-   SOLUTION: Increase opacity to 85%, reduce blur to 12px for readability
-   Brighten inactive icons for visibility
-   
-   These rules ONLY apply when body.is-native (Capacitor iOS wrapper)
+   🎬 GLOBAL DARK THEME: HEADER (Briefing Buzz Style)
+   ALL pages use dark glass header with neon accents
    ======================================== */
 
-/* 🎬 BLACK OPS FIRST: Dark header - higher specificity */
-html.sn-page-dark body.is-native .unified-header-wrapper header,
-html.sn-page-dark body.is-native .unified-header-wrapper [class*="header-pill"],
-html.sn-page-dark body.is-native .unified-header-wrapper > div > div:first-child,
-body.is-native.sn-page-dark .unified-header-wrapper header,
-body.is-native.sn-page-dark .unified-header-wrapper [class*="header-pill"],
-body.is-native.sn-page-dark .unified-header-wrapper > div > div:first-child {
-  background: rgba(5, 8, 15, 0.95) !important;
-  backdrop-filter: blur(20px) saturate(150%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
-  border: 1px solid rgba(0, 209, 255, 0.2) !important;
+/* Dark glass header - ALL pages */
+body.is-native .unified-header-wrapper header,
+body.is-native .unified-header-wrapper [class*="header-pill"],
+body.is-native .unified-header-wrapper > div > div:first-child {
+  background: rgba(10, 10, 15, 0.92) !important;
+  backdrop-filter: blur(24px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(150%) !important;
+  border: 1px solid rgba(0, 209, 255, 0.18) !important;
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 209, 255, 0.1) !important;
 }
 
-/* White header ONLY if NOT dark theme */
-body.is-native:not(.sn-page-dark) .unified-header-wrapper header,
-body.is-native:not(.sn-page-dark) .unified-header-wrapper [class*="header-pill"],
-body.is-native:not(.sn-page-dark) .unified-header-wrapper > div > div:first-child {
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
-}
-
-/* 🎬 BLACK OPS: Header text WHITE */
-html.sn-page-dark body.is-native .unified-header-wrapper header *,
-html.sn-page-dark body.is-native .unified-header-wrapper [class*="text-white"],
-body.is-native.sn-page-dark .unified-header-wrapper header *,
-body.is-native.sn-page-dark .unified-header-wrapper [class*="text-white"] {
+/* Header text - WHITE for dark glass */
+body.is-native .unified-header-wrapper header *,
+body.is-native .unified-header-wrapper [class*="text"] {
   color: rgba(255, 255, 255, 0.95) !important;
   opacity: 1 !important;
-  text-shadow: none !important;
 }
 
-/* White theme header text DARK */
-body.is-native:not(.sn-page-dark) .unified-header-wrapper header *,
-body.is-native:not(.sn-page-dark) .unified-header-wrapper [class*="text-white"] {
-  color: #1C1C1E !important;
-  opacity: 1 !important;
-  text-shadow: none !important;
-}
-
-/* 🎬 BLACK OPS: Header icons CYAN when dark */
-html.sn-page-dark body.is-native .unified-header-wrapper svg,
-body.is-native.sn-page-dark .unified-header-wrapper svg {
+/* Header icons - CYAN neon glow */
+body.is-native .unified-header-wrapper svg {
   color: #00D1FF !important;
   opacity: 1 !important;
-}
-
-/* Header icons iOS blue when white theme */
-body.is-native:not(.sn-page-dark) .unified-header-wrapper svg,
-body.is-native .unified-header-wrapper [class*="icon"] {
-  color: #0A84FF !important;
-  opacity: 1 !important;
+  filter: drop-shadow(0 0 4px rgba(0, 209, 255, 0.4));
 }
 
 /* ========================================
-   Bottom Navigation Contrast Fix (iOS Native)
+   🎬 GLOBAL DARK THEME: BOTTOM NAVIGATION (Briefing Buzz Style)
+   ALL pages use dark glass bottom nav
    ======================================== */
 
-/* 🎬 BLACK OPS FIRST: Dark bottom nav - higher specificity */
-html.sn-page-dark body.is-native .bottom-navigation-ios nav,
-html.sn-page-dark body.is-native .bottom-navigation-ios > div > nav,
-html.sn-page-dark body.is-native #m1-bottom-nav nav,
-body.is-native.sn-page-dark .bottom-navigation-ios nav,
-body.is-native.sn-page-dark .bottom-navigation-ios > div > nav,
-body.is-native.sn-page-dark #m1-bottom-nav nav {
-  background: rgba(5, 8, 15, 0.95) !important;
-  backdrop-filter: blur(20px) saturate(150%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
-  border-top: 1px solid rgba(0, 209, 255, 0.2) !important;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 209, 255, 0.12) !important;
+/* Dark glass bottom nav - ALL pages */
+body.is-native .bottom-navigation-ios nav,
+body.is-native .bottom-navigation-ios > div > nav,
+body.is-native #m1-bottom-nav nav {
+  background: rgba(10, 10, 15, 0.92) !important;
+  backdrop-filter: blur(24px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(150%) !important;
+  border-top: 1px solid rgba(0, 209, 255, 0.18) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 209, 255, 0.1) !important;
 }
 
-/* White bottom nav ONLY if NOT dark theme */
-body.is-native:not(.sn-page-dark) .bottom-navigation-ios nav,
-body.is-native:not(.sn-page-dark) .bottom-navigation-ios > div > nav,
-body.is-native:not(.sn-page-dark) #m1-bottom-nav nav {
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08) !important;
-}
-
-/* Bottom nav inactive icons - DARK for white glass background */
+/* Bottom nav inactive icons - WHITE for dark glass */
 body.is-native .bottom-navigation-ios button:not([class*="active"]) svg,
 body.is-native .bottom-navigation-ios button[data-active="false"] svg,
 body.is-native #m1-bottom-nav button:not(.active) svg {
-  color: #6B7280 !important;
+  color: rgba(255, 255, 255, 0.5) !important;
   opacity: 1 !important;
 }
 
-/* Bottom nav inactive text/labels - DARK for white glass */
+/* Bottom nav inactive text - WHITE for dark glass */
 body.is-native .bottom-navigation-ios button:not([class*="active"]) span,
 body.is-native #m1-bottom-nav button:not(.active) span {
-  color: #6B7280 !important;
+  color: rgba(255, 255, 255, 0.5) !important;
   opacity: 1 !important;
 }
 
-/* Active state - iOS blue accent */
+/* Active state - CYAN neon glow */
 body.is-native .bottom-navigation-ios button[class*="active"] svg,
 body.is-native .bottom-navigation-ios button[data-active="true"] svg,
 body.is-native #m1-bottom-nav button.active svg {
-  color: #0A84FF !important;
+  color: #00D1FF !important;
+  filter: drop-shadow(0 0 6px rgba(0, 209, 255, 0.6)) !important;
+}
+
+body.is-native .bottom-navigation-ios button[class*="active"] span,
+body.is-native #m1-bottom-nav button.active span {
+  color: #00D1FF !important;
 }
 
 /* ========================================
