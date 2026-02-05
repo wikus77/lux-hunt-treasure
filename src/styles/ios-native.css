@@ -960,4 +960,196 @@ body.is-native .m1-relief-sm .via-\[\#FC1EFF\] {
   --tw-gradient-via: #FC1EFF !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎬 BLACK OPS THEME - iOS NATIVE OVERRIDE
+   When .sn-page-dark is present, override WHITE theme to DARK GLASS
+   This takes precedence over the white body.is-native rules above
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ========================================
+   DARK BODY/HTML BACKGROUND
+   Override the white background for dark theme
+   ======================================== */
+body.is-native:has(.sn-page-dark),
+body.is-native.sn-page-dark {
+  background: linear-gradient(180deg, #05060A 0%, #070A12 50%, #04040A 100%) !important;
+  background-color: #05060A !important;
+}
+
+/* html also needs dark for iOS safe-area coverage */
+html:has(.sn-page-dark) {
+  background: linear-gradient(180deg, #05060A 0%, #070A12 50%, #04040A 100%) !important;
+  background-color: #05060A !important;
+}
+
+/* #root and wrappers transparent to show dark body through */
+body.is-native:has(.sn-page-dark) #root,
+body.is-native:has(.sn-page-dark) .safe-area-wrapper,
+body.is-native:has(.sn-page-dark) .global-layout-content,
+body.is-native:has(.sn-page-dark) main {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* ========================================
+   DARK HEADER - GLASS SATIN NERO + NEON
+   ======================================== */
+body.is-native:has(.sn-page-dark) .unified-header-wrapper header,
+body.is-native:has(.sn-page-dark) .unified-header-wrapper [class*="header-pill"],
+body.is-native:has(.sn-page-dark) .unified-header-wrapper > div > div:first-child {
+  background: rgba(8, 10, 18, 0.88) !important;
+  backdrop-filter: blur(20px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+  border: 1px solid rgba(0, 209, 255, 0.18) !important;
+  box-shadow: 
+    0 2px 20px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(0, 209, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Dark header text - WHITE for contrast */
+body.is-native:has(.sn-page-dark) .unified-header-wrapper header *,
+body.is-native:has(.sn-page-dark) .unified-header-wrapper [class*="text-white"] {
+  color: rgba(255, 255, 255, 0.95) !important;
+  text-shadow: none !important;
+}
+
+/* Dark header icons - NEON CYAN */
+body.is-native:has(.sn-page-dark) .unified-header-wrapper svg,
+body.is-native:has(.sn-page-dark) .unified-header-wrapper [class*="icon"] {
+  color: #00D1FF !important;
+  opacity: 1 !important;
+}
+
+/* M1SSION logo on dark - cyan accent */
+body.is-native:has(.sn-page-dark) .unified-header-wrapper .m1ssion-logo span:first-child {
+  color: #00D1FF !important;
+  text-shadow: 0 0 10px rgba(0, 209, 255, 0.5) !important;
+}
+
+body.is-native:has(.sn-page-dark) .unified-header-wrapper .m1ssion-logo span:last-child {
+  color: #FFFFFF !important;
+}
+
+/* ========================================
+   DARK BOTTOM NAV - GLASS SATIN NERO + ICONE BIANCHE
+   Cerchio colorato active MANTENUTO (non toccato)
+   ======================================== */
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios > div,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-pill {
+  background: rgba(8, 10, 18, 0.88) !important;
+  backdrop-filter: blur(20px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+  border: 1px solid rgba(0, 209, 255, 0.18) !important;
+  box-shadow: 
+    0 -4px 24px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(0, 209, 255, 0.06),
+    inset 0 1px 0 rgba(0, 209, 255, 0.08) !important;
+}
+
+/* Inactive icons - WHITE (era nero prima) */
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-inactive,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-inactive svg,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-inactive span,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-btn:not(.bottom-nav-active) {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* Active icons - NEON CYAN con glow (come prima, invariato) */
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-active,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-active svg,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-active span {
+  color: #00D1FF !important;
+}
+
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-active svg {
+  filter: drop-shadow(0 0 6px rgba(0, 209, 255, 0.6)) !important;
+}
+
+/* Active background circle - MANTENIAMO l'effetto cerchio colorato */
+/* Non tocchiamo [style*="background: rgba(0, 0, 0, 0.4)"] - resta nero/scuro */
+
+/* Active indicator line - MANTENIAMO cyan glow */
+/* Non tocchiamo [style*="background-color: #00D1FF"] - resta invariato */
+
+/* ========================================
+   DARK CONTAINERS OVERRIDE
+   I container hanno già inline styles dark in TSX,
+   ma dobbiamo assicurarci che m1-relief/m1-card non 
+   vengano forzati a WHITE quando è dark theme
+   ======================================== */
+
+/* Override m1-relief to DARK GLASS quando sn-page-dark */
+body.is-native:has(.sn-page-dark) .m1-relief,
+body.is-native:has(.sn-page-dark) .m1-relief-sm {
+  background: rgba(10, 12, 20, 0.75) !important;
+  backdrop-filter: blur(18px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+  border: 1px solid rgba(0, 209, 255, 0.25) !important;
+  box-shadow: 
+    0 0 18px rgba(0, 209, 255, 0.15),
+    0 0 35px rgba(0, 150, 255, 0.08),
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Override m1-card to DARK GLASS */
+body.is-native:has(.sn-page-dark) .m1-card {
+  background: rgba(10, 12, 20, 0.75) !important;
+  backdrop-filter: blur(18px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+  border: 1px solid rgba(0, 209, 255, 0.25) !important;
+  box-shadow: 
+    0 0 18px rgba(0, 209, 255, 0.15),
+    0 4px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Text colors inside dark containers - WHITE */
+body.is-native:has(.sn-page-dark) .m1-relief h2,
+body.is-native:has(.sn-page-dark) .m1-relief h3,
+body.is-native:has(.sn-page-dark) .m1-relief-sm h2,
+body.is-native:has(.sn-page-dark) .m1-relief-sm h3,
+body.is-native:has(.sn-page-dark) .m1-card h2,
+body.is-native:has(.sn-page-dark) .m1-card h3 {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+body.is-native:has(.sn-page-dark) .m1-relief .text-white,
+body.is-native:has(.sn-page-dark) .m1-relief-sm .text-white,
+body.is-native:has(.sn-page-dark) .m1-card .text-white {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+body.is-native:has(.sn-page-dark) .m1-relief .text-white\/80,
+body.is-native:has(.sn-page-dark) .m1-relief-sm .text-white\/80,
+body.is-native:has(.sn-page-dark) .m1-card .text-white\/80 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+body.is-native:has(.sn-page-dark) .m1-relief .text-white\/60,
+body.is-native:has(.sn-page-dark) .m1-relief-sm .text-white\/60,
+body.is-native:has(.sn-page-dark) .m1-card .text-white\/60 {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Accent colors stay bright */
+body.is-native:has(.sn-page-dark) .m1-relief .text-\[\#00D1FF\],
+body.is-native:has(.sn-page-dark) .m1-relief-sm .text-\[\#00D1FF\],
+body.is-native:has(.sn-page-dark) .m1-card .text-\[\#00D1FF\] {
+  color: #00D1FF !important;
+}
+
+/* Keep urgency colors (amber/orange/red) visible on dark */
+body.is-native:has(.sn-page-dark) .text-amber-400 {
+  color: #FBBF24 !important;
+}
+
+body.is-native:has(.sn-page-dark) .text-orange-400 {
+  color: #F97316 !important;
+}
+
+body.is-native:has(.sn-page-dark) .text-red-400 {
+  color: #EF4444 !important;
+}
+
 /* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
