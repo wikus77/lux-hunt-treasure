@@ -164,11 +164,11 @@ export const BuzzBriefingFlipOverlay: React.FC<BuzzBriefingFlipOverlayProps> = (
             }}
           />
 
-          {/* PANEL - Fullscreen con scale animation */}
+          {/* PANEL - TRUE FULLSCREEN con scale animation */}
           <motion.div
-            initial={{ scale: 0.85, opacity: 0 }}
+            initial={{ scale: 0.92, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.85, opacity: 0 }}
+            exit={{ scale: 0.92, opacity: 0 }}
             transition={{
               type: 'spring',
               stiffness: isClosing ? 400 : 280,
@@ -177,10 +177,7 @@ export const BuzzBriefingFlipOverlay: React.FC<BuzzBriefingFlipOverlayProps> = (
             }}
             style={{
               position: 'fixed',
-              top: 'env(safe-area-inset-top, 0px)',
-              left: 0,
-              right: 0,
-              bottom: 'env(safe-area-inset-bottom, 0px)',
+              inset: 0, // TRUE FULLSCREEN: edge-to-edge
               zIndex: 99999,
               pointerEvents: 'auto',
               transformOrigin: '50% 50%',
@@ -188,124 +185,154 @@ export const BuzzBriefingFlipOverlay: React.FC<BuzzBriefingFlipOverlayProps> = (
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
+              background: 'linear-gradient(180deg, #0a0a0f 0%, #0d1117 50%, #0a0a0f 100%)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Container principale */}
+            {/* Header - con safe-area e sfondo per leggibilità */}
             <div 
-              className="flex-1 flex flex-col bg-[#0a0a0f]/98 backdrop-blur-xl overflow-hidden"
+              className="flex items-center justify-between px-4 pb-3 flex-shrink-0"
               style={{
-                borderRadius: '24px',
-                margin: '8px',
-                border: '1px solid rgba(0, 209, 255, 0.2)',
-                boxShadow: '0 0 60px rgba(0, 209, 255, 0.15), inset 0 0 30px rgba(0, 209, 255, 0.03)',
+                paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+                background: 'linear-gradient(180deg, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.8) 70%, transparent 100%)',
               }}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 flex-shrink-0">
-                <div className="flex items-center space-x-3">
-                  <div 
-                    className="w-3 h-3 rounded-full"
-                    style={{ 
-                      background: 'linear-gradient(135deg, #00D1FF 0%, #0099CC 100%)',
-                      boxShadow: '0 0 15px #00D1FF',
-                    }}
-                  />
-                  <h3 className="font-orbitron font-bold text-white text-lg tracking-wide">
-                    BRIEFING BUZZ
-                  </h3>
-                </div>
-                <button
-                  onClick={handleClose}
-                  className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
-                  aria-label="Chiudi"
+              <div className="flex items-center space-x-3">
+                <div 
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ 
+                    background: '#00D1FF',
+                    boxShadow: '0 0 12px #00D1FF, 0 0 24px rgba(0,209,255,0.5)',
+                  }}
+                />
+                <h3 
+                  className="font-orbitron font-bold text-white text-base tracking-wider"
+                  style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}
                 >
-                  <X className="w-5 h-5 text-white/70" />
-                </button>
+                  BRIEFING BUZZ
+                </h3>
               </div>
-              
-              {/* Subtitle */}
-              <p className="text-sm text-white/50 px-5 py-3 flex-shrink-0">
-                Guarda il video introduttivo prima di iniziare
-              </p>
-
-              {/* Video Container - occupa tutto lo spazio disponibile */}
-              <div 
-                className="flex-1 px-4 pb-2 overflow-hidden"
-                onClick={handleScreenTap}
-                onTouchStart={handleScreenTap}
+              <button
+                onClick={handleClose}
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                style={{ backdropFilter: 'blur(8px)' }}
+                aria-label="Chiudi"
               >
-                <div className="relative rounded-2xl overflow-hidden bg-black h-full">
-                  <video
-                    ref={videoRef}
-                    src={VIDEO_SRC}
-                    className="w-full h-full object-contain"
-                    playsInline
-                    muted={!audioEnabled}
-                    onEnded={handleVideoEnd}
-                    onError={handleClose}
-                    disablePictureInPicture
-                    disableRemotePlayback
-                    controlsList="nodownload noremoteplayback"
-                  />
-                  
-                  {/* Audio indicator overlay */}
-                  {!audioEnabled && (
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+            
+            {/* Subtitle - compatto e leggibile */}
+            <p 
+              className="text-sm px-4 pb-2 flex-shrink-0"
+              style={{ 
+                color: 'rgba(255,255,255,0.75)',
+                textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+              }}
+            >
+              Guarda il video introduttivo prima di iniziare
+            </p>
+
+            {/* Video Container - MASSIMIZZATO */}
+            <div 
+              className="flex-1 px-2 overflow-hidden min-h-0"
+              onClick={handleScreenTap}
+              onTouchStart={handleScreenTap}
+            >
+              <div 
+                className="relative overflow-hidden bg-black h-full"
+                style={{ borderRadius: '16px' }}
+              >
+                <video
+                  ref={videoRef}
+                  src={VIDEO_SRC}
+                  className="w-full h-full object-cover"
+                  playsInline
+                  muted={!audioEnabled}
+                  onEnded={handleVideoEnd}
+                  onError={handleClose}
+                  disablePictureInPicture
+                  disableRemotePlayback
+                  controlsList="nodownload noremoteplayback"
+                />
+                
+                {/* Audio indicator overlay */}
+                {!audioEnabled && (
+                  <motion.div
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ background: 'rgba(0,0,0,0.35)' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
                     <motion.div
-                      className="absolute inset-0 flex items-center justify-center bg-black/40"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+                      className="flex flex-col items-center gap-2 px-5 py-3 rounded-2xl"
+                      style={{ 
+                        background: 'rgba(0,0,0,0.6)',
+                        backdropFilter: 'blur(8px)',
+                      }}
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
                     >
-                      <motion.div
-                        className="flex flex-col items-center gap-3 px-6 py-4 rounded-2xl bg-black/70 backdrop-blur-sm"
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      >
-                        <VolumeX className="w-10 h-10 text-white/80" />
-                        <span className="text-white/80 text-sm font-medium">Tocca per l'audio</span>
-                      </motion.div>
+                      <VolumeX className="w-8 h-8 text-white/90" />
+                      <span className="text-white/90 text-xs font-medium">Tocca per l'audio</span>
                     </motion.div>
-                  )}
-                  
-                  {/* Audio status badge */}
-                  <div className="absolute bottom-4 left-4">
-                    <div className="w-12 h-12 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                      {audioEnabled ? (
-                        <Volume2 className="w-6 h-6 text-cyan-400" />
-                      ) : (
-                        <VolumeX className="w-6 h-6 text-white/50" />
-                      )}
-                    </div>
+                  </motion.div>
+                )}
+                
+                {/* Audio status badge */}
+                <div className="absolute bottom-3 left-3">
+                  <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                    style={{ 
+                      background: 'rgba(0,0,0,0.5)',
+                      backdropFilter: 'blur(8px)',
+                    }}
+                  >
+                    {audioEnabled ? (
+                      <Volume2 className="w-5 h-5 text-cyan-400" />
+                    ) : (
+                      <VolumeX className="w-5 h-5 text-white/60" />
+                    )}
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Bottom Controls */}
-              <div className="px-5 pb-5 pt-3 flex-shrink-0 space-y-3">
-                <motion.button
-                  className="w-full py-4 px-6 rounded-xl font-orbitron font-bold text-base uppercase tracking-wider"
-                  style={{
-                    background: 'linear-gradient(135deg, #00D1FF 0%, #0099CC 100%)',
-                    color: 'white',
-                    boxShadow: '0 0 30px rgba(0, 209, 255, 0.4)',
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleClose();
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  CONTINUA →
-                </motion.button>
-                
-                <button
-                  className="w-full text-sm text-white/40 hover:text-white/60 transition-colors py-2"
-                  onClick={handleDismissForever}
-                >
-                  Non mostrare più questo video
-                </button>
-              </div>
+            {/* Bottom Controls - con safe-area e sfondo */}
+            <div 
+              className="px-4 pt-3 flex-shrink-0 space-y-2"
+              style={{
+                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
+                background: 'linear-gradient(0deg, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.8) 70%, transparent 100%)',
+              }}
+            >
+              <motion.button
+                className="w-full py-3.5 px-6 rounded-xl font-orbitron font-bold text-sm uppercase tracking-wider"
+                style={{
+                  background: 'linear-gradient(135deg, #00D1FF 0%, #0099CC 100%)',
+                  color: 'white',
+                  boxShadow: '0 0 24px rgba(0, 209, 255, 0.4), 0 4px 12px rgba(0,0,0,0.3)',
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClose();
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                CONTINUA →
+              </motion.button>
+              
+              <button
+                className="w-full text-xs py-2 transition-colors"
+                style={{ 
+                  color: 'rgba(255,255,255,0.6)',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                }}
+                onClick={handleDismissForever}
+              >
+                Non mostrare più questo video
+              </button>
             </div>
           </motion.div>
         </>
