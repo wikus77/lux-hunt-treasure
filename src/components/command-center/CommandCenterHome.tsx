@@ -237,33 +237,76 @@ export default function CommandCenterHome() {
       <AgentDiary />
     </motion.div>
 
-    {/* Active Mission Box (contains Indizi trovati, Tempo rimasto, Stato missione) */}
-    <motion.div 
-      className="mb-6"
-      data-onboarding="mission-card"
-      data-section="status"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.15 }}
+    {/* ═══════════════════════════════════════════════════════════════ */}
+    {/* PANNELLO COLORATO — Wrapper per ActiveMissionBox (Tempo rimasto) */}
+    {/* Stile identico a M1SSION PRIZE in Home */}
+    {/* ═══════════════════════════════════════════════════════════════ */}
+    <div 
+      style={{
+        width: '100%',
+        borderRadius: '24px',
+        overflow: 'hidden',
+        marginBottom: '16px',
+        background: `linear-gradient(160deg, 
+          rgba(20, 60, 120, 0.92) 0%, 
+          rgba(25, 80, 130, 0.88) 25%, 
+          rgba(30, 100, 120, 0.82) 50%, 
+          rgba(35, 120, 100, 0.75) 75%, 
+          rgba(40, 140, 90, 0.65) 100%
+        )`,
+        padding: '20px 16px 24px 16px',
+        boxShadow: '0 4px 20px rgba(0, 100, 150, 0.3)',
+      }}
     >
-      <ActiveMissionBox 
-        mission={activeMission} 
-        purchasedClues={purchasedClues}
-        progress={progress}
-      />
-    </motion.div>
+      {/* Active Mission Box (contains Indizi trovati, Tempo rimasto, Stato missione) */}
+      <motion.div 
+        data-onboarding="mission-card"
+        data-section="status"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+      >
+        <ActiveMissionBox 
+          mission={activeMission} 
+          purchasedClues={purchasedClues}
+          progress={progress}
+        />
+      </motion.div>
+    </div>
 
-    {/* M1SSION BATTLE (Battle Console) - Full width below */}
-    <motion.div 
-      className="mb-6 m1-card"
-      data-onboarding="battle"
-      data-section="battle"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
+    {/* ═══════════════════════════════════════════════════════════════ */}
+    {/* PANNELLO COLORATO — Wrapper per BattleConsole (M1SSION BATTLE) */}
+    {/* Stile identico a M1SSION PRIZE in Home */}
+    {/* ═══════════════════════════════════════════════════════════════ */}
+    <div 
+      style={{
+        width: '100%',
+        borderRadius: '24px',
+        overflow: 'hidden',
+        marginBottom: '16px',
+        background: `linear-gradient(160deg, 
+          rgba(20, 60, 120, 0.92) 0%, 
+          rgba(25, 80, 130, 0.88) 25%, 
+          rgba(30, 100, 120, 0.82) 50%, 
+          rgba(35, 120, 100, 0.75) 75%, 
+          rgba(40, 140, 90, 0.65) 100%
+        )`,
+        padding: '20px 16px 24px 16px',
+        boxShadow: '0 4px 20px rgba(0, 100, 150, 0.3)',
+      }}
     >
-      <BattleConsole />
-    </motion.div>
+      {/* M1SSION BATTLE (Battle Console) - Full width below */}
+      <motion.div 
+        className="m1-card"
+        data-onboarding="battle"
+        data-section="battle"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <BattleConsole />
+      </motion.div>
+    </div>
 
       {/* Battle Arena Overlay - Opens for deep-links */}
       <BattleArenaOverlay
