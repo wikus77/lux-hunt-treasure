@@ -359,10 +359,17 @@ html[data-capacitor="ios"] {
   background-attachment: scroll !important;
 }
 
-/* 🔧 OPTION B: Body WHITE for seamless overscroll */
-body.is-native {
+/* 🔧 OPTION B: Body WHITE for seamless overscroll - EXCEPT when dark theme */
+body.is-native:not(.sn-page-dark):not(:has(.sn-page-dark)) {
   background: #FFFFFF !important;
   background-color: #FFFFFF !important;
+}
+
+/* 🎬 BLACK OPS: When sn-page-dark is on body OR inside body, force DARK */
+body.is-native.sn-page-dark,
+body.is-native:has(.sn-page-dark) {
+  background: linear-gradient(180deg, #05060A 0%, #070A12 50%, #04040A 100%) !important;
+  background-color: #05060A !important;
 }
 
 /* All containers transparent */
@@ -478,11 +485,11 @@ body.is-native #m1u-pill-map3d-slot {
    These rules ONLY apply when body.is-native (Capacitor iOS wrapper)
    ======================================== */
 
-/* 🔧 OPTION B: Header WHITE GLASS OPACO per iOS native
+/* 🔧 OPTION B: Header WHITE GLASS OPACO per iOS native - EXCEPT dark theme
    95% opacità per non mostrare overlay durante overscroll */
-body.is-native .unified-header-wrapper header,
-body.is-native .unified-header-wrapper [class*="header-pill"],
-body.is-native .unified-header-wrapper > div > div:first-child {
+body.is-native:not(.sn-page-dark):not(:has(.sn-page-dark)) .unified-header-wrapper header,
+body.is-native:not(.sn-page-dark):not(:has(.sn-page-dark)) .unified-header-wrapper [class*="header-pill"],
+body.is-native:not(.sn-page-dark):not(:has(.sn-page-dark)) .unified-header-wrapper > div > div:first-child {
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
@@ -490,16 +497,40 @@ body.is-native .unified-header-wrapper > div > div:first-child {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* 🔧 OPTION B: Header text DARK per contrasto su sfondo bianco */
-body.is-native .unified-header-wrapper header *,
-body.is-native .unified-header-wrapper [class*="text-white"] {
+/* 🎬 BLACK OPS: Dark header when sn-page-dark */
+body.is-native.sn-page-dark .unified-header-wrapper header,
+body.is-native.sn-page-dark .unified-header-wrapper [class*="header-pill"],
+body.is-native.sn-page-dark .unified-header-wrapper > div > div:first-child,
+body.is-native:has(.sn-page-dark) .unified-header-wrapper header,
+body.is-native:has(.sn-page-dark) .unified-header-wrapper [class*="header-pill"],
+body.is-native:has(.sn-page-dark) .unified-header-wrapper > div > div:first-child {
+  background: rgba(8, 10, 18, 0.92) !important;
+  backdrop-filter: blur(20px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+  border: 1px solid rgba(0, 209, 255, 0.18) !important;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 209, 255, 0.08) !important;
+}
+
+/* 🔧 OPTION B: Header text DARK per contrasto su sfondo bianco - EXCEPT dark theme */
+body.is-native:not(.sn-page-dark):not(:has(.sn-page-dark)) .unified-header-wrapper header *,
+body.is-native:not(.sn-page-dark):not(:has(.sn-page-dark)) .unified-header-wrapper [class*="text-white"] {
   color: #1C1C1E !important;
   opacity: 1 !important;
   text-shadow: none !important;
 }
 
-/* 🔧 OPTION B: Header icons iOS blue per contrasto */
-body.is-native .unified-header-wrapper svg,
+/* 🎬 BLACK OPS: Header text WHITE when sn-page-dark */
+body.is-native.sn-page-dark .unified-header-wrapper header *,
+body.is-native.sn-page-dark .unified-header-wrapper [class*="text-white"],
+body.is-native:has(.sn-page-dark) .unified-header-wrapper header *,
+body.is-native:has(.sn-page-dark) .unified-header-wrapper [class*="text-white"] {
+  color: rgba(255, 255, 255, 0.95) !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+/* 🔧 OPTION B: Header icons iOS blue per contrasto - EXCEPT dark theme */
+body.is-native:not(.sn-page-dark):not(:has(.sn-page-dark)) .unified-header-wrapper svg,
 body.is-native .unified-header-wrapper [class*="icon"] {
   color: #0A84FF !important;
   opacity: 1 !important;
@@ -509,16 +540,29 @@ body.is-native .unified-header-wrapper [class*="icon"] {
    Bottom Navigation Contrast Fix (iOS Native)
    ======================================== */
 
-/* 🔧 OPTION B: WHITE GLASS OPACO Bottom Nav per iOS Native
+/* 🔧 OPTION B: WHITE GLASS OPACO Bottom Nav per iOS Native - EXCEPT dark theme
    95% opacità per non mostrare overlay durante overscroll */
-body.is-native .bottom-navigation-ios nav,
-body.is-native .bottom-navigation-ios > div > nav,
-body.is-native #m1-bottom-nav nav {
+body.is-native:not(.sn-page-dark):not(:has(.sn-page-dark)) .bottom-navigation-ios nav,
+body.is-native:not(.sn-page-dark):not(:has(.sn-page-dark)) .bottom-navigation-ios > div > nav,
+body.is-native:not(.sn-page-dark):not(:has(.sn-page-dark)) #m1-bottom-nav nav {
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 🎬 BLACK OPS: Dark bottom nav when sn-page-dark */
+body.is-native.sn-page-dark .bottom-navigation-ios nav,
+body.is-native.sn-page-dark .bottom-navigation-ios > div > nav,
+body.is-native.sn-page-dark #m1-bottom-nav nav,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios nav,
+body.is-native:has(.sn-page-dark) #m1-bottom-nav nav {
+  background: rgba(8, 10, 18, 0.92) !important;
+  backdrop-filter: blur(20px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+  border-top: 1px solid rgba(0, 209, 255, 0.2) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 209, 255, 0.1) !important;
 }
 
 /* Bottom nav inactive icons - DARK for white glass background */
@@ -719,16 +763,28 @@ body.sn-page [data-vaul-drawer] * {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ========================================
-   BOTTOM NAV - SAME WHITE GLASS AS HEADER
+   BOTTOM NAV - SAME WHITE GLASS AS HEADER - EXCEPT dark theme
    Matching header style (95% white opacity)
    ======================================== */
-body.is-native .bottom-navigation-ios > div,
-body.is-native .bottom-navigation-ios .bottom-nav-pill {
+body.is-native:not(.sn-page-dark):not(:has(.sn-page-dark)) .bottom-navigation-ios > div,
+body.is-native:not(.sn-page-dark):not(:has(.sn-page-dark)) .bottom-navigation-ios .bottom-nav-pill {
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 🎬 BLACK OPS: Dark bottom nav pill when sn-page-dark */
+body.is-native.sn-page-dark .bottom-navigation-ios > div,
+body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-pill,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios > div,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-pill {
+  background: rgba(8, 10, 18, 0.92) !important;
+  backdrop-filter: blur(20px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+  border: 1px solid rgba(0, 209, 255, 0.2) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 209, 255, 0.1) !important;
 }
 
 /* ========================================
