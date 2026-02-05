@@ -962,8 +962,8 @@ body.is-native .m1-relief-sm .via-\[\#FC1EFF\] {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    🎬 BLACK OPS THEME - iOS NATIVE OVERRIDE
-   When .sn-page-dark is present, override WHITE theme to DARK GLASS
-   This takes precedence over the white body.is-native rules above
+   When .sn-page-dark is present on body/html, override WHITE theme to DARK GLASS
+   NOTE: Using BOTH :has() and direct class for iOS Safari compatibility
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ========================================
@@ -971,22 +971,32 @@ body.is-native .m1-relief-sm .via-\[\#FC1EFF\] {
    Override the white background for dark theme
    ======================================== */
 body.is-native:has(.sn-page-dark),
-body.is-native.sn-page-dark {
+body.is-native.sn-page-dark,
+body.sn-page-dark {
   background: linear-gradient(180deg, #05060A 0%, #070A12 50%, #04040A 100%) !important;
   background-color: #05060A !important;
 }
 
 /* html also needs dark for iOS safe-area coverage */
-html:has(.sn-page-dark) {
+html:has(.sn-page-dark),
+html.sn-page-dark {
   background: linear-gradient(180deg, #05060A 0%, #070A12 50%, #04040A 100%) !important;
   background-color: #05060A !important;
 }
 
 /* #root and wrappers transparent to show dark body through */
 body.is-native:has(.sn-page-dark) #root,
+body.is-native.sn-page-dark #root,
+body.sn-page-dark #root,
 body.is-native:has(.sn-page-dark) .safe-area-wrapper,
+body.is-native.sn-page-dark .safe-area-wrapper,
+body.sn-page-dark .safe-area-wrapper,
 body.is-native:has(.sn-page-dark) .global-layout-content,
-body.is-native:has(.sn-page-dark) main {
+body.is-native.sn-page-dark .global-layout-content,
+body.sn-page-dark .global-layout-content,
+body.is-native:has(.sn-page-dark) main,
+body.is-native.sn-page-dark main,
+body.sn-page-dark main {
   background: transparent !important;
   background-color: transparent !important;
 }
@@ -995,9 +1005,15 @@ body.is-native:has(.sn-page-dark) main {
    DARK HEADER - GLASS SATIN NERO + NEON
    ======================================== */
 body.is-native:has(.sn-page-dark) .unified-header-wrapper header,
+body.is-native.sn-page-dark .unified-header-wrapper header,
+body.sn-page-dark .unified-header-wrapper header,
 body.is-native:has(.sn-page-dark) .unified-header-wrapper [class*="header-pill"],
-body.is-native:has(.sn-page-dark) .unified-header-wrapper > div > div:first-child {
-  background: rgba(8, 10, 18, 0.88) !important;
+body.is-native.sn-page-dark .unified-header-wrapper [class*="header-pill"],
+body.sn-page-dark .unified-header-wrapper [class*="header-pill"],
+body.is-native:has(.sn-page-dark) .unified-header-wrapper > div > div:first-child,
+body.is-native.sn-page-dark .unified-header-wrapper > div > div:first-child,
+body.sn-page-dark .unified-header-wrapper > div > div:first-child {
+  background: rgba(8, 10, 18, 0.92) !important;
   backdrop-filter: blur(20px) saturate(150%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
   border: 1px solid rgba(0, 209, 255, 0.18) !important;
@@ -1009,25 +1025,37 @@ body.is-native:has(.sn-page-dark) .unified-header-wrapper > div > div:first-chil
 
 /* Dark header text - WHITE for contrast */
 body.is-native:has(.sn-page-dark) .unified-header-wrapper header *,
-body.is-native:has(.sn-page-dark) .unified-header-wrapper [class*="text-white"] {
+body.is-native.sn-page-dark .unified-header-wrapper header *,
+body.sn-page-dark .unified-header-wrapper header *,
+body.is-native:has(.sn-page-dark) .unified-header-wrapper [class*="text-white"],
+body.is-native.sn-page-dark .unified-header-wrapper [class*="text-white"],
+body.sn-page-dark .unified-header-wrapper [class*="text-white"] {
   color: rgba(255, 255, 255, 0.95) !important;
   text-shadow: none !important;
 }
 
 /* Dark header icons - NEON CYAN */
 body.is-native:has(.sn-page-dark) .unified-header-wrapper svg,
-body.is-native:has(.sn-page-dark) .unified-header-wrapper [class*="icon"] {
+body.is-native.sn-page-dark .unified-header-wrapper svg,
+body.sn-page-dark .unified-header-wrapper svg,
+body.is-native:has(.sn-page-dark) .unified-header-wrapper [class*="icon"],
+body.is-native.sn-page-dark .unified-header-wrapper [class*="icon"],
+body.sn-page-dark .unified-header-wrapper [class*="icon"] {
   color: #00D1FF !important;
   opacity: 1 !important;
 }
 
 /* M1SSION logo on dark - cyan accent */
-body.is-native:has(.sn-page-dark) .unified-header-wrapper .m1ssion-logo span:first-child {
+body.is-native:has(.sn-page-dark) .unified-header-wrapper .m1ssion-logo span:first-child,
+body.is-native.sn-page-dark .unified-header-wrapper .m1ssion-logo span:first-child,
+body.sn-page-dark .unified-header-wrapper .m1ssion-logo span:first-child {
   color: #00D1FF !important;
   text-shadow: 0 0 10px rgba(0, 209, 255, 0.5) !important;
 }
 
-body.is-native:has(.sn-page-dark) .unified-header-wrapper .m1ssion-logo span:last-child {
+body.is-native:has(.sn-page-dark) .unified-header-wrapper .m1ssion-logo span:last-child,
+body.is-native.sn-page-dark .unified-header-wrapper .m1ssion-logo span:last-child,
+body.sn-page-dark .unified-header-wrapper .m1ssion-logo span:last-child {
   color: #FFFFFF !important;
 }
 
@@ -1036,8 +1064,12 @@ body.is-native:has(.sn-page-dark) .unified-header-wrapper .m1ssion-logo span:las
    Cerchio colorato active MANTENUTO (non toccato)
    ======================================== */
 body.is-native:has(.sn-page-dark) .bottom-navigation-ios > div,
-body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-pill {
-  background: rgba(8, 10, 18, 0.88) !important;
+body.is-native.sn-page-dark .bottom-navigation-ios > div,
+body.sn-page-dark .bottom-navigation-ios > div,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-pill,
+body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-pill,
+body.sn-page-dark .bottom-navigation-ios .bottom-nav-pill {
+  background: rgba(8, 10, 18, 0.92) !important;
   backdrop-filter: blur(20px) saturate(150%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
   border: 1px solid rgba(0, 209, 255, 0.18) !important;
@@ -1049,20 +1081,36 @@ body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-pill {
 
 /* Inactive icons - WHITE (era nero prima) */
 body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-inactive,
+body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-inactive,
+body.sn-page-dark .bottom-navigation-ios .bottom-nav-inactive,
 body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-inactive svg,
+body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-inactive svg,
+body.sn-page-dark .bottom-navigation-ios .bottom-nav-inactive svg,
 body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-inactive span,
-body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-btn:not(.bottom-nav-active) {
+body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-inactive span,
+body.sn-page-dark .bottom-navigation-ios .bottom-nav-inactive span,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-btn:not(.bottom-nav-active),
+body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-btn:not(.bottom-nav-active),
+body.sn-page-dark .bottom-navigation-ios .bottom-nav-btn:not(.bottom-nav-active) {
   color: rgba(255, 255, 255, 0.65) !important;
 }
 
 /* Active icons - NEON CYAN con glow (come prima, invariato) */
 body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-active,
+body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-active,
+body.sn-page-dark .bottom-navigation-ios .bottom-nav-active,
 body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-active svg,
-body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-active span {
+body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-active svg,
+body.sn-page-dark .bottom-navigation-ios .bottom-nav-active svg,
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-active span,
+body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-active span,
+body.sn-page-dark .bottom-navigation-ios .bottom-nav-active span {
   color: #00D1FF !important;
 }
 
-body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-active svg {
+body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-active svg,
+body.is-native.sn-page-dark .bottom-navigation-ios .bottom-nav-active svg,
+body.sn-page-dark .bottom-navigation-ios .bottom-nav-active svg {
   filter: drop-shadow(0 0 6px rgba(0, 209, 255, 0.6)) !important;
 }
 
@@ -1073,83 +1121,182 @@ body.is-native:has(.sn-page-dark) .bottom-navigation-ios .bottom-nav-active svg 
 /* Non tocchiamo [style*="background-color: #00D1FF"] - resta invariato */
 
 /* ========================================
-   DARK CONTAINERS OVERRIDE
-   I container hanno già inline styles dark in TSX,
-   ma dobbiamo assicurarci che m1-relief/m1-card non 
-   vengano forzati a WHITE quando è dark theme
+   DARK CONTAINERS OVERRIDE (HIGH SPECIFICITY)
+   Using doubled selectors for CSS specificity boost
+   These MUST override the white iOS native rules above
    ======================================== */
 
-/* Override m1-relief to DARK GLASS quando sn-page-dark */
+/* Override m1-relief to DARK GLASS quando sn-page-dark 
+   SPECIFICITY BOOST: body.is-native.sn-page-dark.sn-page-dark = 4 classes */
+html.sn-page-dark body.is-native .m1-relief,
+html.sn-page-dark body.is-native .m1-relief-sm,
+body.is-native.sn-page-dark.sn-page-dark .m1-relief,
+body.is-native.sn-page-dark.sn-page-dark .m1-relief-sm,
+body.sn-page-dark.sn-page-dark .m1-relief,
+body.sn-page-dark.sn-page-dark .m1-relief-sm,
 body.is-native:has(.sn-page-dark) .m1-relief,
 body.is-native:has(.sn-page-dark) .m1-relief-sm {
-  background: rgba(10, 12, 20, 0.75) !important;
-  backdrop-filter: blur(18px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-  border: 1px solid rgba(0, 209, 255, 0.25) !important;
+  background: rgba(10, 12, 20, 0.88) !important;
+  backdrop-filter: blur(22px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(160%) !important;
+  border: 1px solid rgba(0, 209, 255, 0.32) !important;
   box-shadow: 
-    0 0 18px rgba(0, 209, 255, 0.15),
-    0 0 35px rgba(0, 150, 255, 0.08),
-    0 4px 24px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+    0 0 24px rgba(0, 209, 255, 0.2),
+    0 0 50px rgba(0, 150, 255, 0.12),
+    0 6px 35px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Override m1-card to DARK GLASS */
+html.sn-page-dark body.is-native .m1-card,
+body.is-native.sn-page-dark.sn-page-dark .m1-card,
+body.sn-page-dark.sn-page-dark .m1-card,
 body.is-native:has(.sn-page-dark) .m1-card {
-  background: rgba(10, 12, 20, 0.75) !important;
-  backdrop-filter: blur(18px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-  border: 1px solid rgba(0, 209, 255, 0.25) !important;
+  background: rgba(10, 12, 20, 0.88) !important;
+  backdrop-filter: blur(22px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(160%) !important;
+  border: 1px solid rgba(0, 209, 255, 0.28) !important;
   box-shadow: 
-    0 0 18px rgba(0, 209, 255, 0.15),
-    0 4px 24px rgba(0, 0, 0, 0.4) !important;
+    0 0 20px rgba(0, 209, 255, 0.18),
+    0 4px 30px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Text colors inside dark containers - WHITE */
 body.is-native:has(.sn-page-dark) .m1-relief h2,
+body.is-native.sn-page-dark .m1-relief h2,
+body.sn-page-dark .m1-relief h2,
 body.is-native:has(.sn-page-dark) .m1-relief h3,
+body.is-native.sn-page-dark .m1-relief h3,
+body.sn-page-dark .m1-relief h3,
 body.is-native:has(.sn-page-dark) .m1-relief-sm h2,
+body.is-native.sn-page-dark .m1-relief-sm h2,
+body.sn-page-dark .m1-relief-sm h2,
 body.is-native:has(.sn-page-dark) .m1-relief-sm h3,
+body.is-native.sn-page-dark .m1-relief-sm h3,
+body.sn-page-dark .m1-relief-sm h3,
 body.is-native:has(.sn-page-dark) .m1-card h2,
-body.is-native:has(.sn-page-dark) .m1-card h3 {
+body.is-native.sn-page-dark .m1-card h2,
+body.sn-page-dark .m1-card h2,
+body.is-native:has(.sn-page-dark) .m1-card h3,
+body.is-native.sn-page-dark .m1-card h3,
+body.sn-page-dark .m1-card h3 {
   color: rgba(255, 255, 255, 0.95) !important;
 }
 
 body.is-native:has(.sn-page-dark) .m1-relief .text-white,
+body.is-native.sn-page-dark .m1-relief .text-white,
+body.sn-page-dark .m1-relief .text-white,
 body.is-native:has(.sn-page-dark) .m1-relief-sm .text-white,
-body.is-native:has(.sn-page-dark) .m1-card .text-white {
+body.is-native.sn-page-dark .m1-relief-sm .text-white,
+body.sn-page-dark .m1-relief-sm .text-white,
+body.is-native:has(.sn-page-dark) .m1-card .text-white,
+body.is-native.sn-page-dark .m1-card .text-white,
+body.sn-page-dark .m1-card .text-white {
   color: rgba(255, 255, 255, 0.95) !important;
 }
 
 body.is-native:has(.sn-page-dark) .m1-relief .text-white\/80,
+body.is-native.sn-page-dark .m1-relief .text-white\/80,
+body.sn-page-dark .m1-relief .text-white\/80,
 body.is-native:has(.sn-page-dark) .m1-relief-sm .text-white\/80,
-body.is-native:has(.sn-page-dark) .m1-card .text-white\/80 {
+body.is-native.sn-page-dark .m1-relief-sm .text-white\/80,
+body.sn-page-dark .m1-relief-sm .text-white\/80,
+body.is-native:has(.sn-page-dark) .m1-card .text-white\/80,
+body.is-native.sn-page-dark .m1-card .text-white\/80,
+body.sn-page-dark .m1-card .text-white\/80 {
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
 body.is-native:has(.sn-page-dark) .m1-relief .text-white\/60,
+body.is-native.sn-page-dark .m1-relief .text-white\/60,
+body.sn-page-dark .m1-relief .text-white\/60,
 body.is-native:has(.sn-page-dark) .m1-relief-sm .text-white\/60,
-body.is-native:has(.sn-page-dark) .m1-card .text-white\/60 {
+body.is-native.sn-page-dark .m1-relief-sm .text-white\/60,
+body.sn-page-dark .m1-relief-sm .text-white\/60,
+body.is-native:has(.sn-page-dark) .m1-card .text-white\/60,
+body.is-native.sn-page-dark .m1-card .text-white\/60,
+body.sn-page-dark .m1-card .text-white\/60 {
   color: rgba(255, 255, 255, 0.6) !important;
+}
+
+body.is-native:has(.sn-page-dark) .m1-relief .text-white\/50,
+body.is-native.sn-page-dark .m1-relief .text-white\/50,
+body.sn-page-dark .m1-relief .text-white\/50,
+body.is-native:has(.sn-page-dark) .m1-relief-sm .text-white\/50,
+body.is-native.sn-page-dark .m1-relief-sm .text-white\/50,
+body.sn-page-dark .m1-relief-sm .text-white\/50,
+body.is-native:has(.sn-page-dark) .m1-card .text-white\/50,
+body.is-native.sn-page-dark .m1-card .text-white\/50,
+body.sn-page-dark .m1-card .text-white\/50 {
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* Accent colors stay bright */
 body.is-native:has(.sn-page-dark) .m1-relief .text-\[\#00D1FF\],
+body.is-native.sn-page-dark .m1-relief .text-\[\#00D1FF\],
+body.sn-page-dark .m1-relief .text-\[\#00D1FF\],
 body.is-native:has(.sn-page-dark) .m1-relief-sm .text-\[\#00D1FF\],
-body.is-native:has(.sn-page-dark) .m1-card .text-\[\#00D1FF\] {
+body.is-native.sn-page-dark .m1-relief-sm .text-\[\#00D1FF\],
+body.sn-page-dark .m1-relief-sm .text-\[\#00D1FF\],
+body.is-native:has(.sn-page-dark) .m1-card .text-\[\#00D1FF\],
+body.is-native.sn-page-dark .m1-card .text-\[\#00D1FF\],
+body.sn-page-dark .m1-card .text-\[\#00D1FF\] {
   color: #00D1FF !important;
 }
 
 /* Keep urgency colors (amber/orange/red) visible on dark */
-body.is-native:has(.sn-page-dark) .text-amber-400 {
+body.is-native:has(.sn-page-dark) .text-amber-400,
+body.is-native.sn-page-dark .text-amber-400,
+body.sn-page-dark .text-amber-400 {
   color: #FBBF24 !important;
 }
 
-body.is-native:has(.sn-page-dark) .text-orange-400 {
+body.is-native:has(.sn-page-dark) .text-orange-400,
+body.is-native.sn-page-dark .text-orange-400,
+body.sn-page-dark .text-orange-400 {
   color: #F97316 !important;
 }
 
-body.is-native:has(.sn-page-dark) .text-red-400 {
+body.is-native:has(.sn-page-dark) .text-red-400,
+body.is-native.sn-page-dark .text-red-400,
+body.sn-page-dark .text-red-400 {
   color: #EF4444 !important;
+}
+
+body.is-native:has(.sn-page-dark) .text-green-400,
+body.is-native.sn-page-dark .text-green-400,
+body.sn-page-dark .text-green-400 {
+  color: #22C55E !important;
+}
+
+/* ========================================
+   DARK GLASS-CARD OVERRIDE
+   For M1SSION PANEL and other glass-card elements
+   ======================================== */
+body.is-native:has(.sn-page-dark) .glass-card,
+body.is-native.sn-page-dark .glass-card,
+body.sn-page-dark .glass-card {
+  background: rgba(10, 12, 20, 0.8) !important;
+  backdrop-filter: blur(20px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+  border: 1px solid rgba(0, 209, 255, 0.22) !important;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 15px rgba(0, 209, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ========================================
+   M1U PILL DARK STYLING
+   ======================================== */
+body.is-native:has(.sn-page-dark) [class*="m1u-pill"],
+body.is-native.sn-page-dark [class*="m1u-pill"],
+body.sn-page-dark [class*="m1u-pill"],
+body.is-native:has(.sn-page-dark) .m1u-display,
+body.is-native.sn-page-dark .m1u-display,
+body.sn-page-dark .m1u-display {
+  background: rgba(10, 12, 20, 0.85) !important;
+  border-color: rgba(0, 209, 255, 0.3) !important;
 }
 
 /* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

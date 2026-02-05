@@ -98,6 +98,17 @@ const { isConnected } = useRealTimeNotifications();
     checkAccess();
   }, []);
 
+  // 🎬 BLACK OPS THEME: Add class to body for CSS targeting (bypass :has() iOS bug)
+  useEffect(() => {
+    document.body.classList.add('sn-page-dark');
+    document.documentElement.classList.add('sn-page-dark');
+    
+    return () => {
+      document.body.classList.remove('sn-page-dark');
+      document.documentElement.classList.remove('sn-page-dark');
+    };
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true);

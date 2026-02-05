@@ -180,22 +180,15 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
     setIsDecryptionMode(prev => !prev);
   };
 
-  // Card container styles (shared between front and back) — WHITE GLASS EFFECT
+  // Card container styles (shared between front and back) — DARK GLASS EFFECT (BLACK OPS)
   const cardContainerStyles: React.CSSProperties = {
-    background: 'linear-gradient(160deg, rgba(255, 255, 255, 0.92) 0%, rgba(245, 248, 255, 0.88) 50%, rgba(240, 245, 255, 0.85) 100%)',
-    backdropFilter: 'blur(40px)',
-    WebkitBackdropFilter: 'blur(40px)',
-    border: '2px solid rgba(0, 180, 220, 0.5)',
-    borderTop: '2px solid rgba(0, 209, 255, 0.6)',
-    borderBottom: '2px solid rgba(0, 150, 200, 0.4)',
+    background: 'linear-gradient(160deg, rgba(8, 12, 20, 0.95) 0%, rgba(12, 18, 28, 0.92) 50%, rgba(8, 12, 20, 0.95) 100%)',
+    backdropFilter: 'blur(24px) saturate(150%)',
+    WebkitBackdropFilter: 'blur(24px) saturate(150%)',
+    border: 'none', // Border handled by parent wrapper
     boxShadow: `
-      0 25px 80px rgba(0, 0, 0, 0.15),
-      0 15px 40px rgba(0, 0, 0, 0.1),
-      0 5px 20px rgba(0, 0, 0, 0.08),
-      inset 0 2px 4px rgba(255, 255, 255, 0.9),
-      inset 0 -2px 4px rgba(0, 0, 0, 0.05),
-      0 0 30px rgba(0, 209, 255, 0.15),
-      0 0 60px rgba(0, 209, 255, 0.08)
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      inset 0 0 30px rgba(0, 209, 255, 0.04)
     `
   };
 
