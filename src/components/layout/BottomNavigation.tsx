@@ -8,7 +8,8 @@ import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { hapticLight } from "@/utils/haptics";
 import { subscribeAudioEvent } from "@/utils/audioController";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
-import BuzzVideoModal from "@/components/buzz/BuzzVideoModal";
+// 🎬 FIX: Replaced bottom-sheet with fullscreen FlipOverlay (M1U Pill style)
+import BuzzBriefingFlipOverlay from "@/components/buzz/BuzzBriefingFlipOverlay";
 import GenericVideoModal from "@/components/shared/GenericVideoModal";
 import { AudioManager } from "@/lib/audio/AudioManager"; // 🔧 FIX: Singleton Audio
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
@@ -348,8 +349,9 @@ const BottomNavigationComponent = () => {
       </div>
       
       {/* 🎬 Modal Video Briefings */}
-      <BuzzVideoModal
-        isOpen={showBuzzVideoModal}
+      {/* 🔧 FIX: Buzz briefing now uses fullscreen FlipOverlay (M1U Pill style) */}
+      <BuzzBriefingFlipOverlay
+        open={showBuzzVideoModal}
         onClose={() => setShowBuzzVideoModal(false)}
         userEmail={user?.email}
         onContinue={handleBuzzVideoContinue}
