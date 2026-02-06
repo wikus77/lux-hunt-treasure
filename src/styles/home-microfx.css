@@ -1,0 +1,349 @@
+/**
+ * M1SSION™ — HOME MICRO-FX CSS
+ * 5 Micro-Interventi Estetici (CSS-Only, iOS-Safe)
+ * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * 
+ * INTERVENTI:
+ * 1. Micro-energia bianca "viva" nei 3 container (AGENT/TEMPO/BATTLE)
+ * 2. Bordo M1SSION PRIZE con movimento direzionale
+ * 3. Blob depth (back-light + volumetric shading)
+ * 4. Continuità narrativa (gradiente nero unico)
+ * 5. Bottom Nav vetro satinato unificato
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ✅ INTERVENTO 1 — MICRO-ENERGIA BIANCA "VIVA" NEI 3 CONTAINER
+   Target: AGENT · TEMPO RIMASTO · BATTLE
+   - Sostituzione energia blu → micro-emissione bianca satinata
+   - Pulse lentissimo irregolare, intensità bassissima (subliminale)
+   - iOS-safe: anima solo opacity su pseudo-elementi
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Override per i 3 container con classe card-glass-white-energy */
+.card-glass-white-energy {
+  /* Background scuro satinato - NON full black */
+  background: linear-gradient(
+    160deg,
+    rgba(14, 14, 18, 0.88) 0%,
+    rgba(18, 18, 24, 0.85) 50%,
+    rgba(14, 14, 18, 0.88) 100%
+  ) !important;
+  
+  /* Bordo bianco sottile (sostituisce cyan) */
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  
+  /* Multi-layer shadow per profondità + white glow sottile */
+  box-shadow:
+    /* White back-halo diffuso */
+    0 16px 48px rgba(255, 255, 255, 0.05),
+    0 24px 64px rgba(220, 230, 255, 0.03),
+    /* Profondità */
+    0 8px 28px rgba(0, 0, 0, 0.50),
+    0 4px 14px rgba(0, 0, 0, 0.35),
+    /* Inner micro-energy */
+    inset 0 0 24px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Radial highlight bianco (::before) - pulse lento A */
+.card-glass-white-energy::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    /* Specular highlight top-left */
+    radial-gradient(ellipse 70% 50% at 12% 8%, rgba(255, 255, 255, 0.10) 0%, transparent 45%),
+    /* Secondary glow center-right */
+    radial-gradient(ellipse 60% 40% at 88% 50%, rgba(255, 255, 255, 0.06) 0%, transparent 40%),
+    /* Top edge sheen */
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 20%);
+  opacity: 0.6;
+  animation: microPulseA 7.3s ease-in-out infinite;
+}
+
+/* Linear sheen overlay (::after) - pulse lento B (sfasato) */
+.card-glass-white-energy::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: calc(24px + 6px);
+  pointer-events: none;
+  z-index: -1;
+  /* Soft white halo behind */
+  background: radial-gradient(
+    ellipse 110% 90% at 50% 50%,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(200, 210, 255, 0.02) 35%,
+    transparent 65%
+  );
+  filter: blur(10px);
+  opacity: 0.5;
+  animation: microPulseB 11.8s ease-in-out infinite;
+}
+
+/* Keyframes con variazioni piccole e durate prime (irregolari) */
+@keyframes microPulseA {
+  0%, 100% { opacity: 0.5; }
+  33% { opacity: 0.72; }
+  66% { opacity: 0.58; }
+}
+
+@keyframes microPulseB {
+  0%, 100% { opacity: 0.45; filter: blur(10px); }
+  40% { opacity: 0.68; filter: blur(12px); }
+  75% { opacity: 0.52; filter: blur(9px); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ✅ INTERVENTO 2 — BORDO M1SSION PRIZE ANIMATO
+   - Movimento direzionale lento
+   - Micro shift cromatico: cyan → white → violet → cyan
+   - CSS-only con conic-gradient
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.m1-neon-border-animated {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Animated gradient border using pseudo-element */
+.m1-neon-border-animated::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  padding: 1.5px; /* Border thickness */
+  pointer-events: none;
+  z-index: 0;
+  
+  /* Conic gradient for directional sweep */
+  background: conic-gradient(
+    from var(--prize-border-angle, 0deg) at 50% 50%,
+    rgba(0, 209, 255, 0.45) 0deg,
+    rgba(255, 255, 255, 0.50) 60deg,
+    rgba(180, 120, 255, 0.40) 120deg,
+    rgba(255, 255, 255, 0.45) 180deg,
+    rgba(0, 209, 255, 0.40) 240deg,
+    rgba(200, 180, 255, 0.35) 300deg,
+    rgba(0, 209, 255, 0.45) 360deg
+  );
+  
+  /* Mask to show only border (transparent inside) */
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  
+  /* Slow rotation animation */
+  animation: prizeBorderSweep 22s linear infinite;
+}
+
+/* Subtle outer glow that follows the border */
+.m1-neon-border-animated::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 27px;
+  pointer-events: none;
+  z-index: -1;
+  
+  background: conic-gradient(
+    from var(--prize-border-angle, 0deg) at 50% 50%,
+    rgba(0, 209, 255, 0.12) 0deg,
+    rgba(255, 255, 255, 0.08) 90deg,
+    rgba(180, 120, 255, 0.10) 180deg,
+    rgba(0, 209, 255, 0.12) 360deg
+  );
+  filter: blur(8px);
+  opacity: 0.6;
+  animation: prizeBorderSweep 22s linear infinite;
+}
+
+@keyframes prizeBorderSweep {
+  0% { --prize-border-angle: 0deg; }
+  100% { --prize-border-angle: 360deg; }
+}
+
+/* Fallback for browsers without @property support */
+@supports not (animation-timeline: scroll) {
+  .m1-neon-border-animated::before,
+  .m1-neon-border-animated::after {
+    animation: prizeBorderRotate 22s linear infinite;
+  }
+  
+  @keyframes prizeBorderRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+}
+
+/* CSS Custom Property for animation (Houdini) */
+@property --prize-border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ✅ INTERVENTO 3 — BLOB PROFONDITÀ (Enhanced Container Depth)
+   - Back-light bianco morbido DIETRO ogni card
+   - Shadow volumetrico interno
+   - NO JS parallax (non fattibile senza listener)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Enhanced depth for card containers - volumetric shading */
+[data-section="agent"],
+[data-section="status"],
+[data-section="battle"] {
+  position: relative;
+}
+
+/* Volumetric inner shadow - gives "sunken" depth */
+[data-section="agent"]::before,
+[data-section="status"]::before,
+[data-section="battle"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  /* Soft volumetric inset shadow */
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 -2px 6px rgba(255, 255, 255, 0.03);
+  opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ✅ INTERVENTO 4 — CONTINUITÀ NARRATIVA (Gradiente Nero Unico)
+   - Un gradiente nero continuo che attraversa tutta la Home
+   - I container "emergono" dal fondo
+   - Zero rotture cromatiche
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Override AppHome background for seamless gradient */
+.sn-page-dark main {
+  background: transparent !important;
+}
+
+/* Unified dark gradient applied to Home container */
+.sn-page-dark .container {
+  background: transparent !important;
+}
+
+/* Ensure no white gaps at edges */
+.sn-page-dark [class*="mx-auto"] {
+  background: transparent !important;
+}
+
+/* Body gradient (already in ios-native.css but reinforced here) */
+body.sn-page-dark,
+html.sn-page-dark {
+  background: linear-gradient(
+    180deg,
+    #05070B 0%,
+    #080C14 12%,
+    #0A1018 28%,
+    #0C1420 50%,
+    #0A1018 72%,
+    #080C14 88%,
+    #05070B 100%
+  ) !important;
+  background-attachment: fixed !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ✅ INTERVENTO 5 — BOTTOM NAV VETRO SATINATO UNIFICATO
+   Stile iOS folder - identico su tutte le pagine
+   (Già implementato in ios-native.css, qui solo rinforzo)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Unified glass effect - ALL PAGES */
+.bottom-nav-pill {
+  /* iOS Folder-style glass */
+  background: rgba(18, 18, 20, 0.28) !important;
+  backdrop-filter: blur(18px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+  
+  /* Refined white border */
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  
+  /* Depth shadow + inner sheen */
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Subtle top sheen for glass realism */
+.bottom-nav-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    transparent 35%
+  );
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎯 PERFORMANCE iOS — Anti-Scroll Jank
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Limit will-change to essential elements */
+.card-glass-white-energy {
+  will-change: transform, opacity;
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+/* Reduce blur on cards inside scroll (header/nav stay at 18px) */
+@supports (-webkit-touch-callout: none) {
+  .card-glass-white-energy {
+    -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
+    backdrop-filter: blur(14px) saturate(140%) !important;
+  }
+}
+
+/* Disable animations during scroll (via class toggle if needed) */
+.is-scrolling .card-glass-white-energy::before,
+.is-scrolling .card-glass-white-energy::after,
+.is-scrolling .m1-neon-border-animated::before,
+.is-scrolling .m1-neon-border-animated::after {
+  animation-play-state: paused !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌙 REDUCED MOTION SUPPORT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .card-glass-white-energy::before,
+  .card-glass-white-energy::after,
+  .m1-neon-border-animated::before,
+  .m1-neon-border-animated::after {
+    animation: none !important;
+    opacity: 0.5 !important;
+  }
+  
+  .m1-neon-border-animated::before {
+    /* Static gradient border for reduced motion */
+    background: linear-gradient(
+      135deg,
+      rgba(0, 209, 255, 0.35) 0%,
+      rgba(255, 255, 255, 0.40) 50%,
+      rgba(180, 120, 255, 0.35) 100%
+    ) !important;
+  }
+}
+
+/* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

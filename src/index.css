@@ -15,6 +15,7 @@
 @import './styles/animations/index.css';
 @import './styles/apple-glass.css';
 @import './styles/native-app-upgrade.css'; /* 🚀 NATIVE APP UI UPGRADE - Rollback: rimuovere questa riga */
+@import './styles/home-microfx.css'; /* 🎨 HOME MICRO-FX - 5 micro-interventi estetici */
 
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap');
 
