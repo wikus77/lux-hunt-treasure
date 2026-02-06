@@ -157,15 +157,16 @@ const AionEntity = forwardRef<AionEntityHandle, AionEntityProps>(({
     const originalPositions = geometry.attributes.position.array.slice();
 
     // Material - Custom shader-like effect with MeshStandardMaterial
+    // 🔧 FIX 06/02/2026: Increased opacity and emissive for better visibility
     const material = new THREE.MeshStandardMaterial({
       color: new THREE.Color(`hsl(${PALETTE.X.h}, ${PALETTE.X.s}%, ${PALETTE.X.l}%)`),
-      emissive: new THREE.Color(`hsl(${PALETTE.X.h}, ${PALETTE.X.s}%, ${PALETTE.X.l * 0.3}%)`),
-      emissiveIntensity: 0.5,
-      metalness: 0.3,
-      roughness: 0.7,
+      emissive: new THREE.Color(`hsl(${PALETTE.X.h}, ${PALETTE.X.s}%, ${PALETTE.X.l * 0.5}%)`),
+      emissiveIntensity: 0.8,
+      metalness: 0.2,
+      roughness: 0.5,
       wireframe: false,
-      transparent: true,
-      opacity: 0.9,
+      transparent: false, // 🔧 FIX: Solid blob for better visibility
+      opacity: 1.0,
     });
 
     const mesh = new THREE.Mesh(geometry, material);
