@@ -181,7 +181,7 @@ Deno.serve(async (req) => {
     // 📊 RELIABILITY: Structured logging header
     console.log(`[AUTO-PUSH-CRON] ════════════════════════════════════════════`);
     console.log(`[AUTO-PUSH-CRON] 🆔 Run ID: ${runId}`);
-    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2026-01-25-v15-NATIVE`);
+    console.log(`[AUTO-PUSH-CRON] 🔧 VERSION: 2026-02-06-v16-NATIVE-FIRST`);
     console.log(`[AUTO-PUSH-CRON] ✅ Auth: ${isServiceRole ? 'service_role' : providedSecret ? 'cron_secret' : 'no_secret_configured'}`);
     console.log(`[AUTO-PUSH-CRON] ⚙️ Params: dry=${dryRun}, bypass=${bypassQuietHours}, force=${forceMode}, user=${forceUserId || 'all'}`);
     console.log(`[AUTO-PUSH-CRON] 🔑 VAPID: contact=${!!VAPID_CONTACT}, public=${!!VAPID_PUBLIC_KEY}, private=${!!VAPID_PRIVATE_KEY}`);
@@ -445,95 +445,110 @@ Deno.serve(async (req) => {
         sentCount++;
         console.log(`[AUTO-PUSH-CRON] 📝 DRY RUN: Would send to ${user.agent_code}`);
       } else {
-        // 🔧 V13: Send notification DIRECTLY via webpush (same as chat-push-notify)
+        // 🔧 V16 (2026-02-06): NATIVE-FIRST PUSH LOGIC
+        // Check BOTH webpush_subscriptions AND push_tokens (native iOS/Android)
+        // Send to whichever exists, don't skip user if only one type exists
         try {
-          // Configure VAPID
-          webpush.setVapidDetails(VAPID_CONTACT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+          let webpushSent = 0;
+          let webpushFailed = 0;
+          let nativeSent = 0;
+          let nativeFailed = 0;
+          let nativeSkipped = false;
           
-          // Get user's webpush subscriptions directly from DB
+          // ════════════════════════════════════════════════════════════════════
+          // STEP 1: Try NATIVE PUSH FIRST (iOS/Android via push_tokens)
+          // ════════════════════════════════════════════════════════════════════
+          const nativeResult = await sendNativePushForUser(
+            user.id,
+            renderedTitle,
+            renderedBody,
+            {
+              template_id: selectedTemplate.id,
+              deeplink: selectedTemplate.deeplink,
+              ctx: 'auto-cron-native'
+            },
+            dryRun
+          );
+          
+          nativeSent = nativeResult.sent;
+          nativeFailed = nativeResult.failed;
+          nativeSkipped = nativeResult.skipped;
+          
+          if (nativeSent > 0) {
+            console.log(`[AUTO-PUSH-CRON] 📱 Native push sent to ${user.agent_code}: ${nativeSent} device(s)`);
+          }
+          
+          // ════════════════════════════════════════════════════════════════════
+          // STEP 2: Also try WEBPUSH (PWA via webpush_subscriptions)
+          // ════════════════════════════════════════════════════════════════════
           const { data: userSubs, error: subsError } = await supabase
             .from('webpush_subscriptions')
             .select('endpoint, keys')
             .eq('user_id', user.id)
             .eq('is_active', true);
           
-          if (subsError) {
-            console.error(`[AUTO-PUSH-CRON] ❌ DB error getting subs for ${user.agent_code}:`, subsError);
-            skippedCount++;
-            continue;
-          }
-          
-          if (!userSubs || userSubs.length === 0) {
-            console.log(`[AUTO-PUSH-CRON] ⚠️ No push subscriptions for ${user.agent_code}`);
-            skippedCount++;
-            continue;
-          }
-          
-          console.log(`[AUTO-PUSH-CRON] 📡 Found ${userSubs.length} subscription(s) for ${user.agent_code}`);
-          
-          const payload = JSON.stringify({
-            title: renderedTitle,
-            body: renderedBody,
-            url: selectedTemplate.deeplink || '/home',
-            icon: '/icon-512.png',
-            badge: '/icon-192.png',
-            tag: `auto_${selectedTemplate.id}`,
-            renotify: true,
-            data: {
-              template_id: selectedTemplate.id,
-              lang: userLang,
-              ctx: 'auto-cron'
-            }
-          });
-          
-          let sentToUser = 0;
-          let failedForUser = 0;
-          
-          for (const sub of userSubs) {
-            try {
-              const subscription = {
-                endpoint: sub.endpoint,
-                keys: {
-                  p256dh: sub.keys?.p256dh || sub.keys?.['p256dh'],
-                  auth: sub.keys?.auth || sub.keys?.['auth']
-                }
-              };
-              
-              if (!subscription.endpoint || !subscription.keys.p256dh || !subscription.keys.auth) {
-                console.warn(`[AUTO-PUSH-CRON] ⚠️ Invalid subscription data for ${user.agent_code}`);
-                continue;
-              }
-              
-              await webpush.sendNotification(subscription, payload);
-              sentToUser++;
-              console.log(`[AUTO-PUSH-CRON] ✅ Direct push sent to ${user.agent_code}`);
-            } catch (pushErr: any) {
-              failedForUser++;
-              console.error(`[AUTO-PUSH-CRON] ❌ Push error for ${user.agent_code}:`, pushErr?.statusCode || pushErr?.message);
-              // Mark expired subscriptions as inactive (410 = Gone)
-              if (pushErr?.statusCode === 410) {
-                await supabase
-                  .from('webpush_subscriptions')
-                  .update({ is_active: false })
-                  .eq('endpoint', sub.endpoint);
-              }
-            }
-          }
-          
-          if (sentToUser > 0) {
-            // 🆕 2026-01-25: Also send to native iOS/Android tokens
-            const nativeResult = await sendNativePushForUser(
-              user.id,
-              renderedTitle,
-              renderedBody,
-              {
+          if (!subsError && userSubs && userSubs.length > 0) {
+            console.log(`[AUTO-PUSH-CRON] 🌐 Found ${userSubs.length} webpush subscription(s) for ${user.agent_code}`);
+            
+            // Configure VAPID
+            webpush.setVapidDetails(VAPID_CONTACT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+            
+            const payload = JSON.stringify({
+              title: renderedTitle,
+              body: renderedBody,
+              url: selectedTemplate.deeplink || '/home',
+              icon: '/icon-512.png',
+              badge: '/icon-192.png',
+              tag: `auto_${selectedTemplate.id}`,
+              renotify: true,
+              data: {
                 template_id: selectedTemplate.id,
-                deeplink: selectedTemplate.deeplink,
-                ctx: 'auto-cron-native'
-              },
-              dryRun
-            );
-
+                lang: userLang,
+                ctx: 'auto-cron'
+              }
+            });
+            
+            for (const sub of userSubs) {
+              try {
+                const subscription = {
+                  endpoint: sub.endpoint,
+                  keys: {
+                    p256dh: sub.keys?.p256dh || sub.keys?.['p256dh'],
+                    auth: sub.keys?.auth || sub.keys?.['auth']
+                  }
+                };
+                
+                if (!subscription.endpoint || !subscription.keys.p256dh || !subscription.keys.auth) {
+                  console.warn(`[AUTO-PUSH-CRON] ⚠️ Invalid webpush subscription for ${user.agent_code}`);
+                  continue;
+                }
+                
+                await webpush.sendNotification(subscription, payload);
+                webpushSent++;
+                console.log(`[AUTO-PUSH-CRON] ✅ Webpush sent to ${user.agent_code}`);
+              } catch (pushErr: any) {
+                webpushFailed++;
+                console.error(`[AUTO-PUSH-CRON] ❌ Webpush error for ${user.agent_code}:`, pushErr?.statusCode || pushErr?.message);
+                // Mark expired subscriptions as inactive (410 = Gone)
+                if (pushErr?.statusCode === 410) {
+                  await supabase
+                    .from('webpush_subscriptions')
+                    .update({ is_active: false })
+                    .eq('endpoint', sub.endpoint);
+                }
+              }
+            }
+          } else {
+            console.log(`[AUTO-PUSH-CRON] ℹ️ No webpush subscriptions for ${user.agent_code} (native-only user)`);
+          }
+          
+          // ════════════════════════════════════════════════════════════════════
+          // STEP 3: Log result - SUCCESS if EITHER native OR webpush worked
+          // ════════════════════════════════════════════════════════════════════
+          const totalSent = nativeSent + webpushSent;
+          const totalFailed = nativeFailed + webpushFailed;
+          
+          if (totalSent > 0) {
             logsToInsert.push({
               template_id: selectedTemplate.id,
               user_id: user.id,
@@ -545,27 +560,38 @@ Deno.serve(async (req) => {
                 body: renderedBody,
                 deeplink: selectedTemplate.deeplink,
                 sent_at: new Date().toISOString(),
-                push_sent: sentToUser,
-                push_failed: failedForUser,
-                // 🆕 Native push stats
-                native_sent: nativeResult.sent,
-                native_failed: nativeResult.failed,
-                native_skipped: nativeResult.skipped
+                // Webpush stats
+                webpush_sent: webpushSent,
+                webpush_failed: webpushFailed,
+                // Native push stats
+                native_sent: nativeSent,
+                native_failed: nativeFailed,
+                native_skipped: nativeSkipped,
+                // Total
+                total_sent: totalSent,
+                total_failed: totalFailed
               }
             });
             sentCount++;
+            console.log(`[AUTO-PUSH-CRON] ✅ SUCCESS for ${user.agent_code}: native=${nativeSent}, webpush=${webpushSent}`);
+          } else if (nativeSkipped && webpushSent === 0 && webpushFailed === 0) {
+            // No subscriptions at all (neither native nor webpush)
+            console.log(`[AUTO-PUSH-CRON] ⏭️ No push channels for ${user.agent_code} (no native token, no webpush)`);
+            skippedCount++;
           } else {
+            // Had subscriptions but all failed
             logsToInsert.push({
               template_id: selectedTemplate.id,
               user_id: user.id,
               sent_date: today,
               status: 'error',
               details: {
-                error: 'All subscriptions failed',
+                error: 'All push channels failed',
                 lang: userLang,
                 title: renderedTitle,
                 body: renderedBody,
-                push_failed: failedForUser
+                webpush_failed: webpushFailed,
+                native_failed: nativeFailed
               }
             });
             skippedCount++;
@@ -609,7 +635,7 @@ Deno.serve(async (req) => {
     return json({
       ok: true,
       run_id: runId,
-      version: '2026-01-25-v15-NATIVE',
+      version: '2026-02-06-v16-NATIVE-FIRST',
       users_processed: shuffledUsers.length,
       sent: sentCount,
       skipped: skippedCount,
