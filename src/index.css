@@ -1429,6 +1429,72 @@ html:has(.sn-page) .m1ssion-glass-card {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   📬 NOTIFICATION CARDS — Force glass effect on .sn-card
+   FIX 06/02/2026: sn-card in notifications should have visible glass effect
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Force glass styling on notification category cards */
+.sn-page .sn-card,
+.m1-folder-glass--graphite .sn-card,
+.sn-card.notification-card-glass {
+  background: rgba(22, 28, 38, 0.80) !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 20px !important;
+  box-shadow: 
+    0 6px 24px rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+    0 0 30px rgba(0, 209, 255, 0.06) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* Sheen effect on notification cards */
+.sn-page .sn-card::before,
+.m1-folder-glass--graphite .sn-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 35%;
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 30%,
+    transparent 70%
+  );
+  pointer-events: none;
+  border-radius: 20px 20px 0 0;
+  z-index: 1;
+}
+
+/* Text colors inside notification cards - ensure readability */
+.sn-page .sn-card h3,
+.sn-page .sn-card p,
+.m1-folder-glass--graphite .sn-card h3,
+.m1-folder-glass--graphite .sn-card p {
+  color: rgba(255, 255, 255, 0.90) !important;
+}
+
+.sn-page .sn-card .text-sm,
+.m1-folder-glass--graphite .sn-card .text-sm {
+  color: rgba(255, 255, 255, 0.70) !important;
+}
+
+/* iOS performance for notification cards */
+@supports (-webkit-touch-callout: none) {
+  .sn-page .sn-card,
+  .m1-folder-glass--graphite .sn-card {
+    backdrop-filter: blur(12px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(140%) !important;
+  }
+}
+
 /* Override m1-app-bg to transparent */
 .sn-page .m1-app-bg,
 html:has(.sn-page) .m1-app-bg {
@@ -1436,9 +1502,28 @@ html:has(.sn-page) .m1-app-bg {
 }
 
 /* Override dark text to readable dark on light */
-.sn-page .text-white,
-html:has(.sn-page) .text-white {
+/* 🔧 FIX 06/02/2026: EXCLUDE leaderboard cards - they need white text on dark glass */
+.sn-page .text-white:not(.leaderboard-card-glass .text-white):not(.leaderboard-rank-1 .text-white):not(.leaderboard-rank-2 .text-white):not(.leaderboard-rank-3 .text-white):not(.leaderboard-rank-top10 .text-white),
+html:has(.sn-page) .text-white:not(.leaderboard-card-glass .text-white) {
   color: var(--wt-text-primary) !important;
+}
+
+/* Force white text inside leaderboard cards */
+.leaderboard-card-glass .text-white,
+.leaderboard-card-glass [class*="text-white"],
+.leaderboard-rank-1 .text-white,
+.leaderboard-rank-2 .text-white,
+.leaderboard-rank-3 .text-white,
+.leaderboard-rank-top10 .text-white,
+.leaderboard-card-glass p,
+.leaderboard-card-glass span:not(.text-cyan-400):not(.text-green-400):not(.text-orange-400):not(.text-pink-400):not(.text-purple-400) {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Force gray-400 text visible in leaderboard */
+.leaderboard-card-glass .text-gray-400,
+.leaderboard-card-glass .text-gray-500 {
+  color: rgba(255, 255, 255, 0.60) !important;
 }
 
 .sn-page .text-white\/70,
