@@ -335,9 +335,16 @@ main {
 /* ═══════════════════════════════════════════════════════════════════════════
    🏆 LEADERBOARD CARDS — Graphite folder glass + TOP 3 Rank Aura
    Psychologically-driven effects: status + aspiration
+   
+   🔧 FIX 05/02/2026: Override m1ssion-glass-card with higher specificity
+   The Card component always applies m1ssion-glass-card which has !important
+   in index.css. We need to win the specificity battle.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Base card style - Graphite folder glass */
+/* Use double-class selector to override .sn-page .m1ssion-glass-card */
+.leaderboard-card-glass.leaderboard-card-glass,
+.sn-page .leaderboard-card-glass,
 .leaderboard-card-glass {
   background: rgba(18, 22, 28, 0.85) !important;
   backdrop-filter: blur(12px) saturate(160%) !important;
@@ -347,8 +354,8 @@ main {
     0 4px 16px rgba(0, 0, 0, 0.40),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
-  position: relative;
-  overflow: hidden;
+  position: relative !important;
+  overflow: hidden !important;
 }
 
 /* Sheen effect for all cards */
@@ -372,6 +379,8 @@ main {
    #1 — CROWN AURA (Il trono - status dominante)
    ═══════════════════════════════════════════════════════════════════════════ */
 
+.leaderboard-rank-1.leaderboard-rank-1,
+.sn-page .leaderboard-rank-1,
 .leaderboard-rank-1 {
   background: linear-gradient(
     135deg,
@@ -440,6 +449,8 @@ main {
    #2 — CHALLENGER GLOW (Quasi top - aspiration)
    ═══════════════════════════════════════════════════════════════════════════ */
 
+.leaderboard-rank-2.leaderboard-rank-2,
+.sn-page .leaderboard-rank-2,
 .leaderboard-rank-2 {
   background: linear-gradient(
     135deg,
@@ -483,6 +494,8 @@ main {
    #3 — PODIUM SPARK (Ultimo gradino - raggiungibile)
    ═══════════════════════════════════════════════════════════════════════════ */
 
+.leaderboard-rank-3.leaderboard-rank-3,
+.sn-page .leaderboard-rank-3,
 .leaderboard-rank-3 {
   background: linear-gradient(
     135deg,
@@ -527,6 +540,8 @@ main {
    TOP 4-10 — Subtle glow
    ═══════════════════════════════════════════════════════════════════════════ */
 
+.leaderboard-rank-top10.leaderboard-rank-top10,
+.sn-page .leaderboard-rank-top10,
 .leaderboard-rank-top10 {
   background: rgba(18, 22, 28, 0.82) !important;
   border: 1px solid rgba(0, 209, 255, 0.12) !important;
@@ -541,10 +556,20 @@ main {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @supports (-webkit-touch-callout: none) {
+  .leaderboard-card-glass.leaderboard-card-glass,
+  .sn-page .leaderboard-card-glass,
   .leaderboard-card-glass,
+  .leaderboard-rank-1.leaderboard-rank-1,
+  .sn-page .leaderboard-rank-1,
   .leaderboard-rank-1,
+  .leaderboard-rank-2.leaderboard-rank-2,
+  .sn-page .leaderboard-rank-2,
   .leaderboard-rank-2,
+  .leaderboard-rank-3.leaderboard-rank-3,
+  .sn-page .leaderboard-rank-3,
   .leaderboard-rank-3,
+  .leaderboard-rank-top10.leaderboard-rank-top10,
+  .sn-page .leaderboard-rank-top10,
   .leaderboard-rank-top10 {
     backdrop-filter: blur(10px) saturate(140%) !important;
     -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
