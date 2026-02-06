@@ -592,7 +592,10 @@
   isolation: isolate !important;
   /* Performance iOS */
   transform: translateZ(0);
-  contain: layout paint style;
+  /* 🔧 FIX 06/02/2026: REMOVED 'contain: layout paint style' 
+     It was clipping the absolute-positioned "COMMIT GIORNALIERO" container.
+     Using 'contain: style' only (doesn't affect layout/paint overflow). */
+  contain: style;
 }
 
 /* (1) DARK POCKET — Tasca scura sotto i blobs */
@@ -740,7 +743,7 @@
   z-index: 5;
   /* Performance iOS */
   transform: translateX(-50%) translateZ(0);
-  contain: layout paint style;
+  /* 🔧 FIX 06/02/2026: Removed contain - not needed for this element */
 }
 
 .commit-fragment {
@@ -772,7 +775,7 @@
 /* 📱 iOS performance guard */
 @supports (-webkit-touch-callout: none) {
   .home-commit-container {
-    contain: layout style;
+    /* 🔧 FIX 06/02/2026: Removed contain - was not needed */
   }
 }
 

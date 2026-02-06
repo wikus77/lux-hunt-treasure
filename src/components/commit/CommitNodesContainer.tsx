@@ -394,8 +394,10 @@ export const CommitNodesContainer: React.FC = () => {
         alignItems: 'center',
         gap: '16px',
         marginTop: '-46px',
-        marginBottom: '8px',
+        marginBottom: '48px', // 🔧 FIX: Increased to make room for "COMMIT GIORNALIERO" text
         position: 'relative',
+        // 🔧 FIX 06/02/2026: Ensure overflow is visible for the COMMIT text container
+        overflow: 'visible',
       }}
     >
       {/* Left AION - Collapses to center on merge */}
@@ -503,21 +505,22 @@ export const CommitNodesContainer: React.FC = () => {
           🔧 FIX 06/02/2026: "COMMIT GIORNALIERO" CONTAINER
           - Fragments separate → converge to "COMMIT" on merge
           - Blinks when fully merged (mode === 'one')
+          🔧 FIX 06/02/2026 v2: Changed from absolute to relative positioning
+             to avoid being clipped by parent's contain/overflow
           ═══════════════════════════════════════════════════════════════════════════ */}
       <div
         className="home-commit-container"
         style={{
           position: 'absolute',
-          bottom: '-48px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '100%',
-          maxWidth: '320px',
+          bottom: '-52px',
+          left: 0,
+          right: 0,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          overflow: 'hidden',
           pointerEvents: 'none',
+          zIndex: 20,
+          minHeight: '24px',
         }}
       >
         {/* Fragment A: "COM" - starts left, moves to center */}
