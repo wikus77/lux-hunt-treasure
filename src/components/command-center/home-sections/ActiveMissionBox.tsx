@@ -554,15 +554,15 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
 
   return (
     <div className="w-full">
-      {/* Header - 🔧 FIX 06/02/2026: "DI RILEVAMENTO" e "ORACLE" ora più visibili (bianco pieno) */}
+      {/* Header - 🔧 FIX 06/02/2026 v2: "DI RILEVAMENTO" e "ORACLE" BIANCO PURO */}
       <div className="mb-4">
         <h2 className="text-xl font-orbitron font-bold mb-2">
           <span className="text-[#00D1FF]">PROTOCOLLO</span>
-          <span className="text-white font-medium" style={{ color: 'rgba(255, 255, 255, 0.95)' }}> DI RILEVAMENTO</span>
+          <span style={{ color: '#FFFFFF', opacity: 1 }}> DI RILEVAMENTO</span>
         </h2>
         <h3 className="text-xl font-orbitron font-bold">
           <span className="text-[#00D1FF]">MISSIONE ID:</span>
-          <span className="text-white font-medium" style={{ color: 'rgba(255, 255, 255, 0.95)' }}> {mission.title}</span>
+          <span style={{ color: '#FFFFFF', opacity: 1 }}> {mission.title}</span>
         </h3>
       </div>
 
@@ -570,7 +570,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
       {/* "Indizi Trovati" e "Stato Missione" spostati dentro M1SSION AGENT come shortcuts */}
       <div className="grid grid-cols-1 gap-4">
 
-        {/* TEMPO RIMASTO - 🔧 FIX 06/02/2026: Stile glass graphite, no glow */}
+        {/* TEMPO RIMASTO - 🔧 FIX 06/02/2026 v2: Glass graphite + PULSE GLOW RIPRISTINATO */}
         <motion.div
           data-section="time"
           className={`m1-folder-glass--graphite rounded-2xl p-4 cursor-pointer transition-colors overflow-hidden relative ${
@@ -583,6 +583,49 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
         >
+          {/* 🔧 PULSE GLOW RIPRISTINATO - overlay when <= 10 days */}
+          {showPulse && (
+            <motion.div
+              className="absolute inset-0 rounded-2xl pointer-events-none"
+              style={{
+                background: isFinalDay 
+                  ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%)'
+                  : isUrgent
+                  ? 'linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%)'
+                  : 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%)',
+              }}
+              animate={{
+                opacity: [0.3, 0.6 * pulseIntensity, 0.3],
+                boxShadow: [
+                  `0 0 ${10 * pulseIntensity}px ${isFinalDay ? 'rgba(239, 68, 68, 0.3)' : 'rgba(251, 191, 36, 0.3)'}`,
+                  `0 0 ${25 * pulseIntensity}px ${isFinalDay ? 'rgba(239, 68, 68, 0.5)' : 'rgba(251, 191, 36, 0.5)'}`,
+                  `0 0 ${10 * pulseIntensity}px ${isFinalDay ? 'rgba(239, 68, 68, 0.3)' : 'rgba(251, 191, 36, 0.3)'}`,
+                ],
+              }}
+              transition={{
+                duration: Math.max(0.5, 2 - pulseIntensity * 0.5),
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+          )}
+          
+          {/* Animated glow strip */}
+          <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
+            <div 
+              className={`absolute inset-0 bg-gradient-to-r from-transparent ${
+                isFinalDay ? 'via-red-500' : isUrgent ? 'via-orange-400' : 'via-amber-400'
+              } to-transparent`} 
+              style={{ 
+                animation: showPulse 
+                  ? `slideGlow ${Math.max(1, 3 - pulseIntensity)}s ease-in-out infinite` 
+                  : 'slideGlow 3s ease-in-out infinite', 
+                width: '200%', 
+                left: '-100%',
+                opacity: 0.6 * pulseIntensity
+              }} 
+            />
+          </div>
           
           <div className="flex items-center space-x-2 mb-2">
             <motion.div 
