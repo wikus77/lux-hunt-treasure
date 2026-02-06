@@ -5,6 +5,7 @@ import React, { useRef, useEffect, useImperativeHandle, forwardRef, useState } f
 import * as THREE from 'three';
 
 // Viseme palette (HSL)
+// 🔧 FIX 06/02/2026: Changed idle color (X) to WHITE for inverted blob design
 const PALETTE: Record<string, { h: number; s: number; l: number }> = {
   A: { h: 350, s: 85, l: 60 }, // Magenta caldo
   E: { h: 280, s: 70, l: 65 }, // Viola
@@ -12,7 +13,7 @@ const PALETTE: Record<string, { h: number; s: number; l: number }> = {
   O: { h: 20, s: 90, l: 65 },  // Arancio
   U: { h: 160, s: 75, l: 60 }, // Verde acqua
   M: { h: 330, s: 60, l: 55 }, // Rosa scuro
-  X: { h: 210, s: 25, l: 12 }, // Idle (blu profondo)
+  X: { h: 0, s: 0, l: 92 },    // Idle (WHITE - inverted design)
 };
 
 export type Viseme = { t: number; v: string };
@@ -111,6 +112,7 @@ const AionEntity = forwardRef<AionEntityHandle, AionEntityProps>(({
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const meshRef = useRef<THREE.Mesh | null>(null);
+  const wireframeMeshRef = useRef<THREE.Mesh | null>(null); // 🔧 FIX: Wireframe overlay for black lines
   const animationFrameRef = useRef<number | null>(null);
   const timeRef = useRef(0);
   
@@ -170,6 +172,18 @@ const AionEntity = forwardRef<AionEntityHandle, AionEntityProps>(({
     scene.add(mesh);
     meshRef.current = mesh;
 
+    // 🔧 FIX 06/02/2026: Wireframe overlay for BLACK lines on WHITE blob
+    const wireframeMaterial = new THREE.MeshBasicMaterial({
+      color: 0x0a0f14, // Charcoal black
+      wireframe: true,
+      transparent: true,
+      opacity: 0.35,
+    });
+    const wireframeMesh = new THREE.Mesh(geometry, wireframeMaterial);
+    wireframeMesh.scale.set(1.002, 1.002, 1.002); // Slightly larger to prevent z-fighting
+    scene.add(wireframeMesh);
+    wireframeMeshRef.current = wireframeMesh;
+
     // Lights
     const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
     scene.add(ambientLight);
@@ -191,6 +205,11 @@ const AionEntity = forwardRef<AionEntityHandle, AionEntityProps>(({
         // Rotate mesh
         meshRef.current.rotation.x = Math.sin(time * 0.3) * 0.1;
         meshRef.current.rotation.y += 0.005;
+
+        // 🔧 FIX: Sync wireframe rotation with main mesh
+        if (wireframeMeshRef.current) {
+          wireframeMeshRef.current.rotation.copy(meshRef.current.rotation);
+        }
 
         // Deform geometry with noise
         const positions = meshRef.current.geometry.attributes.position.array as Float32Array;
@@ -269,6 +288,7 @@ const AionEntity = forwardRef<AionEntityHandle, AionEntityProps>(({
       }
       geometry.dispose();
       material.dispose();
+      wireframeMaterial.dispose(); // 🔧 FIX: Cleanup wireframe material
       renderer.dispose();
     };
   }, [intensity, idleSpeed]);
