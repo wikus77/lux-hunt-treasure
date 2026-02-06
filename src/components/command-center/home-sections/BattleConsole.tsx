@@ -144,32 +144,13 @@ export function BattleConsole({ className }: BattleConsoleProps) {
   return (
     <>
       {/* Compact Card - Tap to open lobby modal */}
+      {/* 🔧 FIX 06/02/2026: Stile "Buzz Notifications/Generali" - glass graphite, no glow */}
       <motion.div 
-        className={`m1-relief rounded-[20px] overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 mb-4 relative ${className}`}
+        className={`m1-folder-glass--graphite rounded-[20px] overflow-hidden cursor-pointer transition-all duration-300 mb-4 relative ${className}`}
         onClick={handleOpenLobby}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
       >
-        {/* Animated glow strip - WHITE MICRO-ENERGY */}
-        <div className="absolute top-0 left-0 w-full h-1 overflow-hidden">
-          <div 
-            className="absolute inset-0 opacity-50"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.7) 50%, transparent 100%)',
-              animation: 'slideGlowBattle 4s ease-in-out infinite',
-              width: '200%',
-              left: '-100%'
-            }}
-          />
-        </div>
-        <style>{`
-          @keyframes slideGlowBattle {
-            0% { transform: translateX(0); }
-            50% { transform: translateX(50%); }
-            100% { transform: translateX(0); }
-          }
-        `}</style>
-
         <div className="p-5">
           {/* Header */}
           <div className="flex justify-between items-center mb-3">
@@ -178,8 +159,8 @@ export function BattleConsole({ className }: BattleConsoleProps) {
                 <Swords className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-orbitron font-bold text-white">
-                  M1SSION BATTLE
+                <h2 className="text-lg font-orbitron font-bold">
+                  <span className="text-cyan-400">M1</span><span className="text-white">SSION BATTLE</span>
                 </h2>
                 {pendingCount > 0 && (
                   <motion.div
