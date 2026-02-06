@@ -1,7 +1,7 @@
 // © 2025 M1SSION™ – Mission Sync Pull-to-Refresh
-// 🔧 FIX 06/02/2026 v2: PTR RISCRITTO - Modale appare SOLO con pressione PROLUNGATA + pull + rilascio
+// 🔧 FIX 06/02/2026 v3: PTR FLUIDO - animazioni progressive, no scatti
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { Clock } from 'lucide-react';
 
@@ -14,18 +14,16 @@ interface MissionSyncProps {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// CONFIGURAZIONE - MOLTO PIÙ RESTRITTIVA
+// CONFIGURAZIONE SEMPLIFICATA
 // ═══════════════════════════════════════════════════════════════════════════
-const MIN_HOLD_TIME = 400;        // Deve tenere premuto almeno 400ms prima che conti
-const PULL_TRIGGER = 100;         // Deve tirare almeno 100px dopo il hold
-const MAX_PULL = 140;             // Max visual pull
-const MIN_PULL_SPEED = 0.3;       // Velocità minima (px/ms) per essere considerato un pull intenzionale
+const MIN_HOLD_TIME = 300;        // Hold minimo prima che inizi il PTR
+const PULL_TRIGGER = 90;          // Deve tirare 90px per triggerare
+const MAX_PULL = 130;             // Max visual pull
 
 // ═══════════════════════════════════════════════════════════════════════════
-// COMING SOON MODAL - Stessa animazione di M1UShopFlipOverlay
+// COMING SOON MODAL - Animazione fluida
 // ═══════════════════════════════════════════════════════════════════════════
 const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  const [isClosing, setIsClosing] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -43,61 +41,43 @@ const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
     if (isOpen) {
       const orig = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
-      
-      const handleEsc = (e: KeyboardEvent) => {
-        if (e.key === 'Escape' && !isClosing) handleClose();
-      };
-      window.addEventListener('keydown', handleEsc);
-      
-      return () => {
-        document.body.style.overflow = orig;
-        window.removeEventListener('keydown', handleEsc);
-      };
+      return () => { document.body.style.overflow = orig; };
     }
-  }, [isOpen, isClosing]);
-
-  const handleClose = useCallback(() => {
-    if (isClosing) return;
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-      setIsClosing(false);
-    }, 280);
-  }, [isClosing, onClose]);
+  }, [isOpen]);
 
   if (!portalContainer) return null;
 
   return createPortal(
-    <AnimatePresence mode="wait">
+    <AnimatePresence>
       {isOpen && (
         <>
-          {/* BACKDROP */}
+          {/* BACKDROP - fade in fluido */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: isClosing ? 0.2 : 0.25 }}
-            onClick={handleClose}
+            transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+            onClick={onClose}
             style={{
               position: 'fixed',
               inset: 0,
               zIndex: 99998,
-              backgroundColor: 'rgba(10, 10, 15, 0.80)',
-              backdropFilter: 'blur(50px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(50px) saturate(180%)',
+              backgroundColor: 'rgba(10, 10, 15, 0.85)',
+              backdropFilter: 'blur(40px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
               pointerEvents: 'auto',
             }}
           />
 
-          {/* MODAL PANEL */}
+          {/* MODAL PANEL - slide up fluido */}
           <motion.div
-            initial={{ scale: 0.1, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.1, opacity: 0 }}
-            transition={{
+            initial={{ y: '100%', opacity: 0.5 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
+            transition={{ 
               type: 'spring',
-              stiffness: isClosing ? 400 : 280,
-              damping: isClosing ? 32 : 24,
+              damping: 28,
+              stiffness: 300,
               mass: 0.8,
             }}
             style={{
@@ -105,12 +85,8 @@ const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
               inset: 0,
               zIndex: 99999,
               pointerEvents: 'auto',
-              transformOrigin: '50% 5%',
-              willChange: 'transform, opacity',
+              willChange: 'transform',
               overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -121,33 +97,26 @@ const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
                 background: 'linear-gradient(180deg, #0A0E14 0%, #0F1419 50%, #0A0E14 100%)',
               }}
             >
-              {/* Close handle */}
+              {/* Close handle - drag down to close */}
               <motion.div 
-                className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/20 rounded-full cursor-pointer"
-                onClick={handleClose}
-                whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.4)' }}
-                whileTap={{ scale: 0.95 }}
+                className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/30 rounded-full cursor-pointer"
+                onClick={onClose}
+                whileTap={{ scale: 0.9 }}
               />
               
-              {/* Logo animato */}
+              {/* Logo */}
               <motion.div
                 className="mb-8"
-                animate={{ 
-                  scale: [1, 1.05, 1],
-                  rotate: [0, 5, -5, 0],
-                }}
-                transition={{ 
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.15, duration: 0.4, ease: 'easeOut' }}
               >
                 <img 
                   src={M1_LOGO_URL} 
                   alt="M1" 
                   className="w-24 h-24 object-contain"
                   style={{
-                    filter: 'drop-shadow(0 0 20px rgba(0, 209, 255, 0.5))'
+                    filter: 'drop-shadow(0 0 25px rgba(0, 209, 255, 0.6))'
                   }}
                 />
               </motion.div>
@@ -155,9 +124,9 @@ const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
               {/* Title */}
               <motion.h1 
                 className="text-4xl font-orbitron font-bold mb-4 text-center"
-                initial={{ y: 20, opacity: 0 }}
+                initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.1 }}
+                transition={{ delay: 0.2, duration: 0.4, ease: 'easeOut' }}
               >
                 <span className="text-[#00D1FF]">COMING</span>
                 <span className="text-white"> SOON</span>
@@ -166,9 +135,9 @@ const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
               {/* Subtitle */}
               <motion.p 
                 className="text-white/60 text-center text-lg mb-8 max-w-xs"
-                initial={{ y: 20, opacity: 0 }}
+                initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
+                transition={{ delay: 0.25, duration: 0.4, ease: 'easeOut' }}
               >
                 Questa funzionalità sarà disponibile a breve. Stay tuned!
               </motion.p>
@@ -178,20 +147,19 @@ const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
                 className="w-16 h-16 rounded-full bg-[#00D1FF]/10 border border-[#00D1FF]/30 flex items-center justify-center mb-8"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.3, type: 'spring' }}
+                transition={{ delay: 0.3, type: 'spring', stiffness: 300 }}
               >
                 <Clock className="w-8 h-8 text-[#00D1FF]" />
               </motion.div>
               
               {/* Close button */}
               <motion.button
-                onClick={handleClose}
+                onClick={onClose}
                 className="px-8 py-3 bg-[#00D1FF]/10 border border-[#00D1FF]/30 rounded-xl text-[#00D1FF] font-medium"
-                whileHover={{ scale: 1.05, backgroundColor: 'rgba(0, 209, 255, 0.2)' }}
                 whileTap={{ scale: 0.95 }}
-                initial={{ y: 20, opacity: 0 }}
+                initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.35, duration: 0.4, ease: 'easeOut' }}
               >
                 Chiudi
               </motion.button>
@@ -205,22 +173,22 @@ const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT - LOGICA RISCRTTA DA CAPO
+// MAIN COMPONENT - LOGICA FLUIDA SENZA SCATTI
 // ═══════════════════════════════════════════════════════════════════════════
 export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, disabled = false }) => {
-  const [pull, setPull] = useState(0);
   const [showComingSoon, setShowComingSoon] = useState(false);
-  const [isHoldActive, setIsHoldActive] = useState(false); // Indica se il hold time è stato superato
   
   const containerRef = useRef<HTMLDivElement>(null);
   
+  // Use spring for smooth pull animation
+  const pullSpring = useSpring(0, { stiffness: 400, damping: 35 });
+  const pullProgress = useTransform(pullSpring, [0, PULL_TRIGGER], [0, 1]);
+  
   // Refs per tracking
-  const touchStartTimeRef = useRef<number>(0);
   const touchStartYRef = useRef<number>(0);
-  const lastYRef = useRef<number>(0);
-  const lastTimeRef = useRef<number>(0);
-  const pullRef = useRef(0);
-  const isValidGestureRef = useRef(false);
+  const touchStartTimeRef = useRef<number>(0);
+  const isHoldValidRef = useRef(false);
+  const currentPullRef = useRef(0);
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -229,234 +197,176 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
     const container = containerRef.current;
     if (!container) return;
 
-    // Trova scroll parent
-    const getScrollParent = (): HTMLElement => {
-      let el = container.parentElement;
-      while (el) {
-        const style = getComputedStyle(el);
-        if (style.overflowY === 'auto' || style.overflowY === 'scroll' || el.tagName === 'MAIN') {
-          return el;
-        }
-        el = el.parentElement;
-      }
-      return document.documentElement;
+    const getScrollTop = (): number => {
+      // Check multiple scroll containers
+      const main = document.querySelector('main');
+      if (main && main.scrollTop > 0) return main.scrollTop;
+      return document.documentElement.scrollTop || document.body.scrollTop || 0;
     };
 
-    const scrollParent = getScrollParent();
-
-    // ═══════════════════════════════════════════════════════════════════════
-    // TOUCH START - Inizia solo se siamo in cima
-    // ═══════════════════════════════════════════════════════════════════════
     const onTouchStart = (e: TouchEvent) => {
-      // Reset tutto
-      isValidGestureRef.current = false;
-      pullRef.current = 0;
-      setPull(0);
-      setIsHoldActive(false);
+      // Reset
+      isHoldValidRef.current = false;
+      currentPullRef.current = 0;
       
       if (holdTimerRef.current) {
         clearTimeout(holdTimerRef.current);
         holdTimerRef.current = null;
       }
       
-      const scrollTop = scrollParent.scrollTop;
+      // Solo se in cima
+      if (getScrollTop() > 5) return;
       
-      // DEVE essere in cima allo scroll per iniziare
-      if (scrollTop > 5) {
-        return;
-      }
+      touchStartYRef.current = e.touches[0].clientY;
+      touchStartTimeRef.current = Date.now();
       
-      const now = Date.now();
-      const y = e.touches[0].clientY;
-      
-      touchStartTimeRef.current = now;
-      touchStartYRef.current = y;
-      lastYRef.current = y;
-      lastTimeRef.current = now;
-      
-      // Timer per attivare il "hold mode" dopo MIN_HOLD_TIME
+      // Timer per validare hold
       holdTimerRef.current = setTimeout(() => {
-        // Solo se il dito è ancora giù e non ha scrollato troppo
-        if (scrollParent.scrollTop <= 5) {
-          setIsHoldActive(true);
-          isValidGestureRef.current = true;
-          // Haptic feedback (se disponibile)
-          if (navigator.vibrate) {
-            navigator.vibrate(30);
-          }
+        if (getScrollTop() <= 5) {
+          isHoldValidRef.current = true;
+          // Haptic
+          if (navigator.vibrate) navigator.vibrate(20);
         }
       }, MIN_HOLD_TIME);
     };
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // TOUCH MOVE - Traccia il pull SOLO se hold è attivo
-    // ═══════════════════════════════════════════════════════════════════════
     const onTouchMove = (e: TouchEvent) => {
-      // Se ha scrollato, cancella tutto
-      if (scrollParent.scrollTop > 5) {
+      // Se scrollato, reset
+      if (getScrollTop() > 5) {
         if (holdTimerRef.current) {
           clearTimeout(holdTimerRef.current);
           holdTimerRef.current = null;
         }
-        isValidGestureRef.current = false;
-        pullRef.current = 0;
-        setPull(0);
-        setIsHoldActive(false);
+        isHoldValidRef.current = false;
+        currentPullRef.current = 0;
+        pullSpring.set(0);
         return;
       }
       
-      const now = Date.now();
       const currentY = e.touches[0].clientY;
-      const totalDelta = currentY - touchStartYRef.current;
+      const delta = currentY - touchStartYRef.current;
       
-      // Se sta tirando verso l'alto (scroll up), cancella
-      if (totalDelta < 0) {
+      // Pull verso l'alto = cancella
+      if (delta < 0) {
         if (holdTimerRef.current) {
           clearTimeout(holdTimerRef.current);
           holdTimerRef.current = null;
         }
-        isValidGestureRef.current = false;
-        pullRef.current = 0;
-        setPull(0);
-        setIsHoldActive(false);
+        isHoldValidRef.current = false;
+        currentPullRef.current = 0;
+        pullSpring.set(0);
         return;
       }
       
-      // Calcola velocità
-      const timeDiff = now - lastTimeRef.current;
-      const yDiff = currentY - lastYRef.current;
-      const speed = timeDiff > 0 ? yDiff / timeDiff : 0;
-      
-      lastYRef.current = currentY;
-      lastTimeRef.current = now;
-      
-      // Se il hold è attivo E sta tirando verso il basso abbastanza veloce
-      if (isValidGestureRef.current && speed >= MIN_PULL_SPEED && totalDelta > 10) {
-        // Calcola pull con resistenza
-        const pullDist = Math.min(totalDelta * 0.4, MAX_PULL);
-        pullRef.current = pullDist;
-        setPull(pullDist);
+      // Se hold è valido, traccia il pull
+      if (isHoldValidRef.current && delta > 0) {
+        const pullDist = Math.min(delta * 0.5, MAX_PULL);
+        currentPullRef.current = pullDist;
+        pullSpring.set(pullDist);
         
-        // Previeni scroll nativo
+        // Previeni scroll nativo quando pull attivo
         if (pullDist > 10) {
           e.preventDefault();
         }
       }
     };
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // TOUCH END - Mostra modale SOLO se tutte le condizioni sono soddisfatte
-    // ═══════════════════════════════════════════════════════════════════════
     const onTouchEnd = () => {
-      // Cancella timer
       if (holdTimerRef.current) {
         clearTimeout(holdTimerRef.current);
         holdTimerRef.current = null;
       }
       
-      const wasValidGesture = isValidGestureRef.current;
-      const currentPull = pullRef.current;
-      const holdWasActive = currentPull > 0;
+      const wasValid = isHoldValidRef.current;
+      const finalPull = currentPullRef.current;
       
       // Reset
-      isValidGestureRef.current = false;
-      pullRef.current = 0;
-      setPull(0);
-      setIsHoldActive(false);
+      isHoldValidRef.current = false;
+      currentPullRef.current = 0;
+      pullSpring.set(0);
       
-      // ════════════════════════════════════════════════════════════════════
-      // TRIGGER MODALE: SOLO se:
-      // 1. Il gesture era valido (hold time superato)
-      // 2. Ha tirato abbastanza (>= PULL_TRIGGER)
-      // ════════════════════════════════════════════════════════════════════
-      if (wasValidGesture && holdWasActive && currentPull >= PULL_TRIGGER) {
-        console.log('[MissionSync] ✅ Valid PTR gesture detected - showing modal');
+      // Trigger modale se condizioni soddisfatte
+      if (wasValid && finalPull >= PULL_TRIGGER) {
         setShowComingSoon(true);
       }
     };
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // TOUCH CANCEL - Reset tutto
-    // ═══════════════════════════════════════════════════════════════════════
     const onTouchCancel = () => {
       if (holdTimerRef.current) {
         clearTimeout(holdTimerRef.current);
         holdTimerRef.current = null;
       }
-      isValidGestureRef.current = false;
-      pullRef.current = 0;
-      setPull(0);
-      setIsHoldActive(false);
+      isHoldValidRef.current = false;
+      currentPullRef.current = 0;
+      pullSpring.set(0);
     };
 
-    // Attach listeners
     container.addEventListener('touchstart', onTouchStart, { passive: true });
     container.addEventListener('touchmove', onTouchMove, { passive: false });
     container.addEventListener('touchend', onTouchEnd, { passive: true });
     container.addEventListener('touchcancel', onTouchCancel, { passive: true });
 
     return () => {
-      if (holdTimerRef.current) {
-        clearTimeout(holdTimerRef.current);
-      }
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
       container.removeEventListener('touchstart', onTouchStart);
       container.removeEventListener('touchmove', onTouchMove);
       container.removeEventListener('touchend', onTouchEnd);
       container.removeEventListener('touchcancel', onTouchCancel);
     };
-  }, [disabled]);
+  }, [disabled, pullSpring]);
 
   if (disabled) {
     return <>{children}</>;
   }
 
-  const progress = Math.min(pull / PULL_TRIGGER, 1);
-  const isArmed = pull >= PULL_TRIGGER;
-
   return (
     <div ref={containerRef} className="relative w-full h-full">
-      {/* Pull indicator - appare SOLO quando hold è attivo */}
-      <AnimatePresence>
-        {isHoldActive && pull > 15 && (
-          <motion.div
-            className="absolute left-0 right-0 flex flex-col items-center justify-center z-[200] pointer-events-none"
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: Math.min(pull, MAX_PULL) - 40 }}
-            exit={{ opacity: 0, y: -50 }}
-            transition={{ duration: 0.1 }}
-            style={{ top: 0 }}
-          >
-            <motion.div
-              className={`rounded-full ${isArmed ? 'ring-2 ring-cyan-400/60' : ''}`}
-              animate={{ scale: 0.8 + progress * 0.3 }}
-              transition={{ duration: 0.1 }}
-            >
-              <img 
-                src={M1_LOGO_URL} 
-                alt="M1" 
-                className="w-10 h-10 object-contain"
-                style={{
-                  filter: isArmed ? 'drop-shadow(0 0 8px rgba(0, 209, 255, 0.7))' : 'none'
-                }}
-              />
-            </motion.div>
-            {/* Feedback visivo */}
-            <motion.p 
-              className="text-[10px] text-white/60 mt-2 font-medium"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              {isArmed ? 'Rilascia!' : 'Continua a tirare...'}
-            </motion.p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Content */}
+      {/* Pull indicator - usa motion.value per fluidità */}
       <motion.div
-        animate={{ y: isHoldActive ? pull : 0 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 30, duration: 0.1 }}
+        className="absolute left-0 right-0 flex flex-col items-center justify-center z-[200] pointer-events-none"
+        style={{ 
+          top: 0,
+          y: useTransform(pullSpring, (v) => v - 50),
+          opacity: useTransform(pullSpring, [0, 30, MAX_PULL], [0, 1, 1]),
+        }}
       >
+        <motion.div
+          className="rounded-full"
+          style={{
+            scale: useTransform(pullSpring, [0, PULL_TRIGGER], [0.7, 1.1]),
+            boxShadow: useTransform(
+              pullSpring, 
+              [0, PULL_TRIGGER], 
+              ['0 0 0px rgba(0,209,255,0)', '0 0 15px rgba(0,209,255,0.6)']
+            ),
+          }}
+        >
+          <img 
+            src={M1_LOGO_URL} 
+            alt="M1" 
+            className="w-10 h-10 object-contain"
+          />
+        </motion.div>
+        <motion.p 
+          className="text-[10px] mt-2 font-medium"
+          style={{
+            color: useTransform(
+              pullSpring, 
+              [0, PULL_TRIGGER - 10, PULL_TRIGGER], 
+              ['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.6)', 'rgba(0,209,255,1)']
+            ),
+          }}
+        >
+          <motion.span style={{ 
+            opacity: useTransform(pullSpring, [30, 50], [0, 1]) 
+          }}>
+            {/* Dynamic text based on pull */}
+          </motion.span>
+        </motion.p>
+      </motion.div>
+
+      {/* Content - si muove con spring */}
+      <motion.div style={{ y: pullSpring }}>
         {children}
       </motion.div>
       

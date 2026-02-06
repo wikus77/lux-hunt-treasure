@@ -1502,13 +1502,13 @@ html:has(.sn-page) .m1-app-bg {
 }
 
 /* Override dark text to readable dark on light */
-/* 🔧 FIX 06/02/2026: EXCLUDE leaderboard cards - they need white text on dark glass */
-.sn-page .text-white:not(.leaderboard-card-glass .text-white):not(.leaderboard-rank-1 .text-white):not(.leaderboard-rank-2 .text-white):not(.leaderboard-rank-3 .text-white):not(.leaderboard-rank-top10 .text-white),
-html:has(.sn-page) .text-white:not(.leaderboard-card-glass .text-white) {
+/* 🔧 FIX 06/02/2026 v2: EXCLUDE glass containers - they need white text on dark background */
+.sn-page .text-white:not(.leaderboard-card-glass .text-white):not(.leaderboard-rank-1 .text-white):not(.leaderboard-rank-2 .text-white):not(.leaderboard-rank-3 .text-white):not(.leaderboard-rank-top10 .text-white):not(.m1-folder-glass--graphite .text-white):not(.m1-folder-glass .text-white):not(.buzz-folder-glass .text-white),
+html:has(.sn-page) .text-white:not(.leaderboard-card-glass .text-white):not(.m1-folder-glass--graphite .text-white):not(.m1-folder-glass .text-white):not(.buzz-folder-glass .text-white) {
   color: var(--wt-text-primary) !important;
 }
 
-/* Force white text inside leaderboard cards */
+/* Force white text inside glass containers (leaderboard, m1-folder, buzz) */
 .leaderboard-card-glass .text-white,
 .leaderboard-card-glass [class*="text-white"],
 .leaderboard-rank-1 .text-white,
@@ -1520,23 +1520,52 @@ html:has(.sn-page) .text-white:not(.leaderboard-card-glass .text-white) {
   color: rgba(255, 255, 255, 0.95) !important;
 }
 
+/* 🔧 FIX 06/02/2026 v2: FORCE WHITE TEXT inside m1-folder-glass containers (M1SSION AGENT, BATTLE, TEMPO) */
+.m1-folder-glass--graphite .text-white,
+.m1-folder-glass--graphite [class*="text-white"],
+.m1-folder-glass .text-white,
+.m1-folder-glass [class*="text-white"],
+.buzz-folder-glass .text-white,
+.buzz-folder-glass [class*="text-white"] {
+  color: rgba(255, 255, 255, 1) !important;
+}
+
+/* Force smaller white text visible inside glass containers */
+.m1-folder-glass--graphite .text-white\/90,
+.m1-folder-glass--graphite .text-white\/80,
+.m1-folder-glass--graphite .text-white\/70,
+.m1-folder-glass .text-white\/90,
+.m1-folder-glass .text-white\/80,
+.m1-folder-glass .text-white\/70 {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.m1-folder-glass--graphite .text-white\/60,
+.m1-folder-glass--graphite .text-white\/50,
+.m1-folder-glass--graphite .text-white\/40,
+.m1-folder-glass .text-white\/60,
+.m1-folder-glass .text-white\/50,
+.m1-folder-glass .text-white\/40 {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
 /* Force gray-400 text visible in leaderboard */
 .leaderboard-card-glass .text-gray-400,
 .leaderboard-card-glass .text-gray-500 {
   color: rgba(255, 255, 255, 0.60) !important;
 }
 
-.sn-page .text-white\/70,
-.sn-page .text-white\/80,
-html:has(.sn-page) .text-white\/70,
-html:has(.sn-page) .text-white\/80 {
+.sn-page .text-white\/70:not(.m1-folder-glass--graphite .text-white\/70):not(.m1-folder-glass .text-white\/70),
+.sn-page .text-white\/80:not(.m1-folder-glass--graphite .text-white\/80):not(.m1-folder-glass .text-white\/80),
+html:has(.sn-page) .text-white\/70:not(.m1-folder-glass--graphite .text-white\/70),
+html:has(.sn-page) .text-white\/80:not(.m1-folder-glass--graphite .text-white\/80) {
   color: var(--wt-text-secondary) !important;
 }
 
-.sn-page .text-white\/60,
-.sn-page .text-white\/50,
-html:has(.sn-page) .text-white\/60,
-html:has(.sn-page) .text-white\/50 {
+.sn-page .text-white\/60:not(.m1-folder-glass--graphite .text-white\/60):not(.m1-folder-glass .text-white\/60),
+.sn-page .text-white\/50:not(.m1-folder-glass--graphite .text-white\/50):not(.m1-folder-glass .text-white\/50),
+html:has(.sn-page) .text-white\/60:not(.m1-folder-glass--graphite .text-white\/60),
+html:has(.sn-page) .text-white\/50:not(.m1-folder-glass--graphite .text-white\/50) {
   color: var(--wt-text-tertiary) !important;
 }
 
