@@ -1,5 +1,5 @@
 // © 2025 M1SSION™ – Mission Sync Pull-to-Refresh
-// 🔧 FIX 06/02/2026: PTR SOSPESO → Modale "Coming Soon" al posto del refresh
+// 🔧 FIX 06/02/2026 v2: PTR RISCRITTO - Modale appare SOLO con pressione PROLUNGATA + pull + rilascio
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
@@ -13,10 +13,13 @@ interface MissionSyncProps {
   disabled?: boolean;
 }
 
-// Thresholds
-const PULL_TRIGGER = 80;
-const MAX_PULL = 120;
-const MIN_DELTA_FOR_PTR = 30;
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIGURAZIONE - MOLTO PIÙ RESTRITTIVA
+// ═══════════════════════════════════════════════════════════════════════════
+const MIN_HOLD_TIME = 400;        // Deve tenere premuto almeno 400ms prima che conti
+const PULL_TRIGGER = 100;         // Deve tirare almeno 100px dopo il hold
+const MAX_PULL = 140;             // Max visual pull
+const MIN_PULL_SPEED = 0.3;       // Velocità minima (px/ms) per essere considerato un pull intenzionale
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COMING SOON MODAL - Stessa animazione di M1UShopFlipOverlay
@@ -202,16 +205,23 @@ const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
+// MAIN COMPONENT - LOGICA RISCRTTA DA CAPO
 // ═══════════════════════════════════════════════════════════════════════════
 export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, disabled = false }) => {
   const [pull, setPull] = useState(0);
   const [showComingSoon, setShowComingSoon] = useState(false);
+  const [isHoldActive, setIsHoldActive] = useState(false); // Indica se il hold time è stato superato
   
   const containerRef = useRef<HTMLDivElement>(null);
-  const startYRef = useRef<number | null>(null);
+  
+  // Refs per tracking
+  const touchStartTimeRef = useRef<number>(0);
+  const touchStartYRef = useRef<number>(0);
+  const lastYRef = useRef<number>(0);
+  const lastTimeRef = useRef<number>(0);
   const pullRef = useRef(0);
-  const touchStartedAtTopRef = useRef(false);
+  const isValidGestureRef = useRef(false);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (disabled) return;
@@ -219,6 +229,7 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
     const container = containerRef.current;
     if (!container) return;
 
+    // Trova scroll parent
     const getScrollParent = (): HTMLElement => {
       let el = container.parentElement;
       while (el) {
@@ -233,76 +244,161 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
 
     const scrollParent = getScrollParent();
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // TOUCH START - Inizia solo se siamo in cima
+    // ═══════════════════════════════════════════════════════════════════════
     const onTouchStart = (e: TouchEvent) => {
-      startYRef.current = null;
+      // Reset tutto
+      isValidGestureRef.current = false;
       pullRef.current = 0;
-      touchStartedAtTopRef.current = false;
+      setPull(0);
+      setIsHoldActive(false);
+      
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+      }
       
       const scrollTop = scrollParent.scrollTop;
-      if (scrollTop <= 0) {
-        startYRef.current = e.touches[0].clientY;
-        touchStartedAtTopRef.current = true;
+      
+      // DEVE essere in cima allo scroll per iniziare
+      if (scrollTop > 5) {
+        return;
       }
+      
+      const now = Date.now();
+      const y = e.touches[0].clientY;
+      
+      touchStartTimeRef.current = now;
+      touchStartYRef.current = y;
+      lastYRef.current = y;
+      lastTimeRef.current = now;
+      
+      // Timer per attivare il "hold mode" dopo MIN_HOLD_TIME
+      holdTimerRef.current = setTimeout(() => {
+        // Solo se il dito è ancora giù e non ha scrollato troppo
+        if (scrollParent.scrollTop <= 5) {
+          setIsHoldActive(true);
+          isValidGestureRef.current = true;
+          // Haptic feedback (se disponibile)
+          if (navigator.vibrate) {
+            navigator.vibrate(30);
+          }
+        }
+      }, MIN_HOLD_TIME);
     };
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // TOUCH MOVE - Traccia il pull SOLO se hold è attivo
+    // ═══════════════════════════════════════════════════════════════════════
     const onTouchMove = (e: TouchEvent) => {
-      if (startYRef.current === null) return;
-      if (!touchStartedAtTopRef.current) return;
-      
+      // Se ha scrollato, cancella tutto
       if (scrollParent.scrollTop > 5) {
-        startYRef.current = null;
+        if (holdTimerRef.current) {
+          clearTimeout(holdTimerRef.current);
+          holdTimerRef.current = null;
+        }
+        isValidGestureRef.current = false;
         pullRef.current = 0;
         setPull(0);
+        setIsHoldActive(false);
         return;
       }
-
+      
+      const now = Date.now();
       const currentY = e.touches[0].clientY;
-      const delta = currentY - startYRef.current;
-
-      if (delta <= MIN_DELTA_FOR_PTR) {
+      const totalDelta = currentY - touchStartYRef.current;
+      
+      // Se sta tirando verso l'alto (scroll up), cancella
+      if (totalDelta < 0) {
+        if (holdTimerRef.current) {
+          clearTimeout(holdTimerRef.current);
+          holdTimerRef.current = null;
+        }
+        isValidGestureRef.current = false;
         pullRef.current = 0;
         setPull(0);
+        setIsHoldActive(false);
         return;
       }
-
-      const pullDist = Math.min((delta - MIN_DELTA_FOR_PTR) * 0.5, MAX_PULL);
-      pullRef.current = pullDist;
-      setPull(pullDist);
-
-      if (pullDist > 5) {
-        e.preventDefault();
+      
+      // Calcola velocità
+      const timeDiff = now - lastTimeRef.current;
+      const yDiff = currentY - lastYRef.current;
+      const speed = timeDiff > 0 ? yDiff / timeDiff : 0;
+      
+      lastYRef.current = currentY;
+      lastTimeRef.current = now;
+      
+      // Se il hold è attivo E sta tirando verso il basso abbastanza veloce
+      if (isValidGestureRef.current && speed >= MIN_PULL_SPEED && totalDelta > 10) {
+        // Calcola pull con resistenza
+        const pullDist = Math.min(totalDelta * 0.4, MAX_PULL);
+        pullRef.current = pullDist;
+        setPull(pullDist);
+        
+        // Previeni scroll nativo
+        if (pullDist > 10) {
+          e.preventDefault();
+        }
       }
     };
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // TOUCH END - Mostra modale SOLO se tutte le condizioni sono soddisfatte
+    // ═══════════════════════════════════════════════════════════════════════
     const onTouchEnd = () => {
-      const currentPull = pullRef.current;
-      const wasAtTop = touchStartedAtTopRef.current;
+      // Cancella timer
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+      }
       
-      startYRef.current = null;
-      touchStartedAtTopRef.current = false;
-
-      // 🔧 FIX 06/02/2026: Mostra modale "Coming Soon" invece di refresh
-      if (wasAtTop && currentPull >= PULL_TRIGGER) {
+      const wasValidGesture = isValidGestureRef.current;
+      const currentPull = pullRef.current;
+      const holdWasActive = currentPull > 0;
+      
+      // Reset
+      isValidGestureRef.current = false;
+      pullRef.current = 0;
+      setPull(0);
+      setIsHoldActive(false);
+      
+      // ════════════════════════════════════════════════════════════════════
+      // TRIGGER MODALE: SOLO se:
+      // 1. Il gesture era valido (hold time superato)
+      // 2. Ha tirato abbastanza (>= PULL_TRIGGER)
+      // ════════════════════════════════════════════════════════════════════
+      if (wasValidGesture && holdWasActive && currentPull >= PULL_TRIGGER) {
+        console.log('[MissionSync] ✅ Valid PTR gesture detected - showing modal');
         setShowComingSoon(true);
       }
-      
-      setPull(0);
-      pullRef.current = 0;
     };
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // TOUCH CANCEL - Reset tutto
+    // ═══════════════════════════════════════════════════════════════════════
     const onTouchCancel = () => {
-      startYRef.current = null;
-      touchStartedAtTopRef.current = false;
-      setPull(0);
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+      }
+      isValidGestureRef.current = false;
       pullRef.current = 0;
+      setPull(0);
+      setIsHoldActive(false);
     };
 
+    // Attach listeners
     container.addEventListener('touchstart', onTouchStart, { passive: true });
     container.addEventListener('touchmove', onTouchMove, { passive: false });
     container.addEventListener('touchend', onTouchEnd, { passive: true });
     container.addEventListener('touchcancel', onTouchCancel, { passive: true });
 
     return () => {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+      }
       container.removeEventListener('touchstart', onTouchStart);
       container.removeEventListener('touchmove', onTouchMove);
       container.removeEventListener('touchend', onTouchEnd);
@@ -319,11 +415,11 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
 
   return (
     <div ref={containerRef} className="relative w-full h-full">
-      {/* Pull indicator */}
+      {/* Pull indicator - appare SOLO quando hold è attivo */}
       <AnimatePresence>
-        {pull > 20 && (
+        {isHoldActive && pull > 15 && (
           <motion.div
-            className="absolute left-0 right-0 flex items-center justify-center z-[200] pointer-events-none"
+            className="absolute left-0 right-0 flex flex-col items-center justify-center z-[200] pointer-events-none"
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: Math.min(pull, MAX_PULL) - 40 }}
             exit={{ opacity: 0, y: -50 }}
@@ -344,13 +440,21 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
                 }}
               />
             </motion.div>
+            {/* Feedback visivo */}
+            <motion.p 
+              className="text-[10px] text-white/60 mt-2 font-medium"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              {isArmed ? 'Rilascia!' : 'Continua a tirare...'}
+            </motion.p>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Content */}
       <motion.div
-        animate={{ y: pull }}
+        animate={{ y: isHoldActive ? pull : 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30, duration: 0.1 }}
       >
         {children}

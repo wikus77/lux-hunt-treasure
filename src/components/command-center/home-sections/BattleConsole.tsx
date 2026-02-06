@@ -177,22 +177,22 @@ export function BattleConsole({ className }: BattleConsoleProps) {
             <ChevronDown className="w-4 h-4 text-white/40" />
           </div>
           
-          {/* Quick Stats Preview */}
+          {/* Quick Stats Preview - 🔧 FIX 06/02/2026: Testi più visibili */}
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center">
               <Trophy className="w-4 h-4 text-yellow-400 mx-auto mb-1" />
               <p className="text-lg font-bold text-white">{stats?.total_wins || 0}</p>
-              <p className="text-[10px] text-white/50">Vinte</p>
+              <p className="text-[10px] text-white/90">Vinte</p>
             </div>
             <div className="text-center">
               <Users className="w-4 h-4 text-red-400 mx-auto mb-1" />
               <p className="text-lg font-bold text-white">{stats?.total_losses || 0}</p>
-              <p className="text-[10px] text-white/50">Perse</p>
+              <p className="text-[10px] text-white/90">Perse</p>
             </div>
             <div className="text-center">
               <Zap className="w-4 h-4 text-[#00D1FF] mx-auto mb-1" />
               <p className="text-lg font-bold text-[#00D1FF]">{stats?.win_rate || 0}%</p>
-              <p className="text-[10px] text-white/50">Win Rate</p>
+              <p className="text-[10px] text-white/90">Win Rate</p>
             </div>
           </div>
         </div>

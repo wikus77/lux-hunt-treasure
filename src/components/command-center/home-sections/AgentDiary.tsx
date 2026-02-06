@@ -145,23 +145,23 @@ export function AgentDiary() {
             <ChevronDown className="w-4 h-4 text-white/40" />
           </div>
           
-          {/* Quick Stats Preview */}
+          {/* Quick Stats Preview - 🔧 FIX 06/02/2026: Testi più visibili */}
           <div className="grid grid-cols-4 gap-2">
             <div className="text-center">
               <p className="text-lg font-bold text-blue-400">{loading ? '...' : stats.totalActivities}</p>
-              <p className="text-[10px] text-white/50">Attività</p>
+              <p className="text-[10px] text-white/90">Attività</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-green-400">{loading ? '...' : stats.notesCount}</p>
-              <p className="text-[10px] text-white/50">Note</p>
+              <p className="text-[10px] text-white/90">Note</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-yellow-400">{loading ? '...' : stats.purchasesCount}</p>
-              <p className="text-[10px] text-white/50">Acquisti</p>
+              <p className="text-[10px] text-white/90">Acquisti</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-purple-400">{loading ? '...' : stats.cluesCount}</p>
-              <p className="text-[10px] text-white/50">Indizi</p>
+              <p className="text-[10px] text-white/90">Indizi</p>
             </div>
           </div>
         </div>
