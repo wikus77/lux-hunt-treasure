@@ -474,4 +474,127 @@
   height: 100%;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   🕳️ VOID POCKET — "Vuoto luminoso" sotto i blobs (DEPTH LAYER)
+   🔧 FIX 05/02/2026: Dark pocket + soft backlight per profondità reale
+   
+   OBIETTIVO: I blobs devono "galleggiare" sopra una tasca scura con leggero
+   back-light bianco/cyan che li stacca dal fondo. Premium depth, not VFX.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* WRAPPER: Blobs container isolation */
+.commit-node-slot.m1-entity-glow-container {
+  position: relative !important;
+  isolation: isolate !important;
+  /* Performance iOS */
+  transform: translateZ(0);
+  contain: layout paint style;
+}
+
+/* (1) DARK POCKET — Tasca scura sotto i blobs */
+.commit-node-slot.m1-entity-glow-container::before {
+  content: '' !important;
+  position: absolute !important;
+  /* Espandi leggermente oltre il container */
+  top: -16px;
+  left: -22px;
+  right: -22px;
+  bottom: -20px;
+  /* Dark radial pocket - più scuro al centro, sfuma ai bordi */
+  background: radial-gradient(
+    ellipse 85% 75% at 50% 55%,
+    rgba(0, 0, 0, 0.88) 0%,
+    rgba(0, 0, 0, 0.55) 40%,
+    rgba(0, 0, 0, 0.25) 65%,
+    transparent 85%
+  ) !important;
+  filter: blur(10px) !important;
+  opacity: 0.92;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  /* Performance */
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+/* (2) SOFT BACKLIGHT — Leggera luminosità diffusa (sopra pocket, sotto blobs) */
+.commit-node-slot.m1-entity-glow-container::after {
+  content: '';
+  position: absolute;
+  /* Espandi oltre il container per effetto alone */
+  top: -22px;
+  left: -30px;
+  right: -30px;
+  bottom: -26px;
+  /* Multi-layer soft backlight: bianco centrale + hint cyan/violet ai lati */
+  background:
+    /* Centro: white soft */
+    radial-gradient(
+      ellipse 70% 60% at 50% 55%,
+      rgba(255, 255, 255, 0.09) 0%,
+      rgba(255, 255, 255, 0.035) 30%,
+      transparent 65%
+    ),
+    /* Sinistra: hint cyan */
+    radial-gradient(
+      ellipse 50% 45% at 20% 60%,
+      rgba(0, 220, 255, 0.05) 0%,
+      transparent 60%
+    ),
+    /* Destra: hint violet */
+    radial-gradient(
+      ellipse 50% 45% at 80% 60%,
+      rgba(160, 120, 255, 0.04) 0%,
+      transparent 60%
+    );
+  filter: blur(14px);
+  opacity: 0.78;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  /* Performance iOS */
+  will-change: opacity;
+  transform: translateZ(0);
+  /* Breathing animation (subtle) */
+  animation: voidBacklightBreath 11s ease-in-out infinite;
+}
+
+@keyframes voidBacklightBreath {
+  0%, 100% { opacity: 0.72; }
+  50% { opacity: 0.86; }
+}
+
+/* (3) BLOBS Z-INDEX — Assicura che stiano sopra il void pocket */
+.commit-node-slot .commit-node-wrapper,
+.commit-node-slot .commit-node-aion-wrapper {
+  position: relative;
+  z-index: 2;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   🌙 VOID POCKET — Reduced Motion Support
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .commit-node-slot.m1-entity-glow-container::after {
+    animation: none !important;
+    opacity: 0.78 !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   📱 VOID POCKET — iOS Performance Guard
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@supports (-webkit-touch-callout: none) {
+  /* Reduce blur on iOS for smooth scrolling */
+  .commit-node-slot.m1-entity-glow-container::before {
+    filter: blur(8px) !important;
+  }
+  
+  .commit-node-slot.m1-entity-glow-container::after {
+    filter: blur(12px);
+  }
+}
+
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
