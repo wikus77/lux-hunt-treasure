@@ -237,6 +237,102 @@ main {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   🗂️ GRAPHITE FOLDER GLASS — Dark variant for better text contrast
+   Premium frosted glass with graphite/charcoal base for AION chat etc.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.m1-folder-glass--graphite {
+  /* Graphite base - darker for better text contrast */
+  background: rgba(18, 22, 28, 0.88) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  
+  /* Subtle light border */
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  border-radius: 24px !important;
+  
+  /* Volumetric shadow with subtle backlight */
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.50),
+    0 2px 8px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.20),
+    0 0 40px rgba(0, 209, 255, 0.05) !important;
+  
+  position: relative;
+  overflow: hidden;
+}
+
+/* Sheen effect for graphite */
+.m1-folder-glass--graphite::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.02) 30%,
+    transparent 70%
+  );
+  pointer-events: none;
+  border-radius: 24px 24px 0 0;
+  z-index: 1;
+}
+
+/* Input bar variant - graphite */
+.m1-folder-glass--graphite-input {
+  background: rgba(24, 28, 36, 0.92) !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 16px !important;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.40),
+    0 0 20px rgba(0, 209, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Text colors for graphite glass containers */
+.m1-folder-glass--graphite .m1-text-primary,
+.m1-folder-glass--graphite h1,
+.m1-folder-glass--graphite h2,
+.m1-folder-glass--graphite h3 {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.m1-folder-glass--graphite .m1-text-secondary {
+  color: rgba(255, 255, 255, 0.70) !important;
+}
+
+.m1-folder-glass--graphite .m1-text-muted {
+  color: rgba(255, 255, 255, 0.50) !important;
+}
+
+/* iOS Performance - graphite variant */
+@supports (-webkit-touch-callout: none) {
+  .m1-folder-glass--graphite {
+    backdrop-filter: blur(14px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(150%) !important;
+  }
+  
+  .m1-folder-glass--graphite-input {
+    backdrop-filter: blur(12px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(140%) !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .m1-folder-glass--graphite,
+  .m1-folder-glass--graphite-input {
+    transition: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    TABS / PILLS
    ═══════════════════════════════════════════════════════════════════════════ */
 

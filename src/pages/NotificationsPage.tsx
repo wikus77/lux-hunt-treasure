@@ -453,48 +453,37 @@ export const NotificationsPage: React.FC = () => {
       }}>
       
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* PANNELLO COLORATO — Identico a M1SSION PRIZE in Home */}
-      {/* DEVE avere position:relative e z-index:1 per essere sopra FADE ZONE */}
+      {/* PANNELLO GRAPHITE GLASS — iOS folder style unificato */}
+      {/* 🎨 FIX 05/02/2026: Graphite glass per uniformità con AION */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       <div 
+        className="m1-folder-glass--graphite"
         style={{
           position: 'relative',
           zIndex: 1,
           width: '100%',
-          borderRadius: '24px',
-          overflow: 'hidden',
           marginBottom: '16px',
-          background: `linear-gradient(160deg, 
-            rgba(20, 60, 120, 0.92) 0%, 
-            rgba(25, 80, 130, 0.88) 25%, 
-            rgba(30, 100, 120, 0.82) 50%, 
-            rgba(35, 120, 100, 0.75) 75%, 
-            rgba(40, 140, 90, 0.65) 100%
-          )`,
-          padding: '16px',
-          boxShadow: '0 4px 20px rgba(0, 100, 150, 0.3)',
+          padding: '0',
         }}
       >
-        {/* Header with Tabs - DENTRO il pannello colorato */}
-        {/* 🎨 FIX 05/02/2026: iOS folder glass style */}
+        {/* Header with Tabs - DENTRO il pannello graphite */}
         <div data-onboarding="notice-page">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="m1-panel relative m1-folder-glass"
+            className="m1-panel relative"
             style={{ 
-              // m1-folder-glass handles all glass effects
               borderRadius: '16px',
             }}
           >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90 rounded-t-2xl" />
           
-          {/* Tabs */}
+          {/* Tabs - GRAPHITE theme text colors */}
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'notifications' | 'messages')} className="w-full">
             <TabsList className="w-full grid grid-cols-2 bg-transparent border-b border-white/10 rounded-none h-auto p-0">
               <TabsTrigger 
                 value="notifications" 
-                className="flex items-center gap-2 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-cyan-500 data-[state=active]:bg-transparent"
+                className="flex items-center gap-2 py-4 rounded-none border-b-2 border-transparent text-white/70 data-[state=active]:text-white data-[state=active]:border-cyan-500 data-[state=active]:bg-transparent"
               >
                 <Bell className="w-5 h-5" />
                 <span>Notifiche</span>
@@ -506,7 +495,7 @@ export const NotificationsPage: React.FC = () => {
               </TabsTrigger>
               <TabsTrigger 
                 value="messages" 
-                className="flex items-center gap-2 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent"
+                className="flex items-center gap-2 py-4 rounded-none border-b-2 border-transparent text-white/70 data-[state=active]:text-white data-[state=active]:border-purple-500 data-[state=active]:bg-transparent"
               >
                 <MessageCircle className="w-5 h-5" />
                 <span>Messaggi</span>
@@ -518,7 +507,7 @@ export const NotificationsPage: React.FC = () => {
               </TabsTrigger>
             </TabsList>
 
-            {/* Notifications Tab Content */}
+            {/* Notifications Tab Content - GRAPHITE theme */}
             <TabsContent value="notifications" className="mt-0 p-4">
               {/* Mark all as read button */}
               {unreadCount > 0 && (
@@ -527,6 +516,7 @@ export const NotificationsPage: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={markAllAsRead}
+                    className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white"
                   >
                     Segna tutte come lette
                   </Button>
@@ -542,11 +532,11 @@ export const NotificationsPage: React.FC = () => {
               animate={{ opacity: 1 }}
               className="text-center py-12"
             >
-              <BellOff className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-              <h3 className="text-xl font-semibold text-white mb-2">
+              <BellOff className="w-16 h-16 mx-auto mb-4 text-white/40" />
+              <h3 className="text-xl font-semibold text-white/90 mb-2">
                 Nessuna Notifica
               </h3>
-              <p className="text-gray-400">
+              <p className="text-white/50">
                 Quando riceverai nuove notifiche, appariranno qui.
               </p>
             </motion.div>
@@ -654,7 +644,7 @@ export const NotificationsPage: React.FC = () => {
         </AnimatePresence>
       </div>
 
-              {/* Footer Info */}
+              {/* Footer Info - GRAPHITE theme */}
               {notifications.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -662,7 +652,7 @@ export const NotificationsPage: React.FC = () => {
                   transition={{ delay: 0.5 }}
                   className="text-center py-4"
                 >
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-white/40">
                     Le notifiche vengono aggiornate in tempo reale
                   </p>
                 </motion.div>

@@ -384,29 +384,27 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   };
 
   // 🔧 FIX 30/01/2026: Changed to WHITE glass theme (was dark rgba(7,8,24,0.6))
-  // 🎨 FIX 05/02/2026: Using m1-folder-glass for unified iOS folder style across app
+  // 🎨 FIX 05/02/2026: Using m1-folder-glass--graphite for unified iOS folder style (dark variant for readability)
   return (
-    <div className={`flex flex-col rounded-2xl overflow-hidden sn-chat-container m1-folder-glass ${className}`}
+    <div className={`flex flex-col rounded-2xl overflow-hidden sn-chat-container m1-folder-glass--graphite ${className}`}
       style={{
-        // m1-folder-glass provides base glass effect, override for slightly more opaque chat
-        background: 'rgba(255, 255, 255, 0.12)',
         // 🔧 FIX v10: Remove marginBottom - we'll handle keyboard in input bar
         ...style
       }}
     >
-      {/* Header - WHITE theme */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200/60">
+      {/* Header - GRAPHITE theme for readability */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-cyan-600" />
-          <span className="text-sm font-medium text-gray-800">Neural Link Established</span>
+          <Brain className="w-5 h-5 text-cyan-400" />
+          <span className="text-sm font-medium text-white/90">Neural Link Established</span>
           <span className={`w-2 h-2 rounded-full ${status === 'idle' ? 'bg-green-500' : status === 'speaking' ? 'bg-cyan-500 animate-pulse' : 'bg-yellow-500 animate-pulse'}`} />
         </div>
         <div className="flex items-center gap-2">
           {/* AION Status Info */}
           {aionStatus && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 text-xs border border-gray-200/60">
-              <Zap className="w-3 h-3 text-yellow-500" />
-              <span className="text-gray-600">
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 text-xs border border-white/10">
+              <Zap className="w-3 h-3 text-yellow-400" />
+              <span className="text-white/70">
                 {aionStatus.free_remaining > 0 
                   ? `${aionStatus.free_remaining} gratis`
                   : `${aionStatus.cost_per_consult} M1U`
@@ -416,17 +414,17 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
           )}
           <button
             onClick={toggleMic}
-            className={`p-2 rounded-lg transition-colors ${isMicEnabled ? 'bg-cyan-100 text-cyan-600' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'}`}
+            className={`p-2 rounded-lg transition-colors ${isMicEnabled ? 'bg-cyan-500/20 text-cyan-400' : 'text-white/50 hover:text-white/80 hover:bg-white/10'}`}
           >
             {isMicEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
           </button>
           <button
             onClick={refreshChat}
-            className="p-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors"
           >
             <RotateCw className="w-4 h-4" />
           </button>
-          <button className="p-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors">
+          <button className="p-2 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors">
             <MoreHorizontal className="w-4 h-4" />
           </button>
         </div>
@@ -441,7 +439,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
           paddingBottom: isKeyboardOpen ? `${keyboardInset + 80}px` : '80px',
         }}
       >
-        {/* 🔧 FIX 30/01/2026: WHITE theme message bubbles */}
+        {/* 🎨 FIX 05/02/2026: GRAPHITE theme message bubbles for readability */}
         <AnimatePresence>
           {messages.map((message) => (
             <motion.div
@@ -454,18 +452,18 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
               <div
                 className={`max-w-[80%] px-4 py-2 rounded-2xl ${
                   message.role === 'user'
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-md'
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
                     : message.role === 'system'
-                    ? 'bg-gray-100 text-gray-500 italic text-sm border border-gray-200/60'
+                    ? 'bg-white/10 text-white/60 italic text-sm border border-white/10'
                     : message.role === 'error'
-                    ? 'bg-red-50 text-red-600 border border-red-200 relative'
-                    : 'bg-gray-100 text-gray-800 border border-gray-200/60 shadow-sm'
+                    ? 'bg-red-500/20 text-red-300 border border-red-500/30 relative'
+                    : 'bg-white/10 text-white/90 border border-white/10 shadow-sm'
                 }`}
               >
                 <p className="text-sm leading-relaxed">{message.content}</p>
                 {/* Show M1U spent info */}
                 {message.meta?.m1u_spent !== undefined && message.meta.m1u_spent > 0 && (
-                  <p className="text-xs text-cyan-600/70 mt-1">
+                  <p className="text-xs text-cyan-400/70 mt-1">
                     -{message.meta.m1u_spent} M1U
                   </p>
                 )}
@@ -474,7 +472,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
                   <button
                     onClick={handleRetry}
                     disabled={isLoading}
-                    className="mt-2 px-3 py-1.5 text-xs bg-cyan-100 hover:bg-cyan-200 text-cyan-700 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                    className="mt-2 px-3 py-1.5 text-xs bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
                   >
                     <RotateCw className="w-3 h-3" />
                     Riprova ({MAX_RETRY_COUNT - retryCount} tentativi)
@@ -491,8 +489,8 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
             animate={{ opacity: 1 }}
             className="flex justify-start"
           >
-            <div className="bg-gray-100 px-4 py-2 rounded-2xl border border-gray-200/60 shadow-sm">
-              <Loader2 className="w-5 h-5 text-cyan-600 animate-spin" />
+            <div className="bg-white/10 px-4 py-2 rounded-2xl border border-white/10 shadow-sm">
+              <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
             </div>
           </motion.div>
         )}
@@ -500,20 +498,22 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Status - UX Resilience: Clear status messages */}
-      <div className="px-4 py-2 text-xs text-center text-gray-500">
+      {/* Status - UX Resilience: Clear status messages - GRAPHITE theme */}
+      <div className="px-4 py-2 text-xs text-center text-white/50">
         {status === 'listening' && '⚡ Verifica accesso in corso...'}
         {status === 'speaking' && '🔊 AION sta parlando...'}
         {status === 'idle' && '✨ Pronto'}
       </div>
 
       {/* Input - 🔧 FIX v17: SEMPRE portal con z-index BASSO (1000)
+          🎨 FIX 05/02/2026: GRAPHITE GLASS theme for input bar
           - z-index 1000 = sotto i modal (99998+) ma sopra contenuti normali
           - Nessun switch di render = nessuna perdita di focus
           - Tastiera: bottom si adatta con keyboardInset
           - isOnAionPage: nasconde quando navighi via (route diversa) */}
       {isOnAionPage && createPortal(
         <div 
+          className="m1-folder-glass--graphite-input"
           style={{
             position: 'fixed',
             left: '8px',
@@ -523,12 +523,6 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
             // z-index 1000 = SOTTO i modal (99998+) ma sopra contenuti pagina
             zIndex: 1000,
             transition: 'bottom 0.15s ease-out',
-            background: 'rgba(255, 255, 255, 0.98)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(0, 209, 255, 0.2)',
-            borderRadius: '16px',
-            boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.08), 0 0 20px rgba(0, 209, 255, 0.1)',
             padding: '12px',
           }}
         >
@@ -555,11 +549,11 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
               data-chat-input="true"
               style={{
                 flex: 1,
-                background: 'rgba(243, 244, 246, 0.9)',
-                border: '1px solid rgba(0, 209, 255, 0.2)',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
                 borderRadius: '12px',
                 padding: '10px 16px',
-                color: '#1F2937',
+                color: 'rgba(255, 255, 255, 0.95)',
                 fontSize: '15px',
                 maxHeight: '120px',
                 minHeight: '40px',
