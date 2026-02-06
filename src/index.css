@@ -1217,6 +1217,129 @@ html:has(.sn-page) .m1ssion-glass-card {
   box-shadow: var(--wt-surface-main-shadow) !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   🏆 LEADERBOARD CARDS OVERRIDE — Must come AFTER .sn-page .m1ssion-glass-card
+   FIX 06/02/2026: Force graphite folder glass on leaderboard cards
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Base graphite folder glass for ALL leaderboard cards */
+.sn-page .leaderboard-card-glass.m1ssion-glass-card,
+.leaderboard-card-glass.m1ssion-glass-card,
+.sn-page .leaderboard-card-glass,
+.leaderboard-card-glass {
+  background: rgba(18, 22, 28, 0.85) !important;
+  backdrop-filter: blur(12px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* #1 — CROWN AURA (gold gradient + breathing) */
+.sn-page .leaderboard-rank-1.m1ssion-glass-card,
+.leaderboard-rank-1.m1ssion-glass-card,
+.sn-page .leaderboard-rank-1,
+.leaderboard-rank-1 {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.15) 0%,
+    rgba(18, 22, 28, 0.92) 30%,
+    rgba(18, 22, 28, 0.90) 70%,
+    rgba(236, 72, 153, 0.12) 100%
+  ) !important;
+  border: 1px solid rgba(255, 215, 0, 0.30) !important;
+  box-shadow: 
+    0 0 35px rgba(255, 215, 0, 0.20),
+    0 0 70px rgba(236, 72, 153, 0.10),
+    0 8px 28px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 215, 0, 0.20) !important;
+}
+
+/* #2 — CHALLENGER GLOW (silver gradient + pulse) */
+.sn-page .leaderboard-rank-2.m1ssion-glass-card,
+.leaderboard-rank-2.m1ssion-glass-card,
+.sn-page .leaderboard-rank-2,
+.leaderboard-rank-2 {
+  background: linear-gradient(
+    135deg,
+    rgba(192, 192, 192, 0.12) 0%,
+    rgba(18, 22, 28, 0.92) 30%,
+    rgba(18, 22, 28, 0.90) 70%,
+    rgba(59, 130, 246, 0.10) 100%
+  ) !important;
+  border: 1px solid rgba(192, 192, 192, 0.25) !important;
+  box-shadow: 
+    0 0 28px rgba(192, 192, 192, 0.15),
+    0 0 50px rgba(59, 130, 246, 0.08),
+    0 6px 22px rgba(0, 0, 0, 0.50),
+    inset 0 1px 0 rgba(192, 192, 192, 0.15) !important;
+}
+
+/* #3 — PODIUM SPARK (bronze gradient + accent) */
+.sn-page .leaderboard-rank-3.m1ssion-glass-card,
+.leaderboard-rank-3.m1ssion-glass-card,
+.sn-page .leaderboard-rank-3,
+.leaderboard-rank-3 {
+  background: linear-gradient(
+    135deg,
+    rgba(205, 127, 50, 0.12) 0%,
+    rgba(18, 22, 28, 0.92) 40%,
+    rgba(18, 22, 28, 0.90) 60%,
+    rgba(52, 211, 153, 0.08) 100%
+  ) !important;
+  border: 1px solid rgba(205, 127, 50, 0.22) !important;
+  box-shadow: 
+    0 0 24px rgba(205, 127, 50, 0.12),
+    0 5px 20px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(205, 127, 50, 0.12) !important;
+}
+
+/* TOP 4-10 — Subtle cyan glow */
+.sn-page .leaderboard-rank-top10.m1ssion-glass-card,
+.leaderboard-rank-top10.m1ssion-glass-card,
+.sn-page .leaderboard-rank-top10,
+.leaderboard-rank-top10 {
+  background: rgba(18, 22, 28, 0.85) !important;
+  border: 1px solid rgba(0, 209, 255, 0.15) !important;
+  box-shadow: 
+    0 0 15px rgba(0, 209, 255, 0.08),
+    0 4px 16px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(0, 209, 255, 0.06) !important;
+}
+
+/* Sheen effect for all leaderboard cards */
+.leaderboard-card-glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* iOS performance optimization for leaderboard */
+@supports (-webkit-touch-callout: none) {
+  .leaderboard-card-glass,
+  .leaderboard-rank-1,
+  .leaderboard-rank-2,
+  .leaderboard-rank-3,
+  .leaderboard-rank-top10 {
+    backdrop-filter: blur(10px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
+  }
+}
+
 /* Override m1-app-bg to transparent */
 .sn-page .m1-app-bg,
 html:has(.sn-page) .m1-app-bg {
