@@ -449,120 +449,6 @@ export const CommitNodesContainer: React.FC = () => {
           position: 'relative',
         }}
       >
-        {/* ═══════════════════════════════════════════════════════════════════════════
-            🔧 FIX 06/02/2026 v4: "COMMIT" TEXT - ANCHORED TO CENTER BLOB
-            - Text is inside center blob's motion.div for perfect alignment
-            - Position: below the blob
-            ═══════════════════════════════════════════════════════════════════════════ */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            marginTop: '16px',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            pointerEvents: 'none',
-            zIndex: 20,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {/* COMMIT text wrapper */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-          }}>
-            {/* Fragment A: "COM" */}
-            <motion.span
-              animate={{
-                marginRight: 24 - (mergeProgress * 24),
-                opacity: 0.75 + mergeProgress * 0.25,
-              }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              style={{
-                fontFamily: 'Orbitron, sans-serif',
-                fontSize: '15px',
-                fontWeight: 700,
-                letterSpacing: '3px',
-                color: mode === 'one' ? 'rgba(0, 255, 255, 1)' : 'rgba(255, 255, 255, 0.95)',
-                textShadow: mode === 'one' 
-                  ? '0 0 20px rgba(0, 255, 255, 1), 0 0 40px rgba(0, 255, 255, 0.6)' 
-                  : '0 0 10px rgba(255, 255, 255, 0.4)',
-              }}
-            >
-              COM
-            </motion.span>
-
-            {/* Fragment B: "MIT" */}
-            <motion.span
-              animate={{
-                marginLeft: 24 - (mergeProgress * 24),
-                opacity: 0.75 + mergeProgress * 0.25,
-              }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              style={{
-                fontFamily: 'Orbitron, sans-serif',
-                fontSize: '15px',
-                fontWeight: 700,
-                letterSpacing: '3px',
-                color: mode === 'one' ? 'rgba(0, 255, 255, 1)' : 'rgba(255, 255, 255, 0.95)',
-                textShadow: mode === 'one' 
-                  ? '0 0 20px rgba(0, 255, 255, 1), 0 0 40px rgba(0, 255, 255, 0.6)' 
-                  : '0 0 10px rgba(255, 255, 255, 0.4)',
-              }}
-            >
-              MIT
-            </motion.span>
-
-            {/* Glow pulse when merged */}
-            {mode === 'one' && (
-              <motion.div
-                animate={{ 
-                  opacity: [0.5, 1, 0.5],
-                  scale: [1, 1.1, 1],
-                }}
-                transition={{
-                  duration: 1.2,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-                style={{
-                  position: 'absolute',
-                  inset: '-12px -28px',
-                  borderRadius: '20px',
-                  background: 'radial-gradient(ellipse 100% 100% at 50% 50%, rgba(0, 255, 255, 0.35) 0%, transparent 70%)',
-                  pointerEvents: 'none',
-                  zIndex: -1,
-                }}
-              />
-            )}
-          </div>
-
-          {/* Fragment C: "GIORNALIERO" - fades out on merge */}
-          <motion.span
-            animate={{
-              opacity: 0.55 * (1 - mergeProgress),
-              scale: 1 - (mergeProgress * 0.1),
-              marginLeft: 10 - (mergeProgress * 10),
-            }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            style={{
-              fontFamily: 'Orbitron, sans-serif',
-              fontSize: '11px',
-              fontWeight: 500,
-              letterSpacing: '2px',
-              color: 'rgba(255, 255, 255, 0.6)',
-              textShadow: '0 0 6px rgba(255, 255, 255, 0.2)',
-            }}
-          >
-            GIORNALIERO
-          </motion.span>
-        </div>
         {/* Proximity glow effect (only in "one" mode) */}
         {mode === 'one' && (
           <motion.div
@@ -630,6 +516,121 @@ export const CommitNodesContainer: React.FC = () => {
               zIndex: -1,
             }}
           />
+          
+          {/* ═══════════════════════════════════════════════════════════════════════════
+              🔧 FIX 06/02/2026 v5: TEXT INSIDE GATE WRAPPER (110x110px)
+              - Now positioned relative to the blob's actual container
+              - left: 50% will be exactly 55px = center of 110px blob
+              ═══════════════════════════════════════════════════════════════════════════ */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              marginTop: '14px',
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'none',
+              zIndex: 20,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {/* COMMIT text wrapper */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+            }}>
+              {/* Fragment A: "COM" */}
+              <motion.span
+                animate={{
+                  marginRight: 20 - (mergeProgress * 20),
+                  opacity: 0.8 + mergeProgress * 0.2,
+                }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                style={{
+                  fontFamily: 'Orbitron, sans-serif',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  letterSpacing: '3px',
+                  color: mode === 'one' ? 'rgba(0, 255, 255, 1)' : 'rgba(255, 255, 255, 0.95)',
+                  textShadow: mode === 'one' 
+                    ? '0 0 20px rgba(0, 255, 255, 1), 0 0 40px rgba(0, 255, 255, 0.6)' 
+                    : '0 0 10px rgba(255, 255, 255, 0.4)',
+                }}
+              >
+                COM
+              </motion.span>
+
+              {/* Fragment B: "MIT" */}
+              <motion.span
+                animate={{
+                  marginLeft: 20 - (mergeProgress * 20),
+                  opacity: 0.8 + mergeProgress * 0.2,
+                }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                style={{
+                  fontFamily: 'Orbitron, sans-serif',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  letterSpacing: '3px',
+                  color: mode === 'one' ? 'rgba(0, 255, 255, 1)' : 'rgba(255, 255, 255, 0.95)',
+                  textShadow: mode === 'one' 
+                    ? '0 0 20px rgba(0, 255, 255, 1), 0 0 40px rgba(0, 255, 255, 0.6)' 
+                    : '0 0 10px rgba(255, 255, 255, 0.4)',
+                }}
+              >
+                MIT
+              </motion.span>
+
+              {/* Glow pulse when merged */}
+              {mode === 'one' && (
+                <motion.div
+                  animate={{ 
+                    opacity: [0.5, 1, 0.5],
+                    scale: [1, 1.1, 1],
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                  style={{
+                    position: 'absolute',
+                    inset: '-12px -28px',
+                    borderRadius: '20px',
+                    background: 'radial-gradient(ellipse 100% 100% at 50% 50%, rgba(0, 255, 255, 0.35) 0%, transparent 70%)',
+                    pointerEvents: 'none',
+                    zIndex: -1,
+                  }}
+                />
+              )}
+            </div>
+
+            {/* Fragment C: "GIORNALIERO" - fades out on merge */}
+            <motion.span
+              animate={{
+                opacity: 0.5 * (1 - mergeProgress),
+                scale: 1 - (mergeProgress * 0.1),
+                marginLeft: 8 - (mergeProgress * 8),
+              }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              style={{
+                fontFamily: 'Orbitron, sans-serif',
+                fontSize: '10px',
+                fontWeight: 500,
+                letterSpacing: '2px',
+                color: 'rgba(255, 255, 255, 0.55)',
+                textShadow: '0 0 6px rgba(255, 255, 255, 0.2)',
+              }}
+            >
+              GIORNALIERO
+            </motion.span>
+          </div>
         </div>
         
         {/* Micro visual feedback in "three" mode (pulse on tap area) */}
