@@ -58,25 +58,54 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   CORE - Deep black center
+   CORE - Graphite volumetric center (NOT pure black)
+   🔧 FIX 05/02/2026: Charcoal/graphite with internal volume
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 .commit-node-core {
   position: absolute;
   inset: 8px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #0a1520 0%, #000000 60%, #000508 100%);
+  /* A) COLORE BASE GRAPHITE - NON NERO PURO */
+  background: radial-gradient(
+    circle at 30% 30%,
+    #2a2e33 0%,      /* Graphite chiaro - highlight */
+    #1a1d22 35%,     /* Charcoal medio */
+    #14161a 55%,     /* Charcoal scuro */
+    #0b0d10 100%     /* Near-black profondo */
+  );
   z-index: 3;
+  /* C) OMBRA VOLUMETRICA (non drop-shadow) */
+  box-shadow:
+    inset 0 0 20px rgba(255, 255, 255, 0.03),
+    inset -10px -14px 32px rgba(0, 0, 0, 0.40);
+}
+
+/* D) SPECULAR SOFT - Micro realismo */
+.commit-node-core::before {
+  content: '';
+  position: absolute;
+  inset: 10%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 28% 22%,
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 55%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   BLOB - Morphing organic skin
+   BLOB - Morphing organic skin with REAL DEPTH
+   🔧 FIX 05/02/2026: Graphite volumetric with back-light
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 .commit-node-blob {
   position: absolute;
   inset: 0;
   border-radius: 47% 53% 52% 48% / 48% 47% 53% 52%;
+  /* Skin gradient con graphite undertone */
   background: linear-gradient(135deg, 
     rgba(0, 255, 255, 0.15) 0%, 
     rgba(0, 200, 220, 0.08) 50%,
@@ -85,10 +114,45 @@
   border: 1.5px solid rgba(0, 255, 255, 0.35);
   z-index: 2;
   animation: blobMorph 8s ease-in-out infinite, breath 4.2s ease-in-out infinite;
+  /* C) OMBRA VOLUMETRICA - Non drop-shadow "sticker" */
   box-shadow: 
-    0 0 20px rgba(0, 255, 255, 0.2),
-    0 0 40px rgba(0, 255, 255, 0.1),
-    inset 0 0 15px rgba(0, 255, 255, 0.08);
+    /* Inner glow white (subtle) */
+    inset 0 0 24px rgba(255, 255, 255, 0.04),
+    /* Volumetric inner shadow (depth) */
+    inset -12px -18px 40px rgba(0, 0, 0, 0.35),
+    /* Outer depth shadow (mass) */
+    0 30px 60px rgba(0, 0, 0, 0.50),
+    0 15px 30px rgba(0, 0, 0, 0.35),
+    /* Cyan energy glow */
+    0 0 20px rgba(0, 255, 255, 0.18),
+    0 0 40px rgba(0, 255, 255, 0.08);
+  /* E) PERFORMANCE iOS */
+  will-change: transform, border-radius;
+  transform: translateZ(0);
+  contain: paint layout;
+}
+
+/* B) BACK-LIGHT REALE - Stacco dal fondo (galleggiamento) */
+.commit-node-blob::after {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0.04) 35%,
+    transparent 60%
+  );
+  filter: blur(18px);
+  z-index: -1;
+  pointer-events: none;
+  animation: backlightPulse 5s ease-in-out infinite;
+}
+
+@keyframes backlightPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.85; }
 }
 
 @keyframes blobMorph {
@@ -103,18 +167,32 @@
 
 @keyframes breath {
   0%, 100% { 
-    transform: scale(0.98);
+    transform: scale(0.98) translateZ(0);
     box-shadow: 
-      0 0 18px rgba(0, 255, 255, 0.18),
-      0 0 35px rgba(0, 255, 255, 0.08),
-      inset 0 0 12px rgba(0, 255, 255, 0.06);
+      /* Inner white glow */
+      inset 0 0 20px rgba(255, 255, 255, 0.03),
+      /* Volumetric inner shadow */
+      inset -10px -16px 36px rgba(0, 0, 0, 0.32),
+      /* Outer depth */
+      0 28px 55px rgba(0, 0, 0, 0.45),
+      0 12px 25px rgba(0, 0, 0, 0.30),
+      /* Cyan energy */
+      0 0 16px rgba(0, 255, 255, 0.15),
+      0 0 32px rgba(0, 255, 255, 0.06);
   }
   50% { 
-    transform: scale(1.03);
+    transform: scale(1.03) translateZ(0);
     box-shadow: 
-      0 0 25px rgba(0, 255, 255, 0.28),
-      0 0 50px rgba(0, 255, 255, 0.15),
-      inset 0 0 20px rgba(0, 255, 255, 0.1);
+      /* Inner white glow (brighter) */
+      inset 0 0 28px rgba(255, 255, 255, 0.05),
+      /* Volumetric inner shadow */
+      inset -14px -20px 44px rgba(0, 0, 0, 0.38),
+      /* Outer depth (deeper) */
+      0 35px 70px rgba(0, 0, 0, 0.55),
+      0 18px 35px rgba(0, 0, 0, 0.40),
+      /* Cyan energy (stronger) */
+      0 0 24px rgba(0, 255, 255, 0.25),
+      0 0 48px rgba(0, 255, 255, 0.12);
   }
 }
 
@@ -151,16 +229,19 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   GLOW LAYER - Pulsing energy
+   GLOW LAYER - Pulsing energy with depth ambient
+   🔧 FIX 05/02/2026: Added white ambient for depth perception
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 .commit-node-glow {
   position: absolute;
   inset: -12px;
   border-radius: 50%;
+  /* White ambient base + cyan energy */
   background: radial-gradient(circle, 
-    rgba(0, 255, 255, 0.12) 0%, 
-    rgba(0, 255, 255, 0.06) 40%,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(0, 255, 255, 0.10) 20%, 
+    rgba(0, 255, 255, 0.05) 45%,
     transparent 70%
   );
   z-index: 0;
@@ -172,13 +253,33 @@
 @keyframes energyPulse {
   0%, 100% { 
     opacity: 0.6; 
-    transform: scale(1);
+    transform: scale(1) translateZ(0);
     filter: blur(4px);
   }
   50% { 
     opacity: 1; 
-    transform: scale(1.08);
+    transform: scale(1.08) translateZ(0);
     filter: blur(6px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   🌙 REDUCED MOTION SUPPORT
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .commit-node-blob,
+  .commit-node-blob::after,
+  .commit-node-glow,
+  .commit-node-ring,
+  .commit-node-wrapper::after,
+  .commit-node-particle,
+  .commit-node-center {
+    animation: none !important;
+  }
+  
+  .commit-node-blob::after {
+    opacity: 0.7 !important;
   }
 }
 
