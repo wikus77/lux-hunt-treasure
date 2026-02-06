@@ -333,6 +333,235 @@ main {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   🏆 LEADERBOARD CARDS — Graphite folder glass + TOP 3 Rank Aura
+   Psychologically-driven effects: status + aspiration
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Base card style - Graphite folder glass */
+.leaderboard-card-glass {
+  background: rgba(18, 22, 28, 0.85) !important;
+  backdrop-filter: blur(12px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Sheen effect for all cards */
+.leaderboard-card-glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 35%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   #1 — CROWN AURA (Il trono - status dominante)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.leaderboard-rank-1 {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.12) 0%,
+    rgba(18, 22, 28, 0.90) 30%,
+    rgba(18, 22, 28, 0.88) 70%,
+    rgba(236, 72, 153, 0.10) 100%
+  ) !important;
+  border: 1px solid rgba(255, 215, 0, 0.25) !important;
+  box-shadow: 
+    0 0 30px rgba(255, 215, 0, 0.15),
+    0 0 60px rgba(236, 72, 153, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.50),
+    inset 0 1px 0 rgba(255, 215, 0, 0.15) !important;
+}
+
+/* Crown breathing effect */
+.leaderboard-rank-1::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 215, 0, 0.08) 50%,
+    transparent 70%
+  );
+  opacity: 0;
+  animation: crownBreathing 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Shimmer highlight - slow diagonal pass */
+.leaderboard-rank-1 .rank-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 215, 0, 0.10) 50%,
+    transparent 100%
+  );
+  animation: crownShimmer 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes crownBreathing {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes crownShimmer {
+  0% { left: -100%; opacity: 0; }
+  10% { opacity: 1; }
+  40% { left: 200%; opacity: 1; }
+  50%, 100% { left: 200%; opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   #2 — CHALLENGER GLOW (Quasi top - aspiration)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.leaderboard-rank-2 {
+  background: linear-gradient(
+    135deg,
+    rgba(192, 192, 192, 0.08) 0%,
+    rgba(18, 22, 28, 0.90) 30%,
+    rgba(18, 22, 28, 0.88) 70%,
+    rgba(59, 130, 246, 0.08) 100%
+  ) !important;
+  border: 1px solid rgba(192, 192, 192, 0.20) !important;
+  box-shadow: 
+    0 0 25px rgba(192, 192, 192, 0.10),
+    0 0 40px rgba(59, 130, 246, 0.06),
+    0 6px 20px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(192, 192, 192, 0.12) !important;
+}
+
+/* Challenger pulse ring */
+.leaderboard-rank-2::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(192, 192, 192, 0.15);
+  animation: challengerPulse 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes challengerPulse {
+  0%, 100% { 
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.8;
+    transform: scale(1.005);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   #3 — PODIUM SPARK (Ultimo gradino - raggiungibile)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.leaderboard-rank-3 {
+  background: linear-gradient(
+    135deg,
+    rgba(205, 127, 50, 0.08) 0%,
+    rgba(18, 22, 28, 0.90) 40%,
+    rgba(18, 22, 28, 0.88) 60%,
+    rgba(52, 211, 153, 0.06) 100%
+  ) !important;
+  border: 1px solid rgba(205, 127, 50, 0.18) !important;
+  box-shadow: 
+    0 0 20px rgba(205, 127, 50, 0.08),
+    0 5px 18px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(205, 127, 50, 0.10) !important;
+}
+
+/* Podium accent line */
+.leaderboard-rank-3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(205, 127, 50, 0.40) 20%,
+    rgba(52, 211, 153, 0.30) 80%,
+    transparent 100%
+  );
+  animation: podiumSpark 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes podiumSpark {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOP 4-10 — Subtle glow
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.leaderboard-rank-top10 {
+  background: rgba(18, 22, 28, 0.82) !important;
+  border: 1px solid rgba(0, 209, 255, 0.12) !important;
+  box-shadow: 
+    0 0 12px rgba(0, 209, 255, 0.06),
+    0 4px 14px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(0, 209, 255, 0.05) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   iOS Performance + Reduced Motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@supports (-webkit-touch-callout: none) {
+  .leaderboard-card-glass,
+  .leaderboard-rank-1,
+  .leaderboard-rank-2,
+  .leaderboard-rank-3,
+  .leaderboard-rank-top10 {
+    backdrop-filter: blur(10px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leaderboard-rank-1::after,
+  .leaderboard-rank-1 .rank-shimmer,
+  .leaderboard-rank-2::after,
+  .leaderboard-rank-3::after {
+    animation: none !important;
+    opacity: 0.5 !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    TABS / PILLS
    ═══════════════════════════════════════════════════════════════════════════ */
 

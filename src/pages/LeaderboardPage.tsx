@@ -114,6 +114,15 @@ const LeaderboardUserCard: React.FC<LeaderboardUserCardProps> = ({
     }
   };
 
+  // 🎨 FIX 05/02/2026: Graphite folder glass + TOP 3 rank aura
+  const getRankCardClass = () => {
+    if (user.rank === 1) return 'leaderboard-card-glass leaderboard-rank-1';
+    if (user.rank === 2) return 'leaderboard-card-glass leaderboard-rank-2';
+    if (user.rank === 3) return 'leaderboard-card-glass leaderboard-rank-3';
+    if (user.rank <= 10) return 'leaderboard-card-glass leaderboard-rank-top10';
+    return 'leaderboard-card-glass';
+  };
+
   return (
     <motion.div
       key={user.id}
@@ -129,12 +138,15 @@ const LeaderboardUserCard: React.FC<LeaderboardUserCardProps> = ({
       onPointerLeave={handlePointerEnd}
       style={{ touchAction: 'pan-y' }}
     >
-      <Card className={`${style.bgClass} ${style.borderClass} ${style.glowClass} ${
+      <Card className={`${getRankCardClass()} ${
         user.isCurrentUser ? 'ring-2 ring-[#00D1FF]' : ''
-      } transition-all duration-300 overflow-hidden cursor-pointer active:scale-[0.98]`}>
+      } transition-all duration-300 overflow-hidden cursor-pointer active:scale-[0.98] rounded-2xl`}>
+        {/* #1 Crown shimmer effect */}
+        {user.rank === 1 && <div className="rank-shimmer" />}
+        
         {/* Top 3 animated glow bar */}
         {user.rank <= 3 && (
-          <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-0.5 overflow-hidden z-10">
             <motion.div
               className={`h-full ${
                 user.rank === 1 ? 'bg-yellow-400' : 
@@ -147,7 +159,7 @@ const LeaderboardUserCard: React.FC<LeaderboardUserCardProps> = ({
           </div>
         )}
 
-        <CardContent className="p-3 sm:p-4">
+        <CardContent className="p-3 sm:p-4 relative z-10">
           <div className="flex items-center justify-between">
             {/* Rank & User Info */}
             <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
@@ -566,15 +578,22 @@ export const LeaderboardPage: React.FC = () => {
         )}
       </motion.div>
 
-      {/* Current User Rank */}
+      {/* Current User Rank - 🎨 FIX 05/02/2026: Graphite glass with rank aura */}
       {currentUserRank && (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.15 }}
         >
-          <Card className="bg-gradient-to-r from-[#00D1FF]/20 to-[#7B5CFF]/20 border-[#00D1FF]/40 shadow-[0_0_20px_rgba(0,209,255,0.2)]">
-            <CardContent className="p-4">
+          <Card className={`leaderboard-card-glass ${
+            currentUserRank.rank === 1 ? 'leaderboard-rank-1' :
+            currentUserRank.rank === 2 ? 'leaderboard-rank-2' :
+            currentUserRank.rank === 3 ? 'leaderboard-rank-3' :
+            currentUserRank.rank <= 10 ? 'leaderboard-rank-top10' : ''
+          } ring-2 ring-[#00D1FF]/50 rounded-2xl`}>
+            {/* Crown shimmer for #1 */}
+            {currentUserRank.rank === 1 && <div className="rank-shimmer" />}
+            <CardContent className="p-4 relative z-10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <motion.div 
@@ -587,7 +606,7 @@ export const LeaderboardPage: React.FC = () => {
                   <div>
                     <p className="font-semibold text-white">La tua posizione</p>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm text-gray-400">{currentUserRank.agent_code}</p>
+                      <p className="text-sm text-white/60">{currentUserRank.agent_code}</p>
                       {currentUserRank.change !== undefined && currentUserRank.change !== 0 && (
                         <span className={`text-xs flex items-center ${currentUserRank.change > 0 ? 'text-green-400' : 'text-red-400'}`}>
                           {currentUserRank.change > 0 ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -601,7 +620,7 @@ export const LeaderboardPage: React.FC = () => {
                   <div className="text-lg font-bold text-[#00D1FF]">
                     {currentUserRank.total_score.toLocaleString()} pts
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                  <div className="flex items-center gap-1 text-xs text-white/50">
                     <Flame className="w-3 h-3 text-orange-400" />
                     {currentUserRank.streak_days}d streak
                   </div>
@@ -672,38 +691,38 @@ export const LeaderboardPage: React.FC = () => {
         )}
       </motion.div>
 
-      {/* Stats Footer */}
+      {/* Stats Footer - 🎨 Graphite glass */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
         className="grid grid-cols-3 gap-3 pt-4"
       >
-        <Card className="bg-gray-800/30 border-gray-700/30">
-          <CardContent className="p-3 text-center">
+        <Card className="leaderboard-card-glass rounded-xl">
+          <CardContent className="p-3 text-center relative z-10">
             <Users className="w-5 h-5 mx-auto mb-1 text-[#00D1FF]" />
             <div className="text-lg font-bold text-white">{leaderboard.length}</div>
-            <div className="text-[10px] text-gray-400">Agenti</div>
+            <div className="text-[10px] text-white/50">Agenti</div>
           </CardContent>
         </Card>
         
-        <Card className="bg-gray-800/30 border-gray-700/30">
-          <CardContent className="p-3 text-center">
+        <Card className="leaderboard-card-glass rounded-xl">
+          <CardContent className="p-3 text-center relative z-10">
             <TriangleDownIcon className="w-5 h-5 mx-auto mb-1 text-pink-400" />
             <div className="text-lg font-bold text-white">
               {leaderboard[0]?.total_score.toLocaleString() || '0'}
             </div>
-            <div className="text-[10px] text-gray-400">Top Score</div>
+            <div className="text-[10px] text-white/50">Top Score</div>
           </CardContent>
         </Card>
         
-        <Card className="bg-gray-800/30 border-gray-700/30">
-          <CardContent className="p-3 text-center">
+        <Card className="leaderboard-card-glass rounded-xl">
+          <CardContent className="p-3 text-center relative z-10">
             <Flame className="w-5 h-5 mx-auto mb-1 text-orange-400" />
             <div className="text-lg font-bold text-white">
               {Math.max(...leaderboard.map(u => u.streak_days), 0)}d
             </div>
-            <div className="text-[10px] text-gray-400">Max Streak</div>
+            <div className="text-[10px] text-white/50">Max Streak</div>
           </CardContent>
         </Card>
       </motion.div>
