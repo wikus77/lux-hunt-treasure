@@ -476,14 +476,14 @@ export const NotificationsPage: React.FC = () => {
         }}
       >
         {/* Header with Tabs - DENTRO il pannello colorato */}
+        {/* 🎨 FIX 05/02/2026: iOS folder glass style */}
         <div data-onboarding="notice-page">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="m1-panel relative"
+            className="m1-panel relative m1-folder-glass"
             style={{ 
-              background: 'rgba(0, 0, 0, 0.3)', 
-              backdropFilter: 'blur(12px)',
+              // m1-folder-glass handles all glass effects
               borderRadius: '16px',
             }}
           >

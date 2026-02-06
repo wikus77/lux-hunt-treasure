@@ -384,14 +384,12 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   };
 
   // 🔧 FIX 30/01/2026: Changed to WHITE glass theme (was dark rgba(7,8,24,0.6))
+  // 🎨 FIX 05/02/2026: Using m1-folder-glass for unified iOS folder style across app
   return (
-    <div className={`flex flex-col rounded-2xl overflow-hidden sn-chat-container ${className}`}
+    <div className={`flex flex-col rounded-2xl overflow-hidden sn-chat-container m1-folder-glass ${className}`}
       style={{
-        background: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(0, 0, 0, 0.08)',
-        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
+        // m1-folder-glass provides base glass effect, override for slightly more opaque chat
+        background: 'rgba(255, 255, 255, 0.12)',
         // 🔧 FIX v10: Remove marginBottom - we'll handle keyboard in input bar
         ...style
       }}
