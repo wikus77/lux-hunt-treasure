@@ -157,15 +157,15 @@ const AionEntity = forwardRef<AionEntityHandle, AionEntityProps>(({
     const originalPositions = geometry.attributes.position.array.slice();
 
     // Material - Custom shader-like effect with MeshStandardMaterial
-    // 🔧 FIX 06/02/2026: Increased opacity and emissive for better visibility
+    // 🔧 FIX 06/02/2026 v2: Maximum visibility - bright white with strong emissive
     const material = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(`hsl(${PALETTE.X.h}, ${PALETTE.X.s}%, ${PALETTE.X.l}%)`),
-      emissive: new THREE.Color(`hsl(${PALETTE.X.h}, ${PALETTE.X.s}%, ${PALETTE.X.l * 0.5}%)`),
-      emissiveIntensity: 0.8,
-      metalness: 0.2,
-      roughness: 0.5,
+      color: new THREE.Color(0xffffff), // Pure white
+      emissive: new THREE.Color(0xeeeeee), // Strong white emissive
+      emissiveIntensity: 1.2, // 🔧 FIX: Increased for maximum visibility
+      metalness: 0.1,
+      roughness: 0.4,
       wireframe: false,
-      transparent: false, // 🔧 FIX: Solid blob for better visibility
+      transparent: false,
       opacity: 1.0,
     });
 
@@ -185,15 +185,15 @@ const AionEntity = forwardRef<AionEntityHandle, AionEntityProps>(({
     scene.add(wireframeMesh);
     wireframeMeshRef.current = wireframeMesh;
 
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+    // Lights - 🔧 FIX: Increased brightness for better visibility
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
-    const pointLight1 = new THREE.PointLight(0x00d4ff, 1, 100);
+    const pointLight1 = new THREE.PointLight(0xffffff, 1.2, 100);
     pointLight1.position.set(5, 5, 5);
     scene.add(pointLight1);
 
-    const pointLight2 = new THREE.PointLight(0xf213a4, 0.8, 100);
+    const pointLight2 = new THREE.PointLight(0xffffff, 1.0, 100);
     pointLight2.position.set(-5, -5, 5);
     scene.add(pointLight2);
 

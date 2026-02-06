@@ -34,8 +34,8 @@ export const CommitNodeSide: React.FC = () => {
         position: 'relative',
         overflow: 'hidden',
         borderRadius: '50%',
-        // Grayscale + high contrast to create black → gray → white gradient effect
-        filter: 'grayscale(100%) contrast(1.3) brightness(1.1)',
+        // 🔧 FIX: Reduced grayscale, increased brightness for better visibility
+        filter: 'grayscale(30%) contrast(1.1) brightness(1.4)',
       }}
     >
       {/* 
