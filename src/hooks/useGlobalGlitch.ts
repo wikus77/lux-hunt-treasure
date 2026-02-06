@@ -5,7 +5,8 @@ import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 // TV Shutdown Effect - più realistico
-function triggerTVShutdownEffect() {
+// 🔧 FIX 06/02/2026: Exported for use in Commit ritual fail
+export function triggerTVShutdownEffect() {
   console.log('[Global Glitch] TV Shutdown Effect triggered');
 
   // Create overlay container
