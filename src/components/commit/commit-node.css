@@ -730,4 +730,50 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   🔧 FIX 06/02/2026: "COMMIT GIORNALIERO" CONTAINER + BLINK
+   - Fragments converge on merge
+   - Blink/pulse when fully merged
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.home-commit-container {
+  z-index: 5;
+  /* Performance iOS */
+  transform: translateX(-50%) translateZ(0);
+  contain: layout paint style;
+}
+
+.commit-fragment {
+  display: inline-block;
+  text-transform: uppercase;
+  /* Performance */
+  transform: translateZ(0);
+}
+
+/* Attention pulse for merged state */
+.commit-attention-glow {
+  /* Performance iOS */
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+/* 🌙 Reduced motion: no blink, static glow */
+@media (prefers-reduced-motion: reduce) {
+  .commit-attention-glow {
+    animation: none !important;
+    opacity: 0.5 !important;
+  }
+  
+  .commit-fragment {
+    transition: none !important;
+  }
+}
+
+/* 📱 iOS performance guard */
+@supports (-webkit-touch-callout: none) {
+  .home-commit-container {
+    contain: layout style;
+  }
+}
+
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

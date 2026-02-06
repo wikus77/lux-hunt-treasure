@@ -75,6 +75,8 @@ async function m1ssionHapticSignatureFuse(): Promise<void> {
 export const CommitNodesContainer: React.FC = () => {
   const [mode, setMode] = useState<MergeMode>('three');
   const [proximityIntensity, setProximityIntensity] = useState(0);
+  // 🔧 FIX 06/02/2026: Merge progress for "COMMIT GIORNALIERO" text animation
+  const [mergeProgress, setMergeProgress] = useState(0);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const centerRef = useRef<HTMLDivElement>(null);
@@ -182,8 +184,15 @@ export const CommitNodesContainer: React.FC = () => {
       setMode(newMode);
     }
     
+    // 🔧 FIX 06/02/2026: Update merge progress for text animation (0→1)
+    const newProgress = Math.min(slowAccum.current / SLOW_ACCUM_THRESHOLD, 1);
+    // Only update if change is significant (avoid excessive re-renders)
+    if (Math.abs(newProgress - mergeProgress) > 0.02) {
+      setMergeProgress(newProgress);
+    }
+    
     rafId.current = requestAnimationFrame(processScroll);
-  }, [mode]);
+  }, [mode, mergeProgress]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SCROLL LISTENER SETUP
@@ -489,6 +498,115 @@ export const CommitNodesContainer: React.FC = () => {
       >
         <CommitNodeSide />
       </motion.div>
+
+      {/* ═══════════════════════════════════════════════════════════════════════════
+          🔧 FIX 06/02/2026: "COMMIT GIORNALIERO" CONTAINER
+          - Fragments separate → converge to "COMMIT" on merge
+          - Blinks when fully merged (mode === 'one')
+          ═══════════════════════════════════════════════════════════════════════════ */}
+      <div
+        className="home-commit-container"
+        style={{
+          position: 'absolute',
+          bottom: '-48px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '100%',
+          maxWidth: '320px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          overflow: 'hidden',
+          pointerEvents: 'none',
+        }}
+      >
+        {/* Fragment A: "COM" - starts left, moves to center */}
+        <motion.span
+          className="commit-fragment commit-fragment-a"
+          animate={{
+            x: mergeProgress * 28,
+            opacity: 0.5 + mergeProgress * 0.5,
+          }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
+          style={{
+            fontFamily: 'Orbitron, sans-serif',
+            fontSize: '14px',
+            fontWeight: 700,
+            letterSpacing: '3px',
+            color: mode === 'one' ? 'rgba(0, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.6)',
+            textShadow: mode === 'one' ? '0 0 12px rgba(0, 255, 255, 0.6)' : 'none',
+            willChange: 'transform, opacity',
+          }}
+        >
+          COM
+        </motion.span>
+
+        {/* Fragment B: "MIT" - starts right, moves to center */}
+        <motion.span
+          className="commit-fragment commit-fragment-b"
+          animate={{
+            x: -mergeProgress * 28,
+            opacity: 0.5 + mergeProgress * 0.5,
+          }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
+          style={{
+            fontFamily: 'Orbitron, sans-serif',
+            fontSize: '14px',
+            fontWeight: 700,
+            letterSpacing: '3px',
+            color: mode === 'one' ? 'rgba(0, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.6)',
+            textShadow: mode === 'one' ? '0 0 12px rgba(0, 255, 255, 0.6)' : 'none',
+            willChange: 'transform, opacity',
+          }}
+        >
+          MIT
+        </motion.span>
+
+        {/* Fragment C: "GIORNALIERO" - fades out as merge progresses */}
+        <motion.span
+          className="commit-fragment commit-fragment-c"
+          animate={{
+            opacity: 0.4 * (1 - mergeProgress),
+            x: 8,
+          }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
+          style={{
+            fontFamily: 'Orbitron, sans-serif',
+            fontSize: '10px',
+            fontWeight: 400,
+            letterSpacing: '2px',
+            color: 'rgba(255, 255, 255, 0.5)',
+            marginLeft: '8px',
+            willChange: 'transform, opacity',
+          }}
+        >
+          GIORNALIERO
+        </motion.span>
+
+        {/* Blink overlay when fully merged */}
+        {mode === 'one' && (
+          <motion.div
+            className="commit-attention-glow"
+            initial={{ opacity: 0 }}
+            animate={{ 
+              opacity: [0.4, 0.8, 0.4],
+            }}
+            transition={{
+              duration: 1.8,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            style={{
+              position: 'absolute',
+              inset: '-4px -12px',
+              borderRadius: '8px',
+              background: 'radial-gradient(ellipse 100% 100% at 50% 50%, rgba(0, 255, 255, 0.15) 0%, transparent 70%)',
+              pointerEvents: 'none',
+              zIndex: -1,
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 };
