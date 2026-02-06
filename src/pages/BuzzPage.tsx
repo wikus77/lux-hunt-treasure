@@ -241,9 +241,9 @@ export const BuzzPage: React.FC = () => {
               />
             </div>
 
-            {/* 🎨 SOFT NATIVE: Info container */}
+            {/* 🎨 iOS FOLDER-STYLE GLASS: Info container */}
             <div 
-              className="sn-card-elevated p-4 sm:p-6 mb-6 max-w-3xl w-full mx-4 relative overflow-hidden"
+              className="buzz-folder-glass p-4 sm:p-6 mb-6 max-w-3xl w-full mx-4"
             >
               <div className="text-center space-y-4">
                 {/* Descrizione BUZZ */}
