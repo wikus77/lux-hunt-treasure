@@ -357,8 +357,8 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
         return;
       }
       
-      serverResult = data as SpinResult;
-      spinResultRef.current = serverResult;
+      serverResult = data as ProgressResult;
+      progressResultRef.current = serverResult;
       
       // Handle already completed today (race condition protection)
       if (serverResult.status === 'already_completed_today') {
@@ -506,15 +506,42 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
   ];
 
   return createPortal(
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[10003] flex items-center justify-center p-4"
-          onClick={onClose}
-        >
+        <>
+          {/* BACKDROP - M1U Style: glass effect with strong blur */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[10002]"
+            style={{
+              backgroundColor: 'rgba(10, 10, 15, 0.75)',
+              backdropFilter: 'blur(50px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(50px) saturate(180%)',
+            }}
+          />
+          
+          {/* PANEL - M1U Style: scale animation from center */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{
+              type: 'spring',
+              stiffness: 280,
+              damping: 24,
+              mass: 0.8,
+            }}
+            className="fixed inset-0 z-[10003] flex items-center justify-center p-4"
+            style={{
+              transformOrigin: '50% 50%',
+              willChange: 'transform, opacity',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
           {/* 🌃 M1SSION APP GRADIENT BACKGROUND - EXACT same as main app */}
           <div 
             className="absolute inset-0"
@@ -1144,6 +1171,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
             )}
           </AnimatePresence>
         </motion.div>
+        </>
       )}
     </AnimatePresence>,
     document.body
