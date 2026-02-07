@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎨 Agent Profile Content - REVOLUT STYLE (iOS WKWebView OPTIMIZED)
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LogOut, Crown, X, HelpCircle, FileText, GraduationCap, Mail, Shield, Eye, Bell, Zap, Users, Sparkles } from 'lucide-react';
 import ProfileAvatar from '@/components/profile/ProfileAvatar';
@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import PulseEnergyBadge from '@/components/pulse/PulseEnergyBadge';
 import { usePulseEnergy } from '@/hooks/usePulseEnergy';
 import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';
+import { HelpModal } from '@/components/help/HelpModal';
 
 interface AgentProfileContentProps {
   profileImage?: string | null;
@@ -25,6 +26,7 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
   const { toast } = useToast();
   const { currentRank, pulseEnergy } = usePulseEnergy();
   const { subscription } = useProfileSubscription();
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -206,7 +208,7 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
 
         {/* Menu 1 */}
         <GlassCard style={{ marginBottom: '16px', padding: 0 }}>
-          <MenuItem icon={HelpCircle} label="Aiuto" onClick={() => goTo('/help')} />
+          <MenuItem icon={HelpCircle} label="Aiuto" onClick={() => setShowHelpModal(true)} />
           <MenuItem icon={FileText} label="Documenti Legali" onClick={() => goTo('/settings/legal')} />
           <MenuItem icon={GraduationCap} label="Impara" onClick={() => goTo('/learn')} />
           <MenuItem icon={Mail} label="Posta in arrivo" onClick={() => goTo('/notifications')} badge={3} last />
@@ -227,6 +229,12 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
           </div>
         </GlassCard>
       </div>
+
+      {/* Help Modal - Fullscreen identico a M1U Shop */}
+      <HelpModal 
+        isOpen={showHelpModal} 
+        onClose={() => setShowHelpModal(false)} 
+      />
     </div>
   );
 };
