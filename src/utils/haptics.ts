@@ -249,3 +249,168 @@ if (typeof window !== 'undefined') {
 }
 
 export default hapticManager;
+
+// ============================================================================
+// 📳 BUZZ HAPTIC PULSE - M1SSION™ "Solemn" Pattern
+// ============================================================================
+// Progressive heartbeat-like haptic during BUZZ clue generation
+// Pattern: slow beats → accelerating → climax
+// ============================================================================
+
+interface BuzzHapticPulseController {
+  isRunning: boolean;
+  start: () => void;
+  stop: () => void;
+}
+
+/**
+ * Create a BUZZ haptic pulse controller
+ * 
+ * Pattern:
+ * 1. Initial HEAVY impact (solemn press)
+ * 2. Two slow "heartbeats" (heavy-pause-heavy)
+ * 3. Three faster beats (accelerating)
+ * 4. Continues until stop() is called
+ * 
+ * Usage:
+ *   const pulse = createBuzzHapticPulse();
+ *   pulse.start();
+ *   // ... async BUZZ operation ...
+ *   pulse.stop();
+ */
+export const createBuzzHapticPulse = (): BuzzHapticPulseController => {
+  let isRunning = false;
+  let timeoutIds: NodeJS.Timeout[] = [];
+  let intervalId: NodeJS.Timeout | null = null;
+
+  const clearAllTimers = () => {
+    timeoutIds.forEach(id => clearTimeout(id));
+    timeoutIds = [];
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+
+  const triggerBeat = async (intensity: HapticType) => {
+    if (!isRunning) return;
+    if (!isCapacitorNative()) return;
+    
+    try {
+      await haptic(intensity);
+    } catch {
+      // Silently ignore errors during pulse
+    }
+  };
+
+  const start = () => {
+    if (!isCapacitorNative() || !isHapticsEnabled()) {
+      console.debug('[BUZZ_HAPTIC_PULSE] Not available, skipping');
+      return;
+    }
+
+    if (isRunning) {
+      console.debug('[BUZZ_HAPTIC_PULSE] Already running');
+      return;
+    }
+
+    isRunning = true;
+    console.debug('[BUZZ_HAPTIC_PULSE] 🫀 Starting solemn pulse');
+
+    // ═══════════════════════════════════════════════════════
+    // PHASE 1: Initial solemn HEAVY press (immediate)
+    // ═══════════════════════════════════════════════════════
+    triggerBeat('heavy');
+
+    // ═══════════════════════════════════════════════════════
+    // PHASE 2: Two slow heartbeats (heavy) - 350ms apart
+    // ═══════════════════════════════════════════════════════
+    const t1 = setTimeout(() => triggerBeat('heavy'), 350);
+    const t2 = setTimeout(() => triggerBeat('heavy'), 700);
+    timeoutIds.push(t1, t2);
+
+    // ═══════════════════════════════════════════════════════
+    // PHASE 3: Accelerating beats (medium → heavy alternating)
+    // Starts at 1000ms, speeds up over time
+    // ═══════════════════════════════════════════════════════
+    let beatIndex = 0;
+    const beatPattern: { delay: number; intensity: HapticType }[] = [
+      { delay: 1000, intensity: 'medium' },
+      { delay: 1200, intensity: 'heavy' },
+      { delay: 1350, intensity: 'medium' },
+      { delay: 1480, intensity: 'heavy' },
+      { delay: 1580, intensity: 'medium' },
+      { delay: 1660, intensity: 'heavy' },
+      { delay: 1720, intensity: 'medium' },
+      { delay: 1770, intensity: 'heavy' },
+    ];
+
+    beatPattern.forEach(({ delay, intensity }) => {
+      const t = setTimeout(() => triggerBeat(intensity), delay);
+      timeoutIds.push(t);
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // PHASE 4: Continuous fast pulse after initial pattern
+    // Every 180ms alternating heavy/medium until stop()
+    // ═══════════════════════════════════════════════════════
+    const continuousPulseStart = 1850;
+    const continuousPulseTimeout = setTimeout(() => {
+      if (!isRunning) return;
+      
+      let toggle = true;
+      intervalId = setInterval(() => {
+        if (!isRunning) {
+          clearAllTimers();
+          return;
+        }
+        triggerBeat(toggle ? 'heavy' : 'medium');
+        toggle = !toggle;
+      }, 180);
+    }, continuousPulseStart);
+    timeoutIds.push(continuousPulseTimeout);
+  };
+
+  const stop = () => {
+    if (!isRunning) return;
+    
+    console.debug('[BUZZ_HAPTIC_PULSE] 🛑 Stopping pulse');
+    isRunning = false;
+    clearAllTimers();
+
+    // Final success notification haptic
+    if (isCapacitorNative() && isHapticsEnabled()) {
+      haptic('success').catch(() => {});
+    }
+  };
+
+  return {
+    get isRunning() { return isRunning; },
+    start,
+    stop
+  };
+};
+
+/**
+ * Singleton instance for simple usage
+ * Can be started/stopped from anywhere
+ */
+let _buzzPulseInstance: BuzzHapticPulseController | null = null;
+
+export const buzzHapticPulse = {
+  start: () => {
+    if (!_buzzPulseInstance) {
+      _buzzPulseInstance = createBuzzHapticPulse();
+    }
+    _buzzPulseInstance.start();
+  },
+  stop: () => {
+    if (_buzzPulseInstance) {
+      _buzzPulseInstance.stop();
+      _buzzPulseInstance = null;
+    }
+  },
+  get isRunning() {
+    return _buzzPulseInstance?.isRunning ?? false;
+  }
+};

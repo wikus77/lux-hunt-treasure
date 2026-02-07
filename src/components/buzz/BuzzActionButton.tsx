@@ -22,7 +22,8 @@ import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION C
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { toast } from 'sonner';
 import { showInsufficientM1UToast, showM1UDebitSuccessToast } from '@/utils/m1uHelpers';
-import { hapticMedium, isHapticsAvailable } from '@/utils/haptics';
+import { hapticHeavy, isHapticsAvailable, buzzHapticPulse } from '@/utils/haptics';
+import { useDailyFreeBuzz } from '@/hooks/buzz/useDailyFreeBuzz';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 // 🌑 Shadow Protocol v3 - Contextual trigger
@@ -80,6 +81,13 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   // PRIORITÀ 2: BUZZ da premi (marker, XP, etc.)
   const { hasFreeBuzz: hasGrantFreeBuzz, consumeFreeBuzz: consumeGrantFreeBuzz, totalRemaining: grantRemaining, dailyUsed } = useBuzzGrants();
   
+  // 🆕 UNIFIED DAILY FREE GATE: 1 free per day regardless of source
+  const { 
+    dailyFreeAvailable, 
+    markDailyFreeUsed, 
+    dateLocal: dailyGateDate 
+  } = useDailyFreeBuzz();
+  
   // 🆕 M1SSION Cashback Vault™
   const { accrueFromBuzz } = useCashbackWallet();
   
@@ -94,9 +102,11 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     updateDailyBuzzCounter
   } = useBuzzCounter(user?.id);
   
-  // 🔥 PRIORITÀ COMBINATA: tier gratuiti → grants → pricing
-  // Se ha BUZZ gratuiti da tier O da grants → mostra "GRATIS"
-  const hasAnyFreeBuzz = hasTierFreeBuzz || hasGrantFreeBuzz;
+  // 🔥 PRIORITÀ COMBINATA: dailyGate → tier gratuiti → grants → pricing
+  // UNIFIED RULE: 1 FREE per day, then M1U payment
+  // Se ha BUZZ gratuiti da tier O da grants E il daily gate è aperto → mostra "GRATIS"
+  const hasAnyFreeBuzzSource = hasTierFreeBuzz || hasGrantFreeBuzz;
+  const hasAnyFreeBuzz = dailyFreeAvailable && hasAnyFreeBuzzSource;
   const currentCostM1U = hasAnyFreeBuzz ? 0 : getCurrentBuzzCostM1U();
   const currentPriceDisplay = hasAnyFreeBuzz ? 'GRATIS' : getCurrentBuzzDisplayCostM1U();
   
@@ -104,7 +114,10 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   React.useEffect(() => {
     console.log('💰 BUZZ BUTTON PRICE UPDATE:', {
       dailyBuzzCounter,
-      // 🆕 Tier Free BUZZ info
+      // 🆕 UNIFIED DAILY GATE
+      dailyFreeAvailable,
+      dailyGateDate,
+      // Tier Free BUZZ info
       userTier,
       hasTierFreeBuzz,
       tierFreeBuzzRemaining,
@@ -112,13 +125,14 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       // Grant Free BUZZ info
       hasGrantFreeBuzz,
       grantRemaining,
-      // Combined
+      // Combined (with daily gate)
+      hasAnyFreeBuzzSource,
       hasAnyFreeBuzz,
       currentCostM1U,
       currentPriceDisplay,
       timestamp: new Date().toISOString()
     });
-  }, [dailyBuzzCounter, userTier, hasTierFreeBuzz, tierFreeBuzzRemaining, tierWeeklyLimit, hasGrantFreeBuzz, grantRemaining, hasAnyFreeBuzz, currentCostM1U, currentPriceDisplay]);
+  }, [dailyBuzzCounter, dailyFreeAvailable, dailyGateDate, userTier, hasTierFreeBuzz, tierFreeBuzzRemaining, tierWeeklyLimit, hasGrantFreeBuzz, grantRemaining, hasAnyFreeBuzzSource, hasAnyFreeBuzz, currentCostM1U, currentPriceDisplay]);
   
   // 🔥 FIX: Pass actual M1U cost to useBuzzHandler to avoid price check blocking
   // 🔍 OBSERVABILITY: Determine buzzType for audit logging
@@ -218,9 +232,9 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   }, [user?.id]);
 
   const handleAction = async () => {
-    // 📳 HAPTIC: Immediate tactile feedback on button press (iOS native)
+    // 📳 HAPTIC: Start solemn M1SSION pulse pattern (iOS native)
     if (isHapticsAvailable()) {
-      hapticMedium();
+      buzzHapticPulse.start();
     }
     
     // 🔊 Play BUZZ button sound on press
@@ -237,6 +251,14 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       console.log('╚══════════════════════════════════════════════════════════════════╝');
       console.log(`📅 Timestamp: ${auditTimestamp}`);
       console.log(`📅 Local (Rome): ${auditLocalDate} ${auditLocalTime}`);
+      console.log('');
+      console.log('┌─────────────────────────────────────────────────────────────────┐');
+      console.log('│ 🚪 DAILY GATE (1 FREE/DAY)                                      │');
+      console.log('├─────────────────────────────────────────────────────────────────┤');
+      console.log(`│ dailyFreeAvailable: ${dailyFreeAvailable}`);
+      console.log(`│ dailyGateDate: ${dailyGateDate}`);
+      console.log(`│ SOURCE: user_daily_free_buzz table`);
+      console.log('└─────────────────────────────────────────────────────────────────┘');
       console.log('');
       console.log('┌─────────────────────────────────────────────────────────────────┐');
       console.log('│ 1️⃣  TIER FREE BUZZ (settimanale)                                │');
@@ -258,20 +280,30 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       console.log('└─────────────────────────────────────────────────────────────────┘');
       console.log('');
       console.log('┌─────────────────────────────────────────────────────────────────┐');
-      console.log('│ 🎯 COMBINED DECISION                                            │');
+      console.log('│ 🎯 COMBINED DECISION (with daily gate)                          │');
       console.log('├─────────────────────────────────────────────────────────────────┤');
-      console.log(`│ hasAnyFreeBuzz: ${hasAnyFreeBuzz} (tier OR grant)`);
+      console.log(`│ hasAnyFreeBuzzSource: ${hasAnyFreeBuzzSource} (tier OR grant)`);
+      console.log(`│ hasAnyFreeBuzz: ${hasAnyFreeBuzz} (source AND dailyGate)`);
       console.log(`│ currentCostM1U: ${currentCostM1U}`);
       console.log(`│ currentPriceDisplay: ${currentPriceDisplay}`);
       console.log(`│ dailyBuzzCounter: ${dailyBuzzCounter}`);
       console.log(`│ m1uBalance: ${unitsData?.balance || 0}`);
       console.log('└─────────────────────────────────────────────────────────────────┘');
       console.log('');
-      console.log(`🚦 DECISION PATH: ${hasTierFreeBuzz ? '1️⃣ TIER FREE (settimanale)' : hasGrantFreeBuzz ? '2️⃣ GRANT FREE (premi)' : '3️⃣ M1U PAYMENT'}`);
+      const decisionPath = !dailyFreeAvailable 
+        ? '🚫 DAILY GATE CLOSED → M1U PAYMENT' 
+        : hasTierFreeBuzz 
+          ? '1️⃣ TIER FREE (settimanale)' 
+          : hasGrantFreeBuzz 
+            ? '2️⃣ GRANT FREE (premi)' 
+            : '3️⃣ M1U PAYMENT';
+      console.log(`🚦 DECISION PATH: ${decisionPath}`);
       console.log('═══════════════════════════════════════════════════════════════════');
     }
     
     if (!user) {
+      // 📳 Stop haptic pulse on error
+      buzzHapticPulse.stop();
       toast.error('Devi essere loggato per utilizzare BUZZ!');
       return;
     }
@@ -280,23 +312,33 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     if (isWalkthroughMode) {
       await handleBuzz();
       onSuccess();
+      // 📳 Stop haptic pulse on success
+      buzzHapticPulse.stop();
       return;
     }
 
     // =========================================================================
     // 🆕 PRIORITÀ 1: BUZZ gratuiti settimanali per tier abbonamento
     // =========================================================================
-    if (hasTierFreeBuzz) {
+    // ⚠️ UNIFIED DAILY GATE: Only proceed if dailyFreeAvailable === true
+    if (dailyFreeAvailable && hasTierFreeBuzz) {
       console.log('🎟️ M1SSION™ TIER FREE BUZZ: Using tier weekly allowance', { 
         tier: userTier,
         remaining: tierFreeBuzzRemaining,
-        weeklyLimit: tierWeeklyLimit 
+        weeklyLimit: tierWeeklyLimit,
+        dailyFreeAvailable 
       });
       const consumed = await consumeTierFreeBuzz();
       if (consumed) {
         await handleBuzz();
         await updateDailyBuzzCounter();
+        
+        // 🆕 MARK DAILY FREE AS USED (unified gate)
+        await markDailyFreeUsed('tier');
+        
         onSuccess();
+        // 📳 Stop haptic pulse on success
+        buzzHapticPulse.stop();
         // 🔥 Evento per sincronizzare il contatore nella BuzzPage
         window.dispatchEvent(new CustomEvent('buzzCompleted'));
         // 🌑 Shadow Protocol v3 - Trigger contestuale BUZZ
@@ -313,12 +355,13 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
             tierFreeBuzzRemaining: tierFreeBuzzRemaining - 1,
             tierWeeklyLimit,
             grantFreeBuzzRemaining: grantRemaining,
-            m1uBalance: unitsData?.balance || 0
+            m1uBalance: unitsData?.balance || 0,
+            dailyFreeMarked: true
           });
         }
         
         if (!__buzz.shown) {
-          toast.success(`BUZZ gratuito! (${tierFreeBuzzRemaining - 1}/${tierWeeklyLimit} rimasti)`);
+          toast.success(`BUZZ gratuito del giorno! (${tierFreeBuzzRemaining - 1}/${tierWeeklyLimit} tier rimasti)`);
         }
         return;
       }
@@ -328,13 +371,23 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     // =========================================================================
     // PRIORITÀ 2: BUZZ da premi (marker, XP, etc.)
     // =========================================================================
-    if (hasGrantFreeBuzz) {
-      console.log('🎁 M1SSION™ GRANT FREE BUZZ: Using reward grant', { remaining: grantRemaining });
+    // ⚠️ UNIFIED DAILY GATE: Only proceed if dailyFreeAvailable === true
+    if (dailyFreeAvailable && hasGrantFreeBuzz) {
+      console.log('🎁 M1SSION™ GRANT FREE BUZZ: Using reward grant', { 
+        remaining: grantRemaining,
+        dailyFreeAvailable 
+      });
       const consumed = await consumeGrantFreeBuzz();
       if (consumed) {
         await handleBuzz();
         await updateDailyBuzzCounter();
+        
+        // 🆕 MARK DAILY FREE AS USED (unified gate)
+        await markDailyFreeUsed('grant');
+        
         onSuccess();
+        // 📳 Stop haptic pulse on success
+        buzzHapticPulse.stop();
         // 🔥 Evento per sincronizzare il contatore nella BuzzPage
         window.dispatchEvent(new CustomEvent('buzzCompleted'));
         // 🌑 Shadow Protocol v3 - Trigger contestuale BUZZ
@@ -350,16 +403,19 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
             source: 'GRANT_FREE',
             tierFreeBuzzRemaining,
             grantFreeBuzzRemaining: grantRemaining - 1,
-            m1uBalance: unitsData?.balance || 0
+            m1uBalance: unitsData?.balance || 0,
+            dailyFreeMarked: true
           });
         }
         
         if (!__buzz.shown) {
-          toast.success('BUZZ gratuito (premio) utilizzato!');
+          toast.success('BUZZ gratuito del giorno (premio) utilizzato!');
         }
         return;
       } else {
         console.error('🔴 M1SSION™ GRANT FREE BUZZ: Failed to consume grant');
+        // 📳 Stop haptic pulse on error
+        buzzHapticPulse.stop();
         toast.error('Errore nell\'uso del BUZZ gratuito');
         return;
       }
@@ -403,6 +459,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         required: costM1U,
         available: currentBalance
       });
+      // 📳 Stop haptic pulse on insufficient balance
+      buzzHapticPulse.stop();
       showInsufficientM1UToast(costM1U, currentBalance);
       // 🎉 Progress Feedback - Insufficient M1U event
       emitGameEvent('BUZZ_INSUFFICIENT_M1U', { required: costM1U, available: currentBalance });
@@ -427,12 +485,16 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
 
       if (updateError) {
         console.error('❌ M1SSION™ M1U BUZZ: Update error', updateError);
+        // 📳 Stop haptic pulse on error
+        buzzHapticPulse.stop();
         toast.error('Errore nel processare il pagamento M1U');
         return;
       }
 
       if (!updatedProfile) {
         console.error('❌ M1SSION™ M1U BUZZ: No profile returned after update');
+        // 📳 Stop haptic pulse on error
+        buzzHapticPulse.stop();
         toast.error('Errore nel processare il pagamento M1U');
         return;
       }
@@ -458,6 +520,9 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       await refetchM1U();
       
       onSuccess();
+      
+      // 📳 Stop haptic pulse on success
+      buzzHapticPulse.stop();
       
       // ✅ Evento per animazione slot machine nel pill M1U
       window.dispatchEvent(new CustomEvent('buzzClueCreated', {
@@ -494,6 +559,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
 
     } catch (error: any) {
       console.error('❌ M1SSION™ M1U BUZZ: Exception during payment', error);
+      // 📳 Stop haptic pulse on error
+      buzzHapticPulse.stop();
       toast.error('Errore durante il BUZZ. Riprova.');
     }
   };
