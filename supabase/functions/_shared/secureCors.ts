@@ -18,6 +18,9 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:8788',
   'http://127.0.0.1:5173',
+  // Capacitor iOS native apps
+  'capacitor://localhost',
+  'ionic://localhost',
   // Capacitor apps (no origin for native)
   null,
 ];
@@ -51,9 +54,18 @@ export function getSecureCorsHeaders(origin: string | null): Record<string, stri
   };
   
   if (isOriginAllowed(origin)) {
-    // Set specific origin (never '*' when we need credentials)
-    headers['Access-Control-Allow-Origin'] = origin || 'https://m1ssion.eu';
-    headers['Access-Control-Allow-Credentials'] = 'true';
+    // 🔧 FIX: Per Capacitor/native apps (origin null), usa '*' perché non c'è un origin da matchare
+    // Per web apps, usa l'origin specifico
+    if (origin === null) {
+      // Native app (Capacitor) - no origin header sent
+      headers['Access-Control-Allow-Origin'] = '*';
+      // Note: quando usiamo '*', non possiamo usare credentials=true
+      // Ma per native apps questo non è un problema perché il browser CORS check non si applica
+    } else {
+      // Web app - use specific origin
+      headers['Access-Control-Allow-Origin'] = origin;
+      headers['Access-Control-Allow-Credentials'] = 'true';
+    }
   } else {
     // For unknown origins, don't allow access
     // This will cause browser to block the request
