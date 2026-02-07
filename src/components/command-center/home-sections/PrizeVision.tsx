@@ -335,7 +335,15 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
                   </motion.div>
 
                   {/* Disclaimer Overlay */}
-                  <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium">
+                  <div 
+                    className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-[14px] md:text-[18px] font-medium"
+                    style={{
+                      background: 'linear-gradient(90deg, #FFFFFF 0%, #A0A0A0 50%, #808080 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}
+                  >
                     Image for illustrative purposes only
                   </div>
                 </div>

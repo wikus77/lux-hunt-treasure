@@ -64,37 +64,41 @@ export function useCashbackWallet(): CashbackWallet {
   // ACTIVE MODE: Logica reale quando cashback è abilitato
   // ========================================================================
 
-  // 🔥 FIX: Claim disponibile SOLO LA DOMENICA (1 volta a settimana)
+  // 🔥 FIX: Claim disponibile DOMENICA + giorni successivi se non riscattato
   const now = new Date();
   const isSunday = now.getDay() === 0; // 0 = Domenica
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  const daysSinceLastClaim = lastClaimAt 
+    ? Math.floor((now.getTime() - lastClaimAt.getTime()) / (24 * 60 * 60 * 1000))
+    : Infinity;
   
   // Calcola se può fare claim:
   // 1. Deve avere cashback accumulato
-  // 2. Deve essere DOMENICA
-  // 3. Non deve aver già fatto claim questa settimana (7 giorni dall'ultimo)
-  const canClaim = accumulatedM1U > 0 && isSunday && (
+  // 2. REGOLA: Domenica è il giorno principale per claim
+  //    MA se non riscattato domenica, può riscattare nei giorni successivi
+  //    fino al prossimo riscatto
+  // 3. Condizioni:
+  //    - Mai fatto claim prima → può riscattare sempre (appena ha M1U)
+  //    - Ultimo claim >= 7 giorni fa → può riscattare (ha passato una domenica)
+  //    - Oggi è Domenica E ultimo claim >= 7 giorni fa → può riscattare
+  const canClaim = accumulatedM1U > 0 && (
     lastClaimAt === null || 
-    now.getTime() - lastClaimAt.getTime() >= 7 * 24 * 60 * 60 * 1000
+    daysSinceLastClaim >= 7
   );
 
-  // Calcola prossima domenica disponibile per claim
-  const getNextSunday = (): Date => {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const daysUntilSunday = dayOfWeek === 0 ? 7 : 7 - dayOfWeek; // Se oggi è domenica, prossima è tra 7 giorni
-    const nextSunday = new Date(today);
-    nextSunday.setDate(today.getDate() + daysUntilSunday);
-    nextSunday.setHours(0, 0, 0, 0);
-    return nextSunday;
+  // Calcola quando sarà disponibile il prossimo claim
+  const getNextClaimDate = (): Date | null => {
+    if (!lastClaimAt) return null; // Mai fatto claim, disponibile ora
+    
+    // Prossimo claim disponibile: 7 giorni dopo l'ultimo
+    const nextAvailable = new Date(lastClaimAt.getTime() + sevenDaysMs);
+    
+    if (nextAvailable <= now) return null; // Già disponibile
+    return nextAvailable;
   };
 
-  // Se ha già fatto claim questa settimana, prossima domenica
-  // Altrimenti, se non è domenica, prossima domenica
-  const nextClaimAvailable = lastClaimAt && (now.getTime() - lastClaimAt.getTime() < 7 * 24 * 60 * 60 * 1000)
-    ? getNextSunday()
-    : !isSunday 
-      ? getNextSunday()
-      : null;
+  // Se non può fare claim, calcola quando sarà disponibile
+  const nextClaimAvailable = canClaim ? null : getNextClaimDate();
 
   // Carica dati wallet
   const loadWallet = useCallback(async () => {

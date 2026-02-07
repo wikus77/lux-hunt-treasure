@@ -134,23 +134,18 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
     }
   };
 
-  // Format next claim date - SOLO DOMENICA
+  // Format next claim date
   const formatNextClaim = () => {
     if (!nextClaimAvailable) {
-      // Se oggi è domenica e può riscattare
-      const isSunday = new Date().getDay() === 0;
-      return isSunday ? 'Disponibile oggi!' : 'Solo di Domenica';
+      return 'Disponibile ora!';
     }
     const now = new Date();
     const diff = nextClaimAvailable.getTime() - now.getTime();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
     if (days <= 0) return 'Disponibile';
-    if (days === 1) return 'Domani (Dom)';
-    return `Domenica (${days}g)`;
+    if (days === 1) return 'Domani';
+    return `Tra ${days} giorni`;
   };
-  
-  // Check if today is Sunday
-  const isSunday = new Date().getDay() === 0;
 
   return (
     <>
@@ -356,14 +351,12 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
                   </motion.button>
                 </div>
 
-                {/* Info - SOLO DOMENICA */}
+                {/* Info */}
                 {!canClaim && (
                   <p className="relative text-center text-white/50 text-xs mt-5">
-                    {!isSunday 
-                      ? '⏰ Il riscatto è disponibile solo di Domenica'
-                      : nextClaimAvailable 
-                        ? `Prossimo riscatto: ${formatNextClaim()}`
-                        : 'Accumula cashback per riscattare'
+                    {nextClaimAvailable 
+                      ? `⏰ Prossimo riscatto: ${formatNextClaim()}`
+                      : 'Accumula cashback per riscattare'
                     }
                   </p>
                 )}
