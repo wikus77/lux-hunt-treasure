@@ -112,13 +112,33 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
     }
   }, [accumulatedM1U, isAnimating]);
 
-  // Handle claim
+  // Handle claim with better error handling
   const handleClaim = async () => {
-    if (!canClaim || isClaiming) return;
+    console.log('[CashbackVaultPill] handleClaim called', { canClaim, isClaiming, accumulatedM1U });
+    
+    if (isClaiming) {
+      console.log('[CashbackVaultPill] Already claiming, skipping');
+      return;
+    }
+    
+    // Se il pulsante è disabilitato ma l'utente è riuscito a premere, mostra motivo
+    if (!canClaim) {
+      if (accumulatedM1U <= 0) {
+        toast.error('Nessun cashback da riscattare', { description: 'Accumula cashback giocando!' });
+      } else if (nextClaimAvailable) {
+        toast.error('Riscatto non ancora disponibile', { 
+          description: `Prossimo riscatto: ${formatNextClaim()}` 
+        });
+      }
+      return;
+    }
 
     setIsClaiming(true);
     try {
+      console.log('[CashbackVaultPill] Calling claimCashback...');
       const result = await claimCashback();
+      console.log('[CashbackVaultPill] claimCashback result:', result);
+      
       if (result) {
         toast.success(`🎉 Cashback riscattato!`, {
           description: `+${result.credited_m1u.toLocaleString()} M1U aggiunti al tuo saldo`,
@@ -126,9 +146,19 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
         setShowClaimModal(false);
         // Trigger M1U pill refresh
         window.dispatchEvent(new CustomEvent('m1u-balance-updated'));
+        window.dispatchEvent(new CustomEvent('m1u-credited', { 
+          detail: { amount: result.credited_m1u } 
+        }));
+      } else {
+        toast.error('Riscatto fallito', { 
+          description: 'Controlla la connessione e riprova' 
+        });
       }
-    } catch (err) {
-      toast.error('Errore nel riscatto del cashback');
+    } catch (err: any) {
+      console.error('[CashbackVaultPill] Claim error:', err);
+      toast.error('Errore nel riscatto', { 
+        description: err?.message || 'Riprova più tardi' 
+      });
     } finally {
       setIsClaiming(false);
     }

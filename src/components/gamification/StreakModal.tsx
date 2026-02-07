@@ -49,23 +49,46 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
   const [canCheckIn, setCanCheckIn] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // 🆕 FIX 16/01/2026: Funzione per award M1U
-  const awardM1U = async (amount: number, source: string): Promise<boolean> => {
+  // 🆕 FIX 07/02/2026: Funzione per award M1U - FIXED parameter name
+  const awardM1U = async (amount: number, reason: string): Promise<boolean> => {
     if (!user || amount <= 0) return false;
     
     try {
+      // 🔧 FIX: Il parametro è p_reason, non p_source!
       const { error } = await supabase.rpc('admin_credit_m1u', {
         p_user_id: user.id,
         p_amount: amount,
-        p_source: source
+        p_reason: reason
       });
       
       if (error) {
         console.warn('[StreakModal] M1U award failed:', error);
+        // Fallback: prova direct update
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('m1_units')
+            .eq('id', user.id)
+            .single();
+          
+          if (profile) {
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ m1_units: (profile.m1_units || 0) + amount })
+              .eq('id', user.id);
+            
+            if (!updateError) {
+              console.log(`[StreakModal] ✅ +${amount} M1U awarded via fallback (${reason})`);
+              return true;
+            }
+          }
+        } catch (fallbackErr) {
+          console.error('[StreakModal] Fallback M1U award failed:', fallbackErr);
+        }
         return false;
       }
       
-      console.log(`[StreakModal] ✅ +${amount} M1U awarded (${source})`);
+      console.log(`[StreakModal] ✅ +${amount} M1U awarded (${reason})`);
       return true;
     } catch (err) {
       console.error('[StreakModal] M1U award error:', err);

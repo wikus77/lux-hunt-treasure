@@ -34,7 +34,7 @@ export const M1UShopFlipOverlay: React.FC<M1UShopFlipOverlayProps> = ({
     if (!container) {
       container = document.createElement('div');
       container.id = 'm1-m1ushop-portal';
-      container.style.cssText = 'position:fixed;inset:0;z-index:99999;pointer-events:none;';
+      container.style.cssText = 'position:fixed;inset:0;z-index:999999;pointer-events:none;';
       document.body.appendChild(container);
     }
     setPortalContainer(container);
