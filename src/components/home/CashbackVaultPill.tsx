@@ -34,6 +34,7 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
     canClaim,
     nextClaimAvailable,
     isLoading,
+    error: walletError,
     claimCashback,
     refresh,
   } = useCashbackWallet();
@@ -150,8 +151,9 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
           detail: { amount: result.credited_m1u } 
         }));
       } else {
+        // Show the actual error from the hook
         toast.error('Riscatto fallito', { 
-          description: 'Controlla la connessione e riprova' 
+          description: walletError || 'Controlla la connessione e riprova' 
         });
       }
     } catch (err: any) {
@@ -179,89 +181,73 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
 
   return (
     <>
-      {/* Pill principale - Azzurro/Cyan gradiente Rosa, semitrasparente */}
+      {/* Pill principale - COMPATTO come Streak/Shop (rounded-full) */}
       <motion.div
         className={`
-          relative overflow-hidden rounded-2xl
-          bg-gradient-to-br from-cyan-500/30 via-blue-500/25 to-pink-500/30
-          backdrop-blur-md border border-cyan-400/30
-          shadow-lg shadow-cyan-500/10
+          relative overflow-hidden rounded-full
           cursor-pointer
-          ${isAnimating ? 'ring-2 ring-cyan-400/50 ring-offset-2 ring-offset-transparent' : ''}
+          ${isAnimating ? 'ring-2 ring-cyan-400/50' : ''}
           ${className}
         `}
-        initial={{ opacity: 0, y: 10 }}
+        style={{
+          background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.25), rgba(236, 72, 153, 0.2))',
+          border: '1px solid rgba(0, 209, 255, 0.5)',
+          boxShadow: '0 2px 16px rgba(0, 209, 255, 0.4), inset 0 0 24px rgba(236, 72, 153, 0.15)',
+          backdropFilter: 'blur(12px)',
+        }}
+        initial={{ opacity: 0, scale: 0.8 }}
         animate={{ 
           opacity: 1, 
-          y: 0,
-          scale: isAnimating ? [1, 1.02, 1] : 1,
+          scale: isAnimating ? [1, 1.05, 1] : 1,
         }}
         transition={{ 
           duration: isAnimating ? 0.3 : 0.3,
           repeat: isAnimating ? 3 : 0,
         }}
         onClick={() => accumulatedM1U > 0 && setShowClaimModal(true)}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
-        {/* Glow effect - azzurro/rosa */}
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-pink-400/15 to-cyan-400/10 animate-pulse" />
-        
-        <div className="relative px-3 py-2 flex items-center justify-between gap-2">
+        <div className="relative px-4 py-2 flex items-center gap-2">
           {/* Icon */}
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <motion.div 
-                className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center shadow-lg shadow-cyan-500/30"
-                animate={isAnimating ? { rotate: [0, 10, -10, 0] } : {}}
-                transition={{ duration: 0.2, repeat: isAnimating ? 5 : 0 }}
-              >
-                <Vault className="w-4 h-4 text-white" />
-              </motion.div>
-              {canClaim && accumulatedM1U > 0 && (
-                <motion.div
-                  className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-black"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                />
-              )}
-            </div>
-
-            {/* Content */}
-            <div className="flex flex-col">
-              <span className="text-[10px] text-cyan-200/80 font-medium leading-tight">
-                Cashback
-              </span>
-              <div className="flex items-center gap-1">
-                {/* 🎰 Slot machine number display */}
-                <motion.span 
-                  className={`text-sm font-bold ${isAnimating ? 'text-cyan-300' : 'text-white'}`}
-                  animate={isAnimating ? { 
-                    color: ['#fff', '#22d3ee', '#f472b6', '#22d3ee', '#fff']
-                  } : {}}
-                  transition={{ duration: 1.2 }}
-                >
-                  {isLoading ? '...' : `+${displayedValue.toLocaleString()}`}
-                </motion.span>
-                <span className="text-[10px] text-cyan-300 font-medium">M1U</span>
-              </div>
-            </div>
+          <div className="relative">
+            <motion.div 
+              className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center"
+              style={{ boxShadow: '0 0 8px rgba(0, 209, 255, 0.6)' }}
+              animate={isAnimating ? { rotate: [0, 10, -10, 0] } : {}}
+              transition={{ duration: 0.2, repeat: isAnimating ? 5 : 0 }}
+            >
+              <Vault className="w-3 h-3 text-white" />
+            </motion.div>
+            {canClaim && accumulatedM1U > 0 && (
+              <motion.div
+                className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-black"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+              />
+            )}
           </div>
 
-          {/* Claim status - compact */}
-          {canClaim && accumulatedM1U > 0 ? (
+            {/* Content - COMPATTO: solo valore */}
+          <motion.span 
+            className={`text-sm font-bold font-orbitron ${isAnimating ? 'text-cyan-300' : 'text-white/90'}`}
+            animate={isAnimating ? { 
+              color: ['#fff', '#22d3ee', '#f472b6', '#22d3ee', '#fff']
+            } : {}}
+            transition={{ duration: 1.2 }}
+          >
+            {isLoading ? '...' : `+${displayedValue}`}
+          </motion.span>
+          
+          {/* Indicator se può riscattare */}
+          {canClaim && accumulatedM1U > 0 && (
             <motion.div
-              className="flex items-center gap-1 px-1.5 py-0.5 bg-green-500/20 rounded-lg"
-              whileHover={{ scale: 1.05 }}
-            >
-              <Gift className="w-2.5 h-2.5 text-green-400" />
-              <ChevronRight className="w-2.5 h-2.5 text-green-400" />
-            </motion.div>
-          ) : nextClaimAvailable && nextClaimAvailable > new Date() ? (
-            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-500/20 rounded-lg">
-              <Clock className="w-2.5 h-2.5 text-gray-400" />
-            </div>
-          ) : null}
+              className="w-2 h-2 bg-green-500 rounded-full"
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+              style={{ boxShadow: '0 0 6px rgba(34, 197, 94, 0.8)' }}
+            />
+          )}
         </div>
       </motion.div>
 

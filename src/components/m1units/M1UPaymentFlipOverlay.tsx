@@ -24,7 +24,7 @@ export const M1UPaymentFlipOverlay: React.FC<M1UPaymentFlipOverlayProps> = ({
     if (!container) {
       container = document.createElement('div');
       container.id = 'm1-payment-portal';
-      container.style.cssText = 'position:fixed;inset:0;z-index:99999;pointer-events:none;';
+      container.style.cssText = 'position:fixed;inset:0;z-index:9999999;pointer-events:none;';
       document.body.appendChild(container);
     }
     setPortalContainer(container);
@@ -74,7 +74,7 @@ export const M1UPaymentFlipOverlay: React.FC<M1UPaymentFlipOverlayProps> = ({
             style={{
               position: 'fixed',
               inset: 0,
-              zIndex: 99998,
+              zIndex: 9999998,
               backgroundColor: 'rgba(10, 10, 15, 0.75)',
               backdropFilter: 'blur(50px) saturate(180%)',
               WebkitBackdropFilter: 'blur(50px) saturate(180%)',
@@ -105,7 +105,7 @@ export const M1UPaymentFlipOverlay: React.FC<M1UPaymentFlipOverlayProps> = ({
             style={{
               position: 'fixed',
               inset: 0,
-              zIndex: 99999,
+              zIndex: 9999999,
               pointerEvents: 'auto',
               transformOrigin: '50% 50%',
               willChange: 'transform, opacity',

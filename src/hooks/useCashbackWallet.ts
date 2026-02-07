@@ -221,9 +221,19 @@ export function useCashbackWallet(): CashbackWallet {
     await accrueInternal('aion', params.costEur, params.tier || userTier);
   }, [accrueInternal, userTier]);
 
-  // Claim cashback
+  // Claim cashback with detailed error handling
   const claimCashback = useCallback(async (): Promise<{ credited_m1u: number; new_balance: number } | null> => {
-    if (!user?.id || !canClaim) return null;
+    console.log('[useCashbackWallet] claimCashback called', { userId: user?.id, canClaim, accumulatedM1U });
+    
+    if (!user?.id) {
+      setError('Utente non autenticato');
+      return null;
+    }
+    
+    if (!canClaim) {
+      setError('Riscatto non disponibile');
+      return null;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -231,25 +241,44 @@ export function useCashbackWallet(): CashbackWallet {
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.access_token) {
-        setError('Sessione scaduta');
+        setError('Sessione scaduta - rieffettua login');
         return null;
       }
 
+      console.log('[useCashbackWallet] Invoking cashback-claim function...');
+      
       const response = await supabase.functions.invoke('cashback-claim', {
         headers: {
           Authorization: `Bearer ${session.session.access_token}`
         }
       });
 
+      console.log('[useCashbackWallet] Response:', { error: response.error, data: response.data });
+
+      // Check for function invoke error
       if (response.error) {
-        console.error('[useCashbackWallet] Claim error:', response.error);
-        setError(response.error.message || 'Errore nel claim');
+        console.error('[useCashbackWallet] Function invoke error:', response.error);
+        setError(response.error.message || 'Errore connessione server');
         return null;
       }
 
       const result = response.data;
+      
+      // Check if response contains an error (400/500 status from function)
+      if (result?.error) {
+        console.error('[useCashbackWallet] Server returned error:', result.error);
+        setError(result.error);
+        return null;
+      }
+      
+      // Check if we got valid data
+      if (!result?.success && !result?.credited_m1u) {
+        console.error('[useCashbackWallet] Invalid response data:', result);
+        setError('Risposta server non valida');
+        return null;
+      }
 
-      // Aggiorna stato locale
+      // Success!
       setAccumulatedM1U(0);
       setLastClaimAt(new Date());
 
@@ -265,12 +294,12 @@ export function useCashbackWallet(): CashbackWallet {
 
     } catch (err: any) {
       console.error('[useCashbackWallet] Claim exception:', err);
-      setError('Errore imprevisto nel claim');
+      setError(err?.message || 'Errore imprevisto nel claim');
       return null;
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, canClaim]);
+  }, [user?.id, canClaim, accumulatedM1U]);
 
   return {
     accumulatedM1U,
