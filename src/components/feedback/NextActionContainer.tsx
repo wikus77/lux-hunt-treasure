@@ -148,8 +148,17 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
                   >
                     🎯 NEXT ACTION
                   </p>
-                  {/* GIOCA badge - always visible, red with pulse (20% larger) */}
-                  <span className="px-2 py-1 rounded text-[11px] font-bold bg-red-500/20 text-red-400 animate-pulse">
+                  {/* GIOCA badge - always visible, red with pulse (larger + more visible) */}
+                  <span 
+                    className="px-2.5 py-1.5 rounded-lg text-[13px] font-extrabold animate-pulse"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(220, 38, 38, 0.45) 100%)',
+                      color: '#FF6B6B',
+                      border: '1px solid rgba(239, 68, 68, 0.5)',
+                      textShadow: '0 0 8px rgba(239, 68, 68, 0.6)',
+                      boxShadow: '0 0 12px rgba(239, 68, 68, 0.3)',
+                    }}
+                  >
                     GIOCA
                   </span>
                   {isUrgent && (

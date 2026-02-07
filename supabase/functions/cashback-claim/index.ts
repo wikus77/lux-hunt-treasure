@@ -78,29 +78,10 @@ serve(async (req) => {
       );
     }
 
-    // 🔥 VERIFICA CHE SIA DOMENICA - Claim disponibile SOLO la Domenica
+    // 🔥 FIX: Claim disponibile ogni 7 giorni dall'ultimo riscatto
+    // Se non riscatti la domenica, puoi farlo nei giorni successivi
     const now = new Date();
-    const isSunday = now.getUTCDay() === 0; // 0 = Domenica (UTC per coerenza server)
     
-    if (!isSunday) {
-      // Calcola prossima domenica
-      const daysUntilSunday = 7 - now.getUTCDay();
-      const nextSunday = new Date(now);
-      nextSunday.setUTCDate(now.getUTCDate() + daysUntilSunday);
-      nextSunday.setUTCHours(0, 0, 0, 0);
-      
-      console.log(`[cashback-claim] ❌ Claim rejected: not Sunday (today is day ${now.getUTCDay()})`);
-      
-      return new Response(
-        JSON.stringify({ 
-          error: "Il riscatto del cashback è disponibile solo di Domenica!",
-          next_claim_available: nextSunday.toISOString(),
-          today: now.toISOString()
-        }),
-        { status: 400, headers: { ...secureCors(req), "Content-Type": "application/json" } }
-      );
-    }
-
     // Verifica cooldown 7 giorni
     if (wallet.last_claim_at) {
       const lastClaim = new Date(wallet.last_claim_at);
