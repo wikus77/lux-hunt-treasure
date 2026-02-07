@@ -11,6 +11,7 @@ import PulseEnergyBadge from '@/components/pulse/PulseEnergyBadge';
 import { usePulseEnergy } from '@/hooks/usePulseEnergy';
 import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';
 import { HelpModal } from '@/components/help/HelpModal';
+import { LearnModal } from '@/components/learn/LearnModal';
 
 interface AgentProfileContentProps {
   profileImage?: string | null;
@@ -27,6 +28,7 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
   const { currentRank, pulseEnergy } = usePulseEnergy();
   const { subscription } = useProfileSubscription();
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showLearnModal, setShowLearnModal] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -210,7 +212,7 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
         <GlassCard style={{ marginBottom: '16px', padding: 0 }}>
           <MenuItem icon={HelpCircle} label="Aiuto" onClick={() => setShowHelpModal(true)} />
           <MenuItem icon={FileText} label="Documenti Legali" onClick={() => goTo('/settings/legal')} />
-          <MenuItem icon={GraduationCap} label="Impara" onClick={() => goTo('/learn')} />
+          <MenuItem icon={GraduationCap} label="Impara" onClick={() => setShowLearnModal(true)} />
           <MenuItem icon={Mail} label="Posta in arrivo" onClick={() => goTo('/notifications')} badge={3} last />
         </GlassCard>
 
@@ -234,6 +236,12 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
       <HelpModal 
         isOpen={showHelpModal} 
         onClose={() => setShowHelpModal(false)} 
+      />
+
+      {/* Learn Modal - Fullscreen identico a M1U Shop */}
+      <LearnModal 
+        isOpen={showLearnModal} 
+        onClose={() => setShowLearnModal(false)} 
       />
     </div>
   );
