@@ -10,8 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import PulseEnergyBadge from '@/components/pulse/PulseEnergyBadge';
 import { usePulseEnergy } from '@/hooks/usePulseEnergy';
 import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';
+import { useProfileRealtime } from '@/hooks/useProfileRealtime';
 import { HelpModal } from '@/components/help/HelpModal';
 import { LearnModal } from '@/components/learn/LearnModal';
+import { InviteFriendsModal } from '@/components/invite/InviteFriendsModal';
 
 interface AgentProfileContentProps {
   profileImage?: string | null;
@@ -27,8 +29,10 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
   const { toast } = useToast();
   const { currentRank, pulseEnergy } = usePulseEnergy();
   const { subscription } = useProfileSubscription();
+  const { profileData } = useProfileRealtime();
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showLearnModal, setShowLearnModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -47,10 +51,20 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
     setTimeout(() => navigate(path), 50);
   };
 
-  // User info
-  const displayName = user?.user_metadata?.full_name || 
-    `${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}`.trim() || 'Agente';
-  const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'agent';
+  // User info - Priorità: DB profiles → auth metadata → fallback
+  // 🔧 FIX: Read from profiles table first (real data), then auth metadata, then fallback
+  const displayName = 
+    profileData?.full_name ||  // 1. DB profiles (real user data)
+    user?.user_metadata?.full_name ||  // 2. Auth metadata
+    `${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}`.trim() ||  // 3. First + Last
+    user?.email?.split('@')[0] ||  // 4. Email prefix
+    'Agente';  // 5. Final fallback
+  
+  const username = 
+    profileData?.agent_code ||  // 1. Agent code from DB
+    user?.user_metadata?.username ||  // 2. Auth metadata username
+    user?.email?.split('@')[0] ||  // 3. Email prefix
+    'agent';  // 4. Final fallback
 
   // Tier
   const tier = subscription?.plan || user?.user_metadata?.subscription_tier || 'Base';
@@ -185,7 +199,7 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '2px' }}>Piano attivo</p>
           </GlassCard>
           
-          <GlassCard onClick={() => goTo('/referral')}>
+          <GlassCard onClick={() => setShowInviteModal(true)}>
             <Users style={{ width: '28px', height: '28px', color: '#60a5fa', marginBottom: '8px' }} />
             <p style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 600 }}>Invita amici</p>
             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '2px' }}>Guadagna M1U</p>
@@ -242,6 +256,12 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
       <LearnModal 
         isOpen={showLearnModal} 
         onClose={() => setShowLearnModal(false)} 
+      />
+
+      {/* Invite Friends Modal - Fullscreen identico a M1U Shop */}
+      <InviteFriendsModal 
+        isOpen={showInviteModal} 
+        onClose={() => setShowInviteModal(false)} 
       />
     </div>
   );
