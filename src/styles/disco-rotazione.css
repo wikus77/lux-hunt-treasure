@@ -1,0 +1,417 @@
+/* © 2026 M1SSION™ — NIYVORA KFT — Joseph MULÉ */
+/* DISCO ROTAZIONE - White ring with blue-violet neon glow */
+/* Based on BUZZ TRON Disc but with inverted color scheme */
+
+:root {
+  --disco-white: #ffffff;
+  --disco-blue: #00D1FF;
+  --disco-violet: #8B5CF6;
+  --disco-glow: rgba(0, 209, 255, 0.6);
+  --disco-violet-glow: rgba(139, 92, 246, 0.4);
+  --disco-dark: #0A0E14;
+  --disco-darker: #050709;
+  --disco-metal: #1a1a22;
+}
+
+/* Main container */
+.disco-rotazione-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Base Disco */
+.disco-rotazione {
+  position: relative;
+  width: clamp(260px, 60vw, 340px);
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  cursor: default;
+  user-select: none;
+  isolation: isolate;
+  
+  /* Dark metallic gradient base */
+  background: 
+    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at center, var(--disco-metal), var(--disco-darker));
+  
+  /* WHITE outer border with BLUE-VIOLET glow */
+  box-shadow:
+    0 0 0 4px var(--disco-white),
+    0 0 25px var(--disco-glow),
+    0 0 50px var(--disco-violet-glow),
+    0 0 80px rgba(0, 209, 255, 0.2),
+    inset 0 -30px 60px rgba(0, 0, 0, 0.8),
+    inset 0 2px 8px rgba(255, 255, 255, 0.05);
+  
+  transition: box-shadow 0.3s ease;
+}
+
+/* Rotation wrapper - spins based on progress */
+.disco-rotazione-rotating {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+/* Panel lines - white/blue segmented details */
+.disco-rotazione::before {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: 
+    linear-gradient(90deg, transparent 48%, rgba(255, 255, 255, 0.06) 49%, rgba(255, 255, 255, 0.06) 51%, transparent 52%),
+    linear-gradient(0deg, transparent 48%, rgba(255, 255, 255, 0.06) 49%, rgba(255, 255, 255, 0.06) 51%, transparent 52%),
+    linear-gradient(45deg, transparent 48%, rgba(0, 209, 255, 0.04) 49%, rgba(0, 209, 255, 0.04) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(139, 92, 246, 0.04) 49%, rgba(139, 92, 246, 0.04) 51%, transparent 52%);
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Central hole effect */
+.disco-rotazione::after {
+  content: '';
+  position: absolute;
+  inset: 25%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--disco-darker), transparent 70%);
+  box-shadow: 
+    inset 0 0 40px rgba(0, 0, 0, 0.9),
+    inset 0 8px 20px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+/* Content container (counter) */
+.disco-rotazione-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* Counter number - BIG style like loading percentage */
+.disco-counter {
+  font-family: 'Orbitron', 'SF Pro Display', -apple-system, sans-serif;
+  font-size: clamp(56px, 14vw, 80px);
+  font-weight: 200;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 
+    0 0 20px rgba(0, 209, 255, 0.5),
+    0 0 40px rgba(139, 92, 246, 0.3);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+
+.disco-counter.critical {
+  color: #FFD700;
+  text-shadow: 
+    0 0 20px rgba(255, 215, 0, 0.6),
+    0 0 40px rgba(255, 100, 0, 0.4);
+}
+
+.disco-counter.success {
+  color: #4ADE80;
+  text-shadow: 
+    0 0 20px rgba(74, 222, 128, 0.6),
+    0 0 40px rgba(0, 255, 100, 0.4);
+}
+
+.disco-counter.fail {
+  color: #EF4444;
+  text-shadow: 
+    0 0 20px rgba(239, 68, 68, 0.6),
+    0 0 40px rgba(255, 0, 0, 0.4);
+}
+
+/* Internal LED Ring */
+.disco-led-ring {
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.disco-led-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    inset 0 0 12px rgba(0, 209, 255, 0.15),
+    0 0 12px rgba(139, 92, 246, 0.15);
+}
+
+/* Progress arc - conic gradient based on progress */
+.disco-progress-arc {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    var(--disco-blue) 0deg,
+    var(--disco-violet) calc(var(--progress, 0) * 360deg),
+    transparent calc(var(--progress, 0) * 360deg)
+  );
+  -webkit-mask: radial-gradient(circle, transparent calc(50% - 4px), black calc(50% - 4px));
+  mask: radial-gradient(circle, transparent calc(50% - 4px), black calc(50% - 4px));
+  filter: drop-shadow(0 0 15px var(--disco-glow));
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+/* Cardinal dots - white with blue glow */
+.disco-dots {
+  position: absolute;
+  inset: 10%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.disco-dots::before,
+.disco-dots::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--disco-white);
+  box-shadow: 
+    0 0 10px var(--disco-blue),
+    0 0 20px var(--disco-violet-glow);
+}
+
+.disco-dots::before {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.disco-dots::after {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.disco-dots-sides {
+  position: absolute;
+  inset: 10%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.disco-dots-sides::before,
+.disco-dots-sides::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--disco-white);
+  box-shadow: 
+    0 0 10px var(--disco-blue),
+    0 0 20px var(--disco-violet-glow);
+}
+
+.disco-dots-sides::before {
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.disco-dots-sides::after {
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+}
+
+/* Target indicator */
+.disco-target-indicator {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.disco-target-value {
+  color: var(--disco-blue);
+  font-weight: 600;
+}
+
+/* Status messages */
+.disco-status {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.disco-status.running {
+  color: var(--disco-blue);
+}
+
+.disco-status.critical {
+  color: #FFD700;
+  animation: criticalPulse 0.5s ease-in-out infinite;
+}
+
+.disco-status.success {
+  color: #4ADE80;
+}
+
+.disco-status.fail {
+  color: #EF4444;
+}
+
+@keyframes criticalPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Intensity glow states */
+.disco-rotazione.low-intensity {
+  box-shadow:
+    0 0 0 4px var(--disco-white),
+    0 0 20px var(--disco-glow),
+    0 0 40px var(--disco-violet-glow),
+    inset 0 -30px 60px rgba(0, 0, 0, 0.8),
+    inset 0 2px 8px rgba(255, 255, 255, 0.05);
+}
+
+.disco-rotazione.medium-intensity {
+  box-shadow:
+    0 0 0 4px var(--disco-white),
+    0 0 30px var(--disco-glow),
+    0 0 60px var(--disco-violet-glow),
+    0 0 100px rgba(0, 209, 255, 0.25),
+    inset 0 -30px 60px rgba(0, 0, 0, 0.7),
+    inset 0 2px 8px rgba(255, 255, 255, 0.08);
+}
+
+.disco-rotazione.high-intensity {
+  box-shadow:
+    0 0 0 4px var(--disco-white),
+    0 0 40px var(--disco-glow),
+    0 0 80px var(--disco-violet-glow),
+    0 0 120px rgba(139, 92, 246, 0.35),
+    inset 0 -30px 60px rgba(0, 0, 0, 0.6),
+    inset 0 2px 8px rgba(255, 255, 255, 0.1);
+}
+
+/* Instructions */
+.disco-instructions {
+  margin-top: 40px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+.disco-instructions strong {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Buttons */
+.disco-btn {
+  margin-top: 30px;
+  padding: 14px 32px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: white;
+  background: linear-gradient(135deg, var(--disco-blue), var(--disco-violet));
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.disco-btn:active {
+  transform: scale(0.96);
+}
+
+.disco-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.disco-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Result overlay */
+.disco-result-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 14, 20, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 50%;
+  z-index: 20;
+}
+
+.disco-result-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+}
+
+.disco-result-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.disco-result-text.success {
+  color: #4ADE80;
+}
+
+.disco-result-text.fail {
+  color: #EF4444;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .disco-rotazione,
+  .disco-progress-arc,
+  .disco-counter,
+  .disco-status {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* © 2026 M1SSION™ — NIYVORA KFT — Joseph MULÉ */

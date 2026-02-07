@@ -1,9 +1,13 @@
 // © 2025 M1SSION™ – Mission Sync Pull-to-Refresh
 // 🔧 FIX 06/02/2026 v3: PTR FLUIDO - animazioni progressive, no scatti
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+// 🎮 07/02/2026: Replaced Coming Soon with DISCO ROTAZIONE mini-game
+import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { Clock } from 'lucide-react';
+
+// Lazy load the game component
+const DiscoRotazione = lazy(() => import('@/components/games/DiscoRotazione'));
 
 const M1_LOGO_URL = '/icons/icon-m1-512x512.png';
 
@@ -21,16 +25,16 @@ const PULL_TRIGGER = 90;          // Deve tirare 90px per triggerare
 const MAX_PULL = 130;             // Max visual pull
 
 // ═══════════════════════════════════════════════════════════════════════════
-// COMING SOON MODAL - Animazione fluida
+// DISCO ROTAZIONE MODAL - Mini-game fullscreen
 // ═══════════════════════════════════════════════════════════════════════════
-const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+const DiscoRotazioneModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    let container = document.getElementById('m1-comingsoon-portal');
+    let container = document.getElementById('m1-disco-portal');
     if (!container) {
       container = document.createElement('div');
-      container.id = 'm1-comingsoon-portal';
+      container.id = 'm1-disco-portal';
       container.style.cssText = 'position:fixed;inset:0;z-index:99999;pointer-events:none;';
       document.body.appendChild(container);
     }
@@ -45,6 +49,15 @@ const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
     }
   }, [isOpen]);
 
+  const handleSuccess = (score: number) => {
+    console.log('[DiscoRotazione] SUCCESS! Score:', score);
+    // TODO: Award M1U or other reward
+  };
+
+  const handleFail = (score: number) => {
+    console.log('[DiscoRotazione] FAIL! Score:', score);
+  };
+
   if (!portalContainer) return null;
 
   return createPortal(
@@ -57,12 +70,11 @@ const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-            onClick={onClose}
             style={{
               position: 'fixed',
               inset: 0,
               zIndex: 99998,
-              backgroundColor: 'rgba(10, 10, 15, 0.85)',
+              backgroundColor: 'rgba(5, 7, 9, 0.95)',
               backdropFilter: 'blur(40px) saturate(180%)',
               WebkitBackdropFilter: 'blur(40px) saturate(180%)',
               pointerEvents: 'auto',
@@ -92,77 +104,49 @@ const ComingSoonModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
           >
             {/* CONTENT */}
             <div 
-              className="w-full h-full flex flex-col items-center justify-center px-6"
+              className="w-full h-full flex flex-col"
               style={{
-                background: 'linear-gradient(180deg, #0A0E14 0%, #0F1419 50%, #0A0E14 100%)',
+                background: 'linear-gradient(180deg, #0A0E14 0%, #050709 50%, #0A0E14 100%)',
+                paddingTop: 'env(safe-area-inset-top, 47px)',
+                paddingBottom: 'env(safe-area-inset-bottom, 34px)',
               }}
             >
-              {/* Close handle - drag down to close */}
+              {/* Close handle */}
               <motion.div 
-                className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/30 rounded-full cursor-pointer"
+                className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/30 rounded-full cursor-pointer z-50"
+                style={{ top: 'calc(env(safe-area-inset-top, 47px) + 12px)' }}
                 onClick={onClose}
                 whileTap={{ scale: 0.9 }}
               />
               
-              {/* Logo */}
-              <motion.div
-                className="mb-8"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.15, duration: 0.4, ease: 'easeOut' }}
-              >
-                <img 
-                  src={M1_LOGO_URL} 
-                  alt="M1" 
-                  className="w-24 h-24 object-contain"
-                  style={{
-                    filter: 'drop-shadow(0 0 25px rgba(0, 209, 255, 0.6))'
-                  }}
-                />
-              </motion.div>
-              
               {/* Title */}
-              <motion.h1 
-                className="text-4xl font-orbitron font-bold mb-4 text-center"
-                initial={{ y: 30, opacity: 0 }}
+              <motion.div 
+                className="text-center pt-12 pb-4"
+                initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.4, ease: 'easeOut' }}
+                transition={{ delay: 0.2, duration: 0.4 }}
               >
-                <span className="text-[#00D1FF]">COMING</span>
-                <span className="text-white"> SOON</span>
-              </motion.h1>
-              
-              {/* Subtitle */}
-              <motion.p 
-                className="text-white/60 text-center text-lg mb-8 max-w-xs"
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.25, duration: 0.4, ease: 'easeOut' }}
-              >
-                Questa funzionalità sarà disponibile a breve. Stay tuned!
-              </motion.p>
-              
-              {/* Icon */}
-              <motion.div
-                className="w-16 h-16 rounded-full bg-[#00D1FF]/10 border border-[#00D1FF]/30 flex items-center justify-center mb-8"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.3, type: 'spring', stiffness: 300 }}
-              >
-                <Clock className="w-8 h-8 text-[#00D1FF]" />
+                <h1 className="text-xl font-orbitron font-bold">
+                  <span className="text-white">DISCO</span>
+                  <span className="text-[#00D1FF]"> ROTAZIONE</span>
+                </h1>
               </motion.div>
               
-              {/* Close button */}
-              <motion.button
-                onClick={onClose}
-                className="px-8 py-3 bg-[#00D1FF]/10 border border-[#00D1FF]/30 rounded-xl text-[#00D1FF] font-medium"
-                whileTap={{ scale: 0.95 }}
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.35, duration: 0.4, ease: 'easeOut' }}
-              >
-                Chiudi
-              </motion.button>
+              {/* Game Container */}
+              <div className="flex-1 flex items-center justify-center overflow-hidden">
+                <Suspense fallback={
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="w-12 h-12 border-2 border-[#00D1FF]/30 border-t-[#00D1FF] rounded-full animate-spin mb-4" />
+                    <p className="text-white/50 text-sm">Caricamento...</p>
+                  </div>
+                }>
+                  <DiscoRotazione 
+                    onClose={onClose}
+                    onSuccess={handleSuccess}
+                    onFail={handleFail}
+                  />
+                </Suspense>
+              </div>
             </div>
           </motion.div>
         </>
@@ -370,8 +354,8 @@ export const MissionSync: React.FC<MissionSyncProps> = ({ onRefresh, children, d
         {children}
       </motion.div>
       
-      {/* Coming Soon Modal */}
-      <ComingSoonModal 
+      {/* Disco Rotazione Game Modal */}
+      <DiscoRotazioneModal 
         isOpen={showComingSoon} 
         onClose={() => setShowComingSoon(false)} 
       />
