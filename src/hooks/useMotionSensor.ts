@@ -8,7 +8,7 @@ import { isCapacitorNative, isCapacitorIOS } from '@/utils/capacitor';
 export interface MotionData {
   rotationRate: { alpha: number; beta: number; gamma: number };
   acceleration: { x: number; y: number; z: number };
-  tilt: { beta: number; gamma: number }; // For braking
+  tilt: { beta: number; gamma: number }; // Tilt angles in DEGREES (beta = forward/back, gamma = left/right)
 }
 
 interface UseMotionSensorReturn {
@@ -105,27 +105,32 @@ export const useMotionSensor = (): UseMotionSensorReturn => {
         smoothedVelocityRef.current * (1 - SMOOTHING_FACTOR) + 
         rawVelocity * SMOOTHING_FACTOR;
 
-      // Calculate tilt brake force from device orientation
-      // When phone is tilted forward (negative beta) = braking
-      const tiltBeta = acceleration.y || 0;
-      const tiltGamma = acceleration.x || 0;
+      // Calculate tilt angles from accelerometer (approximation in degrees)
+      // When phone is upright: y ≈ -9.8, z ≈ 0
+      // When tilted forward: y decreases, z increases (negative)
+      const ax = acceleration.x || 0;
+      const ay = acceleration.y || 0;
+      const az = acceleration.z || 0;
       
-      // Normalize tilt to 0-1 brake force
-      // Tilting forward (leaning phone down) = stronger brake
-      const normalizedTilt = Math.min(1, Math.max(0, 
-        (Math.abs(tiltBeta) / 10) + (Math.abs(tiltGamma) / 10)
-      )) * 0.5; // Max 50% from tilt alone
+      // Calculate tilt angles in degrees
+      // Beta: forward/backward tilt (positive = tilted forward/face down)
+      // Gamma: left/right tilt
+      const tiltBetaDeg = Math.atan2(-az, -ay) * (180 / Math.PI);
+      const tiltGammaDeg = Math.atan2(ax, Math.sqrt(ay * ay + az * az)) * (180 / Math.PI);
+      
+      // Normalize tilt to 0-1 brake force (based on how much phone is tilted from vertical)
+      const normalizedTilt = Math.min(1, Math.max(0, Math.abs(tiltBetaDeg) / 45));
 
       setMotionData({
         rotationRate: { alpha, beta, gamma },
         acceleration: { 
-          x: acceleration.x || 0, 
-          y: acceleration.y || 0, 
-          z: acceleration.z || 0 
+          x: ax, 
+          y: ay, 
+          z: az 
         },
         tilt: { 
-          beta: tiltBeta, 
-          gamma: tiltGamma 
+          beta: tiltBetaDeg,   // degrees from vertical
+          gamma: tiltGammaDeg  // degrees left/right
         }
       });
 

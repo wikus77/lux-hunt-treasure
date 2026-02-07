@@ -25,10 +25,10 @@
   box-sizing: border-box;
 }
 
-/* Base Disco */
+/* Base Disco - SAME SIZE AS BUZZ */
 .disco-rotazione {
   position: relative;
-  width: clamp(260px, 60vw, 340px);
+  width: clamp(280px, 55vw, 380px); /* Matches .tron-disc exactly */
   aspect-ratio: 1/1;
   border-radius: 50%;
   cursor: default;
@@ -132,6 +132,15 @@
   text-shadow: 
     0 0 20px rgba(239, 68, 68, 0.6),
     0 0 40px rgba(255, 0, 0, 0.4);
+}
+
+/* Dim counter for ARMED state */
+.disco-counter-dim {
+  opacity: 0.5;
+  color: rgba(255, 255, 255, 0.6);
+  text-shadow: 
+    0 0 10px rgba(0, 209, 255, 0.3),
+    0 0 20px rgba(139, 92, 246, 0.2);
 }
 
 /* Internal LED Ring */
@@ -270,6 +279,11 @@
   white-space: nowrap;
 }
 
+.disco-status.armed {
+  color: rgba(255, 255, 255, 0.7);
+  animation: armedPulse 1.5s ease-in-out infinite;
+}
+
 .disco-status.running {
   color: var(--disco-blue);
 }
@@ -277,6 +291,11 @@
 .disco-status.critical {
   color: #FFD700;
   animation: criticalPulse 0.5s ease-in-out infinite;
+}
+
+@keyframes armedPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 
 .disco-status.success {
