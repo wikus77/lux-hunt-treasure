@@ -516,7 +516,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
             onClick={onClose}
-            className="fixed inset-0 z-[10002]"
+            className="fixed inset-0 z-[999997]"
             style={{
               backgroundColor: 'rgba(10, 10, 15, 0.75)',
               backdropFilter: 'blur(50px) saturate(180%)',
@@ -535,7 +535,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
               damping: 24,
               mass: 0.8,
             }}
-            className="fixed inset-0 z-[10003] flex items-center justify-center p-4"
+            className="fixed inset-0 z-[999998] flex items-center justify-center p-4"
             style={{
               transformOrigin: '50% 50%',
               willChange: 'transform, opacity',
@@ -1114,7 +1114,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[10004] flex items-center justify-center p-4"
+                className="fixed inset-0 z-[999999] flex items-center justify-center p-4"
                 style={{ background: 'rgba(0,0,0,0.9)' }}
                 onClick={() => setShowClueModal(false)}
               >
