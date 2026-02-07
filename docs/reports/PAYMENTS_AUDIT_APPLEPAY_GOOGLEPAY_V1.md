@@ -1,9 +1,53 @@
 # PAYMENTS AUDIT — Apple Pay & Google Pay
 
 **Data**: 2026-02-07  
-**Versione**: V1  
+**Versione**: V1.1 — DECISIONE FINALE  
 **Autore**: Cursor Agent  
 **Progetto**: M1SSION™
+
+---
+
+## ⚠️ DECISIONE FINALE — STORE COMPLIANCE
+
+**STATUS**: ✅ IMPLEMENTATA
+
+### Architettura Pagamenti Definitiva
+
+| Piattaforma | Metodo Pagamento | Provider | Status |
+|-------------|------------------|----------|--------|
+| **iOS Nativa (WKWebView)** | Apple IAP (StoreKit) | App Store | ✅ OBBLIGATORIO |
+| **Android Nativa** | Google Play Billing | Play Store | ✅ OBBLIGATORIO |
+| **Web Browser** | Stripe (Card + Apple Pay + Google Pay) | Stripe | ✅ ATTIVO |
+| **PWA** | Stripe (Card + Apple Pay + Google Pay) | Stripe | ✅ ATTIVO |
+| **Desktop** | Stripe (Card + Apple Pay + Google Pay) | Stripe | ✅ ATTIVO |
+
+### 🛡️ Guardrail Runtime Implementati
+
+| Guard | File | Effetto |
+|-------|------|---------|
+| `assertStripeAllowedOnPlatform()` | `src/lib/stripe/guard.ts` | Lancia `StoreComplianceError` su iOS native |
+| `isStripeAllowedOnPlatform()` | `src/lib/stripe/guard.ts` | Ritorna `false` su iOS native |
+| `isWalletPaymentAllowed()` | `src/lib/stripe/guard.ts` | Blocca Apple/Google Pay su native |
+| `assertStripeAvailable()` | `src/lib/stripe/stripeClient.ts` | Throw se Stripe bloccato |
+| `STRIPE_NATIVE_DISABLED = true` | `src/config/featureFlags.ts` | Flag master |
+
+### File Modificati per Guardrail
+
+```
+src/lib/stripe/guard.ts                   ✅ Guard completi + StoreComplianceError
+src/lib/stripe/stripeClient.ts            ✅ assertStripeAvailable() + platform check
+src/components/m1units/M1UPaymentContent.tsx   ✅ Doppio guard (useEffect + handleSubmit)
+src/hooks/useStripePayment.ts             ✅ Guard su processSubscription + detectPaymentMethodAvailability
+src/components/payments/ApplePayBox.tsx   ✅ Blocco su iOS native
+src/components/payments/GooglePayBox.tsx  ✅ Blocco su native
+```
+
+### Conformità App Store
+
+- ❌ **NON implementare** `PaymentRequestButtonElement` su iOS native
+- ❌ **NON aggiungere** file `.well-known/apple-developer-merchantid-domain-association` per iOS native
+- ✅ **Stripe Apple Pay/Google Pay** SOLO per: Web, PWA, Desktop
+- ✅ **Apple IAP (StoreKit)** già implementato e funzionante per iOS native
 
 ---
 
@@ -255,25 +299,38 @@ Se vuoi usare `ApplePaySession` e `google.payments.api` direttamente:
 
 ## 8. CONCLUSIONE
 
-### Stato Attuale
-- **Stripe**: ✅ Funzionante per Card payments
-- **Apple Pay**: ⚠️ UI presente, backend manca domain verification
-- **Google Pay**: ⚠️ UI presente, nessuna implementazione reale
-- **IAP Native**: ✅ Implementato separatamente per iOS/Android
+### Stato Attuale (POST-DECISIONE FINALE)
+- **iOS Native**: ✅ Apple IAP OBBLIGATORIO — Stripe BLOCCATO
+- **Android Native**: ✅ Google Play Billing — Stripe BLOCCATO
+- **Web/PWA**: ✅ Stripe Card funzionante
+- **Apple Pay Web**: ⚠️ Richiede domain verification (solo per web)
+- **Google Pay Web**: ⚠️ Richiede config (solo per web)
 
-### Raccomandazione
-**Usare Stripe `PaymentRequestButtonElement`** che gestisce automaticamente:
-- Apple Pay (Safari iOS/Mac)
-- Google Pay (Chrome Android/Desktop)
-- Microsoft Pay, Samsung Pay, etc.
+### Guardrail Implementati
+Sono stati implementati guardrail runtime a più livelli:
+1. **Feature Flag**: `STRIPE_NATIVE_DISABLED = true`
+2. **Platform Detection**: `isCapacitorIOS()` / `isCapacitorNative()`
+3. **Runtime Assert**: `assertStripeAllowedOnPlatform()` throws su iOS
+4. **UI Blocking**: ApplePayBox/GooglePayBox ritornano "non disponibile" su native
 
-Con una sola integrazione ottieni tutti i wallet supportati.
+### Store Compliance
+- ✅ **Apple App Store**: Conforme — solo IAP su iOS
+- ✅ **Google Play Store**: Conforme — billing nativo su Android
+- ✅ **Web**: Stripe standard — nessuna restrizione
 
-### Effort Stimato
-- **Config Apple domain**: 30 min
-- **Codice PRB**: 2-3 ore
-- **Test**: 2-3 ore
-- **Totale**: ~1 giorno
+### Non Implementare
+- ❌ `PaymentRequestButtonElement` su iOS native
+- ❌ Apple domain verification per iOS native
+- ❌ Google Pay merchantId per Android native
+- ❌ Stripe checkout su piattaforme native
+
+### Cosa Resta da Fare (Solo Web/PWA)
+Se desideri Apple Pay / Google Pay **solo su Web/PWA**:
+1. Domain verification Apple (per Safari web)
+2. PaymentRequestButtonElement (opzionale)
+3. Test su browser desktop/mobile
+
+Priorità: **BASSA** — Card payments funzionano già su web.
 
 ---
 

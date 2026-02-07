@@ -1,12 +1,15 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - Stripe Payment Hook - RESET COMPLETO 17/07/2025
+// 🏪 STORE COMPLIANCE: iOS uses ONLY Apple IAP
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import { PaymentErrorHandler } from '@/utils/paymentErrorHandler';
+import { assertStripeAllowedOnPlatform, isStripeAllowedOnPlatform } from '@/lib/stripe/guard';
+import { isCapacitorIOS, isCapacitorNative } from '@/utils/capacitor';
 
 interface PaymentResult {
   success: boolean;
@@ -24,6 +27,15 @@ export const useStripePayment = () => {
   const processSubscription = async (plan: string, paymentMethod?: string): Promise<void> => {
     if (!user) {
       toast.error('Devi essere loggato per effettuare acquisti');
+      return;
+    }
+
+    // 🛡️ STORE COMPLIANCE: Block Stripe on iOS native
+    try {
+      assertStripeAllowedOnPlatform();
+    } catch (e: any) {
+      console.error('[useStripePayment] ❌ Blocked: Stripe on iOS native');
+      toast.error('Per acquisti su iOS, usa la sezione M1U nell\'app');
       return;
     }
 
@@ -114,7 +126,32 @@ export const useStripePayment = () => {
   };
 
   const detectPaymentMethodAvailability = () => {
-    // Detect Apple Pay availability with proper type checking
+    // 🛡️ STORE COMPLIANCE: Return false for wallet payments on iOS native
+    // iOS native MUST use Apple IAP, not Stripe wallet payments
+    const isIOS = isCapacitorIOS();
+    const isNative = isCapacitorNative();
+    
+    if (isIOS && isNative) {
+      console.log('[useStripePayment] 🏪 iOS native: Wallet payments disabled (use IAP)');
+      return {
+        applePayAvailable: false,
+        googlePayAvailable: false,
+        stripeAllowed: false
+      };
+    }
+    
+    // Check if Stripe is allowed on this platform
+    const stripeAllowed = isStripeAllowedOnPlatform();
+    
+    if (!stripeAllowed) {
+      return {
+        applePayAvailable: false,
+        googlePayAvailable: false,
+        stripeAllowed: false
+      };
+    }
+
+    // Detect Apple Pay availability with proper type checking (web/PWA only)
     const applePayAvailable = typeof window !== 'undefined' && 
       'ApplePaySession' in window && 
       (window as any).ApplePaySession?.canMakePayments?.();
@@ -124,7 +161,8 @@ export const useStripePayment = () => {
 
     return {
       applePayAvailable: applePayAvailable || false,
-      googlePayAvailable: googlePayAvailable || false
+      googlePayAvailable: googlePayAvailable || false,
+      stripeAllowed: true
     };
   };
 

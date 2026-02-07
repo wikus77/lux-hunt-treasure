@@ -1,7 +1,12 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// 🏪 STORE COMPLIANCE: This component is for WEB/PWA ONLY
+// Native platforms MUST use native IAP
 
 import { Button } from "@/components/ui/button";
 import { CreditCardIcon } from "lucide-react";
 import { useState, useEffect } from "react";
+import { isCapacitorNative } from "@/utils/capacitor";
+import { isWalletPaymentAllowed } from "@/lib/stripe/guard";
 
 interface GooglePayBoxProps {
   onGooglePay: () => void;
@@ -11,7 +16,21 @@ const GooglePayBox = ({ onGooglePay }: GooglePayBoxProps) => {
   const [isGooglePayAvailable, setIsGooglePayAvailable] = useState(false);
 
   useEffect(() => {
-    // Check if Google Pay is available
+    // 🛡️ STORE COMPLIANCE: Block on native platforms - must use native IAP
+    if (isCapacitorNative()) {
+      console.log('[GooglePayBox] ❌ Blocked on native platform - use native IAP');
+      setIsGooglePayAvailable(false);
+      return;
+    }
+    
+    // Block if wallet payments not allowed on platform
+    if (!isWalletPaymentAllowed()) {
+      console.log('[GooglePayBox] ❌ Wallet payments blocked on this platform');
+      setIsGooglePayAvailable(false);
+      return;
+    }
+
+    // Check if Google Pay is available (web/PWA only)
     const checkGooglePayAvailability = () => {
       if (typeof window.google !== 'undefined' && typeof window.google.payments !== 'undefined') {
         setIsGooglePayAvailable(true);

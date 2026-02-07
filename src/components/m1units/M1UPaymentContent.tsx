@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎨 M1U Payment Content - REVOLUT STYLE con logica pagamento INTATTA
+// 🏪 STORE COMPLIANCE: iOS uses ONLY Apple IAP, Stripe for Web/PWA/Android
 import React, { useState, useEffect } from 'react';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import {
@@ -14,9 +15,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { X, ShoppingCart, AlertCircle, CreditCard, Smartphone } from 'lucide-react';
 import { getStripeSafe } from '@/lib/stripeFallback';
-import { isStripeAvailable } from '@/lib/stripe/stripeClient';
-import { isCapacitorNative, getCapacitorPlatform } from '@/utils/capacitor';
+import { isStripeAvailable, assertStripeAvailable } from '@/lib/stripe/stripeClient';
+import { isCapacitorNative, isCapacitorIOS, getCapacitorPlatform } from '@/utils/capacitor';
 import { useIAP, getProductByCode } from '@/iap';
+import { assertStripeAllowedOnPlatform } from '@/lib/stripe/guard';
 
 const stripePromise = getStripeSafe();
 
@@ -49,6 +51,10 @@ const StripeCheckoutContent: React.FC<{
 
     const createPaymentIntent = async () => {
       try {
+        // 🛡️ STORE COMPLIANCE: Assert Stripe is allowed on this platform
+        // This will throw on iOS native - should never reach here due to parent routing
+        assertStripeAllowedOnPlatform();
+        
         const { data, error } = await supabase.functions.invoke('create-payment-intent', {
           body: {
             amount: priceCents,
@@ -76,8 +82,14 @@ const StripeCheckoutContent: React.FC<{
         } else {
           toast.error('Errore nella configurazione del pagamento');
         }
-      } catch (error) {
-        toast.error('Errore nel sistema di pagamento');
+      } catch (error: any) {
+        // 🛡️ Handle Store Compliance errors specifically
+        if (error?.name === 'StoreComplianceError') {
+          console.error('[M1U Payment] ❌ Store compliance violation:', error.message);
+          toast.error('Usa acquisti in-app per questa piattaforma');
+        } else {
+          toast.error('Errore nel sistema di pagamento');
+        }
       }
     };
 
@@ -86,6 +98,15 @@ const StripeCheckoutContent: React.FC<{
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    // 🛡️ STORE COMPLIANCE: Final guard before Stripe payment
+    try {
+      assertStripeAllowedOnPlatform();
+    } catch (e: any) {
+      console.error('[M1U Payment] ❌ Blocked: Stripe payment on iOS native');
+      toast.error('Usa acquisti in-app su questa piattaforma');
+      return;
+    }
 
     if (!stripe || !elements || !clientSecret) {
       toast.error('Sistema di pagamento non pronto');

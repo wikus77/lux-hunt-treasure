@@ -1,7 +1,12 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// 🏪 STORE COMPLIANCE: This component is for WEB/PWA ONLY
+// iOS native MUST use Apple IAP (StoreKit), not Stripe Apple Pay
 
 import { Button } from "@/components/ui/button";
 import { CreditCardIcon, AppleIcon } from "lucide-react";
 import { useState, useEffect } from "react";
+import { isCapacitorIOS, isCapacitorNative } from "@/utils/capacitor";
+import { isWalletPaymentAllowed } from "@/lib/stripe/guard";
 
 interface ApplePayBoxProps {
   onApplePay: () => void;
@@ -11,7 +16,21 @@ const ApplePayBox = ({ onApplePay }: ApplePayBoxProps) => {
   const [isApplePayAvailable, setIsApplePayAvailable] = useState(false);
 
   useEffect(() => {
-    // Check if Apple Pay is available
+    // 🛡️ STORE COMPLIANCE: Block on iOS native - must use IAP
+    if (isCapacitorIOS() && isCapacitorNative()) {
+      console.log('[ApplePayBox] ❌ Blocked on iOS native - use Apple IAP');
+      setIsApplePayAvailable(false);
+      return;
+    }
+    
+    // Block if wallet payments not allowed on platform
+    if (!isWalletPaymentAllowed()) {
+      console.log('[ApplePayBox] ❌ Wallet payments blocked on this platform');
+      setIsApplePayAvailable(false);
+      return;
+    }
+
+    // Check if Apple Pay is available (web/PWA only)
     const checkApplePayAvailability = () => {
       if (typeof window.ApplePaySession !== 'undefined' && window.ApplePaySession?.canMakePayments()) {
         setIsApplePayAvailable(true);
