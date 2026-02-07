@@ -146,8 +146,12 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
                       textShadow: `0 0 15px ${isUrgent ? 'rgba(255, 68, 68, 0.5)' : preset.glowColor}`,
                     }}
                   >
-                    🎯 PROSSIMA AZIONE
+                    🎯 NEXT ACTION
                   </p>
+                  {/* GIOCA badge - always visible, red with pulse */}
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/20 text-red-400 animate-pulse">
+                    GIOCA
+                  </span>
                   {isUrgent && (
                     <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/20 text-red-400 animate-pulse">
                       URGENTE

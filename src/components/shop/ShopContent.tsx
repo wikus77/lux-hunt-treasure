@@ -1,12 +1,13 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
-// 🎨 Shop Content - REVOLUT STYLE con tab RIVELA, PROGRESSIONE, PERCORSO
+// 🎨 Shop Content - REVOLUT STYLE con tab RIVELA, PROGRESSIONE, PERCORSO, M1U
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
-import { X, Loader2, Gift, RotateCcw, AlertTriangle, Sparkles } from 'lucide-react';
+import { X, Loader2, Gift, RotateCcw, AlertTriangle, Sparkles, Coins } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { toast } from 'sonner';
+import { M1UnitsShopModal } from '@/components/m1units/M1UnitsShopModal';
 
 // Lazy load components
 const FortuneWheel = lazy(() => import('@/components/feedback/FortuneWheel'));
@@ -17,7 +18,7 @@ interface ShopContentProps {
   onClose: () => void;
 }
 
-type ShopTab = 'scratch' | 'wheel' | 'lottery';
+type ShopTab = 'scratch' | 'wheel' | 'lottery' | 'm1u';
 
 interface ScratchStats {
   tier_10?: { available: number; milestone_bonus: boolean; user_purchases_today: number; daily_limit: number };
@@ -143,10 +144,14 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
     window.dispatchEvent(new CustomEvent('wheel-spun'));
   };
 
+  // State for M1U Shop modal (same modal as M1U Pill)
+  const [showM1UShopModal, setShowM1UShopModal] = useState(false);
+
   const tabs = [
     { id: 'scratch' as ShopTab, label: 'RIVELA', color: '#F59E0B' },
     { id: 'wheel' as ShopTab, label: 'PROGRESSIONE', color: '#10B981', badge: canSpinWheel },
     { id: 'lottery' as ShopTab, label: 'PERCORSO', color: '#3B82F6' },
+    { id: 'm1u' as ShopTab, label: 'M1U', color: '#FACC15' },
   ];
 
   return (
@@ -215,7 +220,14 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  if (tab.id === 'm1u') {
+                    // Open the same M1U Shop modal as M1U Pill
+                    setShowM1UShopModal(true);
+                  } else {
+                    setActiveTab(tab.id);
+                  }
+                }}
                 style={{
                   flex: 1,
                   padding: '10px 8px',
@@ -458,6 +470,13 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
           />
         </Suspense>
       )}
+
+      {/* M1U Shop Modal - Same modal as M1U Pill (NOT duplicated!) */}
+      <M1UnitsShopModal 
+        isOpen={showM1UShopModal}
+        onClose={() => setShowM1UShopModal(false)}
+        originRect={null}
+      />
 
       <style>{`
         @keyframes spin {
