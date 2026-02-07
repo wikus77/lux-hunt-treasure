@@ -1,8 +1,7 @@
 // © 2026 M1SSION™ — NIYVORA KFT — Joseph MULÉ
 // DISCO ROTAZIONE - Motion-based mini-game
-// Move phone with arm/shoulder to advance, tilt to brake
-// Target a specific quota without overshooting
-// 🔧 FIX v2: ARMED state + motion threshold + proper physics
+// EPIC FIX v3: Calibrated physics (12-25s), real brake, no progress bar
+// Progress shown on outer ring (white→blue→violet)
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,7 +12,7 @@ import { hapticSuccess, hapticError, hapticHeavy, hapticMedium, hapticLight } fr
 import '@/styles/disco-rotazione.css';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// CONFIGURATION
+// CONFIGURATION - CALIBRATED FOR 12-25 SECOND GAMEPLAY
 // ═══════════════════════════════════════════════════════════════════════════
 const CONFIG = {
   // Target generation
@@ -21,43 +20,52 @@ const CONFIG = {
   TARGET_MAX: 1300,
   REMEMBER_LAST_N: 5,
   
-  // MOTION THRESHOLD - ignores noise below this
-  MOTION_NOISE_THRESHOLD: 8, // degrees/sec - below this = no input
-  MOTION_START_THRESHOLD: 15, // degrees/sec - above this for N frames = start
-  MOTION_START_FRAMES: 6, // frames above threshold to start
+  // === MOTION INPUT ===
+  OMEGA_DEADZONE: 20, // Ignore angular velocity below this (°/s)
+  OMEGA_START_THRESHOLD: 30, // Must exceed this to start game (°/s)
+  OMEGA_START_FRAMES: 8, // Frames above threshold to confirm start
   
-  // Physics - SMOOTHING
-  SMOOTHING_ALPHA: 0.15, // lower = smoother, higher = more responsive
+  // === SMOOTHING ===
+  SMOOTHING_ALPHA: 0.12, // Lower = smoother (0.1-0.2 range)
   
-  // Physics - GAIN & INERTIA
-  BASE_GAIN: 0.012, // how much motion adds to spinVelocity
-  INERTIA_DECAY_BASE: 2.0, // base decay rate (per second)
-  INERTIA_DECAY_HIGH: 4.5, // decay rate when progress > 70%
-  INERTIA_DECAY_CRITICAL: 7.0, // decay rate when progress > 90%
+  // === GAIN (how fast counter advances) ===
+  // Calibrated: ~50-80 omega input should advance ~30-50 units/sec at start
+  // With target 1000, that's ~20-30 seconds to complete
+  GAIN_BASE: 0.0006, // Base gain (VERY LOW for hard mode)
+  GAIN_CURVE: 0.8, // < 1 = sublinear (fast motion doesn't explode)
+  MAX_SPIN_VEL: 15, // Clamp max spin velocity per frame
   
-  // MASS VIRTUAL (reduces effective gain as progress increases)
+  // === VIRTUAL MASS (makes it harder as you progress) ===
   MASS_AT_START: 1.0,
-  MASS_AT_70_PERCENT: 1.8,
-  MASS_AT_90_PERCENT: 3.0,
+  MASS_AT_50_PERCENT: 1.5,
+  MASS_AT_80_PERCENT: 2.5,
+  MASS_AT_95_PERCENT: 4.0, // Very heavy near end
   
-  // BRAKE via tilt
-  BRAKE_MAX_TILT: 30, // degrees - full tilt angle for max brake
-  BRAKE_POWER_CURVE: 1.5, // exponent for progressive brake (>1 = harder at high tilt)
-  BRAKE_STRENGTH: 8.0, // how strong max brake decelerates (per second)
+  // === INERTIA (how long it coasts after you stop) ===
+  DECAY_BASE: 1.2, // Low = long coast (per second)
+  DECAY_AT_80_PERCENT: 2.5,
+  DECAY_AT_95_PERCENT: 4.0, // Faster stop near target
   
-  // Critical zone
+  // === BRAKE (tilt to slow down) ===
+  TILT_DEADZONE: 8, // Ignore tilt below this (degrees)
+  TILT_MAX: 40, // Full brake angle (degrees)
+  BRAKE_CURVE: 2.0, // Quadratic = progressive
+  BRAKE_STRENGTH: 50, // How strong max brake is (per second)
+  
+  // === CRITICAL ZONE ===
   CRITICAL_ZONE_THRESHOLD: 0.92,
-  CRITICAL_INSTABILITY_AMP: 0.15, // amplitude of random perturbation on GAIN (not position)
-  CRITICAL_INSTABILITY_CHANCE: 0.08, // probability per frame
+  CRITICAL_INSTABILITY_AMP: 0.2,
+  CRITICAL_INSTABILITY_CHANCE: 0.06,
   
-  // Soft-lock
-  SOFT_LOCK_TOLERANCE: 0.004, // 0.4% of target
-  SOFT_LOCK_DURATION: 700, // ms to hold for success
-  SOFT_LOCK_MAX_VELOCITY: 0.3, // must be nearly stopped
+  // === SUCCESS/FAIL ===
+  SOFT_LOCK_TOLERANCE: 0.003, // 0.3% of target
+  SOFT_LOCK_DURATION: 600, // ms to hold
+  SOFT_LOCK_MAX_VEL: 0.2,
+  OVERSHOOT_TOLERANCE: 1.002, // 0.2% overshoot = fail
   
-  // Haptic rate limiting
-  HAPTIC_MIN_INTERVAL: 60, // ms
-  HAPTIC_MAX_RATE: 15, // max haptics per second
+  // === HAPTICS ===
+  HAPTIC_MIN_INTERVAL: 80,
+  HAPTIC_MAX_RATE: 12,
 };
 
 // Remember recent targets
@@ -76,8 +84,8 @@ const generateTarget = (): number => {
   return target;
 };
 
-// Lerp helper
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const lerp = (a: number, b: number, t: number) => a + (b - a) * Math.max(0, Math.min(1, t));
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // GAME STATES
@@ -100,7 +108,6 @@ export const DiscoRotazione: React.FC<DiscoRotazioneProps> = ({
     isPermissionGranted, 
     requestPermission, 
     angularVelocity, 
-    tiltBrakeForce,
     motionData
   } = useMotionSensor();
 
@@ -111,18 +118,20 @@ export const DiscoRotazione: React.FC<DiscoRotazioneProps> = ({
   const [displayVelocity, setDisplayVelocity] = useState(0);
   const [rotationAngle, setRotationAngle] = useState(0);
   
-  // Physics refs (persist across renders)
-  const spinVelocityRef = useRef(0); // internal spin velocity
-  const smoothedOmegaRef = useRef(0); // smoothed angular velocity from sensor
+  // Physics refs
+  const spinVelRef = useRef(0);
+  const smoothedOmegaRef = useRef(0);
   const lastTimeRef = useRef(0);
-  const startFramesAboveThresholdRef = useRef(0);
+  const startFramesRef = useRef(0);
   const softLockTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastHapticRef = useRef(0);
   const hapticCountRef = useRef(0);
   const hapticSecondRef = useRef(0);
-  const animationFrameRef = useRef<number | null>(null);
+  const animFrameRef = useRef<number | null>(null);
+  
+  // Visual rotation (separate from physics for smooth feel)
+  const visualRotationRef = useRef(0);
 
-  // Progress
   const progress = Math.min(1, currentValue / target);
   const isInCriticalZone = progress >= CONFIG.CRITICAL_ZONE_THRESHOLD;
 
@@ -131,15 +140,11 @@ export const DiscoRotazione: React.FC<DiscoRotazioneProps> = ({
   // ═════════════════════════════════════════════════════════════════════════
   const triggerHaptic = useCallback((intensity: 'light' | 'medium' | 'heavy') => {
     const now = Date.now();
-    const currentSecond = Math.floor(now / 1000);
-    
-    // Reset counter each second
-    if (currentSecond !== hapticSecondRef.current) {
-      hapticSecondRef.current = currentSecond;
+    const sec = Math.floor(now / 1000);
+    if (sec !== hapticSecondRef.current) {
+      hapticSecondRef.current = sec;
       hapticCountRef.current = 0;
     }
-    
-    // Check rate limits
     if (now - lastHapticRef.current < CONFIG.HAPTIC_MIN_INTERVAL) return;
     if (hapticCountRef.current >= CONFIG.HAPTIC_MAX_RATE) return;
     
@@ -153,7 +158,7 @@ export const DiscoRotazione: React.FC<DiscoRotazioneProps> = ({
         default: hapticLight(); break;
       }
     } else if (navigator.vibrate) {
-      navigator.vibrate(intensity === 'heavy' ? 25 : intensity === 'medium' ? 12 : 5);
+      navigator.vibrate(intensity === 'heavy' ? 20 : intensity === 'medium' ? 10 : 5);
     }
   }, []);
 
@@ -162,157 +167,131 @@ export const DiscoRotazione: React.FC<DiscoRotazioneProps> = ({
   // ═════════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (gameState !== 'armed') {
-      startFramesAboveThresholdRef.current = 0;
+      startFramesRef.current = 0;
       return;
     }
 
-    const checkMotion = () => {
-      const omega = angularVelocity;
+    const check = () => {
+      smoothedOmegaRef.current = lerp(smoothedOmegaRef.current, angularVelocity, CONFIG.SMOOTHING_ALPHA);
       
-      // Smooth the input
-      smoothedOmegaRef.current = lerp(smoothedOmegaRef.current, omega, CONFIG.SMOOTHING_ALPHA);
-      
-      // Check if above start threshold
-      if (smoothedOmegaRef.current > CONFIG.MOTION_START_THRESHOLD) {
-        startFramesAboveThresholdRef.current++;
-        
-        if (startFramesAboveThresholdRef.current >= CONFIG.MOTION_START_FRAMES) {
-          // Real motion detected - START!
-          console.log('[DiscoRotazione] Motion detected - STARTING!');
+      if (smoothedOmegaRef.current > CONFIG.OMEGA_START_THRESHOLD) {
+        startFramesRef.current++;
+        if (startFramesRef.current >= CONFIG.OMEGA_START_FRAMES) {
+          console.log('[DiscoRotazione] Motion detected - START!');
           if (isCapacitorNative()) hapticHeavy();
           setGameState('running');
           return;
         }
       } else {
-        // Reset counter if motion drops
-        startFramesAboveThresholdRef.current = Math.max(0, startFramesAboveThresholdRef.current - 1);
+        startFramesRef.current = Math.max(0, startFramesRef.current - 2);
       }
       
-      animationFrameRef.current = requestAnimationFrame(checkMotion);
+      animFrameRef.current = requestAnimationFrame(check);
     };
 
-    animationFrameRef.current = requestAnimationFrame(checkMotion);
-
-    return () => {
-      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-    };
+    animFrameRef.current = requestAnimationFrame(check);
+    return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); };
   }, [gameState, angularVelocity]);
 
   // ═════════════════════════════════════════════════════════════════════════
-  // PHYSICS LOOP - Only when RUNNING or CRITICAL
+  // PHYSICS LOOP
   // ═════════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (gameState !== 'running' && gameState !== 'critical') return;
 
     lastTimeRef.current = performance.now();
 
-    const physicsLoop = () => {
+    const physics = () => {
       const now = performance.now();
-      const dt = Math.min((now - lastTimeRef.current) / 1000, 0.1); // cap at 100ms
+      const dt = clamp((now - lastTimeRef.current) / 1000, 0.001, 0.1);
       lastTimeRef.current = now;
 
-      // ─────────────────────────────────────────────────────────────────────
-      // 1. SMOOTH INPUT from motion sensor
-      // ─────────────────────────────────────────────────────────────────────
-      const rawOmega = angularVelocity;
-      smoothedOmegaRef.current = lerp(smoothedOmegaRef.current, rawOmega, CONFIG.SMOOTHING_ALPHA);
+      // 1. SMOOTH INPUT
+      smoothedOmegaRef.current = lerp(smoothedOmegaRef.current, angularVelocity, CONFIG.SMOOTHING_ALPHA);
       
-      // Apply noise threshold - below this = zero input
-      const effectiveOmega = smoothedOmegaRef.current > CONFIG.MOTION_NOISE_THRESHOLD 
-        ? smoothedOmegaRef.current - CONFIG.MOTION_NOISE_THRESHOLD 
+      // 2. APPLY DEADZONE
+      const omega = smoothedOmegaRef.current > CONFIG.OMEGA_DEADZONE 
+        ? smoothedOmegaRef.current - CONFIG.OMEGA_DEADZONE 
         : 0;
 
-      // ─────────────────────────────────────────────────────────────────────
-      // 2. CALCULATE VIRTUAL MASS (increases with progress)
-      // ─────────────────────────────────────────────────────────────────────
+      // 3. CALCULATE VIRTUAL MASS
       let mass: number;
-      if (progress < 0.7) {
-        mass = lerp(CONFIG.MASS_AT_START, CONFIG.MASS_AT_70_PERCENT, progress / 0.7);
-      } else if (progress < 0.9) {
-        mass = lerp(CONFIG.MASS_AT_70_PERCENT, CONFIG.MASS_AT_90_PERCENT, (progress - 0.7) / 0.2);
+      if (progress < 0.5) {
+        mass = lerp(CONFIG.MASS_AT_START, CONFIG.MASS_AT_50_PERCENT, progress / 0.5);
+      } else if (progress < 0.8) {
+        mass = lerp(CONFIG.MASS_AT_50_PERCENT, CONFIG.MASS_AT_80_PERCENT, (progress - 0.5) / 0.3);
+      } else if (progress < 0.95) {
+        mass = lerp(CONFIG.MASS_AT_80_PERCENT, CONFIG.MASS_AT_95_PERCENT, (progress - 0.8) / 0.15);
       } else {
-        mass = CONFIG.MASS_AT_90_PERCENT + (progress - 0.9) * 5; // very heavy near end
+        mass = CONFIG.MASS_AT_95_PERCENT + (progress - 0.95) * 20;
       }
 
-      // ─────────────────────────────────────────────────────────────────────
-      // 3. CALCULATE EFFECTIVE GAIN (with critical zone instability)
-      // ─────────────────────────────────────────────────────────────────────
-      let effectiveGain = CONFIG.BASE_GAIN / mass;
+      // 4. CALCULATE GAIN (sublinear curve)
+      let gain = CONFIG.GAIN_BASE / mass;
       
-      // Critical zone instability - random perturbation on GAIN (not position)
+      // Apply sublinear curve: high omega doesn't explode
+      const normalizedOmega = omega / 100; // ~100°/s = fast movement
+      const scaledOmega = Math.pow(normalizedOmega, CONFIG.GAIN_CURVE) * 100;
+      
+      // Critical instability
       if (isInCriticalZone && Math.random() < CONFIG.CRITICAL_INSTABILITY_CHANCE) {
-        const perturbation = (Math.random() - 0.5) * 2 * CONFIG.CRITICAL_INSTABILITY_AMP;
-        effectiveGain *= (1 + perturbation);
+        gain *= (1 + (Math.random() - 0.5) * 2 * CONFIG.CRITICAL_INSTABILITY_AMP);
       }
 
-      // ─────────────────────────────────────────────────────────────────────
-      // 4. ADD INPUT TO SPIN VELOCITY
-      // ─────────────────────────────────────────────────────────────────────
-      spinVelocityRef.current += effectiveOmega * effectiveGain * dt * 60; // scale by ~60fps
+      // 5. ADD TO SPIN VELOCITY
+      const inputAccel = scaledOmega * gain * dt * 60;
+      spinVelRef.current += inputAccel;
+      spinVelRef.current = clamp(spinVelRef.current, 0, CONFIG.MAX_SPIN_VEL);
 
-      // ─────────────────────────────────────────────────────────────────────
-      // 5. APPLY INERTIA DECAY (exponential)
-      // ─────────────────────────────────────────────────────────────────────
+      // 6. APPLY DECAY (inertia)
       let decay: number;
-      if (progress < 0.7) {
-        decay = CONFIG.INERTIA_DECAY_BASE;
-      } else if (progress < 0.9) {
-        decay = lerp(CONFIG.INERTIA_DECAY_BASE, CONFIG.INERTIA_DECAY_HIGH, (progress - 0.7) / 0.2);
+      if (progress < 0.8) {
+        decay = lerp(CONFIG.DECAY_BASE, CONFIG.DECAY_AT_80_PERCENT, progress / 0.8);
+      } else if (progress < 0.95) {
+        decay = lerp(CONFIG.DECAY_AT_80_PERCENT, CONFIG.DECAY_AT_95_PERCENT, (progress - 0.8) / 0.15);
       } else {
-        decay = lerp(CONFIG.INERTIA_DECAY_HIGH, CONFIG.INERTIA_DECAY_CRITICAL, (progress - 0.9) / 0.1);
+        decay = CONFIG.DECAY_AT_95_PERCENT + (progress - 0.95) * 10;
       }
-      spinVelocityRef.current *= Math.exp(-decay * dt);
+      spinVelRef.current *= Math.exp(-decay * dt);
 
-      // ─────────────────────────────────────────────────────────────────────
-      // 6. APPLY TILT BRAKE
-      // ─────────────────────────────────────────────────────────────────────
-      // tiltBrakeForce is 0-1 from useMotionSensor, but let's use raw tilt for more control
-      const tiltAngle = motionData?.tilt?.beta ?? 0;
-      const normalizedTilt = Math.min(1, Math.abs(tiltAngle) / CONFIG.BRAKE_MAX_TILT);
-      const brakeForce = Math.pow(normalizedTilt, CONFIG.BRAKE_POWER_CURVE);
+      // 7. APPLY TILT BRAKE
+      const tiltAngle = Math.abs(motionData?.tilt?.beta ?? 0);
+      const tiltAboveDeadzone = Math.max(0, tiltAngle - CONFIG.TILT_DEADZONE);
+      const tiltNorm = clamp(tiltAboveDeadzone / (CONFIG.TILT_MAX - CONFIG.TILT_DEADZONE), 0, 1);
+      const brakeForce = Math.pow(tiltNorm, CONFIG.BRAKE_CURVE) * CONFIG.BRAKE_STRENGTH;
       
-      // Brake subtracts from velocity
-      const brakeDecel = brakeForce * CONFIG.BRAKE_STRENGTH * dt;
-      if (spinVelocityRef.current > 0) {
-        spinVelocityRef.current = Math.max(0, spinVelocityRef.current - brakeDecel);
+      if (spinVelRef.current > 0 && brakeForce > 0) {
+        spinVelRef.current = Math.max(0, spinVelRef.current - brakeForce * dt);
       }
 
-      // ─────────────────────────────────────────────────────────────────────
-      // 7. UPDATE POSITION
-      // ─────────────────────────────────────────────────────────────────────
-      const newValue = currentValue + spinVelocityRef.current;
+      // 8. UPDATE POSITION
+      const newValue = currentValue + spinVelRef.current;
 
-      // ─────────────────────────────────────────────────────────────────────
-      // 8. CHECK OVERSHOOT (FAIL)
-      // ─────────────────────────────────────────────────────────────────────
-      if (newValue > target * 1.003) { // 0.3% tolerance
+      // 9. CHECK OVERSHOOT
+      if (newValue > target * CONFIG.OVERSHOOT_TOLERANCE) {
         setGameState('fail');
         setCurrentValue(newValue);
         if (isCapacitorNative()) {
-          // Fail haptic pattern: 3 decreasing impacts
           hapticHeavy();
-          setTimeout(() => hapticMedium(), 100);
-          setTimeout(() => hapticLight(), 180);
+          setTimeout(() => hapticMedium(), 80);
+          setTimeout(() => hapticLight(), 140);
         }
         if (onFail) onFail(Math.round(newValue));
         return;
       }
 
-      // ─────────────────────────────────────────────────────────────────────
-      // 9. CHECK SOFT-LOCK (SUCCESS)
-      // ─────────────────────────────────────────────────────────────────────
-      const distanceToTarget = Math.abs(newValue - target) / target;
-      const isNearlyStill = Math.abs(spinVelocityRef.current) < CONFIG.SOFT_LOCK_MAX_VELOCITY;
+      // 10. CHECK SOFT-LOCK
+      const distToTarget = Math.abs(newValue - target) / target;
+      const isStill = spinVelRef.current < CONFIG.SOFT_LOCK_MAX_VEL;
       
-      if (distanceToTarget < CONFIG.SOFT_LOCK_TOLERANCE && isNearlyStill) {
+      if (distToTarget < CONFIG.SOFT_LOCK_TOLERANCE && isStill) {
         if (!softLockTimerRef.current) {
-          console.log('[DiscoRotazione] Soft-lock initiated');
           softLockTimerRef.current = setTimeout(() => {
             setGameState('success');
             setCurrentValue(target);
             if (isCapacitorNative()) {
               hapticSuccess();
-              setTimeout(() => hapticMedium(), 150);
+              setTimeout(() => hapticMedium(), 120);
             }
             if (onSuccess) onSuccess(target);
           }, CONFIG.SOFT_LOCK_DURATION);
@@ -322,45 +301,41 @@ export const DiscoRotazione: React.FC<DiscoRotazioneProps> = ({
         softLockTimerRef.current = null;
       }
 
-      // ─────────────────────────────────────────────────────────────────────
-      // 10. UPDATE STATE
-      // ─────────────────────────────────────────────────────────────────────
+      // 11. UPDATE STATE
       setCurrentValue(Math.max(0, newValue));
-      setDisplayVelocity(spinVelocityRef.current);
-      setRotationAngle(prev => prev + spinVelocityRef.current * 3);
+      setDisplayVelocity(spinVelRef.current);
+      
+      // Visual rotation with damping for weight feel
+      visualRotationRef.current += spinVelRef.current * 4;
+      setRotationAngle(visualRotationRef.current);
 
-      // Update game state to critical
+      // Update to critical state
       if (isInCriticalZone && gameState !== 'critical') {
         setGameState('critical');
         if (isCapacitorNative()) hapticMedium();
       }
 
-      // ─────────────────────────────────────────────────────────────────────
-      // 11. HAPTIC FEEDBACK (proportional to velocity)
-      // ─────────────────────────────────────────────────────────────────────
-      const vel = Math.abs(spinVelocityRef.current);
-      if (vel > 0.5) {
+      // 12. HAPTIC (proportional)
+      if (spinVelRef.current > 0.3) {
         const intensity: 'light' | 'medium' | 'heavy' = 
-          vel > 8 ? 'heavy' : vel > 3 ? 'medium' : 'light';
+          spinVelRef.current > 5 ? 'heavy' : spinVelRef.current > 2 ? 'medium' : 'light';
         triggerHaptic(intensity);
       }
 
-      animationFrameRef.current = requestAnimationFrame(physicsLoop);
+      animFrameRef.current = requestAnimationFrame(physics);
     };
 
-    animationFrameRef.current = requestAnimationFrame(physicsLoop);
-
+    animFrameRef.current = requestAnimationFrame(physics);
     return () => {
-      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       if (softLockTimerRef.current) clearTimeout(softLockTimerRef.current);
     };
-  }, [gameState, angularVelocity, tiltBrakeForce, motionData, currentValue, target, progress, isInCriticalZone, triggerHaptic, onSuccess, onFail]);
+  }, [gameState, angularVelocity, motionData, currentValue, target, progress, isInCriticalZone, triggerHaptic, onSuccess, onFail]);
 
   // ═════════════════════════════════════════════════════════════════════════
   // ACTIONS
   // ═════════════════════════════════════════════════════════════════════════
   const handleStart = async () => {
-    // Request permission if needed
     if (isSupported && !isPermissionGranted) {
       setGameState('waiting_permission');
       const granted = await requestPermission();
@@ -371,24 +346,22 @@ export const DiscoRotazione: React.FC<DiscoRotazioneProps> = ({
       }
     }
 
-    // Reset state
     setCurrentValue(0);
-    spinVelocityRef.current = 0;
+    spinVelRef.current = 0;
     smoothedOmegaRef.current = 0;
-    startFramesAboveThresholdRef.current = 0;
+    visualRotationRef.current = 0;
+    startFramesRef.current = 0;
     setTarget(generateTarget());
     setRotationAngle(0);
-    
-    // Go to ARMED state - wait for motion
     setGameState('armed');
-    console.log('[DiscoRotazione] ARMED - waiting for motion...');
   };
 
   const handleRetry = () => {
     setCurrentValue(0);
-    spinVelocityRef.current = 0;
+    spinVelRef.current = 0;
     smoothedOmegaRef.current = 0;
-    startFramesAboveThresholdRef.current = 0;
+    visualRotationRef.current = 0;
+    startFramesRef.current = 0;
     setTarget(generateTarget());
     setRotationAngle(0);
     setGameState('idle');
@@ -397,8 +370,13 @@ export const DiscoRotazione: React.FC<DiscoRotazioneProps> = ({
   // ═════════════════════════════════════════════════════════════════════════
   // RENDER
   // ═════════════════════════════════════════════════════════════════════════
-  const intensityClass = Math.abs(displayVelocity) > 6 ? 'high-intensity' :
-                         Math.abs(displayVelocity) > 2 ? 'medium-intensity' : 'low-intensity';
+  const intensityClass = displayVelocity > 4 ? 'high-intensity' :
+                         displayVelocity > 1.5 ? 'medium-intensity' : 'low-intensity';
+  
+  // Progress for SVG ring (0-100)
+  const ringProgress = Math.min(100, progress * 100);
+  const circumference = 2 * Math.PI * 46; // radius 46%
+  const strokeDashoffset = circumference - (ringProgress / 100) * circumference;
 
   return (
     <div className="disco-rotazione-container">
@@ -413,9 +391,50 @@ export const DiscoRotazione: React.FC<DiscoRotazioneProps> = ({
         <div className="disco-status critical">⚡ ZONA CRITICA</div>
       )}
 
-      {/* Main Disc - SAME SIZE AS BUZZ */}
+      {/* Main Disc */}
       <div className={`disco-rotazione ${intensityClass}`}>
-        {/* Rotating elements */}
+        {/* SVG Progress Ring (outer) */}
+        {(gameState === 'armed' || gameState === 'running' || gameState === 'critical') && (
+          <svg 
+            className="disco-progress-svg"
+            viewBox="0 0 100 100"
+          >
+            {/* Background ring (white) */}
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              fill="none"
+              stroke="rgba(255,255,255,0.3)"
+              strokeWidth="4"
+            />
+            {/* Progress ring (blue→violet gradient) */}
+            <defs>
+              <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#00D1FF" />
+                <stop offset="100%" stopColor="#8B5CF6" />
+              </linearGradient>
+            </defs>
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              fill="none"
+              stroke="url(#progressGradient)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              transform="rotate(-90 50 50)"
+              style={{ 
+                transition: 'stroke-dashoffset 0.1s ease-out',
+                filter: 'drop-shadow(0 0 8px rgba(0, 209, 255, 0.6))'
+              }}
+            />
+          </svg>
+        )}
+
+        {/* Rotating visual elements */}
         <div 
           className="disco-rotazione-rotating"
           style={{ transform: `rotate(${rotationAngle}deg)` }}
@@ -424,14 +443,6 @@ export const DiscoRotazione: React.FC<DiscoRotazioneProps> = ({
           <div className="disco-dots" />
           <div className="disco-dots-sides" />
         </div>
-
-        {/* Progress arc */}
-        {(gameState === 'armed' || gameState === 'running' || gameState === 'critical') && (
-          <div 
-            className="disco-progress-arc"
-            style={{ '--progress': progress } as React.CSSProperties}
-          />
-        )}
 
         {/* Counter */}
         <div className="disco-rotazione-content">
@@ -522,32 +533,26 @@ export const DiscoRotazione: React.FC<DiscoRotazioneProps> = ({
       )}
 
       {gameState === 'waiting_permission' && (
-        <p className="disco-instructions">
-          Attendi autorizzazione sensori...
-        </p>
+        <p className="disco-instructions">Attendi autorizzazione sensori...</p>
       )}
 
       {(gameState === 'success' || gameState === 'fail') && (
         <div className="flex gap-4 mt-8">
-          <button className="disco-btn" onClick={handleRetry}>
-            RIPROVA
-          </button>
+          <button className="disco-btn" onClick={handleRetry}>RIPROVA</button>
           {onClose && (
-            <button className="disco-btn disco-btn-secondary" onClick={onClose}>
-              CHIUDI
-            </button>
+            <button className="disco-btn disco-btn-secondary" onClick={onClose}>CHIUDI</button>
           )}
         </div>
       )}
 
-      {/* Debug info (DEV only) */}
+      {/* Debug (DEV only) */}
       {import.meta.env.DEV && (
         <div className="fixed bottom-20 left-4 text-xs text-white/30 font-mono space-y-0.5">
           <div>state: {gameState}</div>
-          <div>spinVel: {displayVelocity.toFixed(2)}</div>
-          <div>omega: {smoothedOmegaRef.current.toFixed(1)}°/s</div>
-          <div>progress: {(progress * 100).toFixed(1)}%</div>
-          <div>tilt: {(motionData?.tilt?.beta ?? 0).toFixed(1)}°</div>
+          <div>vel: {displayVelocity.toFixed(2)}</div>
+          <div>ω: {smoothedOmegaRef.current.toFixed(0)}°/s</div>
+          <div>prog: {(progress * 100).toFixed(1)}%</div>
+          <div>tilt: {Math.abs(motionData?.tilt?.beta ?? 0).toFixed(0)}°</div>
         </div>
       )}
     </div>

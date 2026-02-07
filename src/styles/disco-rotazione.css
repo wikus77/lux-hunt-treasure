@@ -1,6 +1,5 @@
 /* © 2026 M1SSION™ — NIYVORA KFT — Joseph MULÉ */
-/* DISCO ROTAZIONE - White ring with blue-violet neon glow */
-/* Based on BUZZ TRON Disc but with inverted color scheme */
+/* DISCO ROTAZIONE - EPIC FIX v3: 1:1 BUZZ size, progress on outer ring */
 
 :root {
   --disco-white: #ffffff;
@@ -23,12 +22,13 @@
   justify-content: center;
   padding: 20px;
   box-sizing: border-box;
+  position: relative;
 }
 
-/* Base Disco - SAME SIZE AS BUZZ */
+/* Base Disco - EXACTLY 1:1 WITH BUZZ (.tron-disc) */
 .disco-rotazione {
   position: relative;
-  width: clamp(280px, 55vw, 380px); /* Matches .tron-disc exactly */
+  width: clamp(280px, 55vw, 380px); /* Desktop: same as .tron-disc */
   aspect-ratio: 1/1;
   border-radius: 50%;
   cursor: default;
@@ -52,7 +52,24 @@
   transition: box-shadow 0.3s ease;
 }
 
-/* Rotation wrapper - spins based on progress */
+/* Mobile: match BUZZ mobile size */
+@media (max-width: 640px) {
+  .disco-rotazione {
+    width: clamp(260px, 75vw, 340px); /* Same as .tron-disc mobile */
+  }
+}
+
+/* SVG Progress Ring - positioned over the disc edge */
+.disco-progress-svg {
+  position: absolute;
+  inset: -8px;
+  width: calc(100% + 16px);
+  height: calc(100% + 16px);
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Rotation wrapper */
 .disco-rotazione-rotating {
   position: absolute;
   inset: 0;
@@ -99,7 +116,7 @@
   z-index: 10;
 }
 
-/* Counter number - BIG style like loading percentage */
+/* Counter number - BIG */
 .disco-counter {
   font-family: 'Orbitron', 'SF Pro Display', -apple-system, sans-serif;
   font-size: clamp(56px, 14vw, 80px);
@@ -134,7 +151,6 @@
     0 0 40px rgba(255, 0, 0, 0.4);
 }
 
-/* Dim counter for ARMED state */
 .disco-counter-dim {
   opacity: 0.5;
   color: rgba(255, 255, 255, 0.6);
@@ -163,25 +179,7 @@
     0 0 12px rgba(139, 92, 246, 0.15);
 }
 
-/* Progress arc - conic gradient based on progress */
-.disco-progress-arc {
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    var(--disco-blue) 0deg,
-    var(--disco-violet) calc(var(--progress, 0) * 360deg),
-    transparent calc(var(--progress, 0) * 360deg)
-  );
-  -webkit-mask: radial-gradient(circle, transparent calc(50% - 4px), black calc(50% - 4px));
-  mask: radial-gradient(circle, transparent calc(50% - 4px), black calc(50% - 4px));
-  filter: drop-shadow(0 0 15px var(--disco-glow));
-  opacity: 0.9;
-  transition: opacity 0.2s;
-}
-
-/* Cardinal dots - white with blue glow */
+/* Cardinal dots */
 .disco-dots {
   position: absolute;
   inset: 10%;
@@ -425,7 +423,6 @@
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .disco-rotazione,
-  .disco-progress-arc,
   .disco-counter,
   .disco-status {
     transition: none !important;

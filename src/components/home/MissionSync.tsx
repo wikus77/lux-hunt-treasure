@@ -41,12 +41,48 @@ const DiscoRotazioneModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
     setPortalContainer(container);
   }, []);
 
+  // Lock to portrait when modal is open
   useEffect(() => {
-    if (isOpen) {
-      const orig = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = orig; };
-    }
+    if (!isOpen) return;
+
+    const origOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    // Try to lock orientation to portrait
+    const lockOrientation = async () => {
+      try {
+        // Standard Screen Orientation API (experimental, needs type cast)
+        const orientation = screen.orientation as ScreenOrientation & {
+          lock?: (orientation: string) => Promise<void>;
+          unlock?: () => void;
+        };
+        if (orientation && typeof orientation.lock === 'function') {
+          await orientation.lock('portrait');
+          console.log('[DiscoRotazione] Orientation locked to portrait');
+        }
+      } catch (err) {
+        // Orientation lock not supported or denied - this is fine
+        console.log('[DiscoRotazione] Orientation lock not available:', err);
+      }
+    };
+
+    lockOrientation();
+
+    return () => {
+      document.body.style.overflow = origOverflow;
+      // Unlock orientation
+      try {
+        const orientation = screen.orientation as ScreenOrientation & {
+          unlock?: () => void;
+        };
+        if (orientation && typeof orientation.unlock === 'function') {
+          orientation.unlock();
+          console.log('[DiscoRotazione] Orientation unlocked');
+        }
+      } catch (err) {
+        // Ignore unlock errors
+      }
+    };
   }, [isOpen]);
 
   const handleSuccess = (score: number) => {
