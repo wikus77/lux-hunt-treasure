@@ -451,19 +451,86 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
           navigator.vibrate([100, 50, 100, 50, 200]);
         }
 
-        // 🔒 Reward already assigned server-side - just notify UI
-        if (serverResult!.reward_type === 'm1u' && serverResult!.reward_value) {
-          window.dispatchEvent(new CustomEvent('m1u-credited', {
-            detail: { amount: serverResult!.reward_value }
-          }));
+        // 🎁 AWARD PRIZE BASED ON WINNING SEGMENT
+        // The wheel segment determines the actual prize, not milestones
+        const segmentPrize = winningSegment;
+        
+        if (segmentPrize.type === 'm1u' && segmentPrize.value > 0 && user) {
+          try {
+            // Award M1U directly to user's profile
+            const { error: awardError } = await supabase.rpc('award_wheel_m1u', {
+              p_amount: segmentPrize.value
+            });
+            
+            if (awardError) {
+              // Fallback: direct update if RPC doesn't exist
+              console.warn('[FortuneWheel] award_wheel_m1u RPC failed, trying direct update:', awardError);
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ 
+                  m1_units: supabase.rpc('increment_m1u', { amount: segmentPrize.value })
+                })
+                .eq('id', user.id);
+              
+              if (updateError) {
+                // Last resort: simple increment via raw SQL approach
+                const { data: profile } = await supabase
+                  .from('profiles')
+                  .select('m1_units')
+                  .eq('id', user.id)
+                  .single();
+                
+                if (profile) {
+                  await supabase
+                    .from('profiles')
+                    .update({ m1_units: (profile.m1_units || 0) + segmentPrize.value })
+                    .eq('id', user.id);
+                }
+              }
+            }
+            
+            // Notify UI of credit
+            window.dispatchEvent(new CustomEvent('m1u-credited', {
+              detail: { amount: segmentPrize.value }
+            }));
+            
+            toast.success(`+${segmentPrize.value} M1U aggiunti!`, {
+              description: 'Il premio è stato accreditato sul tuo account'
+            });
+            
+          } catch (err) {
+            console.error('[FortuneWheel] Failed to award M1U:', err);
+            toast.error('Errore nell\'assegnazione del premio');
+          }
+        } else if (segmentPrize.type === 'pe' && segmentPrize.value > 0 && user) {
+          // Award Pulse Energy
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('pulse_energy')
+              .eq('id', user.id)
+              .single();
+            
+            if (profile) {
+              await supabase
+                .from('profiles')
+                .update({ pulse_energy: (profile.pulse_energy || 0) + segmentPrize.value })
+                .eq('id', user.id);
+              
+              toast.success(`+${segmentPrize.value} PE aggiunti!`);
+            }
+          } catch (err) {
+            console.error('[FortuneWheel] Failed to award PE:', err);
+          }
         }
         
-        // Track reward assigned (server-side confirmed)
-        if (serverResult?.reward_value && serverResult.reward_value > 0) {
+        // Track reward assigned
+        if (segmentPrize.value > 0) {
           Analytics.track('wheel_reward_assigned', {
             spin_id: serverResult?.interaction_id || spinId,
-            reward_type: serverResult?.reward_type,
-            reward_value: serverResult?.reward_value,
+            reward_type: segmentPrize.type,
+            reward_value: segmentPrize.value,
+            segment_label: segmentPrize.label,
           }, { dedupe_key: `wheel:reward:${serverResult?.interaction_id || spinId}` });
         }
       } else {
