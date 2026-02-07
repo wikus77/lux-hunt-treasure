@@ -22,6 +22,7 @@ import { useCashbackWallet } from '@/hooks/useCashbackWallet'; // 🆕 M1SSION C
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { toast } from 'sonner';
 import { showInsufficientM1UToast, showM1UDebitSuccessToast } from '@/utils/m1uHelpers';
+import { hapticMedium, isHapticsAvailable } from '@/utils/haptics';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 // 🌑 Shadow Protocol v3 - Contextual trigger
@@ -217,23 +218,57 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   }, [user?.id]);
 
   const handleAction = async () => {
+    // 📳 HAPTIC: Immediate tactile feedback on button press (iOS native)
+    if (isHapticsAvailable()) {
+      hapticMedium();
+    }
+    
     // 🔊 Play BUZZ button sound on press
     playBuzzButtonSound();
     
-    // 🔍 DEV-ONLY: BUZZ Flow Decision Log
+    // 🔍 DEV-ONLY: BUZZ Flow Decision Log + FREE BUZZ AUDIT
     if (import.meta.env.DEV) {
-      console.log('[BUZZ FLOW] 🔍 Decision State:', {
-        tier: userTier,
-        tierFreeBuzzRemaining,
-        tierWeeklyLimit,
-        hasTierFreeBuzz,
-        grantFreeBuzzRemaining: grantRemaining,
-        hasGrantFreeBuzz,
-        m1uBalance: unitsData?.balance || 0,
-        nextCostM1U: getCurrentBuzzCostM1U(),
-        dailyBuzzCounter,
-        decisionPath: hasTierFreeBuzz ? '1️⃣ TIER FREE' : hasGrantFreeBuzz ? '2️⃣ GRANT FREE' : '3️⃣ M1U PAYMENT'
-      });
+      const auditTimestamp = new Date().toISOString();
+      const auditLocalDate = new Date().toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' });
+      const auditLocalTime = new Date().toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome' });
+      
+      console.log('╔══════════════════════════════════════════════════════════════════╗');
+      console.log('║           🔍 BUZZ FREE AUDIT - DECISION POINT                    ║');
+      console.log('╚══════════════════════════════════════════════════════════════════╝');
+      console.log(`📅 Timestamp: ${auditTimestamp}`);
+      console.log(`📅 Local (Rome): ${auditLocalDate} ${auditLocalTime}`);
+      console.log('');
+      console.log('┌─────────────────────────────────────────────────────────────────┐');
+      console.log('│ 1️⃣  TIER FREE BUZZ (settimanale)                                │');
+      console.log('├─────────────────────────────────────────────────────────────────┤');
+      console.log(`│ userTier: ${userTier}`);
+      console.log(`│ tierWeeklyLimit: ${tierWeeklyLimit}`);
+      console.log(`│ tierFreeBuzzRemaining: ${tierFreeBuzzRemaining}`);
+      console.log(`│ hasTierFreeBuzz: ${hasTierFreeBuzz}`);
+      console.log(`│ SOURCE: user_buzz_weekly table (week_start)`);
+      console.log('└─────────────────────────────────────────────────────────────────┘');
+      console.log('');
+      console.log('┌─────────────────────────────────────────────────────────────────┐');
+      console.log('│ 2️⃣  GRANT FREE BUZZ (premi)                                     │');
+      console.log('├─────────────────────────────────────────────────────────────────┤');
+      console.log(`│ grantRemaining: ${grantRemaining}`);
+      console.log(`│ hasGrantFreeBuzz: ${hasGrantFreeBuzz}`);
+      console.log(`│ dailyUsed flag: ${dailyUsed}`);
+      console.log(`│ SOURCE: buzz_grants table (remaining > 0)`);
+      console.log('└─────────────────────────────────────────────────────────────────┘');
+      console.log('');
+      console.log('┌─────────────────────────────────────────────────────────────────┐');
+      console.log('│ 🎯 COMBINED DECISION                                            │');
+      console.log('├─────────────────────────────────────────────────────────────────┤');
+      console.log(`│ hasAnyFreeBuzz: ${hasAnyFreeBuzz} (tier OR grant)`);
+      console.log(`│ currentCostM1U: ${currentCostM1U}`);
+      console.log(`│ currentPriceDisplay: ${currentPriceDisplay}`);
+      console.log(`│ dailyBuzzCounter: ${dailyBuzzCounter}`);
+      console.log(`│ m1uBalance: ${unitsData?.balance || 0}`);
+      console.log('└─────────────────────────────────────────────────────────────────┘');
+      console.log('');
+      console.log(`🚦 DECISION PATH: ${hasTierFreeBuzz ? '1️⃣ TIER FREE (settimanale)' : hasGrantFreeBuzz ? '2️⃣ GRANT FREE (premi)' : '3️⃣ M1U PAYMENT'}`);
+      console.log('═══════════════════════════════════════════════════════════════════');
     }
     
     if (!user) {
