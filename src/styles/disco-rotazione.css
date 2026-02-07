@@ -430,4 +430,38 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   LANDSCAPE BLOCKER - Forces portrait mode visually
+   ═══════════════════════════════════════════════════════════════════════════ */
+.disco-landscape-blocker {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #0A0E14 0%, #050709 50%, #0A0E14 100%);
+  z-index: 99999;
+}
+
+.disco-landscape-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  animation: rotateBounce 2s ease-in-out infinite;
+}
+
+@keyframes rotateBounce {
+  0%, 100% { transform: rotate(-90deg) scale(1); }
+  50% { transform: rotate(-90deg) scale(1.1); }
+}
+
+.disco-landscape-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  padding: 0 32px;
+  letter-spacing: 0.05em;
+}
+
 /* © 2026 M1SSION™ — NIYVORA KFT — Joseph MULÉ */
