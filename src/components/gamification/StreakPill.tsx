@@ -153,11 +153,35 @@ const StreakPill: React.FC<StreakPillProps> = ({ className = '', showLabel = tru
               </motion.div>
             ) : (
               <motion.div key="streak" className="flex items-center gap-1.5" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                {showLabel && <span className="text-sm font-semibold text-white/90 font-orbitron">STREAK</span>}
-                <span className={`text-sm font-bold font-orbitron ${pulseAnimation ? 'text-orange-400' : 'text-white'}`}>
+                {showLabel && (
+                  <span 
+                    className="text-sm font-semibold font-orbitron"
+                    style={{ 
+                      color: '#FFFFFF',
+                      textShadow: '0 0 8px rgba(255,107,53,0.6), 0 1px 2px rgba(0,0,0,0.8)',
+                    }}
+                  >
+                    STREAK
+                  </span>
+                )}
+                <span 
+                  className="text-sm font-bold font-orbitron"
+                  style={{ 
+                    color: pulseAnimation ? '#FF9F43' : '#FFFFFF',
+                    textShadow: `0 0 10px ${pulseAnimation ? 'rgba(255,159,67,0.8)' : 'rgba(255,107,53,0.5)'}, 0 1px 2px rgba(0,0,0,0.8)`,
+                  }}
+                >
                   {streak}
                 </span>
-                <span className="text-xs text-white/60">d</span>
+                <span 
+                  className="text-xs font-medium"
+                  style={{ 
+                    color: 'rgba(255,255,255,0.85)',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.6)',
+                  }}
+                >
+                  d
+                </span>
               </motion.div>
             )}
           </AnimatePresence>

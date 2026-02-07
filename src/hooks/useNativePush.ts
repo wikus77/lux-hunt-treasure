@@ -73,7 +73,10 @@ export function useNativePush(): UseNativePushReturn {
       registration: (token) => {
         if (mounted) {
           setState(getPushState());
-          toast.success('✅ Push token registered!');
+          // 🔇 Toast removed 2026-02-07 (PUSH_FREEZE) - only log in DEV
+          if (import.meta.env.DEV) {
+            console.log('[useNativePush] ✅ Push token registered');
+          }
         }
       },
       registrationError: (err) => {
