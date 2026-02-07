@@ -22,6 +22,27 @@ function maskToken(token: string): string {
   return token.substring(0, 10) + '...[' + token.length + ' chars]';
 }
 
+// Decode JWT payload to check role (without verifying signature - Supabase handles that)
+function decodeJwtPayload(token: string): Record<string, any> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = parts[1];
+    // Add padding if needed
+    const padded = payload + '='.repeat((4 - payload.length % 4) % 4);
+    const decoded = atob(padded.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
+// Check if token is a service_role JWT
+function isServiceRoleToken(token: string): boolean {
+  const payload = decodeJwtPayload(token);
+  return payload?.role === 'service_role';
+}
+
 // ============================================================================
 // TOKEN VALIDATION GUARD (HARDENING)
 // ============================================================================
@@ -63,7 +84,7 @@ serve(async (req) => {
     )
 
     // =========================================================================
-    // AUTH: Support both user JWT and admin secret
+    // AUTH: Support user JWT, service role JWT, and admin secret
     // =========================================================================
     let userId: string | null = null;
     let authMethod: string = 'none';
@@ -71,38 +92,41 @@ serve(async (req) => {
     // Check for admin secret first (for testing from Supabase dashboard)
     const adminSecret = req.headers.get('x-admin-secret');
     const expectedAdminSecret = Deno.env.get('ADMIN_PUSH_SECRET');
+    const authHeader = req.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
 
     if (adminSecret && expectedAdminSecret && adminSecret === expectedAdminSecret) {
       authMethod = 'admin-secret';
       console.log(`🔐 [${requestId}] Auth via admin secret`);
+    } else if (token) {
+      // Check if it's a service_role JWT (for cron/internal calls)
+      if (isServiceRoleToken(token)) {
+        authMethod = 'service-role';
+        console.log(`🔐 [${requestId}] Auth via service role JWT`);
+      } else {
+        // Try user JWT auth
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+        if (userError || !user) {
+          console.log(`❌ [${requestId}] Invalid JWT:`, userError?.message);
+          return new Response(
+            JSON.stringify({ error: 'Invalid token', details: userError?.message }),
+            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        userId = user.id;
+        authMethod = 'jwt';
+        console.log(`🔐 [${requestId}] Auth via JWT, user: ${userId}`);
+      }
     } else {
-      // Fall back to user JWT auth
-      const authHeader = req.headers.get('Authorization');
-      const token = authHeader?.replace('Bearer ', '');
-      
-      if (!token) {
-        console.log(`❌ [${requestId}] No auth token provided`);
-        return new Response(
-          JSON.stringify({ 
-            error: 'Authentication required',
-            hint: 'Provide Authorization: Bearer <token> or x-admin-secret header'
-          }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-      if (userError || !user) {
-        console.log(`❌ [${requestId}] Invalid JWT:`, userError?.message);
-        return new Response(
-          JSON.stringify({ error: 'Invalid token', details: userError?.message }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      userId = user.id;
-      authMethod = 'jwt';
-      console.log(`🔐 [${requestId}] Auth via JWT, user: ${userId}`);
+      console.log(`❌ [${requestId}] No auth token provided`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Authentication required',
+          hint: 'Provide Authorization: Bearer <token> or x-admin-secret header'
+        }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // =========================================================================
@@ -169,8 +193,27 @@ serve(async (req) => {
     const results: any[] = [];
 
     for (const tokenData of tokens) {
-      const platform = tokenData.platform || 'web';
-      const endpointType = tokenData.endpoint_type || 'web_push';
+      // 🛡️ SMART PLATFORM DETECTION: If DB columns are missing, detect from token format
+      // APNs tokens are EXACTLY 64 hex characters (32 bytes)
+      const isAPNsToken = /^[a-fA-F0-9]{64}$/.test(tokenData.token);
+      
+      let platform = tokenData.platform;
+      let endpointType = tokenData.endpoint_type;
+      
+      // Auto-detect if columns are missing or have wrong defaults
+      if (!platform || platform === 'web' || !endpointType || endpointType === 'web_push') {
+        if (isAPNsToken) {
+          platform = 'ios';
+          endpointType = 'apns';
+          console.log(`🔍 [${requestId}] Auto-detected iOS APNs token (64 hex chars)`);
+        } else if (tokenData.token.length > 100) {
+          // FCM tokens are typically longer (150+ chars)
+          platform = 'android';
+          endpointType = 'fcm';
+          console.log(`🔍 [${requestId}] Auto-detected Android FCM token (long format)`);
+        }
+      }
+      
       const tokenPreview = maskToken(tokenData.token);
       
       console.log(`📤 [${requestId}] Processing: platform=${platform}, type=${endpointType}, token=${tokenPreview}`);

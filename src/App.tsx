@@ -23,6 +23,7 @@ import { ProductionSafetyWrapper } from "./components/ProductionSafetyWrapper";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 // OneSignal rimosso - usando solo FCM
 import { IOSPermissionManager } from "./components/IOSPermissionManager";
+import { NativePushPermissionTrigger } from "./components/push/NativePushPermissionTrigger";
 import { AndroidPushSetup } from "./components/android/AndroidPushSetup";
 import { PushNotificationSetup } from "./components/PushNotificationSetup";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
@@ -281,6 +282,8 @@ function App() {
                     <WouterRoutes />
                     <InstallPrompt />
                     <IOSPermissionManager />
+                    {/* 🔔 NATIVE PUSH: Triggers iOS/Android permission dialog after login */}
+                    <NativePushPermissionTrigger />
                     <AndroidPushSetup className="hidden" />
                     <PushNotificationSetup className="hidden" />
                     <XpSystemManager />

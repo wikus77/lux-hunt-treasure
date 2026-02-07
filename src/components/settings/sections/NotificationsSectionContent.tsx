@@ -1,14 +1,15 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // Notifiche - Section Modal Content (Revolut-style glass design)
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { X, Bell, Volume2, RefreshCw, Smartphone, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, lazy, Suspense, useRef } from 'react';
+import { X, Bell, Volume2, RefreshCw, Smartphone, AlertCircle, Check, ChevronRight, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { Capacitor } from '@capacitor/core';
+import { useNativePush } from '@/hooks/useNativePush';
 
-// Lazy load push components
+// Lazy load push components (dormant - only for debug)
 const NativePushDiagnostic = lazy(() => import('@/components/push/NativePushDiagnostic').then(m => ({ default: m.NativePushDiagnostic })));
 
 // Platform check
@@ -20,6 +21,9 @@ const isNativePlatform = (): boolean => {
   }
 };
 
+// Secret tap count to reveal debug panel
+const DEBUG_TAP_COUNT = 7;
+
 interface NotificationsSectionContentProps {
   onClose: () => void;
 }
@@ -28,6 +32,20 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  
+  // 🔧 Debug panel state (hidden by default)
+  const [debugTapCount, setDebugTapCount] = useState(0);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const debugTapTimeout = useRef<NodeJS.Timeout | null>(null);
+  
+  // Native push hook for the simple toggle
+  const {
+    hasPermission: pushPermission,
+    isRegistered: pushRegistered,
+    requestPermission: requestPushPermission,
+    isLoading: pushLoading,
+    state: pushState,
+  } = useNativePush();
   
   const {
     preferences,
@@ -46,6 +64,42 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
     sound_enabled: true,
     haptic_enabled: true
   });
+  
+  // Handle secret tap for debug panel
+  const handleDebugTap = () => {
+    if (debugTapTimeout.current) {
+      clearTimeout(debugTapTimeout.current);
+    }
+    
+    setDebugTapCount(prev => {
+      const newCount = prev + 1;
+      if (newCount >= DEBUG_TAP_COUNT) {
+        setShowDebugPanel(true);
+        toast({ title: "🔧 Debug mode attivato" });
+        return 0;
+      }
+      return newCount;
+    });
+    
+    // Reset counter after 2 seconds of no taps
+    debugTapTimeout.current = setTimeout(() => {
+      setDebugTapCount(0);
+    }, 2000);
+  };
+  
+  // Handle push notification toggle
+  const handlePushToggle = async () => {
+    if (pushLoading) return;
+    
+    if (!pushPermission || !pushRegistered) {
+      // Request permission and register
+      await requestPushPermission();
+      toast({ title: "🔔 Richiesta permessi notifiche inviata" });
+    } else {
+      // Already registered, just toggle the preference in DB
+      await saveSettings({ push_notifications_enabled: !settings.push_notifications_enabled });
+    }
+  };
 
   const categoryIcons: Record<string, string> = {
     'Luxury & moda': '💎',
@@ -206,22 +260,76 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
           </div>
         </GlassCard>
 
-        {/* Push Notifications */}
+        {/* Push Notifications - Simple Toggle */}
         <GlassCard style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+          <div 
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', cursor: 'pointer' }}
+            onClick={handleDebugTap}
+          >
             <Smartphone style={{ width: '20px', height: '20px', color: '#22C55E' }} />
             <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Notifiche Push</span>
           </div>
 
           {isNativePlatform() ? (
-            <Suspense fallback={
-              <div style={{ padding: '20px', textAlign: 'center' }}>
-                <div style={{ width: '24px', height: '24px', border: '2px solid rgba(34, 197, 94, 0.3)', borderTopColor: '#22C55E', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '8px' }}>Caricamento diagnostica push...</p>
+            <>
+              {/* Simple Push Toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '12px' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Bell style={{ width: '18px', height: '18px', color: pushRegistered ? '#22C55E' : '#6B7280' }} />
+                    <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 500 }}>Ricevi Notifiche Push</span>
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '4px', marginLeft: '26px' }}>
+                    {pushRegistered 
+                      ? 'Riceverai aggiornamenti su premi e missioni' 
+                      : 'Attiva per ricevere notifiche importanti'}
+                  </p>
+                </div>
+                <Toggle 
+                  checked={pushRegistered && settings.push_notifications_enabled}
+                  onChange={handlePushToggle}
+                  disabled={pushLoading}
+                />
               </div>
-            }>
-              <NativePushDiagnostic />
-            </Suspense>
+
+              {/* Status indicator */}
+              {pushRegistered ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                  <Check style={{ width: '16px', height: '16px', color: '#22C55E' }} />
+                  <span style={{ color: '#22C55E', fontSize: '13px', fontWeight: 500 }}>Notifiche push attive</span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                  <AlertCircle style={{ width: '16px', height: '16px', color: '#F59E0B' }} />
+                  <span style={{ color: '#F59E0B', fontSize: '13px' }}>
+                    Attiva il toggle per ricevere notifiche
+                  </span>
+                </div>
+              )}
+
+              {/* 🔧 Debug Panel - Hidden until 7 taps on title */}
+              {showDebugPanel && (
+                <div style={{ marginTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>🔧 Debug Panel</span>
+                    <button 
+                      onClick={() => setShowDebugPanel(false)}
+                      style={{ padding: '4px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: '11px', cursor: 'pointer' }}
+                    >
+                      Nascondi
+                    </button>
+                  </div>
+                  <Suspense fallback={
+                    <div style={{ padding: '20px', textAlign: 'center' }}>
+                      <div style={{ width: '24px', height: '24px', border: '2px solid rgba(34, 197, 94, 0.3)', borderTopColor: '#22C55E', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '8px' }}>Caricamento diagnostica...</p>
+                    </div>
+                  }>
+                    <NativePushDiagnostic />
+                  </Suspense>
+                </div>
+              )}
+            </>
           ) : (
             <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

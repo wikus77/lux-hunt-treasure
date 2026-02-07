@@ -127,10 +127,35 @@ Deno.serve(async (req) => {
     const CRON_SECRET = Deno.env.get("CRON_SECRET") || Deno.env.get("INTERNAL_SECRET");
     const providedSecret = req.headers.get("x-cron-secret") || req.headers.get("x-internal-secret") || body.cron_secret;
     
-    // Allow if: secret matches OR if called from Supabase internal (service role in auth header)
+    // Allow if: secret matches OR if called with service role key
     const authHeader = req.headers.get("authorization");
-    const isServiceRole = authHeader?.includes(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.slice(0, 20) || "NONE");
-    const isAdminAuth = (CRON_SECRET && providedSecret === CRON_SECRET) || isServiceRole;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    // 🔧 FIX 2026-02-06: Multiple auth methods
+    let isServiceRole = false;
+    if (authHeader && serviceRoleKey) {
+      const providedToken = authHeader.replace("Bearer ", "").trim();
+      // Compare full token OR first 50 chars (in case of slight differences)
+      isServiceRole = providedToken === serviceRoleKey || 
+                      providedToken.slice(0, 50) === serviceRoleKey.slice(0, 50);
+    }
+    
+    // 🆕 ADMIN_PUSH_SECRET as alternative auth (same used by send-native-push)
+    const adminPushSecret = Deno.env.get("ADMIN_PUSH_SECRET");
+    const providedAdminSecret = req.headers.get("x-admin-secret") || body.admin_secret;
+    const isAdminPushAuth = adminPushSecret && providedAdminSecret === adminPushSecret;
+    
+    // 🆕 Accept Authorization header with service_role JWT (verify role claim)
+    let isServiceRoleJWT = false;
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const token = authHeader.replace("Bearer ", "");
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        isServiceRoleJWT = payload.role === "service_role";
+      } catch { /* ignore parse errors */ }
+    }
+    
+    const isAdminAuth = (CRON_SECRET && providedSecret === CRON_SECRET) || isServiceRole || isAdminPushAuth || isServiceRoleJWT;
     
     // 🔧 2026-01-23: Made auth DETERMINISTIC (removed backwards-compat mode)
     // If CRON_SECRET is not configured, allow all requests (for initial setup)
@@ -138,6 +163,11 @@ Deno.serve(async (req) => {
     if (CRON_SECRET && !isAdminAuth) {
       console.error("[AUTO-PUSH-CRON] ❌ Invalid cron secret - REJECTED");
       console.error(`[AUTO-PUSH-CRON] 🔍 Debug: CRON_SECRET set=${!!CRON_SECRET}, providedSecret set=${!!providedSecret}, isServiceRole=${isServiceRole}`);
+      console.error(`[AUTO-PUSH-CRON] 🔍 Debug: authHeader present=${!!authHeader}, serviceRoleKey present=${!!serviceRoleKey}`);
+      if (authHeader && serviceRoleKey) {
+        const providedToken = authHeader.replace("Bearer ", "").trim();
+        console.error(`[AUTO-PUSH-CRON] 🔍 Debug: token first 20 chars match=${providedToken.slice(0, 20) === serviceRoleKey.slice(0, 20)}`);
+      }
       return json({ error: "Unauthorized - invalid cron secret" }, 401);
     }
     

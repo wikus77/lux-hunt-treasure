@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
-// Chat Push Notify - V7 STABILE
-// Usa webpush_subscriptions come webpush-send (FUNZIONANTE)
+// Chat Push Notify - V8 NATIVE PUSH SUPPORT
+// Invia a ENTRAMBI: webpush_subscriptions (PWA) + push_tokens (iOS/Android native)
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import webpush from "npm:web-push@3.6.7";
@@ -10,6 +10,53 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// ============================================================================
+// 🆕 NATIVE PUSH HELPER - Chiama send-native-push per iOS/Android
+// ============================================================================
+async function sendNativePushToUser(
+  userId: string,
+  title: string,
+  body: string,
+  data: Record<string, any>
+): Promise<{ sent: number; failed: number }> {
+  const ADMIN_PUSH_SECRET = Deno.env.get("ADMIN_PUSH_SECRET");
+  const SB_URL = Deno.env.get("SUPABASE_URL");
+  
+  if (!ADMIN_PUSH_SECRET || !SB_URL) {
+    console.log(`[CHAT-PUSH] ⚠️ Native push skipped: missing ADMIN_PUSH_SECRET or SUPABASE_URL`);
+    return { sent: 0, failed: 0 };
+  }
+
+  try {
+    const response = await fetch(`${SB_URL}/functions/v1/send-native-push`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-secret': ADMIN_PUSH_SECRET,
+      },
+      body: JSON.stringify({
+        title,
+        body,
+        data,
+        targetUserId: userId,
+      }),
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log(`[CHAT-PUSH] 📱 Native sent to ${userId.slice(0,8)}...: ${result.sent} sent`);
+      return { sent: result.sent || 0, failed: result.failed || 0 };
+    } else {
+      console.log(`[CHAT-PUSH] ⚠️ Native failed for ${userId.slice(0,8)}...: ${result.error}`);
+      return { sent: 0, failed: 1 };
+    }
+  } catch (error: any) {
+    console.error(`[CHAT-PUSH] ❌ Native error for ${userId.slice(0,8)}...:`, error.message);
+    return { sent: 0, failed: 1 };
+  }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -119,10 +166,31 @@ serve(async (req) => {
       }
     });
 
-    let sent = 0;
-    let failed = 0;
+    let webpushSent = 0;
+    let webpushFailed = 0;
 
+    // ════════════════════════════════════════════════════════════════════
+    // STEP 0: Check which users have native tokens (to avoid duplicates!)
+    // ════════════════════════════════════════════════════════════════════
+    const { data: nativeTokens } = await supabase
+      .from("push_tokens")
+      .select("user_id")
+      .in("user_id", recipientIds)
+      .eq("is_active", true);
+    
+    const usersWithNativeToken = new Set((nativeTokens || []).map(t => t.user_id));
+    console.log(`[CHAT-PUSH] Users with native tokens: ${usersWithNativeToken.size}/${recipientIds.length}`);
+
+    // ════════════════════════════════════════════════════════════════════
+    // STEP 1: Send WebPush (PWA) - ONLY to users WITHOUT native token
+    // ════════════════════════════════════════════════════════════════════
     for (const s of subs || []) {
+      // Skip if user has native token (they'll get native push instead)
+      if (usersWithNativeToken.has(s.user_id)) {
+        console.log(`[CHAT-PUSH] ⏭️ Skipping webpush for ${s.user_id} (has native token)`);
+        continue;
+      }
+      
       try {
         // Costruisci oggetto subscription corretto per webpush
         const subscription = {
@@ -139,11 +207,11 @@ serve(async (req) => {
         }
         
         await webpush.sendNotification(subscription, payload);
-        sent++;
-        console.log("[CHAT-PUSH] ✅ Sent to:", s.user_id);
+        webpushSent++;
+        console.log("[CHAT-PUSH] ✅ WebPush sent to:", s.user_id);
       } catch (e: any) {
-        failed++;
-        console.error("[CHAT-PUSH] ❌ Error:", e?.statusCode || e?.message || e);
+        webpushFailed++;
+        console.error("[CHAT-PUSH] ❌ WebPush error:", e?.statusCode || e?.message || e);
         // Cleanup expired subscriptions (410 = expired)
         if (e?.statusCode === 410) {
           await supabase
@@ -154,9 +222,46 @@ serve(async (req) => {
       }
     }
 
-    console.log(`[CHAT-PUSH] Done: ${sent} sent, ${failed} failed`);
+    // ════════════════════════════════════════════════════════════════════
+    // STEP 2: Send Native Push (iOS/Android) - ONLY to users WITH native token
+    // ════════════════════════════════════════════════════════════════════
+    let nativeSent = 0;
+    let nativeFailed = 0;
+    
+    // Send to each recipient that has a native token
+    for (const userId of recipientIds) {
+      // Only send native if user has native token
+      if (!usersWithNativeToken.has(userId)) {
+        continue;
+      }
+      
+      const nativeResult = await sendNativePushToUser(
+        userId,
+        title,
+        bodyText,
+        {
+          conversation_id,
+          type: 'chat_message',
+          route: `/notifications?chat=${conversation_id}`
+        }
+      );
+      nativeSent += nativeResult.sent;
+      nativeFailed += nativeResult.failed;
+    }
 
-    return new Response(JSON.stringify({ ok: true, sent, failed, total: subs?.length || 0 }), {
+    const totalSent = webpushSent + nativeSent;
+    const totalFailed = webpushFailed + nativeFailed;
+    
+    console.log(`[CHAT-PUSH] Done: webpush=${webpushSent}, native=${nativeSent}, failed=${totalFailed}`);
+
+    return new Response(JSON.stringify({ 
+      ok: true, 
+      webpush_sent: webpushSent,
+      native_sent: nativeSent,
+      total_sent: totalSent,
+      failed: totalFailed,
+      recipients: recipientIds.length
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
