@@ -403,8 +403,8 @@ serve(async (req) => {
     let newBalance = 0;
     let newEntitlements: any = null;
 
-    // 🔧 [IAP_FIX_V12] Use productConfig instead of product (supports fallback)
-    const productType = productConfig.product_type || productConfig.type || 'consumable';
+    // 🔧 [IAP_FIX_V14] Removed duplicate productType declaration - already defined at line 314
+    // productType is already defined above as: const productType = productConfig.product_type || 'consumable';
     
     if (productType === 'consumable') {
       // 🔧 [IAP_FIX_V12] Simplified M1U crediting - more robust
