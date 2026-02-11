@@ -735,57 +735,35 @@ async function validatePurchaseServerSide(params: {
   jws?: string;
   originalTransactionId?: string;
 }): Promise<{ success: boolean; error?: string; newBalance?: number; isNetworkError?: boolean }> {
-  // 🚨🚨🚨 [IAP_FIX_V11] ENTRY POINT LOG - MUST APPEAR IN XCODE 🚨🚨🚨
-  console.error('[IAP_FIX_V11] 🎯 validatePurchaseServerSide CALLED:', {
-    transactionId: params.transactionId?.slice(-10) || 'NO_TXN',
-    productCode: params.productCode,
-    platform: params.platform,
-    timestamp: new Date().toISOString(),
-  });
+  // 🚨🚨🚨 [IAP_FIX_V12] ALL LOGS USE console.error FOR XCODE VISIBILITY 🚨🚨🚨
+  const txnShort = params.transactionId?.slice(-10) || 'NO_TXN';
+  console.error(`[IAP_V12] 🎯 ENTRY txn:${txnShort} product:${params.productCode}`);
   
   const functionName = 'verify-iap-purchase';
   
-  // 🔧 [IAP_FIX_V10] Check rate limit BEFORE making any request
+  // Check rate limit
   if (isRateLimited()) {
     const remaining = getRateLimitCooldownRemaining();
-    console.log('[IAP_FIX_V10] ⏳ Rate limited, cooldown remaining:', Math.round(remaining / 1000), 'seconds');
+    console.error(`[IAP_V12] ⏳ RATE_LIMITED cooldown:${Math.round(remaining / 1000)}s`);
     return {
       success: false,
       error: `Server sovraccarico - riprova tra ${Math.ceil(remaining / 1000)} secondi`,
-      isNetworkError: true, // Mark as retriable
+      isNetworkError: true,
     };
   }
   
-  // Mark as pending to prevent balance rollback
   pendingValidationTransactions.add(params.transactionId);
   
   try {
-    // 🔍 [IAP_FIX_V10] Pre-call diagnostics
-    console.log('[IAP_FIX_V10] 📤 Pre-validation diagnostics:', {
-      functionName,
-      platform: params.platform,
-      productCode: params.productCode,
-      transactionId: params.transactionId,
-      hasReceipt: !!params.receipt,
-      hasJws: !!params.jws,
-      receiptLength: params.receipt?.length || 0,
-      jwsLength: params.jws?.length || 0,
-      navigatorOnline: typeof navigator !== 'undefined' ? navigator.onLine : 'N/A',
-    });
-
-    // 🔍 [IAP_FIX_V10] Check session state
+    // Session check - use console.error for visibility
+    console.error(`[IAP_V12] 📡 Getting session...`);
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     const session = sessionData?.session;
     
-    console.log('[IAP_FIX_V10] 🔐 Session check:', {
-      hasSession: !!session,
-      hasAccessToken: !!session?.access_token,
-      userId: session?.user?.id || 'NO_USER',
-      sessionError: sessionError?.message || null,
-    });
+    console.error(`[IAP_V12] 🔐 Session: has=${!!session} token=${session?.access_token?.length || 0}chars userId=${session?.user?.id?.slice(-8) || 'NONE'} err=${sessionError?.message || 'none'}`);
 
     if (!session?.access_token) {
-      console.error('[IAP_FIX_V10] ❌ No valid session');
+      console.error('[IAP_V12] ❌ NO SESSION - login required');
       pendingValidationTransactions.delete(params.transactionId);
       return { 
         success: false, 
@@ -794,33 +772,29 @@ async function validatePurchaseServerSide(params: {
       };
     }
 
-    // 🔍 [IAP_FIX_V10] Prepare request body (truncate JWS if too large)
+    // 🔧 [IAP_FIX_V12] MINIMAL request body - only send what's needed
+    // The server can verify via transaction_id, don't need full JWS
     const requestBody = {
       platform: params.platform,
       product_id: params.storeProductId,
       transaction_id: params.transactionId,
       original_transaction_id: params.originalTransactionId,
-      purchase_token: params.platform === 'android' ? params.transactionId : undefined,
-      // Truncate receipt if too large (server can verify via transaction_id)
-      receipt_data: params.receipt && params.receipt.length > 50000 ? undefined : params.receipt,
-      // JWS can be very large - only send first part for logging, full validation via transaction_id
-      jws_representation: params.jws && params.jws.length > 50000 
-        ? params.jws.slice(0, 10000) 
-        : params.jws,
+      // DON'T send JWS - it's huge and not needed (server verifies via transaction_id)
+      // receipt_data: undefined,
+      // jws_representation: undefined,
     };
 
-    console.log('[IAP_FIX_V10] 📦 Request body size:', JSON.stringify(requestBody).length, 'chars');
+    const bodySize = JSON.stringify(requestBody).length;
+    console.error(`[IAP_V12] 📦 Body: ${bodySize}chars txn:${txnShort}`);
 
     // ═══════════════════════════════════════════════════════════════════
     // METHOD 1: Try supabase.functions.invoke() with EXPLICIT Authorization
-    // 🔧 [IAP_FIX_V10] Pass Authorization header explicitly to fix 401 error
+    // 🔧 [IAP_FIX_V12] ALL LOGS AS console.error FOR XCODE VISIBILITY
     // ═══════════════════════════════════════════════════════════════════
-    console.log('[IAP_FIX_V10] 🚀 Trying supabase.functions.invoke() with explicit auth...');
+    console.error(`[IAP_V12] 🚀 M1: invoke() txn:${txnShort}`);
     const startTime = Date.now();
     
     try {
-      // 🔧 [IAP_FIX_V10] CRITICAL: Pass Authorization header explicitly
-      // supabase.functions.invoke() may NOT auto-include session token in WKWebView
       const { data, error } = await supabase.functions.invoke(functionName, {
         body: requestBody,
         headers: {
@@ -828,156 +802,121 @@ async function validatePurchaseServerSide(params: {
         },
       });
       
-      console.log('[IAP_FIX_V10] 🔐 Auth header sent:', {
-        headerLength: session.access_token?.length || 0,
-        hasData: !!data,
-        hasError: !!error,
-      });
-      
       const elapsed = Date.now() - startTime;
-      console.log('[IAP_FIX_V10] ⏱️ supabase.functions.invoke response:', {
-        elapsed: elapsed + 'ms',
-        hasData: !!data,
-        hasError: !!error,
-        errorName: error?.name,
-        errorMessage: error?.message?.slice(0, 200),
-        errorStatus: (error as any)?.status,
-      });
+      console.error(`[IAP_V12] 📥 M1 response: ${elapsed}ms data=${!!data} err=${error?.message?.slice(0,50) || 'none'}`);
       
       if (error) {
-        // 🔧 [IAP_FIX_V10] Better error categorization with 429 detection
         const errorMsg = error.message || '';
         const errorStatus = (error as any)?.status;
         
-        console.log('[IAP_FIX_V10] 📥 Error details:', {
-          status: errorStatus,
-          message: errorMsg.slice(0, 200),
-          name: error.name,
-        });
+        console.error(`[IAP_V12] ❌ M1 error: status=${errorStatus} msg=${errorMsg.slice(0,100)}`);
         
-        // 429 means rate limit - STOP ALL RETRIES
-        if (errorStatus === 429 || errorMsg.includes('429') || errorMsg.includes('rate limit') || errorMsg.includes('Too Many')) {
-          console.error('[IAP_FIX_V10] 🚫 Rate limit (429) - marking cooldown');
+        // 429 = rate limit
+        if (errorStatus === 429 || errorMsg.includes('429')) {
+          console.error('[IAP_V12] 🚫 RATE_LIMIT_429');
           markRateLimited();
           pendingValidationTransactions.delete(params.transactionId);
-          return {
-            success: false,
-            error: 'Server sovraccarico - riprova tra 1 minuto',
-            isNetworkError: true, // Will be retried after cooldown
-          };
+          return { success: false, error: 'Server sovraccarico', isNetworkError: true };
         }
         
-        // 401 means auth issue - don't retry with XHR (same problem)
-        if (errorStatus === 401 || errorMsg.includes('401') || errorMsg.includes('authorization')) {
-          console.error('[IAP_FIX_V10] ❌ Auth error (401):', errorMsg);
+        // 401 = auth issue
+        if (errorStatus === 401 || errorMsg.includes('401')) {
+          console.error('[IAP_V12] 🔒 AUTH_ERROR_401');
           pendingValidationTransactions.delete(params.transactionId);
-          return {
-            success: false,
-            error: 'Sessione non valida - effettua nuovamente il login',
-            isNetworkError: false,
-          };
+          return { success: false, error: 'Sessione non valida', isNetworkError: false };
         }
         
-        // Check if it's a network error vs server error
-        const isNetworkError = 
-          errorMsg.includes('Load failed') ||
-          errorMsg.includes('Failed to send') ||
-          errorMsg.includes('network') ||
-          errorMsg.includes('timeout') ||
-          error.name === 'FunctionsFetchError';
+        // Network error = try fallback
+        const isNetwork = errorMsg.includes('Load failed') || errorMsg.includes('Failed to send') || 
+                         errorMsg.includes('network') || error.name === 'FunctionsFetchError';
         
-        if (isNetworkError) {
-          console.log('[IAP_FIX_V10] ⚠️ Network error, will try XMLHttpRequest fallback...');
-          // Continue to fallback below
+        if (isNetwork) {
+          console.error('[IAP_V12] 🌐 NETWORK_ERROR → fallback');
           throw new Error('FALLBACK_REQUIRED');
         }
         
-        // Server error - don't retry
-        console.error('[IAP_FIX_V10] ❌ Server error:', error);
+        // Server error
+        console.error(`[IAP_V12] 💥 SERVER_ERROR: ${errorMsg}`);
         pendingValidationTransactions.delete(params.transactionId);
-        return {
-          success: false,
-          error: error.message || 'Verifica acquisto fallita',
-          isNetworkError: false,
-        };
+        return { success: false, error: errorMsg || 'Errore server', isNetworkError: false };
       }
       
       if (!data?.success) {
-        console.error('[IAP_FIX_V10] ❌ Server returned failure:', data);
+        console.error(`[IAP_V12] ❌ M1 returned failure: ${data?.error || 'unknown'}`);
         pendingValidationTransactions.delete(params.transactionId);
-        return { 
-          success: false, 
-          error: data?.error || 'Verifica acquisto fallita',
-          isNetworkError: false,
-        };
+        return { success: false, error: data?.error || 'Verifica fallita', isNetworkError: false };
       }
 
-      console.log('[IAP_FIX_V10] ✅ Validation successful via supabase.functions.invoke:', {
-        newBalance: data.new_balance,
-        transactionId: data.transaction_id,
-      });
-      
+      console.error(`[IAP_V12] ✅ M1 SUCCESS! balance=${data.new_balance}`);
       pendingValidationTransactions.delete(params.transactionId);
-      return { 
-        success: true, 
-        newBalance: data.new_balance,
-        isNetworkError: false,
-      };
+      return { success: true, newBalance: data.new_balance, isNetworkError: false };
       
     } catch (invokeError: any) {
+      const elapsed = Date.now() - startTime;
       if (invokeError?.message !== 'FALLBACK_REQUIRED') {
-        console.error('[IAP_FIX_V10] 💥 Invoke exception:', invokeError);
+        console.error(`[IAP_V12] 💥 M1 EXCEPTION ${elapsed}ms: ${invokeError?.message || 'unknown'}`);
       }
       // Continue to XMLHttpRequest fallback
     }
 
     // ═══════════════════════════════════════════════════════════════════
     // METHOD 2: XMLHttpRequest fallback (different WKWebView code path)
+    // 🔧 [IAP_FIX_V12] Extended timeout (30s) + detailed event logging
     // ═══════════════════════════════════════════════════════════════════
-    console.log('[IAP_FIX_V10] 🔄 Trying XMLHttpRequest fallback...');
+    console.error(`[IAP_V12] 🔄 M2: XHR fallback txn:${txnShort}`);
     const functionUrl = `${SUPABASE_URL}/functions/v1/${functionName}`;
+    const xhrStartTime = Date.now();
     
     const xhrResult = await new Promise<{ success: boolean; data?: any; error?: string; isNetworkError?: boolean }>((resolve) => {
       const xhr = new XMLHttpRequest();
-      xhr.timeout = 20000; // 20 second timeout
+      xhr.timeout = 30000; // 🔧 V12: 30 second timeout (was 20s)
+      
+      // Log ALL XHR events
+      xhr.onreadystatechange = () => {
+        console.error(`[IAP_V12] 📶 XHR state=${xhr.readyState} status=${xhr.readyState >= 2 ? xhr.status : '-'} elapsed=${Date.now() - xhrStartTime}ms`);
+      };
       
       xhr.onload = () => {
-        console.log('[IAP_FIX_V10] 📥 XHR response:', {
-          status: xhr.status,
-          responseLength: xhr.responseText?.length || 0,
-        });
+        const elapsed = Date.now() - xhrStartTime;
+        console.error(`[IAP_V12] 📥 M2 onload: status=${xhr.status} len=${xhr.responseText?.length || 0} ${elapsed}ms`);
         
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const data = JSON.parse(xhr.responseText);
             if (data.success) {
+              console.error(`[IAP_V12] ✅ M2 SUCCESS! balance=${data.new_balance}`);
               resolve({ success: true, data });
             } else {
+              console.error(`[IAP_V12] ❌ M2 server returned error: ${data.error}`);
               resolve({ success: false, error: data.error || 'Server error' });
             }
-          } catch {
+          } catch (e) {
+            console.error(`[IAP_V12] ❌ M2 JSON parse failed: ${xhr.responseText?.slice(0,100)}`);
             resolve({ success: false, error: 'Invalid response' });
           }
         } else if (xhr.status === 429) {
-          // 🔧 [IAP_FIX_V10] Rate limit - mark and stop
-          console.error('[IAP_FIX_V10] 🚫 XHR 429 Rate limit');
+          console.error('[IAP_V12] 🚫 M2 RATE_LIMIT_429');
           markRateLimited();
-          resolve({ success: false, error: 'Server sovraccarico - riprova tra 1 minuto', isNetworkError: true });
+          resolve({ success: false, error: 'Server sovraccarico', isNetworkError: true });
         } else if (xhr.status === 401) {
-          resolve({ success: false, error: 'Sessione scaduta - effettua nuovamente il login' });
+          console.error('[IAP_V12] 🔒 M2 AUTH_ERROR_401');
+          resolve({ success: false, error: 'Sessione scaduta' });
         } else {
-          resolve({ success: false, error: `Server error (${xhr.status})`, isNetworkError: xhr.status >= 500 });
+          console.error(`[IAP_V12] ❌ M2 HTTP_ERROR: ${xhr.status}`);
+          resolve({ success: false, error: `Errore server (${xhr.status})`, isNetworkError: xhr.status >= 500 });
         }
       };
       
       xhr.onerror = () => {
-        console.error('[IAP_FIX_V11] 💥 XHR error - txnId:', params.transactionId?.slice(-10));
+        const elapsed = Date.now() - xhrStartTime;
+        console.error(`[IAP_V12] 💥 M2 onerror ${elapsed}ms txn:${txnShort}`);
         resolve({ success: false, error: 'Errore di connessione', isNetworkError: true });
       };
       
       xhr.ontimeout = () => {
-        console.error('[IAP_FIX_V10] ⏰ XHR timeout');
-        resolve({ success: false, error: 'Timeout - server non risponde', isNetworkError: true });
+        const elapsed = Date.now() - xhrStartTime;
+        console.error(`[IAP_V12] ⏰ M2 timeout ${elapsed}ms`);
+        resolve({ success: false, error: 'Timeout 30s', isNetworkError: true });
       };
       
       xhr.open('POST', functionUrl);
@@ -985,29 +924,23 @@ async function validatePurchaseServerSide(params: {
       xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
       xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
       
+      console.error(`[IAP_V12] 📤 M2 sending to ${functionUrl.split('/').slice(-2).join('/')}`);
+      
       try {
         xhr.send(JSON.stringify(requestBody));
-      } catch (sendError) {
-        console.error('[IAP_FIX_V10] 💥 XHR send error:', sendError);
-        resolve({ success: false, error: 'Errore invio richiesta', isNetworkError: true });
+      } catch (sendError: any) {
+        console.error(`[IAP_V12] 💥 M2 send failed: ${sendError?.message}`);
+        resolve({ success: false, error: 'Errore invio', isNetworkError: true });
       }
     });
 
     pendingValidationTransactions.delete(params.transactionId);
     
     if (xhrResult.success) {
-      console.log('[IAP_FIX_V10] ✅ Validation successful via XMLHttpRequest:', {
-        newBalance: xhrResult.data?.new_balance,
-      });
-      return { 
-        success: true, 
-        newBalance: xhrResult.data?.new_balance,
-        isNetworkError: false,
-      };
+      return { success: true, newBalance: xhrResult.data?.new_balance, isNetworkError: false };
     }
     
-    console.error('[IAP_FIX_V11] ❌ Both methods failed:', xhrResult.error, '- txnId:', params.transactionId?.slice(-10));
-    pendingValidationTransactions.delete(params.transactionId);
+    console.error(`[IAP_V12] ❌ BOTH FAILED txn:${txnShort} err:${xhrResult.error}`);
     return {
       success: false,
       error: xhrResult.error || 'Verifica acquisto fallita',
