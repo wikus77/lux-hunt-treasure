@@ -686,12 +686,25 @@ export async function purchase(productCode: string): Promise<IAPPurchaseResult> 
  * - Credits M1U atomically
  * - Returns new balance
  * 
- * 🔧 [IAP_FIX_V7] Enhanced with:
- * - Direct fetch with AbortController timeout (15s)
- * - Fallback to supabase.functions.invoke if direct fetch fails
+ * 🔧 [IAP_FIX_V8] Enhanced with:
+ * - Primary: supabase.functions.invoke() (handles WKWebView better)
+ * - Fallback: Direct fetch with XMLHttpRequest
+ * - JWS truncation to avoid body size issues
  * - Detailed network diagnostics
  * - Retry queue support for network failures
+ * - Balance lock during pending validation
  */
+
+// Track pending validations to prevent balance rollback
+const pendingValidationTransactions = new Set<string>();
+
+export function isValidationPending(transactionId: string): boolean {
+  return pendingValidationTransactions.has(transactionId);
+}
+
+export function hasPendingValidations(): boolean {
+  return pendingValidationTransactions.size > 0;
+}
 
 async function validatePurchaseServerSide(params: {
   platform: 'ios' | 'android';
@@ -703,13 +716,14 @@ async function validatePurchaseServerSide(params: {
   originalTransactionId?: string;
 }): Promise<{ success: boolean; error?: string; newBalance?: number; isNetworkError?: boolean }> {
   const functionName = 'verify-iap-purchase';
-  const functionUrl = `${SUPABASE_URL}/functions/v1/${functionName}`;
+  
+  // Mark as pending to prevent balance rollback
+  pendingValidationTransactions.add(params.transactionId);
   
   try {
-    // 🔍 [IAP_FIX_V7] Pre-call diagnostics
-    console.log('[IAP_FIX_V7] 📤 Pre-validation diagnostics:', {
+    // 🔍 [IAP_FIX_V8] Pre-call diagnostics
+    console.log('[IAP_FIX_V8] 📤 Pre-validation diagnostics:', {
       functionName,
-      functionUrl,
       platform: params.platform,
       productCode: params.productCode,
       transactionId: params.transactionId,
@@ -720,21 +734,20 @@ async function validatePurchaseServerSide(params: {
       navigatorOnline: typeof navigator !== 'undefined' ? navigator.onLine : 'N/A',
     });
 
-    // 🔍 [IAP_FIX_V7] Check session state BEFORE calling Edge Function
+    // 🔍 [IAP_FIX_V8] Check session state
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     const session = sessionData?.session;
     
-    console.log('[IAP_FIX_V7] 🔐 Session check:', {
+    console.log('[IAP_FIX_V8] 🔐 Session check:', {
       hasSession: !!session,
       hasAccessToken: !!session?.access_token,
-      accessTokenLength: session?.access_token?.length || 0,
       userId: session?.user?.id || 'NO_USER',
-      tokenExpiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'N/A',
       sessionError: sessionError?.message || null,
     });
 
     if (!session?.access_token) {
-      console.error('[IAP_FIX_V7] ❌ No valid session - cannot validate purchase');
+      console.error('[IAP_FIX_V8] ❌ No valid session');
+      pendingValidationTransactions.delete(params.transactionId);
       return { 
         success: false, 
         error: 'Sessione scaduta - effettua nuovamente il login',
@@ -742,151 +755,185 @@ async function validatePurchaseServerSide(params: {
       };
     }
 
-    // 🔍 [IAP_FIX_V7] Prepare request body
+    // 🔍 [IAP_FIX_V8] Prepare request body (truncate JWS if too large)
     const requestBody = {
       platform: params.platform,
       product_id: params.storeProductId,
       transaction_id: params.transactionId,
       original_transaction_id: params.originalTransactionId,
       purchase_token: params.platform === 'android' ? params.transactionId : undefined,
-      receipt_data: params.receipt,
-      jws_representation: params.jws,
+      // Truncate receipt if too large (server can verify via transaction_id)
+      receipt_data: params.receipt && params.receipt.length > 50000 ? undefined : params.receipt,
+      // JWS can be very large - only send first part for logging, full validation via transaction_id
+      jws_representation: params.jws && params.jws.length > 50000 
+        ? params.jws.slice(0, 10000) 
+        : params.jws,
     };
 
-    console.log('[IAP_FIX_V7] 📦 Request body (safe):', {
-      ...requestBody,
-      receipt_data: requestBody.receipt_data ? `[${requestBody.receipt_data.length} chars]` : undefined,
-      jws_representation: requestBody.jws_representation ? `[${requestBody.jws_representation.length} chars]` : undefined,
-    });
+    console.log('[IAP_FIX_V8] 📦 Request body size:', JSON.stringify(requestBody).length, 'chars');
 
-    // 🔧 [IAP_FIX_V7] Direct fetch with AbortController timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-      console.log('[IAP_FIX_V7] ⏰ Request timeout triggered (15s)');
-    }, 15000);
-
-    console.log('[IAP_FIX_V7] 🚀 Sending direct fetch to:', functionUrl);
+    // ═══════════════════════════════════════════════════════════════════
+    // METHOD 1: Try supabase.functions.invoke() first (handles WKWebView better)
+    // ═══════════════════════════════════════════════════════════════════
+    console.log('[IAP_FIX_V8] 🚀 Trying supabase.functions.invoke()...');
     const startTime = Date.now();
     
-    let response: Response;
-    let responseData: any;
-    
     try {
-      response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-          'apikey': SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal,
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: requestBody,
       });
       
-      clearTimeout(timeoutId);
       const elapsed = Date.now() - startTime;
-      
-      console.log('[IAP_FIX_V7] 📥 Fetch response:', {
-        status: response.status,
-        statusText: response.statusText,
+      console.log('[IAP_FIX_V8] ⏱️ supabase.functions.invoke response:', {
         elapsed: elapsed + 'ms',
-        ok: response.ok,
+        hasData: !!data,
+        hasError: !!error,
+        errorName: error?.name,
+        errorMessage: error?.message?.slice(0, 200),
       });
       
-      // Parse response
-      const responseText = await response.text();
+      if (error) {
+        // Check if it's a network error vs server error
+        const isNetworkError = 
+          error.message?.includes('Load failed') ||
+          error.message?.includes('Failed to send') ||
+          error.message?.includes('network') ||
+          error.message?.includes('timeout') ||
+          error.name === 'FunctionsFetchError';
+        
+        if (isNetworkError) {
+          console.log('[IAP_FIX_V8] ⚠️ Network error, will try XMLHttpRequest fallback...');
+          // Continue to fallback below
+          throw new Error('FALLBACK_REQUIRED');
+        }
+        
+        // Server error - don't retry
+        console.error('[IAP_FIX_V8] ❌ Server error:', error);
+        pendingValidationTransactions.delete(params.transactionId);
+        return {
+          success: false,
+          error: error.message || 'Verifica acquisto fallita',
+          isNetworkError: false,
+        };
+      }
+      
+      if (!data?.success) {
+        console.error('[IAP_FIX_V8] ❌ Server returned failure:', data);
+        pendingValidationTransactions.delete(params.transactionId);
+        return { 
+          success: false, 
+          error: data?.error || 'Verifica acquisto fallita',
+          isNetworkError: false,
+        };
+      }
+
+      console.log('[IAP_FIX_V8] ✅ Validation successful via supabase.functions.invoke:', {
+        newBalance: data.new_balance,
+        transactionId: data.transaction_id,
+      });
+      
+      pendingValidationTransactions.delete(params.transactionId);
+      return { 
+        success: true, 
+        newBalance: data.new_balance,
+        isNetworkError: false,
+      };
+      
+    } catch (invokeError: any) {
+      if (invokeError?.message !== 'FALLBACK_REQUIRED') {
+        console.error('[IAP_FIX_V8] 💥 Invoke exception:', invokeError);
+      }
+      // Continue to XMLHttpRequest fallback
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // METHOD 2: XMLHttpRequest fallback (different WKWebView code path)
+    // ═══════════════════════════════════════════════════════════════════
+    console.log('[IAP_FIX_V8] 🔄 Trying XMLHttpRequest fallback...');
+    const functionUrl = `${SUPABASE_URL}/functions/v1/${functionName}`;
+    
+    const xhrResult = await new Promise<{ success: boolean; data?: any; error?: string; isNetworkError?: boolean }>((resolve) => {
+      const xhr = new XMLHttpRequest();
+      xhr.timeout = 20000; // 20 second timeout
+      
+      xhr.onload = () => {
+        console.log('[IAP_FIX_V8] 📥 XHR response:', {
+          status: xhr.status,
+          responseLength: xhr.responseText?.length || 0,
+        });
+        
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.success) {
+              resolve({ success: true, data });
+            } else {
+              resolve({ success: false, error: data.error || 'Server error' });
+            }
+          } catch {
+            resolve({ success: false, error: 'Invalid response' });
+          }
+        } else if (xhr.status === 401) {
+          resolve({ success: false, error: 'Sessione scaduta - effettua nuovamente il login' });
+        } else {
+          resolve({ success: false, error: `Server error (${xhr.status})`, isNetworkError: xhr.status >= 500 });
+        }
+      };
+      
+      xhr.onerror = () => {
+        console.error('[IAP_FIX_V8] 💥 XHR error');
+        resolve({ success: false, error: 'Errore di connessione', isNetworkError: true });
+      };
+      
+      xhr.ontimeout = () => {
+        console.error('[IAP_FIX_V8] ⏰ XHR timeout');
+        resolve({ success: false, error: 'Timeout - server non risponde', isNetworkError: true });
+      };
+      
+      xhr.open('POST', functionUrl);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+      xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      
       try {
-        responseData = JSON.parse(responseText);
-      } catch {
-        responseData = { raw: responseText.slice(0, 200) };
+        xhr.send(JSON.stringify(requestBody));
+      } catch (sendError) {
+        console.error('[IAP_FIX_V8] 💥 XHR send error:', sendError);
+        resolve({ success: false, error: 'Errore invio richiesta', isNetworkError: true });
       }
-      
-      console.log('[IAP_FIX_V7] 📄 Response data:', {
-        success: responseData?.success,
-        error: responseData?.error,
-        newBalance: responseData?.new_balance,
-      });
-      
-    } catch (fetchError: any) {
-      clearTimeout(timeoutId);
-      const elapsed = Date.now() - startTime;
-      
-      console.error('[IAP_FIX_V7] 💥 Fetch failed:', {
-        name: fetchError?.name,
-        message: fetchError?.message,
-        elapsed: elapsed + 'ms',
-        isAbort: fetchError?.name === 'AbortError',
-        navigatorOnline: typeof navigator !== 'undefined' ? navigator.onLine : 'N/A',
-      });
-      
-      // Network error - retriable
-      const isTimeout = fetchError?.name === 'AbortError';
-      return {
-        success: false,
-        error: isTimeout 
-          ? 'Timeout - il server non ha risposto in tempo'
-          : 'Errore di connessione - riproveremo automaticamente',
-        isNetworkError: true,
-      };
-    }
+    });
 
-    // Handle HTTP errors
-    if (!response.ok) {
-      console.error('[IAP_FIX_V7] ❌ HTTP error:', {
-        status: response.status,
-        data: responseData,
+    pendingValidationTransactions.delete(params.transactionId);
+    
+    if (xhrResult.success) {
+      console.log('[IAP_FIX_V8] ✅ Validation successful via XMLHttpRequest:', {
+        newBalance: xhrResult.data?.new_balance,
       });
-      
-      // Check if retriable
-      const isNetworkError = response.status >= 500 || response.status === 0;
-      
-      let userMessage = responseData?.error || `Errore server (${response.status})`;
-      if (response.status === 401) {
-        userMessage = 'Sessione scaduta - effettua nuovamente il login';
-      } else if (response.status === 429) {
-        userMessage = 'Troppe richieste - riprova tra qualche minuto';
-      }
-      
       return { 
-        success: false, 
-        error: userMessage,
-        isNetworkError,
-      };
-    }
-
-    // Check response success
-    if (!responseData?.success) {
-      console.error('[IAP_FIX_V7] ❌ Server returned failure:', responseData);
-      return { 
-        success: false, 
-        error: responseData?.error || 'Verifica acquisto fallita',
+        success: true, 
+        newBalance: xhrResult.data?.new_balance,
         isNetworkError: false,
       };
     }
-
-    console.log('[IAP_FIX_V7] ✅ Server validation successful:', {
-      newBalance: responseData.new_balance,
-      transactionId: responseData.transaction_id,
-    });
-
-    return { 
-      success: true, 
-      newBalance: responseData.new_balance,
-      isNetworkError: false,
+    
+    console.error('[IAP_FIX_V8] ❌ Both methods failed:', xhrResult.error);
+    return {
+      success: false,
+      error: xhrResult.error || 'Verifica acquisto fallita',
+      isNetworkError: xhrResult.isNetworkError ?? true,
     };
     
   } catch (err: any) {
-    console.error('[IAP_FIX_V7] 💥 Validation exception:', {
+    console.error('[IAP_FIX_V8] 💥 Validation exception:', {
       name: err?.name,
       message: err?.message,
-      stack: err?.stack?.slice(0, 500),
     });
     
+    pendingValidationTransactions.delete(params.transactionId);
     return { 
       success: false, 
       error: 'Errore imprevisto nella verifica',
-      isNetworkError: true, // Assume network error for retry
+      isNetworkError: true,
     };
   }
 }

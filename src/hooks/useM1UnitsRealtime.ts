@@ -1,12 +1,17 @@
 /**
  * M1 UNITS™ — Realtime Hook
  * Subscribe to user M1 Units balance updates via Supabase Realtime
+ * 
+ * 🔧 [IAP_FIX_V8] Added balance lock during pending IAP validations
+ * to prevent "rollback" when server hasn't yet received the credit.
+ * 
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { emitSubscribed, emitError } from '@/lib/realtime/reconnectBus';
+import { hasPendingValidations } from '@/iap/iapService';
 
 export interface M1UnitsData {
   user_id: string;
@@ -71,6 +76,9 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
     }
   }, [userId]);
 
+  // Track last known balance to prevent rollback
+  const lastKnownBalanceRef = useRef<number>(0);
+  
   // Fetch initial M1 Units data from profiles table
   const fetchUnits = useCallback(async (retryCount = 0) => {
     if (!userId) {
@@ -81,6 +89,15 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
     try {
       setIsLoading(true);
       setError(null);
+
+      // 🔧 [IAP_FIX_V8] Check if there's a pending IAP validation
+      // If so, don't update balance from server (could cause rollback)
+      const pendingIAP = hasPendingValidations();
+      if (pendingIAP) {
+        console.log('[M1U] ⏳ Skipping balance fetch - IAP validation pending');
+        setIsLoading(false);
+        return;
+      }
 
       // Read directly from profiles.m1_units
       const { data: profile, error: fetchError } = await supabase
@@ -100,6 +117,20 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
 
       if (profile) {
         const balance = profile.m1_units || 0;
+        
+        // 🔧 [IAP_FIX_V8] Prevent rollback - only update if balance increased or no pending
+        const currentBalance = unitsData?.balance || lastKnownBalanceRef.current;
+        if (balance < currentBalance && hasPendingValidations()) {
+          console.log('[M1U] ⚠️ Ignoring lower balance during pending IAP:', { 
+            server: balance, 
+            current: currentBalance 
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        lastKnownBalanceRef.current = balance;
+        
         setUnitsData({
           user_id: profile.id,
           balance,
@@ -117,7 +148,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
     } finally {
       setIsLoading(false);
     }
-  }, [userId, cacheBalance]);
+  }, [userId, cacheBalance, unitsData?.balance]);
 
   // Ping function (triggers realtime update for smoke test)
   const ping = useCallback(async () => {
