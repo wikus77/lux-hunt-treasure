@@ -631,6 +631,8 @@ export async function purchase(productCode: string): Promise<IAPPurchaseResult> 
  * - Enforces idempotency (no double credits)
  * - Credits M1U atomically
  * - Returns new balance
+ * 
+ * 🔧 [IAP_FIX_V6] Enhanced with detailed diagnostics for Edge Function calls
  */
 async function validatePurchaseServerSide(params: {
   platform: 'ios' | 'android';
@@ -640,37 +642,104 @@ async function validatePurchaseServerSide(params: {
   receipt?: string;
   originalTransactionId?: string;
 }): Promise<{ success: boolean; error?: string; newBalance?: number }> {
+  const functionName = 'verify-iap-purchase';
+  
   try {
-    console.log('[IAP] Sending to server for validation:', {
+    // 🔍 [IAP_FIX_V6] Pre-call diagnostics
+    console.log('[IAP_FIX_V6] 📤 Pre-validation diagnostics:', {
+      functionName,
       platform: params.platform,
       productCode: params.productCode,
       transactionId: params.transactionId,
       hasReceipt: !!params.receipt,
+      receiptLength: params.receipt?.length || 0,
     });
 
-    // Use V2 endpoint (verify-iap-purchase) with better security
-    const { data, error } = await supabase.functions.invoke('verify-iap-purchase', {
-      body: {
-        platform: params.platform,
-        product_id: params.storeProductId,
-        transaction_id: params.transactionId,
-        original_transaction_id: params.originalTransactionId,
-        purchase_token: params.platform === 'android' ? params.transactionId : undefined,
-        receipt_data: params.receipt,
-      },
+    // 🔍 [IAP_FIX_V6] Check session state BEFORE calling Edge Function
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    const session = sessionData?.session;
+    
+    console.log('[IAP_FIX_V6] 🔐 Session check:', {
+      hasSession: !!session,
+      hasAccessToken: !!session?.access_token,
+      userId: session?.user?.id || 'NO_USER',
+      tokenExpiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'N/A',
+      sessionError: sessionError?.message || null,
+    });
+
+    if (!session?.access_token) {
+      console.error('[IAP_FIX_V6] ❌ No valid session - Edge Function will reject with 401');
+      return { 
+        success: false, 
+        error: 'Sessione scaduta - effettua nuovamente il login' 
+      };
+    }
+
+    // 🔍 [IAP_FIX_V6] Prepare request body
+    const requestBody = {
+      platform: params.platform,
+      product_id: params.storeProductId,
+      transaction_id: params.transactionId,
+      original_transaction_id: params.originalTransactionId,
+      purchase_token: params.platform === 'android' ? params.transactionId : undefined,
+      receipt_data: params.receipt,
+    };
+
+    console.log('[IAP_FIX_V6] 📦 Request body (safe):', {
+      ...requestBody,
+      receipt_data: requestBody.receipt_data ? `[${requestBody.receipt_data.length} chars]` : undefined,
+    });
+
+    // 🔧 [IAP_FIX_V6] Call Edge Function with explicit error handling
+    console.log('[IAP_FIX_V6] 🚀 Invoking Edge Function:', functionName);
+    const startTime = Date.now();
+    
+    const { data, error } = await supabase.functions.invoke(functionName, {
+      body: requestBody,
+    });
+    
+    const elapsed = Date.now() - startTime;
+    console.log('[IAP_FIX_V6] ⏱️ Edge Function response time:', elapsed, 'ms');
+
+    // 🔍 [IAP_FIX_V6] Post-call diagnostics
+    console.log('[IAP_FIX_V6] 📥 Edge Function response:', {
+      hasData: !!data,
+      hasError: !!error,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      dataSuccess: data?.success,
+      dataError: data?.error,
     });
 
     if (error) {
-      console.error('[IAP] Server validation error:', error);
-      return { success: false, error: error.message };
+      // 🔧 [IAP_FIX_V6] Enhanced error logging
+      console.error('[IAP_FIX_V6] ❌ Edge Function error:', {
+        name: error.name,
+        message: error.message,
+        context: (error as any).context,
+        status: (error as any).status,
+        details: (error as any).details,
+      });
+      
+      // Provide user-friendly error messages
+      let userMessage = error.message;
+      if (error.message?.includes('Failed to send a request')) {
+        userMessage = 'Errore di connessione al server - verifica la connessione internet';
+      } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        userMessage = 'Sessione scaduta - effettua nuovamente il login';
+      } else if (error.message?.includes('timeout')) {
+        userMessage = 'Il server non ha risposto in tempo - riprova';
+      }
+      
+      return { success: false, error: userMessage };
     }
 
     if (!data?.success) {
-      console.error('[IAP] Server returned failure:', data);
-      return { success: false, error: data?.error || 'Validation failed' };
+      console.error('[IAP_FIX_V6] ❌ Server returned failure:', data);
+      return { success: false, error: data?.error || 'Verifica acquisto fallita' };
     }
 
-    console.log('[IAP] Server validation successful:', {
+    console.log('[IAP_FIX_V6] ✅ Server validation successful:', {
       newBalance: data.new_balance,
       transactionId: data.transaction_id,
     });
@@ -679,10 +748,23 @@ async function validatePurchaseServerSide(params: {
       success: true, 
       newBalance: data.new_balance,
     };
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Validation request failed';
-    console.error('[IAP] Validation request exception:', errorMessage);
-    return { success: false, error: errorMessage };
+  } catch (err: any) {
+    // 🔧 [IAP_FIX_V6] Comprehensive exception logging
+    console.error('[IAP_FIX_V6] 💥 Validation exception:', {
+      name: err?.name,
+      message: err?.message,
+      stack: err?.stack?.slice(0, 500),
+      cause: err?.cause,
+    });
+    
+    let userMessage = 'Verifica acquisto non riuscita';
+    if (err?.message?.includes('network') || err?.message?.includes('fetch')) {
+      userMessage = 'Errore di rete - verifica la connessione internet';
+    } else if (err?.message?.includes('timeout')) {
+      userMessage = 'Timeout - il server non ha risposto';
+    }
+    
+    return { success: false, error: userMessage };
   }
 }
 
