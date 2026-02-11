@@ -39,6 +39,7 @@ import {
   isRateLimited,
   markRateLimited,
   getRateLimitCooldownRemaining,
+  cancelAllRetries,
   type PendingValidation,
 } from './iapRetryQueue';
 
@@ -184,13 +185,24 @@ export async function initIAP(): Promise<boolean> {
     logComplianceEvent('iap_init_success', { productCount: mappedProducts.length });
     console.log('[IAP] ✅ Initialized with', mappedProducts.length, 'products');
     
-    // 🔧 [IAP_FIX_V10] DISABLED auto-retry on init to prevent 429 retry storm
-    // Previous sessions' pending validations will be processed manually or on next purchase
-    const pendingCount = await getPendingCount();
+    // 🔧 [IAP_FIX_V11] CRITICAL: Cancel ALL pending retries on init to prevent storm
+    cancelAllRetries();
+    console.error('[IAP_FIX_V11] 🛑 All pending retry timers cancelled on init');
+    
+    // Check pending validations in localStorage
+    const pendingQueue = await getPendingValidations();
+    const pendingCount = pendingQueue.length;
     if (pendingCount > 0) {
-      console.log('[IAP_FIX_V10] ⚠️ Found', pendingCount, 'pending validations - NOT auto-processing (anti-429)');
+      console.error('[IAP_FIX_V11] ⚠️ Found', pendingCount, 'pending validations in localStorage:', 
+        pendingQueue.map(p => ({ txn: p.transactionId?.slice(-10), status: p.status, age: Math.round((Date.now() - new Date(p.createdAt).getTime()) / 60000) + 'min' }))
+      );
       // Clear stale pending validations older than 24h to prevent buildup
-      await clearStalePendingValidations();
+      const cleared = await clearStalePendingValidations();
+      if (cleared > 0) {
+        console.error('[IAP_FIX_V11] 🗑️ Cleared', cleared, 'stale validations');
+      }
+    } else {
+      console.log('[IAP_FIX_V11] ✅ No pending validations in localStorage');
     }
     
     return true;
@@ -569,10 +581,13 @@ export async function purchase(productCode: string): Promise<IAPPurchaseResult> 
     });
 
     if (!validationResult.success) {
-      // 🔧 [IAP_FIX_V7] Check if this is a retriable network error
+      // 🔧 [IAP_FIX_V11] DISABLED RETRY - Too problematic, causes 429 storms
+      // Instead, log and notify user to retry manually
+      console.error('[IAP_FIX_V11] ❌ Validation failed:', validationResult.error);
+      
       if (validationResult.isNetworkError) {
-        // Add to retry queue - purchase is valid, just server unreachable
-        console.log('[IAP_FIX_V7] 📥 Adding to retry queue (network error)');
+        // Store in queue for MANUAL retry only (no auto-retry)
+        console.error('[IAP_FIX_V11] 📥 Storing in queue for MANUAL retry only (no auto-schedule)');
         
         await addPendingValidation({
           transactionId: purchaseResult.transactionId,
@@ -584,11 +599,11 @@ export async function purchase(productCode: string): Promise<IAPPurchaseResult> 
           originalTransactionId: purchaseResult.originalTransactionId,
         });
         
-        // Schedule first retry
-        const delay = getRetryDelay(0);
-        scheduleRetry(purchaseResult.transactionId, delay, async () => {
-          await processPendingValidations();
-        });
+        // 🚫 DISABLED: Don't schedule automatic retry - causes 429 storm
+        // const delay = getRetryDelay(0);
+        // scheduleRetry(purchaseResult.transactionId, delay, async () => {
+        //   await processPendingValidations();
+        // });
         
         // Return special "pending" status to UI
         updateState({ status: 'ready', error: undefined });
@@ -720,6 +735,14 @@ async function validatePurchaseServerSide(params: {
   jws?: string;
   originalTransactionId?: string;
 }): Promise<{ success: boolean; error?: string; newBalance?: number; isNetworkError?: boolean }> {
+  // 🚨🚨🚨 [IAP_FIX_V11] ENTRY POINT LOG - MUST APPEAR IN XCODE 🚨🚨🚨
+  console.error('[IAP_FIX_V11] 🎯 validatePurchaseServerSide CALLED:', {
+    transactionId: params.transactionId?.slice(-10) || 'NO_TXN',
+    productCode: params.productCode,
+    platform: params.platform,
+    timestamp: new Date().toISOString(),
+  });
+  
   const functionName = 'verify-iap-purchase';
   
   // 🔧 [IAP_FIX_V10] Check rate limit BEFORE making any request
@@ -948,7 +971,7 @@ async function validatePurchaseServerSide(params: {
       };
       
       xhr.onerror = () => {
-        console.error('[IAP_FIX_V10] 💥 XHR error');
+        console.error('[IAP_FIX_V11] 💥 XHR error - txnId:', params.transactionId?.slice(-10));
         resolve({ success: false, error: 'Errore di connessione', isNetworkError: true });
       };
       
@@ -983,7 +1006,8 @@ async function validatePurchaseServerSide(params: {
       };
     }
     
-    console.error('[IAP_FIX_V10] ❌ Both methods failed:', xhrResult.error);
+    console.error('[IAP_FIX_V11] ❌ Both methods failed:', xhrResult.error, '- txnId:', params.transactionId?.slice(-10));
+    pendingValidationTransactions.delete(params.transactionId);
     return {
       success: false,
       error: xhrResult.error || 'Verifica acquisto fallita',
@@ -1094,19 +1118,21 @@ async function retryValidation(item: PendingValidation): Promise<boolean> {
     return false;
   }
   
-  // Schedule next retry
+  // 🚫 [IAP_FIX_V11] DISABLED automatic retry scheduling - causes 429 storm
+  // Keep item in queue but don't auto-schedule
   await updatePendingValidation(item.transactionId, {
     status: 'pending',
     lastError: result.error,
   });
   
-  const delay = getRetryDelay(newAttempts);
-  scheduleRetry(item.transactionId, delay, async () => {
-    const updatedItem = (await getPendingValidations()).find(p => p.transactionId === item.transactionId);
-    if (updatedItem && updatedItem.status !== 'blocked' && updatedItem.status !== 'completed') {
-      await retryValidation(updatedItem);
-    }
-  });
+  console.error('[IAP_FIX_V11] 📋 Validation failed, kept in queue for manual retry. Attempts:', newAttempts);
+  // const delay = getRetryDelay(newAttempts);
+  // scheduleRetry(item.transactionId, delay, async () => {
+  //   const updatedItem = (await getPendingValidations()).find(p => p.transactionId === item.transactionId);
+  //   if (updatedItem && updatedItem.status !== 'blocked' && updatedItem.status !== 'completed') {
+  //     await retryValidation(updatedItem);
+  //   }
+  // });
   
   return false;
 }

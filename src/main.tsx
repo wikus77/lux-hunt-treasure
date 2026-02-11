@@ -2,7 +2,7 @@
 /* M1SSION™ AG-X0197 */
 
 // 🚨🚨🚨 FORENSIC BUILD STAMP — REMOVE AFTER DEBUG 🚨🚨🚨
-console.log('🚨🚨🚨 IAP_FIX_V10_ANTI_RETRY_STORM_20260211_1300 🚨🚨🚨');
+console.log('🚨🚨🚨 IAP_FIX_V11_TXN_TRACE_20260211_1315 🚨🚨🚨');
 console.log('🚨 [BUILD STAMP] main.tsx loaded at:', new Date().toISOString());
 // 🚨🚨🚨 END FORENSIC BUILD STAMP 🚨🚨🚨
 
