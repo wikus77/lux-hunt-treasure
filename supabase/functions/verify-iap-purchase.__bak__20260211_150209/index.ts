@@ -48,8 +48,7 @@ interface VerifyRequest {
   original_transaction_id?: string; // iOS subscription
   purchase_token?: string;      // Android
   order_id?: string;            // Android
-  receipt_data?: string;        // iOS legacy receipt
-  jws_representation?: string;  // iOS StoreKit2 JWS (signed transaction)
+  receipt_data?: string;        // iOS receipt
 }
 
 interface VerifyResponse {
@@ -135,18 +134,7 @@ serve(async (req) => {
 
     // Parse request body
     const body: VerifyRequest = await req.json();
-    const { platform, product_id, transaction_id, original_transaction_id, purchase_token, order_id, receipt_data, jws_representation } = body;
-    
-    // 🔧 [IAP_FIX_V15] Log received payload (safe - only lengths)
-    structuredLog('info', '[IAP_FIX_V15] Request received', correlationId, {
-      platform,
-      productId: product_id,
-      transactionId: transaction_id?.slice(-10),
-      hasReceipt: !!receipt_data,
-      receiptLength: receipt_data?.length || 0,
-      hasJws: !!jws_representation,
-      jwsLength: jws_representation?.length || 0,
-    });
+    const { platform, product_id, transaction_id, original_transaction_id, purchase_token, order_id, receipt_data } = body;
 
     // Validate required fields
     if (!platform || !product_id) {
@@ -372,8 +360,7 @@ serve(async (req) => {
     let verificationDetails: any = {};
 
     if (platform === 'ios') {
-      // 🔧 [IAP_FIX_V15] Pass JWS for StoreKit2 verification
-      isValid = await verifyApplePurchase(receipt_data, transaction_id!, APPLE_SHARED_SECRET, jws_representation, product_id, correlationId);
+      isValid = await verifyApplePurchase(receipt_data, transaction_id!, APPLE_SHARED_SECRET);
       verificationDetails = { verified_with: 'apple', transaction_id };
     } else {
       isValid = await verifyGooglePurchase(product_id, purchase_token!, GOOGLE_SERVICE_ACCOUNT_KEY);
@@ -621,51 +608,45 @@ serve(async (req) => {
 // =====================
 
 /**
- * Verify Apple purchase with multiple fallbacks:
- * 1. App Store Server API v2 (if configured)
- * 2. Legacy verifyReceipt (if receipt_data provided)
- * 3. StoreKit2 JWS decoding (if jws_representation provided)
- * 
- * 🔧 [IAP_FIX_V15] Added JWS verification for StoreKit2
+ * Verify Apple purchase - tries App Store Server API v2 first, then falls back to legacy verifyReceipt
  */
 async function verifyApplePurchase(
   receiptData: string | undefined,
   transactionId: string,
-  sharedSecret: string,
-  jwsRepresentation?: string,
-  expectedProductId?: string,
-  correlationId?: string
+  sharedSecret: string
 ): Promise<boolean> {
-  console.log('[IAP_FIX_V15] verifyApplePurchase called:', {
-    hasReceipt: !!receiptData,
-    receiptLen: receiptData?.length || 0,
-    transactionId: transactionId?.slice(-10),
-    hasJws: !!jwsRepresentation,
-    jwsLen: jwsRepresentation?.length || 0,
-    expectedProductId,
-  });
-  
-  // =====================
-  // METHOD 1: App Store Server API v2 (if configured)
-  // =====================
+  // Try App Store Server API v2 first (if configured)
   if (APPLE_PRIVATE_KEY && APPLE_KEY_ID && APPLE_ISSUER_ID) {
     console.log('[IAP] Trying App Store Server API v2...');
     const v2Result = await verifyApplePurchaseV2(transactionId);
     if (v2Result !== null) {
       return v2Result;
     }
-    console.log('[IAP] V2 failed, trying fallbacks...');
-  } else {
-    console.log('[IAP_FIX_V15] Apple API v2 not configured (missing credentials)');
+    console.log('[IAP] V2 failed, falling back to legacy verifyReceipt...');
   }
 
-  // =====================
-  // METHOD 2: Legacy verifyReceipt (if receipt provided)
-  // =====================
-  if (receiptData && receiptData.length > 100) {
-    console.log('[IAP] Trying legacy verifyReceipt...');
-    try {
-      let response = await fetch('https://buy.itunes.apple.com/verifyReceipt', {
+  // Fallback to legacy verifyReceipt
+  if (!receiptData) {
+    console.warn('[IAP] No receipt data for iOS verification');
+    return Deno.env.get('IAP_SANDBOX') === 'true';
+  }
+
+  try {
+    let response = await fetch('https://buy.itunes.apple.com/verifyReceipt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        'receipt-data': receiptData,
+        'password': sharedSecret,
+        'exclude-old-transactions': true
+      })
+    });
+
+    let result = await response.json();
+
+    // Status 21007 means sandbox receipt - retry with sandbox
+    if (result.status === 21007) {
+      response = await fetch('https://sandbox.itunes.apple.com/verifyReceipt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -674,162 +655,27 @@ async function verifyApplePurchase(
           'exclude-old-transactions': true
         })
       });
-
-      let result = await response.json();
-
-      // Status 21007 means sandbox receipt - retry with sandbox
-      if (result.status === 21007) {
-        console.log('[IAP] Sandbox receipt detected, retrying with sandbox endpoint...');
-        response = await fetch('https://sandbox.itunes.apple.com/verifyReceipt', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            'receipt-data': receiptData,
-            'password': sharedSecret,
-            'exclude-old-transactions': true
-          })
-        });
-        result = await response.json();
-      }
-
-      if (result.status === 0) {
-        const receipt = result.receipt;
-        const inApp = receipt?.in_app || [];
-        const found = inApp.some((item: any) => item.transaction_id === transactionId);
-        if (found) {
-          console.log('[IAP] ✅ Legacy verifyReceipt succeeded');
-          return true;
-        }
-        console.warn('[IAP] Transaction not found in receipt');
-      } else {
-        console.warn('[IAP] Legacy verifyReceipt failed with status:', result.status);
-      }
-    } catch (error) {
-      console.error('[IAP] Legacy verifyReceipt error:', error);
+      result = await response.json();
     }
-  } else {
-    console.log('[IAP_FIX_V15] No legacy receipt data available');
-  }
 
-  // =====================
-  // METHOD 3: StoreKit2 JWS Verification (self-contained)
-  // 🔧 [IAP_FIX_V15] Decode and verify JWS payload
-  // =====================
-  if (jwsRepresentation && jwsRepresentation.length > 100) {
-    console.log('[IAP_FIX_V15] Trying StoreKit2 JWS verification...');
-    try {
-      const jwsVerification = verifyStoreKit2JWS(jwsRepresentation, transactionId, expectedProductId);
-      if (jwsVerification.valid) {
-        console.log('[IAP_FIX_V15] ✅ StoreKit2 JWS verified:', {
-          environment: jwsVerification.environment,
-          productId: jwsVerification.productId,
-          transactionId: jwsVerification.transactionId?.slice(-10),
-        });
-        
-        // For Sandbox, we trust the decoded JWS
-        // For Production, we should verify the signature (TODO: implement full signature verification)
-        if (jwsVerification.environment === 'Sandbox') {
-          console.log('[IAP_FIX_V15] ✅ Sandbox JWS accepted');
-          return true;
-        }
-        
-        // For production, be more cautious but still accept if data matches
-        console.log('[IAP_FIX_V15] ⚠️ Production JWS - accepting based on data match');
-        return true;
-      } else {
-        console.warn('[IAP_FIX_V15] JWS verification failed:', jwsVerification.error);
-      }
-    } catch (error) {
-      console.error('[IAP_FIX_V15] JWS verification error:', error);
+    if (result.status !== 0) {
+      console.warn('[IAP] Apple verification failed:', result.status);
+      return false;
     }
-  } else {
-    console.log('[IAP_FIX_V15] No JWS representation available');
-  }
 
-  // =====================
-  // FINAL FALLBACK: Sandbox mode
-  // =====================
-  const sandboxMode = Deno.env.get('IAP_SANDBOX') === 'true';
-  if (sandboxMode) {
-    console.warn('[IAP_FIX_V15] ⚠️ IAP_SANDBOX=true, accepting without verification');
+    const receipt = result.receipt;
+    const inApp = receipt?.in_app || [];
+    const found = inApp.some((item: any) => item.transaction_id === transactionId);
+
+    if (!found) {
+      console.warn('[IAP] Transaction not found in receipt');
+      return false;
+    }
+
     return true;
-  }
-
-  console.error('[IAP_FIX_V15] ❌ All verification methods failed');
-  return false;
-}
-
-/**
- * 🔧 [IAP_FIX_V15] Decode and verify StoreKit2 JWS
- * 
- * JWS format: header.payload.signature (all base64url encoded)
- * Payload contains: transactionId, productId, environment, bundleId, etc.
- */
-function verifyStoreKit2JWS(
-  jws: string,
-  expectedTransactionId: string,
-  expectedProductId?: string
-): { valid: boolean; environment?: string; productId?: string; transactionId?: string; error?: string } {
-  try {
-    const parts = jws.split('.');
-    if (parts.length !== 3) {
-      return { valid: false, error: 'Invalid JWS format (expected 3 parts)' };
-    }
-
-    // Decode payload (second part) - base64url to JSON
-    const payloadB64 = parts[1];
-    // Convert base64url to base64
-    const payloadB64Standard = payloadB64.replace(/-/g, '+').replace(/_/g, '/');
-    // Add padding if needed
-    const padded = payloadB64Standard + '='.repeat((4 - payloadB64Standard.length % 4) % 4);
-    
-    const payloadJson = atob(padded);
-    const payload = JSON.parse(payloadJson);
-
-    console.log('[IAP_FIX_V15] JWS payload decoded:', {
-      transactionId: payload.transactionId?.toString().slice(-10),
-      productId: payload.productId,
-      environment: payload.environment,
-      bundleId: payload.bundleId,
-      type: payload.type,
-    });
-
-    // Verify transaction ID matches
-    const jwsTransactionId = payload.transactionId?.toString();
-    if (jwsTransactionId !== expectedTransactionId) {
-      return { 
-        valid: false, 
-        error: `Transaction ID mismatch: expected ${expectedTransactionId?.slice(-10)}, got ${jwsTransactionId?.slice(-10)}` 
-      };
-    }
-
-    // Verify product ID matches (if provided)
-    if (expectedProductId && payload.productId !== expectedProductId) {
-      return { 
-        valid: false, 
-        error: `Product ID mismatch: expected ${expectedProductId}, got ${payload.productId}` 
-      };
-    }
-
-    // Verify bundle ID (optional but good security practice)
-    const expectedBundleId = Deno.env.get('APPLE_BUNDLE_ID') || 'eu.m1ssion.app';
-    if (payload.bundleId && payload.bundleId !== expectedBundleId) {
-      console.warn('[IAP_FIX_V15] Bundle ID mismatch:', { expected: expectedBundleId, got: payload.bundleId });
-      // Don't fail on this - bundle ID might vary
-    }
-
-    // TODO: For full security, verify the JWS signature using Apple's public key
-    // This requires fetching Apple's certificate chain and performing cryptographic verification
-    // For now, we trust the decoded payload for Sandbox and verify data consistency
-
-    return {
-      valid: true,
-      environment: payload.environment,
-      productId: payload.productId,
-      transactionId: jwsTransactionId,
-    };
   } catch (error) {
-    return { valid: false, error: `JWS decode error: ${error}` };
+    console.error('[IAP] Apple verification error:', error);
+    return false;
   }
 }
 

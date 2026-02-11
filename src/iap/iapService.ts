@@ -772,17 +772,22 @@ async function validatePurchaseServerSide(params: {
       };
     }
 
-    // 🔧 [IAP_FIX_V12] MINIMAL request body - only send what's needed
-    // The server can verify via transaction_id, don't need full JWS
+    // 🔧 [IAP_FIX_V15] MUST send JWS for StoreKit2 verification
+    // The server needs either:
+    // - jws_representation for StoreKit2 decoding/verification
+    // - OR valid Apple API v2 credentials (which may return 401 if not configured)
     const requestBody = {
       platform: params.platform,
       product_id: params.storeProductId,
       transaction_id: params.transactionId,
       original_transaction_id: params.originalTransactionId,
-      // DON'T send JWS - it's huge and not needed (server verifies via transaction_id)
-      // receipt_data: undefined,
-      // jws_representation: undefined,
+      // 🔧 [IAP_FIX_V15] Send JWS for server-side verification
+      jws_representation: params.jws,
+      receipt_data: params.receipt,
     };
+    
+    // Log JWS presence (safe - only length, not content)
+    console.error(`[IAP_V15] 📦 Payload: jws=${params.jws?.length || 0}chars receipt=${params.receipt?.length || 0}chars`);
 
     const bodySize = JSON.stringify(requestBody).length;
     console.error(`[IAP_V12] 📦 Body: ${bodySize}chars txn:${txnShort}`);
