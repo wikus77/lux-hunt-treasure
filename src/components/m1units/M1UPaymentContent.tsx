@@ -192,38 +192,59 @@ const StripeCheckoutContent: React.FC<{
         </div>
       </GlassCard>
       
+      {/* BLACK PRIMARY Button - Apple Pay style */}
       <button
         type="submit"
         disabled={!stripe || loading || !clientSecret}
         style={{
           width: '100%',
-          padding: '14px',
-          borderRadius: '12px',
-          background: 'linear-gradient(135deg, #00D1FF, #7C3AED)',
+          height: '56px',
+          borderRadius: '14px',
+          background: (!stripe || loading || !clientSecret) 
+            ? 'rgba(0, 0, 0, 0.4)' 
+            : '#000000',
           border: 'none',
           color: '#FFFFFF',
-          fontSize: '16px',
-          fontWeight: 700,
-          cursor: 'pointer',
-          opacity: (!stripe || loading || !clientSecret) ? 0.5 : 1,
+          fontSize: '19px',
+          fontWeight: 500,
+          cursor: (!stripe || loading || !clientSecret) ? 'not-allowed' : 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '10px',
+          WebkitTapHighlightColor: 'transparent',
         }}
       >
+        {loading && (
+          <div style={{
+            width: '20px',
+            height: '20px',
+            border: '2.5px solid rgba(255,255,255,0.3)',
+            borderTopColor: '#FFFFFF',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }} />
+        )}
         {loading ? 'Elaborazione...' : `Paga €${(priceCents / 100).toFixed(2)}`}
       </button>
       
+      {/* SECONDARY Button */}
       <button
         type="button"
         onClick={onCancel}
         disabled={loading}
         style={{
           width: '100%',
-          padding: '12px',
-          borderRadius: '10px',
+          height: '44px',
+          marginTop: '12px',
+          borderRadius: '12px',
           background: 'transparent',
           border: 'none',
-          color: 'rgba(255,255,255,0.6)',
-          fontSize: '14px',
-          cursor: 'pointer',
+          color: loading ? 'rgba(0, 122, 255, 0.4)' : '#007AFF',
+          fontSize: '17px',
+          fontWeight: 400,
+          cursor: loading ? 'not-allowed' : 'pointer',
+          WebkitTapHighlightColor: 'transparent',
         }}
       >
         Annulla
@@ -253,6 +274,19 @@ const NativeIAPCheckoutContent: React.FC<{
   const mappedProduct = getProductByCode(packCode);
   const productMappingError = !mappedProduct ? `Prodotto non trovato: ${packCode}` : null;
   const expectedStoreId = mappedProduct ? (platform === 'ios' ? mappedProduct.appleProductId : mappedProduct.googleProductId) : null;
+  
+  // 🔍 [IAP_FIX_V4] Log product mapping
+  console.log('[IAP_FIX_V4] NativeIAPCheckoutContent mount/update', {
+    packCode,
+    mappedProduct: mappedProduct ? { code: mappedProduct.code, appleProductId: mappedProduct.appleProductId } : null,
+    expectedStoreId,
+  });
+
+  // 🔍 [IAP_FIX_V4] Reset error state when pack changes
+  useEffect(() => {
+    setLocalError(null);
+    setInitTimedOut(false);
+  }, [packCode]);
 
   useEffect(() => {
     // 🚨 FORENSIC DIAGNOSTIC — REMOVE AFTER DEBUG
@@ -296,18 +330,47 @@ const NativeIAPCheckoutContent: React.FC<{
 
   const handlePurchase = async () => {
     if (!isIAPReady || purchasing || productMappingError) return;
+    
+    // 🔍 [IAP_FIX_V4] Reset error state before purchase
     setPurchasing(true);
     setLocalError(null);
     
+    // 🔍 [IAP_FIX_V4] Log purchase attempt
+    console.log('[IAP_FIX_V4] handlePurchase() starting', {
+      packCode,
+      expectedStoreId,
+      storeProduct: storeProduct ? { productId: storeProduct.productId, price: storeProduct.localizedPrice } : null,
+    });
+    
     try {
       const result = await purchase(packCode);
+      
+      console.log('[IAP_FIX_V4] purchase() result', result);
+      
       if (result.success) {
         toast.success(`✅ ${m1uAmount} M1U aggiunti!`);
         onSuccess();
+      } else if (result.cancelled) {
+        // 🔍 [IAP_FIX_V4] User cancelled - NOT an error, just close gracefully
+        console.log('[IAP_FIX_V4] User cancelled purchase - resetting state');
+        toast('Acquisto annullato', { icon: '↩️' });
+        // Don't show red error, just reset
+        setLocalError(null);
+      } else if (result.pendingValidation) {
+        // 🔧 [IAP_FIX_V7] Purchase OK but validation pending - show info message
+        console.log('[IAP_FIX_V7] Purchase pending validation - showing info');
+        toast('Acquisto ricevuto! Verifica in corso...', { 
+          icon: '⏳',
+          duration: 5000,
+        });
+        // Don't show error, close modal - retry happens in background
+        setLocalError(null);
+        onSuccess(); // Close modal, but user should check later
       } else {
         setLocalError(result.error || 'Acquisto non completato');
       }
-    } catch {
+    } catch (e) {
+      console.error('[IAP_FIX_V4] handlePurchase() exception', e);
       setLocalError('Errore durante l\'acquisto.');
     } finally {
       setPurchasing(false);
@@ -326,23 +389,71 @@ const NativeIAPCheckoutContent: React.FC<{
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {hasError && (
-        <GlassCard style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-          <AlertCircle style={{ width: '40px', height: '40px', color: '#f87171', margin: '0 auto 12px' }} />
-          <p style={{ color: '#f87171', fontSize: '14px', fontWeight: 600, textAlign: 'center', marginBottom: '8px' }}>
+        <div style={{ 
+          background: 'rgba(255, 59, 48, 0.1)', 
+          borderRadius: '12px',
+          padding: '20px',
+          textAlign: 'center',
+        }}>
+          <AlertCircle style={{ width: '36px', height: '36px', color: '#FF3B30', margin: '0 auto 12px' }} />
+          <p style={{ 
+            color: '#FFFFFF', 
+            fontSize: '17px', 
+            fontWeight: 600, 
+            letterSpacing: '-0.4px',
+            marginBottom: '4px' 
+          }}>
+            Errore di connessione
+          </p>
+          <p style={{ 
+            color: 'rgba(255,255,255,0.6)', 
+            fontSize: '13px', 
+            lineHeight: '1.4',
+            marginBottom: '20px' 
+          }}>
             {localError || error || productMappingError || 'Impossibile connettersi allo store.'}
           </p>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', textAlign: 'center', marginBottom: '12px' }}>
-            Prodotti IAP in configurazione su App Store Connect.
-          </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-            <button onClick={handleRetry} style={{ padding: '8px 16px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#FFFFFF', fontSize: '13px', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {/* Apple-style PRIMARY (in error context) */}
+            <button 
+              onClick={handleRetry} 
+              style={{ 
+                flex: 1,
+                height: '44px',
+                borderRadius: '10px', 
+                background: '#007AFF', 
+                border: 'none',
+                color: '#FFFFFF', 
+                fontSize: '15px',
+                fontWeight: 600,
+                letterSpacing: '-0.2px',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
               Riprova
             </button>
-            <button onClick={onCancel} style={{ padding: '8px 16px', borderRadius: '8px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: '13px', cursor: 'pointer' }}>
+            {/* Apple-style SECONDARY (in error context) */}
+            <button 
+              onClick={onCancel} 
+              style={{ 
+                flex: 1,
+                height: '44px',
+                borderRadius: '10px', 
+                background: 'rgba(255,255,255,0.1)', 
+                border: 'none', 
+                color: '#FFFFFF', 
+                fontSize: '15px',
+                fontWeight: 400,
+                letterSpacing: '-0.2px',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
               Chiudi
             </button>
           </div>
-        </GlassCard>
+        </div>
       )}
 
       {!hasError && status === 'initializing' && (
@@ -354,45 +465,72 @@ const NativeIAPCheckoutContent: React.FC<{
 
       {!hasError && isIAPReady && (
         <>
-          <GlassCard>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-              <Smartphone style={{ width: '24px', height: '24px', color: '#00D1FF' }} />
-              <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>
-                {platform === 'ios' ? 'Apple Pay / Carta' : 'Google Pay / Carta'}
-              </span>
-            </div>
-          </GlassCard>
-
+          {/* Apple Pay style PRIMARY Button - BLACK with Apple logo + white border */}
           <button
             onClick={handlePurchase}
             disabled={purchasing || isLoading || !storeProduct}
             style={{
               width: '100%',
-              padding: '14px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #00D1FF, #7C3AED)',
-              border: 'none',
+              height: '56px',
+              borderRadius: '14px',
+              background: (purchasing || isLoading || !storeProduct) 
+                ? 'rgba(0, 0, 0, 0.4)' 
+                : '#000000',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
               color: '#FFFFFF',
-              fontSize: '16px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              opacity: (purchasing || isLoading || !storeProduct) ? 0.5 : 1,
+              fontSize: '19px',
+              fontWeight: 500,
+              cursor: (purchasing || isLoading || !storeProduct) ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
-            {purchasing ? 'Elaborazione...' : `Paga ${displayPrice}`}
+            {purchasing ? (
+              <>
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  border: '2.5px solid rgba(255,255,255,0.3)',
+                  borderTopColor: '#FFFFFF',
+                  borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite',
+                }} />
+                <span>Elaborazione...</span>
+              </>
+            ) : (
+              <>
+                {/* Apple Logo SVG */}
+                <svg 
+                  viewBox="0 0 384 512" 
+                  style={{ width: '20px', height: '20px', fill: '#FFFFFF', marginRight: '6px' }}
+                >
+                  <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
+                </svg>
+                <span style={{ fontWeight: 600 }}>Pay</span>
+                <span style={{ marginLeft: '4px' }}>{displayPrice}</span>
+              </>
+            )}
           </button>
 
+          {/* SECONDARY Button - text link style */}
           <button
             onClick={onCancel}
+            disabled={purchasing}
             style={{
               width: '100%',
-              padding: '12px',
-              borderRadius: '10px',
+              height: '44px',
+              marginTop: '12px',
+              borderRadius: '12px',
               background: 'transparent',
               border: 'none',
-              color: 'rgba(255,255,255,0.6)',
-              fontSize: '14px',
-              cursor: 'pointer',
+              color: purchasing ? 'rgba(0, 122, 255, 0.4)' : '#007AFF',
+              fontSize: '17px',
+              fontWeight: 400,
+              cursor: purchasing ? 'not-allowed' : 'pointer',
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
             Annulla
@@ -402,28 +540,45 @@ const NativeIAPCheckoutContent: React.FC<{
 
       {!hasError && !isIAPReady && status !== 'initializing' && (
         <>
+          {/* BLACK PRIMARY Button - Apple Pay style */}
           <button
             onClick={handleRetry}
             style={{
               width: '100%',
-              padding: '14px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #00D1FF, #7C3AED)',
+              height: '56px',
+              borderRadius: '14px',
+              background: '#000000',
               border: 'none',
               color: '#FFFFFF',
-              fontSize: '16px',
-              fontWeight: 700,
+              fontSize: '19px',
+              fontWeight: 500,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
+              gap: '10px',
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
             <Smartphone style={{ width: '20px', height: '20px' }} />
             Connetti allo Store
           </button>
-          <button onClick={onCancel} style={{ width: '100%', padding: '12px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: '14px', cursor: 'pointer' }}>
+          {/* SECONDARY Button */}
+          <button 
+            onClick={onCancel} 
+            style={{ 
+              width: '100%', 
+              height: '44px',
+              marginTop: '12px',
+              background: 'transparent', 
+              border: 'none', 
+              color: '#007AFF', 
+              fontSize: '17px',
+              fontWeight: 400,
+              cursor: 'pointer',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
             Annulla
           </button>
         </>

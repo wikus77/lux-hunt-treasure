@@ -14,7 +14,7 @@
  */
 
 import { isCapacitorNative, getCapacitorPlatform } from '@/utils/capacitor';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/integrations/supabase/client';
 import { 
   IAPProduct, 
   ALL_PRODUCTS, 
@@ -24,6 +24,19 @@ import {
   getProductByGoogleId
 } from './products';
 import { logComplianceEvent } from '@/utils/storeCompliance';
+import {
+  addPendingValidation,
+  updatePendingValidation,
+  removePendingValidation,
+  getPendingValidations,
+  getPendingCount,
+  getRetryDelay,
+  shouldRetry,
+  scheduleRetry,
+  isRetriableError,
+  markAsBlocked,
+  type PendingValidation,
+} from './iapRetryQueue';
 
 // 🚨 STATIC IMPORT: Ensures @capgo/native-purchases is bundled
 // This import uses registerPlugin internally, which works on native platforms
@@ -41,6 +54,7 @@ export interface IAPPurchaseResult {
   productCode?: string;
   error?: string;
   cancelled?: boolean; // 🔍 [IAP_FIX_V4] User cancelled - not an error
+  pendingValidation?: boolean; // 🔍 [IAP_FIX_V7] Validation in retry queue
 }
 
 export interface IAPStoreProduct {
@@ -165,6 +179,14 @@ export async function initIAP(): Promise<boolean> {
 
     logComplianceEvent('iap_init_success', { productCount: mappedProducts.length });
     console.log('[IAP] ✅ Initialized with', mappedProducts.length, 'products');
+    
+    // 🔧 [IAP_FIX_V7] Process any pending validations from previous sessions
+    const pendingCount = await getPendingCount();
+    if (pendingCount > 0) {
+      console.log('[IAP_FIX_V7] 📦 Found', pendingCount, 'pending validations - processing...');
+      // Process in background, don't block init
+      setTimeout(() => processPendingValidations(), 2000);
+    }
     
     return true;
   } catch (error) {
@@ -537,13 +559,45 @@ export async function purchase(productCode: string): Promise<IAPPurchaseResult> 
       storeProductId,
       transactionId: purchaseResult.transactionId,
       receipt: purchaseResult.receipt || purchaseResult.appStoreReceipt,
+      jws: purchaseResult.jwsRepresentation,
       originalTransactionId: purchaseResult.originalTransactionId,
     });
 
     if (!validationResult.success) {
-      // ⚠️ Server validation failed - DO NOT finish transaction
-      // User can retry, or transaction will be recoverable on next app launch
-      console.error('[IAP] Server validation failed - transaction NOT finished', validationResult.error);
+      // 🔧 [IAP_FIX_V7] Check if this is a retriable network error
+      if (validationResult.isNetworkError) {
+        // Add to retry queue - purchase is valid, just server unreachable
+        console.log('[IAP_FIX_V7] 📥 Adding to retry queue (network error)');
+        
+        await addPendingValidation({
+          transactionId: purchaseResult.transactionId,
+          productId: storeProductId,
+          productCode,
+          platform,
+          jws: purchaseResult.jwsRepresentation,
+          receipt: purchaseResult.receipt || purchaseResult.appStoreReceipt,
+          originalTransactionId: purchaseResult.originalTransactionId,
+        });
+        
+        // Schedule first retry
+        const delay = getRetryDelay(0);
+        scheduleRetry(purchaseResult.transactionId, delay, async () => {
+          await processPendingValidations();
+        });
+        
+        // Return special "pending" status to UI
+        updateState({ status: 'ready', error: undefined });
+        return { 
+          success: false, 
+          error: 'PENDING_VALIDATION',
+          transactionId: purchaseResult.transactionId,
+          productCode,
+          pendingValidation: true,
+        };
+      }
+      
+      // Hard error - DO NOT add to queue
+      console.error('[IAP] Server validation failed (hard error) - transaction NOT finished', validationResult.error);
       throw new Error(validationResult.error || 'Server validation failed');
     }
 
@@ -632,50 +686,63 @@ export async function purchase(productCode: string): Promise<IAPPurchaseResult> 
  * - Credits M1U atomically
  * - Returns new balance
  * 
- * 🔧 [IAP_FIX_V6] Enhanced with detailed diagnostics for Edge Function calls
+ * 🔧 [IAP_FIX_V7] Enhanced with:
+ * - Direct fetch with AbortController timeout (15s)
+ * - Fallback to supabase.functions.invoke if direct fetch fails
+ * - Detailed network diagnostics
+ * - Retry queue support for network failures
  */
+
 async function validatePurchaseServerSide(params: {
   platform: 'ios' | 'android';
   productCode: string;
   storeProductId: string;
   transactionId: string;
   receipt?: string;
+  jws?: string;
   originalTransactionId?: string;
-}): Promise<{ success: boolean; error?: string; newBalance?: number }> {
+}): Promise<{ success: boolean; error?: string; newBalance?: number; isNetworkError?: boolean }> {
   const functionName = 'verify-iap-purchase';
+  const functionUrl = `${SUPABASE_URL}/functions/v1/${functionName}`;
   
   try {
-    // 🔍 [IAP_FIX_V6] Pre-call diagnostics
-    console.log('[IAP_FIX_V6] 📤 Pre-validation diagnostics:', {
+    // 🔍 [IAP_FIX_V7] Pre-call diagnostics
+    console.log('[IAP_FIX_V7] 📤 Pre-validation diagnostics:', {
       functionName,
+      functionUrl,
       platform: params.platform,
       productCode: params.productCode,
       transactionId: params.transactionId,
       hasReceipt: !!params.receipt,
+      hasJws: !!params.jws,
       receiptLength: params.receipt?.length || 0,
+      jwsLength: params.jws?.length || 0,
+      navigatorOnline: typeof navigator !== 'undefined' ? navigator.onLine : 'N/A',
     });
 
-    // 🔍 [IAP_FIX_V6] Check session state BEFORE calling Edge Function
+    // 🔍 [IAP_FIX_V7] Check session state BEFORE calling Edge Function
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     const session = sessionData?.session;
     
-    console.log('[IAP_FIX_V6] 🔐 Session check:', {
+    console.log('[IAP_FIX_V7] 🔐 Session check:', {
       hasSession: !!session,
       hasAccessToken: !!session?.access_token,
+      accessTokenLength: session?.access_token?.length || 0,
       userId: session?.user?.id || 'NO_USER',
       tokenExpiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'N/A',
       sessionError: sessionError?.message || null,
     });
 
     if (!session?.access_token) {
-      console.error('[IAP_FIX_V6] ❌ No valid session - Edge Function will reject with 401');
+      console.error('[IAP_FIX_V7] ❌ No valid session - cannot validate purchase');
       return { 
         success: false, 
-        error: 'Sessione scaduta - effettua nuovamente il login' 
+        error: 'Sessione scaduta - effettua nuovamente il login',
+        isNetworkError: false,
       };
     }
 
-    // 🔍 [IAP_FIX_V6] Prepare request body
+    // 🔍 [IAP_FIX_V7] Prepare request body
     const requestBody = {
       platform: params.platform,
       product_id: params.storeProductId,
@@ -683,89 +750,236 @@ async function validatePurchaseServerSide(params: {
       original_transaction_id: params.originalTransactionId,
       purchase_token: params.platform === 'android' ? params.transactionId : undefined,
       receipt_data: params.receipt,
+      jws_representation: params.jws,
     };
 
-    console.log('[IAP_FIX_V6] 📦 Request body (safe):', {
+    console.log('[IAP_FIX_V7] 📦 Request body (safe):', {
       ...requestBody,
       receipt_data: requestBody.receipt_data ? `[${requestBody.receipt_data.length} chars]` : undefined,
+      jws_representation: requestBody.jws_representation ? `[${requestBody.jws_representation.length} chars]` : undefined,
     });
 
-    // 🔧 [IAP_FIX_V6] Call Edge Function with explicit error handling
-    console.log('[IAP_FIX_V6] 🚀 Invoking Edge Function:', functionName);
+    // 🔧 [IAP_FIX_V7] Direct fetch with AbortController timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      console.log('[IAP_FIX_V7] ⏰ Request timeout triggered (15s)');
+    }, 15000);
+
+    console.log('[IAP_FIX_V7] 🚀 Sending direct fetch to:', functionUrl);
     const startTime = Date.now();
     
-    const { data, error } = await supabase.functions.invoke(functionName, {
-      body: requestBody,
-    });
+    let response: Response;
+    let responseData: any;
     
-    const elapsed = Date.now() - startTime;
-    console.log('[IAP_FIX_V6] ⏱️ Edge Function response time:', elapsed, 'ms');
-
-    // 🔍 [IAP_FIX_V6] Post-call diagnostics
-    console.log('[IAP_FIX_V6] 📥 Edge Function response:', {
-      hasData: !!data,
-      hasError: !!error,
-      errorName: error?.name,
-      errorMessage: error?.message,
-      dataSuccess: data?.success,
-      dataError: data?.error,
-    });
-
-    if (error) {
-      // 🔧 [IAP_FIX_V6] Enhanced error logging
-      console.error('[IAP_FIX_V6] ❌ Edge Function error:', {
-        name: error.name,
-        message: error.message,
-        context: (error as any).context,
-        status: (error as any).status,
-        details: (error as any).details,
+    try {
+      response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal,
       });
       
-      // Provide user-friendly error messages
-      let userMessage = error.message;
-      if (error.message?.includes('Failed to send a request')) {
-        userMessage = 'Errore di connessione al server - verifica la connessione internet';
-      } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
-        userMessage = 'Sessione scaduta - effettua nuovamente il login';
-      } else if (error.message?.includes('timeout')) {
-        userMessage = 'Il server non ha risposto in tempo - riprova';
+      clearTimeout(timeoutId);
+      const elapsed = Date.now() - startTime;
+      
+      console.log('[IAP_FIX_V7] 📥 Fetch response:', {
+        status: response.status,
+        statusText: response.statusText,
+        elapsed: elapsed + 'ms',
+        ok: response.ok,
+      });
+      
+      // Parse response
+      const responseText = await response.text();
+      try {
+        responseData = JSON.parse(responseText);
+      } catch {
+        responseData = { raw: responseText.slice(0, 200) };
       }
       
-      return { success: false, error: userMessage };
+      console.log('[IAP_FIX_V7] 📄 Response data:', {
+        success: responseData?.success,
+        error: responseData?.error,
+        newBalance: responseData?.new_balance,
+      });
+      
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      const elapsed = Date.now() - startTime;
+      
+      console.error('[IAP_FIX_V7] 💥 Fetch failed:', {
+        name: fetchError?.name,
+        message: fetchError?.message,
+        elapsed: elapsed + 'ms',
+        isAbort: fetchError?.name === 'AbortError',
+        navigatorOnline: typeof navigator !== 'undefined' ? navigator.onLine : 'N/A',
+      });
+      
+      // Network error - retriable
+      const isTimeout = fetchError?.name === 'AbortError';
+      return {
+        success: false,
+        error: isTimeout 
+          ? 'Timeout - il server non ha risposto in tempo'
+          : 'Errore di connessione - riproveremo automaticamente',
+        isNetworkError: true,
+      };
     }
 
-    if (!data?.success) {
-      console.error('[IAP_FIX_V6] ❌ Server returned failure:', data);
-      return { success: false, error: data?.error || 'Verifica acquisto fallita' };
+    // Handle HTTP errors
+    if (!response.ok) {
+      console.error('[IAP_FIX_V7] ❌ HTTP error:', {
+        status: response.status,
+        data: responseData,
+      });
+      
+      // Check if retriable
+      const isNetworkError = response.status >= 500 || response.status === 0;
+      
+      let userMessage = responseData?.error || `Errore server (${response.status})`;
+      if (response.status === 401) {
+        userMessage = 'Sessione scaduta - effettua nuovamente il login';
+      } else if (response.status === 429) {
+        userMessage = 'Troppe richieste - riprova tra qualche minuto';
+      }
+      
+      return { 
+        success: false, 
+        error: userMessage,
+        isNetworkError,
+      };
     }
 
-    console.log('[IAP_FIX_V6] ✅ Server validation successful:', {
-      newBalance: data.new_balance,
-      transactionId: data.transaction_id,
+    // Check response success
+    if (!responseData?.success) {
+      console.error('[IAP_FIX_V7] ❌ Server returned failure:', responseData);
+      return { 
+        success: false, 
+        error: responseData?.error || 'Verifica acquisto fallita',
+        isNetworkError: false,
+      };
+    }
+
+    console.log('[IAP_FIX_V7] ✅ Server validation successful:', {
+      newBalance: responseData.new_balance,
+      transactionId: responseData.transaction_id,
     });
 
     return { 
       success: true, 
-      newBalance: data.new_balance,
+      newBalance: responseData.new_balance,
+      isNetworkError: false,
     };
+    
   } catch (err: any) {
-    // 🔧 [IAP_FIX_V6] Comprehensive exception logging
-    console.error('[IAP_FIX_V6] 💥 Validation exception:', {
+    console.error('[IAP_FIX_V7] 💥 Validation exception:', {
       name: err?.name,
       message: err?.message,
       stack: err?.stack?.slice(0, 500),
-      cause: err?.cause,
     });
     
-    let userMessage = 'Verifica acquisto non riuscita';
-    if (err?.message?.includes('network') || err?.message?.includes('fetch')) {
-      userMessage = 'Errore di rete - verifica la connessione internet';
-    } else if (err?.message?.includes('timeout')) {
-      userMessage = 'Timeout - il server non ha risposto';
-    }
-    
-    return { success: false, error: userMessage };
+    return { 
+      success: false, 
+      error: 'Errore imprevisto nella verifica',
+      isNetworkError: true, // Assume network error for retry
+    };
   }
+}
+
+/**
+ * Process pending validations from the retry queue
+ */
+export async function processPendingValidations(): Promise<void> {
+  const pending = await getPendingValidations();
+  const activePending = pending.filter(p => p.status === 'pending' || p.status === 'retrying');
+  
+  if (activePending.length === 0) {
+    console.log('[IAP_QUEUE] 📭 No pending validations to process');
+    return;
+  }
+  
+  console.log('[IAP_QUEUE] 🔄 Processing', activePending.length, 'pending validations');
+  
+  for (const item of activePending) {
+    await retryValidation(item);
+  }
+}
+
+/**
+ * Retry a single pending validation
+ */
+async function retryValidation(item: PendingValidation): Promise<boolean> {
+  console.log('[IAP_QUEUE] 🔄 Retrying validation:', {
+    transactionId: item.transactionId,
+    productId: item.productId,
+    attempts: item.attempts,
+  });
+  
+  // Update status
+  await updatePendingValidation(item.transactionId, {
+    status: 'retrying',
+    attempts: item.attempts + 1,
+    lastAttempt: new Date().toISOString(),
+  });
+  
+  // Attempt validation
+  const result = await validatePurchaseServerSide({
+    platform: item.platform,
+    productCode: item.productCode,
+    storeProductId: item.productId,
+    transactionId: item.transactionId,
+    receipt: item.receipt,
+    jws: item.jws,
+    originalTransactionId: item.originalTransactionId,
+  });
+  
+  if (result.success) {
+    // Success! Remove from queue
+    await removePendingValidation(item.transactionId);
+    console.log('[IAP_QUEUE] ✅ Validation succeeded on retry:', item.transactionId);
+    
+    // Notify UI of success (if possible)
+    notifyListeners();
+    return true;
+  }
+  
+  // Failed - check if retriable
+  const newAttempts = item.attempts + 1;
+  
+  if (!result.isNetworkError || !isRetriableError(result.error)) {
+    // Hard error - mark as blocked
+    await markAsBlocked(item.transactionId, result.error || 'Unknown error');
+    console.log('[IAP_QUEUE] 🚫 Hard error, marked as blocked:', item.transactionId);
+    return false;
+  }
+  
+  if (!shouldRetry(newAttempts)) {
+    // Max retries reached
+    await markAsBlocked(item.transactionId, 'Numero massimo di tentativi raggiunto');
+    console.log('[IAP_QUEUE] 🚫 Max retries reached:', item.transactionId);
+    return false;
+  }
+  
+  // Schedule next retry
+  await updatePendingValidation(item.transactionId, {
+    status: 'pending',
+    lastError: result.error,
+  });
+  
+  const delay = getRetryDelay(newAttempts);
+  scheduleRetry(item.transactionId, delay, async () => {
+    const updatedItem = (await getPendingValidations()).find(p => p.transactionId === item.transactionId);
+    if (updatedItem && updatedItem.status !== 'blocked' && updatedItem.status !== 'completed') {
+      await retryValidation(updatedItem);
+    }
+  });
+  
+  return false;
 }
 
 // ============================================================================
@@ -873,9 +1087,22 @@ import { useState, useEffect } from 'react';
  */
 export function useIAP() {
   const [state, setState] = useState<IAPState>(iapState);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     return subscribeToIAP(setState);
+  }, []);
+
+  // Check pending validations count
+  useEffect(() => {
+    const checkPending = async () => {
+      const count = await getPendingCount();
+      setPendingCount(count);
+    };
+    checkPending();
+    // Recheck every 30 seconds
+    const interval = setInterval(checkPending, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return {
@@ -885,5 +1112,15 @@ export function useIAP() {
     initIAP,
     isNativeIAPAvailable,
     isIAPReady: state.initialized && state.status === 'ready',
+    pendingValidations: pendingCount,
+    retryPendingValidations: processPendingValidations,
+    getPendingValidations,
   };
 }
+
+// Re-export queue utilities for external use
+export {
+  getPendingValidations,
+  getPendingCount,
+  // processPendingValidations already exported above
+};

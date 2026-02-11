@@ -88,14 +88,12 @@ export const M1UShopContent: React.FC<M1UShopContentProps> = ({ onClose }) => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const handlePurchase = (pack: M1UPack) => {
-    // 🚨 FORENSIC — REMOVE AFTER DEBUG
-    console.log('🚨🚨🚨 IAP_DIAG_ACQUISTA_CLICK 🚨🚨🚨');
-    console.log('[M1U SHOP] 🛒 Purchase initiated:', {
+    // 🔍 [IAP_FIX_V4] User clicked Acquista
+    console.log('[IAP_FIX_V4] 🛒 ACQUISTA clicked', {
+      packId: pack.id,
       packCode: pack.code,
       packName: pack.name,
       priceEUR: pack.euro,
-      priceCents: Math.round(pack.euro * 100),
-      m1u: pack.m1u_total
     });
 
     if (typeof window !== 'undefined' && (window as any).plausible) {

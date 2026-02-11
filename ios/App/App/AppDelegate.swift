@@ -11,6 +11,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     private var webViewConfigured = false
     private var userScriptAdded = false
     private var faceIDHandlerAdded = false
+    private var badgeHandlerAdded = false
     
     // ============================================================================
     // 🚨 APP STORE REVIEW FIX — TEMPORARY SSO HIDE (iOS WRAPPER ONLY)
@@ -158,6 +159,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             faceIDHandlerAdded = true
         }
         
+        // 🔢 BADGE: Add message handler for app icon badge
+        if !badgeHandlerAdded {
+            setupBadgeMessageHandler(webView: webView)
+            badgeHandlerAdded = true
+        }
+        
         webViewConfigured = true
         return true
     }
@@ -232,6 +239,48 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         webView.configuration.userContentController.addUserScript(userScript)
         print("✅ M1SSION™ Face ID: Message handler configured")
+    }
+    
+    // MARK: - 🔢 BADGE MESSAGE HANDLER (JS → Native)
+    
+    /// Sets up message handler for app icon badge updates from WebView
+    private func setupBadgeMessageHandler(webView: WKWebView) {
+        // Add message handler for badge operations
+        webView.configuration.userContentController.add(BadgeMessageHandler(), name: "m1ssionBadge")
+        
+        // Inject JS bridge for Badge
+        let badgeJS = """
+        (function() {
+            // M1SSION™ Badge Bridge - iOS Native Badge Control
+            window.M1SSIONBadge = {
+                // Set badge count on app icon
+                setBadge: function(count) {
+                    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.m1ssionBadge) {
+                        window.webkit.messageHandlers.m1ssionBadge.postMessage({
+                            action: 'setBadge',
+                            count: count
+                        });
+                        return true;
+                    }
+                    return false;
+                },
+                // Clear badge
+                clearBadge: function() {
+                    return this.setBadge(0);
+                }
+            };
+            console.log('✅ M1SSION™ Badge: JS Bridge ready');
+        })();
+        """
+        
+        let userScript = WKUserScript(
+            source: badgeJS,
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: false
+        )
+        
+        webView.configuration.userContentController.addUserScript(userScript)
+        print("✅ M1SSION™ Badge: Message handler configured")
     }
     
     // MARK: - Keyboard Accessory Bar Fix
@@ -714,6 +763,32 @@ class FaceIDMessageHandler: NSObject, WKScriptMessageHandler {
     private func handleClearCredentials() {
         FaceIDManager.shared.deleteCredentials()
         print("✅ FaceIDMessageHandler: Credentials cleared")
+    }
+}
+
+// MARK: - 🔢 BADGE MESSAGE HANDLER CLASS
+/// Handles messages from WebView for app icon badge updates
+class BadgeMessageHandler: NSObject, WKScriptMessageHandler {
+    
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard let body = message.body as? [String: Any],
+              let action = body["action"] as? String else {
+            print("⚠️ BadgeMessageHandler: Invalid message format")
+            return
+        }
+        
+        switch action {
+        case "setBadge":
+            if let count = body["count"] as? Int {
+                DispatchQueue.main.async {
+                    UIApplication.shared.applicationIconBadgeNumber = count
+                    print("🔢 BadgeMessageHandler: Badge set to \(count)")
+                }
+            }
+            
+        default:
+            print("⚠️ BadgeMessageHandler: Unknown action - \(action)")
+        }
     }
 }
 
