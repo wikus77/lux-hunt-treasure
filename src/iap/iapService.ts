@@ -40,6 +40,7 @@ export interface IAPPurchaseResult {
   transactionId?: string;
   productCode?: string;
   error?: string;
+  cancelled?: boolean; // 🔍 [IAP_FIX_V4] User cancelled - not an error
 }
 
 export interface IAPStoreProduct {
@@ -259,38 +260,64 @@ function wrapCapgoPlugin(NativePurchases: any): any {
       }
     },
     purchase: async ({ productId }: any) => {
-      // 🚨 GUARD: productId deve essere una stringa SKU valida
-      if (!productId || typeof productId !== 'string') {
-        console.error('[IAP Capgo] ❌ purchase() called with invalid productId:', productId);
-        throw new Error('productId is required and must be a string SKU');
+      // 🔍 [IAP_FIX_V4] HARD GUARD: productId MUST be valid SKU string
+      console.log('[IAP_FIX_V4] wrapCapgoPlugin.purchase() received', { 
+        productId, 
+        type: typeof productId,
+        isEmpty: !productId || productId.trim?.() === '',
+      });
+      
+      if (!productId || typeof productId !== 'string' || productId.trim() === '') {
+        console.error('[IAP_FIX_V4] ❌ CRITICAL: purchase() called with empty/invalid productId!', productId);
+        throw new Error('productIdentifier is Empty - SKU mancante');
       }
-      console.log('[IAP Capgo] purchase() called with productId:', productId);
       
       try {
-        // 🚨 FIX: Plugin expects "productIdentifier", not "productId"
+        // 🔍 [IAP_FIX_V5] Call plugin with validated identifier
+        console.log('[IAP_FIX_V5] ✅ Calling CapgoNativePurchases.purchaseProduct with:', { productIdentifier: productId });
         const result = await CapgoNativePurchases.purchaseProduct({ productIdentifier: productId });
         
-        if (!result?.transaction) {
+        // 🔧 [IAP_FIX_V5] Plugin returns Transaction FLAT at root level (not nested under .transaction)
+        // Support both formats for backwards compatibility:
+        // - FLAT (current): result.transactionId
+        // - NESTED (legacy fallback): result.transaction.transactionId
+        console.log('[IAP_FIX_V5] purchaseProduct result:', {
+          hasResult: !!result,
+          keys: result ? Object.keys(result) : [],
+          flatTxnId: result?.transactionId,
+          nestedTxnId: result?.transaction?.transactionId,
+        });
+        
+        const flatTxnId = result?.transactionId;
+        const nestedTxnId = result?.transaction?.transactionId || result?.transaction?.transactionIdentifier;
+        const txnId = flatTxnId || nestedTxnId;
+        
+        if (!txnId) {
+          console.error('[IAP_FIX_V5] ❌ No transactionId found in result:', result);
           throw new Error('No transaction returned');
         }
         
-        const txn = result.transaction;
-        const txnId = txn.transactionId || txn.transactionIdentifier;
+        // Store for later finishing (use result as source, it IS the transaction)
+        pendingTransactions.set(txnId, result);
         
-        // Store for later finishing
-        pendingTransactions.set(txnId, txn);
+        console.log('[IAP_FIX_V5] ✅ Purchase approved:', txnId);
         
-        console.log('[IAP Capgo] Purchase approved (NOT finished yet):', txnId);
-        
+        // Map fields with FLAT-first, NESTED fallback
         return {
           transactionId: txnId,
-          productId: txn.productId || productId,
-          receipt: txn.appStoreReceipt || txn.receipt || txn.receiptData,
-          originalTransactionId: txn.originalTransactionId,
+          productId: result?.productIdentifier || result?.transaction?.productIdentifier || productId,
+          receipt: result?.receipt || result?.transaction?.receipt || result?.transaction?.appStoreReceipt,
+          originalTransactionId: result?.originalTransactionId || result?.transaction?.originalTransactionId,
+          jwsRepresentation: result?.jwsRepresentation || result?.transaction?.jwsRepresentation,
         };
       } catch (error: any) {
-        // Handle user cancellation
-        if (error?.code === 'USER_CANCELLED' || error?.message?.includes('cancel')) {
+        // Handle user cancellation - check multiple patterns
+        const msg = error?.message?.toLowerCase() || '';
+        const isCancel = error?.code === 'USER_CANCELLED' || 
+                         msg.includes('cancel') || 
+                         msg.includes('user cancelled');
+        if (isCancel) {
+          console.log('[IAP_FIX_V5] User cancelled purchase');
           throw new Error('Purchase cancelled by user');
         }
         throw error;
@@ -436,17 +463,40 @@ function wrapCordovaPlugin(store: any): any {
  * - Ghost purchases (transaction lost without credit)
  */
 export async function purchase(productCode: string): Promise<IAPPurchaseResult> {
+  // 🔍 [IAP_FIX_V4] Trace entry
+  console.log('[IAP_FIX_V4] purchase() called', { productCode });
+  
   if (!iapState.initialized) {
+    console.log('[IAP_FIX_V4] ❌ IAP not initialized');
     return { success: false, error: 'IAP not initialized' };
   }
 
   const product = ALL_PRODUCTS.find(p => p.code === productCode);
   if (!product) {
+    console.log('[IAP_FIX_V4] ❌ Product not found for code:', productCode);
     return { success: false, error: 'Product not found' };
   }
 
   const platform = getCapacitorPlatform() as 'ios' | 'android';
   const storeProductId = getStoreProductId(product, platform);
+  
+  // 🔍 [IAP_FIX_V4] HARD GUARD: storeProductId MUST be non-empty string
+  if (!storeProductId || typeof storeProductId !== 'string' || storeProductId.trim() === '') {
+    console.error('[IAP_FIX_V4] ❌ CRITICAL: storeProductId is empty/invalid!', {
+      productCode,
+      product,
+      platform,
+      storeProductId,
+    });
+    return { success: false, error: 'SKU mancante - prodotto non configurato' };
+  }
+  
+  console.log('[IAP_FIX_V4] ✅ storeProductId resolved', { 
+    productCode, 
+    storeProductId,
+    appleProductId: product.appleProductId,
+    googleProductId: product.googleProductId,
+  });
 
   updateState({ status: 'purchasing' });
   logComplianceEvent('iap_purchase_started', { productCode, storeProductId, platform });
@@ -533,6 +583,23 @@ export async function purchase(productCode: string): Promise<IAPPurchaseResult> 
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Purchase failed';
+    
+    // 🔍 [IAP_FIX_V4] Check for user cancellation
+    const isUserCancelled = errorMessage.toLowerCase().includes('cancel') || 
+                            errorMessage.includes('userCancelled') ||
+                            (error as any)?.code === 'USER_CANCELLED';
+    
+    console.log('[IAP_FIX_V4] purchase() error', { 
+      errorMessage, 
+      isUserCancelled,
+      hasTransaction: !!purchaseResult?.transactionId,
+    });
+    
+    // 🔍 [IAP_FIX_V4] Don't treat cancellation as error
+    if (isUserCancelled) {
+      updateState({ status: 'ready', error: undefined });
+      return { success: false, error: 'USER_CANCELLED', cancelled: true };
+    }
     
     // Log whether we have an unfinished transaction
     if (purchaseResult?.transactionId) {
