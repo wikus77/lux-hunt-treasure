@@ -686,7 +686,7 @@ export async function purchase(productCode: string): Promise<IAPPurchaseResult> 
  * - Credits M1U atomically
  * - Returns new balance
  * 
- * 🔧 [IAP_FIX_V8] Enhanced with:
+ * 🔧 [IAP_FIX_V9] Enhanced with:
  * - Primary: supabase.functions.invoke() (handles WKWebView better)
  * - Fallback: Direct fetch with XMLHttpRequest
  * - JWS truncation to avoid body size issues
@@ -721,8 +721,8 @@ async function validatePurchaseServerSide(params: {
   pendingValidationTransactions.add(params.transactionId);
   
   try {
-    // 🔍 [IAP_FIX_V8] Pre-call diagnostics
-    console.log('[IAP_FIX_V8] 📤 Pre-validation diagnostics:', {
+    // 🔍 [IAP_FIX_V9] Pre-call diagnostics
+    console.log('[IAP_FIX_V9] 📤 Pre-validation diagnostics:', {
       functionName,
       platform: params.platform,
       productCode: params.productCode,
@@ -734,11 +734,11 @@ async function validatePurchaseServerSide(params: {
       navigatorOnline: typeof navigator !== 'undefined' ? navigator.onLine : 'N/A',
     });
 
-    // 🔍 [IAP_FIX_V8] Check session state
+    // 🔍 [IAP_FIX_V9] Check session state
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     const session = sessionData?.session;
     
-    console.log('[IAP_FIX_V8] 🔐 Session check:', {
+    console.log('[IAP_FIX_V9] 🔐 Session check:', {
       hasSession: !!session,
       hasAccessToken: !!session?.access_token,
       userId: session?.user?.id || 'NO_USER',
@@ -746,7 +746,7 @@ async function validatePurchaseServerSide(params: {
     });
 
     if (!session?.access_token) {
-      console.error('[IAP_FIX_V8] ❌ No valid session');
+      console.error('[IAP_FIX_V9] ❌ No valid session');
       pendingValidationTransactions.delete(params.transactionId);
       return { 
         success: false, 
@@ -755,7 +755,7 @@ async function validatePurchaseServerSide(params: {
       };
     }
 
-    // 🔍 [IAP_FIX_V8] Prepare request body (truncate JWS if too large)
+    // 🔍 [IAP_FIX_V9] Prepare request body (truncate JWS if too large)
     const requestBody = {
       platform: params.platform,
       product_id: params.storeProductId,
@@ -770,45 +770,73 @@ async function validatePurchaseServerSide(params: {
         : params.jws,
     };
 
-    console.log('[IAP_FIX_V8] 📦 Request body size:', JSON.stringify(requestBody).length, 'chars');
+    console.log('[IAP_FIX_V9] 📦 Request body size:', JSON.stringify(requestBody).length, 'chars');
 
     // ═══════════════════════════════════════════════════════════════════
-    // METHOD 1: Try supabase.functions.invoke() first (handles WKWebView better)
+    // METHOD 1: Try supabase.functions.invoke() with EXPLICIT Authorization
+    // 🔧 [IAP_FIX_V9] Pass Authorization header explicitly to fix 401 error
     // ═══════════════════════════════════════════════════════════════════
-    console.log('[IAP_FIX_V8] 🚀 Trying supabase.functions.invoke()...');
+    console.log('[IAP_FIX_V9] 🚀 Trying supabase.functions.invoke() with explicit auth...');
     const startTime = Date.now();
     
     try {
+      // 🔧 [IAP_FIX_V9] CRITICAL: Pass Authorization header explicitly
+      // supabase.functions.invoke() may NOT auto-include session token in WKWebView
       const { data, error } = await supabase.functions.invoke(functionName, {
         body: requestBody,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      
+      console.log('[IAP_FIX_V9] 🔐 Auth header sent:', {
+        headerLength: session.access_token?.length || 0,
+        hasData: !!data,
+        hasError: !!error,
       });
       
       const elapsed = Date.now() - startTime;
-      console.log('[IAP_FIX_V8] ⏱️ supabase.functions.invoke response:', {
+      console.log('[IAP_FIX_V9] ⏱️ supabase.functions.invoke response:', {
         elapsed: elapsed + 'ms',
         hasData: !!data,
         hasError: !!error,
         errorName: error?.name,
         errorMessage: error?.message?.slice(0, 200),
+        errorStatus: (error as any)?.status,
       });
       
       if (error) {
+        // 🔧 [IAP_FIX_V9] Better error categorization
+        const errorMsg = error.message || '';
+        const errorStatus = (error as any)?.status;
+        
+        // 401 means auth issue - don't retry with XHR (same problem)
+        if (errorStatus === 401 || errorMsg.includes('401') || errorMsg.includes('authorization')) {
+          console.error('[IAP_FIX_V9] ❌ Auth error (401):', errorMsg);
+          pendingValidationTransactions.delete(params.transactionId);
+          return {
+            success: false,
+            error: 'Sessione non valida - effettua nuovamente il login',
+            isNetworkError: false,
+          };
+        }
+        
         // Check if it's a network error vs server error
         const isNetworkError = 
-          error.message?.includes('Load failed') ||
-          error.message?.includes('Failed to send') ||
-          error.message?.includes('network') ||
-          error.message?.includes('timeout') ||
+          errorMsg.includes('Load failed') ||
+          errorMsg.includes('Failed to send') ||
+          errorMsg.includes('network') ||
+          errorMsg.includes('timeout') ||
           error.name === 'FunctionsFetchError';
         
         if (isNetworkError) {
-          console.log('[IAP_FIX_V8] ⚠️ Network error, will try XMLHttpRequest fallback...');
+          console.log('[IAP_FIX_V9] ⚠️ Network error, will try XMLHttpRequest fallback...');
           // Continue to fallback below
           throw new Error('FALLBACK_REQUIRED');
         }
         
         // Server error - don't retry
-        console.error('[IAP_FIX_V8] ❌ Server error:', error);
+        console.error('[IAP_FIX_V9] ❌ Server error:', error);
         pendingValidationTransactions.delete(params.transactionId);
         return {
           success: false,
@@ -818,7 +846,7 @@ async function validatePurchaseServerSide(params: {
       }
       
       if (!data?.success) {
-        console.error('[IAP_FIX_V8] ❌ Server returned failure:', data);
+        console.error('[IAP_FIX_V9] ❌ Server returned failure:', data);
         pendingValidationTransactions.delete(params.transactionId);
         return { 
           success: false, 
@@ -827,7 +855,7 @@ async function validatePurchaseServerSide(params: {
         };
       }
 
-      console.log('[IAP_FIX_V8] ✅ Validation successful via supabase.functions.invoke:', {
+      console.log('[IAP_FIX_V9] ✅ Validation successful via supabase.functions.invoke:', {
         newBalance: data.new_balance,
         transactionId: data.transaction_id,
       });
@@ -841,7 +869,7 @@ async function validatePurchaseServerSide(params: {
       
     } catch (invokeError: any) {
       if (invokeError?.message !== 'FALLBACK_REQUIRED') {
-        console.error('[IAP_FIX_V8] 💥 Invoke exception:', invokeError);
+        console.error('[IAP_FIX_V9] 💥 Invoke exception:', invokeError);
       }
       // Continue to XMLHttpRequest fallback
     }
@@ -849,7 +877,7 @@ async function validatePurchaseServerSide(params: {
     // ═══════════════════════════════════════════════════════════════════
     // METHOD 2: XMLHttpRequest fallback (different WKWebView code path)
     // ═══════════════════════════════════════════════════════════════════
-    console.log('[IAP_FIX_V8] 🔄 Trying XMLHttpRequest fallback...');
+    console.log('[IAP_FIX_V9] 🔄 Trying XMLHttpRequest fallback...');
     const functionUrl = `${SUPABASE_URL}/functions/v1/${functionName}`;
     
     const xhrResult = await new Promise<{ success: boolean; data?: any; error?: string; isNetworkError?: boolean }>((resolve) => {
@@ -857,7 +885,7 @@ async function validatePurchaseServerSide(params: {
       xhr.timeout = 20000; // 20 second timeout
       
       xhr.onload = () => {
-        console.log('[IAP_FIX_V8] 📥 XHR response:', {
+        console.log('[IAP_FIX_V9] 📥 XHR response:', {
           status: xhr.status,
           responseLength: xhr.responseText?.length || 0,
         });
@@ -881,12 +909,12 @@ async function validatePurchaseServerSide(params: {
       };
       
       xhr.onerror = () => {
-        console.error('[IAP_FIX_V8] 💥 XHR error');
+        console.error('[IAP_FIX_V9] 💥 XHR error');
         resolve({ success: false, error: 'Errore di connessione', isNetworkError: true });
       };
       
       xhr.ontimeout = () => {
-        console.error('[IAP_FIX_V8] ⏰ XHR timeout');
+        console.error('[IAP_FIX_V9] ⏰ XHR timeout');
         resolve({ success: false, error: 'Timeout - server non risponde', isNetworkError: true });
       };
       
@@ -898,7 +926,7 @@ async function validatePurchaseServerSide(params: {
       try {
         xhr.send(JSON.stringify(requestBody));
       } catch (sendError) {
-        console.error('[IAP_FIX_V8] 💥 XHR send error:', sendError);
+        console.error('[IAP_FIX_V9] 💥 XHR send error:', sendError);
         resolve({ success: false, error: 'Errore invio richiesta', isNetworkError: true });
       }
     });
@@ -906,7 +934,7 @@ async function validatePurchaseServerSide(params: {
     pendingValidationTransactions.delete(params.transactionId);
     
     if (xhrResult.success) {
-      console.log('[IAP_FIX_V8] ✅ Validation successful via XMLHttpRequest:', {
+      console.log('[IAP_FIX_V9] ✅ Validation successful via XMLHttpRequest:', {
         newBalance: xhrResult.data?.new_balance,
       });
       return { 
@@ -916,7 +944,7 @@ async function validatePurchaseServerSide(params: {
       };
     }
     
-    console.error('[IAP_FIX_V8] ❌ Both methods failed:', xhrResult.error);
+    console.error('[IAP_FIX_V9] ❌ Both methods failed:', xhrResult.error);
     return {
       success: false,
       error: xhrResult.error || 'Verifica acquisto fallita',
@@ -924,7 +952,7 @@ async function validatePurchaseServerSide(params: {
     };
     
   } catch (err: any) {
-    console.error('[IAP_FIX_V8] 💥 Validation exception:', {
+    console.error('[IAP_FIX_V9] 💥 Validation exception:', {
       name: err?.name,
       message: err?.message,
     });
