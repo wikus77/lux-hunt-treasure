@@ -35,6 +35,10 @@ import {
   scheduleRetry,
   isRetriableError,
   markAsBlocked,
+  clearStalePendingValidations,
+  isRateLimited,
+  markRateLimited,
+  getRateLimitCooldownRemaining,
   type PendingValidation,
 } from './iapRetryQueue';
 
@@ -180,12 +184,13 @@ export async function initIAP(): Promise<boolean> {
     logComplianceEvent('iap_init_success', { productCount: mappedProducts.length });
     console.log('[IAP] ✅ Initialized with', mappedProducts.length, 'products');
     
-    // 🔧 [IAP_FIX_V7] Process any pending validations from previous sessions
+    // 🔧 [IAP_FIX_V10] DISABLED auto-retry on init to prevent 429 retry storm
+    // Previous sessions' pending validations will be processed manually or on next purchase
     const pendingCount = await getPendingCount();
     if (pendingCount > 0) {
-      console.log('[IAP_FIX_V7] 📦 Found', pendingCount, 'pending validations - processing...');
-      // Process in background, don't block init
-      setTimeout(() => processPendingValidations(), 2000);
+      console.log('[IAP_FIX_V10] ⚠️ Found', pendingCount, 'pending validations - NOT auto-processing (anti-429)');
+      // Clear stale pending validations older than 24h to prevent buildup
+      await clearStalePendingValidations();
     }
     
     return true;
@@ -686,7 +691,7 @@ export async function purchase(productCode: string): Promise<IAPPurchaseResult> 
  * - Credits M1U atomically
  * - Returns new balance
  * 
- * 🔧 [IAP_FIX_V9] Enhanced with:
+ * 🔧 [IAP_FIX_V10] Enhanced with:
  * - Primary: supabase.functions.invoke() (handles WKWebView better)
  * - Fallback: Direct fetch with XMLHttpRequest
  * - JWS truncation to avoid body size issues
@@ -717,12 +722,23 @@ async function validatePurchaseServerSide(params: {
 }): Promise<{ success: boolean; error?: string; newBalance?: number; isNetworkError?: boolean }> {
   const functionName = 'verify-iap-purchase';
   
+  // 🔧 [IAP_FIX_V10] Check rate limit BEFORE making any request
+  if (isRateLimited()) {
+    const remaining = getRateLimitCooldownRemaining();
+    console.log('[IAP_FIX_V10] ⏳ Rate limited, cooldown remaining:', Math.round(remaining / 1000), 'seconds');
+    return {
+      success: false,
+      error: `Server sovraccarico - riprova tra ${Math.ceil(remaining / 1000)} secondi`,
+      isNetworkError: true, // Mark as retriable
+    };
+  }
+  
   // Mark as pending to prevent balance rollback
   pendingValidationTransactions.add(params.transactionId);
   
   try {
-    // 🔍 [IAP_FIX_V9] Pre-call diagnostics
-    console.log('[IAP_FIX_V9] 📤 Pre-validation diagnostics:', {
+    // 🔍 [IAP_FIX_V10] Pre-call diagnostics
+    console.log('[IAP_FIX_V10] 📤 Pre-validation diagnostics:', {
       functionName,
       platform: params.platform,
       productCode: params.productCode,
@@ -734,11 +750,11 @@ async function validatePurchaseServerSide(params: {
       navigatorOnline: typeof navigator !== 'undefined' ? navigator.onLine : 'N/A',
     });
 
-    // 🔍 [IAP_FIX_V9] Check session state
+    // 🔍 [IAP_FIX_V10] Check session state
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     const session = sessionData?.session;
     
-    console.log('[IAP_FIX_V9] 🔐 Session check:', {
+    console.log('[IAP_FIX_V10] 🔐 Session check:', {
       hasSession: !!session,
       hasAccessToken: !!session?.access_token,
       userId: session?.user?.id || 'NO_USER',
@@ -746,7 +762,7 @@ async function validatePurchaseServerSide(params: {
     });
 
     if (!session?.access_token) {
-      console.error('[IAP_FIX_V9] ❌ No valid session');
+      console.error('[IAP_FIX_V10] ❌ No valid session');
       pendingValidationTransactions.delete(params.transactionId);
       return { 
         success: false, 
@@ -755,7 +771,7 @@ async function validatePurchaseServerSide(params: {
       };
     }
 
-    // 🔍 [IAP_FIX_V9] Prepare request body (truncate JWS if too large)
+    // 🔍 [IAP_FIX_V10] Prepare request body (truncate JWS if too large)
     const requestBody = {
       platform: params.platform,
       product_id: params.storeProductId,
@@ -770,17 +786,17 @@ async function validatePurchaseServerSide(params: {
         : params.jws,
     };
 
-    console.log('[IAP_FIX_V9] 📦 Request body size:', JSON.stringify(requestBody).length, 'chars');
+    console.log('[IAP_FIX_V10] 📦 Request body size:', JSON.stringify(requestBody).length, 'chars');
 
     // ═══════════════════════════════════════════════════════════════════
     // METHOD 1: Try supabase.functions.invoke() with EXPLICIT Authorization
-    // 🔧 [IAP_FIX_V9] Pass Authorization header explicitly to fix 401 error
+    // 🔧 [IAP_FIX_V10] Pass Authorization header explicitly to fix 401 error
     // ═══════════════════════════════════════════════════════════════════
-    console.log('[IAP_FIX_V9] 🚀 Trying supabase.functions.invoke() with explicit auth...');
+    console.log('[IAP_FIX_V10] 🚀 Trying supabase.functions.invoke() with explicit auth...');
     const startTime = Date.now();
     
     try {
-      // 🔧 [IAP_FIX_V9] CRITICAL: Pass Authorization header explicitly
+      // 🔧 [IAP_FIX_V10] CRITICAL: Pass Authorization header explicitly
       // supabase.functions.invoke() may NOT auto-include session token in WKWebView
       const { data, error } = await supabase.functions.invoke(functionName, {
         body: requestBody,
@@ -789,14 +805,14 @@ async function validatePurchaseServerSide(params: {
         },
       });
       
-      console.log('[IAP_FIX_V9] 🔐 Auth header sent:', {
+      console.log('[IAP_FIX_V10] 🔐 Auth header sent:', {
         headerLength: session.access_token?.length || 0,
         hasData: !!data,
         hasError: !!error,
       });
       
       const elapsed = Date.now() - startTime;
-      console.log('[IAP_FIX_V9] ⏱️ supabase.functions.invoke response:', {
+      console.log('[IAP_FIX_V10] ⏱️ supabase.functions.invoke response:', {
         elapsed: elapsed + 'ms',
         hasData: !!data,
         hasError: !!error,
@@ -806,13 +822,31 @@ async function validatePurchaseServerSide(params: {
       });
       
       if (error) {
-        // 🔧 [IAP_FIX_V9] Better error categorization
+        // 🔧 [IAP_FIX_V10] Better error categorization with 429 detection
         const errorMsg = error.message || '';
         const errorStatus = (error as any)?.status;
         
+        console.log('[IAP_FIX_V10] 📥 Error details:', {
+          status: errorStatus,
+          message: errorMsg.slice(0, 200),
+          name: error.name,
+        });
+        
+        // 429 means rate limit - STOP ALL RETRIES
+        if (errorStatus === 429 || errorMsg.includes('429') || errorMsg.includes('rate limit') || errorMsg.includes('Too Many')) {
+          console.error('[IAP_FIX_V10] 🚫 Rate limit (429) - marking cooldown');
+          markRateLimited();
+          pendingValidationTransactions.delete(params.transactionId);
+          return {
+            success: false,
+            error: 'Server sovraccarico - riprova tra 1 minuto',
+            isNetworkError: true, // Will be retried after cooldown
+          };
+        }
+        
         // 401 means auth issue - don't retry with XHR (same problem)
         if (errorStatus === 401 || errorMsg.includes('401') || errorMsg.includes('authorization')) {
-          console.error('[IAP_FIX_V9] ❌ Auth error (401):', errorMsg);
+          console.error('[IAP_FIX_V10] ❌ Auth error (401):', errorMsg);
           pendingValidationTransactions.delete(params.transactionId);
           return {
             success: false,
@@ -830,13 +864,13 @@ async function validatePurchaseServerSide(params: {
           error.name === 'FunctionsFetchError';
         
         if (isNetworkError) {
-          console.log('[IAP_FIX_V9] ⚠️ Network error, will try XMLHttpRequest fallback...');
+          console.log('[IAP_FIX_V10] ⚠️ Network error, will try XMLHttpRequest fallback...');
           // Continue to fallback below
           throw new Error('FALLBACK_REQUIRED');
         }
         
         // Server error - don't retry
-        console.error('[IAP_FIX_V9] ❌ Server error:', error);
+        console.error('[IAP_FIX_V10] ❌ Server error:', error);
         pendingValidationTransactions.delete(params.transactionId);
         return {
           success: false,
@@ -846,7 +880,7 @@ async function validatePurchaseServerSide(params: {
       }
       
       if (!data?.success) {
-        console.error('[IAP_FIX_V9] ❌ Server returned failure:', data);
+        console.error('[IAP_FIX_V10] ❌ Server returned failure:', data);
         pendingValidationTransactions.delete(params.transactionId);
         return { 
           success: false, 
@@ -855,7 +889,7 @@ async function validatePurchaseServerSide(params: {
         };
       }
 
-      console.log('[IAP_FIX_V9] ✅ Validation successful via supabase.functions.invoke:', {
+      console.log('[IAP_FIX_V10] ✅ Validation successful via supabase.functions.invoke:', {
         newBalance: data.new_balance,
         transactionId: data.transaction_id,
       });
@@ -869,7 +903,7 @@ async function validatePurchaseServerSide(params: {
       
     } catch (invokeError: any) {
       if (invokeError?.message !== 'FALLBACK_REQUIRED') {
-        console.error('[IAP_FIX_V9] 💥 Invoke exception:', invokeError);
+        console.error('[IAP_FIX_V10] 💥 Invoke exception:', invokeError);
       }
       // Continue to XMLHttpRequest fallback
     }
@@ -877,7 +911,7 @@ async function validatePurchaseServerSide(params: {
     // ═══════════════════════════════════════════════════════════════════
     // METHOD 2: XMLHttpRequest fallback (different WKWebView code path)
     // ═══════════════════════════════════════════════════════════════════
-    console.log('[IAP_FIX_V9] 🔄 Trying XMLHttpRequest fallback...');
+    console.log('[IAP_FIX_V10] 🔄 Trying XMLHttpRequest fallback...');
     const functionUrl = `${SUPABASE_URL}/functions/v1/${functionName}`;
     
     const xhrResult = await new Promise<{ success: boolean; data?: any; error?: string; isNetworkError?: boolean }>((resolve) => {
@@ -885,7 +919,7 @@ async function validatePurchaseServerSide(params: {
       xhr.timeout = 20000; // 20 second timeout
       
       xhr.onload = () => {
-        console.log('[IAP_FIX_V9] 📥 XHR response:', {
+        console.log('[IAP_FIX_V10] 📥 XHR response:', {
           status: xhr.status,
           responseLength: xhr.responseText?.length || 0,
         });
@@ -901,6 +935,11 @@ async function validatePurchaseServerSide(params: {
           } catch {
             resolve({ success: false, error: 'Invalid response' });
           }
+        } else if (xhr.status === 429) {
+          // 🔧 [IAP_FIX_V10] Rate limit - mark and stop
+          console.error('[IAP_FIX_V10] 🚫 XHR 429 Rate limit');
+          markRateLimited();
+          resolve({ success: false, error: 'Server sovraccarico - riprova tra 1 minuto', isNetworkError: true });
         } else if (xhr.status === 401) {
           resolve({ success: false, error: 'Sessione scaduta - effettua nuovamente il login' });
         } else {
@@ -909,12 +948,12 @@ async function validatePurchaseServerSide(params: {
       };
       
       xhr.onerror = () => {
-        console.error('[IAP_FIX_V9] 💥 XHR error');
+        console.error('[IAP_FIX_V10] 💥 XHR error');
         resolve({ success: false, error: 'Errore di connessione', isNetworkError: true });
       };
       
       xhr.ontimeout = () => {
-        console.error('[IAP_FIX_V9] ⏰ XHR timeout');
+        console.error('[IAP_FIX_V10] ⏰ XHR timeout');
         resolve({ success: false, error: 'Timeout - server non risponde', isNetworkError: true });
       };
       
@@ -926,7 +965,7 @@ async function validatePurchaseServerSide(params: {
       try {
         xhr.send(JSON.stringify(requestBody));
       } catch (sendError) {
-        console.error('[IAP_FIX_V9] 💥 XHR send error:', sendError);
+        console.error('[IAP_FIX_V10] 💥 XHR send error:', sendError);
         resolve({ success: false, error: 'Errore invio richiesta', isNetworkError: true });
       }
     });
@@ -934,7 +973,7 @@ async function validatePurchaseServerSide(params: {
     pendingValidationTransactions.delete(params.transactionId);
     
     if (xhrResult.success) {
-      console.log('[IAP_FIX_V9] ✅ Validation successful via XMLHttpRequest:', {
+      console.log('[IAP_FIX_V10] ✅ Validation successful via XMLHttpRequest:', {
         newBalance: xhrResult.data?.new_balance,
       });
       return { 
@@ -944,7 +983,7 @@ async function validatePurchaseServerSide(params: {
       };
     }
     
-    console.error('[IAP_FIX_V9] ❌ Both methods failed:', xhrResult.error);
+    console.error('[IAP_FIX_V10] ❌ Both methods failed:', xhrResult.error);
     return {
       success: false,
       error: xhrResult.error || 'Verifica acquisto fallita',
@@ -952,7 +991,7 @@ async function validatePurchaseServerSide(params: {
     };
     
   } catch (err: any) {
-    console.error('[IAP_FIX_V9] 💥 Validation exception:', {
+    console.error('[IAP_FIX_V10] 💥 Validation exception:', {
       name: err?.name,
       message: err?.message,
     });
@@ -970,6 +1009,13 @@ async function validatePurchaseServerSide(params: {
  * Process pending validations from the retry queue
  */
 export async function processPendingValidations(): Promise<void> {
+  // 🔧 [IAP_FIX_V10] Check rate limit before processing
+  if (isRateLimited()) {
+    const remaining = getRateLimitCooldownRemaining();
+    console.log('[IAP_QUEUE] ⏳ Rate limited, cannot process. Cooldown:', Math.round(remaining / 1000), 's');
+    return;
+  }
+  
   const pending = await getPendingValidations();
   const activePending = pending.filter(p => p.status === 'pending' || p.status === 'retrying');
   
@@ -989,6 +1035,14 @@ export async function processPendingValidations(): Promise<void> {
  * Retry a single pending validation
  */
 async function retryValidation(item: PendingValidation): Promise<boolean> {
+  // 🔧 [IAP_FIX_V10] Check rate limit before retry
+  if (isRateLimited()) {
+    const remaining = getRateLimitCooldownRemaining();
+    console.log('[IAP_QUEUE] ⏳ Rate limited, skipping retry. Cooldown:', Math.round(remaining / 1000), 's');
+    // Don't schedule next retry - let rate limit cooldown naturally
+    return false;
+  }
+  
   console.log('[IAP_QUEUE] 🔄 Retrying validation:', {
     transactionId: item.transactionId,
     productId: item.productId,

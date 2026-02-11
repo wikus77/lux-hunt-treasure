@@ -231,3 +231,69 @@ export async function clearQueue(): Promise<void> {
   localStorage.removeItem(QUEUE_KEY);
   console.log('[IAP_QUEUE] 🗑️ Queue cleared');
 }
+
+/**
+ * Clear stale pending validations older than maxAgeMs (default 24h)
+ * This prevents buildup of old failed transactions causing retry storms
+ */
+export async function clearStalePendingValidations(maxAgeMs: number = 24 * 60 * 60 * 1000): Promise<number> {
+  const queue = await loadQueue();
+  const now = Date.now();
+  
+  const freshItems = queue.filter(item => {
+    const createdAt = new Date(item.createdAt).getTime();
+    const age = now - createdAt;
+    const isStale = age > maxAgeMs;
+    
+    if (isStale) {
+      console.log('[IAP_QUEUE] 🗑️ Removing stale item:', item.transactionId, 'age:', Math.round(age / 3600000), 'hours');
+      // Cancel any pending timer
+      const timer = retryTimers.get(item.transactionId);
+      if (timer) {
+        clearTimeout(timer);
+        retryTimers.delete(item.transactionId);
+      }
+    }
+    
+    return !isStale;
+  });
+  
+  const removedCount = queue.length - freshItems.length;
+  
+  if (removedCount > 0) {
+    await saveQueue(freshItems);
+    console.log('[IAP_QUEUE] 🧹 Cleared', removedCount, 'stale pending validations');
+  }
+  
+  return removedCount;
+}
+
+// Global rate limit tracking
+let lastRateLimitTime: number = 0;
+const RATE_LIMIT_COOLDOWN_MS = 60000; // 1 minute cooldown after 429
+
+/**
+ * Check if we're in rate limit cooldown
+ */
+export function isRateLimited(): boolean {
+  if (lastRateLimitTime === 0) return false;
+  const elapsed = Date.now() - lastRateLimitTime;
+  return elapsed < RATE_LIMIT_COOLDOWN_MS;
+}
+
+/**
+ * Mark that we hit a rate limit
+ */
+export function markRateLimited(): void {
+  lastRateLimitTime = Date.now();
+  console.log('[IAP_QUEUE] 🚫 Rate limit detected - cooling down for', RATE_LIMIT_COOLDOWN_MS / 1000, 'seconds');
+  cancelAllRetries(); // Stop all pending retries
+}
+
+/**
+ * Get time remaining in rate limit cooldown
+ */
+export function getRateLimitCooldownRemaining(): number {
+  if (!isRateLimited()) return 0;
+  return RATE_LIMIT_COOLDOWN_MS - (Date.now() - lastRateLimitTime);
+}

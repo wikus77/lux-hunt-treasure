@@ -2,7 +2,7 @@
  * M1 UNITS™ — Realtime Hook
  * Subscribe to user M1 Units balance updates via Supabase Realtime
  * 
- * 🔧 [IAP_FIX_V9] Added balance lock during pending IAP validations
+ * 🔧 [IAP_FIX_V10] Added balance lock during pending IAP validations
  * to prevent "rollback" when server hasn't yet received the credit.
  * 
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
@@ -90,7 +90,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       setIsLoading(true);
       setError(null);
 
-      // 🔧 [IAP_FIX_V9] Check if there's a pending IAP validation
+      // 🔧 [IAP_FIX_V10] Check if there's a pending IAP validation
       // If so, don't update balance from server (could cause rollback)
       const pendingIAP = hasPendingValidations();
       if (pendingIAP) {
@@ -118,7 +118,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       if (profile) {
         const balance = profile.m1_units || 0;
         
-        // 🔧 [IAP_FIX_V9] Prevent rollback - only update if balance increased or no pending
+        // 🔧 [IAP_FIX_V10] Prevent rollback - only update if balance increased or no pending
         const currentBalance = unitsData?.balance || lastKnownBalanceRef.current;
         if (balance < currentBalance && hasPendingValidations()) {
           console.log('[M1U] ⚠️ Ignoring lower balance during pending IAP:', { 
