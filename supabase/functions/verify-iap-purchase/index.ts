@@ -293,14 +293,44 @@ serve(async (req) => {
 
     // =====================
     // CREATE PENDING TRANSACTION
+    // 🔧 [IAP_FIX_V13] Fixed: product_code, store_product_id, product_type are required
     // =====================
+    
+    // Derive product_code from product_id (e.g., "com.m1ssion.m1u.pack.starter" -> "M1U_STARTER")
+    const productCodeMap: Record<string, string> = {
+      'com.m1ssion.m1u.pack.starter': 'M1U_STARTER',
+      'com.m1ssion.m1u.pack.agent': 'M1U_AGENT',
+      'com.m1ssion.m1u.pack.elite': 'M1U_ELITE',
+      'com.m1ssion.m1u.pack.commander': 'M1U_COMMANDER',
+      'com.m1ssion.m1u.pack.director': 'M1U_DIRECTOR',
+      'com.m1ssion.m1u.pack.master': 'M1U_MASTER',
+      'com.m1ssion.sub.silver': 'SUB_SILVER',
+      'com.m1ssion.sub.gold': 'SUB_GOLD',
+      'com.m1ssion.sub.black': 'SUB_BLACK',
+      'com.m1ssion.sub.titanium': 'SUB_TITANIUM',
+    };
+    
+    const productCode = productCodeMap[product_id] || `UNKNOWN_${product_id.split('.').pop()?.toUpperCase() || 'PRODUCT'}`;
+    const productType = productConfig.product_type || 'consumable';
+    
+    structuredLog('info', '[IAP_FIX_V13] Creating transaction record', correlationId, {
+      productId: product_id,
+      productCode,
+      productType,
+      m1uAmount: productConfig.m1u_amount,
+    });
     
     const { data: txn, error: txnError } = await supabaseAdmin
       .from('iap_transactions')
       .insert({
         user_id: user.id,
         platform,
-        product_id,
+        // 🔧 [IAP_FIX_V13] Required fields that were missing
+        product_code: productCode,
+        store_product_id: product_id,
+        product_type: productType,
+        // Original fields
+        product_id, // Keep for backward compatibility with patch migration
         transaction_id: platform === 'ios' ? transaction_id : null,
         original_transaction_id: platform === 'ios' ? original_transaction_id : null,
         purchase_token: platform === 'android' ? purchase_token : null,
@@ -348,13 +378,17 @@ serve(async (req) => {
         })
         .eq('id', txn.id);
 
-      // Audit log
-      await supabaseAdmin.rpc('log_iap_audit', {
-        p_user_id: user.id,
-        p_action: 'PURCHASE_REJECTED',
-        p_transaction_id: txn.id,
-        p_details: { product_id, platform, reason: 'verification_failed' }
-      });
+      // 🔧 [IAP_FIX_V13] Audit log - non-blocking
+      try {
+        await supabaseAdmin.rpc('log_iap_audit', {
+          p_user_id: user.id,
+          p_action: 'PURCHASE_REJECTED',
+          p_transaction_id: txn.id,
+          p_details: { product_id, product_code: productCode, platform, reason: 'verification_failed' }
+        });
+      } catch (auditErr) {
+        console.error('[IAP_FIX_V13] Audit log failed (non-blocking):', auditErr);
+      }
 
       return new Response(
         JSON.stringify({ success: false, error: 'Purchase verification failed' }),
@@ -512,14 +546,15 @@ serve(async (req) => {
     // AUDIT LOG
     // =====================
     
-    // 🔧 [IAP_FIX_V12] Audit log - handle RPC errors gracefully
+    // 🔧 [IAP_FIX_V13] Audit log - non-blocking
     try {
       await supabaseAdmin.rpc('log_iap_audit', {
         p_user_id: user.id,
         p_action: 'PURCHASE_VERIFIED',
         p_transaction_id: txn.id,
         p_details: { 
-          product_id, 
+          product_id,
+          product_code: productCode,
           platform, 
           type: productType,
           credited_m1u: productConfig.m1u_amount,
@@ -528,12 +563,13 @@ serve(async (req) => {
       });
     } catch (auditErr) {
       // Audit log failure should not block purchase
-      console.error('[IAP_FIX_V12] Audit log failed (non-blocking):', auditErr);
+      console.error('[IAP_FIX_V13] Audit log failed (non-blocking):', auditErr);
     }
 
-    structuredLog('info', 'Purchase verified successfully', correlationId, {
+    structuredLog('info', '[IAP_FIX_V13] Purchase verified successfully', correlationId, {
       userId: user.id,
       productId: product_id,
+      productCode,
       platform,
       creditedM1U: productConfig.m1u_amount,
       creditedTier: productConfig.subscription_tier || productConfig.tier,
