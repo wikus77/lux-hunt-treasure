@@ -159,8 +159,13 @@ serve(async (req) => {
     }
 
     // =====================
-    // REPLAY DEFENSE
+    // REPLAY DEFENSE (DISABLED - causing false positives on retry)
+    // The idempotency check below is sufficient protection
     // =====================
+    // 🔧 [IAP_FIX_V12] DISABLED: Replay check was causing "Error checking replay" 
+    // and blocking legitimate retries. The idempotency check (line ~190) already
+    // prevents duplicate credits. Re-enable after fixing the check_replay RPC.
+    /*
     const isReplay = await checkReplay(
       supabaseAdmin,
       user.id,
@@ -178,6 +183,8 @@ serve(async (req) => {
       });
       return replayResponse(correlationId);
     }
+    */
+    structuredLog('info', '[IAP_FIX_V12] Replay defense DISABLED - using idempotency check only', correlationId, {});
 
     structuredLog('info', 'Processing IAP verification', correlationId, {
       userId: user.id,

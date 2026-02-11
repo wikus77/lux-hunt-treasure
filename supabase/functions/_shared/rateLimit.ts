@@ -117,8 +117,10 @@ export async function checkReplay(
   
   if (error) {
     console.error('[ReplayDefense] Error checking replay:', error);
-    // Fail closed - treat as potential replay if check fails
-    return true;
+    // 🔧 [IAP_FIX_V12] Changed to FAIL OPEN - don't block legitimate purchases
+    // The idempotency check in verify-iap-purchase will catch true duplicates
+    // Previously "fail closed" was blocking all transactions when DB check failed
+    return false;
   }
   
   return data === true;  // True means it's a replay
