@@ -11,6 +11,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     private var webViewConfigured = false
     private var userScriptAdded = false
     private var faceIDHandlerAdded = false
+    
+    // ============================================================================
+    // 🚨 APP STORE REVIEW FIX — TEMPORARY SSO HIDE (iOS WRAPPER ONLY)
+    // Issue: Google/Apple OAuth fails on iOS native (redirect/deep-link issues)
+    // Solution: Hide SSO buttons via JS injection in iOS wrapper
+    // 
+    // TO RE-ENABLE: Set this to false
+    // This does NOT modify the webapp code - only injects CSS/JS at runtime
+    // ============================================================================
+    private let IOS_SSO_TEMPORARILY_DISABLED = true
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // © 2026 M1SSION™ — NIYVORA KFT — Joseph MULÉ
@@ -133,6 +143,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Add UserScript that runs BEFORE document loads
         if !userScriptAdded {
             addPreRenderUserScript(to: webView, safeTop: safeTop)
+            
+            // 🚨 APP STORE REVIEW FIX: Hide SSO buttons if flag is set
+            if IOS_SSO_TEMPORARILY_DISABLED {
+                addSSOHideUserScript(to: webView)
+            }
+            
             userScriptAdded = true
         }
         
@@ -337,6 +353,182 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 print("⚠️ M1SSION™ WRAP: Immediate injection error: \(error)")
             } else {
                 print("✅ M1SSION™ WRAP: Immediate injection successful")
+            }
+        }
+    }
+    
+    // MARK: - 🚨 APP STORE REVIEW FIX: SSO Hide (Wrapper-Only)
+    
+    /// Injects JS to hide Google/Apple SSO buttons on the login screen
+    /// This runs ONLY in iOS native wrapper, does NOT modify web code
+    private func addSSOHideUserScript(to webView: WKWebView) {
+        let ssoHideJS = """
+        (function() {
+            // M1SSION™ iOS Wrapper - SSO Button Hide Fix
+            // This script runs at document start and uses MutationObserver
+            // to find and hide SSO buttons when they appear
+            
+            console.log('🚨 [iOSWrapper] SSO Hide script initializing...');
+            
+            // Set global flag so webapp can detect if needed
+            window.__IOS_SSO_DISABLED__ = true;
+            
+            // CSS to hide SSO buttons - injected early
+            var hideCSS = document.createElement('style');
+            hideCSS.id = 'm1ssion-ios-sso-hide';
+            hideCSS.textContent = `
+                /* M1SSION™ iOS Wrapper - Temp SSO Hide for App Review */
+                /* Target Apple button by SVG path content */
+                button:has(svg path[d^="M17.05"]),
+                /* Target Google button by SVG with multiple paths */
+                button:has(svg path[fill="#4285F4"]),
+                /* Hide any button containing "Apple" or "Google" text */
+                button:has(svg):has(~ *:empty) {
+                    /* Keep hidden with !important to override any JS show */
+                }
+                
+                /* Fallback: Hide by class or position if above doesn't work */
+                .m1ssion-sso-hidden {
+                    display: none !important;
+                    visibility: hidden !important;
+                    height: 0 !important;
+                    overflow: hidden !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+            `;
+            
+            // Insert CSS early
+            if (document.head) {
+                document.head.appendChild(hideCSS);
+            } else {
+                document.documentElement.appendChild(hideCSS);
+            }
+            
+            // MutationObserver to find and hide SSO buttons when they render
+            function hideSSOButtons() {
+                var hidden = 0;
+                
+                // Find all buttons in the DOM
+                var buttons = document.querySelectorAll('button');
+                buttons.forEach(function(btn) {
+                    var text = btn.textContent || '';
+                    var hasAppleSVG = btn.querySelector('svg path[d^="M17.05"]');
+                    var hasGoogleSVG = btn.querySelector('svg path[fill="#4285F4"]');
+                    
+                    // Check for Apple button
+                    if (hasAppleSVG || text.toLowerCase().includes('apple')) {
+                        if (!btn.classList.contains('m1ssion-sso-hidden')) {
+                            btn.classList.add('m1ssion-sso-hidden');
+                            btn.style.display = 'none';
+                            btn.style.visibility = 'hidden';
+                            btn.setAttribute('aria-hidden', 'true');
+                            btn.setAttribute('disabled', 'true');
+                            hidden++;
+                            console.log('🚨 [iOSWrapper] Hidden Apple SSO button');
+                        }
+                    }
+                    
+                    // Check for Google button
+                    if (hasGoogleSVG || text.toLowerCase().includes('google')) {
+                        // Make sure it's a sign-in button, not a Google Pay button
+                        if (text.toLowerCase().includes('sign') || 
+                            text.toLowerCase().includes('continue') ||
+                            text.toLowerCase().includes('up with')) {
+                            if (!btn.classList.contains('m1ssion-sso-hidden')) {
+                                btn.classList.add('m1ssion-sso-hidden');
+                                btn.style.display = 'none';
+                                btn.style.visibility = 'hidden';
+                                btn.setAttribute('aria-hidden', 'true');
+                                btn.setAttribute('disabled', 'true');
+                                hidden++;
+                                console.log('🚨 [iOSWrapper] Hidden Google SSO button');
+                            }
+                        }
+                    }
+                });
+                
+                // Also hide the "or" divider between SSO and email options
+                // Look for dividers near hidden buttons
+                var dividers = document.querySelectorAll('[class*="flex"][class*="items-center"]');
+                dividers.forEach(function(div) {
+                    var text = div.textContent || '';
+                    if (text.trim().toLowerCase() === 'or' || text.trim().toLowerCase() === 'oppure') {
+                        // Check if it's near hidden SSO buttons
+                        var parent = div.parentElement;
+                        if (parent && parent.querySelector('.m1ssion-sso-hidden')) {
+                            if (!div.classList.contains('m1ssion-sso-hidden')) {
+                                div.classList.add('m1ssion-sso-hidden');
+                                div.style.display = 'none';
+                                hidden++;
+                                console.log('🚨 [iOSWrapper] Hidden OR divider');
+                            }
+                        }
+                    }
+                });
+                
+                return hidden;
+            }
+            
+            // Run immediately
+            var initialHidden = hideSSOButtons();
+            console.log('🚨 [iOSWrapper] Initial SSO hide pass: ' + initialHidden + ' elements');
+            
+            // Set up MutationObserver for dynamically added buttons
+            var observer = new MutationObserver(function(mutations) {
+                var anyAdded = mutations.some(function(m) { return m.addedNodes.length > 0; });
+                if (anyAdded) {
+                    hideSSOButtons();
+                }
+            });
+            
+            // Start observing once DOM is ready
+            function startObserver() {
+                if (document.body) {
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true
+                    });
+                    console.log('🚨 [iOSWrapper] SSO MutationObserver started');
+                } else {
+                    setTimeout(startObserver, 10);
+                }
+            }
+            
+            startObserver();
+            
+            // Also run on navigation (SPA route changes)
+            var lastUrl = location.href;
+            setInterval(function() {
+                if (location.href !== lastUrl) {
+                    lastUrl = location.href;
+                    console.log('🚨 [iOSWrapper] URL changed, re-running SSO hide');
+                    setTimeout(hideSSOButtons, 100);
+                    setTimeout(hideSSOButtons, 500);
+                    setTimeout(hideSSOButtons, 1000);
+                }
+            }, 200);
+            
+            console.log('✅ [iOSWrapper] SSO Hide script initialized successfully');
+        })();
+        """
+        
+        // Create UserScript that runs at DOCUMENT START
+        let userScript = WKUserScript(
+            source: ssoHideJS,
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        )
+        
+        webView.configuration.userContentController.addUserScript(userScript)
+        print("🚨 M1SSION™ WRAP: SSO Hide UserScript added (App Review fix)")
+        
+        // Also inject immediately for current page
+        webView.evaluateJavaScript(ssoHideJS) { _, error in
+            if let error = error {
+                print("⚠️ M1SSION™ WRAP: SSO Hide immediate injection error: \(error)")
+            } else {
+                print("✅ M1SSION™ WRAP: SSO Hide immediate injection successful")
             }
         }
     }
