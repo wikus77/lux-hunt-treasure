@@ -1,9 +1,14 @@
-# ROLLBACK IAP V12 - Edge Function
+# ROLLBACK IAP V13 - Edge Function
 
 ## Current State
 - **Branch**: `hotfix/iap-v12-productcode-null`
-- **Backup Tag**: `backup_before_iap_fix_20260211_141521`
-- **HEAD**: `bf400def` (fix(edge-function): V12b - Add product fallback + robust M1U crediting)
+- **Backup Tag (pre-V13)**: `backup_before_iap_fix_20260211_141521`
+- **V13 Commit**: `f5a53bbf` (fix: Add missing product_code, store_product_id, product_type)
+
+## ROOT CAUSE FIXED
+- `iap_transactions` table requires `product_code NOT NULL`, `store_product_id NOT NULL`, `product_type NOT NULL`
+- Edge Function INSERT was missing these fields → 500 error
+- V13 adds `productCodeMap` to derive `product_code` from `product_id`
 
 ## IMMEDIATE ROLLBACK (if needed)
 
