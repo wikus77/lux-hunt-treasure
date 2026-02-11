@@ -88,6 +88,8 @@ export const M1UShopContent: React.FC<M1UShopContentProps> = ({ onClose }) => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const handlePurchase = (pack: M1UPack) => {
+    // 🚨 FORENSIC — REMOVE AFTER DEBUG
+    console.log('🚨🚨🚨 IAP_DIAG_ACQUISTA_CLICK 🚨🚨🚨');
     console.log('[M1U SHOP] 🛒 Purchase initiated:', {
       packCode: pack.code,
       packName: pack.name,

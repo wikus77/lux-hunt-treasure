@@ -12,7 +12,7 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (7.0.4):
     - Capacitor
-  - CapgoNativePurchases (8.0.18):
+  - CapgoNativePurchases (7.16.2):
     - Capacitor
 
 DEPENDENCIES:
@@ -51,7 +51,7 @@ SPEC CHECKSUMS:
   CapacitorPluginSafeArea: 1abd81c6facac9eae0c6ae3cb0b3b53ccc135522
   CapacitorPushNotifications: 7604512af53bbfdf1dd8fb2256b9ef1e8a69cdc2
   CapacitorStatusBar: d0e0151c89c001a9c7125bac59ddedf76b664768
-  CapgoNativePurchases: 53d2d95b4d1eaa164c638c809dbfeddb3366776e
+  CapgoNativePurchases: 8c676076beb71f7361f10e9cfb2cf043122fd5e4
 
 PODFILE CHECKSUM: e261f644b10bafd0ae897162149c280a7e08714e
 

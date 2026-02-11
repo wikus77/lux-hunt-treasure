@@ -22,8 +22,9 @@ export default defineConfig(({ mode }) => ({
   esbuild: {
     target: 'es2022', // Native class fields without helpers
     logOverride: { 'this-is-undefined-in-esm': 'silent' },
-    // Drop debugger AND console.log in production for smaller bundle
-    drop: mode === 'production' ? ['debugger', 'console'] : [],
+    // 🚨 FORENSIC: TEMPORARILY keep console.log for IAP debugging
+    // Original: drop: mode === 'production' ? ['debugger', 'console'] : [],
+    drop: mode === 'production' ? ['debugger'] : [], // 🚨 REMOVE AFTER DEBUG
   },
   plugins: [
     react(),

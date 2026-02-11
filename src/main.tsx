@@ -1,5 +1,11 @@
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
 /* M1SSION™ AG-X0197 */
+
+// 🚨🚨🚨 FORENSIC BUILD STAMP — REMOVE AFTER DEBUG 🚨🚨🚨
+console.log('🚨🚨🚨 IAP_DIAG_BUILD_20260211_V3 🚨🚨🚨');
+console.log('🚨 [BUILD STAMP] main.tsx loaded at:', new Date().toISOString());
+// 🚨🚨🚨 END FORENSIC BUILD STAMP 🚨🚨🚨
+
 import './styles/map.css';
 import './styles/effects/ritual-distortion.css';
 import './styles/motion-tokens.css'; // 🎬 Native Feel: Unified motion system

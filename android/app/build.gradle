@@ -1,0 +1,99 @@
+apply plugin: 'com.android.application'
+
+// Load keystore properties for signing
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace "eu.m1ssion.app"
+    compileSdk rootProject.ext.compileSdkVersion
+    
+    // Signing configuration for release builds
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+    
+    defaultConfig {
+        applicationId "eu.m1ssion.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 4
+        versionName "1.0.1"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+             // 
+             // EXCLUSION STRATEGY (2026-02-10 - FILL TO ~195MB):
+             // ✅ EXCLUDED (CDN/large files):
+             //    - *.mp4, *.mov, *.webm (video files)
+             //    - *.glb (3D models - 1.4GB)
+             //    - models (3D folder)
+             //    - Heavy prize folders (CDN): 99premi, auto-reali, orologi-reali, borse-reali (~85MB)
+             //
+             // ✅ INCLUDED (UI + smaller prizes):
+             //    - lovable-uploads (56M)
+             //    - scratch (11M)
+             //    - crew, crew-team (24M)
+             //    - m1ssion-prize (19M)
+             //    - prizes/root (19M) + gioielli-reali (18M) + borse (13M) + auto (9M) + altri (9M) + orologi (9M)
+             //
+             // EXPECTED AAB SIZE: ~195 MB (under 200MB limit)
+            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~:*.mp4:*.mov:*.webm:*.glb:models:99premi:auto-reali:orologi-reali:borse-reali:gioielli-reali'
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+// Override Java version to match installed JDK (Java 17)
+android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

@@ -255,7 +255,18 @@ const NativeIAPCheckoutContent: React.FC<{
   const expectedStoreId = mappedProduct ? (platform === 'ios' ? mappedProduct.appleProductId : mappedProduct.googleProductId) : null;
 
   useEffect(() => {
-    if (initAttempted || !isNativeIAPAvailable() || productMappingError) return;
+    // 🚨 FORENSIC DIAGNOSTIC — REMOVE AFTER DEBUG
+    const nativeIAPAvail = isNativeIAPAvailable();
+    console.log('🚨🚨🚨 IAP_DIAG_USEEFFECT_ENTRY 🚨🚨🚨');
+    console.log('🚨 [IAP DIAG] NativeIAPCheckoutContent useEffect', {
+      initAttempted,
+      isNativeIAPAvailable: nativeIAPAvail,
+      productMappingError,
+      packCode,
+      willCallInitIAP: !initAttempted && nativeIAPAvail && !productMappingError,
+    });
+    
+    if (initAttempted || !nativeIAPAvail || productMappingError) return;
     
     setInitAttempted(true);
     setLocalError(null);
@@ -437,6 +448,17 @@ export const M1UPaymentContent: React.FC<M1UPaymentContentProps> = ({
 }) => {
   const isNative = isCapacitorNative();
   const stripeAvailable = isStripeAvailable();
+  
+  // 🚨 FORENSIC DIAGNOSTIC — REMOVE AFTER DEBUG
+  console.log('🚨🚨🚨 IAP_DIAG_MODAL_MOUNTED 🚨🚨🚨');
+  console.log('🚨 [IAP DIAG] M1UPaymentContent mounted', {
+    BUILD_STAMP: '20260211_DIAG_V3',
+    isNative,
+    stripeAvailable,
+    platform: getCapacitorPlatform(),
+    packCode,
+    willShowNativeIAP: isNative || !stripeAvailable,
+  });
 
   const options: StripeElementsOptions = {
     appearance: {

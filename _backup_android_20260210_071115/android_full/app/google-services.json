@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "21417361168",
+    "project_id": "m1ssion-app",
+    "storage_bucket": "m1ssion-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:21417361168:android:58841299455ee4bcc7af95",
+        "android_client_info": {
+          "package_name": "app.lovable.2716f91b957c47ba91e06f572f3ce00d"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgY_2prLtVvme616VpfBgTyCJV1aW7mXs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

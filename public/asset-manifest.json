@@ -1,0 +1,103 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-02-10T00:00:00Z",
+  "description": "M1SSION Asset Manifest - Maps local paths to CDN for Android",
+  "baseUrls": {
+    "cdn": "https://cdn.m1ssion.app",
+    "local": ""
+  },
+  "excludedPatterns": {
+    "description": "Patterns excluded from Android AAB via ignoreAssetsPattern",
+    "extensions": ["*.mp4", "*.mov", "*.webm", "*.glb"],
+    "folders": ["models", "99premi", "auto-reali", "orologi-reali", "borse-reali", "gioielli-reali"]
+  },
+  "platformRouting": {
+    "description": "Which platform uses which source",
+    "ios-native": "local",
+    "android-native": "cdn",
+    "web": "cdn",
+    "pwa": "cdn"
+  },
+  "assets": {
+    "models": {
+      "agent_male": {
+        "path": "/models/agent/agent_male.glb",
+        "size": 10485760,
+        "platforms": { "ios": "local", "android": "cdn" }
+      },
+      "agent_female01": {
+        "path": "/models/agent/agent_female01.glb",
+        "size": 10485760,
+        "platforms": { "ios": "local", "android": "cdn" }
+      },
+      "agent_male02": {
+        "path": "/models/agent/agent_male02.glb",
+        "size": 10485760,
+        "platforms": { "ios": "local", "android": "cdn" }
+      },
+      "agent_male03": {
+        "path": "/models/agent/agent_male03.glb",
+        "size": 10485760,
+        "platforms": { "ios": "local", "android": "cdn" }
+      },
+      "agent_wolfman": {
+        "path": "/models/agent/agent_wolfman.glb",
+        "size": 10485760,
+        "platforms": { "ios": "local", "android": "cdn" }
+      }
+    },
+    "videos": {
+      "home_intro": {
+        "path": "/assets/video/HOME-BRIF-VIDEO.mp4",
+        "size": 10485760,
+        "platforms": { "ios": "local", "android": "cdn" },
+        "fallback": "/assets/prizes/altri/premi-1.png"
+      }
+    },
+    "images": {
+      "prizes_auto_reali": {
+        "folder": "/assets/prizes/auto-reali/",
+        "platforms": { "ios": "local", "android": "cdn" },
+        "fallback": "/assets/prizes/altri/premi-1.png"
+      },
+      "prizes_99premi": {
+        "folder": "/assets/prizes/99premi/",
+        "platforms": { "ios": "local", "android": "cdn" },
+        "fallback": "/assets/prizes/altri/premi-1.png"
+      },
+      "prizes_gioielli_reali": {
+        "folder": "/assets/prizes/gioielli-reali/",
+        "platforms": { "ios": "local", "android": "cdn" },
+        "fallback": "/assets/prizes/altri/premi-1.png"
+      },
+      "prizes_orologi_reali": {
+        "folder": "/assets/prizes/orologi-reali/",
+        "platforms": { "ios": "local", "android": "cdn" },
+        "fallback": "/assets/prizes/altri/premi-1.png"
+      },
+      "prizes_borse_reali": {
+        "folder": "/assets/prizes/borse-reali/",
+        "platforms": { "ios": "local", "android": "cdn" },
+        "fallback": "/assets/prizes/altri/premi-1.png"
+      }
+    }
+  },
+  "cacheStrategy": {
+    "description": "HTTP Cache headers to configure on CDN",
+    "maxAge": 31536000,
+    "immutable": true,
+    "headers": {
+      "Cache-Control": "public, max-age=31536000, immutable"
+    }
+  },
+  "cors": {
+    "description": "Required CORS configuration for CDN",
+    "allowedOrigins": [
+      "https://m1ssion.app",
+      "https://www.m1ssion.app",
+      "capacitor://localhost",
+      "http://localhost:5173"
+    ],
+    "allowedMethods": ["GET", "HEAD"]
+  }
+}

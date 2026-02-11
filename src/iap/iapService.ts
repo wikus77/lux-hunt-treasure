@@ -25,6 +25,10 @@ import {
 } from './products';
 import { logComplianceEvent } from '@/utils/storeCompliance';
 
+// 🚨 STATIC IMPORT: Ensures @capgo/native-purchases is bundled
+// This import uses registerPlugin internally, which works on native platforms
+import { NativePurchases as CapgoNativePurchases } from '@capgo/native-purchases';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -98,6 +102,15 @@ export function isNativeIAPAvailable(): boolean {
  * Must be called once at app startup
  */
 export async function initIAP(): Promise<boolean> {
+  // 🚨 FORENSIC DIAGNOSTIC — REMOVE AFTER DEBUG
+  console.log('🚨🚨🚨 IAP_DIAG_INITIAP_CALLED 🚨🚨🚨');
+  console.log('🚨 [IAP DIAG] initIAP() CALLED', {
+    alreadyInitialized: iapState.initialized,
+    isNativeIAPAvailable: isNativeIAPAvailable(),
+    isCapacitorNative: isCapacitorNative(),
+    platform: getCapacitorPlatform(),
+  });
+  
   if (iapState.initialized) {
     console.log('[IAP] Already initialized');
     return true;
@@ -129,7 +142,7 @@ export async function initIAP(): Promise<boolean> {
 
     // Load products from the store
     const storeProducts = await purchasesPlugin.getProducts({
-      productIds: getAllProductIds(platform),
+      productIdentifiers: getAllProductIds(platform),
     });
 
     const mappedProducts: IAPStoreProduct[] = (storeProducts?.products || []).map((p: any) => ({
@@ -178,32 +191,30 @@ export async function initIAP(): Promise<boolean> {
  * 2. cordova-plugin-purchase - Fallback for older setups
  */
 async function loadPurchasesPlugin(): Promise<any> {
-  try {
-    // Primary: @capgo/native-purchases (FREE, StoreKit 2, Google Play Billing 7.x)
-    const moduleName = '@capgo/native-purchases';
-    const module = await import(/* @vite-ignore */ moduleName);
-    if (module?.NativePurchases) {
-      console.log('[IAP] ✅ Loaded @capgo/native-purchases plugin');
-      return wrapCapgoPlugin(module.NativePurchases);
-    }
-  } catch (error) {
-    console.log('[IAP] @capgo/native-purchases not available, trying alternatives');
+  // 🚨 FORENSIC: Check what's in Capacitor.Plugins
+  const cap = (window as any).Capacitor;
+  console.log('🚨 [IAP FORENSIC] Capacitor Bridge Check:', {
+    hasCapacitor: !!cap,
+    platform: cap?.getPlatform?.() || 'unknown',
+    pluginKeys: Object.keys(cap?.Plugins || {}),
+    hasNativePurchases: !!cap?.Plugins?.NativePurchases,
+    hasPurchases: !!cap?.Plugins?.Purchases,
+  });
+  
+  // 🚨 FIX: Use STATIC imported plugin (CapgoNativePurchases from top of file)
+  // This ensures the plugin is bundled and the registerPlugin call happens
+  console.log('🚨 [IAP FORENSIC] Static import check:', {
+    hasCapgoNativePurchases: !!CapgoNativePurchases,
+    typeofCapgoNativePurchases: typeof CapgoNativePurchases,
+    methods: CapgoNativePurchases ? Object.keys(CapgoNativePurchases) : [],
+  });
+  
+  if (CapgoNativePurchases) {
+    console.log('[IAP] ✅ Using @capgo/native-purchases (static import)');
+    return wrapCapgoPlugin(CapgoNativePurchases);
   }
 
-  try {
-    // Fallback: cordova-plugin-purchase
-    const moduleName = 'cordova-plugin-purchase';
-    const module = await import(/* @vite-ignore */ moduleName);
-    if (module?.InAppPurchase2) {
-      console.log('[IAP] ✅ Loaded cordova-plugin-purchase');
-      return wrapCordovaPlugin(module.InAppPurchase2);
-    }
-  } catch (error) {
-    console.log('[IAP] cordova-plugin-purchase not available');
-  }
-
-  console.warn('[IAP] ⚠️ No IAP plugin available - native purchases will not work');
-  console.warn('[IAP] Install with: npm install @capgo/native-purchases && npx cap sync');
+  console.warn('[IAP] ⚠️ No IAP plugin available - CapgoNativePurchases is null/undefined');
   return null;
 }
 
@@ -218,9 +229,19 @@ function wrapCapgoPlugin(NativePurchases: any): any {
       // @capgo/native-purchases auto-initializes, just need to register products
       console.log('[IAP Capgo] Setting up with products:', products);
     },
-    getProducts: async ({ productIds }: any) => {
+    getProducts: async ({ productIdentifiers }: any) => {
+      // 🔍 FORENSIC DIAGNOSTIC — REMOVE AFTER DEBUG
+      console.log('🔍 [IAP DIAG] wrapCapgoPlugin.getProducts() CALLED', {
+        productIdentifiers,
+        count: productIdentifiers?.length,
+      });
       try {
-        const result = await NativePurchases.getProducts({ productIds });
+        console.log('🔍 [IAP DIAG] Calling CapgoNativePurchases.getProducts()...');
+        const result = await CapgoNativePurchases.getProducts({ productIdentifiers });
+        console.log('🔍 [IAP DIAG] CapgoNativePurchases.getProducts() RESULT', {
+          hasProducts: !!result?.products,
+          count: result?.products?.length,
+        });
         return {
           products: (result?.products || []).map((p: any) => ({
             productId: p.productId || p.identifier,
@@ -238,8 +259,16 @@ function wrapCapgoPlugin(NativePurchases: any): any {
       }
     },
     purchase: async ({ productId }: any) => {
+      // 🚨 GUARD: productId deve essere una stringa SKU valida
+      if (!productId || typeof productId !== 'string') {
+        console.error('[IAP Capgo] ❌ purchase() called with invalid productId:', productId);
+        throw new Error('productId is required and must be a string SKU');
+      }
+      console.log('[IAP Capgo] purchase() called with productId:', productId);
+      
       try {
-        const result = await NativePurchases.purchaseProduct({ productId });
+        // 🚨 FIX: Plugin expects "productIdentifier", not "productId"
+        const result = await CapgoNativePurchases.purchaseProduct({ productIdentifier: productId });
         
         if (!result?.transaction) {
           throw new Error('No transaction returned');
@@ -269,19 +298,20 @@ function wrapCapgoPlugin(NativePurchases: any): any {
     },
     finishTransaction: async (transactionId: string) => {
       try {
-        // @capgo/native-purchases uses finishTransaction
-        await NativePurchases.finishTransaction({ transactionId });
+        // @capgo/native-purchases uses acknowledgePurchase with purchaseToken (= transactionId on iOS)
+        console.log('[IAP Capgo] Acknowledging transaction:', transactionId);
+        await CapgoNativePurchases.acknowledgePurchase({ purchaseToken: String(transactionId) });
         pendingTransactions.delete(transactionId);
-        console.log('[IAP Capgo] ✅ Transaction finished:', transactionId);
+        console.log('[IAP Capgo] ✅ Transaction acknowledged:', transactionId);
         return true;
       } catch (error) {
-        console.error('[IAP Capgo] finishTransaction error:', error);
+        console.error('[IAP Capgo] acknowledgePurchase error:', error);
         return false;
       }
     },
     restore: async () => {
       try {
-        await NativePurchases.restorePurchases();
+        await CapgoNativePurchases.restorePurchases();
         return { restored: true };
       } catch (error) {
         console.error('[IAP Capgo] restore error:', error);
