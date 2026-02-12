@@ -266,7 +266,7 @@ export default function MapTiler3D() {
           lng: m.lng, 
           title: m.title,
           claimed: claimedIds.has(m.id), // 🟣 VIOLA se riscattato
-          min_zoom: minZoomMap.get(m.id) || 17 // Zoom minimo per visibilità (default 17)
+          min_zoom: minZoomMap.get(m.id) ?? 14 // Zoom minimo per visibilità (default 14)
         })));
       } catch (e) { console.warn('[Map3D] markers load exception', e); }
     };
