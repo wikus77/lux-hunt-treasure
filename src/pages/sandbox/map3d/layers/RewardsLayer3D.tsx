@@ -27,11 +27,13 @@ interface RewardsLayer3DProps {
 }
 
 // 🎯 ZOOM DEFAULT per marker senza min_zoom configurato
-const DEFAULT_MIN_ZOOM = 17;
+// FIX: Ridotto da 17 a 14 per visibilità a zoom normali (~2km invece di ~500m)
+const DEFAULT_MIN_ZOOM = 14;
 
 const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers = [], userPosition, isAdmin = false }) => {
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
-  const [currentZoom, setCurrentZoom] = useState(0);
+  // 🔧 FIX: Inizializza a DEFAULT_MIN_ZOOM per evitare markers nascosti al primo render
+  const [currentZoom, setCurrentZoom] = useState(DEFAULT_MIN_ZOOM);
   const { rewards } = useMarkerRewards(selectedMarker);
   
   // 🔥 Native MapLibre markers ref for cleanup
@@ -76,7 +78,8 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
 
     // Add or update markers
     markers.forEach(rewardMarker => {
-      const markerMinZoom = rewardMarker.min_zoom || DEFAULT_MIN_ZOOM;
+      // FIX: Usare ?? invece di || per rispettare min_zoom=0 se impostato
+      const markerMinZoom = rewardMarker.min_zoom ?? DEFAULT_MIN_ZOOM;
       const isVisible = rewardMarker.claimed || currentZoom >= markerMinZoom;
       
       const existingMarker = markersRef.current.get(rewardMarker.id);
@@ -159,9 +162,11 @@ const RewardsLayer3D: React.FC<RewardsLayer3DProps> = ({ map, enabled, markers =
     markersRef.current.forEach((marker, id) => {
       const rewardMarker = markers.find(m => m.id === id);
       if (rewardMarker) {
-        const markerMinZoom = rewardMarker.min_zoom || DEFAULT_MIN_ZOOM;
+        // FIX: Usare ?? invece di || per rispettare min_zoom=0 se impostato
+      const markerMinZoom = rewardMarker.min_zoom ?? DEFAULT_MIN_ZOOM;
         const isVisible = rewardMarker.claimed || currentZoom >= markerMinZoom;
-        marker.getElement().style.display = isVisible ? 'block' : 'none';
+        // 🔧 FIX: Usa 'flex' per coerenza con wrapper (altrimenti layout rotto)
+        marker.getElement().style.display = isVisible ? 'flex' : 'none';
       }
     });
 
