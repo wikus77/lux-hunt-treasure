@@ -198,3 +198,39 @@ export function structuredLog(
   }
 }
 
+/**
+ * Simple rate limit wrapper for marker-claim endpoints
+ * Returns Response if rate limited, null if allowed
+ * 
+ * © 2026 Joseph MULÉ – M1SSION™ – NIYVORA KFT™
+ */
+export async function applyRateLimit(
+  req: Request,
+  endpoint: string,
+  userId: string
+): Promise<Response | null> {
+  // For marker claims: 10 claims per minute per user
+  const config: RateLimitConfig = { maxRequests: 10, windowSeconds: 60 };
+  
+  // Create admin client for rate limit check
+  const url = Deno.env.get("SUPABASE_URL");
+  const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  
+  if (!url || !service) {
+    console.warn('[RateLimit] Missing env vars, skipping rate limit');
+    return null; // Fail open
+  }
+  
+  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+  const supabase = createClient(url, service);
+  
+  const result = await checkRateLimit(supabase, userId, 'user', endpoint, config);
+  
+  if (!result.allowed) {
+    const correlationId = generateCorrelationId();
+    console.warn(`[RateLimit] User ${userId.slice(-8)} rate limited on ${endpoint}`);
+    return rateLimitResponse(result, correlationId);
+  }
+  
+  return null; // Allowed
+}
