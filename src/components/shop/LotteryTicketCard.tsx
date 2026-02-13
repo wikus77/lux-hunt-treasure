@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Ticket, Trophy, Clock, Sparkles } from 'lucide-react';
 
@@ -28,6 +29,7 @@ const LotteryTicketCard: React.FC<LotteryTicketCardProps> = ({
   isNew = false,
   onClick
 }) => {
+  const { t } = useTranslation();
   // Format ticket code: 123-456-789-A
   const formattedCode = ticketCode 
     ? `${ticketCode.slice(0, 3)}-${ticketCode.slice(3, 6)}-${ticketCode.slice(6, 9)}-${ticketCode.slice(9)}`
@@ -107,13 +109,13 @@ const LotteryTicketCard: React.FC<LotteryTicketCardProps> = ({
             {isWinner ? (
               <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/20">
                 <Trophy className="w-4 h-4 text-black" />
-                <span className="text-xs font-bold text-black">VINCENTE</span>
+                <span className="text-xs font-bold text-black">{t('shop_lottery_winner')}</span>
               </div>
             ) : (
               <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30">
                 {/* 🏪 STORE COMPLIANT: Progress path, not lottery */}
                 <Ticket className="w-4 h-4 text-cyan-400" />
-                <span className="text-xs font-bold text-cyan-400">PERCORSO</span>
+                <span className="text-xs font-bold text-cyan-400">{t('shop_tab_percorso')}</span>
               </div>
             )}
           </div>
@@ -133,7 +135,7 @@ const LotteryTicketCard: React.FC<LotteryTicketCardProps> = ({
         <div className="relative p-4 pt-3">
           <div className="text-center">
             <p className={`text-xs uppercase tracking-wider mb-1 ${isWinner ? 'text-black/60' : 'text-white/40'}`}>
-              Numero Biglietto
+              {t('shop_ticket_number')}
             </p>
             <div className="relative">
               <p 
