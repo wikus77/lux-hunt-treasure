@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🆘 Help Content - REVOLUT STYLE (iOS WKWebView OPTIMIZED)
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { X, Wrench, Activity, MessageCircle, ChevronRight } from 'lucide-react';
 import HelpQuickFixModal from './HelpQuickFixModal';
@@ -13,40 +14,29 @@ interface HelpContentProps {
 
 interface HelpSection {
   id: string;
-  title: string;
-  subtitle: string;
+  titleKey: string;
+  subtitleKey: string;
   icon: React.ElementType;
   color: string;
 }
 
-const HELP_SECTIONS: HelpSection[] = [
-  {
-    id: 'quickfix',
-    title: 'Problemi rapidi',
-    subtitle: 'Soluzioni alle domande più comuni',
-    icon: Wrench,
-    color: '#00D1FF',
-  },
-  {
-    id: 'status',
-    title: 'Stato sistema',
-    subtitle: 'Verifica lo stato dei servizi',
-    icon: Activity,
-    color: '#22C55E',
-  },
-  {
-    id: 'aion',
-    title: 'Parla con AION',
-    subtitle: 'Assistenza intelligente 24/7',
-    icon: MessageCircle,
-    color: '#A855F7',
-  },
+const HELP_SECTIONS_CONFIG: Omit<HelpSection, 'titleKey' | 'subtitleKey'>[] = [
+  { id: 'quickfix', icon: Wrench, color: '#00D1FF' },
+  { id: 'status', icon: Activity, color: '#22C55E' },
+  { id: 'aion', icon: MessageCircle, color: '#A855F7' },
 ];
 
 export const HelpContent: React.FC<HelpContentProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const [showQuickFix, setShowQuickFix] = useState(false);
   const [showSystemStatus, setShowSystemStatus] = useState(false);
   const [showContactAion, setShowContactAion] = useState(false);
+
+  const HELP_SECTIONS = HELP_SECTIONS_CONFIG.map(section => ({
+    ...section,
+    title: t(`help_${section.id}_title`),
+    subtitle: t(`help_${section.id}_subtitle`),
+  }));
 
   const handleSectionClick = (sectionId: string) => {
     switch (sectionId) {
@@ -113,7 +103,7 @@ export const HelpContent: React.FC<HelpContentProps> = ({ onClose }) => {
                 fontWeight: 700,
                 letterSpacing: '0.5px',
               }}>
-                AIUTO
+                {t('help_title')}
               </h1>
             </div>
 
@@ -127,7 +117,7 @@ export const HelpContent: React.FC<HelpContentProps> = ({ onClose }) => {
             fontSize: '14px', 
             textAlign: 'center',
           }}>
-            Come possiamo aiutarti oggi?
+            {t('help_subtitle')}
           </p>
         </div>
 
@@ -199,7 +189,7 @@ export const HelpContent: React.FC<HelpContentProps> = ({ onClose }) => {
           {/* Footer */}
           <div style={{ marginTop: '32px', textAlign: 'center' }}>
             <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px' }}>
-              M1SSION™ • Supporto disponibile 24/7
+              {t('help_footer')}
             </p>
           </div>
         </div>

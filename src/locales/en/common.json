@@ -307,5 +307,15 @@
   "ssl_security_note": "Your data is protected with SSL encryption and is never stored on our servers.",
   "cardholder": "Cardholder",
   "error_deleting": "Error deleting",
-  "card_added_success": "Card added successfully"
+  "card_added_success": "Card added successfully",
+
+  "help_title": "HELP",
+  "help_subtitle": "How can we help you today?",
+  "help_footer": "M1SSION™ • Support available 24/7",
+  "help_quickfix_title": "Quick fixes",
+  "help_quickfix_subtitle": "Solutions to common questions",
+  "help_status_title": "System status",
+  "help_status_subtitle": "Check service status",
+  "help_aion_title": "Talk to AION",
+  "help_aion_subtitle": "Smart assistance 24/7"
 }

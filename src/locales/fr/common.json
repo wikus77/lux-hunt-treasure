@@ -303,5 +303,15 @@
   "ssl_security_note": "Vos données sont protégées par cryptage SSL et ne sont jamais stockées sur nos serveurs.",
   "cardholder": "Titulaire",
   "error_deleting": "Erreur de suppression",
-  "card_added_success": "Carte ajoutée avec succès"
+  "card_added_success": "Carte ajoutée avec succès",
+
+  "help_title": "AIDE",
+  "help_subtitle": "Comment pouvons-nous vous aider ?",
+  "help_footer": "M1SSION™ • Support disponible 24/7",
+  "help_quickfix_title": "Solutions rapides",
+  "help_quickfix_subtitle": "Réponses aux questions fréquentes",
+  "help_status_title": "État du système",
+  "help_status_subtitle": "Vérifier l'état des services",
+  "help_aion_title": "Parler à AION",
+  "help_aion_subtitle": "Assistance intelligente 24/7"
 }
