@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2, Gift, RotateCcw, Ticket, AlertTriangle, CreditCard, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +44,7 @@ interface ScratchStats {
 const WHEEL_STORAGE_KEY = 'm1_fortune_wheel_last_spin';
 
 const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const { user } = useUnifiedAuth();
   const { unitsData, refetch } = useM1UnitsRealtime(user?.id);
   const balance = unitsData?.balance ?? 0;
@@ -105,7 +107,7 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
   // Purchase scratch ticket
   const handlePurchase = async (tier: 10 | 30 | 50) => {
     if (!user) {
-      toast.error('Devi essere autenticato');
+      toast.error(t('shop_toast_auth'));
       return;
     }
 
@@ -131,12 +133,12 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
           clientNonce,
         });
       } else if (data.status === 'insufficient_balance') {
-        toast.error('Saldo insufficiente', { description: data.message });
+        toast.error(t('shop_toast_insufficient'), { description: data.message });
       } else if (data.status === 'error') {
-        toast.error('Errore', { description: data.message });
+        toast.error(t('shop_toast_error'), { description: data.message });
       }
     } catch (err: any) {
-      toast.error('Errore', { description: err.message });
+      toast.error(t('shop_toast_error'), { description: err.message });
     } finally {
       setIsPurchasing(null);
     }
@@ -191,8 +193,8 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
                 <Sparkles className="w-6 h-6 text-purple-400" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">M1SSION SHOP</h2>
-                <p className="text-sm text-white/60">Saldo: <span className="text-yellow-400 font-bold">{balance.toLocaleString()} M1U</span></p>
+                <h2 className="text-xl font-bold text-white">{t('shop_title')}</h2>
+                <p className="text-sm text-white/60">{t('shop_balance')}: <span className="text-yellow-400 font-bold">{balance.toLocaleString()} M1U</span></p>
               </div>
             </div>
             <button
@@ -207,9 +209,9 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
           <div className="flex border-b border-white/10">
             {/* 🏪 STORE COMPLIANT: Progress-based tab labels (no gambling terms) */}
             {[
-              { id: 'scratch' as ShopTab, label: 'RIVELA', color: 'from-yellow-500 to-amber-600' },
-              { id: 'wheel' as ShopTab, label: 'PROGRESSIONE', color: 'from-green-500 to-emerald-600', badge: canSpinWheel },
-              { id: 'lottery' as ShopTab, label: 'PERCORSO', color: 'from-blue-500 to-cyan-600' },
+              { id: 'scratch' as ShopTab, label: t('shop_tab_rivela'), color: 'from-yellow-500 to-amber-600' },
+              { id: 'wheel' as ShopTab, label: t('shop_tab_progressione'), color: 'from-green-500 to-emerald-600', badge: canSpinWheel },
+              { id: 'lottery' as ShopTab, label: t('shop_tab_percorso'), color: 'from-blue-500 to-cyan-600' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -244,7 +246,7 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
             {activeTab === 'scratch' && (
               <div className="space-y-4">
                 <p className="text-sm text-white/70 text-center mb-4">
-                  Acquista un biglietto e gratta per vincere <span className="text-cyan-400 font-bold">INDIZI</span> o fino a <span className="text-yellow-400 font-bold">100.000 M1U</span>!
+                  {t('shop_scratch_intro')}
                 </p>
                 
                 {isLoadingStats ? (
@@ -266,8 +268,8 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
                       const maxMilestone = tier === 10 ? 100 : tier === 30 ? 200 : 500;
                       
                       let disabledReason = '';
-                      if (!canAfford) disabledReason = `Servono ${tier} M1U`;
-                      else if (!underLimit) disabledReason = 'Limite giornaliero raggiunto';
+                      if (!canAfford) disabledReason = t('shop_need_m1u', { tier });
+                      else if (!underLimit) disabledReason = t('shop_limit_reached');
 
                       return (
                         <motion.button
@@ -286,7 +288,7 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
                           {tierData?.milestone_bonus && (
                             <div className="absolute top-2 right-2 z-10">
                               <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full animate-pulse">
-                                🎯 BONUS
+                                🎯 {t('shop_bonus_badge')}
                               </span>
                             </div>
                           )}
@@ -304,7 +306,7 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
                               )}
                               <div>
                                 <p className="font-bold text-white">{tier} M1U</p>
-                                <p className="text-xs text-white/60">Milestone: +{maxMilestone} M1U</p>
+                                <p className="text-xs text-white/60">{t('shop_milestone_max', { max: maxMilestone })}</p>
                               </div>
                             </div>
                             
@@ -317,10 +319,10 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
                                 </p>
                               ) : (
                                 <p className="text-xs text-green-400">
-                                  {dailyLimit - purchasesToday} rimasti oggi
+                                  {dailyLimit - purchasesToday} {t('shop_remaining_today')}
                                 </p>
                               )}
-                              <p className="text-[10px] text-white/40 mt-1">
+                              <p className="text-[10px] text-white/60 mt-1">
                                 {tierData?.available ?? '?'} biglietti
                               </p>
                             </div>
@@ -354,21 +356,21 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
                   {canSpinWheel ? (
                     <>
                       {/* 🏪 STORE COMPLIANT: Progress-based messaging */}
-                      <h3 className="text-xl font-bold text-white mb-2">Progressione GRATUITA disponibile!</h3>
-                      <p className="text-white/60 mb-6">Avanza nella tua progressione giornaliera</p>
+                      <h3 className="text-xl font-bold text-white mb-2">{t('shop_progression_free')}</h3>
+                      <p className="text-white/60 mb-6">{t('shop_progression_advance')}</p>
                       <motion.button
                         onClick={() => setShowWheel(true)}
                         className="px-8 py-3 rounded-full font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 transition-all"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        🎡 GIRA ORA!
+                        🎡 {t('shop_gira_ora')}
                       </motion.button>
                     </>
                   ) : (
                     <>
-                      <h3 className="text-xl font-bold text-white/60 mb-2">Hai già girato oggi</h3>
-                      <p className="text-white/40">Torna domani per un nuovo giro gratuito!</p>
+                      <h3 className="text-xl font-bold text-white/70 mb-2">{t('shop_already_spun')}</h3>
+                      <p className="text-white/70">{t('shop_tomorrow_spin')}</p>
                     </>
                   )}
                 </div>
