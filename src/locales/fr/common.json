@@ -608,5 +608,14 @@
   "scratch_milestone_desc": "Niveau {{level}} débloqué ! +{{value}} M1U",
   "scratch_clue_revealed": "Indice révélé !",
   "scratch_progress_desc": "+{{value}} points d'avancement",
-  "scratch_continue_progress": "Continuez à progresser !"
+  "scratch_continue_progress": "Continuez à progresser !",
+
+  "home_prize_visibility": "Visibilité : {{progress}} %",
+  "commit_daily_suffix": "QUOTIDIEN",
+  "home_protocol_title": "PROTOCOLE",
+  "home_protocol_reveal": "DE DÉTECTION",
+  "shop_m1u_cta": "Achetez des M1U pour débloquer des indices et des fonctionnalités premium",
+  "shop_buy": "Acheter",
+  "shop_no_cycle": "Aucun cycle actif",
+  "shop_insufficient_for": "Solde insuffisant (il faut {{totalCost}} M1U)"
 }

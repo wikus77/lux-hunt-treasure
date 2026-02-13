@@ -612,5 +612,14 @@
   "scratch_milestone_desc": "Level {{level}} unlocked! +{{value}} M1U",
   "scratch_clue_revealed": "Clue revealed!",
   "scratch_progress_desc": "+{{value}} progress points",
-  "scratch_continue_progress": "Keep making progress!"
+  "scratch_continue_progress": "Keep making progress!",
+
+  "home_prize_visibility": "Visibility: {{progress}}%",
+  "commit_daily_suffix": "DAILY",
+  "home_protocol_title": "PROTOCOL",
+  "home_protocol_reveal": "DETECTION",
+  "shop_m1u_cta": "Buy M1U to unlock clues and premium features",
+  "shop_buy": "Buy",
+  "shop_no_cycle": "No active cycle",
+  "shop_insufficient_for": "Insufficient balance (need {{totalCost}} M1U)"
 }
