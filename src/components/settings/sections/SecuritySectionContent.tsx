@@ -2,6 +2,7 @@
 // Sicurezza - Section Modal Content (Revolut-style glass design)
 import React, { useState } from 'react';
 import { X, Shield, Key, LogOut, Eye, EyeOff, AlertTriangle, Copy, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +12,7 @@ interface SecuritySectionContentProps {
 }
 
 const SecuritySectionContent: React.FC<SecuritySectionContentProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -30,8 +32,8 @@ const SecuritySectionContent: React.FC<SecuritySectionContentProps> = ({ onClose
       const hashedKey = btoa(key);
       await supabase.from('profiles').update({ recovery_key: hashedKey }).eq('id', user.id);
       toast({
-        title: "✅ Codice di emergenza generato",
-        description: "Salva questo codice in un luogo sicuro."
+        title: "✅ " + t('emergency_code_generated'),
+        description: t('save_code_safely')
       });
     } catch (error) {
       console.error('Recovery key save error:', error);
@@ -48,15 +50,15 @@ const SecuritySectionContent: React.FC<SecuritySectionContentProps> = ({ onClose
 
   const handlePasswordChange = async () => {
     if (!passwords.current || !passwords.new || !passwords.confirm) {
-      toast({ title: "❌ Campi obbligatori", description: "Compila tutti i campi.", variant: "destructive" });
+      toast({ title: "❌ " + t('required_fields'), description: t('fill_all_fields'), variant: "destructive" });
       return;
     }
     if (passwords.new !== passwords.confirm) {
-      toast({ title: "❌ Password non corrispondenti", variant: "destructive" });
+      toast({ title: "❌ " + t('passwords_not_matching'), variant: "destructive" });
       return;
     }
     if (passwords.new.length < 6) {
-      toast({ title: "❌ Password troppo corta", description: "Minimo 6 caratteri.", variant: "destructive" });
+      toast({ title: "❌ " + t('password_too_short'), description: t('min_characters'), variant: "destructive" });
       return;
     }
 
@@ -65,9 +67,9 @@ const SecuritySectionContent: React.FC<SecuritySectionContentProps> = ({ onClose
       const { error } = await supabase.auth.updateUser({ password: passwords.new });
       if (error) throw error;
       setPasswords({ current: '', new: '', confirm: '' });
-      toast({ title: "✅ Password aggiornata" });
+      toast({ title: "✅ " + t('password_updated') });
     } catch (error: any) {
-      toast({ title: "❌ Errore", description: error.message, variant: "destructive" });
+      toast({ title: "❌ " + t('error'), description: error.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -80,7 +82,7 @@ const SecuritySectionContent: React.FC<SecuritySectionContentProps> = ({ onClose
       localStorage.clear();
       window.location.href = '/login';
     } catch (error) {
-      toast({ title: "❌ Errore disconnessione", variant: "destructive" });
+      toast({ title: "❌ " + t('disconnect_error'), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -104,11 +106,11 @@ const SecuritySectionContent: React.FC<SecuritySectionContentProps> = ({ onClose
             <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
           </button>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>SICUREZZA</h1>
+            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>{t('security_title')}</h1>
           </div>
           <div style={{ width: '40px' }} />
         </div>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Password e codici di emergenza</p>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>{t('security_subtitle')}</p>
       </div>
 
       {/* CONTENT */}
@@ -118,36 +120,36 @@ const SecuritySectionContent: React.FC<SecuritySectionContentProps> = ({ onClose
         <GlassCard style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <Key style={{ width: '20px', height: '20px', color: '#22C55E' }} />
-            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Cambia Password</span>
+            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('change_password')}</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <InputField 
               type={showPasswords ? 'text' : 'password'}
-              placeholder="Password attuale"
+              placeholder={t('current_password')}
               value={passwords.current}
               onChange={(e) => setPasswords({...passwords, current: e.target.value})}
             />
             <InputField 
               type={showPasswords ? 'text' : 'password'}
-              placeholder="Nuova password"
+              placeholder={t('new_password')}
               value={passwords.new}
               onChange={(e) => setPasswords({...passwords, new: e.target.value})}
             />
             <InputField 
               type={showPasswords ? 'text' : 'password'}
-              placeholder="Conferma nuova password"
+              placeholder={t('confirm_new_password')}
               value={passwords.confirm}
               onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
             />
             
             <button onClick={() => setShowPasswords(!showPasswords)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: '13px', cursor: 'pointer' }}>
               {showPasswords ? <EyeOff size={16} /> : <Eye size={16} />}
-              {showPasswords ? 'Nascondi' : 'Mostra'} password
+              {showPasswords ? t('hide_password') : t('show_password')}
             </button>
 
             <ActionButton onClick={handlePasswordChange} disabled={loading} color="#22C55E">
-              Aggiorna Password
+              {t('update_password')}
             </ActionButton>
           </div>
         </GlassCard>
@@ -156,7 +158,7 @@ const SecuritySectionContent: React.FC<SecuritySectionContentProps> = ({ onClose
         <GlassCard style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <Shield style={{ width: '20px', height: '20px', color: '#F59E0B' }} />
-            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Codice di Emergenza</span>
+            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('emergency_code')}</span>
           </div>
 
           {recoveryKey ? (
@@ -165,19 +167,19 @@ const SecuritySectionContent: React.FC<SecuritySectionContentProps> = ({ onClose
                 <p style={{ color: '#F59E0B', fontSize: '14px', fontFamily: 'monospace', wordBreak: 'break-all', textAlign: 'center' }}>{recoveryKey}</p>
               </div>
               <ActionButton onClick={copyRecoveryKey} color="#F59E0B">
-                {copied ? <><Check size={16} /> Copiato!</> : <><Copy size={16} /> Copia Codice</>}
+                {copied ? <><Check size={16} /> {t('copied')}</> : <><Copy size={16} /> {t('copy_code')}</>}
               </ActionButton>
               <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', marginTop: '12px', textAlign: 'center' }}>
-                ⚠️ Salva questo codice in un luogo sicuro. Non potrà essere visualizzato nuovamente.
+                ⚠️ {t('emergency_code_warning')}
               </p>
             </div>
           ) : (
             <div>
               <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginBottom: '12px' }}>
-                Genera un codice di emergenza per recuperare l'accesso al tuo account.
+                {t('emergency_code_description')}
               </p>
               <ActionButton onClick={generateRecoveryKey} color="#F59E0B">
-                Genera Codice
+                {t('generate_code')}
               </ActionButton>
             </div>
           )}
@@ -187,15 +189,15 @@ const SecuritySectionContent: React.FC<SecuritySectionContentProps> = ({ onClose
         <GlassCard>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <LogOut style={{ width: '20px', height: '20px', color: '#EF4444' }} />
-            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Disconnetti Ovunque</span>
+            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('disconnect_everywhere')}</span>
           </div>
 
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginBottom: '12px' }}>
-            Disconnetti il tuo account da tutti i dispositivi. Dovrai effettuare nuovamente l'accesso.
+            {t('disconnect_description')}
           </p>
 
           <ActionButton onClick={handleSignOutAll} disabled={loading} color="#EF4444">
-            Disconnetti Tutti i Dispositivi
+            {t('disconnect_all_devices')}
           </ActionButton>
         </GlassCard>
       </div>

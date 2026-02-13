@@ -2,6 +2,7 @@
 // Notifiche - Section Modal Content (Revolut-style glass design)
 import React, { useState, useEffect, lazy, Suspense, useRef } from 'react';
 import { X, Bell, Volume2, RefreshCw, Smartphone, AlertCircle, Check, ChevronRight, Settings } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +30,7 @@ interface NotificationsSectionContentProps {
 }
 
 const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -75,7 +77,7 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
       const newCount = prev + 1;
       if (newCount >= DEBUG_TAP_COUNT) {
         setShowDebugPanel(true);
-        toast({ title: "🔧 Debug mode attivato" });
+        toast({ title: "🔧 " + t('debug_mode_activated') });
         return 0;
       }
       return newCount;
@@ -94,7 +96,7 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
     if (!pushPermission || !pushRegistered) {
       // Request permission and register
       await requestPushPermission();
-      toast({ title: "🔔 Richiesta permessi notifiche inviata" });
+      toast({ title: "🔔 " + t('permission_request_sent') });
     } else {
       // Already registered, just toggle the preference in DB
       await saveSettings({ push_notifications_enabled: !settings.push_notifications_enabled });
@@ -147,9 +149,9 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
         push_notifications_enabled: updatedSettings.push_notifications_enabled
       }).eq('id', user.id);
       setSettings(updatedSettings);
-      toast({ title: "✅ Impostazioni salvate" });
+      toast({ title: "✅ " + t('settings_saved') });
     } catch (error) {
-      toast({ title: "❌ Errore salvataggio", variant: "destructive" });
+      toast({ title: "❌ " + t('error_save_settings'), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -158,7 +160,7 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
   const handleCategoryToggle = async (category: string) => {
     const success = await togglePreference(category);
     if (success) {
-      toast({ title: "✅ Preferenza aggiornata" });
+      toast({ title: "✅ " + t('preference_updated') });
     }
   };
 
@@ -180,11 +182,11 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
             <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
           </button>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>NOTIFICHE</h1>
+            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>{t('notifications_title')}</h1>
           </div>
           <div style={{ width: '40px' }} />
         </div>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Preferenze e alert</p>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>{t('notifications_subtitle')}</p>
       </div>
 
       {/* CONTENT */}
@@ -194,19 +196,19 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
         <GlassCard style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <Bell style={{ width: '20px', height: '20px', color: '#EF4444' }} />
-            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Notifiche Email</span>
+            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('email_notifications')}</span>
           </div>
 
           <ToggleRow 
-            label="Notifiche Generali" 
-            description="Ricevi aggiornamenti importanti via email"
+            label={t('general_notifications')} 
+            description={t('general_notifications_desc')}
             checked={settings.notifications_enabled}
             onChange={(v) => saveSettings({ notifications_enabled: v })}
             disabled={loading}
           />
 
           <div style={{ marginTop: '16px' }}>
-            <p style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Suggerimenti Settimanali</p>
+            <p style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>{t('weekly_suggestions')}</p>
             <div style={{ display: 'flex', gap: '8px' }}>
               {(['all', 'only-premium', 'none'] as const).map((option) => (
                 <button
@@ -225,7 +227,7 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
                     cursor: 'pointer',
                   }}
                 >
-                  {option === 'all' ? 'Tutti' : option === 'only-premium' ? 'Premium' : 'Nessuno'}
+                  {option === 'all' ? t('all') : option === 'only-premium' ? t('premium') : t('none')}
                 </button>
               ))}
             </div>
@@ -235,7 +237,7 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
         {/* Categories */}
         <GlassCard style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Categorie di Interesse</span>
+            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('interest_categories')}</span>
             <button onClick={refreshPreferences} disabled={prefsLoading} style={{ padding: '6px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer' }}>
               <RefreshCw style={{ width: '16px', height: '16px', color: '#FFFFFF', animation: prefsLoading ? 'spin 1s linear infinite' : 'none' }} />
             </button>
@@ -243,7 +245,7 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
 
           {hasActivePreferences && (
             <p style={{ color: '#22C55E', fontSize: '12px', marginBottom: '12px' }}>
-              ✅ {resolvedTags.length} tag attivi
+              ✅ {resolvedTags.length} {t('tags_active')}
             </p>
           )}
 
@@ -267,7 +269,7 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
             onClick={handleDebugTap}
           >
             <Smartphone style={{ width: '20px', height: '20px', color: '#22C55E' }} />
-            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Notifiche Push</span>
+            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('push_notifications_section')}</span>
           </div>
 
           {isNativePlatform() ? (
@@ -277,12 +279,12 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Bell style={{ width: '18px', height: '18px', color: pushRegistered ? '#22C55E' : '#6B7280' }} />
-                    <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 500 }}>Ricevi Notifiche Push</span>
+                    <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 500 }}>{t('receive_push')}</span>
                   </div>
                   <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '4px', marginLeft: '26px' }}>
                     {pushRegistered 
-                      ? 'Riceverai aggiornamenti su premi e missioni' 
-                      : 'Attiva per ricevere notifiche importanti'}
+                      ? t('push_active_desc') 
+                      : t('push_inactive_desc')}
                   </p>
                 </div>
                 <Toggle 
@@ -296,13 +298,13 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
               {pushRegistered ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
                   <Check style={{ width: '16px', height: '16px', color: '#22C55E' }} />
-                  <span style={{ color: '#22C55E', fontSize: '13px', fontWeight: 500 }}>Notifiche push attive</span>
+                  <span style={{ color: '#22C55E', fontSize: '13px', fontWeight: 500 }}>{t('push_active')}</span>
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
                   <AlertCircle style={{ width: '16px', height: '16px', color: '#F59E0B' }} />
                   <span style={{ color: '#F59E0B', fontSize: '13px' }}>
-                    Attiva il toggle per ricevere notifiche
+                    {t('enable_toggle_desc')}
                   </span>
                 </div>
               )}
@@ -316,13 +318,13 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
                       onClick={() => setShowDebugPanel(false)}
                       style={{ padding: '4px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: '11px', cursor: 'pointer' }}
                     >
-                      Nascondi
+                      {t('hide')}
                     </button>
                   </div>
                   <Suspense fallback={
                     <div style={{ padding: '20px', textAlign: 'center' }}>
                       <div style={{ width: '24px', height: '24px', border: '2px solid rgba(34, 197, 94, 0.3)', borderTopColor: '#22C55E', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
-                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '8px' }}>Caricamento diagnostica...</p>
+                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '8px' }}>{t('loading_diagnostics')}</p>
                     </div>
                   }>
                     <NativePushDiagnostic />
@@ -335,7 +337,7 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <AlertCircle style={{ width: '18px', height: '18px', color: '#F59E0B' }} />
                 <span style={{ color: '#F59E0B', fontSize: '13px' }}>
-                  Le notifiche push native sono disponibili solo su app iOS/Android.
+                  {t('push_native_only')}
                 </span>
               </div>
             </div>
@@ -346,20 +348,20 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
         <GlassCard>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <Volume2 style={{ width: '20px', height: '20px', color: '#A855F7' }} />
-            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Preferenze Audio</span>
+            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('audio_preferences')}</span>
           </div>
 
           <ToggleRow 
-            label="Suoni di Notifica" 
-            description="Riproduci suoni per le notifiche"
+            label={t('notification_sounds')} 
+            description={t('notification_sounds_desc')}
             checked={settings.sound_enabled}
             onChange={(v) => setSettings({...settings, sound_enabled: v})}
           />
           
           <div style={{ marginTop: '12px' }}>
             <ToggleRow 
-              label="Feedback Aptico" 
-              description="Vibrazioni per dispositivi mobile"
+              label={t('haptic_feedback')} 
+              description={t('haptic_feedback_desc')}
               checked={settings.haptic_enabled}
               onChange={(v) => setSettings({...settings, haptic_enabled: v})}
             />

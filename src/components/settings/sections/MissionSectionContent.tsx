@@ -2,6 +2,7 @@
 // Missione - Section Modal Content (Revolut-style glass design)
 import React from 'react';
 import { X, Target, TrendingUp, Award, Clock, MapPin, Zap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { usePerformanceSettings } from '@/hooks/usePerformanceSettings';
 
 interface MissionSectionContentProps {
@@ -9,6 +10,7 @@ interface MissionSectionContentProps {
 }
 
 const MissionSectionContent: React.FC<MissionSectionContentProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const { battleFxMode, setBattleFxMode, isLoading } = usePerformanceSettings();
 
   return (
@@ -29,11 +31,11 @@ const MissionSectionContent: React.FC<MissionSectionContentProps> = ({ onClose }
             <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
           </button>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>MISSIONE</h1>
+            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>{t('mission_title')}</h1>
           </div>
           <div style={{ width: '40px' }} />
         </div>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Stato missioni e progressi</p>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>{t('mission_subtitle')}</p>
       </div>
 
       {/* CONTENT */}
@@ -47,17 +49,17 @@ const MissionSectionContent: React.FC<MissionSectionContentProps> = ({ onClose }
                 <Target style={{ width: '24px', height: '24px', color: '#00D1FF' }} />
               </div>
               <div>
-                <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Missione Corrente</h3>
+                <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('current_mission')}</h3>
                 <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>Gennaio 2025</p>
               </div>
             </div>
-            <span style={{ padding: '6px 12px', borderRadius: '20px', background: 'rgba(34, 197, 94, 0.2)', color: '#22C55E', fontSize: '12px', fontWeight: 600 }}>Attiva</span>
+            <span style={{ padding: '6px 12px', borderRadius: '20px', background: 'rgba(34, 197, 94, 0.2)', color: '#22C55E', fontSize: '12px', fontWeight: 600 }}>{t('active')}</span>
           </div>
 
           {/* Progress Bar */}
           <div style={{ marginBottom: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>Progresso Generale</span>
+              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('general_progress')}</span>
               <span style={{ color: '#00D1FF', fontSize: '14px', fontWeight: 700 }}>45%</span>
             </div>
             <div style={{ width: '100%', height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)' }}>
@@ -74,7 +76,7 @@ const MissionSectionContent: React.FC<MissionSectionContentProps> = ({ onClose }
                 <TrendingUp style={{ width: '28px', height: '28px', color: '#00D1FF' }} />
               </div>
               <p style={{ color: '#FFFFFF', fontSize: '28px', fontWeight: 700 }}>7</p>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>Completate</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{t('completed')}</p>
             </div>
           </GlassCard>
           
@@ -84,7 +86,7 @@ const MissionSectionContent: React.FC<MissionSectionContentProps> = ({ onClose }
                 <Award style={{ width: '28px', height: '28px', color: '#F59E0B' }} />
               </div>
               <p style={{ color: '#FFFFFF', fontSize: '28px', fontWeight: 700 }}>3</p>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>Premi</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{t('prizes')}</p>
             </div>
           </GlassCard>
         </div>
@@ -93,11 +95,11 @@ const MissionSectionContent: React.FC<MissionSectionContentProps> = ({ onClose }
         <GlassCard style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <Zap style={{ width: '20px', height: '20px', color: '#00D1FF' }} />
-            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Battle FX Settings</span>
+            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('battle_fx_settings')}</span>
           </div>
 
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginBottom: '16px' }}>
-            Regola la qualità degli effetti visivi Battle per ottimizzare le prestazioni
+            {t('battle_fx_description')}
           </p>
 
           <div style={{ display: 'flex', gap: '12px' }}>
@@ -114,8 +116,8 @@ const MissionSectionContent: React.FC<MissionSectionContentProps> = ({ onClose }
                 cursor: 'pointer',
               }}
             >
-              <p style={{ fontWeight: 600, marginBottom: '4px' }}>Alta Qualità</p>
-              <p style={{ fontSize: '11px', opacity: 0.7 }}>Effetti completi</p>
+              <p style={{ fontWeight: 600, marginBottom: '4px' }}>{t('high_quality')}</p>
+              <p style={{ fontSize: '11px', opacity: 0.7 }}>{t('full_effects')}</p>
             </button>
             
             <button
@@ -131,8 +133,8 @@ const MissionSectionContent: React.FC<MissionSectionContentProps> = ({ onClose }
                 cursor: 'pointer',
               }}
             >
-              <p style={{ fontWeight: 600, marginBottom: '4px' }}>Performance</p>
-              <p style={{ fontSize: '11px', opacity: 0.7 }}>Effetti semplificati</p>
+              <p style={{ fontWeight: 600, marginBottom: '4px' }}>{t('performance')}</p>
+              <p style={{ fontSize: '11px', opacity: 0.7 }}>{t('simplified_effects')}</p>
             </button>
           </div>
         </GlassCard>
@@ -141,12 +143,12 @@ const MissionSectionContent: React.FC<MissionSectionContentProps> = ({ onClose }
         <GlassCard>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <Zap style={{ width: '20px', height: '20px', color: '#00D1FF' }} />
-            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Azioni Rapide</span>
+            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('quick_actions')}</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <ActionButton icon={MapPin} label="Visualizza Mappa Missione" />
-            <ActionButton icon={Clock} label="Cronometro Missione" />
+            <ActionButton icon={MapPin} label={t('view_mission_map')} />
+            <ActionButton icon={Clock} label={t('mission_timer')} />
           </div>
         </GlassCard>
       </div>

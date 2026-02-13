@@ -2,12 +2,14 @@
 // Info App - Section Modal Content (Revolut-style glass design)
 import React from 'react';
 import { X, Info, Globe, Users, Shield, Smartphone, Heart, ExternalLink } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AppInfoSectionContentProps {
   onClose: () => void;
 }
 
 const AppInfoSectionContent: React.FC<AppInfoSectionContentProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const appInfo = {
     name: "M1SSION™",
     version: "2.0.1",
@@ -18,10 +20,10 @@ const AppInfoSectionContent: React.FC<AppInfoSectionContentProps> = ({ onClose }
   };
 
   const features = [
-    { icon: Globe, title: "Missioni Globali", description: "Esplora il mondo attraverso missioni interattive", color: "#00D1FF" },
-    { icon: Users, title: "Community", description: "Connettiti con agenti in tutto il mondo", color: "#22C55E" },
-    { icon: Shield, title: "Sicurezza", description: "Protezione avanzata dei dati personali", color: "#F59E0B" },
-    { icon: Smartphone, title: "Multi-Platform", description: "Disponibile su tutti i dispositivi", color: "#A855F7" }
+    { icon: Globe, title: t('feature_global_missions'), description: t('feature_global_missions_desc'), color: "#00D1FF" },
+    { icon: Users, title: t('feature_community'), description: t('feature_community_desc'), color: "#22C55E" },
+    { icon: Shield, title: t('feature_security'), description: t('feature_security_desc'), color: "#F59E0B" },
+    { icon: Smartphone, title: t('feature_multiplatform'), description: t('feature_multiplatform_desc'), color: "#A855F7" }
   ];
 
   return (
@@ -42,11 +44,11 @@ const AppInfoSectionContent: React.FC<AppInfoSectionContentProps> = ({ onClose }
             <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
           </button>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>INFO APP</h1>
+            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>{t('app_info_title')}</h1>
           </div>
           <div style={{ width: '40px' }} />
         </div>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Versione, supporto e credits</p>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>{t('app_info_subtitle')}</p>
       </div>
 
       {/* CONTENT */}
@@ -72,20 +74,20 @@ const AppInfoSectionContent: React.FC<AppInfoSectionContentProps> = ({ onClose }
           </h2>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px' }}>
-            <InfoBox label="Versione" value={appInfo.version} color="#6366F1" />
-            <InfoBox label="Build" value={appInfo.build} color="#6366F1" />
+            <InfoBox label={t('version')} value={appInfo.version} color="#6366F1" />
+            <InfoBox label={t('build')} value={appInfo.build} color="#6366F1" />
           </div>
 
           <div style={{ marginTop: '16px', padding: '12px', borderRadius: '10px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>Ambiente</span>
+              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('environment')}</span>
               <span style={{ padding: '4px 10px', borderRadius: '12px', background: 'rgba(34, 197, 94, 0.2)', color: '#22C55E', fontSize: '12px', fontWeight: 600 }}>{appInfo.environment}</span>
             </div>
           </div>
 
           <div style={{ marginTop: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
-              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>Sviluppatore</span>
+              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('developer')}</span>
               <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 500 }}>{appInfo.developer}</span>
             </div>
           </div>
@@ -94,7 +96,7 @@ const AppInfoSectionContent: React.FC<AppInfoSectionContentProps> = ({ onClose }
         {/* Features */}
         <GlassCard style={{ marginBottom: '16px' }}>
           <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600, marginBottom: '16px', background: 'linear-gradient(90deg, #00D1FF, #00B8E6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Caratteristiche
+            {t('features')}
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -120,7 +122,7 @@ const AppInfoSectionContent: React.FC<AppInfoSectionContentProps> = ({ onClose }
         {/* Links */}
         <GlassCard style={{ marginBottom: '16px' }}>
           <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600, marginBottom: '16px', background: 'linear-gradient(90deg, #A855F7, #EC4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Collegamenti
+            {t('links')}
           </h3>
 
           <button style={{
@@ -136,7 +138,7 @@ const AppInfoSectionContent: React.FC<AppInfoSectionContentProps> = ({ onClose }
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <Heart style={{ width: '18px', height: '18px', color: '#EF4444' }} />
-              <span style={{ color: '#FFFFFF', fontSize: '14px' }}>Supporta il Progetto</span>
+              <span style={{ color: '#FFFFFF', fontSize: '14px' }}>{t('support_project')}</span>
             </div>
             <ExternalLink style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.3)' }} />
           </button>

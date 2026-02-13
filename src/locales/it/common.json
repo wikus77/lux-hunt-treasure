@@ -300,5 +300,13 @@
   "apple_pay_setup": "La configurazione di Apple Pay sarà disponibile a breve.",
   "google_pay_setup": "La configurazione di Google Pay sarà disponibile a breve.",
   "delete_error": "Errore eliminazione",
-  "error": "Errore"
+  "error": "Errore",
+  "wallets_mobile_only": "I wallet digitali sono disponibili solo su dispositivi mobili.",
+  "setup_coming_soon": "La configurazione sarà disponibile a breve.",
+  "enter_card_details": "Inserisci i dati della tua carta",
+  "name_surname": "NOME COGNOME",
+  "ssl_security_note": "I tuoi dati sono protetti con crittografia SSL e non vengono mai memorizzati sui nostri server.",
+  "cardholder": "Titolare",
+  "error_deleting": "Errore eliminazione",
+  "card_added_success": "Carta aggiunta con successo"
 }

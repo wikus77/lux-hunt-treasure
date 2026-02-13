@@ -2,6 +2,7 @@
 // Profilo Agente - Section Modal Content (Revolut-style glass design)
 import React from 'react';
 import { X, User, Edit2, Save, Camera } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useProfileData } from '@/hooks/useProfileData';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileInfo from '@/components/profile/ProfileInfo';
@@ -13,6 +14,7 @@ interface AgentProfileSectionContentProps {
 }
 
 const AgentProfileSectionContent: React.FC<AgentProfileSectionContentProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const { profileData, actions } = useProfileData();
 
   return (
@@ -53,7 +55,7 @@ const AgentProfileSectionContent: React.FC<AgentProfileSectionContentProps> = ({
 
           <div style={{ flex: 1, textAlign: 'center' }}>
             <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>
-              PROFILO AGENTE
+              {t('agent_profile_title')}
             </h1>
           </div>
 
@@ -61,7 +63,7 @@ const AgentProfileSectionContent: React.FC<AgentProfileSectionContentProps> = ({
         </div>
 
         <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>
-          Avatar, nome e informazioni agente
+          {t('agent_profile_subtitle')}
         </p>
       </div>
 
@@ -111,13 +113,13 @@ const AgentProfileSectionContent: React.FC<AgentProfileSectionContentProps> = ({
         {/* Stats */}
         <GlassCard style={{ marginBottom: '16px' }}>
           <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>
-            📊 Statistiche
+            📊 {t('statistics')}
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <StatBox label="Missioni Completate" value={profileData.stats.missionsCompleted} color="#00D1FF" />
-            <StatBox label="Indizi Trovati" value={profileData.stats.cluesFound} color="#22C55E" />
-            <StatBox label="Punteggio" value={profileData.stats.totalScore || 0} color="#F59E0B" />
-            <StatBox label="Livello" value={profileData.stats.level || 1} color="#A855F7" />
+            <StatBox label={t('missions_completed')} value={profileData.stats.missionsCompleted} color="#00D1FF" />
+            <StatBox label={t('clues_found')} value={profileData.stats.cluesFound} color="#22C55E" />
+            <StatBox label={t('score')} value={profileData.stats.totalScore || 0} color="#F59E0B" />
+            <StatBox label={t('level')} value={profileData.stats.level || 1} color="#A855F7" />
           </div>
         </GlassCard>
 

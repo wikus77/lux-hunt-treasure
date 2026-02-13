@@ -295,5 +295,13 @@
   "apple_pay_setup": "La configuration d'Apple Pay sera bientôt disponible.",
   "google_pay_setup": "La configuration de Google Pay sera bientôt disponible.",
   "delete_error": "Erreur de suppression",
-  "error": "Erreur"
+  "error": "Erreur",
+  "wallets_mobile_only": "Les portefeuilles numériques sont uniquement disponibles sur les appareils mobiles.",
+  "setup_coming_soon": "La configuration sera bientôt disponible.",
+  "enter_card_details": "Entrez les détails de votre carte",
+  "name_surname": "NOM PRÉNOM",
+  "ssl_security_note": "Vos données sont protégées par cryptage SSL et ne sont jamais stockées sur nos serveurs.",
+  "cardholder": "Titulaire",
+  "error_deleting": "Erreur de suppression",
+  "card_added_success": "Carte ajoutée avec succès"
 }

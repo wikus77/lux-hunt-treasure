@@ -3,6 +3,7 @@
 // Now with full legal content and IT/EN language switcher
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { X, FileText, Shield, Settings, Copyright, Award, ExternalLink, Trash2, AlertTriangle, ChevronRight, Loader2, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +26,8 @@ interface LegalLink {
 type Language = 'it' | 'en';
 
 const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) => {
+  const { t, i18n } = useTranslation();
+  const isEnglish = i18n.language?.startsWith('en');
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -88,11 +91,11 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
             <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
           </button>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>LEGALE</h1>
+            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>{t('legal_title')}</h1>
           </div>
           <div style={{ width: '40px' }} />
         </div>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Termini, privacy e account</p>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>{t('legal_subtitle')}</p>
       </div>
 
       {/* CONTENT */}
@@ -123,8 +126,8 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
                     <Icon style={{ width: '20px', height: '20px', color: link.color }} />
                   </div>
                   <div style={{ textAlign: 'left' }}>
-                    <p style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600, marginBottom: '2px' }}>{link.title}</p>
-                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{link.description}</p>
+                    <p style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600, marginBottom: '2px' }}>{isEnglish ? link.titleEn : link.title}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{isEnglish ? link.descriptionEn : link.description}</p>
                   </div>
                 </div>
                 <ChevronRight style={{ width: '18px', height: '18px', color: 'rgba(255,255,255,0.3)' }} />
@@ -135,18 +138,18 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
 
         {/* App Info */}
         <GlassCard style={{ marginBottom: '16px' }}>
-          <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>Informazioni App</h3>
+          <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>{t('app_information')}</h3>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <InfoBox label="Versione" value="2.1.0" />
-            <InfoBox label="Build" value="2025.12.05" />
-            <InfoBox label="Sviluppatore" value="NIYVORA KFT™" />
-            <InfoBox label="Copyright" value="M1SSION™ 2025" />
+            <InfoBox label={t('version')} value="2.1.0" />
+            <InfoBox label={t('build')} value="2025.12.05" />
+            <InfoBox label={t('developer')} value="NIYVORA KFT™" />
+            <InfoBox label={t('copyright')} value="M1SSION™ 2025" />
           </div>
 
           <div style={{ marginTop: '16px', padding: '12px', borderRadius: '10px', background: 'rgba(0, 209, 255, 0.1)', border: '1px solid rgba(0, 209, 255, 0.2)' }}>
             <p style={{ color: '#00D1FF', fontSize: '12px' }}>
-              M1SSION™ è un'app ufficiale creata e sviluppata da NIYVORA KFT™.
+              {t('official_app_notice')}
             </p>
           </div>
         </GlassCard>
@@ -155,7 +158,7 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
         <GlassCard style={{ marginBottom: '16px' }}>
           <div style={{ textAlign: 'center' }}>
             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginBottom: '12px' }}>
-              Hai domande o hai bisogno di assistenza?
+              {t('need_help_question')}
             </p>
             <button
               onClick={() => window.location.href = 'mailto:contact@m1ssion.com?subject=M1SSION%20Support'}
@@ -170,7 +173,7 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
                 cursor: 'pointer',
               }}
             >
-              Contatta il Supporto
+              {t('contact_support')}
             </button>
           </div>
         </GlassCard>
@@ -179,11 +182,11 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
         <GlassCard style={{ border: '1px solid rgba(239, 68, 68, 0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <Trash2 style={{ width: '20px', height: '20px', color: '#EF4444' }} />
-            <span style={{ color: '#EF4444', fontSize: '16px', fontWeight: 600 }}>Zona Pericolosa</span>
+            <span style={{ color: '#EF4444', fontSize: '16px', fontWeight: 600 }}>{t('danger_zone')}</span>
           </div>
 
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginBottom: '12px' }}>
-            ⚠️ L'eliminazione dell'account è permanente e irreversibile.
+            ⚠️ {t('delete_account_warning')}
           </p>
 
           {!showDeleteConfirm ? (
@@ -201,30 +204,30 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
                 cursor: 'pointer',
               }}
             >
-              Elimina Account Permanentemente
+              {t('delete_account_permanently')}
             </button>
           ) : (
             <div style={{ background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px', padding: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                 <AlertTriangle style={{ width: '20px', height: '20px', color: '#EF4444' }} />
-                <span style={{ color: '#EF4444', fontSize: '14px', fontWeight: 600 }}>Sei sicuro?</span>
+                <span style={{ color: '#EF4444', fontSize: '14px', fontWeight: 600 }}>{t('are_you_sure')}</span>
               </div>
               <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '16px' }}>
-                Tutti i tuoi dati, progressi e abbonamenti verranno eliminati definitivamente.
+                {t('delete_account_confirm_text')}
               </p>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
                   style={{ flex: 1, padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#FFFFFF', cursor: 'pointer' }}
                 >
-                  Annulla
+                  {t('cancel')}
                 </button>
                 <button
                   onClick={handleDeleteAccount}
                   disabled={loading}
                   style={{ flex: 1, padding: '10px', borderRadius: '10px', background: '#EF4444', border: 'none', color: '#FFFFFF', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}
                 >
-                  {loading ? 'Eliminando...' : 'Conferma Eliminazione'}
+                  {loading ? t('deleting') : t('confirm_deletion')}
                 </button>
               </div>
             </div>

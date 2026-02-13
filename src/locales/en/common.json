@@ -299,5 +299,13 @@
   "card_added": "Card added successfully",
   "apple_pay_setup": "Apple Pay setup will be available soon.",
   "google_pay_setup": "Google Pay setup will be available soon.",
-  "delete_error": "Delete error"
+  "delete_error": "Delete error",
+  "wallets_mobile_only": "Digital wallets are only available on mobile devices.",
+  "setup_coming_soon": "Setup will be available soon.",
+  "enter_card_details": "Enter your card details",
+  "name_surname": "NAME SURNAME",
+  "ssl_security_note": "Your data is protected with SSL encryption and is never stored on our servers.",
+  "cardholder": "Cardholder",
+  "error_deleting": "Error deleting",
+  "card_added_success": "Card added successfully"
 }

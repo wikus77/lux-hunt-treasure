@@ -2,6 +2,7 @@
 // Metodi di Pagamento - Section Modal Content (Revolut-style glass design)
 import React, { useState, useEffect } from 'react';
 import { X, CreditCard, Plus, Smartphone, Shield, Trash2, Star, CheckCircle, ArrowLeft, Lock, Calendar } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,6 +25,7 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platfor
 const isAndroid = /Android/.test(navigator.userAgent);
 
 const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -59,7 +61,7 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
   };
 
   const handleGooglePaySetup = () => {
-    toast({ title: "🤖 Google Pay", description: "La configurazione sarà disponibile a breve." });
+    toast({ title: "🤖 Google Pay", description: t('setup_coming_soon') });
   };
 
   const handleAddCard = (e: React.MouseEvent) => {
@@ -76,7 +78,7 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
       toast({ title: "✅ Carta predefinita impostata" });
       loadPaymentMethods();
     } catch (error) {
-      toast({ title: "❌ Errore", variant: "destructive" });
+      toast({ title: "❌ " + t('error'), variant: "destructive" });
     }
   };
 
@@ -84,10 +86,10 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
     if (!user) return;
     try {
       await supabase.from('user_payment_methods').delete().eq('id', cardId);
-      toast({ title: "✅ Carta eliminata" });
+      toast({ title: "✅ " + t('card_deleted') });
       loadPaymentMethods();
     } catch (error) {
-      toast({ title: "❌ Errore eliminazione", variant: "destructive" });
+      toast({ title: "❌ " + t('error_deleting'), variant: "destructive" });
     }
   };
 
@@ -118,11 +120,11 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
             <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
           </button>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>PAGAMENTI</h1>
+            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>{t('payments_title')}</h1>
           </div>
           <div style={{ width: '40px' }} />
         </div>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Carte, Apple Pay, Google Pay</p>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>{t('payments_subtitle')}</p>
       </div>
 
       {/* CONTENT */}
@@ -132,7 +134,7 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
         <GlassCard style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <Smartphone style={{ width: '20px', height: '20px', color: '#14B8A6' }} />
-            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Wallet Digitali</span>
+            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('digital_wallets')}</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -140,7 +142,7 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
               <WalletButton 
                 icon="🍎" 
                 label="Apple Pay" 
-                status="Non configurato"
+                status={t('not_configured')}
                 onClick={handleApplePaySetup}
               />
             )}
@@ -148,13 +150,13 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
               <WalletButton 
                 icon="🤖" 
                 label="Google Pay" 
-                status="Non configurato"
+                status={t('not_configured')}
                 onClick={handleGooglePaySetup}
               />
             )}
             {!isIOS && !isAndroid && (
               <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', textAlign: 'center' }}>
-                I wallet digitali sono disponibili solo su dispositivi mobili.
+                {t('wallets_mobile_only')}
               </p>
             )}
           </div>
@@ -165,10 +167,10 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CreditCard style={{ width: '20px', height: '20px', color: '#6366F1' }} />
-              <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>Le Tue Carte</span>
+              <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('your_cards')}</span>
             </div>
             <button onClick={(e) => handleAddCard(e)} style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.2)', border: '1px solid rgba(99, 102, 241, 0.4)', color: '#6366F1', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Plus size={14} /> Aggiungi
+              <Plus size={14} /> {t('add')}
             </button>
           </div>
 
@@ -179,8 +181,8 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
           ) : paymentMethods.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '20px' }}>
               <CreditCard style={{ width: '48px', height: '48px', color: 'rgba(255,255,255,0.2)', margin: '0 auto 12px' }} />
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>Nessuna carta salvata</p>
-              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', marginTop: '4px' }}>Aggiungi una carta per pagamenti rapidi</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>{t('no_cards_saved')}</p>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', marginTop: '4px' }}>{t('add_card_for_quick_payments')}</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -202,9 +204,9 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
             <Shield style={{ width: '20px', height: '20px', color: '#22C55E', flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <h4 style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>Pagamenti Sicuri</h4>
+              <h4 style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>{t('secure_payments')}</h4>
               <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>
-                Tutti i pagamenti sono elaborati tramite Stripe con crittografia bancaria. Non conserviamo mai i dati completi della tua carta.
+                {t('secure_payments_desc')}
               </p>
             </div>
           </div>
@@ -225,6 +227,7 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
 
 // Add Card Modal Content
 const AddCardModalContent: React.FC<{ onClose: () => void; onCardAdded: () => void }> = ({ onClose, onCardAdded }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -256,7 +259,7 @@ const AddCardModalContent: React.FC<{ onClose: () => void; onCardAdded: () => vo
 
   const handleSubmit = async () => {
     if (!cardData.number || !cardData.expiry || !cardData.cvc || !cardData.name) {
-      toast({ title: "❌ Compila tutti i campi", variant: "destructive" });
+      toast({ title: "❌ " + t('fill_all_fields'), variant: "destructive" });
       return;
     }
 
@@ -288,11 +291,11 @@ const AddCardModalContent: React.FC<{ onClose: () => void; onCardAdded: () => vo
         if (error) throw error;
       }
 
-      toast({ title: "✅ Carta aggiunta con successo" });
+      toast({ title: "✅ " + t('card_added_success') });
       onCardAdded();
       onClose();
     } catch (error: any) {
-      toast({ title: "❌ Errore", description: error.message, variant: "destructive" });
+      toast({ title: "❌ " + t('error'), description: error.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -316,11 +319,11 @@ const AddCardModalContent: React.FC<{ onClose: () => void; onCardAdded: () => vo
             <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
           </button>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>AGGIUNGI CARTA</h1>
+            <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>{t('add_card')}</h1>
           </div>
           <div style={{ width: '40px' }} />
         </div>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Inserisci i dati della tua carta</p>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>{t('enter_card_details')}</p>
       </div>
 
       {/* CONTENT */}
@@ -344,11 +347,11 @@ const AddCardModalContent: React.FC<{ onClose: () => void; onCardAdded: () => vo
             </p>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <div>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '8px' }}>TITOLARE</p>
-                <p style={{ color: '#FFFFFF', fontSize: '12px' }}>{cardData.name || 'NOME COGNOME'}</p>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '8px' }}>{t('cardholder').toUpperCase()}</p>
+                <p style={{ color: '#FFFFFF', fontSize: '12px' }}>{cardData.name || t('name_surname').toUpperCase()}</p>
               </div>
               <div>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '8px' }}>SCADENZA</p>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '8px' }}>{t('expiry').toUpperCase()}</p>
                 <p style={{ color: '#FFFFFF', fontSize: '12px' }}>{cardData.expiry || 'MM/YY'}</p>
               </div>
             </div>
@@ -385,7 +388,7 @@ const AddCardModalContent: React.FC<{ onClose: () => void; onCardAdded: () => vo
               <div>
                 <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '6px', display: 'block' }}>
                   <Calendar size={14} style={{ display: 'inline', marginRight: '6px' }} />
-                  Scadenza
+                  {t('expiry')}
                 </label>
                 <input
                   type="text"
@@ -434,13 +437,13 @@ const AddCardModalContent: React.FC<{ onClose: () => void; onCardAdded: () => vo
 
             <div>
               <label style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '6px', display: 'block' }}>
-                Nome Titolare
+                {t('cardholder_name')}
               </label>
               <input
                 type="text"
                 value={cardData.name}
                 onChange={(e) => setCardData({...cardData, name: e.target.value.toUpperCase()})}
-                placeholder="NOME COGNOME"
+                placeholder={t('name_surname').toUpperCase()}
                 style={{
                   width: '100%',
                   padding: '14px',
@@ -484,7 +487,7 @@ const AddCardModalContent: React.FC<{ onClose: () => void; onCardAdded: () => vo
             boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)',
           }}
         >
-          {loading ? 'Salvataggio...' : 'Aggiungi Carta'}
+          {loading ? t('saving') : t('add_card')}
         </button>
       </div>
     </div>
