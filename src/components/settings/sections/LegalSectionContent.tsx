@@ -17,17 +17,19 @@ interface LegalLink {
   id: string;
   title: string;
   titleEn: string;
+  titleFr: string;
   description: string;
   descriptionEn: string;
+  descriptionFr: string;
   icon: React.ElementType;
   color: string;
 }
 
-type Language = 'it' | 'en';
+type Language = 'it' | 'en' | 'fr';
 
 const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) => {
   const { t, i18n } = useTranslation();
-  const isEnglish = i18n.language?.startsWith('en');
+  const currentLang = i18n.language?.substring(0, 2) || 'en'; // 'en' | 'it' | 'fr'
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -38,14 +40,26 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
   const [documentOriginRect, setDocumentOriginRect] = useState<DOMRect | null>(null);
 
   const legalLinks: LegalLink[] = [
-    { id: 'terms', title: 'Termini di Servizio', titleEn: 'Terms of Service', description: "Condizioni d'uso dell'applicazione", descriptionEn: 'Application usage conditions', icon: FileText, color: '#00D1FF' },
-    { id: 'privacy', title: 'Privacy Policy', titleEn: 'Privacy Policy', description: 'Come raccogliamo e utilizziamo i tuoi dati', descriptionEn: 'How we collect and use your data', icon: Shield, color: '#22C55E' },
-    { id: 'cookie', title: 'Cookie Policy', titleEn: 'Cookie Policy', description: 'Come utilizziamo i cookie', descriptionEn: 'How we use cookies', icon: Settings, color: '#F59E0B' },
-    { id: 'rules', title: 'Regolamento M1SSION™', titleEn: 'M1SSION™ Rules', description: 'Modalità di gioco, premi, meccaniche', descriptionEn: 'Gameplay, prizes, mechanics', icon: FileText, color: '#A855F7' },
-    { id: 'policies', title: 'Game Policies', titleEn: 'Game Policies', description: 'Disclaimers, virtual currencies', descriptionEn: 'Disclaimers, virtual currencies', icon: Shield, color: '#EF4444' },
-    { id: 'safecreative', title: 'SafeCreative', titleEn: 'SafeCreative', description: 'Certificazione proprietà intellettuale', descriptionEn: 'Intellectual property certification', icon: Copyright, color: '#EC4899' },
-    { id: 'euipo', title: 'EUIPO – Marchio Registrato', titleEn: 'EUIPO – Registered Trademark', description: 'Registrazione marchio EU', descriptionEn: 'EU trademark registration', icon: Award, color: '#6366F1' },
+    { id: 'terms', title: 'Termini di Servizio', titleEn: 'Terms of Service', titleFr: 'Conditions d\'Utilisation', description: "Condizioni d'uso dell'applicazione", descriptionEn: 'Application usage conditions', descriptionFr: 'Conditions d\'utilisation de l\'application', icon: FileText, color: '#00D1FF' },
+    { id: 'privacy', title: 'Privacy Policy', titleEn: 'Privacy Policy', titleFr: 'Politique de Confidentialité', description: 'Come raccogliamo e utilizziamo i tuoi dati', descriptionEn: 'How we collect and use your data', descriptionFr: 'Comment nous collectons et utilisons vos données', icon: Shield, color: '#22C55E' },
+    { id: 'cookie', title: 'Cookie Policy', titleEn: 'Cookie Policy', titleFr: 'Politique des Cookies', description: 'Come utilizziamo i cookie', descriptionEn: 'How we use cookies', descriptionFr: 'Comment nous utilisons les cookies', icon: Settings, color: '#F59E0B' },
+    { id: 'rules', title: 'Regolamento M1SSION™', titleEn: 'M1SSION™ Rules', titleFr: 'Règlement M1SSION™', description: 'Modalità di gioco, premi, meccaniche', descriptionEn: 'Gameplay, prizes, mechanics', descriptionFr: 'Règles du jeu, prix, mécaniques', icon: FileText, color: '#A855F7' },
+    { id: 'policies', title: 'Game Policies', titleEn: 'Game Policies', titleFr: 'Politiques du Jeu', description: 'Disclaimers, virtual currencies', descriptionEn: 'Disclaimers, virtual currencies', descriptionFr: 'Avertissements, monnaies virtuelles', icon: Shield, color: '#EF4444' },
+    { id: 'safecreative', title: 'SafeCreative', titleEn: 'SafeCreative', titleFr: 'SafeCreative', description: 'Certificazione proprietà intellettuale', descriptionEn: 'Intellectual property certification', descriptionFr: 'Certification de propriété intellectuelle', icon: Copyright, color: '#EC4899' },
+    { id: 'euipo', title: 'EUIPO – Marchio Registrato', titleEn: 'EUIPO – Registered Trademark', titleFr: 'EUIPO – Marque Déposée', description: 'Registrazione marchio EU', descriptionEn: 'EU trademark registration', descriptionFr: 'Enregistrement de marque UE', icon: Award, color: '#6366F1' },
   ];
+
+  // Helper per ottenere titolo/descrizione nella lingua corrente
+  const getLinkTitle = (link: LegalLink) => {
+    if (currentLang === 'fr') return link.titleFr;
+    if (currentLang === 'en') return link.titleEn;
+    return link.title; // default IT
+  };
+  const getLinkDescription = (link: LegalLink) => {
+    if (currentLang === 'fr') return link.descriptionFr;
+    if (currentLang === 'en') return link.descriptionEn;
+    return link.description; // default IT
+  };
 
   const openDocumentModal = (link: LegalLink, e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -126,8 +140,8 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
                     <Icon style={{ width: '20px', height: '20px', color: link.color }} />
                   </div>
                   <div style={{ textAlign: 'left' }}>
-                    <p style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600, marginBottom: '2px' }}>{isEnglish ? link.titleEn : link.title}</p>
-                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{isEnglish ? link.descriptionEn : link.description}</p>
+                    <p style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600, marginBottom: '2px' }}>{getLinkTitle(link)}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{getLinkDescription(link)}</p>
                   </div>
                 </div>
                 <ChevronRight style={{ width: '18px', height: '18px', color: 'rgba(255,255,255,0.3)' }} />
@@ -258,8 +272,18 @@ const LegalDocumentModalContent: React.FC<{ documentId: string; document: LegalL
   const [lang, setLang] = useState<Language>('it');
   const Icon = document.icon;
 
-  const title = lang === 'it' ? document.title : document.titleEn;
-  const description = lang === 'it' ? document.description : document.descriptionEn;
+  const getTitle = () => {
+    if (lang === 'fr') return document.titleFr;
+    if (lang === 'en') return document.titleEn;
+    return document.title;
+  };
+  const getDescription = () => {
+    if (lang === 'fr') return document.descriptionFr;
+    if (lang === 'en') return document.descriptionEn;
+    return document.description;
+  };
+  const title = getTitle();
+  const description = getDescription();
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
@@ -284,34 +308,50 @@ const LegalDocumentModalContent: React.FC<{ documentId: string; document: LegalL
             <button
               onClick={() => setLang('it')}
               style={{
-                padding: '6px 12px',
+                padding: '6px 10px',
                 borderRadius: '16px',
                 border: 'none',
                 background: lang === 'it' ? '#00D1FF' : 'transparent',
                 color: lang === 'it' ? '#000' : 'rgba(255,255,255,0.6)',
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
             >
-              🇮🇹 IT
+              🇮🇹
             </button>
             <button
               onClick={() => setLang('en')}
               style={{
-                padding: '6px 12px',
+                padding: '6px 10px',
                 borderRadius: '16px',
                 border: 'none',
                 background: lang === 'en' ? '#00D1FF' : 'transparent',
                 color: lang === 'en' ? '#000' : 'rgba(255,255,255,0.6)',
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
             >
-              🇬🇧 EN
+              🇬🇧
+            </button>
+            <button
+              onClick={() => setLang('fr')}
+              style={{
+                padding: '6px 10px',
+                borderRadius: '16px',
+                border: 'none',
+                background: lang === 'fr' ? '#00D1FF' : 'transparent',
+                color: lang === 'fr' ? '#000' : 'rgba(255,255,255,0.6)',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              🇫🇷
             </button>
           </div>
           
