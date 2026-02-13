@@ -2,6 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { t } from '@/i18n/i18n';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -67,16 +68,17 @@ interface LoadingStateProps {
 
 export const LoadingState: React.FC<LoadingStateProps> = ({
   isLoading,
-  text = "Caricamento...",
+  text,
   children,
   variant = 'overlay'
 }) => {
+  const loadingText = text ?? t('loading');
   if (!isLoading) return <>{children}</>;
 
   if (variant === 'replace') {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <LoadingSpinner text={text} variant="premium" />
+        <LoadingSpinner text={loadingText} variant="premium" />
       </div>
     );
   }
@@ -85,7 +87,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-center py-8">
-          <LoadingSpinner text={text} />
+          <LoadingSpinner text={loadingText} />
         </div>
         <div className="opacity-50 pointer-events-none">
           {children}
@@ -99,7 +101,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
     <div className="relative">
       {children}
       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-        <LoadingSpinner text={text} variant="premium" />
+        <LoadingSpinner text={loadingText} variant="premium" />
       </div>
     </div>
   );
