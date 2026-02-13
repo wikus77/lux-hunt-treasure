@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🚀 Learn How It Works Modal - FULLSCREEN
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { X, Rocket, Target, Map, Clock, Award } from 'lucide-react';
 import { HelpFlipOverlay } from '@/components/help/HelpFlipOverlay';
@@ -27,6 +28,7 @@ const STEPS = [
   {
     icon: Clock,
     title: 'Commit Giornaliero',
+    titleKey: 'status_commit_label',
     description: 'Completa il commit ogni giorno per mantenere attiva la tua partecipazione.',
     color: '#F59E0B',
   },
@@ -39,6 +41,7 @@ const STEPS = [
 ];
 
 export const LearnHowItWorksModal: React.FC<LearnHowItWorksModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const { navigate } = useWouterNavigation();
 
   const handleGoHome = () => {
@@ -175,7 +178,7 @@ export const LearnHowItWorksModal: React.FC<LearnHowItWorksModalProps> = ({ isOp
                   </div>
                   <div>
                     <p style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>
-                      {index + 1}. {step.title}
+                      {index + 1}. {(step as { title?: string; titleKey?: string }).titleKey ? t((step as { titleKey: string }).titleKey) : step.title}
                     </p>
                     <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', lineHeight: '1.5' }}>
                       {step.description}
