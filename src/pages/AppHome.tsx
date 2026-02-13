@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { useState, useEffect, Suspense, lazy } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import CommandCenterHome from "@/components/command-center/CommandCenterHome";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -33,8 +34,7 @@ import { useMissionStatus } from "@/hooks/useMissionStatus";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 const AppHome = () => {
-  // AppHome component rendering
-  
+  const { t } = useTranslation();
   // 🔐 CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -122,12 +122,12 @@ const { isConnected } = useRealTimeNotifications();
 
   useEffect(() => {
     if (error) {
-      toast.error("Si è verificato un errore", {
+      toast.error(t("home_error_toast"), {
         description: error,
         position: "bottom-center"
       });
     }
-  }, [error]);
+  }, [error, t]);
 
   // 🔄 Mission Sync - Pull to Refresh handler
   const handleMissionSync = async () => {
@@ -137,14 +137,14 @@ const { isConnected } = useRealTimeNotifications();
       await getCurrentUser();
       // Small delay for smooth UX
       await new Promise(resolve => setTimeout(resolve, 500));
-      toast.success('Mission Sync Complete', {
-        description: 'Data aggiornati',
+      toast.success(t('home_sync_success'), {
+        description: t('home_sync_description'),
         position: 'top-center',
         duration: 2000
       });
     } catch (err) {
       console.error('[MissionSync] Error:', err);
-      toast.error('Sync failed', { position: 'top-center' });
+      toast.error(t('home_sync_failed'), { position: 'top-center' });
     }
   };
   
@@ -165,7 +165,7 @@ const { isConnected } = useRealTimeNotifications();
       <div className="sn-page min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-t-2 border-cyan-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Inizializzazione utente...</p>
+          <p className="text-gray-600">{t('home_init_user')}</p>
         </div>
       </div>
     );
@@ -188,7 +188,7 @@ const { isConnected } = useRealTimeNotifications();
     return (
       <div className="sn-page flex min-h-screen items-center justify-center px-4">
         <div className="p-8 bg-red-100 border border-red-200 rounded-xl text-center w-full max-w-sm shadow-lg">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-red-600">Errore</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-red-600">{t('home_error_title')}</h2>
           <p className="text-gray-700">{error}</p>
           <motion.button 
             onClick={() => window.location.reload()}
@@ -196,7 +196,7 @@ const { isConnected } = useRealTimeNotifications();
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >
-            Riprova
+            {t('home_retry')}
           </motion.button>
         </div>
       </div>
@@ -286,7 +286,7 @@ const { isConnected } = useRealTimeNotifications();
                   {/* PrizeVision */}
                   <Suspense fallback={
                     <div className="w-full h-64 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-xl animate-pulse flex items-center justify-center">
-                      <div className="text-white/40 text-sm">Caricamento...</div>
+                      <div className="text-white/40 text-sm">{t('loading')}</div>
                     </div>
                   }>
                     <PrizeVision progress={prizeProgress} />
@@ -304,15 +304,15 @@ const { isConnected } = useRealTimeNotifications();
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                       <StreakPill showLabel={false} />
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.95)', fontWeight: 600, textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>Streak</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.95)', fontWeight: 600, textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{t('home_pill_streak')}</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                       <ShopPill />
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.95)', fontWeight: 600, textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>Shop</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.95)', fontWeight: 600, textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{t('home_pill_shop')}</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                       <CashbackVaultPill variant="compact" />
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.95)', fontWeight: 600, textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>Cashback</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.95)', fontWeight: 600, textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{t('home_pill_cashback')}</span>
                     </div>
                   </div>
                 </div>
@@ -350,7 +350,7 @@ const { isConnected } = useRealTimeNotifications();
                     `,
                   }}
                 >
-                  <SectionErrorBoundary section="Prossima Azione" fallbackHeight="80px">
+                  <SectionErrorBoundary section={t('home_section_next_action')} fallbackHeight="80px">
                     <NextActionContainer />
                   </SectionErrorBoundary>
                 </div>
@@ -382,10 +382,10 @@ const { isConnected } = useRealTimeNotifications();
                 {/* 2️⃣ REST OF CONTENT - CommandCenterHome */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 {/* Hidden title for accessibility */}
-                <h1 id="m1-home-title" className="sr-only">M1SSION Centro di Comando</h1>
+                <h1 id="m1-home-title" className="sr-only">{t('home_sr_title')}</h1>
 
                 <div id="main-content" className="max-w-screen-xl mx-auto pb-20" role="main">
-                  <SectionErrorBoundary section="Centro Comando" fallbackHeight="400px">
+                  <SectionErrorBoundary section={t('home_section_command_center')} fallbackHeight="400px">
                     <CommandCenterHome />
                   </SectionErrorBoundary>
                   
@@ -414,7 +414,7 @@ const { isConnected } = useRealTimeNotifications();
                               <span className="text-white"> PANEL</span>
                               <span className="text-xs align-top text-[#7209b7]">™</span>
                             </h3>
-                            <p className="text-gray-400 text-sm">Centro AI Generativo - Accesso Test</p>
+                            <p className="text-gray-400 text-sm">{t('home_panel_subtitle')}</p>
                           </div>
                           <div className="ml-auto">
                             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
