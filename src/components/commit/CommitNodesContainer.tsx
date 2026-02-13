@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { CommitNodeTrigger } from './CommitNodeTrigger';
 import { CommitNodeSide } from './CommitNodeSide';
@@ -628,7 +629,7 @@ export const CommitNodesContainer: React.FC = () => {
                 textShadow: '0 0 6px rgba(255, 255, 255, 0.2)',
               }}
             >
-              GIORNALIERO
+              {t('commit_daily_suffix')}
             </motion.span>
           </div>
         </div>
