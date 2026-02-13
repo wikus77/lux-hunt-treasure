@@ -14,6 +14,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Gift, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -215,6 +216,7 @@ interface ProgressResult {
 }
 
 export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -361,7 +363,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
           
           // Handle already completed today (race condition protection)
           if (serverResult.status === 'already_completed_today') {
-            toast.info('Progressione giornaliera completata. Torna domani!');
+            toast.info(t('fortune_progression_done'));
             setCanSpin(false);
             setIsSpinning(false);
             localStorage.setItem(STORAGE_KEY, new Date().toISOString());
@@ -396,7 +398,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
         milestone_level: 0,
         reward_type: 'progress',
         reward_value: 10,
-        message: 'Progressione completata! +10 punti'
+        message: t('fortune_progression_points')
       };
       progressResultRef.current = serverResult;
     }
@@ -494,13 +496,13 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
               detail: { amount: segmentPrize.value }
             }));
             
-            toast.success(`+${segmentPrize.value} M1U aggiunti!`, {
-              description: 'Il premio è stato accreditato sul tuo account'
+            toast.success(t('fortune_m1u_added', { value: segmentPrize.value }), {
+              description: t('fortune_prize_credited')
             });
             
           } catch (err) {
             console.error('[FortuneWheel] Failed to award M1U:', err);
-            toast.error('Errore nell\'assegnazione del premio');
+            toast.error(t('fortune_award_error'));
           }
         } else if (segmentPrize.type === 'pe' && segmentPrize.value > 0 && user) {
           // Award Pulse Energy
@@ -556,7 +558,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
       case 'marker': return '📍 Marker sbloccato!';
       case 'progress': return `📈 +${result.value} punti progressione!`;
       case 'retry': return '🔄 Continua domani!';
-      default: return '✨ Progressione completata!';
+      default: return `✨ ${t('fortune_progression_points')}`;
     }
   };
 
