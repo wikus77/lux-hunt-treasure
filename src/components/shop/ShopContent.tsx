@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎨 Shop Content - REVOLUT STYLE con tab RIVELA, PROGRESSIONE, PERCORSO, M1U
 import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { X, Loader2, Gift, RotateCcw, AlertTriangle, Sparkles, Coins } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +33,7 @@ interface ScratchStats {
 const WHEEL_STORAGE_KEY = 'm1_fortune_wheel_last_spin';
 
 export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const { user } = useUnifiedAuth();
   const { unitsData, refetch } = useM1UnitsRealtime(user?.id);
   const balance = unitsData?.balance ?? 0;
@@ -401,10 +403,10 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
               {canSpinWheel ? (
                 <>
                   <h3 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
-                    Progressione GRATUITA disponibile!
+                    {t('shop_progression_free')}
                   </h3>
                   <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginBottom: '24px' }}>
-                    Avanza nella tua progressione giornaliera
+                    {t('shop_progression_advance')}
                   </p>
                   <motion.button
                     onClick={() => setShowWheel(true)}
@@ -421,16 +423,16 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    🎡 GIRA ORA!
+                    🎡 {t('shop_gira_ora')}
                   </motion.button>
                 </>
               ) : (
                 <>
                   <h3 style={{ color: 'rgba(255,255,255,0.6)', fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>
-                    Hai già girato oggi
+                    {t('shop_already_spun')}
                   </h3>
-                  <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px' }}>
-                    Torna domani per un nuovo giro gratuito!
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>
+                    {t('shop_tomorrow_spin')}
                   </p>
                 </>
               )}
