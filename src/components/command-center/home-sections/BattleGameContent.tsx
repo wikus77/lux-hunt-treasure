@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎨 Battle Game Content - REVOLUT STYLE con PracticeMode
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { X, ArrowLeft } from "lucide-react";
 import { PracticeMode } from "@/components/battle/PracticeMode";
 
@@ -15,6 +16,7 @@ export const BattleGameContent: React.FC<BattleGameContentProps> = ({
   onClose,
   onBack
 }) => {
+  const { t } = useTranslation();
   return (
     <div 
       style={{ 
@@ -55,7 +57,7 @@ export const BattleGameContent: React.FC<BattleGameContentProps> = ({
             }}
           >
             <ArrowLeft style={{ width: '16px', height: '16px' }} />
-            Lobby
+            {t('home_battle_lobby')}
           </button>
 
           <div style={{ textAlign: 'center' }}>
@@ -65,10 +67,10 @@ export const BattleGameContent: React.FC<BattleGameContentProps> = ({
               fontWeight: 700,
               letterSpacing: '1px',
             }}>
-              BATTLE ARENA
+              {t('home_battle_arena_header')}
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '2px' }}>
-              Test your reflexes!
+              {t('home_battle_test_reflexes')}
             </p>
           </div>
 
