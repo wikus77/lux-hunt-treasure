@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, User, Bell, Shield, Globe, Smartphone, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
 import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -44,6 +45,7 @@ interface UserSettings {
 }
 
 const SettingsPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, updateProfile, logout } = useAuth();
   const { vibrate, playSound } = usePWAHardwareStub();
@@ -130,14 +132,14 @@ const SettingsPage: React.FC = () => {
       }
 
       toast({
-        title: 'Impostazioni Salvate',
-        description: 'Le tue preferenze sono state aggiornate.'
+        title: t('settings_saved'),
+        description: t('settings_saved_desc')
       });
     } catch (error) {
       console.error('Errore nel salvataggio:', error);
       toast({
-        title: 'Errore',
-        description: 'Impossibile salvare le impostazioni.'
+        title: t('error'),
+        description: t('error_save_settings')
       });
     } finally {
       setIsLoading(false);
@@ -162,8 +164,8 @@ const SettingsPage: React.FC = () => {
       navigate('/login');
     } catch (error) {
       toast({
-        title: 'Errore',
-        description: 'Impossibile effettuare il logout.'
+        title: t('error'),
+        description: t('error_logout')
       });
     }
   };
@@ -202,7 +204,7 @@ const SettingsPage: React.FC = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-2xl font-orbitron font-bold neon-text-cyan">
-            Impostazioni
+            {t('settings')}
           </h1>
         </motion.div>
 
@@ -212,7 +214,7 @@ const SettingsPage: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 neon-text-cyan">
                 <User className="h-5 w-5" />
-                Profilo Agente
+                {t('agent_profile')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -225,7 +227,7 @@ const SettingsPage: React.FC = () => {
                 </Avatar>
                 <div className="flex-1 space-y-2">
                   <div>
-                    <Label htmlFor="displayName">Nome Agente</Label>
+                    <Label htmlFor="displayName">{t('agent_name')}</Label>
                     <Input
                       id="displayName"
                       value={settings.profile.displayName}
@@ -237,7 +239,7 @@ const SettingsPage: React.FC = () => {
                     <Badge variant="outline" className="font-mono">
                       {settings.profile.agentCode || 'AG-XXXXX'}
                     </Badge>
-                    <span className="text-sm text-muted-foreground">Codice Agente</span>
+                    <span className="text-sm text-muted-foreground">{t('agent_code')}</span>
                   </div>
                 </div>
               </div>
@@ -251,14 +253,14 @@ const SettingsPage: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 neon-text-cyan">
                 <Bell className="h-5 w-5" />
-                Notifiche
+                {t('notifications')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Notifiche Push</Label>
-                  <p className="text-sm text-muted-foreground">Ricevi notifiche in tempo reale</p>
+                  <Label>{t('push_notifications')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('push_notifications_desc')}</p>
                 </div>
                 <Switch
                   checked={settings.notifications.push}
@@ -267,8 +269,8 @@ const SettingsPage: React.FC = () => {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Notifiche BUZZ</Label>
-                  <p className="text-sm text-muted-foreground">Avvisi per nuove aree disponibili</p>
+                  <Label>{t('buzz_notifications')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('buzz_notifications_desc')}</p>
                 </div>
                 <Switch
                   checked={settings.notifications.buzz}
@@ -277,8 +279,8 @@ const SettingsPage: React.FC = () => {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Notifiche Giochi</Label>
-                  <p className="text-sm text-muted-foreground">Sfide e nuovi mini-giochi</p>
+                  <Label>{t('game_notifications')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('game_notifications_desc')}</p>
                 </div>
                 <Switch
                   checked={settings.notifications.games}
@@ -295,14 +297,14 @@ const SettingsPage: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 neon-text-cyan">
                 <Shield className="h-5 w-5" />
-                Privacy e Sicurezza
+                {t('privacy_security')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Condivisione Posizione</Label>
-                  <p className="text-sm text-muted-foreground">Permetti accesso alla geolocalizzazione</p>
+                  <Label>{t('location_sharing')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('location_sharing_desc')}</p>
                 </div>
                 <Switch
                   checked={settings.privacy.location}
@@ -311,8 +313,8 @@ const SettingsPage: React.FC = () => {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Dati Analitici</Label>
-                  <p className="text-sm text-muted-foreground">Condividi dati per migliorare l'app</p>
+                  <Label>{t('analytics_data')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('analytics_data_desc')}</p>
                 </div>
                 <Switch
                   checked={settings.privacy.analytics}
@@ -321,8 +323,8 @@ const SettingsPage: React.FC = () => {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Report Crash</Label>
-                  <p className="text-sm text-muted-foreground">Invia automaticamente report errori</p>
+                  <Label>{t('crash_reports')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('crash_reports_desc')}</p>
                 </div>
                 <Switch
                   checked={settings.privacy.crashReports}
@@ -339,12 +341,12 @@ const SettingsPage: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 neon-text-cyan">
                 <Smartphone className="h-5 w-5" />
-                Applicazione
+                {t('application')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Lingua</Label>
+                <Label>{t('language')}</Label>
                 <Select
                   value={settings.app.language}
                   onValueChange={(value) => handleSettingChange('app', 'language', value)}
@@ -363,8 +365,8 @@ const SettingsPage: React.FC = () => {
               
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Effetti Sonori</Label>
-                  <p className="text-sm text-muted-foreground">Audio per interazioni e notifiche</p>
+                  <Label>{t('sound_effects')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('sound_effects_desc')}</p>
                 </div>
                 <Switch
                   checked={settings.app.sound}
@@ -374,8 +376,8 @@ const SettingsPage: React.FC = () => {
               
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Vibrazione</Label>
-                  <p className="text-sm text-muted-foreground">Feedback aptico per le azioni</p>
+                  <Label>{t('vibration')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('vibration_desc')}</p>
                 </div>
                 <Switch
                   checked={settings.app.vibration}
@@ -394,7 +396,7 @@ const SettingsPage: React.FC = () => {
             onClick={handleLogout}
             disabled={isLoading}
           >
-            Disconnetti
+            {t('disconnect')}
           </Button>
           
           <div className="text-center text-sm text-muted-foreground">
