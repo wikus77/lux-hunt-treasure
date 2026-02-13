@@ -357,5 +357,18 @@
   "learn_m1uprizes_title": "M1U & Prizes",
   "learn_m1uprizes_subtitle": "How to earn and spend M1U",
   "learn_leaderboard_title": "Leaderboard & Progression",
-  "learn_leaderboard_subtitle": "Climb the rankings and win"
+  "learn_leaderboard_subtitle": "Climb the rankings and win",
+  "learn_m1uprizes_hero_title": "M1SSION Economy",
+  "learn_m1uprizes_hero_subtitle": "Earn, spend and win real prizes",
+  "learn_m1uprizes_note": "M1U never expire and can be used in any mission.",
+  "m1u_what_title": "What are M1U?",
+  "m1u_what_desc": "M1U are the in-game currency. Use them to unlock missions, claim rewards and participate in the hunt.",
+  "m1u_earn_title": "How to earn",
+  "m1u_earn_desc": "Complete missions, daily goals and special events to earn M1U.",
+  "m1u_buy_title": "How to buy",
+  "m1u_buy_desc": "You can purchase M1U packs in the shop when you need a boost.",
+  "m1u_prizes_title": "Prizes",
+  "m1u_prizes_desc": "Spend M1U to unlock real prizes and rewards in the game.",
+  "m1u_streak_title": "Streaks",
+  "m1u_streak_desc": "Keep your streak going for bonus M1U and extra rewards."
 }

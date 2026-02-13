@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 💰 Learn M1U & Prizes Modal - FULLSCREEN
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { X, Coins, Gift, ShoppingCart, Zap, Star } from 'lucide-react';
 import { HelpFlipOverlay } from '@/components/help/HelpFlipOverlay';
@@ -10,40 +11,22 @@ interface LearnM1UPrizesModalProps {
   onClose: () => void;
 }
 
-const M1U_INFO = [
-  {
-    icon: Coins,
-    title: 'Cosa sono gli M1U',
-    description: 'M1 Units (M1U) sono la valuta di M1SSION. Li usi per sbloccare indizi e funzionalità premium.',
-    color: '#F59E0B',
-  },
-  {
-    icon: Zap,
-    title: 'Come guadagnare M1U',
-    description: 'Completa il commit giornaliero, trova indizi, partecipa a eventi e invita amici.',
-    color: '#22C55E',
-  },
-  {
-    icon: ShoppingCart,
-    title: 'Acquista M1U',
-    description: 'Puoi acquistare pacchetti M1U direttamente dallo Shop con prezzi vantaggiosi.',
-    color: '#00D1FF',
-  },
-  {
-    icon: Gift,
-    title: 'Premi reali',
-    description: 'Il premio finale è un oggetto di valore reale. Chi lo trova per primo vince!',
-    color: '#A855F7',
-  },
-  {
-    icon: Star,
-    title: 'Bonus e streak',
-    description: 'Mantieni lo streak di commit giornalieri per ottenere bonus M1U moltiplicati.',
-    color: '#EC4899',
-  },
+const M1U_INFO_CONFIG = [
+  { id: 'what', icon: Coins, color: '#F59E0B' },
+  { id: 'earn', icon: Zap, color: '#22C55E' },
+  { id: 'buy', icon: ShoppingCart, color: '#00D1FF' },
+  { id: 'prizes', icon: Gift, color: '#A855F7' },
+  { id: 'streak', icon: Star, color: '#EC4899' },
 ];
 
 export const LearnM1UPrizesModal: React.FC<LearnM1UPrizesModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
+
+  const M1U_INFO = M1U_INFO_CONFIG.map(item => ({
+    ...item,
+    title: t(`m1u_${item.id}_title`),
+    description: t(`m1u_${item.id}_desc`),
+  }));
   return (
     <HelpFlipOverlay
       open={isOpen}
@@ -92,7 +75,7 @@ export const LearnM1UPrizesModal: React.FC<LearnM1UPrizesModalProps> = ({ isOpen
 
             <div style={{ flex: 1, textAlign: 'center' }}>
               <h1 style={{ color: '#F59E0B', fontSize: '20px', fontWeight: 700 }}>
-                M1U & Premi
+                {t('learn_m1uprizes_title')}
               </h1>
             </div>
 
@@ -130,10 +113,10 @@ export const LearnM1UPrizesModal: React.FC<LearnM1UPrizesModalProps> = ({ isOpen
               <Coins style={{ width: '36px', height: '36px', color: '#F59E0B' }} />
             </div>
             <h2 style={{ color: '#FFFFFF', fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>
-              Economia M1SSION
+              {t('learn_m1uprizes_hero_title')}
             </h2>
             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>
-              Guadagna, spendi e vinci premi reali
+              {t('learn_m1uprizes_hero_subtitle')}
             </p>
           </motion.div>
 
@@ -191,7 +174,7 @@ export const LearnM1UPrizesModal: React.FC<LearnM1UPrizesModalProps> = ({ isOpen
             textAlign: 'center',
             lineHeight: '1.5',
           }}>
-            Gli M1U non scadono mai e possono essere usati in qualsiasi missione.
+            {t('learn_m1uprizes_note')}
           </p>
         </div>
       </div>

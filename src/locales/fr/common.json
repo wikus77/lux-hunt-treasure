@@ -353,5 +353,18 @@
   "learn_m1uprizes_title": "M1U & Prix",
   "learn_m1uprizes_subtitle": "Comment gagner et dépenser des M1U",
   "learn_leaderboard_title": "Classement & Progression",
-  "learn_leaderboard_subtitle": "Grimpez dans le classement et gagnez"
+  "learn_leaderboard_subtitle": "Grimpez dans le classement et gagnez",
+  "learn_m1uprizes_hero_title": "Économie M1SSION",
+  "learn_m1uprizes_hero_subtitle": "Gagnez, dépensez et gagnez des prix réels",
+  "learn_m1uprizes_note": "Les M1U n'expirent jamais et peuvent être utilisés dans n'importe quelle mission.",
+  "m1u_what_title": "Que sont les M1U ?",
+  "m1u_what_desc": "Les M1U sont la monnaie du jeu. Utilisez-les pour débloquer des missions, réclamer des récompenses et participer à la chasse.",
+  "m1u_earn_title": "Comment gagner",
+  "m1u_earn_desc": "Complétez des missions, objectifs quotidiens et événements spéciaux pour gagner des M1U.",
+  "m1u_buy_title": "Comment acheter",
+  "m1u_buy_desc": "Vous pouvez acheter des packs M1U en boutique quand vous avez besoin d'un coup de pouce.",
+  "m1u_prizes_title": "Prix",
+  "m1u_prizes_desc": "Dépensez des M1U pour débloquer des prix réels et des récompenses dans le jeu.",
+  "m1u_streak_title": "Séries",
+  "m1u_streak_desc": "Maintenez votre série pour des M1U bonus et des récompenses supplémentaires."
 }
