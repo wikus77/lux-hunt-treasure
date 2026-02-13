@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎨 Battle Console Lobby Content - REVOLUT STYLE
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { X, Swords, Trophy, Users, Zap, Target, Play } from "lucide-react";
 
@@ -15,6 +16,7 @@ export const BattleConsoleLobbyContent: React.FC<BattleConsoleLobbyContentProps>
   onClose,
   onStartBattle
 }) => {
+  const { t } = useTranslation();
   return (
     <div 
       style={{ 
@@ -62,10 +64,10 @@ export const BattleConsoleLobbyContent: React.FC<BattleConsoleLobbyContentProps>
               fontWeight: 700,
               letterSpacing: '1px',
             }}>
-              M1SSION BATTLE
+              {t('home_battle_title')}
             </h1>
             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '2px' }}>
-              Arena di sfida tra agenti
+              {t('home_battle_subtitle')}
             </p>
           </div>
 
@@ -95,17 +97,17 @@ export const BattleConsoleLobbyContent: React.FC<BattleConsoleLobbyContentProps>
             <div style={{ textAlign: 'center' }}>
               <Trophy style={{ width: '20px', height: '20px', color: '#FACC15', margin: '0 auto 4px' }} />
               <p style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: 700 }}>{stats?.total_wins || 0}</p>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>Vittorie</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>{t('home_battle_wins')}</p>
             </div>
             <div style={{ textAlign: 'center' }}>
               <Users style={{ width: '20px', height: '20px', color: '#F87171', margin: '0 auto 4px' }} />
               <p style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: 700 }}>{stats?.total_losses || 0}</p>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>Sconfitte</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>{t('home_battle_losses')}</p>
             </div>
             <div style={{ textAlign: 'center' }}>
               <Target style={{ width: '20px', height: '20px', color: '#00D1FF', margin: '0 auto 4px' }} />
               <p style={{ color: '#00D1FF', fontSize: '20px', fontWeight: 700 }}>{stats?.win_rate || 0}%</p>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>Win Rate</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>{t('home_battle_win_rate')}</p>
             </div>
           </div>
         </GlassCard>
@@ -128,9 +130,9 @@ export const BattleConsoleLobbyContent: React.FC<BattleConsoleLobbyContentProps>
               <Swords style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
             </div>
             <div style={{ flex: 1 }}>
-              <h3 style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 700, marginBottom: '4px' }}>Battle Arena</h3>
+              <h3 style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 700, marginBottom: '4px' }}>{t('home_battle_arena')}</h3>
               <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', lineHeight: 1.4 }}>
-                Sfida i bot AI e metti alla prova i tuoi riflessi. Ottieni M1U o PE (max 5).
+                {t('home_battle_arena_desc')}
               </p>
             </div>
           </div>
@@ -160,7 +162,7 @@ export const BattleConsoleLobbyContent: React.FC<BattleConsoleLobbyContentProps>
           whileTap={{ scale: 0.98 }}
         >
           <Play style={{ width: '20px', height: '20px' }} />
-          INIZIA BATTAGLIA
+          {t('home_battle_start')}
         </motion.button>
 
         {/* Best Times */}
@@ -168,11 +170,11 @@ export const BattleConsoleLobbyContent: React.FC<BattleConsoleLobbyContentProps>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
             <GlassCard style={{ textAlign: 'center', padding: '12px' }}>
               <p style={{ color: '#FC1EFF', fontSize: '20px', fontWeight: 700 }}>{stats.best_reaction_ms}ms</p>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>Miglior Tempo</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>{t('home_battle_best_time')}</p>
             </GlassCard>
             <GlassCard style={{ textAlign: 'center', padding: '12px' }}>
               <p style={{ color: '#FACC15', fontSize: '20px', fontWeight: 700 }}>{stats.avg_reaction_ms || 0}ms</p>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>Tempo Medio</p>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>{t('home_battle_avg_time')}</p>
             </GlassCard>
           </div>
         )}
