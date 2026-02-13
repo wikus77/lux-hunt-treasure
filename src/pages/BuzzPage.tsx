@@ -21,11 +21,13 @@ import { DebugBuzzPanel } from '@/debug/DebugBuzzPanel';
 import { useActiveMissionEnrollment } from '@/hooks/useActiveMissionEnrollment';
 import { Rocket, Lock, AlertCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 // STANDBY: Sistema hint inattività disabilitato - riattivare se necessario
 // import { InactivityHint } from '@/components/first-session';
 import { MotivationalPopup } from '@/components/feedback';
 
 export const BuzzPage: React.FC = () => {
+  const { t } = useTranslation();
   const { stats, loading, loadBuzzStats } = useBuzzStats();
   const { user, isLoading: authLoading } = useUnifiedAuth();
   // 🔇 RIMOSSO: playSound - ora usa solo BUZZMAP.mp3 gestito da BuzzActionButton
@@ -248,10 +250,10 @@ export const BuzzPage: React.FC = () => {
               <div className="text-center space-y-4">
                 {/* Descrizione BUZZ */}
                 <div className="space-y-2" style={{ color: 'var(--sn-text-secondary)' }}>
-                  <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi. Ogni Buzz ti aiuta a trovare indizi nascosti per raggiungere l'obiettivo di 250 indizi totali.</p>
-                  <p className="font-semibold" style={{ color: 'var(--sn-text-primary)' }}>BUZZ oggi: {dailyBuzzCounter} (prezzo progressivo)</p>
-                  <p className="font-semibold" style={{ color: 'var(--sn-text-primary)' }}>BUZZ totali: {stats?.total_count || 0}/250 (target finale)</p>
-                  <p style={{ color: 'var(--sn-accent)' }}>Prossimo: {currentPriceDisplay}</p>
+                  <p>{t('buzz_container_desc')}</p>
+                  <p className="font-semibold" style={{ color: 'var(--sn-text-primary)' }}>{t('buzz_today_label', { count: dailyBuzzCounter })}</p>
+                  <p className="font-semibold" style={{ color: 'var(--sn-text-primary)' }}>{t('buzz_total_label', { found: stats?.total_count || 0 })}</p>
+                  <p style={{ color: 'var(--sn-accent)' }}>{t('buzz_next_label', { price: currentPriceDisplay })}</p>
                   <p className="text-xs flex items-center justify-center gap-1" style={{ color: 'var(--sn-text-tertiary)' }}>
                     <span 
                       className="inline-flex w-4 h-4 rounded-full items-center justify-center text-[8px] font-bold"
@@ -263,7 +265,7 @@ export const BuzzPage: React.FC = () => {
                     >
                       M1
                     </span>
-                    Ogni BUZZ consuma M1U dal tuo saldo
+                    {t('buzz_m1u_hint')}
                   </p>
                 </div>
               </div>
