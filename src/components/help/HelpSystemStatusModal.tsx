@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 📊 Help System Status Modal - FULLSCREEN (stessa animazione M1U)
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { X, CheckCircle, Wifi, Database, Gift, Target, Clock } from 'lucide-react';
 import HelpFlipOverlay from './HelpFlipOverlay';
@@ -10,53 +11,29 @@ interface HelpSystemStatusModalProps {
   onClose: () => void;
 }
 
-interface StatusItem {
+interface StatusItemConfig {
   id: string;
-  label: string;
   icon: React.ElementType;
   status: 'online' | 'offline' | 'checking';
-  detail?: string;
 }
 
-const SYSTEM_STATUSES: StatusItem[] = [
-  {
-    id: 'connection',
-    label: 'Connessione',
-    icon: Wifi,
-    status: 'online',
-    detail: 'Connesso',
-  },
-  {
-    id: 'sync',
-    label: 'Sincronizzazione',
-    icon: Database,
-    status: 'online',
-    detail: 'Aggiornato',
-  },
-  {
-    id: 'rewards',
-    label: 'Sistema Premi',
-    icon: Gift,
-    status: 'online',
-    detail: 'Attivo',
-  },
-  {
-    id: 'missions',
-    label: 'Missioni',
-    icon: Target,
-    status: 'online',
-    detail: 'Operativo',
-  },
-  {
-    id: 'commit',
-    label: 'Commit Giornaliero',
-    icon: Clock,
-    status: 'online',
-    detail: 'Disponibile',
-  },
+const STATUS_CONFIG: StatusItemConfig[] = [
+  { id: 'connection', icon: Wifi, status: 'online' },
+  { id: 'sync', icon: Database, status: 'online' },
+  { id: 'rewards', icon: Gift, status: 'online' },
+  { id: 'missions', icon: Target, status: 'online' },
+  { id: 'commit', icon: Clock, status: 'online' },
 ];
 
 export const HelpSystemStatusModal: React.FC<HelpSystemStatusModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
+
+  const SYSTEM_STATUSES = STATUS_CONFIG.map(item => ({
+    ...item,
+    label: t(`status_${item.id}_label`),
+    detail: t(`status_${item.id}_detail`),
+  }));
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'online': return '#22C55E';
@@ -68,9 +45,9 @@ export const HelpSystemStatusModal: React.FC<HelpSystemStatusModalProps> = ({ is
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'online': return 'Operativo';
-      case 'offline': return 'Non disponibile';
-      case 'checking': return 'Verifica...';
+      case 'online': return t('status_online');
+      case 'offline': return t('status_offline');
+      case 'checking': return t('status_checking');
       default: return '—';
     }
   };
@@ -123,7 +100,7 @@ export const HelpSystemStatusModal: React.FC<HelpSystemStatusModalProps> = ({ is
 
             <div style={{ flex: 1, textAlign: 'center' }}>
               <h1 style={{ color: '#22C55E', fontSize: '20px', fontWeight: 700 }}>
-                Stato sistema
+                {t('help_status_title')}
               </h1>
             </div>
 
@@ -157,8 +134,8 @@ export const HelpSystemStatusModal: React.FC<HelpSystemStatusModalProps> = ({ is
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <CheckCircle style={{ width: '32px', height: '32px', color: '#22C55E' }} />
               <div>
-                <p style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700 }}>Tutti i sistemi operativi</p>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>Ultimo aggiornamento: adesso</p>
+                <p style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700 }}>{t('status_all_operational')}</p>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>{t('status_last_update')}</p>
               </div>
             </div>
 
@@ -206,8 +183,7 @@ export const HelpSystemStatusModal: React.FC<HelpSystemStatusModalProps> = ({ is
             textAlign: 'center',
             lineHeight: '1.5',
           }}>
-            Lo stato viene aggiornato in tempo reale.{'\n'}
-            Se riscontri problemi, contatta AION.
+            {t('status_footer')}
           </p>
         </div>
       </div>

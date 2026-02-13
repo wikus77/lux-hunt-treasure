@@ -328,5 +328,22 @@
   "faq_access_question": "Access problems",
   "faq_access_answer": "If you have trouble logging in:\n1. Check your internet connection\n2. Try logging out and back in\n3. If you forgot your password, use \"Forgot Password\"\n4. Make sure your email is correct\n\nFor persistent issues, contact AION.",
   "faq_bug_question": "Error / Bug",
-  "faq_bug_answer": "If you encounter an error:\n1. Restart the app\n2. Make sure you have the latest version\n3. Clear the cache (Settings > M1SSION > Clear cache)\n\nTo report a bug, talk to AION describing the problem and when it occurs."
+  "faq_bug_answer": "If you encounter an error:\n1. Restart the app\n2. Make sure you have the latest version\n3. Clear the cache (Settings > M1SSION > Clear cache)\n\nTo report a bug, talk to AION describing the problem and when it occurs.",
+
+  "status_connection_label": "Connection",
+  "status_connection_detail": "Connected",
+  "status_sync_label": "Synchronization",
+  "status_sync_detail": "Updated",
+  "status_rewards_label": "Rewards System",
+  "status_rewards_detail": "Active",
+  "status_missions_label": "Missions",
+  "status_missions_detail": "Operational",
+  "status_commit_label": "Daily Commit",
+  "status_commit_detail": "Available",
+  "status_online": "Operational",
+  "status_offline": "Unavailable",
+  "status_checking": "Checking...",
+  "status_all_operational": "All systems operational",
+  "status_last_update": "Last update: now",
+  "status_footer": "Status is updated in real time.\nIf you encounter issues, contact AION."
 }

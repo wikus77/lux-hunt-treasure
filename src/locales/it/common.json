@@ -329,5 +329,22 @@
   "faq_access_question": "Problemi accesso",
   "faq_access_answer": "Se hai problemi ad accedere:\n1. Verifica la connessione internet\n2. Prova a fare logout e login\n3. Se hai dimenticato la password, usa \"Password dimenticata\"\n4. Controlla che l'email sia corretta\n\nPer problemi persistenti, contatta AION.",
   "faq_bug_question": "Errore / Bug",
-  "faq_bug_answer": "Se riscontri un errore:\n1. Riavvia l'app\n2. Verifica di avere l'ultima versione\n3. Libera la cache (Impostazioni > M1SSION > Cancella cache)\n\nPer segnalare un bug, parla con AION descrivendo il problema e quando si verifica."
+  "faq_bug_answer": "Se riscontri un errore:\n1. Riavvia l'app\n2. Verifica di avere l'ultima versione\n3. Libera la cache (Impostazioni > M1SSION > Cancella cache)\n\nPer segnalare un bug, parla con AION descrivendo il problema e quando si verifica.",
+
+  "status_connection_label": "Connessione",
+  "status_connection_detail": "Connesso",
+  "status_sync_label": "Sincronizzazione",
+  "status_sync_detail": "Aggiornato",
+  "status_rewards_label": "Sistema Premi",
+  "status_rewards_detail": "Attivo",
+  "status_missions_label": "Missioni",
+  "status_missions_detail": "Operativo",
+  "status_commit_label": "Commit Giornaliero",
+  "status_commit_detail": "Disponibile",
+  "status_online": "Operativo",
+  "status_offline": "Non disponibile",
+  "status_checking": "Verifica...",
+  "status_all_operational": "Tutti i sistemi operativi",
+  "status_last_update": "Ultimo aggiornamento: adesso",
+  "status_footer": "Lo stato viene aggiornato in tempo reale.\nSe riscontri problemi, contatta AION."
 }

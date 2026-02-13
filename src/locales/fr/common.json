@@ -324,5 +324,22 @@
   "faq_access_question": "Problèmes d'accès",
   "faq_access_answer": "Si vous avez des difficultés à vous connecter :\n1. Vérifiez votre connexion internet\n2. Essayez de vous déconnecter puis reconnecter\n3. Si vous avez oublié votre mot de passe, utilisez « Mot de passe oublié »\n4. Vérifiez que votre email est correct\n\nPour les problèmes persistants, contactez AION.",
   "faq_bug_question": "Erreur / Bug",
-  "faq_bug_answer": "Si vous rencontrez une erreur :\n1. Redémarrez l'application\n2. Vérifiez que vous avez la dernière version\n3. Videz le cache (Réglages > M1SSION > Vider le cache)\n\nPour signaler un bug, parlez à AION en décrivant le problème et quand il se produit."
+  "faq_bug_answer": "Si vous rencontrez une erreur :\n1. Redémarrez l'application\n2. Vérifiez que vous avez la dernière version\n3. Videz le cache (Réglages > M1SSION > Vider le cache)\n\nPour signaler un bug, parlez à AION en décrivant le problème et quand il se produit.",
+
+  "status_connection_label": "Connexion",
+  "status_connection_detail": "Connecté",
+  "status_sync_label": "Synchronisation",
+  "status_sync_detail": "À jour",
+  "status_rewards_label": "Système de Prix",
+  "status_rewards_detail": "Actif",
+  "status_missions_label": "Missions",
+  "status_missions_detail": "Opérationnel",
+  "status_commit_label": "Commit Quotidien",
+  "status_commit_detail": "Disponible",
+  "status_online": "Opérationnel",
+  "status_offline": "Indisponible",
+  "status_checking": "Vérification...",
+  "status_all_operational": "Tous les systèmes opérationnels",
+  "status_last_update": "Dernière mise à jour : maintenant",
+  "status_footer": "L'état est mis à jour en temps réel.\nSi vous rencontrez des problèmes, contactez AION."
 }
