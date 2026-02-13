@@ -9,98 +9,99 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight, Map, Zap, Brain, Trophy, MessageCircle, Home, Target } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { playSound } from './audioFeedback';
 
-// 🎯 MOTIVATIONAL MESSAGES BY PAGE TYPE
-const MESSAGES = {
+// 🎯 i18n keys for motivational messages (TFunction applied at render)
+const MESSAGE_KEYS = {
   map: [
-    { title: '📡 SEGNALE TROVATO IN ITALIA', description: 'Esplora la mappa e trova i tuoi premi!' },
-    { title: '🗺️ NUOVO PATTERN IN OLANDA', description: '99 premi ti attendono sulla mappa' },
-    { title: '📍 SEGNALE TROVATO IN GERMANIA', description: 'Esplora la mappa e trova i tuoi premi!' },
-    { title: '🎯 AGENT, MISSIONE ATTIVA', description: 'Trova il punto esatto del premio finale!' },
-    { title: '🔴 BUZZ MAP RICHIESTO', description: 'Premi BUZZ MAP per sbloccare la zona premio!' },
-    { title: '🌍 COORDINATE RILEVATE', description: 'Un premio è nascosto in questa zona. Cercalo!' },
-    { title: '📶 ANOMALIA RILEVATA', description: 'Il segnale indica una ricompensa vicina!' },
-    { title: '🗺️ ESPLORA LA MAPPA', description: 'Marker verdi = premi sicuri. Trovane 99!' },
-    { title: '⚡ SEGNALE FORTE IN SPAGNA', description: 'I tuoi premi sono pronti. Vai a prenderli!' },
-    { title: '🎯 NUOVA AREA SBLOCCATA', description: 'Premi BUZZ MAP per rivelare i premi nascosti' },
-    { title: '📍 FRANCIA: PREMI DISPONIBILI', description: 'Esplora e riscatta le tue ricompense!' },
-    { title: '🔥 BONUS AREA ATTIVA', description: 'Questa zona contiene premi extra. Esplora!' },
-    { title: '🎁 99 MARKER TI ATTENDONO', description: 'Ogni marker verde = un premio garantito!' },
-    { title: '📡 INTERFERENZA POSITIVA', description: 'Segnale premio rilevato. Avvicinati!' },
-    { title: '🗺️ MAPPA AGGIORNATA', description: 'Nuovi premi sono stati posizionati. Cercali!' },
-    { title: '🎯 AGENT, LA CACCIA CONTINUA', description: 'Trova tutti i 99 premi sulla mappa!' },
-    { title: '💎 PREMIO RARO IN ZONA', description: 'Un marker speciale ti attende!' },
-    { title: '📍 BELGIO: SEGNALE ATTIVO', description: 'Premi disponibili in quest\'area!' },
-    { title: '🌟 ZONA HOT RILEVATA', description: 'Alta concentrazione di premi qui!' },
-    { title: '🔴 BUZZ MAP = CHIAVE', description: 'Sblocca l\'area per vedere i premi nascosti!' },
+    { titleKey: 'motivation_map_0_title', descKey: 'motivation_map_0_desc' },
+    { titleKey: 'motivation_map_1_title', descKey: 'motivation_map_1_desc' },
+    { titleKey: 'motivation_map_2_title', descKey: 'motivation_map_2_desc' },
+    { titleKey: 'motivation_map_3_title', descKey: 'motivation_map_3_desc' },
+    { titleKey: 'motivation_map_4_title', descKey: 'motivation_map_4_desc' },
+    { titleKey: 'motivation_map_5_title', descKey: 'motivation_map_5_desc' },
+    { titleKey: 'motivation_map_6_title', descKey: 'motivation_map_6_desc' },
+    { titleKey: 'motivation_map_7_title', descKey: 'motivation_map_7_desc' },
+    { titleKey: 'motivation_map_8_title', descKey: 'motivation_map_8_desc' },
+    { titleKey: 'motivation_map_9_title', descKey: 'motivation_map_9_desc' },
+    { titleKey: 'motivation_map_10_title', descKey: 'motivation_map_10_desc' },
+    { titleKey: 'motivation_map_11_title', descKey: 'motivation_map_11_desc' },
+    { titleKey: 'motivation_map_12_title', descKey: 'motivation_map_12_desc' },
+    { titleKey: 'motivation_map_13_title', descKey: 'motivation_map_13_desc' },
+    { titleKey: 'motivation_map_14_title', descKey: 'motivation_map_14_desc' },
+    { titleKey: 'motivation_map_15_title', descKey: 'motivation_map_15_desc' },
+    { titleKey: 'motivation_map_16_title', descKey: 'motivation_map_16_desc' },
+    { titleKey: 'motivation_map_17_title', descKey: 'motivation_map_17_desc' },
+    { titleKey: 'motivation_map_18_title', descKey: 'motivation_map_18_desc' },
+    { titleKey: 'motivation_map_19_title', descKey: 'motivation_map_19_desc' },
   ],
   buzz: [
-    { title: '⚡ BUZZ PRONTO', description: 'Ogni BUZZ ti avvicina al premio finale!' },
-    { title: '🎯 RACCOGLI INDIZI', description: 'Più indizi = più alto il tuo livello Agent!' },
-    { title: '💎 BUZZ = POTERE', description: 'Ogni press ti dà M1U e progressi!' },
-    { title: '🔥 AGENT, È IL TUO MOMENTO', description: 'Premi BUZZ e scala la classifica!' },
-    { title: '⚡ ENERGIA CARICA', description: 'Il tuo BUZZ è pronto. Usalo!' },
-    { title: '🎯 LEVEL UP VICINO', description: 'Ancora pochi BUZZ per il prossimo livello!' },
-    { title: '💰 M1U IN ARRIVO', description: 'Ogni BUZZ = cashback garantito!' },
-    { title: '🚀 BOOST DISPONIBILE', description: 'Premi BUZZ per accelerare i tuoi progressi!' },
-    { title: '⚡ BUZZ STREAK ATTIVA', description: 'Continua a premere per bonus extra!' },
-    { title: '🏆 DIVENTA IL MIGLIORE', description: 'Più BUZZ = posizione più alta in classifica!' },
-    { title: '💎 INDIZIO NASCOSTO', description: 'Il prossimo BUZZ potrebbe svelarlo!' },
-    { title: '🔥 AGENT IN MISSIONE', description: 'Non fermarti. Il premio ti aspetta!' },
-    { title: '⚡ CARICA COMPLETA', description: 'Rilascia l\'energia con un BUZZ!' },
-    { title: '🎯 OBIETTIVO GIORNALIERO', description: 'Completa i tuoi BUZZ quotidiani!' },
-    { title: '💰 CASHBACK ACCUMULATO', description: 'Ogni BUZZ aumenta il tuo vault!' },
+    { titleKey: 'motivation_buzz_0_title', descKey: 'motivation_buzz_0_desc' },
+    { titleKey: 'motivation_buzz_1_title', descKey: 'motivation_buzz_1_desc' },
+    { titleKey: 'motivation_buzz_2_title', descKey: 'motivation_buzz_2_desc' },
+    { titleKey: 'motivation_buzz_3_title', descKey: 'motivation_buzz_3_desc' },
+    { titleKey: 'motivation_buzz_4_title', descKey: 'motivation_buzz_4_desc' },
+    { titleKey: 'motivation_buzz_5_title', descKey: 'motivation_buzz_5_desc' },
+    { titleKey: 'motivation_buzz_6_title', descKey: 'motivation_buzz_6_desc' },
+    { titleKey: 'motivation_buzz_7_title', descKey: 'motivation_buzz_7_desc' },
+    { titleKey: 'motivation_buzz_8_title', descKey: 'motivation_buzz_8_desc' },
+    { titleKey: 'motivation_buzz_9_title', descKey: 'motivation_buzz_9_desc' },
+    { titleKey: 'motivation_buzz_10_title', descKey: 'motivation_buzz_10_desc' },
+    { titleKey: 'motivation_buzz_11_title', descKey: 'motivation_buzz_11_desc' },
+    { titleKey: 'motivation_buzz_12_title', descKey: 'motivation_buzz_12_desc' },
+    { titleKey: 'motivation_buzz_13_title', descKey: 'motivation_buzz_13_desc' },
+    { titleKey: 'motivation_buzz_14_title', descKey: 'motivation_buzz_14_desc' },
   ],
   aion: [
-    { title: '🤖 AION TI ATTENDE', description: 'L\'AI analyst ha nuovi insights per te!' },
-    { title: '🧠 INTELLIGENCE READY', description: 'Analisi avanzate disponibili!' },
-    { title: '📊 DATI ELABORATI', description: 'AION ha trovato pattern interessanti!' },
-    { title: '🔍 NUOVE SCOPERTE', description: 'L\'AI ha rilevato opportunità per te!' },
-    { title: '💡 INSIGHT DISPONIBILE', description: 'Chiedi ad AION e ottieni risposte!' },
-    { title: '🤖 AGENT, PARLAMI', description: 'AION è pronto ad aiutarti nella missione!' },
-    { title: '📈 ANALISI COMPLETATA', description: 'Risultati pronti. Consulta AION!' },
-    { title: '🧠 AI POTENZIATO', description: 'AION ha nuove capacità. Provale!' },
-    { title: '🔮 PREDIZIONI AGGIORNATE', description: 'L\'AI ha elaborato nuovi scenari!' },
-    { title: '💎 SEGRETO SVELATO', description: 'AION conosce la strada verso il premio!' },
+    { titleKey: 'motivation_aion_0_title', descKey: 'motivation_aion_0_desc' },
+    { titleKey: 'motivation_aion_1_title', descKey: 'motivation_aion_1_desc' },
+    { titleKey: 'motivation_aion_2_title', descKey: 'motivation_aion_2_desc' },
+    { titleKey: 'motivation_aion_3_title', descKey: 'motivation_aion_3_desc' },
+    { titleKey: 'motivation_aion_4_title', descKey: 'motivation_aion_4_desc' },
+    { titleKey: 'motivation_aion_5_title', descKey: 'motivation_aion_5_desc' },
+    { titleKey: 'motivation_aion_6_title', descKey: 'motivation_aion_6_desc' },
+    { titleKey: 'motivation_aion_7_title', descKey: 'motivation_aion_7_desc' },
+    { titleKey: 'motivation_aion_8_title', descKey: 'motivation_aion_8_desc' },
+    { titleKey: 'motivation_aion_9_title', descKey: 'motivation_aion_9_desc' },
   ],
   leaderboard: [
-    { title: '🏆 CLASSIFICA LIVE', description: 'Vedi la tua posizione tra gli Agent!' },
-    { title: '📊 TOP AGENTS', description: 'Scala la classifica e diventa il migliore!' },
-    { title: '🥇 PODIO DISPONIBILE', description: 'Sfida gli altri e conquista la vetta!' },
-    { title: '🔥 COMPETIZIONE ATTIVA', description: 'La classifica si aggiorna in tempo reale!' },
-    { title: '🏆 RANKING MONDIALE', description: 'Confrontati con Agent da tutto il mondo!' },
-    { title: '⚡ POSIZIONE IN SALITA', description: 'Continua così per raggiungere il top!' },
-    { title: '🎯 OBIETTIVO: TOP 10', description: 'Sei vicino alla top 10. Non mollare!' },
-    { title: '💎 PREMI ESCLUSIVI', description: 'I top Agent ricevono bonus speciali!' },
-    { title: '🏅 SFIDA ACCETTATA', description: 'Mostra di che pasta sei fatto!' },
-    { title: '🚀 CORSA AL VERTICE', description: 'Ogni azione conta per la classifica!' },
+    { titleKey: 'motivation_leaderboard_0_title', descKey: 'motivation_leaderboard_0_desc' },
+    { titleKey: 'motivation_leaderboard_1_title', descKey: 'motivation_leaderboard_1_desc' },
+    { titleKey: 'motivation_leaderboard_2_title', descKey: 'motivation_leaderboard_2_desc' },
+    { titleKey: 'motivation_leaderboard_3_title', descKey: 'motivation_leaderboard_3_desc' },
+    { titleKey: 'motivation_leaderboard_4_title', descKey: 'motivation_leaderboard_4_desc' },
+    { titleKey: 'motivation_leaderboard_5_title', descKey: 'motivation_leaderboard_5_desc' },
+    { titleKey: 'motivation_leaderboard_6_title', descKey: 'motivation_leaderboard_6_desc' },
+    { titleKey: 'motivation_leaderboard_7_title', descKey: 'motivation_leaderboard_7_desc' },
+    { titleKey: 'motivation_leaderboard_8_title', descKey: 'motivation_leaderboard_8_desc' },
+    { titleKey: 'motivation_leaderboard_9_title', descKey: 'motivation_leaderboard_9_desc' },
   ],
   home: [
-    { title: '🏠 BENTORNATO AGENT', description: 'La tua missione continua!' },
-    { title: '📊 PROGRESSI SALVATI', description: 'Continua da dove hai lasciato!' },
-    { title: '🎯 NUOVA GIORNATA', description: 'Nuove opportunità ti aspettano!' },
-    { title: '💎 PREMI IN ATTESA', description: 'Controlla i tuoi reward!' },
-    { title: '🔥 STREAK ATTIVA', description: 'Non perdere il tuo bonus giornaliero!' },
-    { title: '🚀 READY FOR ACTION', description: 'Scegli la tua prossima mossa!' },
-    { title: '📈 LIVELLO IN CRESCITA', description: 'Sei sempre più vicino al top!' },
-    { title: '🎁 PROGRESSO ATTIVO', description: 'Controlla la tua progressione giornaliera!' },
-    { title: '⚡ ENERGIA PIENA', description: 'È il momento perfetto per agire!' },
-    { title: '🏆 AGENT OPERATIVO', description: 'Missione in corso. Continua così!' },
+    { titleKey: 'motivation_home_0_title', descKey: 'motivation_home_0_desc' },
+    { titleKey: 'motivation_home_1_title', descKey: 'motivation_home_1_desc' },
+    { titleKey: 'motivation_home_2_title', descKey: 'motivation_home_2_desc' },
+    { titleKey: 'motivation_home_3_title', descKey: 'motivation_home_3_desc' },
+    { titleKey: 'motivation_home_4_title', descKey: 'motivation_home_4_desc' },
+    { titleKey: 'motivation_home_5_title', descKey: 'motivation_home_5_desc' },
+    { titleKey: 'motivation_home_6_title', descKey: 'motivation_home_6_desc' },
+    { titleKey: 'motivation_home_7_title', descKey: 'motivation_home_7_desc' },
+    { titleKey: 'motivation_home_8_title', descKey: 'motivation_home_8_desc' },
+    { titleKey: 'motivation_home_9_title', descKey: 'motivation_home_9_desc' },
   ],
   forum: [
-    { title: '💬 COMMUNITY ATTIVA', description: 'Unisciti alla discussione!' },
-    { title: '🗣️ LA TUA VOCE CONTA', description: 'Condividi le tue strategie!' },
-    { title: '📢 NUOVI POST', description: 'Altri Agent hanno condiviso tips!' },
-    { title: '🤝 CONNETTI CON ALTRI', description: 'La community ti aspetta!' },
-    { title: '💡 IDEE BRILLANTI', description: 'Scopri i segreti degli altri Agent!' },
-    { title: '🔥 HOT TOPIC', description: 'Discussione accesa nel forum!' },
-    { title: '📝 LASCIA UN COMMENTO', description: 'La tua opinione è importante!' },
-    { title: '🏅 BEST CONTRIBUTOR', description: 'Partecipa e guadagna reputazione!' },
+    { titleKey: 'motivation_forum_0_title', descKey: 'motivation_forum_0_desc' },
+    { titleKey: 'motivation_forum_1_title', descKey: 'motivation_forum_1_desc' },
+    { titleKey: 'motivation_forum_2_title', descKey: 'motivation_forum_2_desc' },
+    { titleKey: 'motivation_forum_3_title', descKey: 'motivation_forum_3_desc' },
+    { titleKey: 'motivation_forum_4_title', descKey: 'motivation_forum_4_desc' },
+    { titleKey: 'motivation_forum_5_title', descKey: 'motivation_forum_5_desc' },
+    { titleKey: 'motivation_forum_6_title', descKey: 'motivation_forum_6_desc' },
+    { titleKey: 'motivation_forum_7_title', descKey: 'motivation_forum_7_desc' },
   ],
 };
 
-type PageType = keyof typeof MESSAGES;
+type PageType = keyof typeof MESSAGE_KEYS;
 
 interface MotivationalPopupProps {
   pageType: PageType;
@@ -139,8 +140,9 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
   showOnce = true,
   delay = 500,
 }) => {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
-  const [message, setMessage] = useState<{ title: string; description: string } | null>(null);
+  const [message, setMessage] = useState<{ titleKey: string; descKey: string } | null>(null);
 
   useEffect(() => {
     const key = `motivational_${pageType}`;
@@ -155,8 +157,8 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
       return;
     }
 
-    // Get random message
-    const pageMessages = MESSAGES[pageType];
+    // Get random message keys
+    const pageMessages = MESSAGE_KEYS[pageType];
     const randomIndex = Math.floor(Math.random() * pageMessages.length);
     setMessage(pageMessages[randomIndex]);
 
@@ -288,7 +290,7 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
                         textShadow: '0 0 15px rgba(0, 255, 136, 0.55)',
                       }}
                     >
-                      {message.title}
+                      {t(message.titleKey)}
                     </motion.h2>
 
                     <motion.p
@@ -297,7 +299,7 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
                       transition={{ delay: 0.2 }}
                       className="text-white/90 text-sm mt-1.5 leading-relaxed"
                     >
-                      {message.description}
+                      {t(message.descKey)}
                     </motion.p>
                   </div>
                 </div>
@@ -325,7 +327,7 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
               transition={{ delay: 1 }}
               className="text-center text-white/35 text-[11px] mt-1.5"
             >
-              ↑ swipe per chiudere
+              {t('motivation_swipe_hint')}
             </motion.p>
           </motion.div>
         </>
