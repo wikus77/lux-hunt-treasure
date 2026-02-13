@@ -111,6 +111,29 @@ interface MotivationalPopupProps {
 // Track shown popups per session
 const shownPopups = new Set<string>();
 
+// 🔧 FIX 13/02/2026: Throttle globale - max 1 banner ogni 5 min (evita spam su navigazione)
+const THROTTLE_MS = 5 * 60 * 1000; // 5 minuti
+const STORAGE_KEY = 'motivational_last_shown';
+
+function canShowByThrottle(): boolean {
+  try {
+    const last = sessionStorage.getItem(STORAGE_KEY);
+    if (!last) return true;
+    const lastTs = parseInt(last, 10);
+    return Date.now() - lastTs >= THROTTLE_MS;
+  } catch {
+    return true;
+  }
+}
+
+function markShown(): void {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, String(Date.now()));
+  } catch {
+    /* ignore */
+  }
+}
+
 export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
   pageType,
   showOnce = true,
@@ -121,8 +144,13 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
 
   useEffect(() => {
     const key = `motivational_${pageType}`;
-    
-    // Check if already shown this session
+
+    // 🔧 Throttle: non mostrare se ne abbiamo mostrato uno negli ultimi 5 min
+    if (!canShowByThrottle()) {
+      return;
+    }
+
+    // Check if already shown this session (per page type)
     if (showOnce && shownPopups.has(key)) {
       return;
     }
@@ -136,6 +164,7 @@ export const MotivationalPopup: React.FC<MotivationalPopupProps> = ({
     const timer = setTimeout(() => {
       setIsVisible(true);
       shownPopups.add(key);
+      markShown();
       playSound('confirm');
     }, delay);
 
