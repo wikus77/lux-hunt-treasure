@@ -313,5 +313,16 @@
   "help_status_title": "État du système",
   "help_status_subtitle": "Vérifier l'état des services",
   "help_aion_title": "Parler à AION",
-  "help_aion_subtitle": "Assistance intelligente 24/7"
+  "help_aion_subtitle": "Assistance intelligente 24/7",
+
+  "faq_notifications_question": "Je ne reçois pas les notifications",
+  "faq_notifications_answer": "Pour recevoir les notifications :\n1. Allez dans Réglages iOS > M1SSION > Notifications\n2. Activez « Autoriser les notifications »\n3. Vérifiez que le mode « Ne pas déranger » est désactivé\n4. Redémarrez l'application\n\nSi le problème persiste, essayez de réinstaller l'application.",
+  "faq_confused_question": "Je ne sais pas quoi faire maintenant",
+  "faq_confused_answer": "M1SSION vous guide à travers des missions quotidiennes. Pour commencer :\n1. Regardez le conteneur « Prochaine Action » sur l'Accueil\n2. Complétez le commit quotidien (les 3 blobs)\n3. Explorez la carte pour trouver des indices\n4. Utilisez AION pour des suggestions intelligentes\n\nChaque action vous rapproche du prix final !",
+  "faq_rewards_question": "M1U / Prix",
+  "faq_rewards_answer": "M1U (M1 Units) est la monnaie de M1SSION :\n• Gagnez des M1U en complétant des actions\n• Utilisez les M1U pour débloquer des indices premium\n• Vous pouvez acheter des M1U dans la Boutique\n\nLes prix sont attribués aux meilleurs agents du classement. Consultez votre position en temps réel !",
+  "faq_access_question": "Problèmes d'accès",
+  "faq_access_answer": "Si vous avez des difficultés à vous connecter :\n1. Vérifiez votre connexion internet\n2. Essayez de vous déconnecter puis reconnecter\n3. Si vous avez oublié votre mot de passe, utilisez « Mot de passe oublié »\n4. Vérifiez que votre email est correct\n\nPour les problèmes persistants, contactez AION.",
+  "faq_bug_question": "Erreur / Bug",
+  "faq_bug_answer": "Si vous rencontrez une erreur :\n1. Redémarrez l'application\n2. Vérifiez que vous avez la dernière version\n3. Videz le cache (Réglages > M1SSION > Vider le cache)\n\nPour signaler un bug, parlez à AION en décrivant le problème et quand il se produit."
 }

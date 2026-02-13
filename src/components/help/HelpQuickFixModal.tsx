@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🔧 Help Quick Fix Modal - FULLSCREEN (stessa animazione M1U)
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronDown, ChevronUp, Bell, HelpCircle, Gift, Lock, AlertTriangle } from 'lucide-react';
 import HelpFlipOverlay from './HelpFlipOverlay';
@@ -10,76 +11,28 @@ interface HelpQuickFixModalProps {
   onClose: () => void;
 }
 
-interface FAQItem {
+interface FAQItemConfig {
   id: string;
   icon: React.ElementType;
-  question: string;
-  answer: string;
 }
 
-const FAQ_ITEMS: FAQItem[] = [
-  {
-    id: 'notifications',
-    icon: Bell,
-    question: 'Non ricevo notifiche',
-    answer: `Per ricevere le notifiche:
-1. Vai in Impostazioni iOS > M1SSION > Notifiche
-2. Attiva "Consenti notifiche"
-3. Verifica che non sia attiva la modalità "Non disturbare"
-4. Riavvia l'app
-
-Se il problema persiste, prova a reinstallare l'app.`,
-  },
-  {
-    id: 'confused',
-    icon: HelpCircle,
-    question: 'Non capisco cosa fare adesso',
-    answer: `M1SSION ti guida attraverso missioni giornaliere. Per iniziare:
-1. Guarda il contenitore "Prossima Azione" in Home
-2. Completa il commit giornaliero (i 3 blob)
-3. Esplora la mappa per trovare indizi
-4. Usa AION per ricevere suggerimenti intelligenti
-
-Ogni azione ti avvicina al premio finale!`,
-  },
-  {
-    id: 'rewards',
-    icon: Gift,
-    question: 'M1U / Premi',
-    answer: `M1U (M1 Units) sono la valuta di M1SSION:
-• Guadagni M1U completando azioni
-• Usa M1U per sbloccare indizi premium
-• Puoi acquistare M1U nello Shop
-
-I premi vengono assegnati ai migliori agenti della classifica. Controlla la tua posizione in tempo reale!`,
-  },
-  {
-    id: 'access',
-    icon: Lock,
-    question: 'Problemi accesso',
-    answer: `Se hai problemi ad accedere:
-1. Verifica la connessione internet
-2. Prova a fare logout e login
-3. Se hai dimenticato la password, usa "Password dimenticata"
-4. Controlla che l'email sia corretta
-
-Per problemi persistenti, contatta AION.`,
-  },
-  {
-    id: 'bug',
-    icon: AlertTriangle,
-    question: 'Errore / Bug',
-    answer: `Se riscontri un errore:
-1. Riavvia l'app
-2. Verifica di avere l'ultima versione
-3. Libera la cache (Impostazioni > M1SSION > Cancella cache)
-
-Per segnalare un bug, parla con AION descrivendo il problema e quando si verifica.`,
-  },
+const FAQ_ITEMS_CONFIG: FAQItemConfig[] = [
+  { id: 'notifications', icon: Bell },
+  { id: 'confused', icon: HelpCircle },
+  { id: 'rewards', icon: Gift },
+  { id: 'access', icon: Lock },
+  { id: 'bug', icon: AlertTriangle },
 ];
 
 export const HelpQuickFixModal: React.FC<HelpQuickFixModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const FAQ_ITEMS = FAQ_ITEMS_CONFIG.map(item => ({
+    ...item,
+    question: t(`faq_${item.id}_question`),
+    answer: t(`faq_${item.id}_answer`),
+  }));
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
@@ -133,7 +86,7 @@ export const HelpQuickFixModal: React.FC<HelpQuickFixModalProps> = ({ isOpen, on
 
             <div style={{ flex: 1, textAlign: 'center' }}>
               <h1 style={{ color: '#00D1FF', fontSize: '20px', fontWeight: 700 }}>
-                Problemi rapidi
+                {t('help_quickfix_title')}
               </h1>
             </div>
 

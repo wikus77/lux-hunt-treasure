@@ -318,5 +318,16 @@
   "help_status_title": "Stato sistema",
   "help_status_subtitle": "Verifica lo stato dei servizi",
   "help_aion_title": "Parla con AION",
-  "help_aion_subtitle": "Assistenza intelligente 24/7"
+  "help_aion_subtitle": "Assistenza intelligente 24/7",
+
+  "faq_notifications_question": "Non ricevo notifiche",
+  "faq_notifications_answer": "Per ricevere le notifiche:\n1. Vai in Impostazioni iOS > M1SSION > Notifiche\n2. Attiva \"Consenti notifiche\"\n3. Verifica che non sia attiva la modalità \"Non disturbare\"\n4. Riavvia l'app\n\nSe il problema persiste, prova a reinstallare l'app.",
+  "faq_confused_question": "Non capisco cosa fare adesso",
+  "faq_confused_answer": "M1SSION ti guida attraverso missioni giornaliere. Per iniziare:\n1. Guarda il contenitore \"Prossima Azione\" in Home\n2. Completa il commit giornaliero (i 3 blob)\n3. Esplora la mappa per trovare indizi\n4. Usa AION per ricevere suggerimenti intelligenti\n\nOgni azione ti avvicina al premio finale!",
+  "faq_rewards_question": "M1U / Premi",
+  "faq_rewards_answer": "M1U (M1 Units) sono la valuta di M1SSION:\n• Guadagni M1U completando azioni\n• Usa M1U per sbloccare indizi premium\n• Puoi acquistare M1U nello Shop\n\nI premi vengono assegnati ai migliori agenti della classifica. Controlla la tua posizione in tempo reale!",
+  "faq_access_question": "Problemi accesso",
+  "faq_access_answer": "Se hai problemi ad accedere:\n1. Verifica la connessione internet\n2. Prova a fare logout e login\n3. Se hai dimenticato la password, usa \"Password dimenticata\"\n4. Controlla che l'email sia corretta\n\nPer problemi persistenti, contatta AION.",
+  "faq_bug_question": "Errore / Bug",
+  "faq_bug_answer": "Se riscontri un errore:\n1. Riavvia l'app\n2. Verifica di avere l'ultima versione\n3. Libera la cache (Impostazioni > M1SSION > Cancella cache)\n\nPer segnalare un bug, parla con AION descrivendo il problema e quando si verifica."
 }
