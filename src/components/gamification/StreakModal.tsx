@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, Trophy, Zap, Gift, X, Check, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -27,21 +28,22 @@ interface StreakInfo {
   days_to_next_milestone: number;
 }
 
-// 🆕 FIX 16/01/2026: Aggiunto m1uReward per ogni milestone
+// 🆕 FIX 16/01/2026: Aggiunto m1uReward per ogni milestone (names via i18n)
 const MILESTONES = [
-  { days: 5, icon: '🔥', name: 'Fiamma Nascente', color: '#FF6B35', m1uReward: 25 },
-  { days: 10, icon: '🔥', name: 'Fiamma Ardente', color: '#FF4500', m1uReward: 25 },
-  { days: 15, icon: '🌋', name: 'Inferno', color: '#DC143C', m1uReward: 50 },
-  { days: 25, icon: '⚡', name: 'Leggenda Streak', color: '#FFD700', m1uReward: 75 },
-  { days: 30, icon: '🏆', name: 'Campione Missione', color: '#00D1FF', m1uReward: 100 },
-  { days: 50, icon: '💎', name: 'Diamante', color: '#00BFFF', m1uReward: 150 },
-  { days: 100, icon: '👑', name: 'Re della Streak', color: '#9B59B6', m1uReward: 300 },
+  { days: 5, icon: '🔥', key: 'streak_milestone_5', color: '#FF6B35', m1uReward: 25 },
+  { days: 10, icon: '🔥', key: 'streak_milestone_10', color: '#FF4500', m1uReward: 25 },
+  { days: 15, icon: '🌋', key: 'streak_milestone_15', color: '#DC143C', m1uReward: 50 },
+  { days: 25, icon: '⚡', key: 'streak_milestone_25', color: '#FFD700', m1uReward: 75 },
+  { days: 30, icon: '🏆', key: 'streak_milestone_30', color: '#00D1FF', m1uReward: 100 },
+  { days: 50, icon: '💎', key: 'streak_milestone_50', color: '#00BFFF', m1uReward: 150 },
+  { days: 100, icon: '👑', key: 'streak_milestone_100', color: '#9B59B6', m1uReward: 300 },
 ];
 
 // 🆕 FIX 16/01/2026: M1U giornalieri per check-in
 const DAILY_M1U_REWARD = 2;
 
 export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalProps) {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
@@ -192,14 +194,14 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
         const milestoneAwarded = await awardM1U(milestone.m1uReward, `streak_milestone_${milestone.days}`);
         if (milestoneAwarded) {
           totalM1U += milestone.m1uReward;
-          toast.success(`🎉 ${milestone.name}! +${milestone.m1uReward} M1U!`, { duration: 5000 });
+          toast.success(`🎉 ${t(milestone.key)}! +${milestone.m1uReward} M1U!`, { duration: 5000 });
         } else {
-          toast.success(`🎉 Nuovo badge sbloccato: ${milestone.name}!`);
+          toast.success(`🎉 ${t('streak_toast_badge')}: ${t(milestone.key)}!`);
         }
       } else if (streakBroken) {
-        toast.warning('⚠️ Streak resettata! Ricomincia da 1');
+        toast.warning(`⚠️ ${t('streak_toast_reset')}`);
       } else {
-        toast.success(`🔥 Streak: ${newStreak} giorni! +${DAILY_M1U_REWARD} M1U`, { duration: 3000 });
+        toast.success(`🔥 ${t('streak_toast_days')}: ${newStreak} ${t('streak_days_label')}! +${DAILY_M1U_REWARD} M1U`, { duration: 3000 });
       }
       
       // 🆕 FIX 16/01/2026: Dispatch evento per animazione slot machine M1UPill
@@ -215,7 +217,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
 
     } catch (err) {
       console.error('Check-in error:', err);
-      toast.error('Errore durante il check-in');
+      toast.error(t('streak_error_checkin'));
     } finally {
       setCheckingIn(false);
     }
@@ -282,7 +284,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                     >
                       <Check className="w-10 h-10 text-white" />
                     </motion.div>
-                    <p className="text-xl font-bold text-white">Check-in Completato!</p>
+                    <p className="text-xl font-bold text-white">{t('streak_success_title')}</p>
                   </motion.div>
                 </motion.div>
               )}
@@ -319,9 +321,9 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                   textShadow: '0 0 20px rgba(0, 255, 136, 0.6)',
                 }}
               >
-                🔥 STREAK SYSTEM
+                🔥 {t('streak_title')}
               </h2>
-              <p className="text-white/70 text-sm">Accedi ogni giorno per bonus esclusivi</p>
+              <p className="text-white/70 text-sm">{t('streak_subtitle')}</p>
             </div>
 
             {loading ? (
@@ -348,7 +350,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                     >
                       {streak}
                     </p>
-                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">Giorni Streak</p>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">{t('streak_days')}</p>
                   </div>
                   <div 
                     className="p-5 rounded-xl text-center"
@@ -366,7 +368,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                     >
                       {streakInfo?.longest_streak || 0}
                     </p>
-                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">Record</p>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">{t('streak_record')}</p>
                   </div>
                 </div>
 
@@ -374,8 +376,8 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                 {streakInfo?.next_milestone && (
                   <div className="mb-6">
                     <div className="flex justify-between text-xs text-gray-400 mb-2">
-                      <span>Prossimo badge: {MILESTONES.find(m => m.days === streakInfo.next_milestone)?.name}</span>
-                      <span>{streakInfo.days_to_next_milestone} giorni</span>
+                      <span>{t('streak_next_badge')}: {MILESTONES.find(m => m.days === streakInfo.next_milestone) && t(MILESTONES.find(m => m.days === streakInfo.next_milestone)!.key)}</span>
+                      <span>{streakInfo.days_to_next_milestone} {t('streak_days_label')}</span>
                     </div>
                     <div className="h-3 bg-gray-800/50 rounded-full overflow-hidden relative">
                       <motion.div
@@ -397,7 +399,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Zap className="w-4 h-4 text-purple-400" />
-                      <span className="text-xs text-gray-400">PE Bonus</span>
+                      <span className="text-xs text-gray-400">{t('streak_pe_bonus')}</span>
                     </div>
                     <p className="text-lg font-bold text-purple-300">
                       +{Math.round((peMultiplier - 1) * 100)}%
@@ -409,7 +411,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Gift className="w-4 h-4 text-cyan-400" />
-                      <span className="text-xs text-gray-400">M1U Bonus</span>
+                      <span className="text-xs text-gray-400">{t('streak_m1u_bonus')}</span>
                     </div>
                     <p className="text-lg font-bold text-cyan-300">+{m1uBonus}%</p>
                   </motion.div>
@@ -417,7 +419,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
 
                 {/* Milestones */}
                 <div className="mb-6">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Badge Streak</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">{t('streak_badge_title')}</p>
                   <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                     {MILESTONES.slice(0, 5).map((m) => (
                       <motion.div
@@ -462,19 +464,19 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                   ) : canCheckIn ? (
                     <>
                       <Flame className="w-5 h-5" />
-                      CHECK-IN GIORNALIERO
+                      {t('streak_checkin_cta')}
                     </>
                   ) : (
                     <>
                       <Check className="w-5 h-5" />
-                      COMPLETATO OGGI
+                      {t('streak_completed_today')}
                     </>
                   )}
                 </motion.button>
 
                 {!canCheckIn && (
                   <p className="text-center text-xs text-white/50 mt-4">
-                    Torna domani per continuare la streak!
+                    {t('streak_tomorrow_hint')}
                   </p>
                 )}
               </>
