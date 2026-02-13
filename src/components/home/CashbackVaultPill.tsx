@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Vault, Gift, Clock, ChevronRight } from 'lucide-react';
@@ -29,6 +30,7 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
   className = '',
   variant = 'compact',
 }) => {
+  const { t } = useTranslation();
   const {
     accumulatedM1U,
     canClaim,
@@ -125,10 +127,10 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
     // Se il pulsante è disabilitato ma l'utente è riuscito a premere, mostra motivo
     if (!canClaim) {
       if (accumulatedM1U <= 0) {
-        toast.error('Nessun cashback da riscattare', { description: 'Accumula cashback giocando!' });
+        toast.error(t('home_cashback_no_claim'), { description: t('home_cashback_accumulate_playing') });
       } else if (nextClaimAvailable) {
-        toast.error('Riscatto non ancora disponibile', { 
-          description: `Prossimo riscatto: ${formatNextClaim()}` 
+        toast.error(t('home_cashback_not_yet'), { 
+          description: t('home_cashback_next', { date: formatNextClaim() }) 
         });
       }
       return;
@@ -141,8 +143,8 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
       console.log('[CashbackVaultPill] claimCashback result:', result);
       
       if (result) {
-        toast.success(`🎉 Cashback riscattato!`, {
-          description: `+${result.credited_m1u.toLocaleString()} M1U aggiunti al tuo saldo`,
+        toast.success(`🎉 ${t('home_cashback_claimed')}`, {
+          description: t('home_cashback_credited', { amount: result.credited_m1u.toLocaleString() }),
         });
         setShowClaimModal(false);
         // Trigger M1U pill refresh
@@ -151,32 +153,28 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
           detail: { amount: result.credited_m1u } 
         }));
       } else {
-        // Show the actual error from the hook
-        toast.error('Riscatto fallito', { 
-          description: walletError || 'Controlla la connessione e riprova' 
+        toast.error(t('home_cashback_claim_failed'), { 
+          description: walletError || t('home_cashback_check_connection') 
         });
       }
     } catch (err: any) {
       console.error('[CashbackVaultPill] Claim error:', err);
-      toast.error('Errore nel riscatto', { 
-        description: err?.message || 'Riprova più tardi' 
+      toast.error(t('home_cashback_error'), { 
+        description: err?.message || t('home_cashback_retry') 
       });
     } finally {
       setIsClaiming(false);
     }
   };
 
-  // Format next claim date
   const formatNextClaim = () => {
-    if (!nextClaimAvailable) {
-      return 'Disponibile ora!';
-    }
+    if (!nextClaimAvailable) return t('home_cashback_available_now');
     const now = new Date();
     const diff = nextClaimAvailable.getTime() - now.getTime();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    if (days <= 0) return 'Disponibile';
-    if (days === 1) return 'Domani';
-    return `Tra ${days} giorni`;
+    if (days <= 0) return t('home_cashback_available');
+    if (days === 1) return t('home_cashback_tomorrow');
+    return t('home_cashback_in_days', { count: days });
   };
 
   return (
@@ -304,7 +302,7 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
                     textShadow: '0 0 20px rgba(0, 255, 136, 0.6)',
                   }}
                 >
-                  M1SSION Cashback Vault™
+                  {t('home_cashback_title')}
                 </h3>
 
                 {/* Amount */}
@@ -322,7 +320,7 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
                   </span>
                   <span className="text-2xl text-cyan-300 ml-2">M1U</span>
                   <p className="text-white/70 text-sm mt-3">
-                    Cashback accumulato pronto per essere riscattato
+                    {t('home_cashback_desc')}
                   </p>
                 </div>
 
@@ -339,7 +337,7 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setShowClaimModal(false)}
                   >
-                    Annulla
+                    {t('home_cashback_cancel')}
                   </motion.button>
                   <motion.button
                     className="flex-1 py-4 px-5 rounded-xl font-bold flex items-center justify-center gap-2"
@@ -361,7 +359,7 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
                     ) : (
                       <>
                         <Gift className="w-5 h-5" />
-                        Riscatta
+                        {t('home_cashback_claim')}
                       </>
                     )}
                   </motion.button>
@@ -371,8 +369,8 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
                 {!canClaim && (
                   <p className="relative text-center text-white/50 text-xs mt-5">
                     {nextClaimAvailable 
-                      ? `⏰ Prossimo riscatto: ${formatNextClaim()}`
-                      : 'Accumula cashback per riscattare'
+                      ? `⏰ ${t('home_cashback_next', { date: formatNextClaim() })}`
+                      : t('home_cashback_accumulate')
                     }
                   </p>
                 )}
