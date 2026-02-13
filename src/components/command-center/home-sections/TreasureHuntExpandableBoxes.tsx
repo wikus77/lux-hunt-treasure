@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Clock, Target, CheckCircle, AlertCircle, Timer } from "lucide-react";
 import FoundCluesDisplay from "@/components/clues/FoundCluesDisplay";
@@ -24,6 +25,7 @@ export function TreasureHuntExpandableBoxes({
   activeMission, 
   purchasedClues 
 }: TreasureHuntExpandableBoxesProps) {
+  const { t } = useTranslation();
   const [expandedBox, setExpandedBox] = useState<string | null>(null);
 
   const toggleBox = (boxId: string) => {
@@ -53,8 +55,8 @@ export function TreasureHuntExpandableBoxes({
         <h2 className="text-lg md:text-xl font-orbitron font-bold">
           <span className="text-[#00D1FF]" style={{ 
             textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-          }}>PROTOCOLLO</span>
-          <span className="text-white"> DI RILEVAMENTO</span>
+          }}>{t('home_protocol_title')}</span>
+          <span className="text-white"> {t('home_protocol_reveal')}</span>
         </h2>
       </div>
 
