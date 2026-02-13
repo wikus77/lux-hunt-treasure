@@ -1,4 +1,4 @@
-
+import { t } from '@/i18n/i18n';
 import { toast } from "sonner";
 
 /**
@@ -9,17 +9,17 @@ import { toast } from "sonner";
 export function displayNewClueNotification(clueText: string, addNotification: ((notification: any) => boolean) | null): void {
   if (addNotification) {
     const success = addNotification({
-      title: "Nuovo indizio extra!",
+      title: t('new_clue_extra'),
       description: clueText
     });
 
     if (!success) {
       // Fall back to toast if notification couldn't be added
-      toast("Nuovo indizio extra! " + clueText, { duration: 5000 });
+      toast(t('new_clue_extra') + " " + clueText, { duration: 5000 });
     }
   } else {
     // If notification function not available, use toast
-    toast("Nuovo indizio extra! " + clueText, { duration: 5000 });
+    toast(t('new_clue_extra') + " " + clueText, { duration: 5000 });
   }
 }
 
@@ -27,7 +27,7 @@ export function displayNewClueNotification(clueText: string, addNotification: ((
  * Shows a toast notification for clue limit reached
  */
 export function showCluesLimitReachedNotification(): void {
-  toast("Hai già sbloccato tutti gli indizi disponibili!", {
+  toast(t('all_clues_unlocked'), {
     duration: 3000,
     position: "top-center"
   });
@@ -37,7 +37,7 @@ export function showCluesLimitReachedNotification(): void {
  * Shows a toast notification for clues reset
  */
 export function showCluesResetNotification(): void {
-  toast.info("Contatore degli indizi azzerato", { 
+  toast.info(t('clues_counter_reset'), { 
     duration: 3000 
   });
 }
