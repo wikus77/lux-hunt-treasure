@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎨 M1U Shop Content - REVOLUT STYLE (identico design a SettingsContent)
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { X, ShoppingCart, Sparkles, Zap, Crown, Gem, Star } from 'lucide-react';
 import { M1UPaymentModal } from './M1UPaymentModal';
@@ -202,7 +203,7 @@ export const M1UShopContent: React.FC<M1UShopContentProps> = ({ onClose }) => {
             fontSize: '13px', 
             textAlign: 'center',
           }}>
-            Acquista M1U per sbloccare indizi e funzionalità premium
+            {t('shop_m1u_cta')}
           </p>
         </div>
 
@@ -322,7 +323,7 @@ export const M1UShopContent: React.FC<M1UShopContentProps> = ({ onClose }) => {
                       }}
                     >
                       <ShoppingCart style={{ width: '14px', height: '14px' }} />
-                      Acquista
+                      {t('shop_buy')}
                     </button>
                   </GlassCard>
                 </motion.div>
