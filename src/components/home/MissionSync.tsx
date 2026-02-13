@@ -2,6 +2,7 @@
 // 🔧 FIX 06/02/2026 v3: PTR FLUIDO - animazioni progressive, no scatti
 // 🎮 07/02/2026: Replaced Coming Soon with DISCO ROTAZIONE mini-game
 import React, { useState, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { Clock } from 'lucide-react';
@@ -28,6 +29,7 @@ const MAX_PULL = 130;             // Max visual pull
 // DISCO ROTAZIONE MODAL - Mini-game fullscreen
 // ═══════════════════════════════════════════════════════════════════════════
 const DiscoRotazioneModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -173,7 +175,7 @@ const DiscoRotazioneModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
                 <Suspense fallback={
                   <div className="flex flex-col items-center justify-center">
                     <div className="w-12 h-12 border-2 border-[#00D1FF]/30 border-t-[#00D1FF] rounded-full animate-spin mb-4" />
-                    <p className="text-white/50 text-sm">Caricamento...</p>
+                    <p className="text-white/50 text-sm">{t('loading')}</p>
                   </div>
                 }>
                   <DiscoRotazione 
