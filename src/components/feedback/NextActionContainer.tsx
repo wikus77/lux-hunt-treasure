@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { 
   ChevronDown, 
@@ -32,6 +33,7 @@ interface NextActionContainerProps {
 }
 
 export const NextActionContainer: React.FC<NextActionContainerProps> = ({ className = '' }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [originRect, setOriginRect] = useState<DOMRect | null>(null);
@@ -78,10 +80,10 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
   // Get mission status text
   const getMissionStatusText = () => {
     if (!MISSIONS_ENABLED || !isMissionReady || isMissionCompleted) return null;
-    if (isMissionNotStarted) return 'Nuova!';
-    if (missionPhase === 1 && !isPhase2Ready) return 'P1';
-    if (missionPhase === 2 && !isPhase2Ready) return 'P2 🔜';
-    if (isPhase2Ready) return 'P2!';
+    if (isMissionNotStarted) return t('next_action_new');
+    if (missionPhase === 1 && !isPhase2Ready) return t('next_action_p1');
+    if (missionPhase === 2 && !isPhase2Ready) return t('next_action_p2_soon');
+    if (isPhase2Ready) return t('next_action_p2_ready');
     return null;
   };
 
@@ -146,7 +148,7 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
                       textShadow: `0 0 15px ${isUrgent ? 'rgba(255, 68, 68, 0.5)' : preset.glowColor}`,
                     }}
                   >
-                    🎯 NEXT ACTION
+                    🎯 {t('next_action_label')}
                   </p>
                   {/* GIOCA badge - always visible, red with pulse (larger + more visible) */}
                   <span 
@@ -159,16 +161,16 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
                       boxShadow: '0 0 12px rgba(239, 68, 68, 0.3)',
                     }}
                   >
-                    GIOCA
+                    {t('next_action_gioca')}
                   </span>
                   {isUrgent && (
                     <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/20 text-red-400 animate-pulse">
-                      URGENTE
+                      {t('next_action_urgent')}
                     </span>
                   )}
                 </div>
                 <p className="text-white/70 text-xs">
-                  {isUrgent ? `Solo ${daysRemaining} giorni rimasti!` : 'Tocca per vedere le opzioni'}
+                  {isUrgent ? t('next_action_days_left', { count: daysRemaining }) : t('next_action_tap_options')}
                 </p>
               </div>
             </div>
