@@ -323,7 +323,7 @@ const ShopModal: React.FC<ShopModalProps> = ({ isOpen, onClose }) => {
                                 </p>
                               )}
                               <p className="text-[10px] text-white/60 mt-1">
-                                {tierData?.available ?? '?'} biglietti
+                                {t('shop_tickets_count', { count: tierData?.available ?? '?' })}
                               </p>
                             </div>
                           </div>
