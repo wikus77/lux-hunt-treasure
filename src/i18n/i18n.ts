@@ -18,8 +18,10 @@ import fr from '../locales/fr/common.json';
 
 // ---- Costanti & Utils
 const STORAGE_KEY = 'm1_locale';
+const STORAGE_KEY_MODE = 'm1_locale_mode'; // 'auto' | 'manual'
 const SUPPORTED = ['en', 'it', 'fr'] as const;
 type SupportedLang = (typeof SUPPORTED)[number];
+type LocaleMode = 'auto' | 'manual';
 
 function normalize(lang: string | undefined | null): SupportedLang {
   if (!lang || typeof lang !== 'string') return 'en';
@@ -47,9 +49,21 @@ export function getSavedLocale(): SupportedLang | null {
   }
 }
 
+// 🔧 FIX iOS: Legge il mode (auto/manual) - default 'auto' se assente
+function getLocaleMode(): LocaleMode {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_MODE);
+    return raw === 'manual' ? 'manual' : 'auto';
+  } catch {
+    return 'auto';
+  }
+}
+
+// 🔧 FIX iOS: Setta override MANUALE (chiamato da LanguageSettings)
 export function setLocale(lng: SupportedLang): void {
   try {
     localStorage.setItem(STORAGE_KEY, lng);
+    localStorage.setItem(STORAGE_KEY_MODE, 'manual'); // Marca come override manuale
   } catch {
     /* ignore */
   }
@@ -58,8 +72,30 @@ export function setLocale(lng: SupportedLang): void {
   }
 }
 
+// 🔧 FIX iOS: Torna a seguire OS (reset override manuale)
+export function clearLocaleOverride(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem(STORAGE_KEY_MODE, 'auto');
+  } catch {
+    /* ignore */
+  }
+  // Aggiorna i18next con lingua OS
+  const osLang = getDeviceLocale();
+  if (i18next?.changeLanguage) {
+    i18next.changeLanguage(osLang);
+  }
+}
+
+// 🔧 FIX iOS: OS-driven di default, override solo se mode === 'manual'
 export function getDefaultLocale(): SupportedLang {
-  return getSavedLocale() ?? getDeviceLocale();
+  const mode = getLocaleMode();
+  if (mode === 'manual') {
+    const saved = getSavedLocale();
+    if (saved) return saved;
+  }
+  // AUTO: segue sempre OS (ignora eventuali m1_locale legacy senza mode)
+  return getDeviceLocale();
 }
 
 // ---- Risorse
