@@ -264,8 +264,8 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
           setShowNewTicketModal(true);
         }
         
-        toast.success(`🎫 Acquistati ${quantity} biglietti!`, {
-          description: `Totale: ${data.total_cost} M1U`
+        toast.success(`🎫 ${t('shop_lottery_purchased', { quantity })}`, {
+          description: t('shop_lottery_purchased_desc', { total: data.total_cost })
         });
         
         // Refresh
@@ -671,7 +671,7 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
             
             {!status.user_can_buy_more && (
               <p className="text-center text-xs text-orange-400">
-                Hai raggiunto il limite di {status.max_tickets_per_user} biglietti
+                {t('shop_lottery_limit_tickets', { max: status.max_tickets_per_user })}
               </p>
             )}
           </div>
