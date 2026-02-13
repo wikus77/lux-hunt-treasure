@@ -47,5 +47,56 @@
   "cookie_marketing_description": "Used to deliver personalized ads and measure the effectiveness of advertising campaigns.",
 
   "cookie_personalization_title": "Personalization cookies",
-  "cookie_personalization_description": "Store preferences such as language, theme, layout, and UI settings to personalize your experience."
+  "cookie_personalization_description": "Store preferences such as language, theme, layout, and UI settings to personalize your experience.",
+
+  "settings": "Settings",
+  "settings_saved": "Settings Saved",
+  "settings_saved_desc": "Your preferences have been updated.",
+  "error": "Error",
+  "error_save_settings": "Unable to save settings.",
+  "error_logout": "Unable to logout.",
+
+  "agent_profile": "Agent Profile",
+  "agent_name": "Agent Name",
+  "agent_code": "Agent Code",
+
+  "notifications": "Notifications",
+  "push_notifications": "Push Notifications",
+  "push_notifications_desc": "Receive real-time notifications",
+  "buzz_notifications": "BUZZ Notifications",
+  "buzz_notifications_desc": "Alerts for new available areas",
+  "game_notifications": "Game Notifications",
+  "game_notifications_desc": "Challenges and new mini-games",
+
+  "privacy_security": "Privacy and Security",
+  "location_sharing": "Location Sharing",
+  "location_sharing_desc": "Allow access to geolocation",
+  "analytics_data": "Analytics Data",
+  "analytics_data_desc": "Share data to improve the app",
+  "crash_reports": "Crash Reports",
+  "crash_reports_desc": "Automatically send error reports",
+
+  "application": "Application",
+  "language": "Language",
+  "sound_effects": "Sound Effects",
+  "sound_effects_desc": "Audio for interactions and notifications",
+  "vibration": "Vibration",
+  "vibration_desc": "Haptic feedback for actions",
+  "disconnect": "Disconnect",
+  "logout": "Logout",
+  "logged_out": "Logged out.",
+
+  "help": "Help",
+  "legal_documents": "Legal Documents",
+  "learn": "Learn",
+  "inbox": "Inbox",
+  "security": "Security",
+  "privacy": "Privacy",
+  "invite_friends": "Invite friends",
+  "earn_m1u": "Earn M1U",
+  "pulse_energy": "Pulse Energy",
+
+  "new_clue_extra": "New extra clue!",
+  "all_clues_unlocked": "You have already unlocked all available clues!",
+  "clues_counter_reset": "Clue counter reset"
 }

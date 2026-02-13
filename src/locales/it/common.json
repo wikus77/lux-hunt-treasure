@@ -47,5 +47,56 @@
   "cookie_marketing_description": "Utilizzati per mostrare annunci personalizzati e misurare l'efficacia delle campagne pubblicitarie.",
 
   "cookie_personalization_title": "Cookie di personalizzazione",
-  "cookie_personalization_description": "Memorizzano preferenze come lingua, tema, layout e impostazioni dell'interfaccia per personalizzare la tua esperienza."
+  "cookie_personalization_description": "Memorizzano preferenze come lingua, tema, layout e impostazioni dell'interfaccia per personalizzare la tua esperienza.",
+
+  "settings": "Impostazioni",
+  "settings_saved": "Impostazioni Salvate",
+  "settings_saved_desc": "Le tue preferenze sono state aggiornate.",
+  "error": "Errore",
+  "error_save_settings": "Impossibile salvare le impostazioni.",
+  "error_logout": "Impossibile effettuare il logout.",
+
+  "agent_profile": "Profilo Agente",
+  "agent_name": "Nome Agente",
+  "agent_code": "Codice Agente",
+
+  "notifications": "Notifiche",
+  "push_notifications": "Notifiche Push",
+  "push_notifications_desc": "Ricevi notifiche in tempo reale",
+  "buzz_notifications": "Notifiche BUZZ",
+  "buzz_notifications_desc": "Avvisi per nuove aree disponibili",
+  "game_notifications": "Notifiche Giochi",
+  "game_notifications_desc": "Sfide e nuovi mini-giochi",
+
+  "privacy_security": "Privacy e Sicurezza",
+  "location_sharing": "Condivisione Posizione",
+  "location_sharing_desc": "Permetti accesso alla geolocalizzazione",
+  "analytics_data": "Dati Analitici",
+  "analytics_data_desc": "Condividi dati per migliorare l'app",
+  "crash_reports": "Report Crash",
+  "crash_reports_desc": "Invia automaticamente report errori",
+
+  "application": "Applicazione",
+  "language": "Lingua",
+  "sound_effects": "Effetti Sonori",
+  "sound_effects_desc": "Audio per interazioni e notifiche",
+  "vibration": "Vibrazione",
+  "vibration_desc": "Feedback aptico per le azioni",
+  "disconnect": "Disconnetti",
+  "logout": "Esci",
+  "logged_out": "Disconnesso.",
+
+  "help": "Aiuto",
+  "legal_documents": "Documenti Legali",
+  "learn": "Impara",
+  "inbox": "Posta in arrivo",
+  "security": "Sicurezza",
+  "privacy": "Privacy",
+  "invite_friends": "Invita amici",
+  "earn_m1u": "Guadagna M1U",
+  "pulse_energy": "Pulse Energy",
+
+  "new_clue_extra": "Nuovo indizio extra!",
+  "all_clues_unlocked": "Hai già sbloccato tutti gli indizi disponibili!",
+  "clues_counter_reset": "Contatore degli indizi azzerato"
 }
