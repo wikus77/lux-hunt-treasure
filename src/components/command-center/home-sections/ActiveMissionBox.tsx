@@ -563,8 +563,8 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
       {/* Header - 🔧 FIX 06/02/2026 v2: "DI RILEVAMENTO" e "ORACLE" BIANCO PURO */}
       <div className="mb-4">
         <h2 className="text-xl font-orbitron font-bold mb-2">
-          <span className="text-[#00D1FF]">PROTOCOLLO</span>
-          <span style={{ color: '#FFFFFF', opacity: 1 }}> DI RILEVAMENTO</span>
+          <span className="text-[#00D1FF]">{t('home_protocol_title')}</span>
+          <span style={{ color: '#FFFFFF', opacity: 1 }}> {t('home_protocol_reveal')}</span>
         </h2>
         <h3 className="text-xl font-orbitron font-bold">
           <span className="text-[#00D1FF]">MISSIONE ID:</span>
