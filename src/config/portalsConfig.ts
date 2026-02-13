@@ -39,6 +39,8 @@ export interface PortalRequirement {
 export interface PortalDialogue {
   entity: 'MCP' | 'SHADOW' | 'ECHO';
   lines: string[];
+  /** i18n keys for lines - when present, lines are translated via t(lineKeys[i]) */
+  lineKeys?: string[];
 }
 
 export interface PortalBehaviorConfig {
@@ -240,7 +242,11 @@ export const PORTAL_BEHAVIORS: PortalBehaviorConfig[] = [
       { entity: 'MCP', lines: ['Hollywood Gate — Coming Soon.'] },
     ],
     dialogueLocked: [
-      { entity: 'MCP', lines: ['ACCESS DENIED — Level 19 required.', 'Create more BUZZ MAP areas to unlock.'] },
+      {
+        entity: 'MCP',
+        lines: ['ACCESS DENIED — Level 19 required.', 'Create more BUZZ MAP areas to unlock.'],
+        lineKeys: ['portal_hollywood_locked_1', 'portal_hollywood_locked_2'],
+      },
     ],
     effects: { glitch: 'light' },
   },

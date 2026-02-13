@@ -8,6 +8,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { GameEvent, getEventCopy, cancelAutoDismiss, startAutoDismiss } from '@/gameplay/events';
 import { GLASS_PRESETS, getGlassVariantForEvent, MOTION_PRESETS, M1SSION_COLORS } from './glassPresets';
 
@@ -22,7 +23,8 @@ export const CelebrationToast: React.FC<CelebrationToastProps> = ({
   onDismiss,
   onCtaClick,
 }) => {
-  const copy = getEventCopy(event);
+  const { t } = useTranslation();
+  const copy = getEventCopy(event, t);
   const variant = getGlassVariantForEvent(event.type);
   const preset = GLASS_PRESETS[variant];
   const progressRef = useRef<HTMLDivElement>(null);

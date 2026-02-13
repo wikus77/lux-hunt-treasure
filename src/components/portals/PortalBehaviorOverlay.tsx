@@ -5,6 +5,7 @@
 // Pure front-end logic - no backend modifications
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Zap, Shield, AlertTriangle, Radio, Eye, Lock, Unlock, Gift, Sparkles } from 'lucide-react';
 import type { PortalDTO } from '@/features/living-map/adapters/readOnlyData';
@@ -101,12 +102,17 @@ const DialogueDisplay: React.FC<{
   dialogues: PortalDialogue[];
   onComplete?: () => void;
 }> = ({ dialogues, onComplete }) => {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
 
   const currentDialogue = dialogues[currentIndex];
-  const fullText = currentDialogue?.lines.join('\n') || '';
+  const fullText = currentDialogue
+    ? (currentDialogue.lineKeys
+        ? currentDialogue.lineKeys.map((k) => t(k)).join('\n')
+        : currentDialogue.lines.join('\n'))
+    : '';
 
   useEffect(() => {
     let index = 0;

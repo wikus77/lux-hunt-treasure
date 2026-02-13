@@ -8,6 +8,7 @@ import React, { useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useTranslation } from 'react-i18next';
 import { GameEvent, getEventCopy } from '@/gameplay/events';
 import { GLASS_PRESETS, getGlassVariantForEvent, MOTION_PRESETS, M1SSION_COLORS } from './glassPresets';
 
@@ -252,7 +253,7 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
               {...MOTION_PRESETS.textStagger(0.4)}
             >
               <p className="text-xs text-white/50 mb-1 uppercase tracking-wider">
-                🎯 PROSSIMO PASSO
+                {t('game_next_step')}
               </p>
               <p className="text-white font-medium">{copy.nextStep}</p>
             </motion.div>
@@ -272,7 +273,7 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
               }}
               whileTap={{ scale: 0.98 }}
             >
-              {copy.cta?.label || 'CONTINUA'}
+              {copy.cta?.label || t('game_continue')}
               <ArrowRight className="w-5 h-5" />
             </motion.button>
           </div>
