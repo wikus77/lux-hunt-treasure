@@ -20,6 +20,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Gift, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,6 +82,7 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
   purchaseId,
   clientNonce,
 }) => {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const ticketRef = useRef<HTMLDivElement>(null);
@@ -435,8 +437,8 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
         };
         milestoneConfetti();
         
-        toast.success('🎯 MILESTONE RAGGIUNTA!', {
-          description: `Livello ${milestoneLevel} sbloccato! +${rewardValue.toLocaleString()} M1U`,
+        toast.success(`🎯 ${t('scratch_milestone_reached')}`, {
+          description: t('scratch_milestone_desc', { level: milestoneLevel, value: rewardValue.toLocaleString() }),
           duration: 8000,
         });
         
@@ -455,8 +457,8 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
           origin: { y: 0.7 },
           colors: ['#4169E1', '#00BFFF', '#1E90FF'],
         });
-        toast.success('📈 Progressione completata!', {
-          description: `+${rewardValue} punti avanzamento`,
+        toast.success(`📈 ${t('scratch_progression_done')}`, {
+          description: t('scratch_progress_desc', { value: rewardValue }),
         });
         
       } else if (rewardType === 'clue') {
@@ -469,7 +471,7 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
         
         const clueMessage = clueText || 'Nuovo indizio rivelato! Controlla le notifiche.';
         
-        toast.success('🔍 Indizio rivelato!', {
+        toast.success(`🔍 ${t('scratch_clue_revealed')}`, {
           description: clueMessage,
           duration: 8000,
         });
@@ -483,8 +485,8 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
         }
       } else {
         // Standard progress completion
-        toast.info('✨ Rivelazione completata!', {
-          description: 'Continua a fare progressi!',
+        toast.info(`✨ ${t('scratch_reveal_done')}`, {
+          description: t('scratch_continue_progress'),
         });
       }
       
@@ -775,8 +777,8 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
                   >
                     {/* 🏪 STORE COMPLIANT: Progress completion (no lose state) */}
                     <div className="text-5xl mb-4">✨</div>
-                    <div className="text-xl font-bold text-white/80">Rivelazione completata</div>
-                    <p className="text-white/60 mt-2 text-sm">Continua a fare progressi!</p>
+                    <div className="text-xl font-bold text-white/80">{t('scratch_reveal_done')}</div>
+                    <p className="text-white/70 mt-2 text-sm">{t('scratch_continue_progress')}</p>
                   </motion.div>
                 )}
               </div>
