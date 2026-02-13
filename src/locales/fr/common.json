@@ -617,5 +617,16 @@
   "shop_m1u_cta": "Achetez des M1U pour débloquer des indices et des fonctionnalités premium",
   "shop_buy": "Acheter",
   "shop_no_cycle": "Aucun cycle actif",
-  "shop_insufficient_for": "Solde insuffisant (il faut {{totalCost}} M1U)"
+  "shop_insufficient_for": "Solde insuffisant (il faut {{totalCost}} M1U)",
+  "shop_tickets_count": "{{count}} billets",
+  "shop_scratch_reveal_progress": "RÉVÉLER PROGRESSION",
+  "shop_scratch_revealing": "RÉVÉLATION...",
+  "shop_scratch_reveal_prize": "RÉVÉLER LE LOT !",
+  "shop_scratch_instruction": "Grattez la zone dorée pour révéler les symboles",
+  "shop_lottery_winner": "GAGNANT",
+  "shop_ticket_number": "Numéro de billet",
+  "shop_lottery_purchased": "{{quantity}} billets achetés !",
+  "shop_lottery_purchased_desc": "Total : {{total}} M1U",
+  "shop_lottery_your_tickets": "Vos billets",
+  "shop_lottery_limit_tickets": "Vous avez atteint la limite de {{max}} billets"
 }

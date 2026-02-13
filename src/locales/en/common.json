@@ -621,5 +621,16 @@
   "shop_m1u_cta": "Buy M1U to unlock clues and premium features",
   "shop_buy": "Buy",
   "shop_no_cycle": "No active cycle",
-  "shop_insufficient_for": "Insufficient balance (need {{totalCost}} M1U)"
+  "shop_insufficient_for": "Insufficient balance (need {{totalCost}} M1U)",
+  "shop_tickets_count": "{{count}} tickets",
+  "shop_scratch_reveal_progress": "REVEAL PROGRESS",
+  "shop_scratch_revealing": "REVEALING...",
+  "shop_scratch_reveal_prize": "REVEAL PRIZE!",
+  "shop_scratch_instruction": "Scratch the golden area to reveal symbols",
+  "shop_lottery_winner": "WINNER",
+  "shop_ticket_number": "Ticket Number",
+  "shop_lottery_purchased": "Purchased {{quantity}} tickets!",
+  "shop_lottery_purchased_desc": "Total: {{total}} M1U",
+  "shop_lottery_your_tickets": "Your tickets",
+  "shop_lottery_limit_tickets": "You've reached the limit of {{max}} tickets"
 }
