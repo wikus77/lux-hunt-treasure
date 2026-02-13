@@ -17,6 +17,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Ticket, 
@@ -122,6 +123,7 @@ interface LotteryContentProps {
 }
 
 const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdate }) => {
+  const { t } = useTranslation();
   const { user } = useUnifiedAuth();
   
   // State
@@ -344,7 +346,7 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
           <Ticket className="w-10 h-10 text-blue-400" />
         </motion.div>
         <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-        <h3 className="text-lg font-bold text-white mb-2">Nessun ciclo attivo</h3>
+        <h3 className="text-lg font-bold text-white mb-2">{t('shop_no_cycle')}</h3>
         <p className="text-white/60 text-sm">Il prossimo percorso progressione inizierà presto!</p>
       </div>
     );
@@ -663,7 +665,7 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
             
             {!canAfford && (
               <p className="text-center text-xs text-red-400">
-                Saldo insufficiente (servono {totalCost} M1U)
+                {t('shop_insufficient_for', { totalCost })}
               </p>
             )}
             
