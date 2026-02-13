@@ -6,6 +6,7 @@ import {
   FileText, Info, MapPin, Stethoscope, 
   ChevronRight, CreditCard
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { getProjectRef } from '@/lib/supabase/clientUtils';
@@ -46,9 +47,10 @@ const SectionLoadingFallback = () => (
 );
 
 export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [geolocationEnabled, setGeolocationEnabled] = useState(false);
-  const [sessionStatus, setSessionStatus] = useState<string>('Verifica...');
+  const [sessionStatus, setSessionStatus] = useState<string>('checking');
   
   // State per gestire sezione aperta
   const [openSection, setOpenSection] = useState<string | null>(null);
@@ -73,9 +75,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
   const checkSession = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      setSessionStatus(session ? 'Attiva' : 'Non attiva');
+      setSessionStatus(session ? 'active' : 'inactive');
     } catch (error) {
-      setSessionStatus('Errore');
+      setSessionStatus('error');
     }
   };
 
@@ -95,57 +97,57 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
   const sections = [
     {
       id: 'agent-profile',
-      label: 'Profilo Agente',
-      description: 'Avatar, nome e informazioni agente',
+      label: t('section_agent_profile'),
+      description: t('section_agent_profile_desc'),
       icon: User,
       color: '#00D1FF',
     },
     {
       id: 'security',
-      label: 'Sicurezza',
-      description: 'Password e codici di emergenza',
+      label: t('section_security'),
+      description: t('section_security_desc'),
       icon: Shield,
       color: '#22C55E',
     },
     {
       id: 'mission',
-      label: 'Missione',
-      description: 'Stato missioni e progressi',
+      label: t('section_mission'),
+      description: t('section_mission_desc'),
       icon: Target,
       color: '#F59E0B',
     },
     {
       id: 'notifications',
-      label: 'Notifiche',
-      description: 'Preferenze e alert',
+      label: t('section_notifications'),
+      description: t('section_notifications_desc'),
       icon: Bell,
       color: '#EF4444',
     },
     {
       id: 'privacy',
-      label: 'Privacy',
-      description: 'Gestione consensi e cookie',
+      label: t('section_privacy'),
+      description: t('section_privacy_desc'),
       icon: Lock,
       color: '#A855F7',
     },
     {
       id: 'payment-methods',
-      label: 'Metodi di Pagamento',
-      description: 'Carte, Apple Pay, Google Pay',
+      label: t('section_payment_methods'),
+      description: t('section_payment_methods_desc'),
       icon: CreditCard,
       color: '#14B8A6',
     },
     {
       id: 'legal',
-      label: 'Legale',
-      description: 'Termini, privacy e account',
+      label: t('section_legal'),
+      description: t('section_legal_desc'),
       icon: FileText,
       color: '#EC4899',
     },
     {
       id: 'app-info',
-      label: 'Info App',
-      description: 'Versione, supporto e credits',
+      label: t('section_app_info'),
+      description: t('section_app_info_desc'),
       icon: Info,
       color: '#6366F1',
     },
@@ -223,7 +225,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
                 fontWeight: 700,
                 letterSpacing: '1px',
               }}>
-                IMPOSTAZIONI
+                {t('settings_modal_title')}
               </h1>
             </div>
 
@@ -235,7 +237,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
             fontSize: '13px', 
             textAlign: 'center',
           }}>
-            Configura la tua esperienza M1SSION
+            {t('settings_modal_subtitle')}
           </p>
         </div>
 
@@ -268,7 +270,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
           <GlassCard style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
               <MapPin style={{ width: '18px', height: '18px', color: '#60a5fa' }} />
-              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600 }}>Privacy & Permessi</span>
+              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600 }}>{t('privacy_permissions')}</span>
             </div>
             
             <div style={{ 
@@ -277,7 +279,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
               justifyContent: 'space-between',
               marginBottom: '12px',
             }}>
-              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>Geolocalizzazione</span>
+              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('geolocation')}</span>
               <span style={{
                 padding: '4px 10px',
                 borderRadius: '12px',
@@ -286,7 +288,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
                 fontSize: '11px',
                 fontWeight: 600,
               }}>
-                {geolocationEnabled ? 'Attiva' : 'Disattiva'}
+                {geolocationEnabled ? t('active') : t('inactive')}
               </span>
             </div>
             
@@ -304,7 +306,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
                 cursor: 'pointer',
               }}
             >
-              Verifica Permessi
+              {t('check_permissions')}
             </button>
           </GlassCard>
 
@@ -312,7 +314,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
           <GlassCard>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
               <Stethoscope style={{ width: '18px', height: '18px', color: '#22c55e' }} />
-              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600 }}>Diagnostica</span>
+              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600 }}>{t('diagnostics')}</span>
             </div>
             
             <div style={{ marginBottom: '8px' }}>
@@ -322,7 +324,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
                 justifyContent: 'space-between',
                 marginBottom: '8px',
               }}>
-                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>Supabase ID</span>
+                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('supabase_id')}</span>
                 <span style={{
                   padding: '4px 10px',
                   borderRadius: '12px',
@@ -341,16 +343,16 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
                 alignItems: 'center', 
                 justifyContent: 'space-between',
               }}>
-                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>Stato Sessione</span>
+                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('session_status')}</span>
                 <span style={{
                   padding: '4px 10px',
                   borderRadius: '12px',
-                  background: sessionStatus === 'Attiva' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                  color: sessionStatus === 'Attiva' ? '#22c55e' : '#ef4444',
+                  background: sessionStatus === 'active' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                  color: sessionStatus === 'active' ? '#22c55e' : '#ef4444',
                   fontSize: '11px',
                   fontWeight: 600,
                 }}>
-                  {sessionStatus}
+                  {t(sessionStatus)}
                 </span>
               </div>
             </div>
@@ -370,7 +372,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
                 marginTop: '8px',
               }}
             >
-              Verifica Sessione
+              {t('check_session')}
             </button>
           </GlassCard>
         </div>
