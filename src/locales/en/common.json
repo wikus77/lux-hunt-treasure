@@ -448,5 +448,6 @@
   "home_active_clue_progress": "Clue progress",
   "home_active_clues_found_count": "{{found}}/{{total}} clues found",
   "home_active_goals_reached": "Goals reached",
-  "home_active_goals_remaining": "Goals remaining"
+  "home_active_goals_remaining": "Goals remaining",
+  "home_active_total_duration": "Total duration"
 }

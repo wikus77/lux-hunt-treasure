@@ -449,5 +449,6 @@
   "home_active_clue_progress": "Progresso Indizi",
   "home_active_clues_found_count": "{{found}}/{{total}} indizi trovati",
   "home_active_goals_reached": "Obiettivi Raggiunti",
-  "home_active_goals_remaining": "Obiettivi Rimanenti"
+  "home_active_goals_remaining": "Obiettivi Rimanenti",
+  "home_active_total_duration": "Durata totale"
 }

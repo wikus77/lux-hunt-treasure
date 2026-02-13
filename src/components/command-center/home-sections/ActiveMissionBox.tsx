@@ -837,7 +837,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
         items={[
           { label: t('home_active_days_remaining'), value: mission.remainingDays, color: isFinalDay ? '#EF4444' : isUrgent ? '#F97316' : '#FBBF24', icon: <Hourglass className="w-4 h-4" /> },
           { label: t('home_active_days_elapsed'), value: mission.totalDays - mission.remainingDays, color: '#22C55E' },
-          { label: t('home_active_days'), value: `${mission.totalDays}`, color: '#00D1FF' },
+          { label: t('home_active_total_duration'), value: `${mission.totalDays} ${t('home_active_days')}`, color: '#00D1FF' },
           { label: t('home_active_completion'), value: `${Math.round(((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100)}%`, color: '#A855F7' },
           { label: t('home_active_started_on'), value: new Date(mission.startTime).toLocaleDateString(), color: '#fff' },
         ]}
