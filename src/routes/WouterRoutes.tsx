@@ -3,6 +3,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Route, Switch, useLocation, Redirect } from "wouter";
 
 // Dev tools (conditionally loaded)
@@ -145,6 +146,7 @@ import { getActiveSubscription } from '@/lib/subscriptions';
 import { SUBSCRIPTIONS_STEALTH } from '@/config/featureFlags';
 
 const WouterRoutes: React.FC = () => {
+  const { t } = useTranslation();
   const { isAuthenticated, isLoading, getCurrentUser } = useUnifiedAuth();
   const [location, setLocation] = useLocation();
   const [hasActiveSub, setHasActiveSub] = useState<boolean | null>(null);
@@ -271,7 +273,7 @@ const WouterRoutes: React.FC = () => {
                   <AppHome />
                   {subCheckLoading && (
                     <div className="fixed top-4 right-4 bg-background/80 backdrop-blur-sm border rounded-lg p-2">
-                      <div className="text-xs text-muted-foreground">Verifica piano...</div>
+                      <div className="text-xs text-muted-foreground">{t('home_verify_plan')}</div>
                     </div>
                   )}
                 </GlobalLayout>
