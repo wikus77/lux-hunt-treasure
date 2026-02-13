@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useState, useEffect, Suspense } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
@@ -73,6 +74,7 @@ function MiniAgentModel({ glbPath }: { glbPath: string }) {
 }
 
 export function PrizeVision({ progress }: PrizeVisionProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSwipeTransition, setIsSwipeTransition] = useState(false);
@@ -278,7 +280,7 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
                   <span style={{ color: '#FFFFFF', textShadow: '0 0 6px rgba(255, 255, 255, 0.4)' }}>SSION<span className="text-xs align-top">™</span> PRIZE</span>
                 </h2>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs font-medium" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>Visibilità: {progress}%</span>
+                  <span className="text-xs font-medium" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>{t('home_prize_visibility', { progress })}</span>
                   <span className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>({currentImageIndex + 1}/{missionPrizeImages.length})</span>
                   {/* Flip indicator icon */}
                   <motion.div 
