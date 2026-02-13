@@ -121,12 +121,12 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
           clientNonce,
         });
       } else if (data.status === 'insufficient_balance') {
-        toast.error('Saldo insufficiente', { description: data.message });
+        toast.error(t('shop_toast_insufficient'), { description: data.message });
       } else if (data.status === 'error') {
-        toast.error('Errore', { description: data.message });
+        toast.error(t('shop_toast_error'), { description: data.message });
       }
     } catch (err: any) {
-      toast.error('Errore', { description: err.message });
+      toast.error(t('shop_toast_error'), { description: err.message });
     } finally {
       setIsPurchasing(null);
     }
@@ -150,9 +150,9 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
   const [showM1UShopModal, setShowM1UShopModal] = useState(false);
 
   const tabs = [
-    { id: 'scratch' as ShopTab, label: 'RIVELA', color: '#F59E0B' },
-    { id: 'wheel' as ShopTab, label: 'PROGRESSIONE', color: '#10B981', badge: canSpinWheel },
-    { id: 'lottery' as ShopTab, label: 'PERCORSO', color: '#3B82F6' },
+    { id: 'scratch' as ShopTab, label: t('shop_tab_rivela'), color: '#F59E0B' },
+    { id: 'wheel' as ShopTab, label: t('shop_tab_progressione'), color: '#10B981', badge: canSpinWheel },
+    { id: 'lottery' as ShopTab, label: t('shop_tab_percorso'), color: '#3B82F6' },
     { id: 'm1u' as ShopTab, label: 'M1U', color: '#FACC15' },
   ];
 
@@ -206,11 +206,11 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
                   fontWeight: 700,
                   letterSpacing: '1px',
                 }}>
-                  M1SSION SHOP
+                  {t('shop_title')}
                 </h1>
               </div>
               <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '2px' }}>
-                Saldo: <span style={{ color: '#FACC15', fontWeight: 700 }}>{balance.toLocaleString()} M1U</span>
+                {t('shop_balance')}: <span style={{ color: '#FACC15', fontWeight: 700 }}>{balance.toLocaleString()} M1U</span>
               </p>
             </div>
 
@@ -277,7 +277,7 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
           {activeTab === 'scratch' && (
             <div>
               <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', textAlign: 'center', marginBottom: '16px' }}>
-                Acquista un biglietto e gratta per vincere <span style={{ color: '#00D1FF', fontWeight: 700 }}>INDIZI</span> o fino a <span style={{ color: '#FACC15', fontWeight: 700 }}>100.000 M1U</span>!
+                {t('shop_scratch_intro')}
               </p>
               
               {isLoadingStats ? (
@@ -298,8 +298,8 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
                     const maxMilestone = tier === 10 ? 100 : tier === 30 ? 200 : 500;
                     
                     let disabledReason = '';
-                    if (!canAfford) disabledReason = `Servono ${tier} M1U`;
-                    else if (!underLimit) disabledReason = 'Limite giornaliero raggiunto';
+                    if (!canAfford) disabledReason = t('shop_need_m1u', { tier });
+                    else if (!underLimit) disabledReason = t('shop_limit_reached');
 
                     return (
                       <GlassCard 
@@ -325,7 +325,7 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
                               color: '#FFFFFF', 
                               borderRadius: '10px' 
                             }}>
-                              🎯 BONUS
+                              🎯 {t('shop_bonus_badge')}
                             </span>
                           </div>
                         )}
@@ -349,7 +349,7 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
                             )}
                             <div>
                               <p style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '14px' }}>{tier} M1U</p>
-                              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px' }}>Milestone: +{maxMilestone} M1U</p>
+                              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px' }}>{t('shop_milestone_max', { max: maxMilestone })}</p>
                             </div>
                           </div>
                           
@@ -361,7 +361,7 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
                               </p>
                             ) : (
                               <p style={{ color: '#22C55E', fontSize: '11px' }}>
-                                {dailyLimit - purchasesToday} rimasti oggi
+                                {dailyLimit - purchasesToday} {t('shop_remaining_today')}
                               </p>
                             )}
                             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', marginTop: '2px' }}>

@@ -153,7 +153,7 @@ function FoundCluesModal({
                   <h5 className="text-sm font-medium text-white flex-1 pr-2">{clue.title}</h5>
                   <span className="inline-block px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-full flex-shrink-0">BUZZ</span>
                 </div>
-                <p className="text-sm text-white/70 leading-relaxed mb-3">{clue.description}</p>
+                <p className="text-sm text-white/90 leading-relaxed mb-3">{clue.description}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-white/80">{new Date(clue.date).toLocaleDateString()}</span>
                   <span className="text-xs text-green-400">✅ {t('home_active_found_via_buzz')}</span>
@@ -563,8 +563,8 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
       {/* Header - 🔧 FIX 06/02/2026 v2: "DI RILEVAMENTO" e "ORACLE" BIANCO PURO */}
       <div className="mb-4">
         <h2 className="text-xl font-orbitron font-bold mb-2">
-          <span className="text-[#00D1FF]">PROTOCOLLO</span>
-          <span style={{ color: '#FFFFFF', opacity: 1 }}> DI RILEVAMENTO</span>
+          <span className="text-[#00D1FF]">{t('home_protocol_title')}</span>
+          <span style={{ color: '#FFFFFF', opacity: 1 }}> {t('home_protocol_reveal')}</span>
         </h2>
         <h3 className="text-xl font-orbitron font-bold">
           <span className="text-[#00D1FF]">MISSIONE ID:</span>
@@ -681,7 +681,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           </div>
           
           <span className="text-xs text-white/80">{t('home_active_of_total', { total: mission.totalDays })}</span>
-          <div className="absolute bottom-2 right-2 text-white/70"><ChevronDown className="w-4 h-4" /></div>
+          <div className="absolute bottom-2 right-2 text-white/80"><ChevronDown className="w-4 h-4" /></div>
         </motion.div>
 
         {/* 🔧 FIX 28/01/2026: "Stato Missione" card rimossa da Home - ora accessibile solo da M1SSION AGENT */}
