@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, Plus, RefreshCw, Sparkles, User, Activity, Target, Search, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAgentCode } from "@/hooks/useAgentCode";
@@ -28,6 +29,7 @@ interface AgentDiaryContentProps {
 }
 
 export const AgentDiaryContent: React.FC<AgentDiaryContentProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { agentCode } = useAgentCode();
   const { energy } = useAgentEnergy();
@@ -265,10 +267,10 @@ export const AgentDiaryContent: React.FC<AgentDiaryContentProps> = ({ onClose })
                 fontWeight: 700,
                 letterSpacing: '1px',
               }}>
-                M1SSION AGENT
+                {t('home_agent_title')}
               </h1>
               <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '2px' }}>
-                Il tuo diario operativo e statistiche
+                {t('home_agent_header_subtitle')}
               </p>
             </div>
 
@@ -317,8 +319,8 @@ export const AgentDiaryContent: React.FC<AgentDiaryContentProps> = ({ onClose })
                   <Sparkles style={{ width: '20px', height: '20px', color: '#00D1FF' }} />
                 </div>
                 <div>
-                  <p style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 700 }}>AGENT LAB™</p>
-                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px' }}>Customize • Shop • Upgrades</p>
+                  <p style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 700 }}>{t('home_agent_lab_title')}</p>
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px' }}>{t('home_agent_lab_subtitle')}</p>
                 </div>
               </div>
               <span style={{ fontSize: '24px' }}>🧬</span>
@@ -329,28 +331,28 @@ export const AgentDiaryContent: React.FC<AgentDiaryContentProps> = ({ onClose })
           <GlassCard style={{ marginBottom: '16px', padding: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
               <Target style={{ width: '16px', height: '16px', color: '#00D1FF' }} />
-              <p style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 600 }}>Azioni Rapide Missione</p>
+              <p style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 600 }}>{t('home_agent_quick_actions')}</p>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <ShortcutButton 
                 icon={Search} 
-                label="Indizi Trovati" 
-                sublabel="Progressi caccia al tesoro" 
+                label={t('home_agent_clues_found')} 
+                sublabel={t('home_agent_treasure_progress')} 
                 color="#22C55E" 
                 onClick={() => handleMissionShortcut('clues')} 
               />
               <ShortcutButton 
                 icon={Target} 
-                label="Stato Missione" 
-                sublabel="Panoramica completa" 
+                label={t('home_agent_mission_status')} 
+                sublabel={t('home_agent_full_overview')} 
                 color="#00D1FF" 
                 onClick={() => handleMissionShortcut('status')} 
               />
               <ShortcutButton 
                 icon={Clock} 
-                label="Tempo Rimasto" 
-                sublabel="Countdown deadline" 
+                label={t('home_agent_time_remaining')} 
+                sublabel={t('home_agent_countdown_deadline')} 
                 color="#F59E0B" 
                 onClick={() => handleMissionShortcut('time')} 
               />
@@ -411,7 +413,7 @@ export const AgentDiaryContent: React.FC<AgentDiaryContentProps> = ({ onClose })
               }}
             >
               <Plus style={{ width: '16px', height: '16px' }} />
-              Aggiungi Nota Personale
+              {t('home_agent_add_note')}
             </button>
 
             <AnimatePresence>
@@ -426,7 +428,7 @@ export const AgentDiaryContent: React.FC<AgentDiaryContentProps> = ({ onClose })
                   <textarea
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
-                    placeholder="Scrivi la tua nota personale..."
+                    placeholder={t('home_agent_note_placeholder')}
                     onClick={(e) => e.stopPropagation()}
                     style={{
                       width: '100%',
@@ -457,7 +459,7 @@ export const AgentDiaryContent: React.FC<AgentDiaryContentProps> = ({ onClose })
                         cursor: 'pointer',
                       }}
                     >
-                      Salva Nota
+                      {t('home_agent_save_note')}
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setShowAddNote(false); setNewNote(""); }}
@@ -471,7 +473,7 @@ export const AgentDiaryContent: React.FC<AgentDiaryContentProps> = ({ onClose })
                         cursor: 'pointer',
                       }}
                     >
-                      Annulla
+                      {t('home_cashback_cancel')}
                     </button>
                   </div>
                 </motion.div>
@@ -483,13 +485,13 @@ export const AgentDiaryContent: React.FC<AgentDiaryContentProps> = ({ onClose })
           <GlassCard>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
               <span style={{ fontSize: '16px' }}>📋</span>
-              <p style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 600 }}>Diario delle Attività</p>
+              <p style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 600 }}>{t('home_agent_diary')}</p>
             </div>
             
             {loading ? (
               <div style={{ textAlign: 'center', padding: '24px' }}>
                 <RefreshCw style={{ width: '24px', height: '24px', color: 'rgba(255,255,255,0.5)', margin: '0 auto 8px', animation: 'spin 1s linear infinite' }} />
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>Caricamento attività...</p>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>{t('home_agent_loading')}</p>
               </div>
             ) : entries.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -534,8 +536,8 @@ export const AgentDiaryContent: React.FC<AgentDiaryContentProps> = ({ onClose })
                 }}>
                   <User style={{ width: '28px', height: '28px', color: 'rgba(255,255,255,0.3)' }} />
                 </div>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>Nessuna attività registrata</p>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '4px' }}>Usa BUZZ per scoprire indizi!</p>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('home_agent_no_activities')}</p>
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '4px' }}>{t('home_agent_buzz_hint')}</p>
               </div>
             )}
           </GlassCard>
