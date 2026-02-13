@@ -76,6 +76,8 @@ function MiniAgentModel({ glbPath }: { glbPath: string }) {
 export function PrizeVision({ progress }: PrizeVisionProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  // Caso C: safe interpolation — avoid undefined/NaN breaking t() or style on iOS
+  const safeProgress = Number.isFinite(progress) && typeof progress === 'number' ? progress : 0;
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSwipeTransition, setIsSwipeTransition] = useState(false);
   const [isDecryptionMode, setIsDecryptionMode] = useState(false);
@@ -280,7 +282,7 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
                   <span style={{ color: '#FFFFFF', textShadow: '0 0 6px rgba(255, 255, 255, 0.4)' }}>SSION<span className="text-xs align-top">™</span> PRIZE</span>
                 </h2>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs font-medium" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>{t('home_prize_visibility', { progress })}</span>
+                  <span className="text-xs font-medium" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>{t('home_prize_visibility', { progress: safeProgress })}</span>
                   <span className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>({currentImageIndex + 1}/{missionPrizeImages.length})</span>
                   {/* Flip indicator icon */}
                   <motion.div 
@@ -352,7 +354,7 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
 
                 {/* Progress bar */}
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
-                  <div className="h-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF]" style={{ width: `${progress}%` }} />
+                  <div className="h-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF]" style={{ width: `${safeProgress}%` }} />
                 </div>
               </div>
             </div>
@@ -582,14 +584,14 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
                 <div className="mb-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs text-white/60 font-mono">DECRYPTION PROGRESS</span>
-                    <span className="text-xs text-emerald-400 font-mono font-bold">{progress}%</span>
+                    <span className="text-xs text-emerald-400 font-mono font-bold">{safeProgress}%</span>
                   </div>
                   <div className="h-2 bg-black/50 rounded-full overflow-hidden border border-emerald-500/30">
                     <motion.div 
                       className="h-full rounded-full"
                       style={{
                         background: 'linear-gradient(90deg, #10B981 0%, #00D1FF 50%, #7B2EFF 100%)',
-                        width: `${progress}%`,
+                        width: `${safeProgress}%`,
                         boxShadow: '0 0 10px rgba(16, 185, 129, 0.6)'
                       }}
                       animate={{
@@ -688,7 +690,7 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
               </div>
             </div>
             <div className="mt-3 pt-3 border-t border-white/10 text-center">
-              <p className="text-xs text-white/50">Progresso attuale: <span className="text-yellow-400 font-bold">{progress}%</span></p>
+              <p className="text-xs text-white/50">Progresso attuale: <span className="text-yellow-400 font-bold">{safeProgress}%</span></p>
               <p className="text-[10px] text-white/40 mt-1">Scorri per vedere tutti i premi disponibili</p>
             </div>
           </div>
