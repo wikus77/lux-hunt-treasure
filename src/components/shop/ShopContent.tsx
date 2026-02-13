@@ -96,7 +96,7 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
   // Purchase scratch ticket
   const handlePurchase = async (tier: 10 | 30 | 50) => {
     if (!user) {
-      toast.error('Devi essere autenticato');
+      toast.error(t('shop_toast_auth'));
       return;
     }
 
@@ -365,7 +365,7 @@ export const ShopContent: React.FC<ShopContentProps> = ({ onClose }) => {
                               </p>
                             )}
                             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', marginTop: '2px' }}>
-                              {tierData?.available ?? '?'} biglietti
+                              {t('shop_tickets_count', { count: tierData?.available ?? '?' })}
                             </p>
                           </div>
                         </div>
