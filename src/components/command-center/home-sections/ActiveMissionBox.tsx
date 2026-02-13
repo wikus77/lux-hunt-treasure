@@ -102,7 +102,7 @@ function FoundCluesModal({
         }}
       >
         <div className="text-4xl font-bold text-green-400 mb-3">
-          {displayCluesFound}<span className="text-white/60">/{totalClues}</span>
+          {displayCluesFound}<span className="text-white/80">/{totalClues}</span>
         </div>
         <div className="w-full bg-black/30 rounded-full h-3 mb-3">
           <motion.div 
@@ -155,7 +155,7 @@ function FoundCluesModal({
                 </div>
                 <p className="text-sm text-white/70 leading-relaxed mb-3">{clue.description}</p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-white/60">{new Date(clue.date).toLocaleDateString()}</span>
+                  <span className="text-xs text-white/80">{new Date(clue.date).toLocaleDateString()}</span>
                   <span className="text-xs text-green-400">✅ {t('home_active_found_via_buzz')}</span>
                 </div>
               </motion.div>
@@ -166,7 +166,7 @@ function FoundCluesModal({
                 <Search className="w-8 h-8 text-white/30" />
               </div>
               <p className="text-white/80 mb-2">{t('home_active_no_clues')}</p>
-              <p className="text-sm text-white/60">{t('home_active_press_buzz')}</p>
+              <p className="text-sm text-white/80">{t('home_active_press_buzz')}</p>
             </div>
           )}
         </div>
@@ -254,11 +254,11 @@ function TimeRemainingModal({ isOpen, onClose, remainingDays, totalDays, startTi
       <div className="grid grid-cols-2 gap-3 mb-5">
         <div className="rounded-xl p-4 border border-white/10 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
           <p className="text-2xl font-bold text-green-400">{totalDays - remainingDays}</p>
-          <p className="text-xs text-white/70 mt-1">{t('home_active_days_elapsed')}</p>
+          <p className="text-xs text-white/85 mt-1">{t('home_active_days_elapsed')}</p>
         </div>
         <div className="rounded-xl p-4 border border-white/10 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
           <p className={`text-2xl font-bold ${isExpired ? 'text-red-400' : isUrgent ? 'text-orange-400' : 'text-amber-400'}`}>{remainingDays}</p>
-          <p className="text-xs text-white/70 mt-1">{t('home_active_days_remaining')}</p>
+          <p className="text-xs text-white/85 mt-1">{t('home_active_days_remaining')}</p>
         </div>
       </div>
       
@@ -285,7 +285,7 @@ function TimeRemainingModal({ isOpen, onClose, remainingDays, totalDays, startTi
                 }`} />
                 <span className="text-white text-sm">{item.event}</span>
               </div>
-              <span className="text-xs text-white/70">{item.date}</span>
+              <span className="text-xs text-white/85">{item.date}</span>
             </motion.div>
           ))}
         </div>
@@ -348,7 +348,7 @@ function MissionStatusModal({ isOpen, onClose, remainingDays, totalDays, startTi
         {/* Time Progress */}
         <div className="rounded-xl p-4 border border-white/10" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
           <div className="flex justify-between mb-2">
-            <span className="text-sm text-white/70 flex items-center gap-2">
+            <span className="text-sm text-white/85 flex items-center gap-2">
               <Clock className="w-4 h-4 text-amber-400" />
               {t('home_active_time_elapsed')}
             </span>
@@ -367,7 +367,7 @@ function MissionStatusModal({ isOpen, onClose, remainingDays, totalDays, startTi
               transition={{ duration: 0.8, ease: 'easeOut' }}
             />
           </div>
-          <div className="text-xs text-white/80 mt-2">
+          <div className="text-xs text-white/90 mt-2">
             {totalDays - remainingDays}/{totalDays} {t('home_active_days')}
           </div>
         </div>
@@ -375,7 +375,7 @@ function MissionStatusModal({ isOpen, onClose, remainingDays, totalDays, startTi
         {/* Clues Progress */}
         <div className="rounded-xl p-4 border border-white/10" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
           <div className="flex justify-between mb-2">
-            <span className="text-sm text-white/70 flex items-center gap-2">
+            <span className="text-sm text-white/85 flex items-center gap-2">
               <Search className="w-4 h-4 text-green-400" />
               {t('home_active_clue_progress')}
             </span>
@@ -394,7 +394,7 @@ function MissionStatusModal({ isOpen, onClose, remainingDays, totalDays, startTi
               transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
             />
           </div>
-          <div className="text-xs text-white/80 mt-2">
+          <div className="text-xs text-white/90 mt-2">
             {t('home_active_clues_found_count', { found: cluesFound, total: totalClues })}
           </div>
         </div>
@@ -404,11 +404,11 @@ function MissionStatusModal({ isOpen, onClose, remainingDays, totalDays, startTi
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl p-4 border border-white/10 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
           <p className="text-2xl font-bold text-green-400">{cluesFound}</p>
-          <p className="text-xs text-white/80 mt-1">{t('home_active_goals_reached')}</p>
+          <p className="text-xs text-white/90 mt-1">{t('home_active_goals_reached')}</p>
         </div>
         <div className="rounded-xl p-4 border border-white/10 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
           <p className="text-2xl font-bold text-red-400">{totalClues - cluesFound}</p>
-          <p className="text-xs text-white/80 mt-1">{t('home_active_goals_remaining')}</p>
+          <p className="text-xs text-white/90 mt-1">{t('home_active_goals_remaining')}</p>
         </div>
       </div>
     </GlassModal>
@@ -549,11 +549,12 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
 
   const getMissionTimeline = () => {
     const startDate = new Date(mission.startTime);
+    const locale = typeof navigator !== 'undefined' ? navigator.language : 'it-IT';
     return [
-      { event: "Missione Iniziata", date: startDate.toLocaleDateString('it-IT'), status: "completed" },
-      { event: "Primo Indizio", date: new Date(startDate.getTime() + 86400000).toLocaleDateString('it-IT'), status: "completed" },
-      { event: "Fase Intermedia", date: new Date().toLocaleDateString('it-IT'), status: "current" },
-      { event: "Deadline Finale", date: new Date(startDate.getTime() + (mission.totalDays * 86400000)).toLocaleDateString('it-IT'), status: "pending" }
+      { event: t('home_active_timeline_start'), date: startDate.toLocaleDateString(locale), status: "completed" },
+      { event: t('home_active_timeline_first_clue'), date: new Date(startDate.getTime() + 86400000).toLocaleDateString(locale), status: "completed" },
+      { event: t('home_active_timeline_mid'), date: new Date().toLocaleDateString(locale), status: "current" },
+      { event: t('home_active_timeline_deadline'), date: new Date(startDate.getTime() + (mission.totalDays * 86400000)).toLocaleDateString(locale), status: "pending" }
     ];
   };
 
@@ -680,7 +681,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           </div>
           
           <span className="text-xs text-white/80">{t('home_active_of_total', { total: mission.totalDays })}</span>
-          <div className="absolute bottom-2 right-2 text-white/50"><ChevronDown className="w-4 h-4" /></div>
+          <div className="absolute bottom-2 right-2 text-white/70"><ChevronDown className="w-4 h-4" /></div>
         </motion.div>
 
         {/* 🔧 FIX 28/01/2026: "Stato Missione" card rimossa da Home - ora accessibile solo da M1SSION AGENT */}
@@ -820,7 +821,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           { label: t('home_active_next_milestone'), value: nextMilestone ? `${nextMilestone.threshold}` : t('home_active_completed'), color: '#A855F7' },
         ]}
         footer={
-          <p className="text-xs text-white/70 text-center">
+          <p className="text-xs text-white/85 text-center">
             {t('home_active_touch_for_details')}
           </p>
         }
@@ -842,7 +843,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           { label: t('home_active_started_on'), value: new Date(mission.startTime).toLocaleDateString(), color: '#fff' },
         ]}
         footer={
-          <p className="text-xs text-white/70 text-center">
+          <p className="text-xs text-white/85 text-center">
             {isFinalDay ? t('home_active_last_day_alert') : isUrgent ? `⏰ ${t('home_active_hurry')}` : t('home_active_touch_for_details')}
           </p>
         }
@@ -865,7 +866,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           { label: t('home_active_advancement'), value: `${Math.round(((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100)}%`, color: '#A855F7' },
         ]}
         footer={
-          <p className="text-xs text-white/70 text-center">
+          <p className="text-xs text-white/85 text-center">
             {t('home_active_touch_timeline')}
           </p>
         }
