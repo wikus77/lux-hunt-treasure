@@ -540,7 +540,7 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
           <div className="flex items-center gap-2">
             {/* 🏪 STORE COMPLIANT: Progress reveal, not scratch & win */}
             <Gift className="w-6 h-6" style={{ color: config.color }} />
-            <span className="text-white font-bold text-lg">RIVELA PROGRESSI</span>
+            <span className="text-white font-bold text-lg">{t('shop_scratch_reveal_progress')}</span>
             <span className="text-white/70 text-sm">• {tier} M1U</span>
           </div>
           <motion.button
@@ -848,15 +848,15 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
                 {isRevealing ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    RIVELANDO...
+                    {t('shop_scratch_revealing')}
                   </span>
                 ) : (
-                  '🎁 RIVELA IL PREMIO!'
+                  `🎁 ${t('shop_scratch_reveal_prize')}`
                 )}
               </motion.button>
             ) : (
               <div className="text-center text-white/60">
-                <span className="animate-pulse">👆 Gratta l'area dorata per rivelare i simboli</span>
+                <span className="animate-pulse">👆 {t('shop_scratch_instruction')}</span>
               </div>
             )}
           </div>
