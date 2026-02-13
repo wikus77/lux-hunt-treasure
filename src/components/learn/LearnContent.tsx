@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 📚 Learn Content - REVOLUT STYLE (iOS WKWebView OPTIMIZED)
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { X, Rocket, MapPin, Coins, Trophy, ChevronRight } from 'lucide-react';
 import LearnHowItWorksModal from './LearnHowItWorksModal';
@@ -12,50 +13,31 @@ interface LearnContentProps {
   onClose: () => void;
 }
 
-interface LearnSection {
+interface LearnSectionConfig {
   id: string;
-  title: string;
-  subtitle: string;
   icon: React.ElementType;
   color: string;
 }
 
-const LEARN_SECTIONS: LearnSection[] = [
-  {
-    id: 'howitworks',
-    title: 'Come funziona M1SSION',
-    subtitle: 'Scopri le basi del gioco',
-    icon: Rocket,
-    color: '#00D1FF',
-  },
-  {
-    id: 'buzzclues',
-    title: 'BUZZ & Indizi',
-    subtitle: 'Impara a trovare e usare gli indizi',
-    icon: MapPin,
-    color: '#22C55E',
-  },
-  {
-    id: 'm1uprizes',
-    title: 'M1U & Premi',
-    subtitle: 'Come guadagnare e spendere M1U',
-    icon: Coins,
-    color: '#F59E0B',
-  },
-  {
-    id: 'leaderboard',
-    title: 'Classifica & Progressione',
-    subtitle: 'Scala la classifica e vinci',
-    icon: Trophy,
-    color: '#A855F7',
-  },
+const LEARN_SECTIONS_CONFIG: LearnSectionConfig[] = [
+  { id: 'howitworks', icon: Rocket, color: '#00D1FF' },
+  { id: 'buzzclues', icon: MapPin, color: '#22C55E' },
+  { id: 'm1uprizes', icon: Coins, color: '#F59E0B' },
+  { id: 'leaderboard', icon: Trophy, color: '#A855F7' },
 ];
 
 export const LearnContent: React.FC<LearnContentProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showBuzzClues, setShowBuzzClues] = useState(false);
   const [showM1UPrizes, setShowM1UPrizes] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+
+  const LEARN_SECTIONS = LEARN_SECTIONS_CONFIG.map(section => ({
+    ...section,
+    title: t(`learn_${section.id}_title`),
+    subtitle: t(`learn_${section.id}_subtitle`),
+  }));
 
   const handleSectionClick = (sectionId: string) => {
     switch (sectionId) {
@@ -125,7 +107,7 @@ export const LearnContent: React.FC<LearnContentProps> = ({ onClose }) => {
                 fontWeight: 700,
                 letterSpacing: '0.5px',
               }}>
-                IMPARA
+                {t('learn_title')}
               </h1>
             </div>
 
@@ -139,7 +121,7 @@ export const LearnContent: React.FC<LearnContentProps> = ({ onClose }) => {
             fontSize: '14px', 
             textAlign: 'center',
           }}>
-            Diventa un agente esperto
+            {t('learn_subtitle')}
           </p>
         </div>
 
@@ -211,7 +193,7 @@ export const LearnContent: React.FC<LearnContentProps> = ({ onClose }) => {
           {/* Footer */}
           <div style={{ marginTop: '32px', textAlign: 'center' }}>
             <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px' }}>
-              M1SSION™ • La caccia al tesoro del futuro
+              {t('learn_footer')}
             </p>
           </div>
         </div>

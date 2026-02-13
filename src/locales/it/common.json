@@ -346,5 +346,17 @@
   "status_checking": "Verifica...",
   "status_all_operational": "Tutti i sistemi operativi",
   "status_last_update": "Ultimo aggiornamento: adesso",
-  "status_footer": "Lo stato viene aggiornato in tempo reale.\nSe riscontri problemi, contatta AION."
+  "status_footer": "Lo stato viene aggiornato in tempo reale.\nSe riscontri problemi, contatta AION.",
+
+  "learn_title": "IMPARA",
+  "learn_subtitle": "Diventa un agente esperto",
+  "learn_footer": "M1SSION™ • La caccia al tesoro del futuro",
+  "learn_howitworks_title": "Come funziona M1SSION",
+  "learn_howitworks_subtitle": "Scopri le basi del gioco",
+  "learn_buzzclues_title": "BUZZ & Indizi",
+  "learn_buzzclues_subtitle": "Impara a trovare e usare gli indizi",
+  "learn_m1uprizes_title": "M1U & Premi",
+  "learn_m1uprizes_subtitle": "Come guadagnare e spendere M1U",
+  "learn_leaderboard_title": "Classifica & Progressione",
+  "learn_leaderboard_subtitle": "Scala la classifica e vinci"
 }

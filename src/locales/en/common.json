@@ -345,5 +345,17 @@
   "status_checking": "Checking...",
   "status_all_operational": "All systems operational",
   "status_last_update": "Last update: now",
-  "status_footer": "Status is updated in real time.\nIf you encounter issues, contact AION."
+  "status_footer": "Status is updated in real time.\nIf you encounter issues, contact AION.",
+
+  "learn_title": "LEARN",
+  "learn_subtitle": "Become an expert agent",
+  "learn_footer": "M1SSION™ • The treasure hunt of the future",
+  "learn_howitworks_title": "How M1SSION works",
+  "learn_howitworks_subtitle": "Discover the basics of the game",
+  "learn_buzzclues_title": "BUZZ & Clues",
+  "learn_buzzclues_subtitle": "Learn how to find and use clues",
+  "learn_m1uprizes_title": "M1U & Prizes",
+  "learn_m1uprizes_subtitle": "How to earn and spend M1U",
+  "learn_leaderboard_title": "Leaderboard & Progression",
+  "learn_leaderboard_subtitle": "Climb the rankings and win"
 }
