@@ -586,6 +586,15 @@
   "shop_toast_auth": "Devi essere autenticato",
   "shop_toast_insufficient": "Saldo insufficiente",
   "shop_toast_error": "Errore",
+  "shop_m1u_cta": "Acquista M1U per sbloccare indizi e funzionalità premium",
+  "shop_buy": "Acquista",
+  "shop_no_cycle": "Nessun ciclo attivo",
+  "shop_insufficient_for": "Saldo insufficiente (servono {{totalCost}} M1U)",
+
+  "home_prize_visibility": "Visibilità: {{progress}}%",
+  "commit_daily_suffix": "GIORNALIERO",
+  "home_protocol_title": "PROTOCOLLO",
+  "home_protocol_reveal": "DI RILEVAMENTO",
 
   "next_action_label": "NEXT ACTION",
   "next_action_gioca": "GIOCA",

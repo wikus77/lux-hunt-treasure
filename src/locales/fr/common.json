@@ -581,6 +581,15 @@
   "shop_toast_auth": "Vous devez être connecté",
   "shop_toast_insufficient": "Solde insuffisant",
   "shop_toast_error": "Erreur",
+  "shop_m1u_cta": "Achetez des M1U pour débloquer des indices et des fonctionnalités premium",
+  "shop_buy": "Acheter",
+  "shop_no_cycle": "Aucun cycle actif",
+  "shop_insufficient_for": "Solde insuffisant (il faut {{totalCost}} M1U)",
+
+  "home_prize_visibility": "Visibilité : {{progress}} %",
+  "commit_daily_suffix": "QUOTIDIEN",
+  "home_protocol_title": "PROTOCOLE",
+  "home_protocol_reveal": "DÉTECTION",
 
   "next_action_label": "NEXT ACTION",
   "next_action_gioca": "JOUER",

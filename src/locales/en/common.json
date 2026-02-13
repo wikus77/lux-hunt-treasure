@@ -585,6 +585,15 @@
   "shop_toast_auth": "You must be signed in",
   "shop_toast_insufficient": "Insufficient balance",
   "shop_toast_error": "Error",
+  "shop_m1u_cta": "Buy M1U to unlock clues and premium features",
+  "shop_buy": "Buy",
+  "shop_no_cycle": "No active cycle",
+  "shop_insufficient_for": "Insufficient balance (need {{totalCost}} M1U)",
+
+  "home_prize_visibility": "Visibility: {{progress}}%",
+  "commit_daily_suffix": "DAILY",
+  "home_protocol_title": "PROTOCOL",
+  "home_protocol_reveal": "DETECTION",
 
   "next_action_label": "NEXT ACTION",
   "next_action_gioca": "PLAY",
