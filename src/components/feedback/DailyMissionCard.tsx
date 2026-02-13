@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Target, Clock, Play, X, Check, Info, Gift } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -43,6 +44,7 @@ const CYAN_PRESET = {
 };
 
 export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = '' }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [showLongPressInfo, setShowLongPressInfo] = useState(false);
@@ -98,11 +100,11 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
 
   // Get status text
   const getStatusText = () => {
-    if (isNotStarted) return 'Nuova missione disponibile!';
-    if (isPhase1Active) return 'Phase 1 in corso...';
-    if (isPhase2Pending) return 'Phase 2 domani';
-    if (isPhase2Ready) return 'Phase 2 pronta!';
-    return 'Missione attiva';
+    if (isNotStarted) return t('home_daily_new_mission');
+    if (isPhase1Active) return t('home_daily_phase1_in_progress');
+    if (isPhase2Pending) return t('home_daily_phase2_tomorrow');
+    if (isPhase2Ready) return t('home_daily_phase2_ready');
+    return t('home_daily_mission_active');
   };
 
   const handleStartMission = async () => {
@@ -187,7 +189,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
                   textShadow: '0 0 15px rgba(0, 209, 255, 0.5)',
                 }}
               >
-                🎯 DAILY MISSION
+                🎯 {t('home_daily_title')}
               </p>
               <p className="text-white font-bold text-sm truncate">
                 {mission.title}
@@ -318,7 +320,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
                         marginBottom: '8px',
                       }}
                     >
-                      DAILY MISSION
+                      {t('home_daily_title')}
                     </p>
                     <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>
                       {mission.title}
@@ -543,7 +545,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
       <LongPressInfoModal
         isOpen={showLongPressInfo}
         onClose={() => setShowLongPressInfo(false)}
-        title="DAILY MISSION"
+        title={t('home_daily_title')}
         subtitle={mission.title}
         icon={<span className="text-2xl">{mission.icon}</span>}
         accentColor="#00D1FF"
