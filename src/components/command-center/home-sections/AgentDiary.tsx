@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { ChevronDown, User, Activity, Target, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,7 @@ interface AgentStats {
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════
 export function AgentDiary() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { agentCode } = useAgentCode();
   const { energy } = useAgentEnergy();
@@ -124,7 +126,7 @@ export function AgentDiary() {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-cyan-400 rounded-full" />
               <h2 className="text-lg font-orbitron font-bold">
-                <span className="text-cyan-400">M1</span><span className="text-white">SSION AGENT</span>
+                <span className="text-cyan-400">M1</span><span className="text-white">{t('home_agent_title').replace('M1', '')}</span>
               </h2>
               {/* 🔧 FIX: Agent Code + Rank Badge (replaces FlaskConical icon) */}
               <motion.div
@@ -149,19 +151,19 @@ export function AgentDiary() {
           <div className="grid grid-cols-4 gap-2">
             <div className="text-center">
               <p className="text-lg font-bold text-blue-400">{loading ? '...' : stats.totalActivities}</p>
-              <p className="text-[10px] text-white/90">Attività</p>
+              <p className="text-[10px] text-white/90">{t('home_agent_activities')}</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-green-400">{loading ? '...' : stats.notesCount}</p>
-              <p className="text-[10px] text-white/90">Note</p>
+              <p className="text-[10px] text-white/90">{t('home_agent_notes_label')}</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-yellow-400">{loading ? '...' : stats.purchasesCount}</p>
-              <p className="text-[10px] text-white/90">Acquisti</p>
+              <p className="text-[10px] text-white/90">{t('home_agent_purchases')}</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-purple-400">{loading ? '...' : stats.cluesCount}</p>
-              <p className="text-[10px] text-white/90">Indizi</p>
+              <p className="text-[10px] text-white/90">{t('home_agent_clues_label')}</p>
             </div>
           </div>
         </div>
@@ -180,41 +182,41 @@ export function AgentDiary() {
       <LongPressInfoModal
         isOpen={showInfoModal}
         onClose={() => setShowInfoModal(false)}
-        title="M1SSION AGENT"
-        subtitle="Il tuo profilo operativo"
+        title={t('home_agent_title')}
+        subtitle={t('home_agent_subtitle')}
         accentColor="#00D1FF"
         content={
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <User className="w-5 h-5 text-cyan-400" />
               <div>
-                <p className="font-semibold text-cyan-400">Codice Agente</p>
-                <p className="text-white/70 text-xs">{agentCode || 'Non assegnato'} • Rango: {energy?.rank?.code || 'AG-01'}</p>
+                <p className="font-semibold text-cyan-400">{t('home_agent_code')}</p>
+                <p className="text-white/70 text-xs">{agentCode || t('home_agent_not_assigned')} • {t('home_agent_rank')}: {energy?.rank?.code || 'AG-01'}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <Activity className="w-5 h-5 text-blue-400" />
               <div>
-                <p className="font-semibold text-blue-400">Attività Totali</p>
-                <p className="text-white/70 text-xs">{stats.totalActivities} azioni completate nella missione</p>
+                <p className="font-semibold text-blue-400">{t('home_agent_total_activities')}</p>
+                <p className="text-white/70 text-xs">{t('home_agent_actions_completed', { count: stats.totalActivities })}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <Target className="w-5 h-5 text-purple-400" />
               <div>
-                <p className="font-semibold text-purple-400">Indizi Trovati</p>
-                <p className="text-white/70 text-xs">{stats.cluesCount} indizi scoperti tramite BUZZ</p>
+                <p className="font-semibold text-purple-400">{t('home_agent_clues_found')}</p>
+                <p className="text-white/70 text-xs">{t('home_agent_clues_via_buzz', { count: stats.cluesCount })}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <BookOpen className="w-5 h-5 text-green-400" />
               <div>
-                <p className="font-semibold text-green-400">Note Personali</p>
-                <p className="text-white/70 text-xs">{stats.notesCount} note salvate nel diario</p>
+                <p className="font-semibold text-green-400">{t('home_agent_personal_notes')}</p>
+                <p className="text-white/70 text-xs">{t('home_agent_notes_saved', { count: stats.notesCount })}</p>
               </div>
             </div>
             <div className="mt-3 pt-3 border-t border-white/10 text-center">
-              <p className="text-[10px] text-white/40">Tocca la card per aprire il diario completo</p>
+              <p className="text-[10px] text-white/60">{t('home_agent_touch_to_open')}</p>
             </div>
           </div>
         }
