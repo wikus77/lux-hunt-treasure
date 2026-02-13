@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎨 Next Action Content - REVOLUT STYLE
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -33,6 +34,7 @@ interface NextActionContentProps {
 }
 
 export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const { user } = useAuth();
   
@@ -77,8 +79,8 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose })
       {
         id: 'map',
         priority: isUrgent ? 100 : 90,
-        label: 'Esplora / Riduci area',
-        description: isUrgent ? '⚠️ Tempo quasi scaduto!' : 'Avvicinati al premio',
+        label: t('home_next_action_explore'),
+        description: isUrgent ? `⚠️ ${t('home_next_action_explore_urgent')}` : t('home_next_action_explore_desc'),
         icon: <Map style={{ width: '20px', height: '20px' }} />,
         path: '/map-3d-tiler',
         color: '#FF4444',
@@ -87,8 +89,8 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose })
       {
         id: 'buzz',
         priority: buzzUsedToday ? 60 : 80,
-        label: 'Usa Buzz',
-        description: buzzUsedToday ? `Già usato oggi (${dailyBuzzCounter}x)` : 'Ottieni nuovi indizi',
+        label: t('home_next_action_buzz'),
+        description: buzzUsedToday ? t('home_next_action_buzz_used', { count: dailyBuzzCounter }) : t('home_next_action_buzz_desc'),
         icon: <Zap style={{ width: '20px', height: '20px' }} />,
         path: '/buzz',
         color: '#FFD700',
@@ -97,8 +99,8 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose })
       {
         id: 'aion',
         priority: 70,
-        label: 'Chiedi all\'Oracolo',
-        description: 'Analizza la situazione',
+        label: t('home_next_action_oracle'),
+        description: t('home_next_action_oracle_desc'),
         icon: <Brain style={{ width: '20px', height: '20px' }} />,
         path: '/intelligence',
         color: '#00D1FF',
@@ -107,7 +109,7 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose })
     ];
     
     return baseActions.sort((a, b) => b.priority - a.priority);
-  }, [isUrgent, buzzUsedToday, dailyBuzzCounter]);
+  }, [isUrgent, buzzUsedToday, dailyBuzzCounter, t]);
   
   const primaryAction = orderedActions[0]?.id || 'explore';
   
@@ -147,10 +149,10 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose })
 
   const getMissionStatusText = () => {
     if (!MISSIONS_ENABLED || !isMissionReady || isMissionCompleted) return null;
-    if (isMissionNotStarted) return 'Nuova missione!';
-    if (missionPhase === 1 && !isPhase2Ready) return 'P1 attiva';
-    if (missionPhase === 2 && !isPhase2Ready) return 'P2 domani';
-    if (isPhase2Ready) return 'P2 pronta!';
+    if (isMissionNotStarted) return t('home_next_action_new_mission');
+    if (missionPhase === 1 && !isPhase2Ready) return t('home_next_action_p1_active');
+    if (missionPhase === 2 && !isPhase2Ready) return t('home_next_action_p2_tomorrow');
+    if (isPhase2Ready) return t('home_next_action_p2_ready');
     return null;
   };
 
@@ -206,11 +208,11 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose })
                   fontWeight: 700,
                   letterSpacing: '1px',
                 }}>
-                  🎯 PROSSIMA AZIONE
+                  🎯 {t('home_next_action_title')}
                 </h1>
               </div>
               <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '2px' }}>
-                {isUrgent ? `⚠️ Solo ${daysRemaining} giorni rimasti!` : 'Scegli cosa fare'}
+                {isUrgent ? `⚠️ ${t('home_next_action_subtitle_urgent', { count: daysRemaining })}` : t('home_next_action_subtitle')}
               </p>
             </div>
 
