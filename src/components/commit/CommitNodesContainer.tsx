@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { CommitNodeTrigger } from './CommitNodeTrigger';
 import { CommitNodeSide } from './CommitNodeSide';
@@ -73,6 +74,7 @@ async function m1ssionHapticSignatureFuse(): Promise<void> {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const CommitNodesContainer: React.FC = () => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<MergeMode>('three');
   const [proximityIntensity, setProximityIntensity] = useState(0);
   // 🔧 FIX 06/02/2026: Merge progress for "COMMIT GIORNALIERO" text animation
@@ -628,7 +630,7 @@ export const CommitNodesContainer: React.FC = () => {
                 textShadow: '0 0 6px rgba(255, 255, 255, 0.2)',
               }}
             >
-              GIORNALIERO
+              {t('commit_daily_suffix')}
             </motion.span>
           </div>
         </div>
