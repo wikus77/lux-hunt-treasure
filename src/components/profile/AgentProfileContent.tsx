@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LogOut, Crown, X, HelpCircle, FileText, GraduationCap, Mail, Shield, Eye, Bell, Zap, Users, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import ProfileAvatar from '@/components/profile/ProfileAvatar';
 import { useAuth } from '@/hooks/use-auth';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
@@ -24,6 +25,7 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
   profileImage,
   onClose
 }) => {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const { navigate } = useWouterNavigation();
   const { toast } = useToast();
@@ -37,12 +39,12 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
   const handleLogout = async () => {
     try {
       await logout();
-      toast({ title: "✅ Logout", description: "Disconnesso." });
+      toast({ title: "✅ " + t('logout'), description: t('logged_out') });
       onClose();
       // 🔐 FIX: Use /login (correct route) instead of /auth (404)
       navigate('/login');
     } catch {
-      toast({ title: "❌ Errore", variant: "destructive" });
+      toast({ title: "❌ " + t('error'), variant: "destructive" });
     }
   };
 
@@ -201,8 +203,8 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
           
           <GlassCard onClick={() => setShowInviteModal(true)}>
             <Users style={{ width: '28px', height: '28px', color: '#60a5fa', marginBottom: '8px' }} />
-            <p style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 600 }}>Invita amici</p>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '2px' }}>Guadagna M1U</p>
+            <p style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 600 }}>{t('invite_friends')}</p>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '2px' }}>{t('earn_m1u')}</p>
           </GlassCard>
         </div>
 
@@ -211,7 +213,7 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
           <GlassCard style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
               <Zap style={{ width: '20px', height: '20px', color: '#22d3ee' }} />
-              <span style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 600 }}>Pulse Energy</span>
+              <span style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 600 }}>{t('pulse_energy')}</span>
               {pulseEnergy !== undefined && (
                 <span style={{ marginLeft: 'auto', color: '#22d3ee', fontSize: '14px', fontWeight: 700 }}>
                   {pulseEnergy.toLocaleString()} PE
@@ -224,24 +226,24 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
 
         {/* Menu 1 */}
         <GlassCard style={{ marginBottom: '16px', padding: 0 }}>
-          <MenuItem icon={HelpCircle} label="Aiuto" onClick={() => setShowHelpModal(true)} />
-          <MenuItem icon={FileText} label="Documenti Legali" onClick={() => goTo('/settings/legal')} />
-          <MenuItem icon={GraduationCap} label="Impara" onClick={() => setShowLearnModal(true)} />
-          <MenuItem icon={Mail} label="Posta in arrivo" onClick={() => goTo('/notifications')} badge={3} last />
+          <MenuItem icon={HelpCircle} label={t('help')} onClick={() => setShowHelpModal(true)} />
+          <MenuItem icon={FileText} label={t('legal_documents')} onClick={() => goTo('/settings/legal')} />
+          <MenuItem icon={GraduationCap} label={t('learn')} onClick={() => setShowLearnModal(true)} />
+          <MenuItem icon={Mail} label={t('inbox')} onClick={() => goTo('/notifications')} badge={3} last />
         </GlassCard>
 
         {/* Menu 2 */}
         <GlassCard style={{ marginBottom: '16px', padding: 0 }}>
-          <MenuItem icon={Shield} label="Sicurezza" onClick={() => goTo('/settings/security')} />
-          <MenuItem icon={Eye} label="Privacy" onClick={() => goTo('/settings/privacy')} />
-          <MenuItem icon={Bell} label="Notifiche" onClick={() => goTo('/settings/notifications')} last />
+          <MenuItem icon={Shield} label={t('security')} onClick={() => goTo('/settings/security')} />
+          <MenuItem icon={Eye} label={t('privacy')} onClick={() => goTo('/settings/privacy')} />
+          <MenuItem icon={Bell} label={t('notifications')} onClick={() => goTo('/settings/notifications')} last />
         </GlassCard>
 
         {/* Logout */}
         <GlassCard onClick={handleLogout}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <LogOut style={{ width: '20px', height: '20px', color: '#f87171' }} />
-            <span style={{ color: '#f87171', fontSize: '16px', fontWeight: 500 }}>Esci</span>
+            <span style={{ color: '#f87171', fontSize: '16px', fontWeight: 500 }}>{t('logout')}</span>
           </div>
         </GlassCard>
       </div>
