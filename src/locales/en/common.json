@@ -1087,5 +1087,24 @@
   "mapPills.missionWar.continents": "Continents",
   "mapPills.missionWar.tabConquests": "Conquests",
   "mapPills.missionWar.tabBattles": "Battles",
-  "mapPills.missionWar.tabLeaderboard": "Leaderboard"
+  "mapPills.missionWar.tabLeaderboard": "Leaderboard",
+
+  "mapLongPress.noInfo": "No information available",
+  "mapLongPress.tapOutsideToClose": "Tap outside to close",
+  "mapLongPress.prize.title": "M1SSION PRIZE",
+  "mapLongPress.prize.subtitle": "Your treasure awaits!",
+  "mapLongPress.prize.categoryPrestige": "Prestige vehicles",
+  "mapLongPress.prize.categoryPrestigeDesc": "Sports cars and exclusive vehicles",
+  "mapLongPress.prize.categoryRare": "Rare items",
+  "mapLongPress.prize.categoryRareDesc": "Luxury jewelry and timepieces",
+  "mapLongPress.prize.categoryExperiences": "Exclusive experiences",
+  "mapLongPress.prize.categoryExperiencesDesc": "Trips and access to special events",
+  "mapLongPress.prize.categoryTech": "Advanced technology",
+  "mapLongPress.prize.categoryTechDesc": "Premium devices and gadgets",
+  "mapLongPress.prize.categorySpecial": "How to win",
+  "mapLongPress.prize.categorySpecialDesc": "Complete M1SSION and unlock the prizes",
+  "mapLongPress.prize.poolTitle": "Prize pool",
+  "mapLongPress.prize.poolDesc": "Over 99 exclusive prizes to win",
+  "mapLongPress.prize.progress": "Current progress",
+  "mapLongPress.prize.swipeHint": "Swipe to see all available prizes"
 }

@@ -1083,5 +1083,24 @@
   "mapPills.missionWar.continents": "Continents",
   "mapPills.missionWar.tabConquests": "Conquêtes",
   "mapPills.missionWar.tabBattles": "Batailles",
-  "mapPills.missionWar.tabLeaderboard": "Classement"
+  "mapPills.missionWar.tabLeaderboard": "Classement",
+
+  "mapLongPress.noInfo": "Aucune information disponible",
+  "mapLongPress.tapOutsideToClose": "Touchez à l'extérieur pour fermer",
+  "mapLongPress.prize.title": "M1SSION PRIZE",
+  "mapLongPress.prize.subtitle": "Votre trésor vous attend !",
+  "mapLongPress.prize.categoryPrestige": "Véhicules de prestige",
+  "mapLongPress.prize.categoryPrestigeDesc": "Voitures de sport et véhicules exclusifs",
+  "mapLongPress.prize.categoryRare": "Objets rares",
+  "mapLongPress.prize.categoryRareDesc": "Bijoux et montres de luxe",
+  "mapLongPress.prize.categoryExperiences": "Expériences exclusives",
+  "mapLongPress.prize.categoryExperiencesDesc": "Voyages et accès à des événements spéciaux",
+  "mapLongPress.prize.categoryTech": "Technologie avancée",
+  "mapLongPress.prize.categoryTechDesc": "Appareils et gadgets premium",
+  "mapLongPress.prize.categorySpecial": "Comment gagner",
+  "mapLongPress.prize.categorySpecialDesc": "Complétez M1SSION et débloquez les prix",
+  "mapLongPress.prize.poolTitle": "Lot de prix",
+  "mapLongPress.prize.poolDesc": "Plus de 99 prix exclusifs à gagner",
+  "mapLongPress.prize.progress": "Progression actuelle",
+  "mapLongPress.prize.swipeHint": "Glissez pour voir tous les prix disponibles"
 }

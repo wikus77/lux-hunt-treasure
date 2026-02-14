@@ -446,17 +446,21 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
     return () => window.removeEventListener('openMissionModal', handleOpenMissionModal as EventListener);
   }, []);
   
-  // Long press info states
   const [showCluesLongPress, setShowCluesLongPress] = useState(false);
   const [showTimeLongPress, setShowTimeLongPress] = useState(false);
   const [showStatusLongPress, setShowStatusLongPress] = useState(false);
+  const [timeLongPressOriginRect, setTimeLongPressOriginRect] = useState<DOMRect | null>(null);
+  const timeCardRef = useRef<HTMLDivElement>(null);
   
   const prevClueCount = useRef<number>(0);
   const warningChecked = useRef<boolean>(false);
   
-  // Long press handlers
   const cluesLongPress = useLongPress(() => setShowCluesLongPress(true), { threshold: 500 });
-  const timeLongPress = useLongPress(() => setShowTimeLongPress(true), { threshold: 500 });
+  const timeLongPress = useLongPress(() => {
+    const rect = timeCardRef.current?.getBoundingClientRect() ?? null;
+    setTimeLongPressOriginRect(rect);
+    setShowTimeLongPress(true);
+  }, { threshold: 500 });
   const statusLongPress = useLongPress(() => setShowStatusLongPress(true), { threshold: 500 });
   
   // 🏆 MILESTONE SYSTEM
@@ -578,6 +582,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
 
         {/* TEMPO RIMASTO - 🔧 FIX 06/02/2026 v2: Glass graphite + PULSE GLOW RIPRISTINATO */}
         <motion.div
+          ref={timeCardRef}
           data-section="time"
           className={`m1-folder-glass--graphite rounded-2xl p-4 cursor-pointer transition-colors overflow-hidden relative ${
             isFinalDay ? 'border-red-500/50' : 
@@ -831,6 +836,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
       <LongPressInfoModal
         isOpen={showTimeLongPress}
         onClose={() => setShowTimeLongPress(false)}
+        originRect={timeLongPressOriginRect}
         title={t('home_active_time_title')}
         subtitle={t('home_active_countdown_mission')}
         icon={<Clock className="w-5 h-5" style={{ color: isFinalDay ? '#EF4444' : isUrgent ? '#F97316' : '#FBBF24' }} />}

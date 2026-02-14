@@ -1,14 +1,15 @@
 /**
  * M1SSION™ Long Press Info Modal
- * Modal compatto per mostrare info rapide su long press
- * 
+ * NOTE-style fullscreen modal via MapPillFlipOverlay
+ * Unificato con animazioni, design e leggibilità del modale NOTE
+ *
  * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import React from 'react';
-import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Info } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { X } from 'lucide-react';
+import { MapPillFlipOverlay } from '@/components/map/MapPillFlipOverlay';
 
 export interface InfoItem {
   label: string;
@@ -24,7 +25,8 @@ interface LongPressInfoModalProps {
   subtitle?: string;
   icon?: React.ReactNode;
   accentColor?: string;
-  // Support either items array OR custom content
+  /** Per animazione scale-from-origin (NOTE-style) */
+  originRect?: DOMRect | null;
   items?: InfoItem[];
   content?: React.ReactNode;
   footer?: React.ReactNode;
@@ -37,147 +39,138 @@ export const LongPressInfoModal: React.FC<LongPressInfoModalProps> = ({
   subtitle,
   icon,
   accentColor = '#00D1FF',
+  originRect = null,
   items,
   content,
   footer
 }) => {
-  // Server-side rendering guard
-  if (typeof document === 'undefined') return null;
-  if (!isOpen) return null;
+  const { t } = useTranslation();
 
-  return createPortal(
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+  if (typeof document === 'undefined') return null;
+
+  return (
+    <MapPillFlipOverlay open={isOpen} originRect={originRect ?? null} onClose={onClose}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+        {/* HEADER - NOTE-style (gradient, safe-area, X, title, subtitle) */}
+        <div
           style={{
-            background: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(8px)',
+            flexShrink: 0,
+            background: `linear-gradient(180deg, ${accentColor}CC 0%, ${accentColor}66 100%)`,
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
+            paddingBottom: '20px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
           }}
         >
-          <motion.div
-            initial={{ scale: 0.9, y: 20, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.9, y: 20, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm overflow-hidden rounded-2xl relative"
-            style={{
-              background: 'linear-gradient(145deg, rgba(10, 15, 30, 0.98), rgba(20, 30, 50, 0.95))',
-              border: `1px solid ${accentColor}40`,
-              boxShadow: `0 0 40px ${accentColor}30, 0 8px 32px rgba(0, 0, 0, 0.5)`,
-            }}
-          >
-            {/* Glow top border */}
-            <div 
-              className="absolute top-0 left-0 right-0 h-[2px]"
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <button
+              onClick={onClose}
               style={{
-                background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)`,
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.15)',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
               }}
-            />
-
-            {/* Header */}
-            <div className="p-4 pb-3 flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                {icon && (
-                  <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{
-                      background: `${accentColor}20`,
-                      border: `1px solid ${accentColor}40`,
-                    }}
-                  >
-                    {icon}
-                  </div>
-                )}
-                <div>
-                  <h3 
-                    className="text-lg font-bold text-white"
-                    style={{ textShadow: `0 0 20px ${accentColor}50` }}
-                  >
-                    {title}
-                  </h3>
-                  {subtitle && (
-                    <p className="text-xs text-white/50">{subtitle}</p>
-                  )}
+            >
+              <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+            </button>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+              {icon && (
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    background: 'rgba(255,255,255,0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {icon}
                 </div>
-              </div>
-              
-              <button
-                onClick={onClose}
-                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-              >
-                <X className="w-5 h-5 text-white/60" />
-              </button>
-            </div>
-
-            {/* Content - Support both items array and custom content */}
-            <div className="px-4 pb-4">
-              {content ? (
-                // Custom content mode
-                <div>{content}</div>
-              ) : items && items.length > 0 ? (
-                // Items array mode
-                <div className="space-y-2">
-                  {items.map((item, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="flex items-center justify-between py-2 px-3 rounded-lg"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        {item.icon && (
-                          <span className="text-white/40">{item.icon}</span>
-                        )}
-                        <span className="text-sm text-white/60">{item.label}</span>
-                      </div>
-                      <span 
-                        className="text-sm font-bold"
-                        style={{ color: item.color || accentColor }}
-                      >
-                        {item.value}
-                      </span>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                // No content fallback
-                <p className="text-center text-white/40 text-sm">Nessuna informazione disponibile</p>
               )}
+              <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>{title}</h1>
             </div>
+            <div style={{ width: '40px' }} />
+          </div>
+          {subtitle && (
+            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', textAlign: 'center', margin: 0 }}>
+              {subtitle}
+            </p>
+          )}
+        </div>
 
-            {/* Footer */}
-            {footer && (
-              <div 
-                className="px-4 py-3 border-t"
-                style={{ borderColor: 'rgba(255, 255, 255, 0.05)' }}
-              >
-                {footer}
-              </div>
-            )}
-
-            {/* Hint */}
-            <div className="px-4 py-2 text-center">
-              <p className="text-[10px] text-white/30 flex items-center justify-center gap-1">
-                <Info className="w-3 h-3" />
-                Tocca fuori per chiudere
-              </p>
+        {/* CONTENT - scrollable, high contrast */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '16px',
+            paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          {content ? (
+            <div>{content}</div>
+          ) : items && items.length > 0 ? (
+            <div className="space-y-2">
+              {items.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between py-3 px-4 rounded-xl"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    {item.icon && <span style={{ color: 'rgba(255,255,255,0.7)' }}>{item.icon}</span>}
+                    <span className="text-sm text-white/90">{item.label}</span>
+                  </div>
+                  <span
+                    className="text-sm font-bold"
+                    style={{ color: item.color || accentColor }}
+                  >
+                    {item.value}
+                  </span>
+                </div>
+              ))}
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>,
-    document.body
+          ) : (
+            <p className="text-center text-white/70 text-sm">{t('mapLongPress.noInfo')}</p>
+          )}
+
+          {footer && (
+            <div
+              className="mt-4 pt-4 border-t"
+              style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+            >
+              {footer}
+            </div>
+          )}
+        </div>
+
+        {/* Hint - NOTE-style */}
+        <div
+          style={{
+            flexShrink: 0,
+            padding: '12px 16px',
+            paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 12px)',
+            textAlign: 'center',
+          }}
+        >
+          <p className="text-xs text-white/60">{t('mapLongPress.tapOutsideToClose')}</p>
+        </div>
+      </div>
+    </MapPillFlipOverlay>
   );
 };
 

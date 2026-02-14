@@ -4,7 +4,7 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { ChevronDown, User, Activity, Target, BookOpen } from "lucide-react";
@@ -42,12 +42,16 @@ export function AgentDiary() {
   });
   const [loading, setLoading] = useState(true);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoModalOriginRect, setInfoModalOriginRect] = useState<DOMRect | null>(null);
+  const longPressTargetRef = useRef<HTMLDivElement>(null);
   
-  // Long press handler for quick info modal
-  const longPressHandlers = useLongPress(() => setShowInfoModal(true), {
+  const longPressHandlers = useLongPress(() => {
+    const rect = longPressTargetRef.current?.getBoundingClientRect() ?? null;
+    setInfoModalOriginRect(rect);
+    setShowInfoModal(true);
+  }, {
     threshold: 500,
     hapticFeedback: true,
-    hapticPattern: [50]
   });
 
   // Fetch stats for preview card
@@ -114,6 +118,7 @@ export function AgentDiary() {
       {/* Compact Card - Tap to open modal, Long press for quick info */}
       {/* 🔧 FIX 06/02/2026: Stile "Buzz Notifications/Generali" - glass graphite, no glow */}
       <motion.div 
+        ref={longPressTargetRef}
         className="m1-folder-glass--graphite rounded-[20px] overflow-hidden cursor-pointer transition-all duration-300 mb-4 relative"
         onClick={handleOpenModal}
         whileHover={{ scale: 1.01 }}
@@ -178,10 +183,11 @@ export function AgentDiary() {
         <AgentDiaryContent onClose={() => setIsModalOpen(false)} />
       </AgentDiaryFlipOverlay>
       
-      {/* Long Press Info Modal */}
+      {/* Long Press Info Modal - NOTE-style */}
       <LongPressInfoModal
         isOpen={showInfoModal}
         onClose={() => setShowInfoModal(false)}
+        originRect={infoModalOriginRect}
         title={t('home_agent_title')}
         subtitle={t('home_agent_subtitle')}
         accentColor="#00D1FF"
