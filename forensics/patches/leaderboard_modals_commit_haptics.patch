@@ -1,0 +1,487 @@
+diff --git a/src/components/commit/CommitRitual.tsx b/src/components/commit/CommitRitual.tsx
+index 31ee7a0b..366c0b11 100644
+--- a/src/components/commit/CommitRitual.tsx
++++ b/src/components/commit/CommitRitual.tsx
+@@ -6,7 +6,7 @@
+ 
+ import React, { useState, useRef, useCallback, useEffect } from 'react';
+ import { motion, AnimatePresence } from 'framer-motion';
+-import { Haptics, ImpactStyle } from '@capacitor/haptics';
++import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+ import './commit-node.css';
+ 
+ // ═══════════════════════════════════════════════════════════════════════════════
+@@ -44,6 +44,16 @@ const triggerHaptic = async (style: ImpactStyle) => {
+   }
+ };
+ 
++const triggerNotificationHaptic = async (type: NotificationType) => {
++  try {
++    if (typeof Haptics !== 'undefined' && Haptics.notification) {
++      await Haptics.notification({ type });
++    }
++  } catch {
++    // Silent fallback
++  }
++};
++
+ // ═══════════════════════════════════════════════════════════════════════════════
+ // EASING FUNCTIONS
+ // ═══════════════════════════════════════════════════════════════════════════════
+@@ -112,6 +122,7 @@ export const CommitRitual: React.FC<CommitRitualProps> = ({
+   const isPressing = useRef(false);
+   const phase3HapticFired = useRef(false);
+   const holdTextTimeoutRef = useRef<NodeJS.Timeout | null>(null);
++  const lastProgressMilestoneRef = useRef<number>(0);
+ 
+   // ─────────────────────────────────────────────────────────────────────────────
+   // ANIMATION LOOP
+@@ -123,6 +134,14 @@ export const CommitRitual: React.FC<CommitRitualProps> = ({
+     const elapsed = performance.now() - startTimeRef.current;
+     const rawProgress = Math.min(elapsed / TOTAL_DURATION_MS, 1);
+ 
++    // Micro-tap at 25%, 50%, 75% (progressive haptic during hold)
++    const milestones = [0.25, 0.5, 0.75];
++    const nextMilestone = milestones.find(m => m > lastProgressMilestoneRef.current && rawProgress >= m);
++    if (nextMilestone !== undefined) {
++      lastProgressMilestoneRef.current = nextMilestone;
++      triggerHaptic(ImpactStyle.Light);
++    }
++
+     let currentPhase: RitualPhase = 'phase1';
+     if (elapsed >= PHASE3_END) {
+       currentPhase = 'completing';
+@@ -174,10 +193,10 @@ export const CommitRitual: React.FC<CommitRitualProps> = ({
+       setFingerprintOpacity(0.5 + phaseProgress * 0.3);
+       setFingerprintScale(1.05 + phaseProgress * 0.1);
+     } else if (currentPhase === 'completing') {
+-      // 7s reached - SUCCESS
++      // 7s reached - SUCCESS: strong success haptic (NOT deceptive - only after confirmed success)
+       isPressing.current = false;
+       setPhase('complete');
+-      triggerHaptic(ImpactStyle.Medium);
++      triggerNotificationHaptic(NotificationType.Success);
+ 
+       // Clear hold text
+       setShowHoldText(false);
+@@ -219,6 +238,7 @@ export const CommitRitual: React.FC<CommitRitualProps> = ({
+     isPressing.current = true;
+     startTimeRef.current = performance.now();
+     phase3HapticFired.current = false;
++    lastProgressMilestoneRef.current = 0;
+ 
+     setPhase('phase1');
+     setProgress(0);
+@@ -265,7 +285,7 @@ export const CommitRitual: React.FC<CommitRitualProps> = ({
+ 
+     if (phase !== 'complete' && phase !== 'completing') {
+       setPhase('failed');
+-      triggerHaptic(ImpactStyle.Light);
++      triggerNotificationHaptic(NotificationType.Warning); // Abort: warning haptic, not success
+ 
+       // Show fail result
+       setResultText('fail');
+diff --git a/src/components/leaderboard/UserProfileModal.tsx b/src/components/leaderboard/UserProfileModal.tsx
+index 3df88cd9..cab0a58d 100644
+--- a/src/components/leaderboard/UserProfileModal.tsx
++++ b/src/components/leaderboard/UserProfileModal.tsx
+@@ -1,12 +1,14 @@
+ // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ /**
+- * UserProfileModal - Glass modal for leaderboard long-press
+- * Shows user profile with "Chatta" CTA
++ * UserProfileModal - Fullscreen modal for leaderboard long-press
++ * Design matches Note modal (MapPillFlipOverlay): same animation, layout, typography
++ * Join date shown when available; fallback "—" when not.
+  */
+ 
+-import React from 'react';
++import React, { useState, useCallback, useEffect } from 'react';
+ import { useTranslation } from 'react-i18next';
+ import { motion, AnimatePresence } from 'framer-motion';
++import { createPortal } from 'react-dom';
+ import { X, MessageSquare, User, Calendar, Trophy, Zap, Flame, Star } from 'lucide-react';
+ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+ import { Button } from '@/components/ui/button';
+@@ -48,9 +50,24 @@ const HIERARCHY_KEYS: Record<string, string> = {
+   'elite': 'leaderboard_hierarchy_elite',
+ };
+ 
++// Glass card - matches Note modal GlassCard
++const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
++  <div style={{
++    background: 'rgba(25, 25, 35, 0.7)',
++    backdropFilter: 'blur(24px)',
++    WebkitBackdropFilter: 'blur(24px)',
++    borderRadius: '14px',
++    padding: '16px',
++    border: '1px solid rgba(255, 255, 255, 0.08)',
++    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
++    ...style
++  }}>{children}</div>
++);
++
+ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, isOpen, onClose }) => {
+   const { t, i18n } = useTranslation();
+   const [, navigate] = useLocation();
++  const [isClosing, setIsClosing] = useState(false);
+ 
+   const formatDate = (dateString?: string) => {
+     if (!dateString) return '—';
+@@ -84,154 +101,236 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, isOpen
+   const handleChat = () => {
+     hapticMedium();
+     onClose();
+-    // Navigate to chat with user - uses existing chat infrastructure
+-    // For now, open AION/Intelligence page with a message intent
+     navigate(`/intelligence?chat_with=${user?.id}&name=${encodeURIComponent(user?.full_name || 'Agente')}`);
+   };
+ 
+-  const handleClose = () => {
++  const handleClose = useCallback(() => {
++    if (isClosing) return;
+     hapticLight();
+-    onClose();
+-  };
++    setIsClosing(true);
++    setTimeout(() => {
++      onClose();
++      setIsClosing(false);
++    }, 280);
++  }, [isClosing, onClose]);
++
++  // Lock scroll + ESC
++  useEffect(() => {
++    if (isOpen) {
++      const orig = document.body.style.overflow;
++      document.body.style.overflow = 'hidden';
++      const handleEsc = (e: KeyboardEvent) => {
++        if (e.key === 'Escape' && !isClosing) handleClose();
++      };
++      window.addEventListener('keydown', handleEsc);
++      return () => {
++        document.body.style.overflow = orig;
++        window.removeEventListener('keydown', handleEsc);
++      };
++    }
++  }, [isOpen, isClosing, handleClose]);
+ 
+   if (!user) return null;
+ 
+   const hierarchyBadge = getHierarchyBadge(user.hierarchy_rank);
+ 
+-  return (
+-    <AnimatePresence>
++  // Note modal style: backdrop rgba(10,10,15,0.98) blur(50px), panel scale 0.1->1 spring
++  const panelContent = (
++    <AnimatePresence mode="wait">
+       {isOpen && (
+         <>
+-          {/* Backdrop */}
++          {/* Backdrop - same as MapPillFlipOverlay */}
+           <motion.div
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             exit={{ opacity: 0 }}
+-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999]"
++            transition={{ duration: isClosing ? 0.2 : 0.25 }}
+             onClick={handleClose}
++            style={{
++              position: 'fixed',
++              inset: 0,
++              zIndex: 99998,
++              backgroundColor: 'rgba(10, 10, 15, 0.98)',
++              backdropFilter: 'blur(50px) saturate(180%)',
++              WebkitBackdropFilter: 'blur(50px) saturate(180%)',
++              pointerEvents: 'auto',
++            }}
+           />
+ 
+-          {/* Modal - 🔧 FIX 23/01/2026: Proper centering with safe-area */}
++          {/* Panel - same animation as Note modal (scale from center) */}
+           <motion.div
+-            initial={{ opacity: 0, scale: 0.9 }}
+-            animate={{ opacity: 1, scale: 1 }}
+-            exit={{ opacity: 0, scale: 0.9 }}
+-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+-            className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
++            initial={{ scale: 0.1, opacity: 0 }}
++            animate={{ scale: 1, opacity: 1 }}
++            exit={{ scale: 0.1, opacity: 0 }}
++            transition={{
++              type: 'spring',
++              stiffness: isClosing ? 400 : 280,
++              damping: isClosing ? 32 : 24,
++              mass: 0.8,
++            }}
+             style={{
+-              paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+-              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
++              position: 'fixed',
++              inset: 0,
++              zIndex: 99999,
++              pointerEvents: 'auto',
++              transformOrigin: '50% 50%',
++              willChange: 'transform, opacity',
++              overflow: 'hidden',
++              background: 'linear-gradient(180deg, #0a0a0f 0%, #12121a 50%, #0a0a0f 100%)',
+             }}
+             onClick={(e) => e.stopPropagation()}
+           >
+-            <div 
+-              className="w-full max-w-md max-h-[calc(100vh-120px)] overflow-y-auto"
+-              onClick={(e) => e.stopPropagation()}
+-            >
+-            <div className="relative rounded-2xl overflow-hidden border border-cyan-500/30 shadow-[0_0_30px_rgba(0,209,255,0.2)]">
+-              {/* Glass background */}
+-              <div className="absolute inset-0 bg-gradient-to-b from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl" />
+-
+-              {/* Content */}
+-              <div className="relative p-5 space-y-4">
+-                {/* Close button */}
+-                <button
+-                  onClick={handleClose}
+-                  className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+-                >
+-                  <X className="w-4 h-4 text-white" />
+-                </button>
+-
+-                {/* Avatar & Name */}
+-                <div className="flex flex-col items-center text-center pt-2">
+-                  <div className="relative">
+-                    <Avatar className="w-20 h-20 border-3 border-cyan-500/50 shadow-[0_0_20px_rgba(0,209,255,0.3)]">
+-                      <AvatarImage src={user.avatar_url} />
+-                      <AvatarFallback className="bg-gradient-to-br from-cyan-600 to-purple-600 text-white text-2xl font-bold">
+-                        {user.full_name?.charAt(0) || user.agent_code?.charAt(0) || 'A'}
+-                      </AvatarFallback>
+-                    </Avatar>
+-                    {/* Rank badge */}
+-                    <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center text-black font-bold text-sm shadow-lg">
+-                      #{user.rank}
+-                    </div>
++            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
++              {/* Header - same gradient as Note modal */}
++              <div style={{
++                flexShrink: 0,
++                background: 'linear-gradient(180deg, rgba(0, 209, 255, 0.8) 0%, rgba(0, 100, 150, 0.6) 100%)',
++                backdropFilter: 'blur(20px)',
++                WebkitBackdropFilter: 'blur(20px)',
++                paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
++                paddingBottom: '20px',
++                paddingLeft: '16px',
++                paddingRight: '16px',
++              }}>
++                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
++                  <button
++                    onClick={handleClose}
++                    style={{
++                      width: '40px',
++                      height: '40px',
++                      borderRadius: '50%',
++                      background: 'rgba(255,255,255,0.15)',
++                      border: 'none',
++                      display: 'flex',
++                      alignItems: 'center',
++                      justifyContent: 'center',
++                      cursor: 'pointer',
++                    }}
++                  >
++                    <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
++                  </button>
++                  <div style={{ flex: 1, textAlign: 'center' }}>
++                    <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>
++                      {user.full_name || user.agent_code || t('leaderboard_agent_anonymous')}
++                    </h1>
+                   </div>
+-
+-                  <h2 className="mt-3 text-xl font-bold text-white">
+-                    {user.full_name || t('leaderboard_agent_anonymous')}
+-                  </h2>
+-
+-                  {/* Agent code */}
+-                  <p className="text-sm text-gray-400 font-mono">
+-                    {user.agent_code || '—'}
+-                  </p>
+-
+-                  {/* Hierarchy badge */}
+-                  <Badge className={`mt-2 ${hierarchyBadge.color} text-white text-xs px-3 py-1`}>
+-                    <Trophy className="w-3 h-3 mr-1" />
+-                    {hierarchyBadge.label}
+-                  </Badge>
++                  <div style={{ width: '40px' }} />
+                 </div>
++                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', textAlign: 'center' }}>
++                  #{user.rank} · {user.agent_code || '—'}
++                </p>
++              </div>
+ 
+-                {/* Stats grid */}
+-                <div className="grid grid-cols-3 gap-3 pt-2">
+-                  <div className="text-center p-2 rounded-lg bg-white/5 border border-white/10">
+-                    <div className="flex items-center justify-center gap-1 text-cyan-400">
+-                      <Star className="w-4 h-4" />
+-                    </div>
+-                    <div className="text-lg font-bold text-white mt-1">
+-                      {user.total_score?.toLocaleString() || '0'}
++              {/* Content - scrollable, glass cards, high-contrast text */}
++              <div style={{
++                flex: 1,
++                overflowY: 'auto',
++                padding: '16px',
++                paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)',
++                WebkitOverflowScrolling: 'touch',
++              }}>
++                <GlassCard style={{ marginBottom: '16px' }}>
++                  <div className="flex flex-col items-center text-center">
++                    <div style={{ position: 'relative' }}>
++                      <Avatar className="w-20 h-20 border-3 border-cyan-500/50 shadow-[0_0_20px_rgba(0,209,255,0.3)]">
++                        <AvatarImage src={user.avatar_url} />
++                        <AvatarFallback className="bg-gradient-to-br from-cyan-600 to-purple-600 text-white text-2xl font-bold">
++                          {user.full_name?.charAt(0) || user.agent_code?.charAt(0) || 'A'}
++                        </AvatarFallback>
++                      </Avatar>
++                      <div style={{
++                        position: 'absolute',
++                        bottom: -4,
++                        right: -4,
++                        width: 32,
++                        height: 32,
++                        borderRadius: '50%',
++                        background: 'linear-gradient(135deg, #eab308, #f97316)',
++                        display: 'flex',
++                        alignItems: 'center',
++                        justifyContent: 'center',
++                        color: '#000',
++                        fontWeight: 700,
++                        fontSize: 14,
++                      }}>
++                        #{user.rank}
++                      </div>
+                     </div>
+-                    <div className="text-[10px] text-gray-500">{t('leaderboard_profile_points')}</div>
++                    <h2 style={{ marginTop: 12, color: '#FFFFFF', fontSize: '18px', fontWeight: 700 }}>
++                      {user.full_name || t('leaderboard_agent_anonymous')}
++                    </h2>
++                    <Badge className={`mt-2 ${hierarchyBadge.color} text-white text-xs px-3 py-1`}>
++                      <Trophy className="w-3 h-3 mr-1 inline" />
++                      {hierarchyBadge.label}
++                    </Badge>
+                   </div>
++                </GlassCard>
+ 
+-                  <div className="text-center p-2 rounded-lg bg-white/5 border border-white/10">
+-                    <div className="flex items-center justify-center gap-1 text-orange-400">
+-                      <Flame className="w-4 h-4" />
++                <GlassCard style={{ marginBottom: '16px' }}>
++                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
++                    <div style={{ textAlign: 'center', padding: 8 }}>
++                      <Star className="w-4 h-4 mx-auto" style={{ color: '#22d3ee' }} />
++                      <div style={{ color: 'rgba(255,255,255,0.95)', fontSize: 18, fontWeight: 700, marginTop: 4 }}>
++                        {user.total_score?.toLocaleString() || '0'}
++                      </div>
++                      <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10 }}>{t('leaderboard_profile_points')}</div>
+                     </div>
+-                    <div className="text-lg font-bold text-white mt-1">
+-                      {user.streak_days || 0}d
+-                    </div>
+-                    <div className="text-[10px] text-gray-500">{t('leaderboard_profile_streak')}</div>
+-                  </div>
+-
+-                  <div className="text-center p-2 rounded-lg bg-white/5 border border-white/10">
+-                    <div className="flex items-center justify-center gap-1 text-green-400">
+-                      <Zap className="w-4 h-4" />
++                    <div style={{ textAlign: 'center', padding: 8 }}>
++                      <Flame className="w-4 h-4 mx-auto" style={{ color: '#fb923c' }} />
++                      <div style={{ color: 'rgba(255,255,255,0.95)', fontSize: 18, fontWeight: 700, marginTop: 4 }}>
++                        {user.streak_days || 0}d
++                      </div>
++                      <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10 }}>{t('leaderboard_profile_streak')}</div>
+                     </div>
+-                    <div className="text-lg font-bold text-white mt-1">
+-                      {user.clues_unlocked || user.pulse_energy || 0}
++                    <div style={{ textAlign: 'center', padding: 8 }}>
++                      <Zap className="w-4 h-4 mx-auto" style={{ color: '#4ade80' }} />
++                      <div style={{ color: 'rgba(255,255,255,0.95)', fontSize: 18, fontWeight: 700, marginTop: 4 }}>
++                        {user.clues_unlocked ?? user.pulse_energy ?? 0}
++                      </div>
++                      <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10 }}>{t('leaderboard_profile_clues')}</div>
+                     </div>
+-                    <div className="text-[10px] text-gray-500">{t('leaderboard_profile_clues')}</div>
+                   </div>
+-                </div>
++                </GlassCard>
+ 
+-                {/* Info rows */}
+-                <div className="space-y-2 pt-2">
+-                  <div className="flex items-center gap-2 text-sm text-gray-400">
+-                    <Calendar className="w-4 h-4 text-purple-400" />
+-                    <span>{t('leaderboard_profile_joined')} {formatDate(user.created_at)}</span>
+-                  </div>
+-                  {user.city && (
+-                    <div className="flex items-center gap-2 text-sm text-gray-400">
+-                      <User className="w-4 h-4 text-blue-400" />
+-                      <span>{user.city}{user.country ? `, ${user.country}` : ''}</span>
++                <GlassCard style={{ marginBottom: '16px' }}>
++                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
++                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
++                      <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: '#a78bfa' }} />
++                      <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>
++                        {t('leaderboard_profile_joined')} {formatDate(user.created_at)}
++                      </span>
+                     </div>
+-                  )}
+-                </div>
++                    {user.city && (
++                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
++                        <User className="w-4 h-4 flex-shrink-0" style={{ color: '#60a5fa' }} />
++                        <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>
++                          {user.city}{user.country ? `, ${user.country}` : ''}
++                        </span>
++                      </div>
++                    )}
++                  </div>
++                </GlassCard>
+ 
+-                {/* CTA Buttons */}
+-                <div className="flex gap-3 pt-3">
++                <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                   <Button
+                     variant="outline"
+                     onClick={handleClose}
+-                    className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
++                    className="flex-1"
++                    style={{
++                      borderColor: 'rgba(255,255,255,0.2)',
++                      color: 'rgba(255,255,255,0.9)',
++                    }}
+                   >
+                     {t('leaderboard_profile_close')}
+                   </Button>
+                   <Button
+                     onClick={handleChat}
+-                    className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-[0_0_15px_rgba(0,209,255,0.3)]"
++                    className="flex-1"
++                    style={{
++                      background: 'linear-gradient(90deg, #06b6d4, #2563eb)',
++                      color: '#FFFFFF',
++                      boxShadow: '0 0 15px rgba(0,209,255,0.3)',
++                    }}
+                   >
+                     <MessageSquare className="w-4 h-4 mr-2" />
+                     {t('leaderboard_profile_chat')}
+@@ -239,12 +338,14 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, isOpen
+                 </div>
+               </div>
+             </div>
+-            </div>
+           </motion.div>
+         </>
+       )}
+     </AnimatePresence>
+   );
++
++  if (typeof document === 'undefined') return null;
++  return createPortal(panelContent, document.body);
+ };
+ 
+ export default UserProfileModal;

@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, Trophy, Zap, Gift, X, Check, Sparkles } from 'lucide-react';
@@ -232,63 +233,47 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg p-0 bg-transparent border-0 overflow-hidden">
+      <DialogContent className="max-w-lg p-0 bg-transparent border-0 overflow-visible">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="relative rounded-3xl overflow-hidden"
+          className="relative rounded-3xl overflow-visible"
           style={{
-            background: 'linear-gradient(145deg, rgba(0, 40, 40, 0.98), rgba(0, 60, 60, 0.95))',
-            border: '2px solid rgba(0, 255, 136, 0.5)',
-            boxShadow: '0 0 60px rgba(0, 255, 136, 0.3), 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1)',
+            background: 'linear-gradient(180deg, rgba(15, 35, 35, 0.98) 0%, rgba(10, 25, 30, 0.98) 100%)',
+            border: '1px solid rgba(0, 255, 136, 0.35)',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
           }}
         >
-          {/* Ambient Glow - Green */}
+          {/* Ambient Glow - subtle */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.2) 0%, transparent 60%)',
+              background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.12) 0%, transparent 55%)',
               borderRadius: '24px',
             }}
           />
 
-          {/* Content */}
-          <div className="relative p-6">
+          {/* Content - safe-area padding for iOS */}
+          <div 
+            className="relative p-6"
+            style={{
+              paddingTop: 'calc(24px + env(safe-area-inset-top, 0))',
+              paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0))',
+              maxHeight: 'min(85vh, 600px)',
+              overflowY: 'auto',
+            }}
+          >
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
+              style={{ top: 'calc(16px + env(safe-area-inset-top, 0))' }}
             >
-              <X className="w-4 h-4 text-white/60" />
+              <X className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.9)' }} />
             </button>
 
-            {/* Success Animation Overlay */}
-            <AnimatePresence>
-              {showSuccess && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-2xl"
-                >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: [0, 1.2, 1] }}
-                    className="text-center"
-                  >
-                    <motion.div
-                      animate={{ rotate: [0, 360] }}
-                      transition={{ duration: 1 }}
-                      className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-400 to-cyan-400 flex items-center justify-center"
-                    >
-                      <Check className="w-10 h-10 text-white" />
-                    </motion.div>
-                    <p className="text-xl font-bold text-white">{t('streak_success_title')}</p>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Success overlay: rendered via portal to avoid overflow clipping — always fully visible */}
 
             {/* Header */}
             <div className="text-center mb-6">
@@ -316,14 +301,11 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
               
               <h2 
                 className="text-2xl font-orbitron font-bold mb-2"
-                style={{ 
-                  color: '#00FF88',
-                  textShadow: '0 0 20px rgba(0, 255, 136, 0.6)',
-                }}
+                style={{ color: '#00FF88' }}
               >
                 🔥 {t('streak_title')}
               </h2>
-              <p className="text-white/70 text-sm">{t('streak_subtitle')}</p>
+              <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>{t('streak_subtitle')}</p>
             </div>
 
             {loading ? (
@@ -343,39 +325,33 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                   >
                     <p 
                       className="text-4xl font-orbitron font-bold"
-                      style={{ 
-                        color: '#00FF88',
-                        textShadow: '0 0 15px rgba(0, 255, 136, 0.5)',
-                      }}
+                      style={{ color: '#00FF88' }}
                     >
                       {streak}
                     </p>
-                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">{t('streak_days')}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4 }}>{t('streak_days')}</p>
                   </div>
                   <div 
                     className="p-5 rounded-xl text-center"
                     style={{
-                      background: 'rgba(0, 209, 255, 0.1)',
+                      background: 'rgba(0, 209, 255, 0.12)',
                       border: '1px solid rgba(0, 209, 255, 0.3)',
                     }}
                   >
                     <p 
                       className="text-4xl font-orbitron font-bold"
-                      style={{ 
-                        color: '#00D1FF',
-                        textShadow: '0 0 15px rgba(0, 209, 255, 0.5)',
-                      }}
+                      style={{ color: '#00D1FF' }}
                     >
                       {streakInfo?.longest_streak || 0}
                     </p>
-                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">{t('streak_record')}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4 }}>{t('streak_record')}</p>
                   </div>
                 </div>
 
                 {/* Progress to Next Badge */}
                 {streakInfo?.next_milestone && (
                   <div className="mb-6">
-                    <div className="flex justify-between text-xs text-gray-400 mb-2">
+                    <div className="flex justify-between text-xs mb-2" style={{ color: 'rgba(255,255,255,0.85)' }}>
                       <span>{t('streak_next_badge')}: {MILESTONES.find(m => m.days === streakInfo.next_milestone) && t(MILESTONES.find(m => m.days === streakInfo.next_milestone)!.key)}</span>
                       <span>{streakInfo.days_to_next_milestone} {t('streak_days_label')}</span>
                     </div>
@@ -399,7 +375,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Zap className="w-4 h-4 text-purple-400" />
-                      <span className="text-xs text-gray-400">{t('streak_pe_bonus')}</span>
+                      <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>{t('streak_pe_bonus')}</span>
                     </div>
                     <p className="text-lg font-bold text-purple-300">
                       +{Math.round((peMultiplier - 1) * 100)}%
@@ -411,7 +387,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Gift className="w-4 h-4 text-cyan-400" />
-                      <span className="text-xs text-gray-400">{t('streak_m1u_bonus')}</span>
+                      <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>{t('streak_m1u_bonus')}</span>
                     </div>
                     <p className="text-lg font-bold text-cyan-300">+{m1uBonus}%</p>
                   </motion.div>
@@ -419,7 +395,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
 
                 {/* Milestones */}
                 <div className="mb-6">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">{t('streak_badge_title')}</p>
+                  <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>{t('streak_badge_title')}</p>
                   <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                     {MILESTONES.slice(0, 5).map((m) => (
                       <motion.div
@@ -432,7 +408,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                         }`}
                       >
                         <span className="text-lg">{m.icon}</span>
-                        <span className={`text-[10px] font-bold ${streak >= m.days ? 'text-green-400' : 'text-gray-500'}`}>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: streak >= m.days ? '#4ade80' : 'rgba(255,255,255,0.6)' }}>
                           {m.days}g
                         </span>
                       </motion.div>
@@ -452,7 +428,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                       ? 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)' 
                       : 'rgba(100,100,100,0.3)',
                     border: 'none',
-                    color: canCheckIn ? '#000' : 'rgba(255,255,255,0.4)',
+                    color: canCheckIn ? '#000' : 'rgba(255,255,255,0.5)',
                     boxShadow: canCheckIn ? '0 4px 25px rgba(0, 255, 136, 0.4)' : 'none',
                     cursor: canCheckIn ? 'pointer' : 'not-allowed',
                   }}
@@ -475,7 +451,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                 </motion.button>
 
                 {!canCheckIn && (
-                  <p className="text-center text-xs text-white/50 mt-4">
+                  <p style={{ textAlign: 'center', fontSize: '12px', color: 'rgba(255,255,255,0.8)', marginTop: 16 }}>
                     {t('streak_tomorrow_hint')}
                   </p>
                 )}
@@ -484,6 +460,65 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
           </div>
         </motion.div>
       </DialogContent>
+
+      {/* Success overlay: portal to body — z-index above Dialog, no clipping */}
+      {typeof document !== 'undefined' && isOpen && createPortal(
+        <AnimatePresence>
+          {showSuccess && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 10001,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(10, 10, 15, 0.95)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                paddingTop: 'env(safe-area-inset-top, 0)',
+                paddingBottom: 'env(safe-area-inset-bottom, 0)',
+                paddingLeft: 'env(safe-area-inset-left, 0)',
+                paddingRight: 'env(safe-area-inset-right, 0)',
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: [0, 1.1, 1] }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+                style={{ textAlign: 'center' }}
+              >
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 1 }}
+                  style={{
+                    width: 80,
+                    height: 80,
+                    margin: '0 auto 16px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #22c55e 0%, #06b6d4 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 8px 32px rgba(34, 197, 94, 0.4)',
+                  }}
+                >
+                  <Check style={{ width: 40, height: 40, color: '#FFFFFF' }} />
+                </motion.div>
+                <p style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: 700, opacity: 0.95 }}>
+                  {t('streak_success_title')}
+                </p>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </Dialog>
   );
 }
