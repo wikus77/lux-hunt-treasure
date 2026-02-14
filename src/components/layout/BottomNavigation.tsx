@@ -370,6 +370,7 @@ const BottomNavigationComponent = () => {
         storageKey="m1_home_video_dismissed"
         title="M1SSION HOME"
         subtitle="Briefing: Benvenuto nel tuo quartier generale"
+        enableSubtitles
       />
       
       <BriefingFlipOverlay

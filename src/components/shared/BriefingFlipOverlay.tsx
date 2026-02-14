@@ -2,6 +2,7 @@
  * BriefingFlipOverlay - Modal fullscreen UNIFICATO per TUTTI i briefing video
  * Pattern M1U FlipOverlay: scale dal centro + backdrop blur + edge-to-edge
  * CTA: bianco opaco glass (no colori pieni)
+ * Subtitles: EN/FR only for M1SSION HOME (IT = none)
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
@@ -9,8 +10,28 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { X, VolumeX, Volume2 } from 'lucide-react';
+import { getLocale } from '@/i18n/i18n';
 
 const ADMIN_EMAILS = ['wikus77@hotmail.it'];
+
+// FASE 3 — Testi autorizzati (IMMUTABILI) per sottotitoli M1SSION HOME
+const SUBTITLES_EN = [
+  'Agent, this is M1SSION.\nA limited-time hunt with real prizes.',
+  'The mission lasts four weeks.\nOne main prize.\nNinety-nine secondary prizes.',
+  'Your objective is to locate the final prize before anyone else.',
+  'Use the map to explore.\nCollect clues.\nReduce the search area.',
+  'When you are confident about the location,\nactivate Final Shot on the map.',
+  'You have three attempts.',
+];
+
+const SUBTITLES_FR = [
+  'Agent, ceci est M1SSION.\nUne chasse à durée limitée avec des récompenses réelles.',
+  'La mission dure quatre semaines.\nUn prix principal.\nQuatre-vingt-dix-neuf prix secondaires.',
+  'Votre objectif est de localiser le prix final avant tous les autres.',
+  'Utilisez la carte pour explorer.\nObtenez des indices.\nRéduisez la zone de recherche.',
+  "Lorsque vous êtes sûr de l'emplacement,\nactivez le Final Shot sur la carte.",
+  "Vous avez trois tentatives.",
+];
 
 export interface BriefingFlipOverlayProps {
   open: boolean;
@@ -21,6 +42,8 @@ export interface BriefingFlipOverlayProps {
   storageKey: string;
   title: string;
   subtitle?: string;
+  /** Solo per M1SSION HOME: abilita sottotitoli EN/FR (IT = nessuno) */
+  enableSubtitles?: boolean;
 }
 
 export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
@@ -32,11 +55,18 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
   storageKey,
   title,
   subtitle = 'Guarda il video introduttivo prima di iniziare',
+  enableSubtitles = false,
 }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [subtitleIndex, setSubtitleIndex] = useState(-1);
+  const [videoDuration, setVideoDuration] = useState(60);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const locale = getLocale();
+  const showSubtitles = enableSubtitles && (locale === 'en' || locale === 'fr');
+  const subtitleLines = locale === 'en' ? SUBTITLES_EN : SUBTITLES_FR;
 
   // Check se mostrare il video (admin sempre, altri controllano localStorage)
   const shouldShowVideo = useCallback(() => {
@@ -135,6 +165,42 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
   const handleVideoEnd = useCallback(() => {
     setTimeout(handleClose, 500);
   }, [handleClose]);
+
+  // Reset subtitle when modal opens
+  useEffect(() => {
+    if (open) setSubtitleIndex(-1);
+  }, [open]);
+
+  // Subtitle sync: timeupdate + loadedmetadata
+  useEffect(() => {
+    if (!open || !showSubtitles || !videoRef.current) return;
+    const video = videoRef.current;
+
+    const onLoadedMetadata = () => {
+      const d = video.duration;
+      if (Number.isFinite(d) && d > 0) setVideoDuration(d);
+    };
+
+    const onTimeUpdate = () => {
+      const t = video.currentTime;
+      const d = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : videoDuration;
+      const segment = d / subtitleLines.length;
+      const idx = Math.min(Math.floor(t / segment), subtitleLines.length - 1);
+      setSubtitleIndex(t < 0.5 ? -1 : idx);
+    };
+
+    video.addEventListener('loadedmetadata', onLoadedMetadata);
+    video.addEventListener('timeupdate', onTimeUpdate);
+
+    if (video.readyState >= 1 && video.duration) {
+      onLoadedMetadata();
+    }
+
+    return () => {
+      video.removeEventListener('loadedmetadata', onLoadedMetadata);
+      video.removeEventListener('timeupdate', onTimeUpdate);
+    };
+  }, [open, showSubtitles, videoDuration, subtitleLines.length]);
 
   // Skip if already dismissed
   useEffect(() => {
@@ -309,6 +375,40 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
                     )}
                   </div>
                 </div>
+
+                {/* Subtitles overlay - EN/FR only, bottom-center, safe-area */}
+                {showSubtitles && subtitleIndex >= 0 && (
+                  <motion.div
+                    className="absolute left-4 right-4 flex justify-center"
+                    style={{
+                      bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+                      pointerEvents: 'none',
+                    }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div
+                      className="px-4 py-3 rounded-lg text-center max-w-lg"
+                      style={{
+                        background: 'rgba(0, 0, 0, 0.75)',
+                        backdropFilter: 'blur(8px)',
+                        color: '#FFFFFF',
+                        fontSize: '14px',
+                        lineHeight: 1.5,
+                        textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                      }}
+                    >
+                      {subtitleLines[subtitleIndex]?.split('\n').map((line, i) => (
+                        <p key={i} className="m-0" style={{ marginTop: i > 0 ? '0.25rem' : 0 }}>
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
               </div>
             </div>
 
