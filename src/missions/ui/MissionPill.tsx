@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Target, Clock, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +34,7 @@ import { creditM1USafe } from '../rewards/creditM1U';
 import '@/features/m1u/m1u-ui.css';
 
 export function MissionPill() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [phase, setPhase] = useState(0);
@@ -126,7 +128,7 @@ export function MissionPill() {
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-        aria-label="Daily Mission"
+        aria-label={t('mapPills.mission.ariaLabel')}
       >
         {/* M1 Official Logo */}
         <img 
@@ -216,10 +218,10 @@ export function MissionPill() {
                 <>
                   <div style={{ background: 'rgba(0,255,150,0.1)', borderRadius: '12px', padding: '12px', marginBottom: '12px' }}>
                     <p style={{ fontSize: '11px', color: '#00FF96', fontWeight: 600, margin: 0 }}>
-                      📍 PHASE 1 TODAY: +{phase1Reward} M1U
+                      {t('mapPills.mission.phase1Today', { reward: phase1Reward })}
                     </p>
                     <p style={{ fontSize: '11px', color: '#FFD700', fontWeight: 600, margin: '4px 0 0' }}>
-                      🔄 PHASE 2 TOMORROW: +{phase2Reward} M1U
+                      {t('mapPills.mission.phase2Tomorrow', { reward: phase2Reward })}
                     </p>
                   </div>
                   <button
@@ -240,7 +242,7 @@ export function MissionPill() {
                       gap: '8px',
                     }}
                   >
-                    <Play size={18} /> START MISSION
+                    <Play size={18} /> {t('mapPills.mission.startMission')}
                   </button>
                 </>
               )}
@@ -250,7 +252,7 @@ export function MissionPill() {
                 <>
                   <div style={{ background: 'rgba(0,209,255,0.1)', borderRadius: '12px', padding: '12px', marginBottom: '12px' }}>
                     <p style={{ fontSize: '11px', color: '#00D1FF', fontWeight: 600, margin: 0 }}>
-                      📍 PHASE 1 IN PROGRESS
+                      {t('mapPills.mission.phase1InProgress')}
                     </p>
                     <p style={{ fontSize: '12px', color: '#fff', margin: '4px 0' }}>{mission.phase1.instruction}</p>
                   </div>
@@ -268,7 +270,7 @@ export function MissionPill() {
                       cursor: 'pointer',
                     }}
                   >
-                    ✓ COMPLETE PHASE 1 (+{phase1Reward} M1U)
+                    {t('mapPills.mission.completePhase1', { reward: phase1Reward })}
                   </button>
                 </>
               )}
@@ -278,10 +280,10 @@ export function MissionPill() {
                 <div style={{ background: 'rgba(255,200,0,0.1)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
                   <Clock size={30} color="#FFD700" style={{ marginBottom: '8px' }} />
                   <p style={{ fontSize: '13px', color: '#FFD700', fontWeight: 600, margin: 0 }}>
-                    PHASE 2 UNLOCKS TOMORROW
+                    {t('mapPills.mission.phase2UnlocksTomorrow')}
                   </p>
                   <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', margin: '4px 0 0' }}>
-                    Return to claim +{phase2Reward} M1U
+                    {t('mapPills.mission.returnToClaim', { reward: phase2Reward })}
                   </p>
                 </div>
               )}
@@ -291,7 +293,7 @@ export function MissionPill() {
                 <>
                   <div style={{ background: 'rgba(255,200,0,0.1)', borderRadius: '12px', padding: '12px', marginBottom: '12px' }}>
                     <p style={{ fontSize: '11px', color: '#FFD700', fontWeight: 600, margin: 0 }}>
-                      🔄 PHASE 2 READY!
+                      {t('mapPills.mission.phase2Ready')}
                     </p>
                     <p style={{ fontSize: '12px', color: '#fff', margin: '4px 0' }}>{mission.phase2.instruction}</p>
                   </div>
@@ -309,7 +311,7 @@ export function MissionPill() {
                       cursor: 'pointer',
                     }}
                   >
-                    🎉 COMPLETE PHASE 2 (+{phase2Reward} M1U)
+                    {t('mapPills.mission.completePhase2', { reward: phase2Reward })}
                   </button>
                 </>
               )}
@@ -319,7 +321,7 @@ export function MissionPill() {
                 onClick={() => setShowModal(false)}
                 style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '12px', cursor: 'pointer' }}
               >
-                Close
+                {t('mapPills.mission.close')}
               </p>
             </motion.div>
           </motion.div>
@@ -348,14 +350,14 @@ export function MissionPill() {
             }}
           >
             <p style={{ fontSize: '14px', fontWeight: 700, color: '#00FF96', margin: 0 }}>
-              {completedPhase === 1 ? '✅ PHASE 1 COMPLETE!' : '🎉 MISSION ACCOMPLISHED!'}
+              {completedPhase === 1 ? t('mapPills.mission.phase1Complete') : t('mapPills.mission.missionAccomplished')}
             </p>
             <p style={{ fontSize: '20px', fontWeight: 800, color: '#00FF96', margin: '4px 0' }}>
               +{completedReward} M1U
             </p>
             {completedPhase === 1 && (
               <p style={{ fontSize: '11px', color: '#FFD700', margin: 0 }}>
-                Return tomorrow for Phase 2!
+                {t('mapPills.mission.returnTomorrowPhase2')}
               </p>
             )}
           </motion.div>

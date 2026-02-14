@@ -1016,5 +1016,20 @@
   "mapPills.arsenal.ariaLabel": "Ouvrir la boutique de bataille",
   "mapPills.search.placeNotFound": "Lieu non trouvé",
   "mapPills.search.searchError": "Erreur de recherche",
-  "mapPills.search.placeholder": "Rechercher..."
+  "mapPills.search.placeholder": "Rechercher...",
+
+  "mapPills.mission.ariaLabel": "Mission du jour",
+  "mapPills.mission.startMission": "DÉMARRER LA MISSION",
+  "mapPills.mission.close": "Fermer",
+  "mapPills.mission.phase1Today": "📍 PHASE 1 AUJOURD'HUI : +{{reward}} M1U",
+  "mapPills.mission.phase2Tomorrow": "🔄 PHASE 2 DEMAIN : +{{reward}} M1U",
+  "mapPills.mission.phase1InProgress": "📍 PHASE 1 EN COURS",
+  "mapPills.mission.completePhase1": "✓ TERMINER PHASE 1 (+{{reward}} M1U)",
+  "mapPills.mission.phase2UnlocksTomorrow": "PHASE 2 DÉBLOQUÉE DEMAIN",
+  "mapPills.mission.returnToClaim": "Revenez pour réclamer +{{reward}} M1U",
+  "mapPills.mission.phase2Ready": "🔄 PHASE 2 PRÊTE !",
+  "mapPills.mission.completePhase2": "🎉 TERMINER PHASE 2 (+{{reward}} M1U)",
+  "mapPills.mission.phase1Complete": "✅ PHASE 1 TERMINÉE !",
+  "mapPills.mission.missionAccomplished": "🎉 MISSION ACCOMPLIE !",
+  "mapPills.mission.returnTomorrowPhase2": "Revenez demain pour la Phase 2 !"
 }

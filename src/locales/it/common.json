@@ -1021,5 +1021,20 @@
   "mapPills.arsenal.ariaLabel": "Apri Battle Shop",
   "mapPills.search.placeNotFound": "Luogo non trovato",
   "mapPills.search.searchError": "Errore di ricerca",
-  "mapPills.search.placeholder": "Cerca..."
+  "mapPills.search.placeholder": "Cerca...",
+
+  "mapPills.mission.ariaLabel": "Missione del giorno",
+  "mapPills.mission.startMission": "AVVIA MISSIONE",
+  "mapPills.mission.close": "Chiudi",
+  "mapPills.mission.phase1Today": "📍 FASE 1 OGGI: +{{reward}} M1U",
+  "mapPills.mission.phase2Tomorrow": "🔄 FASE 2 DOMANI: +{{reward}} M1U",
+  "mapPills.mission.phase1InProgress": "📍 FASE 1 IN CORSO",
+  "mapPills.mission.completePhase1": "✓ COMPLETA FASE 1 (+{{reward}} M1U)",
+  "mapPills.mission.phase2UnlocksTomorrow": "FASE 2 SI SBLOCCA DOMANI",
+  "mapPills.mission.returnToClaim": "Torna per riscattare +{{reward}} M1U",
+  "mapPills.mission.phase2Ready": "🔄 FASE 2 PRONTA!",
+  "mapPills.mission.completePhase2": "🎉 COMPLETA FASE 2 (+{{reward}} M1U)",
+  "mapPills.mission.phase1Complete": "✅ FASE 1 COMPLETATA!",
+  "mapPills.mission.missionAccomplished": "🎉 MISSIONE COMPIUTA!",
+  "mapPills.mission.returnTomorrowPhase2": "Torna domani per la Fase 2!"
 }
