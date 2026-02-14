@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -56,6 +57,7 @@ export const M1ssionWarModal: React.FC<M1ssionWarModalProps> = ({
   onClose,
   userId
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [battleHistory, setBattleHistory] = useState<BattleHistory[]>([]);
   const [countryProgress, setCountryProgress] = useState<CountryProgress[]>([]);
@@ -260,8 +262,8 @@ export const M1ssionWarModal: React.FC<M1ssionWarModalProps> = ({
                   <Globe className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-red-400">M1SSION WAR</h2>
-                  <p className="text-xs text-muted-foreground">Domina il mondo</p>
+                  <h2 className="text-lg font-bold text-red-400">{t('mapPills.missionWar.title')}</h2>
+                  <p className="text-xs text-muted-foreground">{t('mapPills.missionWar.subtitle')}</p>
                 </div>
               </div>
               <Button
@@ -280,19 +282,19 @@ export const M1ssionWarModal: React.FC<M1ssionWarModalProps> = ({
                 <div className="grid grid-cols-4 gap-3">
                   <div className="text-center">
                     <div className="text-xl font-bold text-green-400">{userStats.countries_owned}</div>
-                    <div className="text-[10px] text-green-300/70">Conquistati</div>
+                    <div className="text-[10px] text-green-300/70">{t('mapPills.missionWar.conquered')}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-amber-400">{userStats.countries_contested}</div>
-                    <div className="text-[10px] text-amber-300/70">Contesi</div>
+                    <div className="text-[10px] text-amber-300/70">{t('mapPills.missionWar.contested')}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-cyan-400">{userStats.total_wins}</div>
-                    <div className="text-[10px] text-cyan-300/70">Vittorie</div>
+                    <div className="text-[10px] text-cyan-300/70">{t('mapPills.missionWar.wins')}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-purple-400">{userStats.continents_owned?.length || 0}</div>
-                    <div className="text-[10px] text-purple-300/70">Continenti</div>
+                    <div className="text-[10px] text-purple-300/70">{t('mapPills.missionWar.continents')}</div>
                   </div>
                 </div>
               </div>
@@ -309,7 +311,7 @@ export const M1ssionWarModal: React.FC<M1ssionWarModalProps> = ({
                 }`}
               >
                 <Target className="inline w-3.5 h-3.5 mr-1" />
-                Conquiste
+                {t('mapPills.missionWar.tabConquests')}
               </button>
               <button
                 onClick={() => setActiveTab('history')}
@@ -320,7 +322,7 @@ export const M1ssionWarModal: React.FC<M1ssionWarModalProps> = ({
                 }`}
               >
                 <Swords className="inline w-3.5 h-3.5 mr-1" />
-                Battaglie
+                {t('mapPills.missionWar.tabBattles')}
               </button>
               <button
                 onClick={() => setActiveTab('leaderboard')}
@@ -331,7 +333,7 @@ export const M1ssionWarModal: React.FC<M1ssionWarModalProps> = ({
                 }`}
               >
                 <Crown className="inline w-3.5 h-3.5 mr-1" />
-                Classifica
+                {t('mapPills.missionWar.tabLeaderboard')}
               </button>
             </div>
 

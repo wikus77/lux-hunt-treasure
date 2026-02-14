@@ -3,6 +3,7 @@
 // NOTA: Componente COMPLETAMENTE INDIPENDENTE dalla logica Buzz Map
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crosshair, Target, Trophy, AlertCircle, Lock, X, Zap, VolumeX, Volume2 } from 'lucide-react';
@@ -17,6 +18,7 @@ const VIDEO_STORAGE_KEY = 'm1_finalshot_video_dismissed';
 const ADMIN_EMAILS = ['wikus77@hotmail.it'];
 
 const FinalShootPill: React.FC = () => {
+  const { t } = useTranslation();
   const {
     isAvailable,
     isActive,
@@ -391,7 +393,7 @@ const FinalShootPill: React.FC = () => {
                       <h2 className="text-lg font-bold text-white font-orbitron">
                         FINAL SHOT
                       </h2>
-                      <p className="text-xs text-cyan-400">La Mossa Finale</p>
+                      <p className="text-xs text-cyan-400">{t('mapPills.finalShot.subtitle')}</p>
                     </div>
                   </div>
                   <button
@@ -408,31 +410,30 @@ const FinalShootPill: React.FC = () => {
                 <div className="p-3 rounded-xl bg-white/5 border border-white/10">
                   <h3 className="font-bold text-white mb-2 flex items-center gap-2 text-sm">
                     <Target className="w-4 h-4 text-pink-400" />
-                    Cos'è Final Shot?
+                    {t('mapPills.finalShot.whatIs')}
                   </h3>
                   <p className="text-xs text-white/70 leading-relaxed">
-                    È la tua ultima possibilità di vincere! Negli <span className="text-cyan-400 font-bold">ultimi 7 giorni</span> della missione, 
-                    puoi indicare sulla mappa dove pensi si trovi il premio.
+                    {t('mapPills.finalShot.whatIsDesc')}
                   </p>
                 </div>
 
                 <div className="p-3 rounded-xl bg-white/5 border border-white/10">
                   <h3 className="font-bold text-white mb-2 flex items-center gap-2 text-sm">
                     <Zap className="w-4 h-4 text-yellow-400" />
-                    Come Funziona
+                    {t('mapPills.finalShot.howItWorks')}
                   </h3>
                   <ul className="text-xs text-white/70 space-y-1.5">
                     <li className="flex items-start gap-2">
                       <span className="text-cyan-400 font-bold">1.</span>
-                      Attiva Final Shot toccando questo pulsante
+                      {t('mapPills.finalShot.bullet1')}
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-cyan-400 font-bold">2.</span>
-                      Tocca sulla mappa dove pensi sia il premio
+                      {t('mapPills.finalShot.bullet2')}
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-cyan-400 font-bold">3.</span>
-                      Ricevi feedback sulla distanza dal premio
+                      {t('mapPills.finalShot.bullet3')}
                     </li>
                   </ul>
                 </div>
@@ -441,24 +442,24 @@ const FinalShootPill: React.FC = () => {
                 <div className="p-3 rounded-xl bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-400/20">
                   <h3 className="font-bold text-red-300 mb-2 flex items-center gap-2 text-sm">
                     <AlertCircle className="w-4 h-4" />
-                    Tentativi Disponibili
+                    {t('mapPills.finalShot.attemptsAvailable')}
                   </h3>
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between text-white/80">
-                      <span>🆓 Gratuiti</span>
-                      <span className="font-bold text-green-400">3 tentativi</span>
+                      <span>🆓 {t('mapPills.finalShot.free')}</span>
+                      <span className="font-bold text-green-400">{t('mapPills.finalShot.freeValue')}</span>
                     </div>
                     <div className="flex justify-between text-white/80">
-                      <span>⭐ Plus</span>
-                      <span className="font-bold text-amber-400">10 tentativi (100-1000 M1U)</span>
+                      <span>⭐ {t('mapPills.finalShot.plus')}</span>
+                      <span className="font-bold text-amber-400">{t('mapPills.finalShot.plusValue')}</span>
                     </div>
                     <div className="flex justify-between text-white/80">
-                      <span>💎 Elite</span>
-                      <span className="font-bold text-purple-400">10 tentativi (1500 M1U cad.)</span>
+                      <span>💎 {t('mapPills.finalShot.elite')}</span>
+                      <span className="font-bold text-purple-400">{t('mapPills.finalShot.eliteValue')}</span>
                     </div>
                     <div className="pt-1 border-t border-white/10 flex justify-between text-white/60">
-                      <span>Totale massimo</span>
-                      <span className="font-bold text-cyan-400">23 tentativi</span>
+                      <span>{t('mapPills.finalShot.totalMax')}</span>
+                      <span className="font-bold text-cyan-400">{t('mapPills.finalShot.totalValue')}</span>
                     </div>
                   </div>
                 </div>
@@ -467,13 +468,13 @@ const FinalShootPill: React.FC = () => {
                 <div className="p-3 rounded-xl bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-400/30">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-xs text-white/60">Si attiva tra</div>
+                      <div className="text-xs text-white/60">{t('mapPills.finalShot.activatesIn')}</div>
                       <div className="text-xl font-bold text-cyan-400 font-orbitron">
-                        {daysUntilAvailable} GIORNI
+                        {daysUntilAvailable} {t('mapPills.finalShot.days')}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-white/60">Giorni missione</div>
+                      <div className="text-xs text-white/60">{t('mapPills.finalShot.missionDays')}</div>
                       <div className="text-base font-bold text-white">
                         {totalMissionDays - daysRemaining}/{totalMissionDays}
                       </div>
@@ -488,7 +489,7 @@ const FinalShootPill: React.FC = () => {
                   onClick={() => setShowInfoModal(false)}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-400/30 text-white font-bold hover:border-cyan-400/50 transition-colors text-sm"
                 >
-                  Ho Capito
+                  {t('mapPills.finalShot.gotIt')}
                 </button>
               </div>
             </div>

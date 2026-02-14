@@ -5,6 +5,7 @@
 // BUG FIX: Radius picker is now INLINE (no modal), points render on map
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Map as MLMap } from 'maplibre-gl';
 import maplibregl from 'maplibre-gl';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ const DevAreasPanel: React.FC<DevAreasPanelProps> = ({
   onAddArea,
   onCreateAreaDirect
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState<boolean>(false);
   const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const [activeTab, setActiveTab] = useState<string>('aree');
@@ -475,7 +477,7 @@ const DevAreasPanel: React.FC<DevAreasPanelProps> = ({
             <MapPin className="h-5 w-5 text-purple-400" />
           </div>
           <div className="m1x-pill__label">
-            Punti/Aree ({totalCount})
+            {t('mapPills.areas.pillLabel', { count: totalCount })}
           </div>
         </div>
       </div>
@@ -503,20 +505,20 @@ const DevAreasPanel: React.FC<DevAreasPanelProps> = ({
                 <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
               </button>
               <div style={{ flex: 1, textAlign: 'center' }}>
-                <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>PUNTI E AREE</h1>
+                <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>{t('mapPills.areas.title')}</h1>
               </div>
               <div style={{ width: '40px' }} />
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Gestisci i tuoi punti di interesse</p>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>{t('mapPills.areas.subtitle')}</p>
           </div>
 
           {/* TABS */}
           <div style={{ display: 'flex', margin: '16px', gap: '8px' }}>
             <button onClick={() => setActiveTab('aree')} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: activeTab === 'aree' ? '#7B2EFF' : 'rgba(255,255,255,0.1)', border: 'none', color: activeTab === 'aree' ? '#FFFFFF' : 'rgba(255,255,255,0.6)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              <Target style={{ width: '16px', height: '16px' }} /> Aree ({searchAreas?.length || 0})
+              <Target style={{ width: '16px', height: '16px' }} /> {t('mapPills.areas.tabAreas', { count: searchAreas?.length || 0 })}
             </button>
             <button onClick={() => setActiveTab('punti')} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: activeTab === 'punti' ? '#00D1FF' : 'rgba(255,255,255,0.1)', border: 'none', color: activeTab === 'punti' ? '#000000' : 'rgba(255,255,255,0.6)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              <MapPin style={{ width: '16px', height: '16px' }} /> Punti ({mapPoints.length})
+              <MapPin style={{ width: '16px', height: '16px' }} /> {t('mapPills.areas.tabPoints', { count: mapPoints.length })}
             </button>
           </div>
 
@@ -574,11 +576,11 @@ const DevAreasPanel: React.FC<DevAreasPanelProps> = ({
                 ) : (
                   <>
                     <button onClick={handleAddAreaClick} style={{ width: '100%', padding: '14px', marginBottom: '16px', borderRadius: '12px', background: '#7B2EFF', border: 'none', color: '#FFF', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                      <Plus style={{ width: '16px', height: '16px' }} /> Nuova area di ricerca
+                      <Plus style={{ width: '16px', height: '16px' }} /> {t('mapPills.areas.newArea')}
                     </button>
 
                     {(!searchAreas || searchAreas.length === 0) ? (
-                      <GlassCard><p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>Nessuna area. Clicca "Nuova" e poi tocca sulla mappa.</p></GlassCard>
+                      <GlassCard><p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>{t('mapPills.areas.empty')}</p></GlassCard>
                     ) : (
                       searchAreas.map(area => (
                         <GlassCard key={area.id} style={{ marginBottom: '12px' }}>

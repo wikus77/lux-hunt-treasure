@@ -4,6 +4,7 @@
 // Jan 2026 update: Now uses MapPillFlipOverlay
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Map as MLMap } from 'maplibre-gl';
 import { Button } from '@/components/ui/button';
 import { FileText, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
@@ -25,6 +26,7 @@ interface NoteItem {
 }
 
 const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState<boolean>(false);
   const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const [notes, setNotes] = useState<NoteItem[]>([]);
@@ -58,7 +60,7 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
       })));
     } catch (error) {
       console.error('[DevNotesPanel] Error loading notes:', error);
-      toast.error('Errore nel caricare le note');
+      toast.error(t('mapPills.notes.toastLoadError'));
     } finally {
       setLoading(false);
     }
@@ -98,7 +100,7 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
           updated_at: data.updated_at
         }, ...prev]);
         setNewNoteText('');
-        toast.success('Nota aggiunta');
+        toast.success(t('mapPills.notes.toastAddSuccess'));
       }
     } catch (error) {
       console.error('[DevNotesPanel] Error adding note:', error);
@@ -227,7 +229,7 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
             <FileText className="h-5 w-5 text-cyan-400" />
           </div>
           <div className="m1x-pill__label">
-            Note ({count})
+            {t('mapPills.notes.pillLabel', { count })}
           </div>
         </div>
       </div>
@@ -255,11 +257,11 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
                 <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
               </button>
               <div style={{ flex: 1, textAlign: 'center' }}>
-                <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>NOTE</h1>
+                <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>{t('mapPills.notes.title')}</h1>
               </div>
               <div style={{ width: '40px' }} />
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Salva appunti sulla tua ricerca</p>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>{t('mapPills.notes.subtitle')}</p>
           </div>
 
           {/* CONTENT */}
@@ -268,7 +270,7 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
             <GlassCard style={{ marginBottom: '16px' }}>
               <textarea
                 style={{ width: '100%', height: '80px', padding: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#FFFFFF', fontSize: '14px', resize: 'none', outline: 'none' }}
-                placeholder="Scrivi una nuova nota..."
+                placeholder={t('mapPills.notes.placeholder')}
                 value={newNoteText}
                 onChange={(e) => setNewNoteText(e.target.value)}
                 disabled={!isAuthenticated}
@@ -279,20 +281,20 @@ const DevNotesPanel: React.FC<DevNotesPanelProps> = ({ map }) => {
                 style={{ width: '100%', marginTop: '12px', padding: '14px', borderRadius: '12px', background: '#00D1FF', border: 'none', color: '#000000', fontSize: '14px', fontWeight: 600, cursor: 'pointer', opacity: (!newNoteText.trim() || saving || !isAuthenticated) ? 0.5 : 1 }}
               >
                 <Plus style={{ width: '16px', height: '16px', display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
-                {saving ? 'Salvataggio...' : 'Aggiungi nota'}
+                {saving ? t('mapPills.notes.saving') : t('mapPills.notes.addNote')}
               </button>
             </GlassCard>
 
             {/* Notes list */}
             {!isAuthenticated ? (
-              <GlassCard><p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>Accedi per salvare le tue note.</p></GlassCard>
+              <GlassCard><p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>{t('mapPills.notes.loginRequired')}</p></GlassCard>
             ) : loading ? (
               <GlassCard style={{ textAlign: 'center', padding: '30px 0' }}>
                 <div style={{ width: '24px', height: '24px', border: '2px solid rgba(0, 209, 255, 0.3)', borderTopColor: '#00D1FF', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>Caricamento...</p>
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>{t('mapPills.notes.loading')}</p>
               </GlassCard>
             ) : notes.length === 0 ? (
-              <GlassCard><p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>Nessuna nota. Aggiungi la tua prima nota sopra.</p></GlassCard>
+              <GlassCard><p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', textAlign: 'center', padding: '20px 0' }}>{t('mapPills.notes.empty')}</p></GlassCard>
             ) : (
               notes.map(note => (
                 <GlassCard key={note.id} style={{ marginBottom: '12px' }}>
