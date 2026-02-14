@@ -1555,6 +1555,30 @@ html:has(.sn-page) .text-white:not(.leaderboard-card-glass .text-white):not(.m1-
   color: rgba(255, 255, 255, 0.60) !important;
 }
 
+/* 🔧 FIX 13/02/2026: MODAL PORTAL - Force WHITE text (GlassModal, RewardZonePopup)
+   html:has(.sn-page) overrides text-white to dark - modals render in #m1-modal-portal
+   and have DARK backgrounds, so text MUST stay white for legibility */
+#m1-modal-portal .text-white,
+#m1-modal-portal [class*="text-white"],
+#m1-modal-portal .text-white\/90,
+#m1-modal-portal .text-white\/80,
+#m1-modal-portal .text-white\/70,
+#m1-modal-portal .text-white\/60,
+#m1-modal-portal .text-white\/50 {
+  color: #ffffff !important;
+}
+
+/* RewardZonePopup renders to body (not #m1-modal-portal) - same fix */
+.m1-reward-zone-popup .text-white,
+.m1-reward-zone-popup [class*="text-white"],
+.m1-reward-zone-popup .text-white\/90,
+.m1-reward-zone-popup .text-white\/80,
+.m1-reward-zone-popup .text-white\/70,
+.m1-reward-zone-popup .text-white\/60,
+.m1-reward-zone-popup .text-white\/50 {
+  color: #ffffff !important;
+}
+
 .sn-page .text-white\/70:not(.m1-folder-glass--graphite .text-white\/70):not(.m1-folder-glass .text-white\/70),
 .sn-page .text-white\/80:not(.m1-folder-glass--graphite .text-white\/80):not(.m1-folder-glass .text-white\/80),
 html:has(.sn-page) .text-white\/70:not(.m1-folder-glass--graphite .text-white\/70),

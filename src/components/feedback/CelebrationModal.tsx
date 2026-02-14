@@ -32,7 +32,8 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
   onDismiss,
   onCtaClick,
 }) => {
-  const copy = getEventCopy(event);
+  const { t } = useTranslation();
+  const copy = getEventCopy(event, t);
   const variant = getGlassVariantForEvent(event.type);
   const preset = GLASS_PRESETS[variant];
   const animationRef = useRef<number | null>(null);

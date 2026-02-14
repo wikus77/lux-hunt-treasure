@@ -31,22 +31,18 @@ export interface AIAnalystPanelProps {
   showChips?: boolean; // v4: hide chips by default
 }
 
-const QUICK_CHIPS: Array<{ label: string; mode: AnalystMode }> = [
-  { label: 'Classifica indizi', mode: 'classify' },
-  { label: 'Trova pattern', mode: 'analyze' },
-  { label: 'Decodifica', mode: 'decode' },
-  { label: 'Valuta probabilità', mode: 'assess' },
-  { label: 'Mentore', mode: 'guide' }
+const QUICK_CHIPS: Array<{ labelKey: string; mode: AnalystMode }> = [
+  { labelKey: 'aion_chip_classify', mode: 'classify' },
+  { labelKey: 'aion_chip_pattern', mode: 'analyze' },
+  { labelKey: 'aion_chip_decode', mode: 'decode' },
+  { labelKey: 'aion_chip_assess', mode: 'assess' },
+  { labelKey: 'aion_chip_guide', mode: 'guide' }
 ];
 
-// v4: Placeholder telegrafici per input brevi
-const PLACEHOLDERS = [
-  "finalshot?",
-  "buzz map",
-  "piani?",
-  "come inizio?",
-  "cosa è mission?",
-  "aiuto"
+// v4: Placeholder keys per input brevi (i18n)
+const PLACEHOLDER_KEYS = [
+  'aion_placeholder_1', 'aion_placeholder_2', 'aion_placeholder_3',
+  'aion_placeholder_4', 'aion_placeholder_5', 'aion_placeholder_6'
 ];
 
 const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => { 
@@ -76,7 +72,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
   });
   
   const [input, setInput] = useState('');
-  const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
+  const [placeholderKey, setPlaceholderKey] = useState(PLACEHOLDER_KEYS[0]);
   const [nbaPills, setNbaPills] = useState<NBASuggestion[]>([]);
   const [celebration, setCelebration] = useState<ReturnType<typeof celebrateMilestone> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -99,7 +95,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
   // Rotate placeholder
   useEffect(() => {
     const interval = setInterval(() => {
-      setPlaceholder(PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
+      setPlaceholderKey(PLACEHOLDER_KEYS[Math.floor(Math.random() * PLACEHOLDER_KEYS.length)]);
     }, 4000);
     return () => clearInterval(interval);
   }, []);
@@ -347,7 +343,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={nbaPills.length > 0 ? t('pills_ready') : t('norah_placeholder')}
+                placeholder={nbaPills.length > 0 ? t('pills_ready') : t(placeholderKey)}
                 disabled={isProcessing}
                 className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-[#F213A4]/50 disabled:opacity-50 transition-all"
               />

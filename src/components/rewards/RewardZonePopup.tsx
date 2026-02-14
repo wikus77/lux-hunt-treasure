@@ -271,7 +271,7 @@ export const RewardZonePopup: React.FC = () => {
   return createPortal(
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[10003] flex items-center justify-center p-4"
+        className="m1-reward-zone-popup fixed inset-0 z-[10003] flex items-center justify-center p-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -328,7 +328,7 @@ export const RewardZonePopup: React.FC = () => {
             <h2 className="relative text-2xl font-bold text-white mb-1">
               <span className="text-emerald-400">99</span> MARKER REWARDS
             </h2>
-            <p className="relative text-emerald-300/80 text-sm font-medium tracking-wider">
+            <p className="relative text-white/90 text-sm font-medium tracking-wider">
               HIDDEN TREASURES AWAIT
             </p>
           </div>
@@ -338,7 +338,7 @@ export const RewardZonePopup: React.FC = () => {
             <div className="bg-black/30 rounded-xl p-4 border border-white/10">
               <div className="flex items-start gap-3 mb-3">
                 <MapPin className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <p className="text-white/80 text-sm leading-relaxed">
+                <p className="text-white/90 text-sm leading-relaxed">
                   Abbiamo nascosto <span className="text-emerald-400 font-bold">99 marker rewards</span> di colore verde sulla mappa. 
                   Trovandoli potrai riscattare premi esclusivi!
                 </p>
@@ -346,7 +346,7 @@ export const RewardZonePopup: React.FC = () => {
               
               <div className="flex items-start gap-3">
                 <Navigation className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
-                <p className="text-white/60 text-sm leading-relaxed">
+                <p className="text-white/90 text-sm leading-relaxed">
                   Premi il pulsante per volare verso una <span className="text-cyan-400">zona di 250 metri</span> dove 
                   si nasconde un marker. Dovrai cercarlo!
                 </p>
@@ -373,14 +373,14 @@ export const RewardZonePopup: React.FC = () => {
               <Button
                 onClick={handleClose}
                 variant="outline"
-                className="flex-1 h-10 border-white/20 text-white/70 hover:bg-white/10"
+                className="flex-1 h-10 border-white/20 text-white hover:bg-white/10"
               >
                 Più tardi
               </Button>
               <Button
                 onClick={handleDontShowAgain}
                 variant="ghost"
-                className="flex-1 h-10 text-white/50 hover:text-white/70 hover:bg-white/5"
+                className="flex-1 h-10 text-white hover:text-white/90 hover:bg-white/5"
               >
                 Non mostrare più
               </Button>

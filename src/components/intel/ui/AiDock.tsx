@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ - AI Dock Component
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Video, Mic, MicOff, MoreHorizontal, Crosshair } from 'lucide-react';
 import { useLocation } from 'wouter';
 import styles from './AiDock.module.css';
@@ -17,6 +18,7 @@ const AiDock: React.FC<AiDockProps> = ({
   onMoreClick,
   onFinalShotClick
 }) => {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   
   const handleFinalShot = () => {
@@ -34,7 +36,7 @@ const AiDock: React.FC<AiDockProps> = ({
         <button
           className={styles.dockButton}
           onClick={handleFinalShot}
-          aria-label="Open Final Shot"
+          aria-label={t('aion_dock_final_shot')}
           type="button"
         >
           <Crosshair className={styles.icon} />
@@ -44,7 +46,7 @@ const AiDock: React.FC<AiDockProps> = ({
         <button
           className={`${styles.dockButton} ${micEnabled ? styles.active : ''}`}
           onClick={onMicToggle}
-          aria-label={micEnabled ? 'Disable microphone' : 'Enable microphone'}
+          aria-label={micEnabled ? t('aion_dock_mic_disable') : t('aion_dock_mic_enable')}
           aria-pressed={micEnabled}
           type="button"
         >
@@ -59,7 +61,7 @@ const AiDock: React.FC<AiDockProps> = ({
         <button
           className={styles.dockButton}
           onClick={onMoreClick}
-          aria-label="More options"
+          aria-label={t('aion_dock_more')}
           type="button"
         >
           <MoreHorizontal className={styles.icon} />

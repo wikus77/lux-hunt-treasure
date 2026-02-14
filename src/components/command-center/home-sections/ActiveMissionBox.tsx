@@ -102,7 +102,7 @@ function FoundCluesModal({
         }}
       >
         <div className="text-4xl font-bold text-green-400 mb-3">
-          {displayCluesFound}<span className="text-white/80">/{totalClues}</span>
+          {displayCluesFound}<span className="text-white">/{totalClues}</span>
         </div>
         <div className="w-full bg-black/30 rounded-full h-3 mb-3">
           <motion.div 
@@ -119,7 +119,7 @@ function FoundCluesModal({
           />
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-white/80">{t('home_active_completed_pct', { pct: Math.round((displayCluesFound / totalClues) * 100) })}</span>
+          <span className="text-white">{t('home_active_completed_pct', { pct: Math.round((displayCluesFound / totalClues) * 100) })}</span>
           <span className="text-green-400 font-medium">{totalClues - displayCluesFound} {t('home_active_remaining')}</span>
         </div>
       </div>
@@ -153,9 +153,9 @@ function FoundCluesModal({
                   <h5 className="text-sm font-medium text-white flex-1 pr-2">{clue.title}</h5>
                   <span className="inline-block px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-full flex-shrink-0">BUZZ</span>
                 </div>
-                <p className="text-sm text-white/70 leading-relaxed mb-3">{clue.description}</p>
+                <p className="text-sm text-white/90 leading-relaxed mb-3">{clue.description}</p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-white/80">{new Date(clue.date).toLocaleDateString()}</span>
+                  <span className="text-xs text-white">{new Date(clue.date).toLocaleDateString()}</span>
                   <span className="text-xs text-green-400">✅ {t('home_active_found_via_buzz')}</span>
                 </div>
               </motion.div>
@@ -165,8 +165,8 @@ function FoundCluesModal({
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
                 <Search className="w-8 h-8 text-white/30" />
               </div>
-              <p className="text-white/80 mb-2">{t('home_active_no_clues')}</p>
-              <p className="text-sm text-white/80">{t('home_active_press_buzz')}</p>
+              <p className="text-white mb-2">{t('home_active_no_clues')}</p>
+              <p className="text-sm text-white">{t('home_active_press_buzz')}</p>
             </div>
           )}
         </div>
@@ -227,7 +227,7 @@ function TimeRemainingModal({ isOpen, onClose, remainingDays, totalDays, startTi
           <div className={`text-5xl font-bold ${isExpired ? 'text-red-400' : isUrgent ? 'text-orange-400' : 'text-amber-400'}`}>
             {remainingDays}
           </div>
-          <span className="text-xl text-white/80">{t('home_active_days')}</span>
+          <span className="text-xl text-white">{t('home_active_days')}</span>
         </div>
         
         <div className="w-full bg-black/30 rounded-full h-3 mb-3">
@@ -245,7 +245,7 @@ function TimeRemainingModal({ isOpen, onClose, remainingDays, totalDays, startTi
         </div>
         
         <div className="flex justify-between text-sm">
-          <span className="text-white/80">{t('home_active_elapsed_pct', { pct: Math.round(timeProgress) })}</span>
+          <span className="text-white">{t('home_active_elapsed_pct', { pct: Math.round(timeProgress) })}</span>
           <span className="text-amber-400 font-medium">{t('home_active_of_total_days', { total: totalDays })}</span>
         </div>
       </div>
@@ -254,11 +254,11 @@ function TimeRemainingModal({ isOpen, onClose, remainingDays, totalDays, startTi
       <div className="grid grid-cols-2 gap-3 mb-5">
         <div className="rounded-xl p-4 border border-white/10 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
           <p className="text-2xl font-bold text-green-400">{totalDays - remainingDays}</p>
-          <p className="text-xs text-white/85 mt-1">{t('home_active_days_elapsed')}</p>
+          <p className="text-xs text-white mt-1">{t('home_active_days_elapsed')}</p>
         </div>
         <div className="rounded-xl p-4 border border-white/10 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
           <p className={`text-2xl font-bold ${isExpired ? 'text-red-400' : isUrgent ? 'text-orange-400' : 'text-amber-400'}`}>{remainingDays}</p>
-          <p className="text-xs text-white/85 mt-1">{t('home_active_days_remaining')}</p>
+          <p className="text-xs text-white mt-1">{t('home_active_days_remaining')}</p>
         </div>
       </div>
       
@@ -285,7 +285,7 @@ function TimeRemainingModal({ isOpen, onClose, remainingDays, totalDays, startTi
                 }`} />
                 <span className="text-white text-sm">{item.event}</span>
               </div>
-              <span className="text-xs text-white/85">{item.date}</span>
+              <span className="text-xs text-white">{item.date}</span>
             </motion.div>
           ))}
         </div>
@@ -338,7 +338,7 @@ function MissionStatusModal({ isOpen, onClose, remainingDays, totalDays, startTi
           </span>
         </div>
         
-        <div className="text-sm text-white/80">
+        <div className="text-sm text-white">
           {t('home_active_started_on')} <span className="text-white font-medium">{new Date(startTime).toLocaleDateString()}</span>
         </div>
       </div>
@@ -348,7 +348,7 @@ function MissionStatusModal({ isOpen, onClose, remainingDays, totalDays, startTi
         {/* Time Progress */}
         <div className="rounded-xl p-4 border border-white/10" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
           <div className="flex justify-between mb-2">
-            <span className="text-sm text-white/85 flex items-center gap-2">
+            <span className="text-sm text-white flex items-center gap-2">
               <Clock className="w-4 h-4 text-amber-400" />
               {t('home_active_time_elapsed')}
             </span>
@@ -367,7 +367,7 @@ function MissionStatusModal({ isOpen, onClose, remainingDays, totalDays, startTi
               transition={{ duration: 0.8, ease: 'easeOut' }}
             />
           </div>
-          <div className="text-xs text-white/90 mt-2">
+          <div className="text-xs text-white mt-2">
             {totalDays - remainingDays}/{totalDays} {t('home_active_days')}
           </div>
         </div>
@@ -375,7 +375,7 @@ function MissionStatusModal({ isOpen, onClose, remainingDays, totalDays, startTi
         {/* Clues Progress */}
         <div className="rounded-xl p-4 border border-white/10" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
           <div className="flex justify-between mb-2">
-            <span className="text-sm text-white/85 flex items-center gap-2">
+            <span className="text-sm text-white flex items-center gap-2">
               <Search className="w-4 h-4 text-green-400" />
               {t('home_active_clue_progress')}
             </span>
@@ -394,7 +394,7 @@ function MissionStatusModal({ isOpen, onClose, remainingDays, totalDays, startTi
               transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
             />
           </div>
-          <div className="text-xs text-white/90 mt-2">
+          <div className="text-xs text-white mt-2">
             {t('home_active_clues_found_count', { found: cluesFound, total: totalClues })}
           </div>
         </div>
@@ -404,11 +404,11 @@ function MissionStatusModal({ isOpen, onClose, remainingDays, totalDays, startTi
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl p-4 border border-white/10 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
           <p className="text-2xl font-bold text-green-400">{cluesFound}</p>
-          <p className="text-xs text-white/90 mt-1">{t('home_active_goals_reached')}</p>
+          <p className="text-xs text-white mt-1">{t('home_active_goals_reached')}</p>
         </div>
         <div className="rounded-xl p-4 border border-white/10 text-center" style={{ background: 'rgba(255, 255, 255, 0.04)' }}>
           <p className="text-2xl font-bold text-red-400">{totalClues - cluesFound}</p>
-          <p className="text-xs text-white/90 mt-1">{t('home_active_goals_remaining')}</p>
+          <p className="text-xs text-white mt-1">{t('home_active_goals_remaining')}</p>
         </div>
       </div>
     </GlassModal>
@@ -680,8 +680,8 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             />
           </div>
           
-          <span className="text-xs text-white/80">{t('home_active_of_total', { total: mission.totalDays })}</span>
-          <div className="absolute bottom-2 right-2 text-white/70"><ChevronDown className="w-4 h-4" /></div>
+          <span className="text-xs text-white">{t('home_active_of_total', { total: mission.totalDays })}</span>
+          <div className="absolute bottom-2 right-2 text-white"><ChevronDown className="w-4 h-4" /></div>
         </motion.div>
 
         {/* 🔧 FIX 28/01/2026: "Stato Missione" card rimossa da Home - ora accessibile solo da M1SSION AGENT */}
@@ -764,7 +764,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           <div className={`text-5xl font-orbitron font-bold mb-4 ${isFinalDay ? 'text-red-400' : 'text-orange-400'}`}>
             {daysRemaining}
           </div>
-          <div className="text-white/80 text-lg mb-6">
+          <div className="text-white text-lg mb-6">
             {daysRemaining === 0 ? t('home_active_last_day') : daysRemaining === 1 ? t('home_active_day_left') : t('home_active_days_remaining_label')}
           </div>
           

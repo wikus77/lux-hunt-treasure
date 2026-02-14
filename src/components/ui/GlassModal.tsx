@@ -176,7 +176,7 @@ export function GlassModal({ isOpen, onClose, children, accentColor, title, subt
               </div>
               
               {subtitle && (
-                <p className="text-xs text-white/50 px-4 pt-2">{subtitle}</p>
+                <p className="text-xs text-white/90 px-4 pt-2">{subtitle}</p>
               )}
 
               {/* Scrollable Content */}

@@ -3,6 +3,7 @@
 // Includes Shadow Protocol v2 Intercepts panel
 
 import React, { useRef, useEffect, Suspense, lazy } from 'react';
+import { useTranslation } from 'react-i18next';
 // 🔥 CRITICAL: Lazy load AionEntity to prevent THREE.js hook errors during initial load
 const AionEntity = lazy(() => import('@/components/aion/AionEntity'));
 import type { AionEntityHandle } from '@/components/aion/AionEntity';
@@ -17,6 +18,7 @@ const ShadowIntercepts = lazy(() => import('@/components/intelligence/ShadowInte
 import { MotivationalPopup } from '@/components/feedback';
 
 const IntelligencePage: React.FC = () => {
+  const { t } = useTranslation();
   const aionRef = useRef<AionEntityHandle>(null);
 
   // 🔧 P0 FIX 31/01/2026: REMOVED html/body manipulation
@@ -106,7 +108,7 @@ const IntelligencePage: React.FC = () => {
             <span style={{ color: 'var(--sn-accent)' }}>AI</span>
             <span style={{ color: 'var(--sn-text-primary)' }}>ON</span>
           </h2>
-          <p className="text-[9px] tracking-wide" style={{ color: 'var(--sn-text-tertiary)' }}>Neural Link Established</p>
+          <p className="text-[9px] tracking-wide" style={{ color: 'var(--sn-text-tertiary)' }}>{t('aion_neural_link_established')}</p>
         </div>
 
         {/* Shadow Protocol v2 - Hidden on mobile to save space */}

@@ -3,6 +3,7 @@
 // 🔧 FIX v11 (22/01/2026): Unified KeyboardDock for iOS keyboard handling
 
 import React, { useState, useRef, useEffect, RefObject } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, MicOff, RotateCw, MoreHorizontal, Loader2, Brain, Zap } from 'lucide-react';
@@ -18,6 +19,7 @@ interface Message {
   id: string;
   role: 'user' | 'assistant' | 'system' | 'error';
   content: string;
+  contentKey?: string; // i18n key when content should be translated
   timestamp: Date;
   meta?: {
     m1u_spent?: number;
@@ -39,22 +41,24 @@ interface IntelChatPanelProps {
   style?: React.CSSProperties;
 }
 
-// Error messages mapping (lore-friendly)
-const ERROR_MESSAGES: Record<string, string> = {
-  'INSUFFICIENT_M1U_FOR_AION': '⚡ Energia M1U insufficiente per attivare il canale AION. Ricarica le tue unità per continuare.',
-  'AION_DAILY_CAP_EXCEEDED': '🔒 Limite giornaliero AION raggiunto. Il canale si ricaricherà domani. Riprova più tardi.',
-  'NOT_AUTHENTICATED': '🔐 Connessione neurale non autenticata. Effettua il login per accedere ad AION.',
-  'AUTH_ERROR': '🔐 Errore di autenticazione. Effettua nuovamente il login.',
-  'RPC_UNAVAILABLE': '⚙️ Sistema di billing temporaneamente non disponibile. Riprova tra qualche secondo.',
-  'INTERNAL_ERROR': '⚠️ Interferenza nel canale. Riprova tra qualche secondo.',
+// Error code → i18n key mapping
+const ERROR_KEYS: Record<string, string> = {
+  'INSUFFICIENT_M1U_FOR_AION': 'aion_error_insufficient_m1u',
+  'AION_DAILY_CAP_EXCEEDED': 'aion_error_daily_cap',
+  'NOT_AUTHENTICATED': 'aion_error_not_authenticated',
+  'AUTH_ERROR': 'aion_error_auth',
+  'RPC_UNAVAILABLE': 'aion_error_rpc',
+  'INTERNAL_ERROR': 'aion_error_internal',
 };
 
 const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, className = '', style }) => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'system-1',
       role: 'system',
-      content: 'Connessione neurale stabilizzata. Sono AION, la tua intelligenza adattiva.',
+      content: '',
+      contentKey: 'aion_system_welcome',
       timestamp: new Date()
     }
   ]);
@@ -216,7 +220,8 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
       // 🔒 HARDENED: Check if access was denied (ALL cases, no bypass)
       if (data?.authorized === false) {
         const errorCode = data.error_code || 'INTERNAL_ERROR';
-        const errorMessage = ERROR_MESSAGES[errorCode] || data.message || 'Accesso AION non autorizzato.';
+        const errorKey = ERROR_KEYS[errorCode] || 'aion_error_internal';
+        const errorMessage = data.message || t(errorKey);
         
         // 🔍 OBSERVABILITY: Track 503/RPC_UNAVAILABLE for retry
         const isRetryableError = errorCode === 'RPC_UNAVAILABLE' || errorCode === 'INTERNAL_ERROR';
@@ -374,7 +379,8 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
     setMessages([{
       id: 'system-1',
       role: 'system',
-      content: 'Connessione neurale ripristinata. Sono AION, pronto ad assisterti.',
+      content: '',
+      contentKey: 'aion_system_welcome',
       timestamp: new Date()
     }]);
     stopTTS();
@@ -396,7 +402,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-cyan-400" />
-          <span className="text-sm font-medium text-white/90">Neural Link Established</span>
+          <span className="text-sm font-medium text-white/90">{t('aion_neural_link_established')}</span>
           <span className={`w-2 h-2 rounded-full ${status === 'idle' ? 'bg-green-500' : status === 'speaking' ? 'bg-cyan-500 animate-pulse' : 'bg-yellow-500 animate-pulse'}`} />
         </div>
         <div className="flex items-center gap-2">
@@ -406,8 +412,8 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
               <Zap className="w-3 h-3 text-yellow-400" />
               <span className="text-white/70">
                 {aionStatus.free_remaining > 0 
-                  ? `${aionStatus.free_remaining} gratis`
-                  : `${aionStatus.cost_per_consult} M1U`
+                  ? t('aion_status_gratis', { count: aionStatus.free_remaining })
+                  : t('aion_status_m1u', { cost: aionStatus.cost_per_consult })
                 }
               </span>
             </div>
@@ -460,7 +466,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
                     : 'bg-white/10 text-white/90 border border-white/10 shadow-sm'
                 }`}
               >
-                <p className="text-sm leading-relaxed">{message.content}</p>
+                <p className="text-sm leading-relaxed">{message.contentKey ? t(message.contentKey) : message.content}</p>
                 {/* Show M1U spent info */}
                 {message.meta?.m1u_spent !== undefined && message.meta.m1u_spent > 0 && (
                   <p className="text-xs text-cyan-400/70 mt-1">
@@ -475,7 +481,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
                     className="mt-2 px-3 py-1.5 text-xs bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
                   >
                     <RotateCw className="w-3 h-3" />
-                    Riprova ({MAX_RETRY_COUNT - retryCount} tentativi)
+                    {t('aion_retry_button', { count: MAX_RETRY_COUNT - retryCount })}
                   </button>
                 )}
               </div>
@@ -500,9 +506,9 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
 
       {/* Status - UX Resilience: Clear status messages - GRAPHITE theme */}
       <div className="px-4 py-2 text-xs text-center text-white/50">
-        {status === 'listening' && '⚡ Verifica accesso in corso...'}
-        {status === 'speaking' && '🔊 AION sta parlando...'}
-        {status === 'idle' && '✨ Pronto'}
+        {status === 'listening' && t('aion_status_verifying')}
+        {status === 'speaking' && t('aion_status_speaking')}
+        {status === 'idle' && t('aion_status_ready')}
       </div>
 
       {/* Input - 🔧 FIX v17: SEMPRE portal con z-index BASSO (1000)
@@ -536,7 +542,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
                 e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
               }}
               onKeyDown={handleKeyPress}
-              placeholder="Scrivi un messaggio..."
+              placeholder={t('aion_input_placeholder')}
               disabled={isLoading}
               rows={1}
               autoComplete="off"
