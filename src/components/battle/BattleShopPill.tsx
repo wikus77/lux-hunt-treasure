@@ -6,7 +6,8 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { MapPillFlipOverlay } from '@/components/map/MapPillFlipOverlay';
 import { ShoppingBag, X, Swords, Shield, Package, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,7 @@ const RARITY_COLORS: Record<string, string> = {
 
 export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) {
   const { t } = useTranslation();
+  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loadingInventory, setLoadingInventory] = useState(false);
@@ -76,7 +78,7 @@ export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) 
       {/* Glassmorphism Shop Pill - Same style as M1U Plus */}
       <motion.button
         className={`pill-orb ${className}`}
-        onClick={() => setIsOpen(true)}
+        onClick={(e) => { setOriginRect(e.currentTarget.getBoundingClientRect()); setIsOpen(true); }}
         aria-label={t('mapPills.arsenal.ariaLabel')}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
@@ -97,64 +99,35 @@ export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) 
         )}
       </motion.button>
 
-      {/* Shop Modal */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed inset-0 z-[5000] flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            {/* Backdrop */}
-            <motion.div
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-              onClick={() => setIsOpen(false)}
-            />
-
-            {/* Modal Content */}
-            <motion.div
-              className="relative w-full max-w-md max-h-[85vh] overflow-hidden rounded-2xl"
-              style={{
-                background: 'linear-gradient(180deg, rgba(15,23,42,0.98) 0%, rgba(30,41,59,0.98) 100%)',
-                border: '1px solid rgba(0, 255, 255, 0.2)',
-                boxShadow: '0 0 40px rgba(0, 255, 255, 0.15), 0 25px 50px rgba(0, 0, 0, 0.5)',
-              }}
-              initial={{ scale: 0.9, y: 20, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: 20, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25 }}
-            >
-              {/* Header */}
-              <div className="relative px-6 py-4 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="p-2.5 rounded-xl"
-                    style={{
-                      background: 'radial-gradient(circle at 30% 30%, rgba(0,255,255,0.2), rgba(139,92,246,0.3) 80%)',
-                      border: '1px solid rgba(0, 255, 255, 0.3)',
-                    }}
-                  >
-                    <ShoppingBag className="w-5 h-5 text-cyan-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-white font-orbitron">{t('mapPills.arsenal.title')}</h2>
-                    <p className="text-xs text-gray-400">{t('mapPills.arsenal.subtitle')}</p>
-                  </div>
-                </div>
-
-                {/* Close button */}
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-400" />
-                </button>
+      {/* Shop Modal - MapPillFlipOverlay (NOTE-style) */}
+      <MapPillFlipOverlay open={isOpen} originRect={originRect} onClose={() => setIsOpen(false)}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+          {/* HEADER - NOTE style */}
+          <div style={{
+            flexShrink: 0,
+            background: 'linear-gradient(180deg, rgba(0, 209, 255, 0.8) 0%, rgba(0, 100, 150, 0.6) 100%)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
+            paddingBottom: '20px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <button onClick={() => setIsOpen(false)} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+              </button>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>{t('mapPills.arsenal.title')}</h1>
               </div>
+              <div style={{ width: '40px' }} />
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>{t('mapPills.arsenal.subtitle')}</p>
+          </div>
 
-              {/* Tabs: Shop & Inventory */}
-              <Tabs defaultValue="shop" className="w-full">
-                <TabsList className="w-full grid grid-cols-2 mx-4 mt-4" style={{ width: 'calc(100% - 32px)' }}>
+          {/* Tabs: Shop & Inventory */}
+              <Tabs defaultValue="shop" className="w-full flex-1 flex flex-col min-h-0">
+                <TabsList className="w-full grid grid-cols-2 mx-4 mt-4 flex-shrink-0" style={{ width: 'calc(100% - 32px)' }}>
                   <TabsTrigger value="shop" className="gap-2">
                     <ShoppingBag className="h-4 w-4" />
                     {t('mapPills.arsenal.tabShop')}
@@ -166,15 +139,15 @@ export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) 
                 </TabsList>
 
                 {/* Shop Tab */}
-                <TabsContent value="shop" className="mt-0">
-                  <div className="p-4 max-h-[calc(85vh-180px)] overflow-y-auto">
+                <TabsContent value="shop" className="mt-0 flex-1 min-h-0 overflow-hidden">
+                  <div className="p-4 h-full overflow-y-auto" style={{ flex: 1, minHeight: 0 }}>
                     <BattleShop userId={userId} />
                   </div>
                 </TabsContent>
 
                 {/* Inventory Tab */}
-                <TabsContent value="inventory" className="mt-0">
-                  <ScrollArea className="h-[calc(85vh-180px)] p-4">
+                <TabsContent value="inventory" className="mt-0 flex-1 min-h-0 overflow-hidden">
+                  <ScrollArea className="h-full p-4" style={{ flex: 1, minHeight: 0 }}>
                     {loadingInventory ? (
                       <div className="flex items-center justify-center py-12">
                         <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
@@ -273,10 +246,8 @@ export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) 
                   </ScrollArea>
                 </TabsContent>
               </Tabs>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      </MapPillFlipOverlay>
     </>
   );
 }

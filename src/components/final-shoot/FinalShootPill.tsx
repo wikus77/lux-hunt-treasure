@@ -4,8 +4,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { MapPillFlipOverlay } from '@/components/map/MapPillFlipOverlay';
 import { Crosshair, Target, Trophy, AlertCircle, Lock, X, Zap, VolumeX, Volume2 } from 'lucide-react';
 import { useFinalShootContext } from './FinalShootContext';
 import '@/features/m1u/m1u-ui.css';
@@ -51,6 +51,7 @@ const FinalShootPill: React.FC = () => {
     return null;
   };
 
+  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [videoAudioEnabled, setVideoAudioEnabled] = useState(false);
@@ -186,14 +187,14 @@ const FinalShootPill: React.FC = () => {
     }
   };
 
-  const handleClick = () => {
+  const handleClick = (e?: React.MouseEvent) => {
     if (state === 'won' || state === 'exhausted') return;
+    if (e) setOriginRect(e.currentTarget.getBoundingClientRect());
     if (state === 'active') {
       deactivateFinalShoot();
     } else if (state === 'locked') {
       setShowInfoModal(true);
     } else {
-      // State è 'available' - mostra video briefing se non dismissato
       if (shouldShowVideo()) {
         setShowVideoModal(true);
       } else {
@@ -202,211 +203,106 @@ const FinalShootPill: React.FC = () => {
     }
   };
 
-  // 🎬 Video Modal Content - renderizzato con createPortal
+  // 🎬 Video Modal - MapPillFlipOverlay (NOTE-style)
   const videoModalContent = (
-    <AnimatePresence>
-      {showVideoModal && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            style={{ zIndex: 999998 }}
-            onClick={handleCloseVideo}
-          />
-          
-          {/* Modal Container Espandibile */}
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 overflow-hidden"
-            style={{
-              zIndex: 999999,
-              top: 'calc(50px + env(safe-area-inset-top, 0px))',
-              paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-            }}
-          >
-            <div 
-              className="h-full rounded-t-3xl bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-x overflow-hidden flex flex-col"
-              style={{
-                borderColor: 'rgba(239, 68, 68, 0.3)',
-                boxShadow: '0 -10px 40px rgba(239, 68, 68, 0.15), 0 0 0 1px rgba(239, 68, 68, 0.1)',
-              }}
-            >
-              {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-2 cursor-grab flex-shrink-0">
-                <div className="w-12 h-1.5 rounded-full bg-white/30" />
-              </div>
-
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 pb-3 border-b border-white/10 flex-shrink-0">
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className="w-2 h-2 rounded-full animate-pulse"
-                    style={{ background: '#EF4444', boxShadow: '0 0 10px #EF4444' }}
-                  />
-                  <h3 className="font-orbitron font-bold text-white text-[15px]">FINAL SHOT</h3>
-                </div>
-                <button
-                  onClick={handleCloseVideo}
-                  className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center"
-                >
-                  <X className="w-4 h-4 text-white/70" />
-                </button>
-              </div>
-              
-              <p className="text-xs text-white/50 px-4 pt-2 flex-shrink-0">Briefing: La tua ultima possibilità di vincere</p>
-
-              {/* Video Container */}
-              <div 
-                className="flex-1 px-3 py-2 overflow-hidden"
-                onClick={handleVideoTapForAudio}
-                onTouchStart={handleVideoTapForAudio}
-              >
-                <div className="relative rounded-2xl overflow-hidden bg-black h-full">
-                  <video
-                    ref={videoRef}
-                    src={FINALSHOT_VIDEO}
-                    className="w-full h-full object-contain"
-                    playsInline
-                    muted={!videoAudioEnabled}
-                    onEnded={handleVideoEnd}
-                    onError={handleSkipVideo}
-                    // 🛡️ Impedisce attivazione Dynamic Island su iOS
-                    disablePictureInPicture
-                    disableRemotePlayback
-                    controlsList="nodownload noremoteplayback"
-                  />
-                  
-                  {/* Audio hint */}
-                  {!videoAudioEnabled && (
-                    <motion.div
-                      className="absolute inset-0 flex items-center justify-center bg-black/30"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                    >
-                      <motion.div
-                        className="flex flex-col items-center gap-2 px-4 py-3 rounded-xl bg-black/60 backdrop-blur-sm"
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      >
-                        <VolumeX className="w-8 h-8 text-white/80" />
-                        <span className="text-white/80 text-xs font-medium">Tocca per l'audio</span>
-                      </motion.div>
-                    </motion.div>
-                  )}
-                  
-                  {/* Audio indicator */}
-                  <div className="absolute bottom-3 left-3">
-                    <div className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                      {videoAudioEnabled ? (
-                        <Volume2 className="w-5 h-5 text-red-400" />
-                      ) : (
-                        <VolumeX className="w-5 h-5 text-white/60" />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Buttons */}
-              <div className="px-4 pb-4 flex-shrink-0">
-                <motion.button
-                  className="w-full py-4 px-6 rounded-xl font-orbitron font-bold text-sm uppercase tracking-wider"
-                  style={{
-                    background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
-                    color: 'white',
-                    boxShadow: '0 0 20px rgba(239, 68, 68, 0.5)',
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSkipVideo();
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  ATTIVA FINAL SHOT →
-                </motion.button>
-                
-                <button
-                  className="w-full mt-2 text-xs text-white/40 hover:text-white/60 transition-colors py-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDismissVideo();
-                  }}
-                >
-                  Non mostrare più questo video
-                </button>
-              </div>
+    <MapPillFlipOverlay open={showVideoModal} originRect={originRect} onClose={handleCloseVideo}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+        <div style={{
+          flexShrink: 0,
+          background: 'linear-gradient(180deg, rgba(239, 68, 68, 0.8) 0%, rgba(180, 50, 50, 0.6) 100%)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
+          paddingBottom: '20px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <button onClick={handleCloseVideo} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+            </button>
+            <div style={{ flex: 1, textAlign: 'center' }}>
+              <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>FINAL SHOT</h1>
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            <div style={{ width: '40px' }} />
+          </div>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>Briefing: La tua ultima possibilità di vincere</p>
+        </div>
+        <div
+          style={{ flex: 1, overflow: 'hidden', padding: '16px', display: 'flex', flexDirection: 'column' }}
+          onClick={handleVideoTapForAudio}
+          onTouchStart={handleVideoTapForAudio}
+        >
+          <div className="relative rounded-2xl overflow-hidden bg-black" style={{ flex: 1, minHeight: 0 }}>
+            <video
+              ref={videoRef}
+              src={FINALSHOT_VIDEO}
+              className="w-full h-full object-contain"
+              playsInline
+              muted={!videoAudioEnabled}
+              onEnded={handleVideoEnd}
+              onError={handleSkipVideo}
+              disablePictureInPicture
+              disableRemotePlayback
+              controlsList="nodownload noremoteplayback"
+            />
+            {!videoAudioEnabled && (
+              <motion.div className="absolute inset-0 flex items-center justify-center bg-black/30" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <motion.div className="flex flex-col items-center gap-2 px-4 py-3 rounded-xl bg-black/60 backdrop-blur-sm" animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                  <VolumeX className="w-8 h-8 text-white/80" />
+                  <span className="text-white/80 text-xs font-medium">Tocca per l&apos;audio</span>
+                </motion.div>
+              </motion.div>
+            )}
+            <div className="absolute bottom-3 left-3 w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
+              {videoAudioEnabled ? <Volume2 className="w-5 h-5 text-red-400" /> : <VolumeX className="w-5 h-5 text-white/60" />}
+            </div>
+          </div>
+        </div>
+        <div style={{ flexShrink: 0, padding: '16px', paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 16px)' }}>
+          <motion.button
+            className="w-full py-4 px-6 rounded-xl font-orbitron font-bold text-sm uppercase tracking-wider"
+            style={{ background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)', color: 'white', boxShadow: '0 0 20px rgba(239, 68, 68, 0.5)', border: 'none', cursor: 'pointer' }}
+            onClick={(e) => { e.stopPropagation(); handleSkipVideo(); }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            ATTIVA FINAL SHOT →
+          </motion.button>
+          <button className="w-full mt-2 text-xs text-white/40 hover:text-white/60 transition-colors py-2" style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); handleDismissVideo(); }}>
+            Non mostrare più questo video
+          </button>
+        </div>
+      </div>
+    </MapPillFlipOverlay>
   );
 
-  // 📋 Info Modal Content - renderizzato con createPortal
+  // 📋 Info Modal - MapPillFlipOverlay (NOTE-style)
   const infoModalContent = (
-    <AnimatePresence>
-      {showInfoModal && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-md"
-            style={{ zIndex: 999998 }}
-            onClick={() => setShowInfoModal(false)}
-          />
-          
-          {/* Modal Container */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed left-4 right-4 overflow-hidden"
-            style={{ 
-              zIndex: 999999,
-              top: 'calc(60px + env(safe-area-inset-top, 0px))',
-              bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div 
-              className="h-full w-full max-w-lg mx-auto rounded-2xl bg-gradient-to-b from-gray-900 via-gray-900 to-black border border-cyan-500/30 shadow-2xl overflow-hidden flex flex-col"
-              style={{ boxShadow: '0 0 60px rgba(0, 209, 255, 0.3), 0 25px 50px rgba(0, 0, 0, 0.5)' }}
-            >
-              {/* Header fisso */}
-              <div className="flex-shrink-0 p-4 border-b border-white/10">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-400/30">
-                      <Crosshair className="w-6 h-6 text-cyan-400" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-white font-orbitron">
-                        FINAL SHOT
-                      </h2>
-                      <p className="text-xs text-cyan-400">{t('mapPills.finalShot.subtitle')}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowInfoModal(false)}
-                    className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
-                  >
-                    <X className="w-5 h-5 text-white/60" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Contenuto scrollabile */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+    <MapPillFlipOverlay open={showInfoModal} originRect={originRect} onClose={() => setShowInfoModal(false)}>
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+        <div style={{
+          flexShrink: 0,
+          background: 'linear-gradient(180deg, rgba(0, 209, 255, 0.8) 0%, rgba(0, 100, 150, 0.6) 100%)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
+          paddingBottom: '20px',
+          paddingLeft: '16px',
+          paddingRight: '16px',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <button onClick={() => setShowInfoModal(false)} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+            </button>
+            <div style={{ flex: 1, textAlign: 'center' }}>
+              <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>FINAL SHOT</h1>
+            </div>
+            <div style={{ width: '40px' }} />
+          </div>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center' }}>{t('mapPills.finalShot.subtitle')}</p>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)', WebkitOverflowScrolling: 'touch' }} className="space-y-3">
                 <div className="p-3 rounded-xl bg-white/5 border border-white/10">
                   <h3 className="font-bold text-white mb-2 flex items-center gap-2 text-sm">
                     <Target className="w-4 h-4 text-pink-400" />
@@ -479,24 +375,16 @@ const FinalShootPill: React.FC = () => {
                         {totalMissionDays - daysRemaining}/{totalMissionDays}
                       </div>
                     </div>
-                  </div>
                 </div>
               </div>
-
-              {/* Footer fisso */}
-              <div className="flex-shrink-0 p-4 border-t border-white/10">
-                <button
-                  onClick={() => setShowInfoModal(false)}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-400/30 text-white font-bold hover:border-cyan-400/50 transition-colors text-sm"
-                >
-                  {t('mapPills.finalShot.gotIt')}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+        </div>
+        <div style={{ flexShrink: 0, padding: '16px', paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 16px)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <button onClick={() => setShowInfoModal(false)} style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', background: 'linear-gradient(135deg, rgba(0,209,255,0.2), rgba(139,92,246,0.2))', border: '1px solid rgba(0,209,255,0.3)', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+            {t('mapPills.finalShot.gotIt')}
+          </button>
+        </div>
+      </div>
+    </MapPillFlipOverlay>
   );
 
   return (
@@ -504,7 +392,7 @@ const FinalShootPill: React.FC = () => {
       {/* Final Shoot Pill - IDENTICAL to other pills (pill-orb class) */}
       <motion.button
         className={`pill-orb final-shoot-pill final-shoot-pill--${state}`}
-        onClick={handleClick}
+        onClick={(e) => handleClick(e)}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         whileHover={{ scale: 1.03 }}
@@ -531,11 +419,8 @@ const FinalShootPill: React.FC = () => {
         )}
       </motion.button>
 
-      {/* 🎬 Video Briefing Modal - renderizzato nel body con createPortal */}
-      {createPortal(videoModalContent, document.body)}
-      
-      {/* 📋 Info Modal - renderizzato nel body con createPortal */}
-      {createPortal(infoModalContent, document.body)}
+      {videoModalContent}
+      {infoModalContent}
     </>
   );
 };
