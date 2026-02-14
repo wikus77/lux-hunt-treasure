@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Target, Star, TrendingUp, TrendingDown,
@@ -65,6 +66,7 @@ type RankStyle = {
 const LeaderboardUserCard: React.FC<LeaderboardUserCardProps> = ({ 
   user, index, style, isTop10, onLongPress 
 }) => {
+  const { t } = useTranslation();
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const startPosRef = React.useRef({ x: 0, y: 0 });
   const isScrollingRef = React.useRef(false);
@@ -103,12 +105,12 @@ const LeaderboardUserCard: React.FC<LeaderboardUserCardProps> = ({
     switch (tier) {
       case 'premium':
       case 'gold':
-        return <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-[10px] px-1.5">GOLD</Badge>;
+        return <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-[10px] px-1.5">{t('leaderboard_tier_gold')}</Badge>;
       case 'silver':
-        return <Badge className="bg-gray-400 text-black text-[10px] px-1.5">SILVER</Badge>;
+        return <Badge className="bg-gray-400 text-black text-[10px] px-1.5">{t('leaderboard_tier_silver')}</Badge>;
       case 'black':
       case 'titanium':
-        return <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] px-1.5">VIP</Badge>;
+        return <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] px-1.5">{t('leaderboard_tier_vip')}</Badge>;
       default:
         return null;
     }
@@ -181,10 +183,10 @@ const LeaderboardUserCard: React.FC<LeaderboardUserCardProps> = ({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <p className={`font-semibold truncate ${user.isCurrentUser ? 'text-[#00D1FF]' : 'text-white'}`}>
-                    {user.full_name || 'Agente'}
+                    {user.full_name || t('leaderboard_agent_fallback')}
                   </p>
                   {user.isCurrentUser && (
-                    <Badge variant="outline" className="text-[10px] px-1 py-0">Tu</Badge>
+                    <Badge variant="outline" className="text-[10px] px-1 py-0">{t('leaderboard_you_badge')}</Badge>
                   )}
                   {getTierBadgeLocal(user.subscription_plan)}
                 </div>
@@ -244,6 +246,7 @@ const LeaderboardUserCard: React.FC<LeaderboardUserCardProps> = ({
 
 // Forum Quick Link Component
 const ForumQuickLink: React.FC = () => {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   
   return (
@@ -257,7 +260,7 @@ const ForumQuickLink: React.FC = () => {
       whileTap={{ scale: 0.98 }}
     >
       <MessageSquare className="w-4 h-4 text-purple-400" />
-      <span className="text-sm text-purple-300 font-medium">Entra nel Forum</span>
+      <span className="text-sm text-purple-300 font-medium">{t('leaderboard_forum_enter')}</span>
     </motion.button>
   );
 };
@@ -308,6 +311,7 @@ const useLongPressCard = (onLongPress: () => void, delay = 500) => {
 };
 
 export const LeaderboardPage: React.FC = () => {
+  const { t } = useTranslation();
   const [scope, setScope] = useState<LeaderboardScope>('global');
   const [filterValue, setFilterValue] = useState<string>('');
   const [filterOptions, setFilterOptions] = useState<string[]>([]);
@@ -439,12 +443,12 @@ export const LeaderboardPage: React.FC = () => {
     switch (tier) {
       case 'premium':
       case 'gold':
-        return <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-[10px] px-1.5">GOLD</Badge>;
+        return <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-[10px] px-1.5">{t('leaderboard_tier_gold')}</Badge>;
       case 'silver':
-        return <Badge className="bg-gray-400 text-black text-[10px] px-1.5">SILVER</Badge>;
+        return <Badge className="bg-gray-400 text-black text-[10px] px-1.5">{t('leaderboard_tier_silver')}</Badge>;
       case 'black':
       case 'titanium':
-        return <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] px-1.5">VIP</Badge>;
+        return <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] px-1.5">{t('leaderboard_tier_vip')}</Badge>;
       default:
         return null;
     }
@@ -507,8 +511,8 @@ export const LeaderboardPage: React.FC = () => {
             <TriangleDownIcon className="w-8 h-8" style={{ color: 'var(--sn-accent)' }} />
           </motion.div>
           <h1 className="text-3xl font-orbitron font-bold">
-            <span style={{ color: 'var(--sn-accent)' }}>LIVE</span>
-            <span style={{ color: 'var(--sn-text-primary)' }}> Classifica</span>
+            <span style={{ color: 'var(--sn-accent)' }}>{t('leaderboard_live')}</span>
+            <span style={{ color: 'var(--sn-text-primary)' }}> {t('leaderboard_title')}</span>
           </h1>
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
@@ -517,7 +521,7 @@ export const LeaderboardPage: React.FC = () => {
           />
         </div>
         <p style={{ color: 'var(--sn-text-secondary)' }} className="text-sm">
-          Aggiornamenti in tempo reale
+          {t('leaderboard_realtime_updates')}
         </p>
         {/* Forum Quick Link */}
         <ForumQuickLink />
@@ -535,7 +539,7 @@ export const LeaderboardPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-orange-400" />
               <span className="text-orange-300 text-sm">
-                <strong>{lastOvertake.name}</strong> ti ha superato! Ora è #{lastOvertake.rank}
+                {t('leaderboard_overtake_alert', { name: lastOvertake.name, rank: lastOvertake.rank })}
               </span>
             </div>
           </motion.div>
@@ -559,7 +563,7 @@ export const LeaderboardPage: React.FC = () => {
               className={`flex-shrink-0 ${scope === s ? 'bg-[#00D1FF] text-black' : 'border-gray-600'}`}
             >
               {scopeIcons[s]}
-              <span className="ml-1.5 capitalize">{s === 'global' ? 'Globale' : s === 'country' ? 'Nazione' : s === 'region' ? 'Regione' : 'Città'}</span>
+              <span className="ml-1.5 capitalize">{s === 'global' ? t('leaderboard_scope_global') : s === 'country' ? t('leaderboard_scope_country') : s === 'region' ? t('leaderboard_scope_region') : t('leaderboard_scope_city')}</span>
             </Button>
           ))}
         </div>
@@ -567,7 +571,7 @@ export const LeaderboardPage: React.FC = () => {
         {scope !== 'global' && filterOptions.length > 0 && (
           <Select value={filterValue} onValueChange={setFilterValue}>
             <SelectTrigger className="bg-gray-800/50 border-gray-600">
-              <SelectValue placeholder={`Seleziona ${scope === 'country' ? 'nazione' : scope === 'region' ? 'regione' : 'città'}`} />
+              <SelectValue placeholder={scope === 'country' ? t('leaderboard_select_country') : scope === 'region' ? t('leaderboard_select_region') : t('leaderboard_select_city')} />
             </SelectTrigger>
             <SelectContent>
               {filterOptions.map(opt => (
@@ -604,7 +608,7 @@ export const LeaderboardPage: React.FC = () => {
                     #{currentUserRank.rank}
                   </motion.div>
                   <div>
-                    <p className="font-semibold text-white">La tua posizione</p>
+                    <p className="font-semibold text-white">{t('leaderboard_your_position')}</p>
                     <div className="flex items-center gap-2">
                       <p className="text-sm text-white/60">{currentUserRank.agent_code}</p>
                       {currentUserRank.change !== undefined && currentUserRank.change !== 0 && (
@@ -618,11 +622,11 @@ export const LeaderboardPage: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-bold text-[#00D1FF]">
-                    {currentUserRank.total_score.toLocaleString()} pts
+                    {currentUserRank.total_score.toLocaleString()} {t('leaderboard_pts')}
                   </div>
                   <div className="flex items-center gap-1 text-xs text-white/50">
                     <Flame className="w-3 h-3 text-orange-400" />
-                    {currentUserRank.streak_days}d streak
+                    {t('leaderboard_streak_days', { count: currentUserRank.streak_days })}
                   </div>
                 </div>
               </div>
@@ -641,7 +645,7 @@ export const LeaderboardPage: React.FC = () => {
           className="text-gray-400 hover:text-white"
         >
           <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
-          Aggiorna
+          {t('leaderboard_refresh')}
         </Button>
       </div>
 
@@ -663,12 +667,12 @@ export const LeaderboardPage: React.FC = () => {
         ) : error ? (
           <div className="text-center py-10 text-red-400">
             <p>{error}</p>
-            <Button onClick={refetch} variant="outline" className="mt-4">Riprova</Button>
+            <Button onClick={refetch} variant="outline" className="mt-4">{t('leaderboard_retry')}</Button>
           </div>
         ) : leaderboard.length === 0 ? (
           <div className="text-center py-10 text-gray-400">
             <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>Nessun agente trovato</p>
+            <p>{t('leaderboard_no_agents')}</p>
           </div>
         ) : (
           <AnimatePresence>
@@ -702,7 +706,7 @@ export const LeaderboardPage: React.FC = () => {
           <CardContent className="p-3 text-center relative z-10">
             <Users className="w-5 h-5 mx-auto mb-1 text-[#00D1FF]" />
             <div className="text-lg font-bold text-white">{leaderboard.length}</div>
-            <div className="text-[10px] text-white/50">Agenti</div>
+            <div className="text-[10px] text-white/50">{t('leaderboard_agents')}</div>
           </CardContent>
         </Card>
         
@@ -712,7 +716,7 @@ export const LeaderboardPage: React.FC = () => {
             <div className="text-lg font-bold text-white">
               {leaderboard[0]?.total_score.toLocaleString() || '0'}
             </div>
-            <div className="text-[10px] text-white/50">Top Score</div>
+            <div className="text-[10px] text-white/50">{t('leaderboard_top_score')}</div>
           </CardContent>
         </Card>
         
@@ -722,7 +726,7 @@ export const LeaderboardPage: React.FC = () => {
             <div className="text-lg font-bold text-white">
               {Math.max(...leaderboard.map(u => u.streak_days), 0)}d
             </div>
-            <div className="text-[10px] text-white/50">Max Streak</div>
+            <div className="text-[10px] text-white/50">{t('leaderboard_max_streak')}</div>
           </CardContent>
         </Card>
       </motion.div>
@@ -739,7 +743,7 @@ export const LeaderboardPage: React.FC = () => {
             transition={{ duration: 2, repeat: Infinity }}
             className="w-2 h-2 rounded-full bg-green-500"
           />
-          Classifica live • Aggiornamento automatico
+          {t('leaderboard_live_indicator')}
         </div>
       </motion.div>
       

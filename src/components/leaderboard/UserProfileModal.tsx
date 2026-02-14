@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageSquare, User, Calendar, Trophy, Zap, Flame, Star } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -36,36 +37,49 @@ interface UserProfileModalProps {
   onClose: () => void;
 }
 
-// Hierarchy rank badges
-const getHierarchyBadge = (rank?: string) => {
-  const badges: Record<string, { label: string; color: string }> = {
-    'recruit': { label: 'Recluta', color: 'bg-gray-500' },
-    'agent': { label: 'Agente', color: 'bg-blue-500' },
-    'operative': { label: 'Operativo', color: 'bg-green-500' },
-    'specialist': { label: 'Specialista', color: 'bg-purple-500' },
-    'commander': { label: 'Comandante', color: 'bg-orange-500' },
-    'director': { label: 'Direttore', color: 'bg-pink-500' },
-    'elite': { label: 'Elite', color: 'bg-yellow-500' },
-  };
-  return badges[rank?.toLowerCase() || ''] || { label: rank || 'Agente', color: 'bg-cyan-500' };
-};
-
-// Format date in Italian
-const formatDate = (dateString?: string) => {
-  if (!dateString) return '—';
-  try {
-    return new Date(dateString).toLocaleDateString('it-IT', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  } catch {
-    return '—';
-  }
+// Hierarchy rank badges - keys for i18n
+const HIERARCHY_KEYS: Record<string, string> = {
+  'recruit': 'leaderboard_hierarchy_recruit',
+  'agent': 'leaderboard_hierarchy_agent',
+  'operative': 'leaderboard_hierarchy_operative',
+  'specialist': 'leaderboard_hierarchy_specialist',
+  'commander': 'leaderboard_hierarchy_commander',
+  'director': 'leaderboard_hierarchy_director',
+  'elite': 'leaderboard_hierarchy_elite',
 };
 
 export const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, isOpen, onClose }) => {
+  const { t, i18n } = useTranslation();
   const [, navigate] = useLocation();
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '—';
+    try {
+      const locale = i18n.language === 'it' ? 'it-IT' : i18n.language === 'fr' ? 'fr-FR' : 'en-US';
+      return new Date(dateString).toLocaleDateString(locale, {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch {
+      return '—';
+    }
+  };
+
+  const getHierarchyBadge = (rank?: string) => {
+    const key = HIERARCHY_KEYS[rank?.toLowerCase() || ''];
+    const label = key ? t(key) : (rank || t('leaderboard_hierarchy_agent'));
+    const colors: Record<string, string> = {
+      'recruit': 'bg-gray-500',
+      'agent': 'bg-blue-500',
+      'operative': 'bg-green-500',
+      'specialist': 'bg-purple-500',
+      'commander': 'bg-orange-500',
+      'director': 'bg-pink-500',
+      'elite': 'bg-yellow-500',
+    };
+    return { label, color: colors[rank?.toLowerCase() || ''] || 'bg-cyan-500' };
+  };
 
   const handleChat = () => {
     hapticMedium();
@@ -144,7 +158,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, isOpen
                   </div>
 
                   <h2 className="mt-3 text-xl font-bold text-white">
-                    {user.full_name || 'Agente Anonimo'}
+                    {user.full_name || t('leaderboard_agent_anonymous')}
                   </h2>
 
                   {/* Agent code */}
@@ -168,7 +182,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, isOpen
                     <div className="text-lg font-bold text-white mt-1">
                       {user.total_score?.toLocaleString() || '0'}
                     </div>
-                    <div className="text-[10px] text-gray-500">Punti</div>
+                    <div className="text-[10px] text-gray-500">{t('leaderboard_profile_points')}</div>
                   </div>
 
                   <div className="text-center p-2 rounded-lg bg-white/5 border border-white/10">
@@ -178,7 +192,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, isOpen
                     <div className="text-lg font-bold text-white mt-1">
                       {user.streak_days || 0}d
                     </div>
-                    <div className="text-[10px] text-gray-500">Streak</div>
+                    <div className="text-[10px] text-gray-500">{t('leaderboard_profile_streak')}</div>
                   </div>
 
                   <div className="text-center p-2 rounded-lg bg-white/5 border border-white/10">
@@ -188,7 +202,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, isOpen
                     <div className="text-lg font-bold text-white mt-1">
                       {user.clues_unlocked || user.pulse_energy || 0}
                     </div>
-                    <div className="text-[10px] text-gray-500">Indizi</div>
+                    <div className="text-[10px] text-gray-500">{t('leaderboard_profile_clues')}</div>
                   </div>
                 </div>
 
@@ -196,7 +210,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, isOpen
                 <div className="space-y-2 pt-2">
                   <div className="flex items-center gap-2 text-sm text-gray-400">
                     <Calendar className="w-4 h-4 text-purple-400" />
-                    <span>Iscritto il: {formatDate(user.created_at)}</span>
+                    <span>{t('leaderboard_profile_joined')} {formatDate(user.created_at)}</span>
                   </div>
                   {user.city && (
                     <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -213,14 +227,14 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ user, isOpen
                     onClick={handleClose}
                     className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
                   >
-                    Chiudi
+                    {t('leaderboard_profile_close')}
                   </Button>
                   <Button
                     onClick={handleChat}
                     className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-[0_0_15px_rgba(0,209,255,0.3)]"
                   >
                     <MessageSquare className="w-4 h-4 mr-2" />
-                    Chatta
+                    {t('leaderboard_profile_chat')}
                   </Button>
                 </div>
               </div>

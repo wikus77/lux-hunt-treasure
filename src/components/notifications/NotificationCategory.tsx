@@ -1,5 +1,5 @@
-
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { ChevronDown, Bell } from "lucide-react";
 import type { Notification } from "@/hooks/useNotifications";
@@ -23,6 +23,7 @@ const NotificationCategory: React.FC<NotificationCategoryProps> = ({
   onSelect,
   onDelete
 }) => {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const categoryInfo = getCategoryInfo(category);
@@ -69,16 +70,18 @@ const NotificationCategory: React.FC<NotificationCategoryProps> = ({
             </div>
             <div>
               <h3 className="text-base font-semibold" style={{ color: 'var(--sn-text-primary)' }}>
-                {categoryInfo.title}
+                {t(categoryInfo.titleKey)}
               </h3>
               <p className="text-sm" style={{ color: 'var(--sn-text-secondary)' }}>
-                {notifications.length} {notifications.length === 1 ? 'notifica' : 'notifiche'}
+                {notifications.length === 1 
+                  ? t('notifications_count_one', { count: 1 }) 
+                  : t('notifications_count_other', { count: notifications.length })}
                 {unreadCount > 0 && (
                   <span 
                     className="ml-2 sn-badge"
                     style={{ background: getAccentColor() }}
                   >
-                    {unreadCount} nuove
+                    {t('notifications_new_count', { count: unreadCount })}
                   </span>
                 )}
               </p>
@@ -96,7 +99,7 @@ const NotificationCategory: React.FC<NotificationCategoryProps> = ({
         onClose={() => setIsModalOpen(false)}
       >
         <NotificationCategoryContent
-          title={categoryInfo.title}
+          title={t(categoryInfo.titleKey)}
           notifications={notifications}
           unreadCount={unreadCount}
           accentColor={getAccentColor()}

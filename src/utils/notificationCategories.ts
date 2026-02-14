@@ -12,40 +12,19 @@ export const NOTIFICATION_CATEGORIES = {
 export const getCategoryInfo = (type: string) => {
   switch (type) {
     case NOTIFICATION_CATEGORIES.LEADERBOARD:
-      return {
-        title: 'Aggiornamento Classifica',
-        color: 'text-green-400'
-      };
+      return { titleKey: 'notifications_category_leaderboard', color: 'text-green-400' };
     case NOTIFICATION_CATEGORIES.REWARDS:
-      return {
-        title: 'Ricompense Sbloccate',
-        color: 'text-yellow-400'
-      };
+      return { titleKey: 'notifications_category_rewards', color: 'text-yellow-400' };
     case NOTIFICATION_CATEGORIES.MISSION:
-      return {
-        title: 'Avvisi Missione',
-        color: 'text-red-400'
-      };
+      return { titleKey: 'notifications_category_mission', color: 'text-red-400' };
     case NOTIFICATION_CATEGORIES.BUZZ:
-      return {
-        title: 'Buzz Notifications',
-        color: 'text-blue-400'
-      };
+      return { titleKey: 'notifications_category_buzz', color: 'text-blue-400' };
     case NOTIFICATION_CATEGORIES.MAP_BUZZ:
-      return {
-        title: 'Aggiornamenti Mappa',
-        color: 'text-purple-400'
-      };
+      return { titleKey: 'notifications_category_map', color: 'text-purple-400' };
     case NOTIFICATION_CATEGORIES.WEEKLY:
-      return {
-        title: 'Riassunto Settimanale',
-        color: 'text-cyan-400'
-      };
+      return { titleKey: 'notifications_category_weekly', color: 'text-cyan-400' };
     default:
-      return {
-        title: 'Generali',
-        color: 'text-gray-400'
-      };
+      return { titleKey: 'notifications_category_general', color: 'text-gray-400' };
   }
 };
 

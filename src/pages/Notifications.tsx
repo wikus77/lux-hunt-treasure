@@ -1,6 +1,7 @@
 // FILE MODIFICATO — BY JOSEPH MULE
 // With Chat/Messages Tab Integration - STATIC LAYOUT
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bell, MessageCircle } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
@@ -21,6 +22,7 @@ import { NewGroupModal } from '@/components/chat/NewGroupModal';
 import { useChat } from '@/hooks/useChat';
 
 const Notifications = () => {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<'all' | 'unread' | 'important'>('all');
   const { notifications, markAsRead, deleteNotification, markAllAsRead, reloadNotifications } = useNotifications();
   const { playSound } = useBuzzSound();
@@ -138,7 +140,7 @@ const Notifications = () => {
                 className={`relative flex items-center justify-center gap-2 sn-tab ${activeTab === 'notifications' ? 'sn-tab-active' : ''}`}
               >
                 <Bell className="w-4 h-4" />
-                <span className="font-medium">Notifiche</span>
+                <span className="font-medium">{t('notifications_tab_notifications')}</span>
                 {unreadNotificationsCount > 0 && (
                   <span className="sn-badge ml-1">
                     {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
@@ -150,7 +152,7 @@ const Notifications = () => {
                 className={`relative flex items-center justify-center gap-2 sn-tab ${activeTab === 'messages' ? 'sn-tab-active' : ''}`}
               >
                 <MessageCircle className="w-4 h-4" />
-                <span className="font-medium">Messaggi</span>
+                <span className="font-medium">{t('notifications_tab_messages')}</span>
                 {chatUnreadCount > 0 && (
                   <span className="sn-badge ml-1" style={{ background: '#AF52DE' }}>
                     {chatUnreadCount > 99 ? '99+' : chatUnreadCount}

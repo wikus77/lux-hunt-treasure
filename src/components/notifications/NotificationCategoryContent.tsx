@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎨 Notification Category Content - REVOLUT STYLE
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { X, Bell } from 'lucide-react';
 import NotificationItem from './NotificationItem';
@@ -25,6 +26,7 @@ export const NotificationCategoryContent: React.FC<NotificationCategoryContentPr
   onSelect,
   onDelete
 }) => {
+  const { t } = useTranslation();
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
       {/* HEADER - Gradient based on accent color */}
@@ -52,8 +54,10 @@ export const NotificationCategoryContent: React.FC<NotificationCategoryContentPr
               <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700 }}>{title}</h1>
             </div>
             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>
-              {notifications.length} {notifications.length === 1 ? 'notifica' : 'notifiche'}
-              {unreadCount > 0 && ` • ${unreadCount} non lette`}
+              {notifications.length === 1 
+                ? t('notifications_count_one', { count: 1 }) 
+                : t('notifications_count_other', { count: notifications.length })}
+              {unreadCount > 0 && ` • ${t('notifications_unread_count', { count: unreadCount })}`}
             </p>
           </div>
           <div style={{ width: '40px' }} />
@@ -77,11 +81,11 @@ export const NotificationCategoryContent: React.FC<NotificationCategoryContentPr
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', textAlign: 'center' }}>
             <div>
               <p style={{ fontSize: '28px', fontWeight: 700, color: accentColor }}>{notifications.length}</p>
-              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>Totali</p>
+              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>{t('notifications_total')}</p>
             </div>
             <div>
               <p style={{ fontSize: '28px', fontWeight: 700, color: '#00D1FF' }}>{unreadCount}</p>
-              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>Non lette</p>
+              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>{t('notifications_unread')}</p>
             </div>
           </div>
         </GlassCard>
@@ -114,8 +118,8 @@ export const NotificationCategoryContent: React.FC<NotificationCategoryContentPr
               }}>
                 <Bell style={{ width: '32px', height: '32px', color: 'rgba(255,255,255,0.3)' }} />
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '8px' }}>Nessuna notifica</p>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px' }}>Le nuove notifiche appariranno qui</p>
+              <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '8px' }}>{t('notifications_none')}</p>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px' }}>{t('notifications_new_appear')}</p>
             </GlassCard>
           )}
         </div>

@@ -1,7 +1,8 @@
-
 import React, { useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { formatDistanceToNow } from "date-fns";
-import { it } from "date-fns/locale";
+import type { Locale } from "date-fns";
+import { it, enUS, fr } from "date-fns/locale";
 import type { Notification } from "@/hooks/useNotifications";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, ChevronDown, Copy, Check } from "lucide-react";
@@ -13,22 +14,28 @@ interface NotificationItemProps {
   onDelete: () => void;
 }
 
+const dateFnsLocales: Record<string, Locale> = { it, en: enUS, fr };
+
 const NotificationItem: React.FC<NotificationItemProps> = ({ 
   notification, 
   onSelect, 
   onDelete 
 }) => {
+  const { t, i18n } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
+  const locale = dateFnsLocales[i18n.language] ?? enUS;
+
   const formattedDate = formatDistanceToNow(new Date(notification.date), {
     addSuffix: true,
-    locale: it,
+    locale,
   });
 
-  const fullFormattedDate = new Date(notification.date).toLocaleString('it-IT', {
+  const localeTag = i18n.language === 'it' ? 'it-IT' : i18n.language === 'fr' ? 'fr-FR' : 'en-US';
+  const fullFormattedDate = new Date(notification.date).toLocaleString(localeTag, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -53,12 +60,12 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     try {
       await navigator.clipboard.writeText(notification.description);
       setCopied(true);
-      toast({ title: "📋 Contenuto copiato!", description: "Il testo è stato copiato negli appunti." });
+      toast({ title: `📋 ${t('notifications_toast_copied')}`, description: t('notifications_toast_copied_desc') });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      toast({ title: "❌ Errore", description: "Impossibile copiare il testo.", variant: "destructive" });
+      toast({ title: "❌", description: t('notifications_toast_copy_error'), variant: "destructive" });
     }
-  }, [notification.description, toast]);
+  }, [notification.description, toast, t]);
 
   const handleLongPressStart = (e: React.TouchEvent | React.MouseEvent) => {
     e.stopPropagation();
@@ -149,7 +156,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
                   onMouseLeave={handleLongPressEnd}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <h4 style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 600 }}>Contenuto completo</h4>
+                    <h4 style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 600 }}>{t('notifications_content_full')}</h4>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleCopyContent(); }}
                       style={{
@@ -160,7 +167,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
                       }}
                     >
                       {copied ? <Check style={{ width: '12px', height: '12px' }} /> : <Copy style={{ width: '12px', height: '12px' }} />}
-                      {copied ? 'Copiato!' : 'Copia'}
+                      {copied ? t('notifications_copied') : t('notifications_copy')}
                     </button>
                   </div>
                   <p style={{ 
@@ -174,26 +181,26 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
                     {notification.description}
                   </p>
                   <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', marginTop: '8px' }}>
-                    💡 Tieni premuto per copiare
+                    💡 {t('notifications_long_press_copy')}
                   </p>
                 </div>
 
                 {/* Notification details - READABLE TEXT */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="p-4 rounded-[16px]" style={{ background: 'rgba(60, 60, 70, 0.9)' }}>
-                    <span style={{ color: '#FFFFFF', fontSize: '12px', fontWeight: 600 }}>Data completa</span>
+                    <span style={{ color: '#FFFFFF', fontSize: '12px', fontWeight: 600 }}>{t('notifications_date_full')}</span>
                     <p style={{ color: '#FFFFFF', fontSize: '14px', marginTop: '4px' }}>{fullFormattedDate}</p>
                   </div>
 
                   <div className="p-4 rounded-[16px]" style={{ background: 'rgba(60, 60, 70, 0.9)' }}>
-                    <span style={{ color: '#FFFFFF', fontSize: '12px', fontWeight: 600 }}>Stato</span>
+                    <span style={{ color: '#FFFFFF', fontSize: '12px', fontWeight: 600 }}>{t('notifications_status')}</span>
                     <div className="flex items-center space-x-2 mt-1">
                       <span style={{ 
                         color: notification.read ? '#22C55E' : '#FBBF24', 
                         fontSize: '14px', 
                         fontWeight: 500 
                       }}>
-                        {notification.read ? 'Letta' : 'Non letta'}
+                        {notification.read ? t('notifications_status_read') : t('notifications_status_unread')}
                       </span>
                       {!notification.read && (
                         <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
@@ -213,7 +220,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
                         }}
                         className="px-4 py-2 bg-gradient-to-r from-[#365EFF] to-[#FC1EFF] text-white rounded-full text-xs hover:shadow-lg transition-all font-orbitron"
                       >
-                        Segna come letta
+                        {t('notifications_mark_read')}
                       </button>
                     )}
                   </div>
@@ -221,7 +228,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
                   <button 
                     onClick={handleDelete}
                     className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                    title="Elimina notifica"
+                    title={t('notifications_delete')}
                   >
                     <Trash2 size={16} className="text-red-400 hover:text-red-300" />
                   </button>
