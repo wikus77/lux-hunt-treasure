@@ -2,7 +2,7 @@
  * BriefingFlipOverlay - Modal fullscreen UNIFICATO per TUTTI i briefing video
  * Pattern M1U FlipOverlay: scale dal centro + backdrop blur + edge-to-edge
  * CTA: bianco opaco glass (no colori pieni)
- * Subtitles: EN/FR only for M1SSION HOME (IT = none)
+ * Subtitles: EN/FR only for M1SSION HOME and BUZZ MAP (IT = none)
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
@@ -33,6 +33,27 @@ const SUBTITLES_FR = [
   "Vous avez trois tentatives.",
 ];
 
+// FASE 3 — Testi autorizzati (IMMUTABILI) per sottotitoli BUZZ MAP
+const SUBTITLES_BUZZMAP_EN = [
+  'This is the M1SSION map.\nThe final prize is hidden here.\nYou cannot see it.\nYou must discover it.',
+  'Press the button to generate the area\nwhere the final prize is located.',
+  'The map will generate search areas.',
+  'Search and find the green markers.\nThey are real, instant prizes.',
+  'They are hidden,\nbut you can find them.',
+  'If you find them,\nthey are yours immediately.',
+  'Each press of the Buzz button\nreduces the search area of the final prize.',
+];
+
+const SUBTITLES_BUZZMAP_FR = [
+  "Voici la carte de M1SSION.\nLe prix final est caché ici.\nIl n'est pas visible.\nVous devez le découvrir.",
+  "Appuyez sur le bouton pour générer la zone\noù se trouve le prix final.",
+  'La carte génère des zones de recherche.',
+  'Cherchez et trouvez les marqueurs verts.\nCe sont des récompenses réelles et immédiates.',
+  'Ils sont cachés,\nmais vous pouvez les trouver.',
+  'Si vous les trouvez,\nils sont à vous immédiatement.',
+  'Chaque pression du bouton Buzz\nréduit la zone de recherche du prix final.',
+];
+
 export interface BriefingFlipOverlayProps {
   open: boolean;
   onClose: () => void;
@@ -42,8 +63,8 @@ export interface BriefingFlipOverlayProps {
   storageKey: string;
   title: string;
   subtitle?: string;
-  /** Solo per M1SSION HOME: abilita sottotitoli EN/FR (IT = nessuno) */
-  enableSubtitles?: boolean;
+  /** 'home' | 'buzz_map' = sottotitoli EN/FR (IT = nessuno); undefined = nessun sottotitolo */
+  enableSubtitles?: 'home' | 'buzz_map';
 }
 
 export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
@@ -55,7 +76,7 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
   storageKey,
   title,
   subtitle = 'Guarda il video introduttivo prima di iniziare',
-  enableSubtitles = false,
+  enableSubtitles,
 }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
@@ -65,8 +86,15 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const locale = getLocale();
-  const showSubtitles = enableSubtitles && (locale === 'en' || locale === 'fr');
-  const subtitleLines = locale === 'en' ? SUBTITLES_EN : SUBTITLES_FR;
+  const showSubtitles = !!enableSubtitles && (locale === 'en' || locale === 'fr');
+  const subtitleLines =
+    enableSubtitles === 'buzz_map'
+      ? locale === 'en'
+        ? SUBTITLES_BUZZMAP_EN
+        : SUBTITLES_BUZZMAP_FR
+      : locale === 'en'
+        ? SUBTITLES_EN
+        : SUBTITLES_FR;
 
   // Check se mostrare il video (admin sempre, altri controllano localStorage)
   const shouldShowVideo = useCallback(() => {

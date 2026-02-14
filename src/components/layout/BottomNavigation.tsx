@@ -370,7 +370,7 @@ const BottomNavigationComponent = () => {
         storageKey="m1_home_video_dismissed"
         title="M1SSION HOME"
         subtitle="Briefing: Benvenuto nel tuo quartier generale"
-        enableSubtitles
+        enableSubtitles="home"
       />
       
       <BriefingFlipOverlay
@@ -382,6 +382,7 @@ const BottomNavigationComponent = () => {
         storageKey="m1_map_video_dismissed"
         title="BUZZ MAP"
         subtitle="Briefing: La mappa della missione"
+        enableSubtitles="buzz_map"
       />
       
       <BriefingFlipOverlay
