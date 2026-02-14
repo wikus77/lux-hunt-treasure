@@ -999,5 +999,27 @@
   "leaderboard_profile_clues": "Indizi",
   "leaderboard_profile_joined": "Iscritto il:",
   "leaderboard_profile_close": "Chiudi",
-  "leaderboard_profile_chat": "Chatta"
+  "leaderboard_profile_chat": "Chatta",
+
+  "mapPills.rewards.title": "REWARDS",
+  "mapPills.rewards.subtitle": "Premi disponibili sulla mappa",
+  "mapPills.rewards.available": "Disponibili",
+  "mapPills.rewards.total": "Totali",
+  "mapPills.rewards.claimed": "Riscattati",
+  "mapPills.rewards.availableLabel": "disponibili",
+  "mapPills.rewards.hint": "Trova i marker verdi sulla mappa per riscattare premi istantanei!",
+  "mapPills.rewards.ariaLabel": "Marker Rewards disponibili",
+  "mapPills.arsenal.title": "Arsenale",
+  "mapPills.arsenal.subtitle": "Shop & Inventario",
+  "mapPills.arsenal.tabShop": "Shop",
+  "mapPills.arsenal.tabInventory": "Inventario ({{count}})",
+  "mapPills.arsenal.emptyTitle": "Nessun oggetto nell'inventario",
+  "mapPills.arsenal.emptyHint": "Acquista oggetti dalla Shop!",
+  "mapPills.arsenal.weapons": "Armi",
+  "mapPills.arsenal.defenses": "Difese",
+  "mapPills.arsenal.equipped": "Equipaggiato",
+  "mapPills.arsenal.ariaLabel": "Apri Battle Shop",
+  "mapPills.search.placeNotFound": "Luogo non trovato",
+  "mapPills.search.searchError": "Errore di ricerca",
+  "mapPills.search.placeholder": "Cerca..."
 }

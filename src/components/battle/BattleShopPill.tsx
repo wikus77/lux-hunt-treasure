@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, Swords, Shield, Package, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -41,6 +42,7 @@ const RARITY_COLORS: Record<string, string> = {
 };
 
 export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loadingInventory, setLoadingInventory] = useState(false);
@@ -75,7 +77,7 @@ export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) 
       <motion.button
         className={`pill-orb ${className}`}
         onClick={() => setIsOpen(true)}
-        aria-label="Open Battle Shop"
+        aria-label={t('mapPills.arsenal.ariaLabel')}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         initial={{ scale: 0 }}
@@ -136,8 +138,8 @@ export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) 
                     <ShoppingBag className="w-5 h-5 text-cyan-400" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-white font-orbitron">Arsenal</h2>
-                    <p className="text-xs text-gray-400">Shop & Inventory</p>
+                    <h2 className="text-lg font-bold text-white font-orbitron">{t('mapPills.arsenal.title')}</h2>
+                    <p className="text-xs text-gray-400">{t('mapPills.arsenal.subtitle')}</p>
                   </div>
                 </div>
 
@@ -155,11 +157,11 @@ export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) 
                 <TabsList className="w-full grid grid-cols-2 mx-4 mt-4" style={{ width: 'calc(100% - 32px)' }}>
                   <TabsTrigger value="shop" className="gap-2">
                     <ShoppingBag className="h-4 w-4" />
-                    Shop
+                    {t('mapPills.arsenal.tabShop')}
                   </TabsTrigger>
                   <TabsTrigger value="inventory" className="gap-2">
                     <Package className="h-4 w-4" />
-                    Inventory ({totalItems})
+                    {t('mapPills.arsenal.tabInventory', { count: totalItems })}
                   </TabsTrigger>
                 </TabsList>
 
@@ -180,8 +182,8 @@ export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) 
                     ) : inventory.length === 0 ? (
                       <div className="text-center py-12">
                         <Package className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-                        <p className="text-gray-400 text-sm">No items in inventory</p>
-                        <p className="text-gray-500 text-xs mt-1">Purchase items from the Shop!</p>
+                        <p className="text-gray-400 text-sm">{t('mapPills.arsenal.emptyTitle')}</p>
+                        <p className="text-gray-500 text-xs mt-1">{t('mapPills.arsenal.emptyHint')}</p>
                       </div>
                     ) : (
                       <div className="space-y-6">
@@ -190,7 +192,7 @@ export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) 
                           <div>
                             <div className="flex items-center gap-2 mb-3">
                               <Swords className="h-4 w-4 text-red-400" />
-                              <h3 className="text-sm font-semibold text-white">Weapons</h3>
+                              <h3 className="text-sm font-semibold text-white">{t('mapPills.arsenal.weapons')}</h3>
                               <Badge variant="outline" className="text-[10px] border-red-500/30 text-red-400">
                                 {weapons.length}
                               </Badge>
@@ -216,7 +218,7 @@ export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) 
                                     </div>
                                     {item.is_equipped && (
                                       <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">
-                                        Equipped
+                                        {t('mapPills.arsenal.equipped')}
                                       </Badge>
                                     )}
                                   </div>
@@ -231,7 +233,7 @@ export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) 
                           <div>
                             <div className="flex items-center gap-2 mb-3">
                               <Shield className="h-4 w-4 text-cyan-400" />
-                              <h3 className="text-sm font-semibold text-white">Defenses</h3>
+                              <h3 className="text-sm font-semibold text-white">{t('mapPills.arsenal.defenses')}</h3>
                               <Badge variant="outline" className="text-[10px] border-cyan-500/30 text-cyan-400">
                                 {defenses.length}
                               </Badge>
@@ -257,7 +259,7 @@ export function BattleShopPill({ userId, className = '' }: BattleShopPillProps) 
                                     </div>
                                     {item.is_equipped && (
                                       <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">
-                                        Equipped
+                                        {t('mapPills.arsenal.equipped')}
                                       </Badge>
                                     )}
                                   </div>

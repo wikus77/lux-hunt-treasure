@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // SearchLocationPill - Fly to any city/location on the map
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, Navigation2, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -18,6 +19,7 @@ const getMapTilerKey = (): string => {
 };
 
 export const SearchLocationPill: React.FC<SearchLocationPillProps> = ({ map }) => {
+  const { t } = useTranslation();
   const mapTilerKey = getMapTilerKey();
   const [isExpanded, setIsExpanded] = useState(false);
   const [query, setQuery] = useState('');
@@ -60,11 +62,11 @@ export const SearchLocationPill: React.FC<SearchLocationPillProps> = ({ map }) =
         setIsExpanded(false);
         
       } else {
-        setError('Luogo non trovato');
+        setError(t('mapPills.search.placeNotFound'));
       }
     } catch (err) {
       console.error('Geocoding error:', err);
-      setError('Errore di ricerca');
+      setError(t('mapPills.search.searchError'));
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +161,7 @@ export const SearchLocationPill: React.FC<SearchLocationPillProps> = ({ map }) =
                 onTouchStart={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
                 onFocus={(e) => e.stopPropagation()}
-                placeholder="Cerca..."
+                placeholder={t('mapPills.search.placeholder')}
                 className="flex-1 bg-transparent border-none outline-none text-white text-sm placeholder-gray-500"
                 style={{ minWidth: 80, width: '100%' }}
                 disabled={isLoading}

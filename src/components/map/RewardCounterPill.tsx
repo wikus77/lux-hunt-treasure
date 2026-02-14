@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Gift, X, MapPin, CheckCircle, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,7 @@ interface RewardCounterPillProps {
 }
 
 export function RewardCounterPill({ className = '' }: RewardCounterPillProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const [stats, setStats] = useState<RewardStats>({ total: 0, claimed: 0, available: 0 });
@@ -122,7 +124,7 @@ export function RewardCounterPill({ className = '' }: RewardCounterPillProps) {
       <motion.button
         className={`pill-orb ${className}`}
         onClick={handlePillClick}
-        aria-label="Marker Rewards disponibili"
+        aria-label={t('mapPills.rewards.ariaLabel')}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         initial={{ scale: 0 }}
@@ -164,11 +166,11 @@ export function RewardCounterPill({ className = '' }: RewardCounterPillProps) {
                 <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
               </button>
               <div style={{ flex: 1, textAlign: 'center' }}>
-                <h1 style={{ color: '#000000', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>REWARDS</h1>
+                <h1 style={{ color: '#000000', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>{t('mapPills.rewards.title')}</h1>
               </div>
               <div style={{ width: '40px' }} />
             </div>
-            <p style={{ color: 'rgba(0,0,0,0.7)', fontSize: '13px', textAlign: 'center' }}>Premi disponibili sulla mappa</p>
+            <p style={{ color: 'rgba(0,0,0,0.7)', fontSize: '13px', textAlign: 'center' }}>{t('mapPills.rewards.subtitle')}</p>
           </div>
 
           {/* CONTENT */}
@@ -194,7 +196,7 @@ export function RewardCounterPill({ className = '' }: RewardCounterPillProps) {
                     </svg>
                     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                       <span style={{ fontSize: '36px', fontWeight: 700, color: '#FFD700' }}>{stats.available}</span>
-                      <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>disponibili</span>
+                      <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>{t('mapPills.rewards.availableLabel')}</span>
                     </div>
                   </div>
                 </GlassCard>
@@ -204,26 +206,26 @@ export function RewardCounterPill({ className = '' }: RewardCounterPillProps) {
                   <GlassCard style={{ textAlign: 'center', padding: '14px 8px' }}>
                     <MapPin style={{ width: '24px', height: '24px', color: '#FFD700', margin: '0 auto 8px' }} />
                     <div style={{ fontSize: '22px', fontWeight: 700, color: '#FFFFFF' }}>{stats.total}</div>
-                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>Totali</div>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>{t('mapPills.rewards.total')}</div>
                   </GlassCard>
                   
                   <GlassCard style={{ textAlign: 'center', padding: '14px 8px', background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
                     <CheckCircle style={{ width: '24px', height: '24px', color: '#22C55E', margin: '0 auto 8px' }} />
                     <div style={{ fontSize: '22px', fontWeight: 700, color: '#22C55E' }}>{stats.claimed}</div>
-                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>Riscattati</div>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>{t('mapPills.rewards.claimed')}</div>
                   </GlassCard>
                   
                   <GlassCard style={{ textAlign: 'center', padding: '14px 8px', background: 'rgba(255, 215, 0, 0.15)', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
                     <Clock style={{ width: '24px', height: '24px', color: '#FFD700', margin: '0 auto 8px' }} />
                     <div style={{ fontSize: '22px', fontWeight: 700, color: '#FFD700' }}>{stats.available}</div>
-                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>Disponibili</div>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>{t('mapPills.rewards.available')}</div>
                   </GlassCard>
                 </div>
 
                 {/* Info Card */}
                 <GlassCard style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
                   <p style={{ color: 'rgba(167, 243, 208, 0.9)', fontSize: '14px', textAlign: 'center', lineHeight: '1.6' }}>
-                    🎁 Trova i marker <span style={{ color: '#10B981', fontWeight: 600 }}>verdi</span> sulla mappa per riscattare premi istantanei!
+                    🎁 {t('mapPills.rewards.hint')}
                   </p>
                 </GlassCard>
               </>

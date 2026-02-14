@@ -998,5 +998,27 @@
   "leaderboard_profile_clues": "Clues",
   "leaderboard_profile_joined": "Joined:",
   "leaderboard_profile_close": "Close",
-  "leaderboard_profile_chat": "Chat"
+  "leaderboard_profile_chat": "Chat",
+
+  "mapPills.rewards.title": "REWARDS",
+  "mapPills.rewards.subtitle": "Rewards available on the map",
+  "mapPills.rewards.available": "Available",
+  "mapPills.rewards.total": "Total",
+  "mapPills.rewards.claimed": "Claimed",
+  "mapPills.rewards.availableLabel": "available",
+  "mapPills.rewards.hint": "Find green markers on the map to claim instant rewards!",
+  "mapPills.rewards.ariaLabel": "Marker rewards available",
+  "mapPills.arsenal.title": "Arsenal",
+  "mapPills.arsenal.subtitle": "Shop & Inventory",
+  "mapPills.arsenal.tabShop": "Shop",
+  "mapPills.arsenal.tabInventory": "Inventory ({{count}})",
+  "mapPills.arsenal.emptyTitle": "No items in inventory",
+  "mapPills.arsenal.emptyHint": "Purchase items from the Shop!",
+  "mapPills.arsenal.weapons": "Weapons",
+  "mapPills.arsenal.defenses": "Defenses",
+  "mapPills.arsenal.equipped": "Equipped",
+  "mapPills.arsenal.ariaLabel": "Open Battle Shop",
+  "mapPills.search.placeNotFound": "Place not found",
+  "mapPills.search.searchError": "Search error",
+  "mapPills.search.placeholder": "Search..."
 }

@@ -994,5 +994,27 @@
   "leaderboard_profile_clues": "Indices",
   "leaderboard_profile_joined": "Inscrit le :",
   "leaderboard_profile_close": "Fermer",
-  "leaderboard_profile_chat": "Discuter"
+  "leaderboard_profile_chat": "Discuter",
+
+  "mapPills.rewards.title": "REWARDS",
+  "mapPills.rewards.subtitle": "Récompenses disponibles sur la carte",
+  "mapPills.rewards.available": "Disponibles",
+  "mapPills.rewards.total": "Total",
+  "mapPills.rewards.claimed": "Récupérés",
+  "mapPills.rewards.availableLabel": "disponibles",
+  "mapPills.rewards.hint": "Trouvez les marqueurs verts sur la carte pour réclamer des récompenses instantanées !",
+  "mapPills.rewards.ariaLabel": "Récompenses de marqueurs disponibles",
+  "mapPills.arsenal.title": "Arsenal",
+  "mapPills.arsenal.subtitle": "Boutique & Inventaire",
+  "mapPills.arsenal.tabShop": "Boutique",
+  "mapPills.arsenal.tabInventory": "Inventaire ({{count}})",
+  "mapPills.arsenal.emptyTitle": "Aucun objet dans l'inventaire",
+  "mapPills.arsenal.emptyHint": "Achetez des objets à la Boutique !",
+  "mapPills.arsenal.weapons": "Armes",
+  "mapPills.arsenal.defenses": "Défenses",
+  "mapPills.arsenal.equipped": "Équipé",
+  "mapPills.arsenal.ariaLabel": "Ouvrir la boutique de bataille",
+  "mapPills.search.placeNotFound": "Lieu non trouvé",
+  "mapPills.search.searchError": "Erreur de recherche",
+  "mapPills.search.placeholder": "Rechercher..."
 }
