@@ -108,4 +108,17 @@ export const PRODUCTION_LAUNCH_READY = false;
 // Maintenance mode (shows maintenance page)
 export const MAINTENANCE_MODE = false;
 
+// ====== VERA MISSION: BOMBA (Phase 1 MVP) ======
+// When true: Show entrypoint for Bomb mission (dev/test only)
+// Default OFF - enable via localStorage m1_vera_mission_bomb_enabled=true or VITE_VERA_MISSION_BOMB_ENABLED
+// Uses function (not constant) so flag is read at render time - reliable on iOS WKWebView after localStorage set + reload
+export function isVeraBombEnabled(): boolean {
+  if (import.meta.env.VITE_VERA_MISSION_BOMB_ENABLED === 'true') return true;
+  try {
+    return localStorage.getItem('m1_vera_mission_bomb_enabled') === 'true';
+  } catch {
+    return false;
+  }
+}
+
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

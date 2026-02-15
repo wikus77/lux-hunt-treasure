@@ -1102,5 +1102,18 @@
   "mapLongPress.prize.poolTitle": "Lot de prix",
   "mapLongPress.prize.poolDesc": "Plus de 99 prix exclusifs à gagner",
   "mapLongPress.prize.progress": "Progression actuelle",
-  "mapLongPress.prize.swipeHint": "Glissez pour voir tous les prix disponibles"
+  "mapLongPress.prize.swipeHint": "Glissez pour voir tous les prix disponibles",
+
+  "vera_mission.bomb.title": "BOMBE / DÉSAMORÇAGE",
+  "vera_mission.bomb.briefing": "Une bombe a été détectée. Vous devez la désamorcer en coupant le bon fil. Choisissez bien : une erreur et elle explose. Vous avez 30 secondes.",
+  "vera_mission.bomb.timer_label": "Temps restant",
+  "vera_mission.bomb.cut_wire": "Couper le fil",
+  "vera_mission.bomb.success_title": "Désamorcée !",
+  "vera_mission.bomb.success_body": "Bon travail, agent. La bombe a été neutralisée.",
+  "vera_mission.bomb.fail_title": "Explosion",
+  "vera_mission.bomb.fail_body": "Mauvais fil. La bombe a explosé. Pénalité PE appliquée.",
+  "vera_mission.bomb.cta_start": "DÉMARRER LA MISSION",
+  "vera_mission.bomb.cta_abort": "Abandonner",
+  "vera_mission.bomb.next_action_desc": "Désamorcez l'engin. Risque PE.",
+  "vera_mission.bomb.badge": "BOMBE"
 }

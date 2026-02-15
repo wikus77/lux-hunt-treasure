@@ -1107,5 +1107,18 @@
   "mapLongPress.prize.poolTitle": "Monte Premi",
   "mapLongPress.prize.poolDesc": "Oltre 99 premi esclusivi da vincere",
   "mapLongPress.prize.progress": "Progresso attuale",
-  "mapLongPress.prize.swipeHint": "Scorri per vedere tutti i premi disponibili"
+  "mapLongPress.prize.swipeHint": "Scorri per vedere tutti i premi disponibili",
+
+  "vera_mission.bomb.title": "BOMBA / DISINNESCO",
+  "vera_mission.bomb.briefing": "Una bomba è stata individuata. Devi disinnescarla tagliando il filo corretto. Scegli bene: un errore e esplode. Hai 30 secondi.",
+  "vera_mission.bomb.timer_label": "Tempo rimanente",
+  "vera_mission.bomb.cut_wire": "Taglia il filo",
+  "vera_mission.bomb.success_title": "Disinnescata!",
+  "vera_mission.bomb.success_body": "Ottimo lavoro, agente. La bomba è stata neutralizzata.",
+  "vera_mission.bomb.fail_title": "Esplosione",
+  "vera_mission.bomb.fail_body": "Filo sbagliato. La bomba è esplosa. Penalità PE applicata.",
+  "vera_mission.bomb.cta_start": "AVVIA MISSIONE",
+  "vera_mission.bomb.cta_abort": "Abbandona",
+  "vera_mission.bomb.next_action_desc": "Disinnesca l'ordigno. Rischio PE.",
+  "vera_mission.bomb.badge": "BOMBA"
 }

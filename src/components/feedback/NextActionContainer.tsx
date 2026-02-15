@@ -27,6 +27,8 @@ import {
 } from '@/missions/missionState';
 import { NextActionFlipOverlay } from './NextActionFlipOverlay';
 import { NextActionContent } from './NextActionContent';
+import { isVeraBombEnabled } from '@/config/featureFlags';
+import { BombMissionModal } from '@/features/vera-missions/bomb/BombMissionModal';
 
 interface NextActionContainerProps {
   className?: string;
@@ -37,6 +39,7 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [originRect, setOriginRect] = useState<DOMRect | null>(null);
+  const [isVeraBombOpen, setVeraBombOpen] = useState(false);
   
   const { missionStatus } = useMissionStatus();
   const { dailyBuzzCounter } = useBuzzCounter(user?.id);
@@ -89,6 +92,11 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
 
   const missionStatusText = getMissionStatusText();
 
+  const handleOpenVeraBomb = useCallback(() => {
+    setIsModalOpen(false);
+    requestAnimationFrame(() => setVeraBombOpen(true));
+  }, []);
+
   const handleOpenModal = (e: React.MouseEvent<HTMLButtonElement>) => {
     setOriginRect(e.currentTarget.getBoundingClientRect());
     setIsModalOpen(true);
@@ -125,6 +133,15 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
               background: `radial-gradient(ellipse at 50% 0%, ${preset.glowColor} 0%, transparent 60%)`,
             }}
           />
+          {/* Vera Bomba badge - nome missione principale del giorno */}
+          {isVeraBombEnabled() && (
+            <div
+              className="px-2 py-1 rounded-lg text-[10px] font-semibold flex-shrink-0 absolute top-2 right-2 max-w-[100px] truncate backdrop-blur bg-black/40 border border-red-400/40 text-red-200 shadow-sm"
+              style={{ pointerEvents: 'none' }}
+            >
+              {t('vera_mission.bomb.badge')}
+            </div>
+          )}
 
           <div className="relative flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
@@ -220,8 +237,15 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
         originRect={originRect}
         onClose={() => setIsModalOpen(false)}
       >
-        <NextActionContent onClose={() => setIsModalOpen(false)} />
+        <NextActionContent onClose={() => setIsModalOpen(false)} onOpenVeraBomb={handleOpenVeraBomb} />
       </NextActionFlipOverlay>
+
+      {/* BombMissionModal: mounted here (outside overlay) so it appears above everything */}
+      <BombMissionModal
+        open={isVeraBombOpen}
+        onClose={() => setVeraBombOpen(false)}
+        originRect={null}
+      />
     </>
   );
 };

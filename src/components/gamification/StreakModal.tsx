@@ -1,5 +1,5 @@
 /**
- * STREAK MODAL™ - Futuristic M1SSION Style
+ * STREAK MODAL™ - Note-style fullscreen (MapPillFlipOverlay)
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
@@ -7,9 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flame, Trophy, Zap, Gift, X, Check, Sparkles } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Flame, Zap, Gift, X, Check, Sparkles } from 'lucide-react';
+import { MapPillFlipOverlay } from '@/components/map/MapPillFlipOverlay';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
@@ -42,6 +41,20 @@ const MILESTONES = [
 
 // 🆕 FIX 16/01/2026: M1U giornalieri per check-in
 const DAILY_M1U_REWARD = 2;
+
+// Glass card — matches Note modal (DevNotesPanel)
+const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
+  <div style={{
+    background: 'rgba(25, 25, 35, 0.7)',
+    backdropFilter: 'blur(24px)',
+    WebkitBackdropFilter: 'blur(24px)',
+    borderRadius: '14px',
+    padding: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
+    ...style
+  }}>{children}</div>
+);
 
 export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalProps) {
   const { t } = useTranslation();
@@ -232,203 +245,153 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
   const m1uBonus = Math.min(streak * 2, 30);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg p-0 bg-transparent border-0 overflow-visible">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="relative rounded-3xl overflow-visible"
-          style={{
-            background: 'linear-gradient(180deg, rgba(15, 35, 35, 0.98) 0%, rgba(10, 25, 30, 0.98) 100%)',
-            border: '1px solid rgba(0, 255, 136, 0.35)',
-            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
-          }}
-        >
-          {/* Ambient Glow - subtle */}
-          <div 
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: 'radial-gradient(ellipse at 50% 0%, rgba(0, 255, 136, 0.12) 0%, transparent 55%)',
-              borderRadius: '24px',
-            }}
-          />
-
-          {/* Content - safe-area padding for iOS */}
-          <div 
-            className="relative p-6"
-            style={{
-              paddingTop: 'calc(24px + env(safe-area-inset-top, 0))',
-              paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0))',
-              maxHeight: 'min(85vh, 600px)',
-              overflowY: 'auto',
-            }}
-          >
-            {/* Close Button */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors z-10"
-              style={{ top: 'calc(16px + env(safe-area-inset-top, 0))' }}
-            >
-              <X className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.9)' }} />
-            </button>
-
-            {/* Success overlay: rendered via portal to avoid overflow clipping — always fully visible */}
-
-            {/* Header */}
-            <div className="text-center mb-6">
-              <motion.div
-                animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="relative inline-block mb-4"
+    <>
+      <MapPillFlipOverlay open={isOpen} originRect={null} onClose={onClose}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
+          {/* HEADER — same as Note modal */}
+          <div style={{
+            flexShrink: 0,
+            background: 'linear-gradient(180deg, rgba(0, 209, 255, 0.8) 0%, rgba(0, 100, 150, 0.6) 100%)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
+            paddingBottom: '20px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <button
+                onClick={onClose}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.15)',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
               >
-                <div 
-                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto"
-                  style={{
-                    background: 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)',
-                    boxShadow: '0 8px 30px rgba(0, 255, 136, 0.5)',
-                  }}
-                >
-                  <Flame className="w-10 h-10 text-black" />
-                </div>
-                <motion.div
-                  className="absolute -inset-3 rounded-2xl"
-                  style={{ border: '2px solid rgba(0, 255, 136, 0.4)' }}
-                  animate={{ scale: [1, 1.15, 1], opacity: [0.6, 0, 0.6] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </motion.div>
-              
-              <h2 
-                className="text-2xl font-orbitron font-bold mb-2"
-                style={{ color: '#00FF88' }}
-              >
-                🔥 {t('streak_title')}
-              </h2>
-              <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>{t('streak_subtitle')}</p>
-            </div>
-
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <div className="w-8 h-8 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
+                <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+              </button>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px' }}>
+                  🔥 {t('streak_title')}
+                </h1>
               </div>
+              <div style={{ width: '40px' }} />
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', textAlign: 'center' }}>{t('streak_subtitle')}</p>
+          </div>
+
+          {/* CONTENT — scrollable, same as Note modal */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '16px',
+            paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)',
+            WebkitOverflowScrolling: 'touch',
+          }}>
+            {loading ? (
+              <GlassCard style={{ textAlign: 'center', padding: '40px 0' }}>
+                <div style={{ width: '28px', height: '28px', border: '2px solid rgba(0, 209, 255, 0.3)', borderTopColor: '#00D1FF', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
+                <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>Loading…</p>
+              </GlassCard>
             ) : (
               <>
                 {/* Main Stats */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div 
-                    className="p-5 rounded-xl text-center"
-                    style={{
-                      background: 'rgba(0, 255, 136, 0.1)',
-                      border: '1px solid rgba(0, 255, 136, 0.3)',
-                    }}
-                  >
-                    <p 
-                      className="text-4xl font-orbitron font-bold"
-                      style={{ color: '#00FF88' }}
-                    >
-                      {streak}
-                    </p>
-                    <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4 }}>{t('streak_days')}</p>
+                <GlassCard style={{ marginBottom: '16px' }}>
+                <div className="grid grid-cols-2 gap-4">
+                  <div style={{ textAlign: 'center', padding: 16 }}>
+                    <p className="text-4xl font-orbitron font-bold" style={{ color: '#00FF88' }}>{streak}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.95)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4 }}>{t('streak_days')}</p>
                   </div>
-                  <div 
-                    className="p-5 rounded-xl text-center"
-                    style={{
-                      background: 'rgba(0, 209, 255, 0.12)',
-                      border: '1px solid rgba(0, 209, 255, 0.3)',
-                    }}
-                  >
-                    <p 
-                      className="text-4xl font-orbitron font-bold"
-                      style={{ color: '#00D1FF' }}
-                    >
-                      {streakInfo?.longest_streak || 0}
-                    </p>
-                    <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4 }}>{t('streak_record')}</p>
+                  <div style={{ textAlign: 'center', padding: 16 }}>
+                    <p className="text-4xl font-orbitron font-bold" style={{ color: '#00D1FF' }}>{streakInfo?.longest_streak || 0}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.95)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 4 }}>{t('streak_record')}</p>
                   </div>
                 </div>
+                </GlassCard>
 
                 {/* Progress to Next Badge */}
                 {streakInfo?.next_milestone && (
-                  <div className="mb-6">
-                    <div className="flex justify-between text-xs mb-2" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                  <GlassCard style={{ marginBottom: '16px' }}>
+                    <div className="flex justify-between text-sm mb-2" style={{ color: 'rgba(255,255,255,0.9)' }}>
                       <span>{t('streak_next_badge')}: {MILESTONES.find(m => m.days === streakInfo.next_milestone) && t(MILESTONES.find(m => m.days === streakInfo.next_milestone)!.key)}</span>
                       <span>{streakInfo.days_to_next_milestone} {t('streak_days_label')}</span>
                     </div>
-                    <div className="h-3 bg-gray-800/50 rounded-full overflow-hidden relative">
+                    <div className="h-3 bg-black/30 rounded-full overflow-hidden relative">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
                         transition={{ duration: 1, ease: 'easeOut' }}
                         className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                     </div>
-                  </div>
+                  </GlassCard>
                 )}
 
                 {/* Bonus Section */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <motion.div 
-                    className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20"
-                    whileHover={{ scale: 1.02 }}
-                  >
+                <GlassCard style={{ marginBottom: '16px' }}>
+                <div className="grid grid-cols-2 gap-3">
+                  <div style={{ padding: 12, borderRadius: 12, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.25)' }}>
                     <div className="flex items-center gap-2 mb-1">
-                      <Zap className="w-4 h-4 text-purple-400" />
-                      <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>{t('streak_pe_bonus')}</span>
+                      <Zap className="w-4 h-4" style={{ color: '#c084fc' }} />
+                      <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{t('streak_pe_bonus')}</span>
                     </div>
-                    <p className="text-lg font-bold text-purple-300">
-                      +{Math.round((peMultiplier - 1) * 100)}%
-                    </p>
-                  </motion.div>
-                  <motion.div 
-                    className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20"
-                    whileHover={{ scale: 1.02 }}
-                  >
+                    <p className="text-lg font-bold" style={{ color: '#e9d5ff' }}>+{Math.round((peMultiplier - 1) * 100)}%</p>
+                  </div>
+                  <div style={{ padding: 12, borderRadius: 12, background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.25)' }}>
                     <div className="flex items-center gap-2 mb-1">
-                      <Gift className="w-4 h-4 text-cyan-400" />
-                      <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>{t('streak_m1u_bonus')}</span>
+                      <Gift className="w-4 h-4" style={{ color: '#22d3ee' }} />
+                      <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{t('streak_m1u_bonus')}</span>
                     </div>
-                    <p className="text-lg font-bold text-cyan-300">+{m1uBonus}%</p>
-                  </motion.div>
+                    <p className="text-lg font-bold" style={{ color: '#67e8f9' }}>+{m1uBonus}%</p>
+                  </div>
                 </div>
+                </GlassCard>
 
                 {/* Milestones */}
-                <div className="mb-6">
-                  <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>{t('streak_badge_title')}</p>
+                <GlassCard style={{ marginBottom: '16px' }}>
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.95)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>{t('streak_badge_title')}</p>
                   <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                     {MILESTONES.slice(0, 5).map((m) => (
-                      <motion.div
+                      <div
                         key={m.days}
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        className={`flex-shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center transition-all ${
+                        className={`flex-shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center ${
                           streak >= m.days
                             ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/40'
-                            : 'bg-gray-800/30 border border-gray-700/30'
+                            : 'bg-black/20 border border-white/10'
                         }`}
                       >
                         <span className="text-lg">{m.icon}</span>
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: streak >= m.days ? '#4ade80' : 'rgba(255,255,255,0.6)' }}>
-                          {m.days}g
-                        </span>
-                      </motion.div>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: streak >= m.days ? '#4ade80' : 'rgba(255,255,255,0.7)' }}>{m.days}g</span>
+                      </div>
                     ))}
                   </div>
-                </div>
+                </GlassCard>
 
                 {/* Check-in Button */}
                 <motion.button
                   onClick={handleCheckIn}
                   disabled={!canCheckIn || checkingIn}
-                  whileHover={canCheckIn ? { scale: 1.02, boxShadow: '0 6px 35px rgba(0, 255, 136, 0.6)' } : {}}
+                  whileHover={canCheckIn ? { scale: 1.02 } : {}}
                   whileTap={canCheckIn ? { scale: 0.98 } : {}}
-                  className="w-full h-14 text-lg font-orbitron font-bold rounded-xl transition-all flex items-center justify-center gap-3"
                   style={{
-                    background: canCheckIn 
-                      ? 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)' 
-                      : 'rgba(100,100,100,0.3)',
+                    width: '100%',
+                    height: 56,
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    borderRadius: 14,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 12,
+                    background: canCheckIn ? 'linear-gradient(135deg, #00FF88 0%, #00D1FF 100%)' : 'rgba(100,100,100,0.3)',
                     border: 'none',
-                    color: canCheckIn ? '#000' : 'rgba(255,255,255,0.5)',
+                    color: canCheckIn ? '#000' : 'rgba(255,255,255,0.6)',
                     boxShadow: canCheckIn ? '0 4px 25px rgba(0, 255, 136, 0.4)' : 'none',
                     cursor: canCheckIn ? 'pointer' : 'not-allowed',
                   }}
@@ -451,17 +414,17 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                 </motion.button>
 
                 {!canCheckIn && (
-                  <p style={{ textAlign: 'center', fontSize: '12px', color: 'rgba(255,255,255,0.8)', marginTop: 16 }}>
+                  <p style={{ textAlign: 'center', fontSize: '14px', color: 'rgba(255,255,255,0.9)', marginTop: 16 }}>
                     {t('streak_tomorrow_hint')}
                   </p>
                 )}
               </>
             )}
           </div>
-        </motion.div>
-      </DialogContent>
+        </div>
+      </MapPillFlipOverlay>
 
-      {/* Success overlay: portal to body — z-index above Dialog, no clipping */}
+      {/* Success overlay: portal to body — z-index above MapPillFlipOverlay (99999), no clipping */}
       {typeof document !== 'undefined' && isOpen && createPortal(
         <AnimatePresence>
           {showSuccess && (
@@ -473,7 +436,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
               style={{
                 position: 'fixed',
                 inset: 0,
-                zIndex: 10001,
+                zIndex: 100000,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -519,7 +482,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
         </AnimatePresence>,
         document.body
       )}
-    </Dialog>
+    </>
   );
 }
 

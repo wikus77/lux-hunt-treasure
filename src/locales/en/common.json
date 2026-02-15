@@ -1106,5 +1106,18 @@
   "mapLongPress.prize.poolTitle": "Prize pool",
   "mapLongPress.prize.poolDesc": "Over 99 exclusive prizes to win",
   "mapLongPress.prize.progress": "Current progress",
-  "mapLongPress.prize.swipeHint": "Swipe to see all available prizes"
+  "mapLongPress.prize.swipeHint": "Swipe to see all available prizes",
+
+  "vera_mission.bomb.title": "BOMB / DISARM",
+  "vera_mission.bomb.briefing": "A bomb has been detected. You must disarm it by cutting the correct wire. Choose wisely: one wrong move and it explodes. You have 30 seconds.",
+  "vera_mission.bomb.timer_label": "Time remaining",
+  "vera_mission.bomb.cut_wire": "Cut wire",
+  "vera_mission.bomb.success_title": "Disarmed!",
+  "vera_mission.bomb.success_body": "Good work, agent. The bomb has been neutralized.",
+  "vera_mission.bomb.fail_title": "Explosion",
+  "vera_mission.bomb.fail_body": "Wrong wire. The bomb has exploded. PE penalty applied.",
+  "vera_mission.bomb.cta_start": "START MISSION",
+  "vera_mission.bomb.cta_abort": "Abort",
+  "vera_mission.bomb.next_action_desc": "Disarm the device. PE risk.",
+  "vera_mission.bomb.badge": "BOMB"
 }

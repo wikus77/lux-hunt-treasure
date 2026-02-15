@@ -10,7 +10,8 @@ import {
   Brain, 
   Target,
   ChevronRight,
-  AlertTriangle
+  AlertTriangle,
+  Bomb
 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
@@ -28,12 +29,14 @@ import {
 } from '@/missions/missionState';
 import { DailyMissionFlipOverlay } from './DailyMissionFlipOverlay';
 import { DailyMissionContent } from './DailyMissionContent';
+import { isVeraBombEnabled } from '@/config/featureFlags';
 
 interface NextActionContentProps {
   onClose: () => void;
+  onOpenVeraBomb: () => void;
 }
 
-export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose }) => {
+export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose, onOpenVeraBomb }) => {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
   const { user } = useAuth();
@@ -230,9 +233,9 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose })
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          {/* Primary Actions */}
+          {/* Primary Actions - fallback [] for iOS WKWebView safety */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-            {orderedActions.map((action, index) => (
+            {(orderedActions ?? []).map((action, index) => (
               <motion.button
                 key={action.id}
                 onClick={() => handleActionClick(action.id, action.path)}
@@ -286,8 +289,8 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose })
             ))}
           </div>
 
-          {/* Daily Mission Section */}
-          {MISSIONS_ENABLED && isMissionReady && !isMissionCompleted && mission && (
+          {/* Optional actions (Daily Mission + VERA BOMB) */}
+          {(MISSIONS_ENABLED && isMissionReady && !isMissionCompleted && mission) || isVeraBombEnabled() ? (
             <>
               {/* Section divider */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
@@ -298,7 +301,40 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose })
                 <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
               </div>
 
+              {/* VERA MISSION BOMB - Entrypoint (feature flag) */}
+              {isVeraBombEnabled() && (
+                <GlassCard onClick={onOpenVeraBomb} style={{ marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, rgba(255, 68, 68, 0.3), rgba(255, 68, 68, 0.1))',
+                        border: '1px solid rgba(255, 68, 68, 0.4)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Bomb style={{ width: '20px', height: '20px', color: '#FF4444' }} />
+                    </div>
+                    <div style={{ flex: 1, textAlign: 'left' }}>
+                      <p style={{ color: '#FFFFFF', fontWeight: 600, fontSize: '14px' }}>
+                        {t('vera_mission.bomb.title')}
+                      </p>
+                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>
+                        {t('vera_mission.bomb.next_action_desc')}
+                      </p>
+                    </div>
+                    <ChevronRight style={{ width: '16px', height: '16px', color: 'rgba(255, 68, 68, 0.6)', flexShrink: 0 }} />
+                  </div>
+                </GlassCard>
+              )}
+
               {/* Daily Mission Card */}
+              {MISSIONS_ENABLED && isMissionReady && !isMissionCompleted && mission && (
               <GlassCard onClick={handleDailyMissionClick}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div 
@@ -353,8 +389,9 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose })
                   <ChevronRight style={{ width: '16px', height: '16px', color: 'rgba(0, 209, 255, 0.6)', flexShrink: 0 }} />
                 </div>
               </GlassCard>
+              )}
             </>
-          )}
+          ) : null}
         </div>
       </div>
 
