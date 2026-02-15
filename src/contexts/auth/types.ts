@@ -1,10 +1,15 @@
 
+// APPLE-LOGIN-LOOP-PATCH: authHydrated + justSignedInAt for grace period anti-loop
+export const JUST_SIGNED_IN_GRACE_MS = 15000;
+
 export interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: any; session?: any }>;
   register: (email: string, password: string) => Promise<{ success: boolean; error?: any; data?: any }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
+  authHydrated: boolean;
+  justSignedInAt: number | null;
   isEmailVerified: boolean;
   getCurrentUser: () => User | null;
   getAccessToken: () => string | null;

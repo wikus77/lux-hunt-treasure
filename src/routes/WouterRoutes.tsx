@@ -22,6 +22,7 @@ import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
 const IS_DEV = import.meta.env.DEV;
 import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
+import { JUST_SIGNED_IN_GRACE_MS } from "@/contexts/auth/types";
 import { useQueryQRRedirect } from "@/hooks/useQueryQRRedirect";
 import { shouldShowLanding, markFirstVisitCompleted } from "@/utils/firstVisitUtils";
 import { supabase } from "@/integrations/supabase/client";
@@ -147,7 +148,7 @@ import { SUBSCRIPTIONS_STEALTH } from '@/config/featureFlags';
 
 const WouterRoutes: React.FC = () => {
   const { t } = useTranslation();
-  const { isAuthenticated, isLoading, getCurrentUser } = useUnifiedAuth();
+  const { isAuthenticated, isLoading, getCurrentUser, authHydrated, justSignedInAt } = useUnifiedAuth();
   const [location, setLocation] = useLocation();
   const [hasActiveSub, setHasActiveSub] = useState<boolean | null>(null);
   const [subCheckLoading, setSubCheckLoading] = useState(false);
@@ -256,29 +257,37 @@ const WouterRoutes: React.FC = () => {
               - Web browser: Show Landing first for marketing/SEO
           */}
           <Route path="/">
-            {isLoading ? (
-              // 🔧 FIX: Native apps show seamless black bg (matches Login) instead of skeleton flash
-              isCapacitorApp ? (
-                <div className="fixed inset-0 bg-black z-[100]" aria-hidden="true" />
-              ) : (
-                <PageSkeleton variant="default" />
-              )
-            ) : !isAuthenticated ? (
-              // In native app, skip landing page - go directly to login
-              isCapacitorApp ? <Redirect to="/login" /> : <LandingPage />
-            ) : (
-              <ProtectedRoute>
-                <GlobalLayout>
-                  {/* Render home immediately even if subscription check is pending */}
-                  <AppHome />
-                  {subCheckLoading && (
-                    <div className="fixed top-4 right-4 bg-background/80 backdrop-blur-sm border rounded-lg p-2">
-                      <div className="text-xs text-muted-foreground">{t('home_verify_plan')}</div>
-                    </div>
-                  )}
-                </GlobalLayout>
-              </ProtectedRoute>
-            )}
+            {(() => {
+              // APPLE-LOGIN-LOOP-PATCH: grace period - no redirect within 15s of SIGNED_IN
+              const withinGracePeriod = justSignedInAt != null && (Date.now() - justSignedInAt) < JUST_SIGNED_IN_GRACE_MS;
+              const blockRedirect = isLoading || !authHydrated || (!isAuthenticated && withinGracePeriod);
+              if (withinGracePeriod && !isAuthenticated) {
+                console.log('[ROUTER] blocked redirect (reason=justSignedIn_grace_period at root)');
+              }
+              if (blockRedirect) {
+                return isCapacitorApp ? (
+                  <div className="fixed inset-0 bg-black z-[100]" aria-hidden="true" />
+                ) : (
+                  <PageSkeleton variant="default" />
+                );
+              }
+              if (!isAuthenticated) {
+                return isCapacitorApp ? <Redirect to="/login" /> : <LandingPage />;
+              }
+              return (
+                <ProtectedRoute>
+                  <GlobalLayout>
+                    {/* Render home immediately even if subscription check is pending */}
+                    <AppHome />
+                    {subCheckLoading && (
+                      <div className="fixed top-4 right-4 bg-background/80 backdrop-blur-sm border rounded-lg p-2">
+                        <div className="text-xs text-muted-foreground">{t('home_verify_plan')}</div>
+                      </div>
+                    )}
+                  </GlobalLayout>
+                </ProtectedRoute>
+              );
+            })()}
           </Route>
 
           {/* Landing Page - Always accessible */}

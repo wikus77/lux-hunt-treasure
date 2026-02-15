@@ -1,6 +1,10 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Silent Auto-Update - No banners, just ONE refresh per BUILD_ID
 
+// APPLE-LOGIN-LOOP-PATCH: storage key written by AuthProvider on SIGNED_IN
+const JUST_SIGNED_IN_STORAGE_KEY = 'm1_just_signed_in_at';
+const JUST_SIGNED_IN_GRACE_MS = 15000;
+
 interface SilentUpdateOptions {
   debug?: boolean;
 }
@@ -68,6 +72,24 @@ class SilentAutoUpdate {
     sessionStorage.setItem(this.getSessionKey('updateReady'), '1');
   }
 
+  // APPLE-LOGIN-LOOP-PATCH: block reload within 15s of SIGNED_IN to prevent session loss on iPad
+  private shouldBlockReload(): boolean {
+    try {
+      const raw = sessionStorage.getItem(JUST_SIGNED_IN_STORAGE_KEY);
+      if (!raw) return false;
+      const ts = parseInt(raw, 10);
+      if (isNaN(ts)) return false;
+      const deltaMs = Date.now() - ts;
+      if (deltaMs < JUST_SIGNED_IN_GRACE_MS) {
+        console.warn('[SW] blocked reload post-login (deltaMs=' + deltaMs + ')');
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
   private performSilentRefresh(): void {
     if (this.hasReloaded()) {
       this.log('Already reloaded for this BUILD_ID, skipping');
@@ -76,6 +98,12 @@ class SilentAutoUpdate {
 
     if (this.state.isUpdating) {
       this.log('Update already in progress, skipping');
+      return;
+    }
+
+    // APPLE-LOGIN-LOOP-PATCH: do not reload within 15s of sign-in
+    if (this.shouldBlockReload()) {
+      this.log('Blocked reload - within just-signed-in grace period');
       return;
     }
 

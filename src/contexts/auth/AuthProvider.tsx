@@ -41,6 +41,9 @@ const log = (message: string, data?: any) => {
 // Cache key for instant auth state
 const AUTH_SESSION_CACHE = 'm1ssion_session_cache';
 
+// APPLE-LOGIN-LOOP-PATCH: sessionStorage key for silentAutoUpdate reload guard (can't import AuthProvider)
+export const JUST_SIGNED_IN_STORAGE_KEY = 'm1_just_signed_in_at';
+
 // Get cached session for instant display
 const getCachedSession = (): { user: User | null; session: Session | null } => {
   try {
@@ -67,6 +70,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(!cachedAuth.user);
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isRoleLoading, setIsRoleLoading] = useState<boolean>(true);
+  // APPLE-LOGIN-LOOP-PATCH: prevent redirect during hydration; grace period after SIGNED_IN
+  const [authHydrated, setAuthHydrated] = useState<boolean>(!!cachedAuth.user);
+  const [justSignedInAt, setJustSignedInAt] = useState<number | null>(null);
   
   // Cache session for instant load next time
   const cacheSession = (user: User | null, session: Session | null) => {
@@ -123,7 +129,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               await new Promise(resolve => setTimeout(resolve, 1000));
               continue;
             }
+            // APPLE-LOGIN-LOOP-PATCH: fallback to getUser when getSession fails (iPad WKWebView resilience)
+            try {
+              const { data: { user: fallbackUser } } = await supabase.auth.getUser();
+              if (fallbackUser && isMounted) {
+                log("Fallback getUser OK - user recovered");
+                const { data: { session: fallbackSession } } = await supabase.auth.getSession();
+                if (fallbackSession) {
+                  setSession(fallbackSession);
+                  setUser(fallbackUser);
+                  cacheSession(fallbackUser, fallbackSession);
+                  if (isMounted) {
+                    setAuthHydrated(true);
+                    setIsLoading(false);
+                  }
+                  return;
+                }
+              }
+            } catch (_) { /* ignore */ }
             if (isMounted) {
+              setAuthHydrated(true);
               setIsLoading(false);
             }
             return;
@@ -153,8 +178,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       log("Errore init auth", error);
     } finally {
+      // APPLE-LOGIN-LOOP-PATCH: mark hydrated only after first getSession attempt completes
       if (isMounted) {
+        setAuthHydrated(true);
         setIsLoading(false);
+        console.log('[AUTH] hydrated=true isLoading=false isAuthenticated=', !!session);
       }
     }
   };
@@ -197,6 +225,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         cacheSession(newSession?.user ?? null, newSession);
         
         if (event === 'SIGNED_IN' && newSession) {
+          // APPLE-LOGIN-LOOP-PATCH: set justSignedInAt for grace period (router + silentAutoUpdate)
+          const ts = Date.now();
+          setJustSignedInAt(ts);
+          try {
+            sessionStorage.setItem(JUST_SIGNED_IN_STORAGE_KEY, String(ts));
+          } catch (_) { /* ignore */ }
+          console.log('[AUTH] SIGNED_IN at', ts);
+
           log("Utente autenticato", newSession.user.email);
           
           // 📊 M1SSION Analytics - Set user ID and track login
@@ -240,6 +276,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           //   }, 1000);
           // }
         } else if (event === 'SIGNED_OUT') {
+          // APPLE-LOGIN-LOOP-PATCH: clear justSignedInAt on logout
+          setJustSignedInAt(null);
+          try {
+            sessionStorage.removeItem(JUST_SIGNED_IN_STORAGE_KEY);
+          } catch (_) { /* ignore */ }
+
           log("Utente disconnesso");
           
           // 🔐 FIX: Reset Face ID runtime guards on SIGNED_OUT event
@@ -565,6 +607,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Clear mission intro session to force replay on next login
       sessionStorage.removeItem('hasSeenPostLoginIntro');
+      // APPLE-LOGIN-LOOP-PATCH: clear just-signed-in flag on logout
+      sessionStorage.removeItem(JUST_SIGNED_IN_STORAGE_KEY);
       console.log('🧹 [AuthProvider] Cleared hasSeenPostLoginIntro on logout');
       
       // 🚨 CRITICAL: Force redirect to login after logout + PWA iOS stability
@@ -610,6 +654,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     session,
     isAuthenticated: !!user,
     isLoading,
+    authHydrated,
+    justSignedInAt,
     isEmailVerified: user?.email_confirmed_at ? true : false,
     userRole: userRoles[0] || null,
     isRoleLoading,

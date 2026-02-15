@@ -7,6 +7,7 @@ import { useLocation, Redirect } from 'wouter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useAccessControl } from '@/hooks/useAccessControl';
 import AccessBlockedView from '@/components/auth/AccessBlockedView';
+import { JUST_SIGNED_IN_GRACE_MS } from '@/contexts/auth/types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -34,7 +35,7 @@ const RedirectScreen = () => (
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // 🚨 CRITICAL: ALL HOOKS MUST BE CALLED BEFORE ANY RETURN
-  const { isAuthenticated, isLoading: authLoading, getCurrentUser } = useUnifiedAuth();
+  const { isAuthenticated, isLoading: authLoading, getCurrentUser, authHydrated, justSignedInAt } = useUnifiedAuth();
   const { canAccess, isLoading: accessLoading, subscriptionPlan, accessStartDate, timeUntilAccess } = useAccessControl();
   const [location, setLocation] = useLocation();
 
@@ -52,10 +53,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <AuthLoadingScreen />;
   }
 
+  // APPLE-LOGIN-LOOP-PATCH: wait for hydration before redirect (prevents 1-frame false redirect)
+  if (!authHydrated) {
+    return <AuthLoadingScreen />;
+  }
+
   // STEP 2: Admin bypass - immediate render
   if (isAdminUser) {
     console.log('🚀 INSTANT ADMIN BYPASS - Direct children render');
     return <>{children}</>;
+  }
+
+  // APPLE-LOGIN-LOOP-PATCH: grace period after SIGNED_IN - show loading instead of redirect
+  const now = Date.now();
+  const withinGracePeriod = justSignedInAt != null && (now - justSignedInAt) < JUST_SIGNED_IN_GRACE_MS;
+  if (!isAuthenticated && withinGracePeriod) {
+    console.log('[ROUTER] blocked redirect (reason=justSignedIn_grace_period)');
+    return <AuthLoadingScreen />;
   }
 
   // STEP 3: Not authenticated - redirect to login
