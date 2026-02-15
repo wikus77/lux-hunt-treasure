@@ -6,6 +6,8 @@ import React, { Suspense } from 'react';
 import { useLocation, Redirect } from 'wouter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useAccessControl } from '@/hooks/useAccessControl';
+// IPHONE-REGRESSION-FORENSIC: Sanitized logging for regression diagnosis
+import { logAuthForensic } from '@/utils/authForensicLog';
 import AccessBlockedView from '@/components/auth/AccessBlockedView';
 import { JUST_SIGNED_IN_GRACE_MS } from '@/contexts/auth/types';
 
@@ -50,11 +52,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // STEP 1: Show loading while auth is being checked
   if (authLoading) {
+    logAuthForensic('T4_redirect_or_loading', { isLoading: authLoading, authHydrated, isAuthenticated, justSignedInAt, reason: 'authLoading', currentRoute: location });
     return <AuthLoadingScreen />;
   }
 
   // APPLE-LOGIN-LOOP-PATCH: wait for hydration before redirect (prevents 1-frame false redirect)
   if (!authHydrated) {
+    logAuthForensic('T4_redirect_or_loading', { isLoading: authLoading, authHydrated, isAuthenticated, justSignedInAt, reason: 'not_hydrated', currentRoute: location });
     return <AuthLoadingScreen />;
   }
 
@@ -68,6 +72,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const now = Date.now();
   const withinGracePeriod = justSignedInAt != null && (now - justSignedInAt) < JUST_SIGNED_IN_GRACE_MS;
   if (!isAuthenticated && withinGracePeriod) {
+    const deltaMs = justSignedInAt != null ? now - justSignedInAt : 0;
+    logAuthForensic('T4_redirect_or_loading', { isLoading: authLoading, authHydrated, isAuthenticated, justSignedInAt, reason: 'grace_period', currentRoute: location, deltaMs });
     console.log('[ROUTER] blocked redirect (reason=justSignedIn_grace_period)');
     return <AuthLoadingScreen />;
   }
@@ -76,6 +82,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // 🚨 CRITICAL: Use Redirect component, NOT render Login component
   // This prevents THREE.js and other lazy components from being evaluated
   if (!isAuthenticated) {
+    logAuthForensic('T4_redirect_or_loading', { isLoading: authLoading, authHydrated, isAuthenticated, justSignedInAt, reason: 'redirect_to_login', currentRoute: location });
     console.log('🔐 [WouterProtectedRoute] User not authenticated, redirecting to login');
     return <Redirect to="/login" replace />;
   }

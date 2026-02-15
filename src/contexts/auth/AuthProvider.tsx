@@ -15,6 +15,8 @@ import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
 import { AuthContextType } from './types';
 import { authHealthLogger } from '@/utils/AuthHealthCheckLog';
+// IPHONE-REGRESSION-FORENSIC: Sanitized logging for regression diagnosis
+import { logAuthForensic, logForensicTimeline } from '@/utils/authForensicLog';
 import { logAuditEvent } from '@/utils/auditLog';
 import { isAdminEmail } from '@/config/adminConfig';
 // 🔐 Sync prize intro state with user
@@ -101,6 +103,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const initializeAuth = async () => {
     try {
+      // IPHONE-REGRESSION-FORENSIC: T0 launch
+      logForensicTimeline('T0_launch', { isLoading, authHydrated, isAuthenticated: !!cachedAuth.user, justSignedInAt });
       log("Inizializzazione sistema unified auth");
       authHealthLogger.log('AuthProvider_Init', true, { timestamp: new Date().toISOString() });
       
@@ -183,6 +187,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setAuthHydrated(true);
         setIsLoading(false);
         console.log('[AUTH] hydrated=true isLoading=false isAuthenticated=', !!session);
+        // IPHONE-REGRESSION-FORENSIC: post-init state
+        logAuthForensic('AUTH_init_done', { isLoading: false, authHydrated: true, isAuthenticated: !!session, justSignedInAt: null });
       }
     }
   };
@@ -481,6 +487,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // LOGIN FUNCTION - Unified
   const login = async (email: string, password: string) => {
+    // IPHONE-REGRESSION-FORENSIC: T1 login submit
+    logForensicTimeline('T1_login_submit', { isLoading, authHydrated, isAuthenticated: !!user, justSignedInAt });
     log("Login attempt", email);
     
     try {

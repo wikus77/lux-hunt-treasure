@@ -22,7 +22,8 @@ import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
 const IS_DEV = import.meta.env.DEV;
 import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
-import { JUST_SIGNED_IN_GRACE_MS } from "@/contexts/auth/types";
+// IPHONE-REGRESSION-FORENSIC: Sanitized logging for regression diagnosis
+import { logAuthForensic } from "@/utils/authForensicLog";
 import { useQueryQRRedirect } from "@/hooks/useQueryQRRedirect";
 import { shouldShowLanding, markFirstVisitCompleted } from "@/utils/firstVisitUtils";
 import { supabase } from "@/integrations/supabase/client";
@@ -150,6 +151,11 @@ const WouterRoutes: React.FC = () => {
   const { t } = useTranslation();
   const { isAuthenticated, isLoading, getCurrentUser, authHydrated, justSignedInAt } = useUnifiedAuth();
   const [location, setLocation] = useLocation();
+
+  // IPHONE-REGRESSION-FORENSIC: T3 route change
+  useEffect(() => {
+    logAuthForensic('T3_route_change', { isLoading, authHydrated, isAuthenticated, justSignedInAt, currentRoute: location });
+  }, [location]);
   const [hasActiveSub, setHasActiveSub] = useState<boolean | null>(null);
   const [subCheckLoading, setSubCheckLoading] = useState(false);
   
@@ -258,11 +264,12 @@ const WouterRoutes: React.FC = () => {
           */}
           <Route path="/">
             {(() => {
-              // APPLE-LOGIN-LOOP-PATCH: grace period - no redirect within 15s of SIGNED_IN
-              const withinGracePeriod = justSignedInAt != null && (Date.now() - justSignedInAt) < JUST_SIGNED_IN_GRACE_MS;
-              const blockRedirect = isLoading || !authHydrated || (!isAuthenticated && withinGracePeriod);
-              if (withinGracePeriod && !isAuthenticated) {
-                console.log('[ROUTER] blocked redirect (reason=justSignedIn_grace_period at root)');
+              // IPHONE-REGRESSION-FIX: Root gating reduced to isLoading ONLY.
+              // authHydrated + grace period remain in ProtectedRoute (handles /home, /map, etc.).
+              // Root was over-blocking on iPhone → black screen / flow stuck.
+              const blockRedirect = isLoading;
+              if (blockRedirect) {
+                logAuthForensic('T4_redirect_or_loading', { isLoading, authHydrated, isAuthenticated, justSignedInAt, reason: 'root_loading', currentRoute: '/' });
               }
               if (blockRedirect) {
                 return isCapacitorApp ? (
