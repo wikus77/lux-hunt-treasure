@@ -4,7 +4,7 @@
 **Branch:** `fix/ipad-intro-haptics-minimal`  
 **Safety tag:** `safety/ipad-intro-haptics-prepatch-20260216_104216`  
 **Prepatch SHA:** `f17272080908c13cb1dc0d7586bd32a323b3d6e7`  
-**Patch commit SHA:** `731fd777`
+**Patch commit SHA:** `699ae64a`
 
 ---
 
@@ -43,7 +43,7 @@ src/utils/haptics.ts
 Dopo aver fatto il commit di questa patch:
 
 ```bash
-git revert 731fd777 --no-edit
+git revert 699ae64a --no-edit
 ```
 
 (Sostituire `<commit_sha>` con l’hash del commit che applica questa patch.)
