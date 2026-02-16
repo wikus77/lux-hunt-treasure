@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { MapPillFlipOverlay } from '@/components/map/MapPillFlipOverlay';
-import { hapticWarning, hapticSuccess, hapticError } from '@/utils/haptics';
+import { hapticWarning, hapticSuccess, hapticError, hapticLight, hapticMedium } from '@/utils/haptics';
 import { toast } from 'sonner';
 import {
   BOMB_TIMER_MS,
@@ -81,9 +81,15 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
     setPhase('playing');
     startTimeRef.current = Date.now();
     hapticWarning();
+    const lastTickRef = { prev: BOMB_TIMER_MS / 1000 };
     timerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
       const left = Math.max(0, Math.ceil((BOMB_TIMER_MS - elapsed) / 1000));
+      if (left !== lastTickRef.prev) {
+        if (left === 10 || left === 5) hapticWarning();
+        else if (left >= 1 && left <= 5) hapticLight();
+        lastTickRef.prev = left;
+      }
       setTimeLeft(left);
       if (left <= 0 && timerRef.current) {
         clearInterval(timerRef.current);
@@ -96,6 +102,7 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
   const handleWireCut = useCallback(
     async (wireIndex: number) => {
       if (!runId || !wireConfig || phase !== 'playing' || isFinalizing) return;
+      hapticMedium();
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
