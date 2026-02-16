@@ -22,8 +22,10 @@ type LoginScreen = 'opening' | 'signup' | 'login';
 
 // 🔧 FIX: Correct video path (lowercase 'video' folder)
 const VIDEO_SRC = '/assets/video/M1SSION_INTRO.mp4';
-const MAX_VIDEO_RETRIES = 2;
+const MAX_VIDEO_RETRIES = 3;
 const MEDIA_ERR_DECODE = 3;
+/** Backoff ms for play retries: 150, 350, 700 */
+const PLAY_RETRY_DELAYS = [150, 350, 700];
 
 /** Device class for forensics: ipad | iphone | other (UA + MacIntel/maxTouchPoints) */
 function getLoginVideoDeviceClass(): 'ipad' | 'iphone' | 'other' {
@@ -89,7 +91,9 @@ const Login = () => {
   const firstFrameSeenRef = useRef(false);
   const hasLoggedFinalRef = useRef(false);
   const retryingRef = useRef(false);
+  const playAttemptRef = useRef(0);
   const [showFallback, setShowFallback] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // iPad/WKWebView: retry video play on first tap (autoplay often blocked)
   const handleVideoRetryTap = useCallback(() => {
@@ -140,25 +144,49 @@ const Login = () => {
     if (video.disablePictureInPicture !== undefined) video.disablePictureInPicture = true;
 
     const attemptPlay = () => {
-      video.play().catch(() => {});
+      playAttemptRef.current += 1;
+      const n = playAttemptRef.current;
+      logLoginVideoForensic('play_attempt', {
+        playAttempt: n,
+        muted: video.muted,
+        inline: video.hasAttribute('playsinline')
+      });
+      video.play()
+        .then(() => {
+          logLoginVideoForensic('play_ok', { video, finalMode: retryCountRef.current > 0 ? 'RETRY_OK' : 'VIDEO_OK' });
+        })
+        .catch((err: Error) => {
+          logLoginVideoForensic('play_reject', {
+            video,
+            rejectName: err?.name,
+            rejectMessage: err?.message
+          });
+          tryRecover();
+        });
     };
 
     const tryRecover = () => {
       if (retryingRef.current) return;
       if (retryCountRef.current >= MAX_VIDEO_RETRIES) {
+        const code = video.error?.code;
+        const reason: 'DECODE_FAILED' | 'AUTOPLAY_BLOCKED' | 'TIMEOUT' =
+          code === MEDIA_ERR_DECODE ? 'DECODE_FAILED' : 'AUTOPLAY_BLOCKED';
         logLoginVideoForensic('error', {
           video,
-          errorCode: video.error?.code,
+          errorCode: code,
           errorMessage: video.error?.message,
           retryCount: retryCountRef.current,
-          finalMode: 'FALLBACK'
+          finalMode: 'FALLBACK',
+          reason
         });
+        logLoginVideoForensic('fallback', { reason });
         hasLoggedFinalRef.current = true;
         setShowFallback(true);
         return;
       }
       retryingRef.current = true;
       retryCountRef.current += 1;
+      const delay = PLAY_RETRY_DELAYS[retryCountRef.current - 1] ?? 350;
       logLoginVideoForensic('retry', { video, retryCount: retryCountRef.current });
       video.pause();
       try {
@@ -170,7 +198,7 @@ const Login = () => {
       setTimeout(() => {
         attemptPlay();
         retryingRef.current = false;
-      }, 300);
+      }, delay);
     };
 
     const onLoadStart = () => logLoginVideoForensic('loadstart', { video });
@@ -179,6 +207,7 @@ const Login = () => {
       attemptPlay();
     };
     const onPlaying = () => {
+      setIsPlaying(true);
       if (!hasLoggedFinalRef.current) {
         hasLoggedFinalRef.current = true;
         logLoginVideoForensic('playing', { video, finalMode: retryCountRef.current > 0 ? 'RETRY_OK' : 'VIDEO_OK' });
@@ -509,7 +538,7 @@ const Login = () => {
       onTouchStart={handleVideoRetryTap}
       role="presentation"
     >
-      {/* 🎬 Video Background or fallback invisibile (black + same overlay); always-try + recovery + forensics */}
+      {/* 🎬 Video: no native controls (no play button); pointer-events:none so overlay never shows tap UI */}
       {!showFallback && (
         <video
           ref={videoRef}
@@ -518,19 +547,39 @@ const Login = () => {
           loop
           playsInline
           preload="auto"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ zIndex: 0, transform: 'translateZ(0)' }}
+          controls={false}
           disablePictureInPicture
+          controlsList="nodownload noplaybackrate noremoteplayback"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ zIndex: 0, transform: 'translateZ(0)', pointerEvents: 'none' }}
         >
           <source src={VIDEO_SRC} type="video/mp4" />
         </video>
       )}
+      {/* Loading overlay: covers video until isPlaying so native play icon never visible; pointer-events:none */}
+      {!showFallback && !isPlaying && (
+        <div
+          className="absolute inset-0 w-full h-full bg-black flex items-center justify-center"
+          style={{ zIndex: 0.5, pointerEvents: 'none' }}
+          aria-hidden
+        >
+          <div
+            className="w-10 h-10 border-2 border-white/20 border-t-white/80 rounded-full animate-spin"
+            style={{ animationDuration: '1s' }}
+          />
+        </div>
+      )}
       {showFallback && (
         <div
-          className="absolute inset-0 w-full h-full bg-black"
+          className="absolute inset-0 w-full h-full bg-black flex items-center justify-center"
           style={{ zIndex: 0 }}
           aria-hidden
-        />
+        >
+          <div
+            className="w-10 h-10 border-2 border-white/20 border-t-white/80 rounded-full animate-spin"
+            style={{ animationDuration: '1s' }}
+          />
+        </div>
       )}
 
       {/* Gradient overlay for readability (z-index: 1) — identico per video e fallback */}
