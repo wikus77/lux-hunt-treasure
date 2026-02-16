@@ -166,6 +166,79 @@ function normalizeText(text: string): string {
     .trim();
 }
 
+// Language-specific fallback replies (when Gemini empty or out-of-scope)
+function getFallbackReply(lowerText: string, inScope: boolean, replyLang: 'it' | 'en' | 'fr'): string {
+  const F: Record<string, { it: string; en: string; fr: string }> = {
+    outOfScope: {
+      it: 'Agente, la mia conoscenza è limitata a M1SSION. Chiedimi del BUZZ, della mappa, degli M1U, del Final Shot... e ti guiderò.',
+      en: 'Agent, my knowledge is limited to M1SSION. Ask me about BUZZ, the map, M1U, Final Shot... and I will guide you.',
+      fr: 'Agent, ma connaissance se limite à M1SSION. Demande-moi le BUZZ, la carte, les M1U, le Final Shot... et je te guiderai.'
+    },
+    whoAreYou: {
+      it: 'Io sono AION, Adaptive Intelligence ON, l\'Oracolo digitale di M1SSION. Sono qui per guidarti nella caccia al tesoro. Posso spiegarti il BUZZ, la mappa, gli M1U e molto altro. Cosa vuoi sapere?',
+      en: 'I am AION, Adaptive Intelligence ON, the digital Oracle of M1SSION. I am here to guide you in the treasure hunt. I can explain BUZZ, the map, M1U and more. What do you want to know?',
+      fr: 'Je suis AION, Adaptive Intelligence ON, l\'Oracle numérique de M1SSION. Je suis ici pour te guider dans la chasse au trésor. Je peux expliquer le BUZZ, la carte, les M1U et plus. Que veux-tu savoir?'
+    },
+    hello: {
+      it: 'Benvenuto, Agente. Io sono AION, la tua guida in M1SSION. Posso aiutarti con: BUZZ (indizi), BUZZ MAP (mappa), M1U (valuta), Final Shot (fase finale). Cosa ti interessa?',
+      en: 'Welcome, Agent. I am AION, your guide in M1SSION. I can help with: BUZZ (clues), BUZZ MAP (map), M1U (currency), Final Shot (final phase). What interests you?',
+      fr: 'Bienvenue, Agent. Je suis AION, ton guide dans M1SSION. Je peux aider avec: BUZZ (indices), BUZZ MAP (carte), M1U (monnaie), Final Shot (phase finale). Qu\'est-ce qui t\'intéresse?'
+    },
+    treasureWhere: {
+      it: 'Il tesoro non si trova con scorciatoie, Agente. Devi raccogliere indizi con il BUZZ, esplorare la BUZZ MAP, e quando avrai abbastanza informazioni, tentare il FINAL SHOT con le coordinate. Gli indizi sono la chiave.',
+      en: 'The treasure cannot be found with shortcuts, Agent. You must collect clues with BUZZ, explore the BUZZ MAP, and when you have enough information, attempt the FINAL SHOT with coordinates. Clues are the key.',
+      fr: 'Le trésor ne se trouve pas par des raccourcis, Agent. Tu dois collecter des indices avec le BUZZ, explorer la BUZZ MAP, et quand tu auras assez d\'infos, tenter le FINAL SHOT avec les coordonnées. Les indices sont la clé.'
+    },
+    buzz: {
+      it: 'Il BUZZ è il tuo portale verso gli indizi, Agente. Premi il tasto BUZZ per ricevere un indizio testuale sul tesoro. Il primo del giorno è GRATIS, poi costa M1U progressivamente. Hai già fatto il tuo BUZZ gratuito oggi?',
+      en: 'BUZZ is your portal to clues, Agent. Press the BUZZ button to receive a textual clue about the treasure. The first of the day is FREE, then it costs M1U progressively. Have you used your free BUZZ today?',
+      fr: 'Le BUZZ est ton portail vers les indices, Agent. Appuie sur le bouton BUZZ pour recevoir un indice textuel sur le trésor. Le premier du jour est GRATUIT, puis ça coûte des M1U progressivement. As-tu utilisé ton BUZZ gratuit aujourd\'hui?'
+    },
+    buzzMap: {
+      it: 'La BUZZ MAP è la mappa geolocalizzata di M1SSION. Vai fisicamente in un luogo, attiva il BUZZ sulla mappa, e riceverai indizi specifici di quella zona. Costa M1U. Il raggio è circa 500 metri.',
+      en: 'The BUZZ MAP is M1SSION\'s geolocated map. Go physically to a place, activate BUZZ on the map, and you will receive clues specific to that area. It costs M1U. Range is about 500 meters.',
+      fr: 'La BUZZ MAP est la carte géolocalisée de M1SSION. Va physiquement dans un lieu, active le BUZZ sur la carte, et tu recevras des indices spécifiques à cette zone. Ça coûte des M1U. Rayon ~500 m.'
+    },
+    m1u: {
+      it: 'Gli M1U (Mission Units) sono la valuta di M1SSION. Li usi per: BUZZ, BUZZ MAP, potenziamenti. Puoi comprarli o vincerli. Clicca sul pill M1U in alto per ricaricare. 1 M1U vale circa 0,10€.',
+      en: 'M1U (Mission Units) is M1SSION\'s currency. You use them for: BUZZ, BUZZ MAP, upgrades. You can buy or win them. Click the M1U pill at top to recharge. 1 M1U ≈ €0.10.',
+      fr: 'Les M1U (Mission Units) sont la monnaie de M1SSION. Tu les utilises pour: BUZZ, BUZZ MAP, améliorations. Tu peux les acheter ou les gagner. Clique sur le pill M1U en haut pour recharger. 1 M1U ≈ 0,10€.'
+    },
+    finalShot: {
+      it: 'Il FINAL SHOT è la fase finale, Agente. Quando pensi di sapere DOV\'È il tesoro, inserisci le coordinate esatte. Se sono corrette, HAI VINTO! I tentativi sono limitati. Sei pronto?',
+      en: 'FINAL SHOT is the final phase, Agent. When you think you know WHERE the treasure is, enter the exact coordinates. If correct, YOU WIN! Attempts are limited. Are you ready?',
+      fr: 'Le FINAL SHOT est la phase finale, Agent. Quand tu penses savoir OÙ est le trésor, entre les coordonnées exactes. Si c\'est correct, TU GAGNES! Les tentatives sont limitées. Tu es prêt?'
+    },
+    pulse: {
+      it: 'La Pulse Energy misura la tua attività nel gioco. Aumenta con BUZZ, esplorazione, interazioni. Diminuisce con l\'inattività. Influenza rank e ricompense.',
+      en: 'Pulse Energy measures your activity in the game. It increases with BUZZ, exploration, interactions. Decreases with inactivity. Affects rank and rewards.',
+      fr: 'La Pulse Energy mesure ton activité dans le jeu. Elle augmente avec BUZZ, exploration, interactions. Diminue avec l\'inactivité. Affecte le rang et les récompenses.'
+    },
+    help: {
+      it: 'Sono qui per aiutarti, Agente! Posso spiegarti: BUZZ (indizi), BUZZ MAP (mappa), M1U (valuta), Final Shot, Pulse Energy, Battle System. Cosa vuoi sapere?',
+      en: 'I am here to help, Agent! I can explain: BUZZ (clues), BUZZ MAP (map), M1U (currency), Final Shot, Pulse Energy, Battle System. What do you want to know?',
+      fr: 'Je suis là pour t\'aider, Agent! Je peux expliquer: BUZZ (indices), BUZZ MAP (carte), M1U (monnaie), Final Shot, Pulse Energy, Battle System. Que veux-tu savoir?'
+    }
+  };
+  const generic: { it: string[]; en: string[]; fr: string[] } = {
+    it: ['Agente, posso guidarti nel mondo di M1SSION. Chiedimi del BUZZ, della mappa, degli M1U. Cosa ti interessa?', 'La caccia prosegue. Hai domande sul BUZZ, sulla mappa? Sono qui per illuminare il tuo cammino.'],
+    en: ['Agent, I can guide you in M1SSION. Ask me about BUZZ, the map, M1U. What interests you?', 'The hunt continues. Questions about BUZZ, the map? I am here to light your path.'],
+    fr: ['Agent, je peux te guider dans M1SSION. Demande-moi le BUZZ, la carte, les M1U. Qu\'est-ce qui t\'intéresse?', 'La chasse continue. Des questions sur le BUZZ, la carte? Je suis ici pour illuminer ton chemin.']
+  };
+  if (!inScope) return F.outOfScope[replyLang];
+  if (lowerText.includes('chi sei') || lowerText.includes('who are') || lowerText.includes('qui es-tu') || lowerText.includes('presentati')) return F.whoAreYou[replyLang];
+  if (lowerText.includes('ciao') || lowerText.includes('hello') || lowerText.includes('hi ') || lowerText.includes('salut') || lowerText.includes('hey')) return F.hello[replyLang];
+  if (lowerText.includes('dove') && (lowerText.includes('tesoro') || lowerText.includes('treasure') || lowerText.includes('premio') || lowerText.includes('où') || lowerText.includes('prix'))) return F.treasureWhere[replyLang];
+  if (lowerText.includes('buzz') && !lowerText.includes('map')) return F.buzz[replyLang];
+  if (lowerText.includes('buzz') && lowerText.includes('map')) return F.buzzMap[replyLang];
+  if (lowerText.includes('m1u') || lowerText.includes('monete') || lowerText.includes('credits') || lowerText.includes('soldi') || lowerText.includes('argent')) return F.m1u[replyLang];
+  if (lowerText.includes('final') || lowerText.includes('shot') || lowerText.includes('finale')) return F.finalShot[replyLang];
+  if (lowerText.includes('pulse') || lowerText.includes('energia') || lowerText.includes('energy')) return F.pulse[replyLang];
+  if (lowerText.includes('aiut') || lowerText.includes('help') || lowerText.includes('aide')) return F.help[replyLang];
+  const arr = generic[replyLang];
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 // Check if query is in scope
 function isInScope(text: string): boolean {
   const keywords = [
@@ -185,7 +258,12 @@ serve(async (req) => {
   }
 
   try {
-    const { session_id, text, messages = [], system, is_retry = false, retry_attempt = 0 } = await req.json();
+    const { session_id, text, messages = [], system, lang, reply_lang, is_retry = false, retry_attempt = 0 } = await req.json();
+
+    const replyLang = (reply_lang || lang) === 'en' ? 'en' : (reply_lang || lang) === 'fr' ? 'fr' : 'it';
+    if (lang || reply_lang) {
+      console.log('[AION][LANG]', { lang: replyLang, text: text?.substring(0, 40) });
+    }
 
     // 🔍 OBSERVABILITY: Log retry attempts
     if (is_retry) {
@@ -368,7 +446,15 @@ serve(async (req) => {
           parts: [{ text: m.content }]
         }));
 
-        console.log('[AION] Calling Gemini with', conversationHistory.length, 'history messages');
+        console.log('[AION] Calling Gemini with', conversationHistory.length, 'history messages, reply_lang:', replyLang);
+
+        const langInstruction = replyLang === 'en'
+          ? '\n\nIMPORTANT: You MUST reply STRICTLY in English. Do not mix languages. Answer in English only.'
+          : replyLang === 'fr'
+            ? '\n\nIMPORTANT: Tu DOIS répondre STRICTEMENT en français. Ne mélange pas les langues. Réponds en français uniquement.'
+            : '\n\nIMPORTANT: Devi rispondere STRETTAMENTE in italiano. Non mescolare le lingue. Rispondi solo in italiano.';
+
+        const systemPrompt = AION_SYSTEM_PROMPT + langInstruction;
 
         // Call Gemini
         const geminiResponse = await fetch(
@@ -381,7 +467,7 @@ serve(async (req) => {
                 ...conversationHistory,
                 { role: 'user', parts: [{ text: normalizedText }] }
               ],
-              systemInstruction: { parts: [{ text: AION_SYSTEM_PROMPT }] },
+              systemInstruction: { parts: [{ text: systemPrompt }] },
               generationConfig: {
                 temperature: 0.7,
                 maxOutputTokens: 256,
@@ -415,51 +501,10 @@ serve(async (req) => {
       console.log('[AION] Skipping Gemini:', { hasKey: !!GEMINI_API_KEY, inScope });
     }
 
-    // Fallback responses - INFORMATIVE but MYSTERIOUS
+    // Fallback responses - language-aware
     if (!reply || reply.trim() === '') {
-      console.log('[AION] Empty reply, using fallback. inScope:', inScope, 'text:', normalizedText);
-      const lowerText = normalizedText.toLowerCase();
-      
-      if (!inScope) {
-        reply = 'Agente, la mia conoscenza è limitata a M1SSION. Chiedimi del BUZZ, della mappa, degli M1U, del Final Shot... e ti guiderò.';
-      } else if (lowerText.includes('chi sei') || lowerText.includes('chi 6') || lowerText.includes('presentati')) {
-        reply = 'Io sono AION, Adaptive Intelligence ON, l\'Oracolo digitale di M1SSION. Sono qui per guidarti nella caccia al tesoro più emozionante. Posso spiegarti come funziona il BUZZ, la mappa, gli M1U e molto altro. Cosa vuoi sapere?';
-      } else if (lowerText.includes('ciao') || lowerText.includes('salve') || lowerText.includes('hey')) {
-        reply = 'Benvenuto, Agente. Io sono AION, la tua guida in M1SSION. Posso aiutarti con: BUZZ (indizi), BUZZ MAP (mappa), M1U (valuta), Final Shot (fase finale). Cosa ti interessa?';
-      } else if (lowerText.includes('dove') && (lowerText.includes('tesoro') || lowerText.includes('premio'))) {
-        reply = 'Il tesoro non si trova con scorciatoie, Agente. Devi raccogliere indizi con il BUZZ, esplorare la BUZZ MAP, e quando avrai abbastanza informazioni, tentare il FINAL SHOT con le coordinate. Gli indizi sono la chiave.';
-      } else if (lowerText.includes('buzz') && !lowerText.includes('map')) {
-        reply = 'Il BUZZ è il tuo portale verso gli indizi, Agente. Premi il tasto BUZZ per ricevere un indizio testuale sul tesoro. Il primo del giorno è GRATIS, poi costa M1U progressivamente: 1, 2, 3... Più buzzi, più sai. Hai già fatto il tuo BUZZ gratuito oggi?';
-      } else if (lowerText.includes('buzz') && lowerText.includes('map')) {
-        reply = 'La BUZZ MAP è la mappa geolocalizzata di M1SSION. Vai fisicamente in un luogo, attiva il BUZZ sulla mappa, e riceverai indizi specifici di quella zona. Costa M1U, ma gli indizi sono più precisi. Il raggio è circa 500 metri. Dove vuoi esplorare?';
-      } else if (lowerText.includes('m1u') || lowerText.includes('monete') || lowerText.includes('soldi') || lowerText.includes('crediti')) {
-        reply = 'Gli M1U (Mission Units) sono la valuta di M1SSION. Li usi per: BUZZ, BUZZ MAP, potenziamenti. Puoi comprarli o vincerli. Clicca sul pill M1U in alto a sinistra per ricaricare. 1 M1U vale circa 0,10€. Quanti ne hai?';
-      } else if (lowerText.includes('final') || lowerText.includes('shot') || lowerText.includes('finale')) {
-        reply = 'Il FINAL SHOT è la fase finale, Agente. Quando pensi di sapere DOV\'È il tesoro, inserisci le coordinate esatte. Se sono corrette, HAI VINTO! Ma i tentativi sono limitati, quindi raccogli prima abbastanza indizi. Sei pronto per il Final Shot?';
-      } else if (lowerText.includes('pulse') || lowerText.includes('energia')) {
-        reply = 'La Pulse Energy misura la tua attività nel gioco. Aumenta quando fai BUZZ, esplori, interagisci. Diminuisce con l\'inattività. Influenza il tuo rank e le ricompense. Tieni alta la tua energia, Agente!';
-      } else if (lowerText.includes('premio') || lowerText.includes('premi') || lowerText.includes('vincere')) {
-        reply = 'In M1SSION ci sono il PREMIO PRINCIPALE (il tesoro) e PREMI SECONDARI sulla mappa (marker verdi). Avvicinati a 75 metri per vederli e reclamarli. Per il tesoro principale, devi raccogliere indizi e fare il FINAL SHOT. Vuoi sapere di più?';
-      } else if (lowerText.includes('mappa') || lowerText.includes('map')) {
-        reply = 'La mappa di M1SSION mostra la tua posizione, altri agenti, e i marker dei premi. Usa la BUZZ MAP per attivare indizi geolocalizzati. I marker verdi sono premi da raccogliere. Esplora e scopri i segreti nascosti!';
-      } else if (lowerText.includes('battle') || lowerText.includes('attacca') || lowerText.includes('combatti')) {
-        reply = 'Il Battle System ti permette di sfidare altri agenti! Attacca nemici sulla mappa, usa missili e scudi. Chi vince prende M1U o Pulse Energy dal perdente. È una guerra di strategia, Agente!';
-      } else if (lowerText.includes('indizi') || lowerText.includes('indizio') || lowerText.includes('clue')) {
-        reply = 'Gli indizi sono frammenti di informazione sul tesoro. Li ottieni con il BUZZ (testo) o la BUZZ MAP (geolocalizzati). Ogni indizio è un pezzo del puzzle. Collezionali, analizzali, trova le connessioni. Quanti indizi hai già raccolto?';
-      } else if (lowerText.includes('come') && (lowerText.includes('funziona') || lowerText.includes('gioca') || lowerText.includes('inizia'))) {
-        reply = 'Ecco come funziona M1SSION: 1) Fai BUZZ per ricevere indizi, 2) Esplora la BUZZ MAP per indizi geolocalizzati, 3) Raccogli premi secondari (marker verdi), 4) Quando sai dove è il tesoro, fai il FINAL SHOT. Usa gli M1U per alimentare la ricerca. Da dove vuoi iniziare?';
-      } else if (lowerText.includes('aiut') || lowerText.includes('help')) {
-        reply = 'Sono qui per aiutarti, Agente! Posso spiegarti: BUZZ (indizi), BUZZ MAP (mappa), M1U (valuta), Final Shot (fase finale), Pulse Energy, Battle System. Cosa vuoi sapere?';
-      } else {
-        const fallbacks = [
-          'Agente, posso guidarti nel mondo di M1SSION. Chiedimi del BUZZ, della mappa, degli M1U, o di come trovare il tesoro. Cosa ti interessa?',
-          'La caccia prosegue, Agente. Hai domande sul BUZZ, sulla mappa, sui premi? Sono qui per illuminare il tuo cammino.',
-          'Sono AION e monitoro i tuoi progressi. Vuoi sapere come funziona il BUZZ? La BUZZ MAP? Gli M1U? Chiedimi!',
-          'Agente, ogni grande cacciatore ha bisogno di una guida. BUZZ per indizi, MAPPA per esplorare, FINAL SHOT per vincere. Di cosa hai bisogno?',
-          'Il tesoro attende chi sa cercare. Posso spiegarti le meccaniche di M1SSION: BUZZ, mappa, M1U, premi. Cosa vuoi sapere?'
-        ];
-        reply = fallbacks[Math.floor(Math.random() * fallbacks.length)];
-      }
+      console.log('[AION] Empty reply, using fallback. inScope:', inScope, 'replyLang:', replyLang, 'text:', normalizedText.substring(0, 40));
+      reply = getFallbackReply(normalizedText.toLowerCase(), inScope, replyLang);
       provider = 'fallback';
     }
 
