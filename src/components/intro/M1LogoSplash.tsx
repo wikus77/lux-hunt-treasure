@@ -24,6 +24,21 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
   const [contentVisible, setContentVisible] = useState(false); // For video fade-in
   const videoRef = useRef<HTMLVideoElement>(null);
   const hasEndedRef = useRef(false);
+  const retryTappedRef = useRef(false);
+
+  // iPad/WKWebView: retry play on first user interaction (autoplay often blocked)
+  const handleRetryPlay = () => {
+    if (retryTappedRef.current || hasEndedRef.current) return;
+    retryTappedRef.current = true;
+    const video = videoRef.current;
+    if (video && !videoError) {
+      video.muted = true;
+      video.play().catch(() => {
+        console.warn('🎬 [Splash] Retry play failed');
+        setVideoError(true);
+      });
+    }
+  };
 
   // Handle completion with smooth fade-out
   const handleComplete = () => {
@@ -74,24 +89,17 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
     setVideoError(true);
   };
 
-  // Auto-play video when component mounts
+  // Auto-play video when component mounts (muted first for iOS/WKWebView)
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
-      // Set up listeners first
+      video.muted = true;
       video.addEventListener('loadeddata', handleVideoLoaded);
       video.addEventListener('error', handleVideoError);
-      
-      // Try to play
-      video.play().catch(err => {
-        console.log('🎬 [Splash] Video autoplay blocked, trying muted:', err);
-        video.muted = true;
-        video.play().catch(() => {
-          console.error('🎬 [Splash] Video play failed even muted');
-          setVideoError(true);
-        });
-      });
-      
+      video.addEventListener('canplay', () => {
+        video.play().catch(() => { /* retry on tap */ });
+      }, { once: true });
+      video.play().catch(() => { /* iPad: retry on first tap */ });
       return () => {
         video.removeEventListener('loadeddata', handleVideoLoaded);
         video.removeEventListener('error', handleVideoError);
@@ -103,6 +111,10 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
     <AnimatePresence>
       {isVisible && (
         <motion.div
+          role="button"
+          tabIndex={0}
+          onClick={handleRetryPlay}
+          onTouchStart={handleRetryPlay}
           style={{
             position: 'fixed',
             inset: 0,
@@ -192,54 +204,16 @@ const M1LogoSplash: React.FC<M1LogoSplashProps> = ({
               </motion.div>
             </>
           ) : (
-            // Fallback: Simple logo if video fails
-            <motion.div
+            // Fallback when video fails: black + same overlay only (never show "M1" static — iPad fix)
+            <div
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
+                position: 'absolute',
+                inset: 0,
+                background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%)',
+                pointerEvents: 'none',
+                zIndex: 2,
               }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: contentVisible ? 1 : 0, scale: contentVisible ? 1 : 0.8 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px' }}>
-                <span 
-                  style={{ 
-                    fontSize: '96px',
-                    fontWeight: 700,
-                    color: '#00D1FF',
-                    textShadow: '0 0 40px rgba(0, 209, 255, 0.8), 0 0 80px rgba(0, 209, 255, 0.4)',
-                    fontFamily: 'Inter, sans-serif'
-                  }}
-                >
-                  M
-                </span>
-                <span 
-                  style={{ 
-                    fontSize: '96px',
-                    fontWeight: 700,
-                    color: '#FFFFFF',
-                    textShadow: '0 0 20px rgba(255, 255, 255, 0.5)',
-                    fontFamily: 'Inter, sans-serif'
-                  }}
-                >
-                  1
-                </span>
-              </div>
-              <p 
-                style={{ 
-                  fontSize: '18px',
-                  letterSpacing: '0.3em',
-                  color: '#F59E0B',
-                  fontFamily: 'Orbitron, sans-serif',
-                  textShadow: '0 0 20px rgba(218, 165, 32, 0.6)'
-                }}
-              >
-                IT IS POSSIBLE
-              </p>
-            </motion.div>
+            />
           )}
 
           {/* Loading indicator while video loads - only show after content fade-in starts */}

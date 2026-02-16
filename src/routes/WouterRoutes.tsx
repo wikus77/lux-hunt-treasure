@@ -207,9 +207,9 @@ const WouterRoutes: React.FC = () => {
           return;
         }
         
-        // Soft redirect home for initial routes only
-        const initialRoutes = ['/', '/login', '/mission-intro', '/subscription-verify'];
-        if (subResult.plan === 'free' && initialRoutes.includes(location)) {
+        // Soft redirect home for initial routes only (exclude /mission-intro so first-login intro plays)
+        const routesToRedirectToHome = ['/', '/login', '/subscription-verify'];
+        if (subResult.plan === 'free' && routesToRedirectToHome.includes(location)) {
           setLocation('/home');
           return;
         }

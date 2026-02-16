@@ -68,8 +68,8 @@ const guardHapticsRuntime = (caller: string): boolean => {
 };
 
 /**
- * Detect iPad (incl. iPadOS 13+ reporting as Mac with maxTouchPoints).
- * Used to strengthen haptic pattern so feedback is perceptible on iPad.
+ * Detect iPad (UA iPad or MacIntel + maxTouchPoints > 1 for iPadOS 13+).
+ * Used to strengthen haptic pattern so feedback is perceptible on iPad (iPhone unchanged).
  */
 const isIPad = (): boolean => {
   if (typeof navigator === 'undefined') return false;

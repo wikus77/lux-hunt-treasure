@@ -48,6 +48,18 @@ const Login = () => {
   const redirectAttemptedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hasDispatchedLoginVisibleRef = useRef(false);
+  const videoRetryTappedRef = useRef(false);
+
+  // iPad/WKWebView: retry video play on first tap (autoplay often blocked)
+  const handleVideoRetryTap = useCallback(() => {
+    if (videoRetryTappedRef.current) return;
+    videoRetryTappedRef.current = true;
+    const v = videoRef.current;
+    if (v) {
+      v.muted = true;
+      v.play().catch(() => {});
+    }
+  }, []);
 
   // 🔐 FACE ID: Trigger Face ID when login screen is visible (iOS native only)
   // This is NON-INVASIVE: no UI changes, no auth flow changes, only adds Face ID prompt
@@ -73,23 +85,16 @@ const Login = () => {
     }
   }, [currentScreen]);
 
-  // 🔍 Debug log on mount + programmatic play for iOS
+  // Video: muted first for iOS/WKWebView; retry on canplay and on first tap
   useEffect(() => {
-    const platform = Capacitor.isNativePlatform() ? 'capacitor' : 'web';
-    console.log('🎬 [Login] Mount debug:', { platform, videoSrc: VIDEO_SRC });
-    
-    // Try to play video programmatically (helps with iOS edge cases)
     const video = videoRef.current;
     if (video) {
-      video.play().catch(err => {
-        console.warn('🎬 [Login] Video autoplay issue:', err.message);
-      });
-      
-      // Debug: log video state
-      video.addEventListener('loadeddata', () => {
-        console.log('🎬 [Login] Video loadeddata - readyState:', video.readyState);
-      });
-      video.addEventListener('error', (e) => {
+      video.muted = true;
+      video.addEventListener('canplay', () => {
+        video.play().catch(() => {});
+      }, { once: true });
+      video.play().catch(() => {});
+      video.addEventListener('error', () => {
         console.error('🎬 [Login] Video error:', video.error?.code, video.error?.message);
       });
     }
@@ -370,9 +375,13 @@ const Login = () => {
   // MAIN RENDER
   // ============================================================================
   return createPortal(
-    <div className="fixed inset-0 z-[100] overflow-hidden bg-black">
-      {/* 🎬 Video Background - Full Screen Cover (z-index: 0) */}
-      {/* FIX: Using lowercase 'video' path + no poster (file didn't exist) */}
+    <div
+      className="fixed inset-0 z-[100] overflow-hidden bg-black"
+      onClick={handleVideoRetryTap}
+      onTouchStart={handleVideoRetryTap}
+      role="presentation"
+    >
+      {/* 🎬 Video Background - Full Screen Cover (z-index: 0); iPad: retry play on first tap */}
       <video
         ref={videoRef}
         autoPlay
