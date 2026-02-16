@@ -1123,5 +1123,6 @@
   "vera_mission.bomb.badge": "BOMBA",
   "vera_mission.bomb.already_played_title": "Già completata oggi",
   "vera_mission.bomb.already_played_body": "Torna domani per una nuova missione.",
-  "vera_mission.bomb.badge_done": "FATTO"
+  "vera_mission.bomb.badge_done": "FATTO",
+  "vera_mission.bomb.cta_continue": "CONTINUA"
 }

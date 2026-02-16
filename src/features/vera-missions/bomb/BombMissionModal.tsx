@@ -18,6 +18,7 @@ import {
 } from './bombMissionTypes';
 import { useBombMissionRun } from './useBombMissionRun';
 import { BombDeviceVisual } from './ui/BombDeviceVisual';
+import { VeraBombPulseBarOverlay } from './ui/VeraBombPulseBarOverlay';
 
 interface BombMissionModalProps {
   open: boolean;
@@ -483,17 +484,12 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
                   >
                     {t('vera_mission.bomb.success_body')}
                   </p>
-                  {deltaPe !== null && deltaPe > 0 && (
-                    <p
-                      style={{
-                        color: '#00FF88',
-                        fontSize: '18px',
-                        fontWeight: 700,
-                      }}
-                    >
-                      +{deltaPe} PE
-                    </p>
-                  )}
+                  <VeraBombPulseBarOverlay
+                    deltaPe={deltaPe ?? 0}
+                    isWin={true}
+                    onContinue={handleClose}
+                    ctaLabel={t('vera_mission.bomb.cta_continue')}
+                  />
                 </div>
               </motion.div>
             )}
@@ -532,17 +528,12 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
                   >
                     {t('vera_mission.bomb.fail_body')}
                   </p>
-                  {deltaPe !== null && deltaPe < 0 && (
-                    <p
-                      style={{
-                        color: '#FF4444',
-                        fontSize: '18px',
-                        fontWeight: 700,
-                      }}
-                    >
-                      {deltaPe} PE
-                    </p>
-                  )}
+                  <VeraBombPulseBarOverlay
+                    deltaPe={deltaPe ?? 0}
+                    isWin={false}
+                    onContinue={handleClose}
+                    ctaLabel={t('vera_mission.bomb.cta_continue')}
+                  />
                 </div>
               </motion.div>
             )}

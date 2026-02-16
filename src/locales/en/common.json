@@ -1122,5 +1122,6 @@
   "vera_mission.bomb.badge": "BOMB",
   "vera_mission.bomb.already_played_title": "Already completed today",
   "vera_mission.bomb.already_played_body": "Come back tomorrow for a new mission.",
-  "vera_mission.bomb.badge_done": "DONE"
+  "vera_mission.bomb.badge_done": "DONE",
+  "vera_mission.bomb.cta_continue": "CONTINUE"
 }
