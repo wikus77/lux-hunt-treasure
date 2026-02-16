@@ -54,6 +54,67 @@ const SUBTITLES_BUZZMAP_FR = [
   'Chaque pression du bouton Buzz\nréduit la zone de recherche du prix final.',
 ];
 
+// FIX: Subtitles for Buzz, AION, Classifica, Notifiche (EN/FR)
+const SUBTITLES_BUZZ_EN = [
+  'BUZZ is your scan action.\nIt reveals clues and narrows the search.',
+  'Each BUZZ costs energy.\nUse it wisely on the map.',
+  'Unlock new areas.\nFind green markers for instant rewards.',
+  'The more you scan,\nthe closer you get to the final prize.',
+  'BUZZ from anywhere.\nThe map is your control center.',
+];
+const SUBTITLES_BUZZ_FR = [
+  'BUZZ est votre action de scan.\nIl révèle des indices et affine la recherche.',
+  'Chaque BUZZ coûte de l\'énergie.\nUtilisez-le avec sagesse sur la carte.',
+  'Débloquez de nouvelles zones.\nTrouvez les marqueurs verts pour des récompenses instantanées.',
+  'Plus vous scannez,\nplus vous vous rapprochez du prix final.',
+  'BUZZ de partout.\nLa carte est votre centre de contrôle.',
+];
+
+const SUBTITLES_AION_EN = [
+  'AION is your AI oracle.\nPatterns and energy reveal the path.',
+  'Ask questions.\nGet strategic insights.',
+  'The oracle speaks in probabilities.\nInterpret wisely.',
+  'AION sees what you cannot.\nTrust the patterns.',
+  'Your intelligence partner.\nAlways available.',
+];
+const SUBTITLES_AION_FR = [
+  'AION est votre oracle IA.\nLes motifs et l\'énergie révèlent le chemin.',
+  'Posez des questions.\nObtenez des insights stratégiques.',
+  'L\'oracle parle en probabilités.\nInterprétez avec sagesse.',
+  'AION voit ce que vous ne pouvez pas.\nFaites confiance aux motifs.',
+  'Votre partenaire intelligence.\nToujours disponible.',
+];
+
+const SUBTITLES_CLASSIFICA_EN = [
+  'The leaderboard ranks all agents.\nClimb to the top.',
+  'Points come from clues,\nPulse energy and streaks.',
+  'See who is ahead.\nOvertake your rivals.',
+  'Top 10 get special recognition.\nAim for the podium.',
+  'Real-time updates.\nThe race never stops.',
+];
+const SUBTITLES_CLASSIFICA_FR = [
+  'Le classement range tous les agents.\nGrimpez au sommet.',
+  'Les points viennent des indices,\n de l\'énergie Pulse et des streaks.',
+  'Voyez qui est devant.\nDépassez vos rivaux.',
+  'Le Top 10 a une reconnaissance spéciale.\nVisez le podium.',
+  'Mises à jour en temps réel.\nLa course ne s\'arrête jamais.',
+];
+
+const SUBTITLES_NOTIFICHE_EN = [
+  'Notifications keep you in the mission.\nNever miss a clue.',
+  'Alerts for rewards, rivals, and events.\nStay informed.',
+  'Enable push for real-time updates.\nCustomize your alerts.',
+  'Your mission, your rhythm.\nWe notify when it matters.',
+  'Turn them on.\nStay ahead.',
+];
+const SUBTITLES_NOTIFICHE_FR = [
+  'Les notifications vous gardent en mission.\nNe manquez aucun indice.',
+  'Alertes pour récompenses, rivaux et événements.\nRestez informé.',
+  'Activez les push pour des mises à jour en temps réel.\nPersonnalisez vos alertes.',
+  'Votre mission, votre rythme.\nNous notifions quand ça compte.',
+  'Activez-les.\nRestez en avance.',
+];
+
 export interface BriefingFlipOverlayProps {
   open: boolean;
   onClose: () => void;
@@ -63,8 +124,8 @@ export interface BriefingFlipOverlayProps {
   storageKey: string;
   title: string;
   subtitle?: string;
-  /** 'home' | 'buzz_map' = sottotitoli EN/FR (IT = nessuno); undefined = nessun sottotitolo */
-  enableSubtitles?: 'home' | 'buzz_map';
+  /** 'home' | 'buzz_map' | 'buzz' | 'aion' | 'classifica' | 'notifiche' = sottotitoli EN/FR (IT = nessuno); undefined = nessun sottotitolo */
+  enableSubtitles?: 'home' | 'buzz_map' | 'buzz' | 'aion' | 'classifica' | 'notifiche';
 }
 
 export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
@@ -87,14 +148,20 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
 
   const locale = getLocale();
   const showSubtitles = !!enableSubtitles && (locale === 'en' || locale === 'fr');
-  const subtitleLines =
-    enableSubtitles === 'buzz_map'
-      ? locale === 'en'
-        ? SUBTITLES_BUZZMAP_EN
-        : SUBTITLES_BUZZMAP_FR
-      : locale === 'en'
-        ? SUBTITLES_EN
-        : SUBTITLES_FR;
+  const getSubtitleLines = () => {
+    if (!enableSubtitles) return SUBTITLES_EN;
+    const isEn = locale === 'en';
+    switch (enableSubtitles) {
+      case 'buzz_map': return isEn ? SUBTITLES_BUZZMAP_EN : SUBTITLES_BUZZMAP_FR;
+      case 'buzz': return isEn ? SUBTITLES_BUZZ_EN : SUBTITLES_BUZZ_FR;
+      case 'aion': return isEn ? SUBTITLES_AION_EN : SUBTITLES_AION_FR;
+      case 'classifica': return isEn ? SUBTITLES_CLASSIFICA_EN : SUBTITLES_CLASSIFICA_FR;
+      case 'notifiche': return isEn ? SUBTITLES_NOTIFICHE_EN : SUBTITLES_NOTIFICHE_FR;
+      case 'home':
+      default: return isEn ? SUBTITLES_EN : SUBTITLES_FR;
+    }
+  };
+  const subtitleLines = getSubtitleLines();
 
   // Check se mostrare il video (admin sempre, altri controllano localStorage)
   const shouldShowVideo = useCallback(() => {

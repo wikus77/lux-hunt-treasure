@@ -359,6 +359,7 @@ const BottomNavigationComponent = () => {
         storageKey="m1_buzz_video_modal_dismissed"
         title="BRIEFING BUZZ"
         subtitle="Guarda il video introduttivo prima di iniziare"
+        enableSubtitles="buzz"
       />
       
       <BriefingFlipOverlay
@@ -394,6 +395,7 @@ const BottomNavigationComponent = () => {
         storageKey="m1_aion_video_dismissed"
         title="AION AI"
         subtitle="Briefing: L'intelligenza artificiale al tuo servizio"
+        enableSubtitles="aion"
       />
       
       <BriefingFlipOverlay
@@ -405,6 +407,7 @@ const BottomNavigationComponent = () => {
         storageKey="m1_classifica_video_dismissed"
         title="CLASSIFICA"
         subtitle="Briefing: La classifica dei migliori agenti"
+        enableSubtitles="classifica"
       />
       
       <BriefingFlipOverlay
@@ -416,6 +419,7 @@ const BottomNavigationComponent = () => {
         storageKey="m1_notifiche_video_dismissed"
         title="NOTIFICHE"
         subtitle="Briefing: Le notifiche della missione"
+        enableSubtitles="notifiche"
       />
     </div>
   );

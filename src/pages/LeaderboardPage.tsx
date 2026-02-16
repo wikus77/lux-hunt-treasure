@@ -40,7 +40,8 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useRealtimeLeaderboard, LeaderboardScope } from '@/hooks/useRealtimeLeaderboard';
-import { hapticLight, hapticMedium } from '@/utils/haptics';
+import { hapticLight } from '@/utils/haptics';
+import { useLongPress } from '@/hooks/useLongPress';
 import { notifyShadowContext } from '@/stores/entityOverlayStore'; // 🌑 Shadow Protocol v3
 import { MotivationalPopup } from '@/components/feedback';
 import { UserProfileModal } from '@/components/leaderboard/UserProfileModal';
@@ -67,38 +68,8 @@ const LeaderboardUserCard: React.FC<LeaderboardUserCardProps> = ({
   user, index, style, isTop10, onLongPress 
 }) => {
   const { t } = useTranslation();
-  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const startPosRef = React.useRef({ x: 0, y: 0 });
-  const isScrollingRef = React.useRef(false);
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    startPosRef.current = { x: e.clientX, y: e.clientY };
-    isScrollingRef.current = false;
-    timerRef.current = setTimeout(() => {
-      if (!isScrollingRef.current) {
-        hapticMedium();
-        onLongPress();
-      }
-    }, 500);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!timerRef.current) return;
-    const dx = Math.abs(e.clientX - startPosRef.current.x);
-    const dy = Math.abs(e.clientY - startPosRef.current.y);
-    if (dx > 10 || dy > 10) {
-      isScrollingRef.current = true;
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
-  const handlePointerEnd = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  };
+  // FIX: use useLongPress (touch + pointer) for reliable iOS WKWebView support
+  const longPressHandlers = useLongPress(onLongPress, { threshold: 500 });
 
   // Get tier badge
   const getTierBadgeLocal = (tier?: string) => {
@@ -133,11 +104,7 @@ const LeaderboardUserCard: React.FC<LeaderboardUserCardProps> = ({
       exit={{ x: 20, opacity: 0 }}
       transition={{ delay: index * 0.03 }}
       layout
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerEnd}
-      onPointerCancel={handlePointerEnd}
-      onPointerLeave={handlePointerEnd}
+      {...longPressHandlers}
       style={{ touchAction: 'pan-y' }}
     >
       <Card className={`${getRankCardClass()} ${
@@ -263,51 +230,6 @@ const ForumQuickLink: React.FC = () => {
       <span className="text-sm text-purple-300 font-medium">{t('leaderboard_forum_enter')}</span>
     </motion.button>
   );
-};
-
-// 🔧 Long-press hook for leaderboard cards
-const useLongPressCard = (onLongPress: () => void, delay = 500) => {
-  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isLongPressRef = React.useRef(false);
-  const startPosRef = React.useRef({ x: 0, y: 0 });
-
-  const start = React.useCallback((e: React.PointerEvent) => {
-    startPosRef.current = { x: e.clientX, y: e.clientY };
-    isLongPressRef.current = false;
-    timerRef.current = setTimeout(() => {
-      isLongPressRef.current = true;
-      hapticMedium();
-      onLongPress();
-    }, delay);
-  }, [onLongPress, delay]);
-
-  const move = React.useCallback((e: React.PointerEvent) => {
-    if (!timerRef.current) return;
-    const dx = Math.abs(e.clientX - startPosRef.current.x);
-    const dy = Math.abs(e.clientY - startPosRef.current.y);
-    // Cancel if moved more than 10px (scrolling)
-    if (dx > 10 || dy > 10) {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    }
-  }, []);
-
-  const end = React.useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-
-  return {
-    onPointerDown: start,
-    onPointerMove: move,
-    onPointerUp: end,
-    onPointerCancel: end,
-    onPointerLeave: end,
-  };
 };
 
 export const LeaderboardPage: React.FC = () => {
