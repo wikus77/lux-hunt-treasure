@@ -54,6 +54,9 @@ const PostLoginMissionIntro = () => {
                 // 🎯 REDIRECT FINALE DOPO 1.5s
                 setTimeout(() => {
                   sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
+                  try {
+                    localStorage.setItem('m1_first_login_done', 'true');
+                  } catch {}
                   navigate('/home');
                 }, 1500);
               }, 1000);

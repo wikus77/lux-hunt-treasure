@@ -8,6 +8,7 @@ import FormField from './form-field';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuthContext } from '@/contexts/auth';
 import { saveFaceIDCredentials } from '@/hooks/useFaceIDLogin';
+import { isFirstLoginDone } from '@/utils/postLoginRedirectFixed';
 
 interface StandardLoginFormProps {
   verificationStatus?: string | null;
@@ -76,26 +77,29 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         detail: { timestamp: Date.now() } 
       }));
       
-      // POST-LOGIN REDIRECT: Handle redirect params and localStorage
-      const params = new URLSearchParams(window.location.search);
-      const qRedirect = params.get('redirect');
-      let target = qRedirect || '';
-      if (!target) {
-        try { 
-          target = localStorage.getItem('post_login_redirect') || ''; 
-          if (target) localStorage.removeItem('post_login_redirect'); 
-        } catch {}
+      // POST-LOGIN REDIRECT: First login (clean install) → mission-intro; else map/home
+      let finalTarget: string;
+      if (!isFirstLoginDone()) {
+        finalTarget = '/mission-intro';
+        console.log('🚀 [StandardLoginForm] REDIRECTING TO:', finalTarget, '(first login)');
+        navigate(finalTarget);
+      } else {
+        const params = new URLSearchParams(window.location.search);
+        const qRedirect = params.get('redirect');
+        let target = qRedirect || '';
+        if (!target) {
+          try {
+            target = localStorage.getItem('post_login_redirect') || '';
+            if (target) localStorage.removeItem('post_login_redirect');
+          } catch {}
+        }
+        finalTarget = target || '/map-3d-tiler';
+        console.log('🚀 [StandardLoginForm] REDIRECTING TO:', finalTarget);
+        navigate(finalTarget);
       }
-      
-      // 🔥 FIX 16/01/2026: Redirect alla MAPPA invece che alla Home
-      // Così le MicroMissions partono subito dopo il login
-      const finalTarget = target || '/map-3d-tiler';
-      console.log('🚀 [StandardLoginForm] REDIRECTING TO:', finalTarget);
-      
-      navigate(finalTarget);
-      
+
       // PWA iOS Safari fallback
-      if (window.matchMedia('(display-mode: standalone)').matches || 
+      if (window.matchMedia('(display-mode: standalone)').matches ||
           (window.navigator as any).standalone === true) {
         console.log('📱 PWA DETECTED - Setting up fallback redirect');
         setTimeout(() => {

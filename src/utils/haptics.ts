@@ -68,23 +68,37 @@ const guardHapticsRuntime = (caller: string): boolean => {
 };
 
 /**
+ * Detect iPad (incl. iPadOS 13+ reporting as Mac with maxTouchPoints).
+ * Used to strengthen haptic pattern so feedback is perceptible on iPad.
+ */
+const isIPad = (): boolean => {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  if (/iPad/.test(ua)) return true;
+  if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return true;
+  return false;
+};
+
+/**
  * Trigger native iOS/Android haptic via @capacitor/haptics
  * This is the ONLY way to trigger haptics in this app.
+ * On iPad we use stronger patterns (Medium/Heavy) so feedback is perceptible.
  */
 const triggerNativeHaptic = async (type: HapticType): Promise<boolean> => {
   try {
     // Import Capacitor Haptics
     const { Haptics, ImpactStyle, NotificationType } = await import('@capacitor/haptics');
-    
-    console.debug(`[HAPTICS] 📳 Triggering native haptic: ${type}`);
-    
+    const iPad = isIPad();
+
+    console.debug(`[HAPTICS] 📳 Triggering native haptic: ${type}${iPad ? ' (iPad stronger)' : ''}`);
+
     switch (type) {
       case 'light':
       case 'selection':
-        await Haptics.impact({ style: ImpactStyle.Light });
+        await Haptics.impact({ style: iPad ? ImpactStyle.Medium : ImpactStyle.Light });
         break;
       case 'medium':
-        await Haptics.impact({ style: ImpactStyle.Medium });
+        await Haptics.impact({ style: iPad ? ImpactStyle.Heavy : ImpactStyle.Medium });
         break;
       case 'heavy':
         await Haptics.impact({ style: ImpactStyle.Heavy });
@@ -102,7 +116,7 @@ const triggerNativeHaptic = async (type: HapticType): Promise<boolean> => {
         await Haptics.notification({ type: NotificationType.Success });
         break;
       default:
-        await Haptics.impact({ style: ImpactStyle.Light });
+        await Haptics.impact({ style: iPad ? ImpactStyle.Medium : ImpactStyle.Light });
     }
     
     console.debug(`[HAPTICS] ✅ Native haptic triggered: ${type}`);
