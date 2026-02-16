@@ -24,10 +24,12 @@ type LoginScreen = 'opening' | 'signup' | 'login';
 const VIDEO_SRC = '/assets/video/M1SSION_INTRO.mp4';
 const MAX_VIDEO_RETRIES = 3;
 const MEDIA_ERR_DECODE = 3;
-/** Backoff ms for play retries: 150, 350, 700 */
-const PLAY_RETRY_DELAYS = [150, 350, 700];
+/** Backoff ms: 0, 200, 600, 1200 (WKWebView) */
+const PLAY_BACKOFF_MS = [0, 200, 600, 1200];
+/** Timeout anti-spinner: if not isPlaying by then → fallback */
+const PLAY_TIMEOUT_MS = 3000;
 
-/** Device class for forensics: ipad | iphone | other (UA + MacIntel/maxTouchPoints) */
+/** Device class for forensics: ipad | iphone | other */
 function getLoginVideoDeviceClass(): 'ipad' | 'iphone' | 'other' {
   if (typeof navigator === 'undefined') return 'other';
   const ua = navigator.userAgent;
@@ -37,15 +39,38 @@ function getLoginVideoDeviceClass(): 'ipad' | 'iphone' | 'other' {
   return 'other';
 }
 
-/** Forensic log: [LOGIN-VIDEO-FORENSIC] event + deviceClass + optional props/error/retry/finalMode */
+/** Sanitized UA for forensics (no tokens/PII) */
+function sanitizedUserAgent(): string {
+  if (typeof navigator === 'undefined') return '';
+  return (navigator.userAgent || '').slice(0, 80);
+}
+
+/** Forensic log: [LOGIN_VIDEO_FORENSIC] event + deviceClass + timestamp + optional video/error/reason */
 function logLoginVideoForensic(
   event: string,
-  extra?: { video?: HTMLVideoElement; errorCode?: number; errorMessage?: string; retryCount?: number; finalMode?: 'VIDEO_OK' | 'RETRY_OK' | 'FALLBACK' }
+  extra?: {
+    video?: HTMLVideoElement;
+    errorCode?: number;
+    errorMessage?: string;
+    retryCount?: number;
+    finalMode?: 'VIDEO_OK' | 'RETRY_OK' | 'FALLBACK';
+    reason?: string;
+    playAttempt?: number;
+    fallback_reason?: 'DECODE_FAILED' | 'AUTOPLAY_BLOCKED' | 'TIMEOUT_NO_PLAYING_EVENT';
+    rejectName?: string;
+    rejectMessage?: string;
+  }
 ) {
   const deviceClass = getLoginVideoDeviceClass();
-  const payload: Record<string, unknown> = { event, deviceClass };
+  const payload: Record<string, unknown> = {
+    event,
+    deviceClass,
+    ts: Date.now(),
+    userAgent: sanitizedUserAgent(),
+    maxTouchPoints: typeof navigator !== 'undefined' ? navigator.maxTouchPoints : 0
+  };
   if (extra?.video) {
-    payload.src = extra.video.currentSrc || VIDEO_SRC;
+    payload.currentSrc = extra.video.currentSrc || VIDEO_SRC;
     payload.readyState = extra.video.readyState;
     payload.networkState = extra.video.networkState;
     payload.currentTime = extra.video.currentTime;
@@ -58,7 +83,12 @@ function logLoginVideoForensic(
   if (extra?.errorMessage != null) payload.errorMessage = extra.errorMessage;
   if (extra?.retryCount != null) payload.retryCount = extra.retryCount;
   if (extra?.finalMode != null) payload.finalMode = extra.finalMode;
-  console.log('[LOGIN-VIDEO-FORENSIC]', JSON.stringify(payload));
+  if (extra?.reason != null) payload.reason = extra.reason;
+  if (extra?.playAttempt != null) payload.play_attempt = extra.playAttempt;
+  if (extra?.fallback_reason != null) payload.fallback_reason = extra.fallback_reason;
+  if (extra?.rejectName != null) payload.rejectName = extra.rejectName;
+  if (extra?.rejectMessage != null) payload.rejectMessage = extra.rejectMessage;
+  console.log('[LOGIN_VIDEO_FORENSIC]', JSON.stringify(payload));
 }
 
 const Login = () => {
@@ -92,6 +122,7 @@ const Login = () => {
   const hasLoggedFinalRef = useRef(false);
   const retryingRef = useRef(false);
   const playAttemptRef = useRef(0);
+  const isPlayingRef = useRef(false);
   const [showFallback, setShowFallback] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -130,27 +161,37 @@ const Login = () => {
     }
   }, [currentScreen]);
 
-  // Video: always-try + auto-recovery (max 2 retries) + forensics; fallback invisibile on final fail
+  // Video: hard autoplay + no-play-icon (opacity 0 until playing) + timeout anti-spinner + user-gesture retry
   useEffect(() => {
     const video = videoRef.current;
     if (!video || showFallback) return;
 
-    logLoginVideoForensic('mount', {});
+    logLoginVideoForensic('mount', { video });
 
     video.muted = true;
-    video.setAttribute('playsinline', '');
-    video.setAttribute('webkit-playsinline', '');
+    video.playsInline = true;
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('webkit-playsinline', 'true');
+    video.setAttribute('autoplay', 'true');
     video.preload = 'auto';
+    video.controls = false;
+    video.setAttribute('controls', 'false');
     if (video.disablePictureInPicture !== undefined) video.disablePictureInPicture = true;
 
-    const attemptPlay = () => {
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    const clearAllTimeouts = () => {
+      timeouts.forEach((t) => clearTimeout(t));
+      timeouts.length = 0;
+    };
+
+    const attemptPlay = (reason: string) => {
+      if (showFallback) return;
+      video.muted = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('webkit-playsinline', 'true');
       playAttemptRef.current += 1;
-      const n = playAttemptRef.current;
-      logLoginVideoForensic('play_attempt', {
-        playAttempt: n,
-        muted: video.muted,
-        inline: video.hasAttribute('playsinline')
-      });
+      logLoginVideoForensic('play_attempt', { video, reason, playAttempt: playAttemptRef.current });
       video.play()
         .then(() => {
           logLoginVideoForensic('play_ok', { video, finalMode: retryCountRef.current > 0 ? 'RETRY_OK' : 'VIDEO_OK' });
@@ -161,33 +202,34 @@ const Login = () => {
             rejectName: err?.name,
             rejectMessage: err?.message
           });
-          tryRecover();
+          if (err?.name === 'NotAllowedError') {
+            const onUserGesture = () => {
+              document.removeEventListener('pointerdown', onUserGesture, true);
+              document.removeEventListener('touchstart', onUserGesture, true);
+              attemptPlay('user_gesture');
+            };
+            document.addEventListener('pointerdown', onUserGesture, { capture: true, once: true });
+            document.addEventListener('touchstart', onUserGesture, { capture: true, once: true });
+          } else {
+            tryRecover();
+          }
         });
     };
 
     const tryRecover = () => {
       if (retryingRef.current) return;
       if (retryCountRef.current >= MAX_VIDEO_RETRIES) {
-        const code = video.error?.code;
-        const reason: 'DECODE_FAILED' | 'AUTOPLAY_BLOCKED' | 'TIMEOUT' =
-          code === MEDIA_ERR_DECODE ? 'DECODE_FAILED' : 'AUTOPLAY_BLOCKED';
-        logLoginVideoForensic('error', {
+        logLoginVideoForensic('fallback', {
           video,
-          errorCode: code,
-          errorMessage: video.error?.message,
-          retryCount: retryCountRef.current,
-          finalMode: 'FALLBACK',
-          reason
+          fallback_reason: 'AUTOPLAY_BLOCKED'
         });
-        logLoginVideoForensic('fallback', { reason });
         hasLoggedFinalRef.current = true;
         setShowFallback(true);
         return;
       }
       retryingRef.current = true;
       retryCountRef.current += 1;
-      const delay = PLAY_RETRY_DELAYS[retryCountRef.current - 1] ?? 350;
-      logLoginVideoForensic('retry', { video, retryCount: retryCountRef.current });
+      const delay = PLAY_BACKOFF_MS[retryCountRef.current - 1] ?? 200;
       video.pause();
       try {
         video.currentTime = 0;
@@ -195,65 +237,112 @@ const Login = () => {
         // ignore
       }
       video.load();
-      setTimeout(() => {
-        attemptPlay();
+      const t = setTimeout(() => {
+        attemptPlay('retry');
         retryingRef.current = false;
       }, delay);
+      timeouts.push(t);
     };
 
-    const onLoadStart = () => logLoginVideoForensic('loadstart', { video });
+    const onLoadedMetadata = () => {
+      logLoginVideoForensic('loadedmetadata', { video });
+      attemptPlay('loadedmetadata');
+    };
     const onCanPlay = () => {
       logLoginVideoForensic('canplay', { video });
-      attemptPlay();
+      attemptPlay('canplay');
+    };
+    const onCanPlayThrough = () => {
+      logLoginVideoForensic('canplaythrough', { video });
+      attemptPlay('canplaythrough');
     };
     const onPlaying = () => {
+      isPlayingRef.current = true;
       setIsPlaying(true);
       if (!hasLoggedFinalRef.current) {
         hasLoggedFinalRef.current = true;
-        logLoginVideoForensic('playing', { video, finalMode: retryCountRef.current > 0 ? 'RETRY_OK' : 'VIDEO_OK' });
-      } else {
-        logLoginVideoForensic('playing', { video });
+        logLoginVideoForensic('PLAYING_CONFIRMED', { video, finalMode: retryCountRef.current > 0 ? 'RETRY_OK' : 'VIDEO_OK' });
       }
     };
+    const onPlay = () => {
+      isPlayingRef.current = true;
+      setIsPlaying(true);
+    };
     const onTimeUpdate = () => {
-      if (!firstFrameSeenRef.current) {
+      if (video.currentTime > 0.05) {
+        isPlayingRef.current = true;
+        setIsPlaying(true);
+      }
+      if (!firstFrameSeenRef.current && video.currentTime > 0) {
         firstFrameSeenRef.current = true;
         logLoginVideoForensic('timeupdate', { video });
       }
     };
-    const onStalled = () => {
-      logLoginVideoForensic('stalled', { video });
-      tryRecover();
-    };
-    const onWaiting = () => logLoginVideoForensic('waiting', { video });
     const onError = () => {
       const code = video.error?.code;
       const msg = video.error?.message;
-      logLoginVideoForensic('error', { video, errorCode: code, errorMessage: msg, retryCount: retryCountRef.current });
+      logLoginVideoForensic('error', {
+        video,
+        errorCode: code,
+        errorMessage: msg,
+        currentSrc: video.currentSrc,
+        networkState: video.networkState,
+        readyState: video.readyState
+      });
+      if (code === MEDIA_ERR_DECODE) {
+        logLoginVideoForensic('fallback', { video, fallback_reason: 'DECODE_FAILED' });
+        hasLoggedFinalRef.current = true;
+        setShowFallback(true);
+        return;
+      }
       tryRecover();
     };
     const onEnded = () => logLoginVideoForensic('ended', { video });
 
-    video.addEventListener('loadstart', onLoadStart);
+    video.addEventListener('loadedmetadata', onLoadedMetadata);
     video.addEventListener('canplay', onCanPlay);
+    video.addEventListener('canplaythrough', onCanPlayThrough);
     video.addEventListener('playing', onPlaying);
+    video.addEventListener('play', onPlay);
     video.addEventListener('timeupdate', onTimeUpdate);
-    video.addEventListener('stalled', onStalled);
-    video.addEventListener('waiting', onWaiting);
     video.addEventListener('error', onError);
     video.addEventListener('ended', onEnded);
 
-    attemptPlay();
+    PLAY_BACKOFF_MS.forEach((delay) => {
+      const t = setTimeout(() => attemptPlay('backoff'), delay);
+      timeouts.push(t);
+    });
+
+    const timeoutId = setTimeout(() => {
+      if (isPlayingRef.current || hasLoggedFinalRef.current) return;
+      logLoginVideoForensic('fallback', { video, fallback_reason: 'TIMEOUT_NO_PLAYING_EVENT' });
+      hasLoggedFinalRef.current = true;
+      setShowFallback(true);
+    }, PLAY_TIMEOUT_MS);
+    timeouts.push(timeoutId);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') attemptPlay('visibilitychange');
+    };
+    const onPageShow = () => attemptPlay('pageshow');
+    const onFocus = () => attemptPlay('focus');
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pageshow', onPageShow);
+    window.addEventListener('focus', onFocus);
 
     return () => {
-      video.removeEventListener('loadstart', onLoadStart);
+      clearAllTimeouts();
+      video.removeEventListener('loadedmetadata', onLoadedMetadata);
       video.removeEventListener('canplay', onCanPlay);
+      video.removeEventListener('canplaythrough', onCanPlayThrough);
       video.removeEventListener('playing', onPlaying);
+      video.removeEventListener('play', onPlay);
       video.removeEventListener('timeupdate', onTimeUpdate);
-      video.removeEventListener('stalled', onStalled);
-      video.removeEventListener('waiting', onWaiting);
       video.removeEventListener('error', onError);
       video.removeEventListener('ended', onEnded);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pageshow', onPageShow);
+      window.removeEventListener('focus', onFocus);
     };
   }, [showFallback]);
 
@@ -538,7 +627,9 @@ const Login = () => {
       onTouchStart={handleVideoRetryTap}
       role="presentation"
     >
-      {/* 🎬 Video: no native controls (no play button); pointer-events:none so overlay never shows tap UI */}
+      {/* Static background (no poster): always visible so video never shows play icon behind */}
+      <div className="absolute inset-0 w-full h-full bg-black" style={{ zIndex: 0 }} aria-hidden />
+      {/* Video: opacity 0 until isPlaying (no play icon visible); no poster */}
       {!showFallback && (
         <video
           ref={videoRef}
@@ -551,12 +642,18 @@ const Login = () => {
           disablePictureInPicture
           controlsList="nodownload noplaybackrate noremoteplayback"
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ zIndex: 0, transform: 'translateZ(0)', pointerEvents: 'none' }}
+          style={{
+            zIndex: 0.2,
+            transform: 'translateZ(0)',
+            pointerEvents: 'none',
+            opacity: isPlaying ? 1 : 0,
+            transition: 'opacity 0.4s ease-in'
+          }}
         >
           <source src={VIDEO_SRC} type="video/mp4" />
         </video>
       )}
-      {/* Loading overlay: covers video until isPlaying so native play icon never visible; pointer-events:none */}
+      {/* Spinner: only while attempting autoplay; disappears when isPlaying or fallback (no infinite spinner) */}
       {!showFallback && !isPlaying && (
         <div
           className="absolute inset-0 w-full h-full bg-black flex items-center justify-center"
@@ -569,17 +666,9 @@ const Login = () => {
           />
         </div>
       )}
+      {/* Fallback: static black only (no spinner to avoid infinite) */}
       {showFallback && (
-        <div
-          className="absolute inset-0 w-full h-full bg-black flex items-center justify-center"
-          style={{ zIndex: 0 }}
-          aria-hidden
-        >
-          <div
-            className="w-10 h-10 border-2 border-white/20 border-t-white/80 rounded-full animate-spin"
-            style={{ animationDuration: '1s' }}
-          />
-        </div>
+        <div className="absolute inset-0 w-full h-full bg-black" style={{ zIndex: 0.3 }} aria-hidden />
       )}
 
       {/* Gradient overlay for readability (z-index: 1) — identico per video e fallback */}
