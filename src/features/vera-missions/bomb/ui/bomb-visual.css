@@ -1,0 +1,118 @@
+/* VERA BOMB - Device Visual - Local styles only */
+
+.bomb-visual-root {
+  position: relative;
+  width: 140px;
+  height: 180px;
+  margin: 0 auto 20px;
+}
+
+.bomb-visual-root.armed {
+  --bomb-glow: rgba(255, 68, 68, 0.4);
+  animation: bomb-breathing 2s ease-in-out infinite, bomb-shake-subtle 3s ease-in-out infinite;
+}
+
+.bomb-visual-root.armed.urgent {
+  --bomb-glow: rgba(255, 68, 68, 0.8);
+  animation: bomb-urgent-pulse-shake 0.5s ease-in-out infinite;
+}
+
+.bomb-visual-root.armed.urgent .bomb-lamp {
+  animation: bomb-lamp-blink 0.5s ease-in-out infinite;
+}
+
+.bomb-visual-root.disarmed {
+  --bomb-glow: rgba(0, 255, 136, 0.5);
+  animation: none;
+}
+
+.bomb-visual-root.exploded {
+  animation: none;
+}
+
+.bomb-visual-root.reduced-motion,
+.bomb-visual-root.reduced-motion * {
+  animation: none !important;
+}
+
+@keyframes bomb-breathing {
+  0%, 100% { filter: drop-shadow(0 0 8px var(--bomb-glow, rgba(255,68,68,0.3))); }
+  50% { filter: drop-shadow(0 0 16px var(--bomb-glow, rgba(255,68,68,0.5))); }
+}
+
+@keyframes bomb-shake-subtle {
+  0%, 90%, 100% { transform: translateX(0); }
+  92% { transform: translateX(-1px); }
+  94% { transform: translateX(1px); }
+  96% { transform: translateX(-1px); }
+  98% { transform: translateX(1px); }
+}
+
+@keyframes bomb-urgent-pulse-shake {
+  0%, 100% { filter: drop-shadow(0 0 12px var(--bomb-glow)); transform: translateX(0) scale(1); }
+  25% { filter: drop-shadow(0 0 24px var(--bomb-glow)); transform: translateX(-2px) scale(1.02); }
+  50% { filter: drop-shadow(0 0 12px var(--bomb-glow)); transform: translateX(2px) scale(1); }
+  75% { filter: drop-shadow(0 0 24px var(--bomb-glow)); transform: translateX(-2px) scale(1.02); }
+}
+
+@keyframes bomb-urgent-pulse {
+  0%, 100% { filter: drop-shadow(0 0 12px var(--bomb-glow)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 24px var(--bomb-glow)); transform: scale(1.03); }
+}
+
+@keyframes bomb-lamp-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.bomb-exploded-flash {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle, rgba(255,100,50,0.8) 0%, rgba(255,50,0,0.4) 40%, transparent 70%);
+  animation: bomb-flash 0.4s ease-out forwards;
+  pointer-events: none;
+}
+
+.bomb-exploded-smoke {
+  position: absolute;
+  inset: -30px;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.bomb-exploded-smoke::before,
+.bomb-exploded-smoke::after {
+  content: '';
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(80,80,80,0.4) 0%, rgba(50,50,50,0.2) 40%, transparent 70%);
+  animation: bomb-smoke 1.2s ease-out forwards;
+}
+
+.bomb-exploded-smoke::before {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 0.1s;
+}
+
+.bomb-exploded-smoke::after {
+  top: 45%;
+  left: 55%;
+  width: 60px;
+  height: 60px;
+  animation-delay: 0.2s;
+}
+
+@keyframes bomb-flash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes bomb-smoke {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1.5); }
+}

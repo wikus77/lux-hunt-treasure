@@ -328,35 +328,62 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
                   secondsLeft={timeLeft}
                   isUrgent={timeLeft <= 5}
                 />
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '24px',
-                    padding: '12px 16px',
-                    background: 'rgba(255,68,68,0.15)',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(255,68,68,0.4)',
-                  }}
-                >
-                  <span style={{ color: '#FF6666', fontSize: '14px', fontWeight: 600 }}>
-                    {t('vera_mission.bomb.timer_label')}
-                  </span>
-                  <motion.span
-                    key={timeLeft}
-                    initial={{ scale: 1.2 }}
-                    animate={{ scale: 1 }}
-                    style={{
-                      color: '#FFFFFF',
-                      fontSize: '24px',
-                      fontWeight: 800,
-                      fontFamily: 'monospace',
-                    }}
-                  >
-                    {timeLeft}s
-                  </motion.span>
-                </div>
+                {(() => {
+                  const totalSec = BOMB_TIMER_MS / 1000;
+                  const progress = Math.max(0, timeLeft / totalSec);
+                  const barColor = timeLeft > 10 ? '#00FF88' : timeLeft > 5 ? '#FFD700' : '#FF4444';
+                  return (
+                    <div style={{ marginBottom: '24px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: '8px',
+                          padding: '0 4px',
+                        }}
+                      >
+                        <span style={{ color: barColor, fontSize: '14px', fontWeight: 600 }}>
+                          {t('vera_mission.bomb.timer_label')}
+                        </span>
+                        <motion.span
+                          key={timeLeft}
+                          initial={{ scale: 1.2 }}
+                          animate={{ scale: 1 }}
+                          style={{
+                            color: barColor,
+                            fontSize: '24px',
+                            fontWeight: 800,
+                            fontFamily: 'monospace',
+                          }}
+                        >
+                          {timeLeft}s
+                        </motion.span>
+                      </div>
+                      <div
+                        style={{
+                          height: '8px',
+                          background: 'rgba(0,0,0,0.4)',
+                          borderRadius: '4px',
+                          overflow: 'hidden',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                        }}
+                      >
+                        <motion.div
+                          initial={false}
+                          animate={{ width: `${progress * 100}%` }}
+                          transition={{ duration: 0.3 }}
+                          style={{
+                            height: '100%',
+                            background: barColor,
+                            borderRadius: '4px',
+                            boxShadow: `0 0 12px ${barColor}80`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <p
                   style={{
@@ -374,8 +401,9 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
                       key={i}
                       onClick={() => handleWireCut(i)}
                       disabled={isFinalizing}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      whileHover={!isFinalizing ? { scale: 1.02 } : undefined}
+                      whileTap={!isFinalizing ? { scale: 0.96 } : undefined}
+                      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                       style={{
                         padding: '16px 24px',
                         background: i % 2 === 0
