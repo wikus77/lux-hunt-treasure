@@ -14,6 +14,7 @@ import { useAionDynamicIsland } from '@/hooks/useAionDynamicIsland'; // 🎙️ 
 import type { AionEntityHandle, Viseme } from '@/components/aion/AionEntity';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset'; // 🔧 FIX v12: For keyboard positioning
 import { useLocation } from 'wouter'; // 🔧 FIX v17: Route check
+import { detectLang } from './detectLang';
 
 interface Message {
   id: string;
@@ -52,7 +53,7 @@ const ERROR_KEYS: Record<string, string> = {
 };
 
 const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, className = '', style }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'system-1',
@@ -75,6 +76,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sessionIdRef = useRef<string>(`session_${Date.now()}`);
+  const lastUserLangRef = useRef<'it' | 'en' | 'fr'>('it');
   
   // 🔧 FIX v11: Use unified keyboard inset hook
   const { isOpen: isKeyboardOpen, inset: keyboardInset } = useKeyboardInset();
@@ -202,6 +204,14 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
         console.log(`[AION] Retry attempt ${currentRetry}/${MAX_RETRY_COUNT}`);
       }
 
+      const detected = detectLang(messageText);
+      const lang = detected ?? lastUserLangRef.current ?? (i18n.language?.slice(0, 2) as 'it' | 'en' | 'fr') ?? 'it';
+      if (detected) lastUserLangRef.current = detected;
+
+      if (import.meta.env.DEV) {
+        console.log('[AION][LANG]', { messageText: messageText.substring(0, 30), detected, lang });
+      }
+
       // Call norah-chat-v2 edge function
       const { data, error } = await supabase.functions.invoke('norah-chat-v2', {
         body: {
@@ -209,7 +219,8 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
           text: messageText,
           messages: messages.filter(m => m.role !== 'system' && m.role !== 'error').slice(-10),
           system: 'AION_CLIENT',
-          // 🔍 OBSERVABILITY: Include retry metadata
+          lang,
+          reply_lang: lang,
           is_retry: isRetry,
           retry_attempt: currentRetry
         }
@@ -376,6 +387,8 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
   // Refresh chat
   const refreshChat = () => {
     sessionIdRef.current = `session_${Date.now()}`;
+    const sys = i18n.language?.slice(0, 2) as string;
+    lastUserLangRef.current = (sys === 'en' || sys === 'fr') ? sys : 'it';
     setMessages([{
       id: 'system-1',
       role: 'system',
