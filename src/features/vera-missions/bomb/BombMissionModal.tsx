@@ -17,6 +17,7 @@ import {
   type WireConfig,
 } from './bombMissionTypes';
 import { useBombMissionRun } from './useBombMissionRun';
+import { BombDeviceVisual } from './ui/BombDeviceVisual';
 
 interface BombMissionModalProps {
   open: boolean;
@@ -24,7 +25,7 @@ interface BombMissionModalProps {
   originRect?: DOMRect | null;
 }
 
-type Phase = 'briefing' | 'playing' | 'success' | 'fail';
+type Phase = 'briefing' | 'playing' | 'success' | 'fail' | 'already_played';
 
 export const BombMissionModal: React.FC<BombMissionModalProps> = ({
   open,
@@ -63,6 +64,10 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
     if (isStarting) return;
     const res = await startRun();
     if (!res.ok) {
+      if (res.error?.code === 'ALREADY_PLAYED_TODAY') {
+        setPhase('already_played');
+        return;
+      }
       if (res.error?.code !== 'IN_FLIGHT') {
         toast.error(res.error?.message || 'Impossibile avviare missione. Riprova.');
         console.error('[VERA_BOMB][START][ERROR]', res.error);
@@ -104,6 +109,7 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
       });
       if (res?.success && res.deltaPe !== undefined) {
         setDeltaPe(res.deltaPe);
+        window.dispatchEvent(new CustomEvent('vera_bomb:completed'));
         if (isCorrect) {
           hapticSuccess();
           setPhase('success');
@@ -112,6 +118,7 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
           setPhase('fail');
         }
       } else if (res?.error) {
+        window.dispatchEvent(new CustomEvent('vera_bomb:completed'));
         hapticError();
         setPhase('fail');
       }
@@ -125,9 +132,11 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
     const res = await finalizeRun(runId, 'fail', elapsed, { timeout: true });
     if (res?.success && res.deltaPe !== undefined) {
       setDeltaPe(res.deltaPe);
+      window.dispatchEvent(new CustomEvent('vera_bomb:completed'));
       hapticError();
       setPhase('fail');
     } else {
+      window.dispatchEvent(new CustomEvent('vera_bomb:completed'));
       setPhase('fail');
     }
   }, [runId, phase, isFinalizing, finalizeRun]);
@@ -253,6 +262,60 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
               </motion.div>
             )}
 
+            {phase === 'already_played' && (
+              <motion.div
+                key="already_played"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '32px 16px',
+                  }}
+                >
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
+                  <h2
+                    style={{
+                      color: '#00FF88',
+                      fontSize: '20px',
+                      fontWeight: 700,
+                      marginBottom: '8px',
+                    }}
+                  >
+                    {t('vera_mission.bomb.already_played_title')}
+                  </h2>
+                  <p
+                    style={{
+                      color: 'rgba(255,255,255,0.9)',
+                      fontSize: '15px',
+                      marginBottom: '24px',
+                    }}
+                  >
+                    {t('vera_mission.bomb.already_played_body')}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    style={{
+                      width: '100%',
+                      padding: '16px',
+                      background: 'linear-gradient(90deg, #00FF88, #00CC6A)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      color: '#000',
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    OK
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {phase === 'playing' && wireConfig && (
               <motion.div
                 key="playing"
@@ -260,6 +323,11 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
+                <BombDeviceVisual
+                  state="armed"
+                  secondsLeft={timeLeft}
+                  isUrgent={timeLeft <= 5}
+                />
                 <div
                   style={{
                     display: 'flex',
@@ -359,6 +427,7 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
                     padding: '32px 16px',
                   }}
                 >
+                  <BombDeviceVisual state="disarmed" secondsLeft={0} />
                   <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
                   <h2
                     style={{
@@ -407,6 +476,7 @@ export const BombMissionModal: React.FC<BombMissionModalProps> = ({
                     padding: '32px 16px',
                   }}
                 >
+                  <BombDeviceVisual state="exploded" secondsLeft={0} />
                   <div style={{ fontSize: '48px', marginBottom: '16px' }}>💥</div>
                   <h2
                     style={{

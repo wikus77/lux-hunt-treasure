@@ -3,9 +3,13 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+
+function getTodayDayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export interface StartRunError {
   code?: string;
@@ -77,8 +81,19 @@ export function useBombMissionRun() {
         return { ok: false, error: { message: String(res.error), details: res.details } };
       }
       const runId = res?.run_id;
+      const status = res?.status;
       if (!runId) {
         return { ok: false, error: { message: 'Risposta RPC incompleta. Riprova.' } };
+      }
+      if (status === 'completed' || status === 'failed') {
+        console.log('[VERA_BOMB][START][ALREADY_PLAYED_TODAY]', { runId, status });
+        return {
+          ok: false,
+          error: {
+            code: 'ALREADY_PLAYED_TODAY',
+            message: 'Missione già completata oggi. Torna domani.',
+          },
+        };
       }
       return {
         ok: true,
@@ -151,4 +166,47 @@ export function useBombMissionRun() {
   );
 
   return { startRun, finalizeRun, isStarting, isFinalizing };
+}
+
+/**
+ * Check if user has completed VERA BOMB today (for badge "DONE")
+ * Refetches on 'vera_bomb:completed' event (dispatched when mission ends)
+ */
+export function useVeraBombCompletedToday(): { completedToday: boolean; loading: boolean } {
+  const { user } = useAuth();
+  const [completedToday, setCompletedToday] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCompleted = useCallback(() => {
+    if (!user?.id) return;
+    const dayKey = getTodayDayKey();
+    supabase
+      .from('vera_mission_runs')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('mission_id', 'bomb')
+      .eq('day_key', dayKey)
+      .in('status', ['completed', 'failed'])
+      .maybeSingle()
+      .then(({ data, error }) => {
+        setCompletedToday(!!data);
+        if (error) console.warn('[VERA_BOMB][CHECK_COMPLETED]', error.message);
+      })
+      .finally(() => setLoading(false));
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setCompletedToday(false);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    fetchCompleted();
+    const handler = () => fetchCompleted();
+    window.addEventListener('vera_bomb:completed', handler);
+    return () => window.removeEventListener('vera_bomb:completed', handler);
+  }, [user?.id, fetchCompleted]);
+
+  return { completedToday, loading };
 }

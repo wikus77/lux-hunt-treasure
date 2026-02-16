@@ -1119,5 +1119,8 @@
   "vera_mission.bomb.cta_start": "START MISSION",
   "vera_mission.bomb.cta_abort": "Abort",
   "vera_mission.bomb.next_action_desc": "Disarm the device. PE risk.",
-  "vera_mission.bomb.badge": "BOMB"
+  "vera_mission.bomb.badge": "BOMB",
+  "vera_mission.bomb.already_played_title": "Already completed today",
+  "vera_mission.bomb.already_played_body": "Come back tomorrow for a new mission.",
+  "vera_mission.bomb.badge_done": "DONE"
 }

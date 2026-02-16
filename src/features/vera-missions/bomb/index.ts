@@ -4,5 +4,5 @@
  */
 
 export { BombMissionModal } from './BombMissionModal';
-export { useBombMissionRun } from './useBombMissionRun';
+export { useBombMissionRun, useVeraBombCompletedToday } from './useBombMissionRun';
 export * from './bombMissionTypes';
