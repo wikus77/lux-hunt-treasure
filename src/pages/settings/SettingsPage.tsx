@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { 
   User, Shield, Target, Bell, Lock, 
-  FileText, Info, MapPin, Stethoscope, HelpCircle,
-  ChevronRight, CreditCard
+  FileText, Info, HelpCircle,
+  ChevronRight, CreditCard, Trash2
 } from 'lucide-react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
@@ -16,6 +16,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { getProjectRef } from '@/lib/supabase/clientUtils';
+import { useTranslation } from 'react-i18next';
+import { useToast } from '@/hooks/use-toast';
 
 type SettingsSection = 
   | 'agent-profile' 
@@ -31,13 +33,41 @@ type SettingsSection =
   | 'payment-methods';
 
 const SettingsPage = () => {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [geolocationEnabled, setGeolocationEnabled] = useState(false);
   const [sessionStatus, setSessionStatus] = useState<string>('Verifica...');
+  const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
   const geo = useGeolocation();
   
   const supabaseProjectId = getProjectRef();
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    const confirmed = window.confirm(
+      t('delete_account_confirm') || 'Sei sicuro? Questa azione è irreversibile. Tutti i dati verranno eliminati.'
+    );
+    if (!confirmed) return;
+    setDeleteAccountLoading(true);
+    try {
+      await supabase.from('user_clues').delete().eq('user_id', user.id);
+      await supabase.from('user_buzz_counter').delete().eq('user_id', user.id);
+      await supabase.from('user_notifications').delete().eq('user_id', user.id);
+      await supabase.from('subscriptions').delete().eq('user_id', user.id);
+      await supabase.from('profiles').delete().eq('id', user.id);
+      await supabase.auth.signOut();
+      localStorage.clear();
+      toast({ title: '✅ ' + (t('account_deleted') || 'Account eliminato') });
+      window.location.href = '/login';
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      toast({ title: '❌ ' + (t('error') || 'Errore'), description: msg, variant: 'destructive' });
+    } finally {
+      setDeleteAccountLoading(false);
+    }
+  };
 
   useEffect(() => {
     checkGeolocation();
@@ -99,8 +129,8 @@ const SettingsPage = () => {
     },
     {
       id: 'payment-methods',
-      label: 'Metodi di Pagamento',
-      description: 'Carte, Apple Pay, Google Pay',
+      label: t('section_payment_methods') || 'Metodi di Pagamento',
+      description: t('section_payment_methods_desc'),
       icon: CreditCard,
     },
     {
@@ -162,89 +192,28 @@ const SettingsPage = () => {
             ))}
           </div>
 
-          {/* Privacy & Permissions Section */}
+          {/* Elimina Account Permanentemente — visible in Settings root (Apple requirement) */}
           <div className="space-y-4 mt-8">
-            <Card className="glass-card border-0 bg-card/40 backdrop-blur-md">
+            <Card className="glass-card border-0 bg-card/40 backdrop-blur-md border-red-500/20">
               <CardHeader className="pb-3">
-                <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                  Privacy & Permessi
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="glass-card p-4 border-0 bg-background/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-lg bg-blue-500/20">
-                        <MapPin className="h-5 w-5 text-blue-400" />
-                      </div>
-                      <span className="font-medium text-foreground">Geolocalizzazione</span>
-                    </div>
-                    <Badge 
-                      variant={geolocationEnabled ? "default" : "secondary"}
-                      className={geolocationEnabled ? "bg-green-500/20 text-green-400 border-green-500/30" : ""}
-                    >
-                      {geolocationEnabled ? "Attiva" : "Disattiva"}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground/80 mb-3">
-                    Permetti l'accesso alla posizione per le funzionalità di missione
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={checkGeolocation}
-                    className="w-full bg-background/50 border-primary/30 hover:bg-primary/10"
-                  >
-                    Verifica Permessi
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Diagnostics Section */}
-          <div className="space-y-4">
-            <Card className="glass-card border-0 bg-card/40 backdrop-blur-md">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-                  Diagnostica
+                <CardTitle className="text-xl font-bold text-red-400 flex items-center gap-2">
+                  <Trash2 className="h-5 w-5" />
+                  {t('delete_account_permanently') || 'Elimina Account Permanentemente'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="glass-card p-4 border-0 bg-background/20 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-lg bg-green-500/20">
-                        <Stethoscope className="h-5 w-5 text-green-400" />
-                      </div>
-                      <span className="font-medium text-foreground">Info Supabase</span>
-                    </div>
-                    <Badge variant="outline" className="border-green-500/30 text-green-400">
-                      ID: {supabaseProjectId.slice(0, 8)}...
-                    </Badge>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground/80">Stato Sessione:</span>
-                      <Badge 
-                        variant={sessionStatus === 'Attiva' ? "default" : "destructive"}
-                        className={sessionStatus === 'Attiva' ? "bg-green-500/20 text-green-400 border-green-500/30" : ""}
-                      >
-                        {sessionStatus}
-                      </Badge>
-                    </div>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={checkSession}
-                      className="w-full bg-background/50 border-green-500/30 hover:bg-green-500/10"
-                    >
-                      Verifica Sessione
-                    </Button>
-                  </div>
-                </div>
+                <p className="text-sm text-muted-foreground/80 mb-4">
+                  {t('delete_account_warning') || 'Questa azione è irreversibile. Tutti i tuoi dati verranno eliminati.'}
+                </p>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteAccount}
+                  disabled={deleteAccountLoading}
+                  className="w-full"
+                >
+                  {deleteAccountLoading ? (t('loading') || '...') : (t('delete_account_permanently') || 'Elimina Account Permanentemente')}
+                </Button>
               </CardContent>
             </Card>
           </div>

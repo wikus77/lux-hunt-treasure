@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // Missione - Section Modal Content (Revolut-style glass design)
 import React from 'react';
-import { X, Target, TrendingUp, Award, Clock, MapPin, Zap } from 'lucide-react';
+import { X, Target, TrendingUp, Award, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePerformanceSettings } from '@/hooks/usePerformanceSettings';
 
@@ -139,18 +139,7 @@ const MissionSectionContent: React.FC<MissionSectionContentProps> = ({ onClose }
           </div>
         </GlassCard>
 
-        {/* Quick Actions */}
-        <GlassCard>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <Zap style={{ width: '20px', height: '20px', color: '#00D1FF' }} />
-            <span style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600 }}>{t('quick_actions')}</span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <ActionButton icon={MapPin} label={t('view_mission_map')} />
-            <ActionButton icon={Clock} label={t('mission_timer')} />
-          </div>
-        </GlassCard>
+        {/* Quick Actions — HIDDEN (placeholder CTAs not implemented; Apple QA) */}
       </div>
     </div>
   );
@@ -159,14 +148,6 @@ const MissionSectionContent: React.FC<MissionSectionContentProps> = ({ onClose }
 // Glass Card
 const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
   <div style={{ background: 'rgba(25, 25, 35, 0.7)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: '14px', padding: '16px', border: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)', ...style }}>{children}</div>
-);
-
-// Action Button
-const ActionButton: React.FC<{ icon: React.ElementType; label: string }> = ({ icon: Icon, label }) => (
-  <button style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#FFFFFF', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-    <Icon style={{ width: '18px', height: '18px', color: '#00D1FF' }} />
-    {label}
-  </button>
 );
 
 export default MissionSectionContent;

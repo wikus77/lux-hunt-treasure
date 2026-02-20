@@ -10,6 +10,56 @@ import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { Capacitor } from '@capacitor/core';
 import { useNativePush } from '@/hooks/useNativePush';
 
+const M1_SOUND_ENABLED_KEY = 'm1_sound_enabled';
+const M1_HAPTICS_ENABLED_KEY = 'm1_haptics_enabled';
+
+/** Play a short beep (Web Audio). iOS-safe: only in handler, webkitAudioContext fallback. No-op on error. */
+function playBeep(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const Ctx = (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }).AudioContext
+      || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    ctx.resume?.().catch(() => {});
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 800;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+  } catch {
+    // Silent fallback
+  }
+}
+
+/** Trigger haptic feedback via dynamic import (avoids top-level haptics load; safe in WKWebView). */
+async function triggerHapticFeedback(): Promise<void> {
+  try {
+    const mod = await import('@/utils/haptics');
+    if (mod?.hapticLight) mod.hapticLight();
+  } catch {
+    // No-op
+  }
+}
+
+/** Read haptic enabled from localStorage without importing haptics (avoids crash on modal open). */
+function readHapticEnabled(): boolean {
+  if (typeof localStorage === 'undefined') return true;
+  const v = localStorage.getItem(M1_HAPTICS_ENABLED_KEY);
+  return v !== 'false';
+}
+
+/** Persist haptic enabled and optionally trigger feedback (dynamic import). */
+async function setHapticEnabledAndPersist(enabled: boolean, triggerFeedback: boolean): Promise<void> {
+  if (typeof localStorage !== 'undefined') localStorage.setItem(M1_HAPTICS_ENABLED_KEY, String(enabled));
+  if (triggerFeedback) await triggerHapticFeedback();
+}
+
 // Lazy load push components (dormant - only for debug)
 const NativePushDiagnostic = lazy(() => import('@/components/push/NativePushDiagnostic').then(m => ({ default: m.NativePushDiagnostic })));
 
@@ -66,6 +116,19 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
     sound_enabled: true,
     haptic_enabled: true
   });
+
+  // Load sound/haptic from localStorage only (no haptics module import → avoids crash on open)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const soundStored = localStorage.getItem(M1_SOUND_ENABLED_KEY);
+      const soundEnabled = soundStored === null ? true : soundStored === 'true';
+      const hapticEnabled = readHapticEnabled();
+      setSettings(prev => ({ ...prev, sound_enabled: soundEnabled, haptic_enabled: hapticEnabled }));
+    } catch {
+      // Silent
+    }
+  }, []);
   
   // Handle secret tap for debug panel
   const handleDebugTap = () => {
@@ -161,6 +224,26 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
     const success = await togglePreference(category);
     if (success) {
       toast({ title: "✅ " + t('preference_updated') });
+    }
+  };
+
+  const handleSoundToggle = (v: boolean) => {
+    try {
+      if (typeof localStorage !== 'undefined') localStorage.setItem(M1_SOUND_ENABLED_KEY, String(v));
+      setSettings(prev => ({ ...prev, sound_enabled: v }));
+      playBeep();
+    } catch {
+      setSettings(prev => ({ ...prev, sound_enabled: v }));
+    }
+  };
+
+  const handleHapticToggle = async (v: boolean) => {
+    try {
+      setSettings(prev => ({ ...prev, haptic_enabled: v }));
+      await setHapticEnabledAndPersist(v, true);
+    } catch {
+      setSettings(prev => ({ ...prev, haptic_enabled: v }));
+      if (typeof localStorage !== 'undefined') localStorage.setItem(M1_HAPTICS_ENABLED_KEY, String(v));
     }
   };
 
@@ -355,7 +438,7 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
             label={t('notification_sounds')} 
             description={t('notification_sounds_desc')}
             checked={settings.sound_enabled}
-            onChange={(v) => setSettings({...settings, sound_enabled: v})}
+            onChange={handleSoundToggle}
           />
           
           <div style={{ marginTop: '12px' }}>
@@ -363,7 +446,7 @@ const NotificationsSectionContent: React.FC<NotificationsSectionContentProps> = 
               label={t('haptic_feedback')} 
               description={t('haptic_feedback_desc')}
               checked={settings.haptic_enabled}
-              onChange={(v) => setSettings({...settings, haptic_enabled: v})}
+              onChange={handleHapticToggle}
             />
           </div>
         </GlassCard>

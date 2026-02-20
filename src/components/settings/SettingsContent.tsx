@@ -1,15 +1,14 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎨 Settings Content - REVOLUT STYLE con sub-modali per sezioni
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useRef, lazy, Suspense } from 'react';
 import { 
   X, User, Shield, Target, Bell, Lock, 
-  FileText, Info, MapPin, Stethoscope, 
-  ChevronRight, CreditCard
+  FileText, Info, ChevronRight, CreditCard, Trash2
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
-import { getProjectRef } from '@/lib/supabase/clientUtils';
+import { useToast } from '@/hooks/use-toast';
 import { SettingsSectionFlipOverlay } from './SettingsSectionFlipOverlay';
 
 // Lazy load section contents
@@ -49,35 +48,35 @@ const SectionLoadingFallback = () => (
 export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [geolocationEnabled, setGeolocationEnabled] = useState(false);
-  const [sessionStatus, setSessionStatus] = useState<string>('checking');
+  const { toast } = useToast();
+  const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
   
   // State per gestire sezione aperta
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [sectionOriginRect, setSectionOriginRect] = useState<DOMRect | null>(null);
-  
-  const supabaseProjectId = getProjectRef();
 
-  useEffect(() => {
-    checkGeolocation();
-    checkSession();
-  }, []);
-
-  const checkGeolocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        () => setGeolocationEnabled(true),
-        () => setGeolocationEnabled(false)
-      );
-    }
-  };
-
-  const checkSession = async () => {
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    const confirmed = window.confirm(
+      t('delete_account_confirm') || 'Sei sicuro? Questa azione è irreversibile. Tutti i dati verranno eliminati.'
+    );
+    if (!confirmed) return;
+    setDeleteAccountLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSessionStatus(session ? 'active' : 'inactive');
-    } catch (error) {
-      setSessionStatus('error');
+      await supabase.from('user_clues').delete().eq('user_id', user.id);
+      await supabase.from('user_buzz_counter').delete().eq('user_id', user.id);
+      await supabase.from('user_notifications').delete().eq('user_id', user.id);
+      await supabase.from('subscriptions').delete().eq('user_id', user.id);
+      await supabase.from('profiles').delete().eq('id', user.id);
+      await supabase.auth.signOut();
+      localStorage.clear();
+      toast({ title: '✅ ' + (t('account_deleted') || 'Account eliminato') });
+      window.location.href = '/login';
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      toast({ title: '❌ ' + (t('error') || 'Errore'), description: msg, variant: 'destructive' });
+    } finally {
+      setDeleteAccountLoading(false);
     }
   };
 
@@ -266,113 +265,32 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
             ))}
           </GlassCard>
 
-          {/* Privacy & Permissions */}
+          {/* Elimina Account Permanentemente — visibile nel root Impostazioni (Apple compliance) */}
           <GlassCard style={{ marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <MapPin style={{ width: '18px', height: '18px', color: '#60a5fa' }} />
-              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600 }}>{t('privacy_permissions')}</span>
+              <Trash2 style={{ width: '18px', height: '18px', color: '#ef4444' }} />
+              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600 }}>{t('delete_account') || 'Elimina Account Permanentemente'}</span>
             </div>
-            
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              marginBottom: '12px',
-            }}>
-              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('geolocation')}</span>
-              <span style={{
-                padding: '4px 10px',
-                borderRadius: '12px',
-                background: geolocationEnabled ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.1)',
-                color: geolocationEnabled ? '#22c55e' : 'rgba(255,255,255,0.5)',
-                fontSize: '11px',
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginBottom: '12px' }}>
+              {t('delete_account_description') || 'Questa azione è irreversibile. Tutti i dati verranno eliminati.'}
+            </p>
+            <button
+              onClick={handleDeleteAccount}
+              disabled={deleteAccountLoading}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                background: 'rgba(239, 68, 68, 0.2)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                color: '#ef4444',
+                fontSize: '14px',
                 fontWeight: 600,
-              }}>
-                {geolocationEnabled ? t('active') : t('inactive')}
-              </span>
-            </div>
-            
-            <button
-              onClick={checkGeolocation}
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '10px',
-                background: 'rgba(96, 165, 250, 0.15)',
-                border: '1px solid rgba(96, 165, 250, 0.3)',
-                color: '#60a5fa',
-                fontSize: '13px',
-                fontWeight: 500,
-                cursor: 'pointer',
+                cursor: deleteAccountLoading ? 'not-allowed' : 'pointer',
+                opacity: deleteAccountLoading ? 0.7 : 1,
               }}
             >
-              {t('check_permissions')}
-            </button>
-          </GlassCard>
-
-          {/* Diagnostics */}
-          <GlassCard>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <Stethoscope style={{ width: '18px', height: '18px', color: '#22c55e' }} />
-              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600 }}>{t('diagnostics')}</span>
-            </div>
-            
-            <div style={{ marginBottom: '8px' }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                marginBottom: '8px',
-              }}>
-                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('supabase_id')}</span>
-                <span style={{
-                  padding: '4px 10px',
-                  borderRadius: '12px',
-                  background: 'rgba(34, 197, 94, 0.15)',
-                  border: '1px solid rgba(34, 197, 94, 0.3)',
-                  color: '#22c55e',
-                  fontSize: '11px',
-                  fontWeight: 500,
-                }}>
-                  {supabaseProjectId.slice(0, 8)}...
-                </span>
-              </div>
-              
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-              }}>
-                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('session_status')}</span>
-                <span style={{
-                  padding: '4px 10px',
-                  borderRadius: '12px',
-                  background: sessionStatus === 'active' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                  color: sessionStatus === 'active' ? '#22c55e' : '#ef4444',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                }}>
-                  {t(sessionStatus)}
-                </span>
-              </div>
-            </div>
-            
-            <button
-              onClick={checkSession}
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '10px',
-                background: 'rgba(34, 197, 94, 0.15)',
-                border: '1px solid rgba(34, 197, 94, 0.3)',
-                color: '#22c55e',
-                fontSize: '13px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                marginTop: '8px',
-              }}
-            >
-              {t('check_session')}
+              {deleteAccountLoading ? (t('deleting') || 'Eliminazione...') : (t('delete_account') || 'Elimina Account Permanentemente')}
             </button>
           </GlassCard>
         </div>
