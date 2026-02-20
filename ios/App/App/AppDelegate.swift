@@ -22,6 +22,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // This does NOT modify the webapp code - only injects CSS/JS at runtime
     // ============================================================================
     private let IOS_SSO_TEMPORARILY_DISABLED = true
+    
+    /// iPad Account Buttons forensics: set true only when debugging tap/hit-test (OFF in release)
+    private let IPAD_FORENSICS_LOGGING_ENABLED = false
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // © 2026 M1SSION™ — NIYVORA KFT — Joseph MULÉ
@@ -124,6 +127,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         webView.scrollView.bounces = true
         webView.scrollView.alwaysBounceVertical = true
         
+        // 🔧 FIX 20/02/2026: iPad Account Buttons — touch delivery (wrapper-only)
+        // On iPad, default delaysContentTouches = true can make taps feel "dead"; set false for immediate delivery
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            webView.scrollView.delaysContentTouches = false
+        }
+        
         // 🎬 GLOBAL DARK FIX 05/02/2026: BLACK background for iOS bounce/overscroll
         // CRITICAL: This color shows during rubber-band bounce
         // Native layer = BLACK (Briefing Buzz style) for dark theme
@@ -135,6 +144,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Set root view background to BLACK
         if let rootView = webView.superview {
             rootView.backgroundColor = bgColor
+        }
+        
+        // 🔍 iPad Account Buttons Forensics (gated — set IPAD_FORENSICS_LOGGING_ENABLED = true to re-enable)
+        if UIDevice.current.userInterfaceIdiom == .pad && IPAD_FORENSICS_LOGGING_ENABLED {
+            dumpViewHierarchyForIPad(rootVC: rootVC, webView: webView)
+            addIPadPointerdownLoggingUserScript(to: webView)
         }
         
         // 🔧 FIX 22/01/2026: Hide iOS keyboard accessory bar (toolbar)
@@ -580,6 +595,52 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 print("✅ M1SSION™ WRAP: SSO Hide immediate injection successful")
             }
         }
+    }
+    
+    // MARK: - 🔍 iPad Account Buttons Forensics (Temporary — remove or gate after root cause)
+    
+    /// Dumps view hierarchy and scrollView touch settings on iPad for overlay/hit-test diagnosis
+    private func dumpViewHierarchyForIPad(rootVC: UIViewController, webView: WKWebView) {
+        print("🔍 [iPad Forensics] === View hierarchy dump ===")
+        print("🔍 [iPad Forensics] rootVC.view.subviews.count: \(rootVC.view.subviews.count)")
+        for (i, sub in rootVC.view.subviews.enumerated()) {
+            print("🔍 [iPad Forensics]   [\(i)] \(type(of: sub)) frame=\(sub.frame) isUserInteractionEnabled=\(sub.isUserInteractionEnabled)")
+        }
+        if let superview = webView.superview {
+            print("🔍 [iPad Forensics] webView.superview: \(type(of: superview)) subviews.count=\(superview.subviews.count)")
+            for (i, sub in superview.subviews.enumerated()) {
+                print("🔍 [iPad Forensics]   superview[\(i)] \(type(of: sub)) frame=\(sub.frame) isUserInteractionEnabled=\(sub.isUserInteractionEnabled)")
+            }
+        }
+        let scrollView = webView.scrollView
+        print("🔍 [iPad Forensics] scrollView.delaysContentTouches=\(scrollView.delaysContentTouches) canCancelContentTouches=\(scrollView.canCancelContentTouches)")
+        print("🔍 [iPad Forensics] scrollView.gestureRecognizers: \(scrollView.gestureRecognizers?.count ?? 0)")
+        scrollView.gestureRecognizers?.enumerated().forEach { i, g in
+            print("🔍 [iPad Forensics]   gesture[\(i)] \(type(of: g))")
+        }
+        print("🔍 [iPad Forensics] === End view hierarchy ===")
+    }
+    
+    /// Injects JS (iPad only) to log pointerdown target and elementFromPoint — no DOM change
+    private func addIPadPointerdownLoggingUserScript(to webView: WKWebView) {
+        let script = """
+        (function() {
+            if (typeof document === 'undefined') return;
+            function logPointer(e) {
+                var t = e.target;
+                var el = document.elementFromPoint(e.clientX, e.clientY);
+                var tag = t ? t.tagName : '';
+                var cls = t && t.className ? (typeof t.className === 'string' ? t.className : '') : '';
+                var elTag = el ? el.tagName : '';
+                console.log('[iPad Forensics] pointerdown target=' + tag + ' class=' + cls + ' clientXY=' + e.clientX + ',' + e.clientY + ' elementFromPoint=' + elTag);
+            }
+            document.addEventListener('pointerdown', logPointer, { capture: true, passive: true });
+            console.log('[iPad Forensics] pointerdown logging attached');
+        })();
+        """
+        let userScript = WKUserScript(source: script, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+        webView.configuration.userContentController.addUserScript(userScript)
+        print("🔍 [iPad Forensics] Pointerdown logging UserScript added (iPad only)")
     }
     
     /// Recursively finds WKWebView in view hierarchy
