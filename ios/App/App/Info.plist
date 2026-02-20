@@ -28,6 +28,10 @@
 	<string>M1SSION needs your location to show nearby treasure on the map and verify your discoveries.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>M1SSION needs your location to show nearby treasure on the map and verify your discoveries.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Allows you to take a profile photo for your avatar.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allows you to choose an image from your photo library for your profile avatar.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
