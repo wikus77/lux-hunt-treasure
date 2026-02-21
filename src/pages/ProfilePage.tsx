@@ -1,7 +1,7 @@
 // @ts-nocheck
 // 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
 // M1SSION™ - Profile Page for iOS Capacitor
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, 
@@ -52,6 +52,8 @@ export const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
   const { user, logout } = useAuth();
   const { navigateWithFeedback, toHome } = useEnhancedNavigation();
   const { vibrate } = usePWAHardwareStub();
@@ -232,7 +234,7 @@ export const ProfilePage: React.FC = () => {
         <Card className="m1ssion-glass-card">
           <CardContent className="p-6">
             <div className="flex items-center space-x-4">
-              {/* Avatar - BY JOSEPH MULE */}
+              {/* Avatar - IOS-CAMERA-CRASH-FIX: camera button real (file input, no capture) */}
               <div className="relative">
                 <Avatar className="w-20 h-20 ring-2 ring-[#00D1FF]">
                   <AvatarImage 
@@ -244,9 +246,54 @@ export const ProfilePage: React.FC = () => {
                     <User className="w-8 h-8" />
                   </AvatarFallback>
                 </Avatar>
-                <button className="absolute -bottom-2 -right-2 bg-[#00D1FF] rounded-full p-2 hover:bg-[#00B8E6] transition-colors">
+                <button
+                  type="button"
+                  onClick={() => avatarFileInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  className="absolute -bottom-2 -right-2 bg-[#00D1FF] rounded-full p-2 hover:bg-[#00B8E6] transition-colors disabled:opacity-50"
+                >
                   <Camera className="w-4 h-4 text-black" />
                 </button>
+                <input
+                  ref={avatarFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !user) return;
+                    if (!file.type.startsWith('image/')) {
+                      toast.error('Seleziona solo un\'immagine (PNG, JPG).');
+                      return;
+                    }
+                    if (file.size > 2 * 1024 * 1024) {
+                      toast.error('Immagine troppo grande. Max 2MB.');
+                      return;
+                    }
+                    setAvatarUploading(true);
+                    try {
+                      const ext = file.name.split('.').pop();
+                      const fileName = `${user.id}/avatar_${Date.now()}.${ext}`;
+                      const { error: uploadError } = await supabase.storage
+                        .from('avatars')
+                        .upload(fileName, file, { upsert: true, cacheControl: '3600' });
+                      if (uploadError) throw uploadError;
+                      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+                      const { error: updateError } = await supabase
+                        .from('profiles')
+                        .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
+                        .eq('id', user.id);
+                      if (updateError) throw updateError;
+                      setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : null);
+                      toast.success('Avatar aggiornato');
+                    } catch (err: any) {
+                      toast.error(err?.message || 'Errore caricamento avatar');
+                    } finally {
+                      setAvatarUploading(false);
+                      e.target.value = '';
+                    }
+                  }}
+                />
               </div>
 
               {/* Profile Info */}

@@ -114,11 +114,12 @@ const PrivacyPermissionsSettings: React.FC = () => {
           }
           break;
         case 'camera':
-          if ('mediaDevices' in navigator) {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            stream.getTracks().forEach(track => track.stop());
-            granted = true;
-          }
+          // IOS-CAMERA-CRASH-FIX: do not start video stream in WKWebView (crash risk on iPadOS)
+          toast({
+            title: "📷 Permesso camera",
+            description: "Il permesso camera verrà richiesto quando usi una funzione che ne ha bisogno (es. foto profilo).",
+          });
+          granted = true;
           break;
         case 'microphone':
           if ('mediaDevices' in navigator) {

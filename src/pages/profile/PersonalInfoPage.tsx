@@ -228,7 +228,6 @@ const PersonalInfoPage: React.FC = () => {
                     ref={fileInputRef}
                     type="file"
                     accept="image/jpeg,image/png,image/jpg"
-                    capture="environment"
                     onChange={handleAvatarUpload}
                     className="hidden"
                   />
