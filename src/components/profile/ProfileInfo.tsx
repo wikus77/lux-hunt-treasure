@@ -8,9 +8,41 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
+import { safeSetProfileImage } from "@/hooks/useProfileImage";
 import { usePulseEnergy } from "@/hooks/usePulseEnergy";
 import PulseEnergyBadge from "@/components/pulse/PulseEnergyBadge";
 import PulseEnergyProgressBar from "@/components/pulse/PulseEnergyProgressBar";
+
+/** Normalize HEIC/HEIF to JPEG for WKWebView; return null if decode fails (fallback UX). */
+async function normalizeAvatarFile(file: File): Promise<File | null> {
+  const type = (file.type || '').toLowerCase();
+  const name = (file.name || '').toLowerCase();
+  const isHeic = type === 'image/heic' || type === 'image/heif' || name.endsWith('.heic') || name.endsWith('.heif');
+  if (!isHeic) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(bitmap, 0, 0);
+    bitmap.close();
+    return new Promise<File | null>((resolve) => {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) resolve(null);
+          else resolve(new File([blob], `avatar_${Date.now()}.jpg`, { type: 'image/jpeg' }));
+        },
+        'image/jpeg',
+        0.9
+      );
+    });
+  } catch (e) {
+    console.warn('[AvatarAsset] heic_decode_failed', e);
+    return null;
+  }
+}
 
 // Subscription plan ring colors
 const getSubscriptionRingColor = (plan: string) => {
@@ -129,35 +161,43 @@ const ProfileInfo = ({
           type="file"
           accept="image/*"
           onChange={async (e) => {
-            const file = e.target.files?.[0];
+            const rawFile = e.target.files?.[0];
             const n = e.target.files?.length ?? 0;
-            console.log('[AvatarPicker] onChange files=', n, 'type=', file?.type, 'size=', file?.size);
-            if (!file) return;
+            const source = 'file';
+            console.log('[AvatarPicker] source=', source, 'files=', n, 'type=', rawFile?.type, 'name=', rawFile?.name, 'size=', rawFile?.size, 'lastModified=', rawFile?.lastModified);
+            if (!rawFile) return;
+            const file = await normalizeAvatarFile(rawFile);
+            if (!file) {
+              toast.error('Formato non supportato. Scegli JPG o PNG.');
+              e.target.value = '';
+              return;
+            }
+            if (file !== rawFile) console.log('[AvatarAsset] normalized_to=image/jpeg type=', file.type, 'name=', file.name);
             try {
               const { data: { user } } = await supabase.auth.getUser();
               if (!user) {
                 toast.error('Devi essere loggato per cambiare avatar');
+                e.target.value = '';
                 return;
               }
-              const ext = file.name.split('.').pop() || 'jpg';
-              const fileName = `${user.id}/avatar_${Date.now()}.${ext}`;
+              const fileName = `${user.id}/avatar_${Date.now()}.jpg`;
               console.log('[AvatarUpload] path=', fileName, 'start');
               const { data, error } = await supabase.storage
                 .from('avatars')
                 .upload(fileName, file, {
                   cacheControl: '3600',
-                  upsert: true
+                  upsert: true,
+                  contentType: 'image/jpeg'
                 });
 
               if (error) {
                 console.error('[AvatarUpload] fail path=', fileName, 'error=', error?.message);
                 toast.error('Errore nel caricamento dell\'immagine');
+                e.target.value = '';
                 return;
               }
 
-              const { data: publicUrl } = supabase.storage
-                .from('avatars')
-                .getPublicUrl(data.path);
+              const { data: publicUrl } = supabase.storage.from('avatars').getPublicUrl(data.path);
               console.log('[AvatarUpload] ok url=', publicUrl.publicUrl);
 
               console.log('[AvatarProfile] update start');
@@ -169,13 +209,19 @@ const ProfileInfo = ({
               if (updateError) {
                 console.error('[AvatarProfile] update fail', updateError?.message);
                 toast.error('Immagine caricata ma profilo non aggiornato');
-              } else {
-                console.log('[AvatarProfile] update ok');
+                e.target.value = '';
+                return;
               }
+              console.log('[AvatarProfile] update ok');
 
               setProfileImage(publicUrl.publicUrl);
-              localStorage.setItem('profileImage', publicUrl.publicUrl);
-              console.log('[AvatarSync] storeUpdated avatar=', publicUrl.publicUrl);
+              try {
+                safeSetProfileImage(publicUrl.publicUrl);
+                console.log('[AvatarSync] localStorage ok');
+              } catch (err) {
+                console.warn('[AvatarSync] localStorage_write_failed', err);
+              }
+              console.log('[AvatarRender] avatar_url updated');
               toast.success('Immagine profilo aggiornata');
             } catch (error) {
               console.error('[AvatarUpload] error', error);
@@ -195,25 +241,25 @@ const ProfileInfo = ({
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mb-2 h-10 bg-black/30 text-white placeholder:text-white/50 border-white/20 focus-visible:ring-cyan-500"
+              className="mb-2 h-10 bg-black/30 text-white placeholder:text-white/50 border-white/20 focus-visible:ring-cyan-500 caret-white disabled:opacity-100 disabled:text-white"
               placeholder="Nome Agente"
             />
             <Input
               value={agentCode}
               onChange={(e) => setAgentCode(e.target.value)}
-              className="mb-2 h-10 bg-black/30 font-mono text-white placeholder:text-white/50 border-white/20 focus-visible:ring-cyan-500"
+              className="mb-2 h-10 bg-black/30 font-mono text-white placeholder:text-white/50 border-white/20 focus-visible:ring-cyan-500 caret-white disabled:opacity-100 disabled:text-white"
               placeholder="Codice Agente"
             />
             <Input
               value={agentTitle}
               onChange={(e) => setAgentTitle(e.target.value)}
-              className="mb-2 h-10 bg-black/30 text-white placeholder:text-white/50 border-white/20 focus-visible:ring-cyan-500"
+              className="mb-2 h-10 bg-black/30 text-white placeholder:text-white/50 border-white/20 focus-visible:ring-cyan-500 caret-white disabled:opacity-100 disabled:text-white"
               placeholder="Titolo Agente"
             />
             <Textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="bg-black/30 text-white placeholder:text-white/50 border-white/20 focus-visible:ring-cyan-500"
+              className="bg-black/30 text-white placeholder:text-white/50 border-white/20 focus-visible:ring-cyan-500 caret-white disabled:opacity-100 disabled:text-white"
               placeholder="Bio"
               rows={isMobile ? 3 : 4}
             />
