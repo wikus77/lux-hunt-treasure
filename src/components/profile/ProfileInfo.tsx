@@ -7,7 +7,7 @@ import { User, Camera } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePulseEnergy } from "@/hooks/usePulseEnergy";
 import PulseEnergyBadge from "@/components/pulse/PulseEnergyBadge";
 import PulseEnergyProgressBar from "@/components/pulse/PulseEnergyProgressBar";
@@ -77,6 +77,7 @@ const ProfileInfo = ({
 }: ProfileInfoProps) => {
   const isMobile = useIsMobile();
   const { pulseEnergy, currentRank, nextRank, progressToNextRank, loading: peLoading } = usePulseEnergy();
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
   
   // Debug logging for PE system (INCIDENT REPORT AUDIT)
   useEffect(() => {
@@ -92,67 +93,99 @@ const ProfileInfo = ({
   return (
     <div className="flex-shrink-0 flex flex-col items-center md:w-1/3">
       <div className="relative">
-        {/* Subscription plan ring */}
-        <div className="absolute inset-0 rounded-full ring-2 ring-offset-2 ring-offset-black"
-             style={{
-               '--ring-color': getSubscriptionRingColor(subscriptionPlan),
-               borderColor: 'var(--ring-color)',
-               boxShadow: `0 0 12px var(--ring-color)80`
-             } as React.CSSProperties}
+        {/* Subscription plan ring - pointer-events-none so camera tap is not captured */}
+        <div
+          className="absolute inset-0 rounded-full ring-2 ring-offset-2 ring-offset-black pointer-events-none"
+          style={{
+            '--ring-color': getSubscriptionRingColor(subscriptionPlan),
+            borderColor: 'var(--ring-color)',
+            boxShadow: `0 0 12px var(--ring-color)80`
+          } as React.CSSProperties}
         />
-        <Avatar className={`${isMobile ? 'w-24 h-24' : 'w-32 h-32'} border-2 border-cyan-500 shadow-lg shadow-cyan-500/20 cursor-pointer relative z-10`}>
-          <AvatarImage src={profileImage || ""} />
+        <Avatar className={`${isMobile ? 'w-24 h-24' : 'w-32 h-32'} border-2 border-cyan-500 shadow-lg shadow-cyan-500/20 cursor-pointer relative z-10 pointer-events-none`}>
+          <AvatarImage key={profileImage ?? ''} src={profileImage || ""} />
           <AvatarFallback className="bg-cyan-900/30">
             <User className={`${isMobile ? 'w-8 h-8' : 'w-12 h-12'} text-cyan-500`} />
           </AvatarFallback>
         </Avatar>
         
-        {/* Camera icon overlay - always visible */}
-        <div 
-          className="absolute bottom-0 right-0 bg-cyan-500 rounded-full p-1.5 cursor-pointer hover:bg-cyan-400 transition-colors"
-          onClick={() => document.getElementById('profile-image-input')?.click()}
+        {/* Camera icon overlay - top layer, 44px hit area (iOS), sync click for WKWebView */}
+        <div
+          className="absolute bottom-0 right-0 z-[9999] flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full bg-cyan-500 hover:bg-cyan-400 transition-colors pointer-events-auto"
+          onClick={() => {
+            console.log('[AvatarHitTest] camera pressed');
+            const input = profileImageInputRef.current;
+            if (input) {
+              input.click();
+            }
+          }}
         >
-          <Camera className="w-3 h-3 text-black" />
+          <Camera className="h-4 w-4 text-black" />
         </div>
-        
-        {/* Hidden file input */}
+
+        {/* Offscreen file input (no id, ref-only) for iOS reliability */}
         <input
-          id="profile-image-input"
+          ref={profileImageInputRef}
           type="file"
           accept="image/*"
           onChange={async (e) => {
             const file = e.target.files?.[0];
-            if (file) {
-              try {
-                // Upload to Supabase Storage
-                const fileName = `avatar-${Date.now()}.${file.name.split('.').pop()}`;
-                const { data, error } = await supabase.storage
-                  .from('avatars')
-                  .upload(fileName, file, {
-                    cacheControl: '3600',
-                    upsert: false
-                  });
-
-                if (error) {
-                  console.error('Upload error:', error);
-                  toast.error('Errore nel caricamento dell\'immagine');
-                  return;
-                }
-
-                // Get public URL
-                const { data: publicUrl } = supabase.storage
-                  .from('avatars')
-                  .getPublicUrl(data.path);
-
-                setProfileImage(publicUrl.publicUrl);
-                toast.success('Immagine profilo aggiornata');
-              } catch (error) {
-                console.error('Error uploading image:', error);
-                toast.error('Errore nel caricamento dell\'immagine');
+            const n = e.target.files?.length ?? 0;
+            console.log('[AvatarPicker] onChange files=', n, 'type=', file?.type, 'size=', file?.size);
+            if (!file) return;
+            try {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (!user) {
+                toast.error('Devi essere loggato per cambiare avatar');
+                return;
               }
+              const ext = file.name.split('.').pop() || 'jpg';
+              const fileName = `${user.id}/avatar_${Date.now()}.${ext}`;
+              console.log('[AvatarUpload] path=', fileName, 'start');
+              const { data, error } = await supabase.storage
+                .from('avatars')
+                .upload(fileName, file, {
+                  cacheControl: '3600',
+                  upsert: true
+                });
+
+              if (error) {
+                console.error('[AvatarUpload] fail path=', fileName, 'error=', error?.message);
+                toast.error('Errore nel caricamento dell\'immagine');
+                return;
+              }
+
+              const { data: publicUrl } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(data.path);
+              console.log('[AvatarUpload] ok url=', publicUrl.publicUrl);
+
+              console.log('[AvatarProfile] update start');
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ avatar_url: publicUrl.publicUrl, updated_at: new Date().toISOString() })
+                .eq('id', user.id);
+
+              if (updateError) {
+                console.error('[AvatarProfile] update fail', updateError?.message);
+                toast.error('Immagine caricata ma profilo non aggiornato');
+              } else {
+                console.log('[AvatarProfile] update ok');
+              }
+
+              setProfileImage(publicUrl.publicUrl);
+              localStorage.setItem('profileImage', publicUrl.publicUrl);
+              console.log('[AvatarSync] storeUpdated avatar=', publicUrl.publicUrl);
+              toast.success('Immagine profilo aggiornata');
+            } catch (error) {
+              console.error('[AvatarUpload] error', error);
+              toast.error('Errore nel caricamento dell\'immagine');
+            } finally {
+              e.target.value = '';
             }
           }}
-          className="hidden"
+          style={{ opacity: 0, position: 'absolute', width: 1, height: 1, left: -9999, top: 0 }}
+          aria-hidden
         />
       </div>
       
@@ -162,25 +195,25 @@ const ProfileInfo = ({
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mb-2 bg-black/30 h-10"
+              className="mb-2 h-10 bg-black/30 text-white placeholder:text-white/50 border-white/20 focus-visible:ring-cyan-500"
               placeholder="Nome Agente"
             />
             <Input
               value={agentCode}
               onChange={(e) => setAgentCode(e.target.value)}
-              className="mb-2 bg-black/30 font-mono h-10"
+              className="mb-2 h-10 bg-black/30 font-mono text-white placeholder:text-white/50 border-white/20 focus-visible:ring-cyan-500"
               placeholder="Codice Agente"
             />
             <Input
               value={agentTitle}
               onChange={(e) => setAgentTitle(e.target.value)}
-              className="mb-2 bg-black/30 h-10"
+              className="mb-2 h-10 bg-black/30 text-white placeholder:text-white/50 border-white/20 focus-visible:ring-cyan-500"
               placeholder="Titolo Agente"
             />
             <Textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="bg-black/30"
+              className="bg-black/30 text-white placeholder:text-white/50 border-white/20 focus-visible:ring-cyan-500"
               placeholder="Bio"
               rows={isMobile ? 3 : 4}
             />

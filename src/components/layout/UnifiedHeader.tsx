@@ -59,7 +59,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [location] = useLocation();
   const { unreadCount, openNotificationsDrawer } = useNotificationManager();
   const { goBackWithFeedback, canGoBack } = useEnhancedNavigation();
-  const { profileImage } = useProfileImage();
+  const { profileImage, avatarDisplayUrl } = useProfileImage();
   const { user } = useUnifiedAuth();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
@@ -180,8 +180,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     };
   }, [isMapRoute, location, disableScrollHide, isBuzzRoute]);
 
-  // Use profile image from hook or fallback to prop
-  const currentProfileImage = profileImage || propProfileImage;
+  // Use profile image from hook or fallback to prop; cache-bust for avatar display
+  const currentProfileImage = avatarDisplayUrl ?? profileImage ?? propProfileImage;
 
   // Check for Capacitor environment and device type
   useEffect(() => {

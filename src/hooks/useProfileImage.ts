@@ -16,6 +16,11 @@ export const useProfileImage = () => {
     }
   }, [realtimeProfile?.avatar_url, setProfileImage]);
 
+  // Cache-bust for UI only (no querystring in DB)
+  const avatarDisplayUrl = profileImage
+    ? `${profileImage}${profileImage.includes('?') ? '&' : '?'}v=${realtimeProfile?.updated_at ?? ''}`
+    : null;
+
   // Save image to Supabase Storage
   const saveImageToStorage = async (file: File): Promise<string | null> => {
     try {
@@ -50,8 +55,9 @@ export const useProfileImage = () => {
     }
   };
   
-  return { 
+  return {
     profileImage,
+    avatarDisplayUrl,
     setProfileImage,
     saveImageToStorage
   };

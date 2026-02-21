@@ -1,16 +1,16 @@
 PODS:
-  - Capacitor (7.4.5):
+  - Capacitor (7.5.0):
     - CapacitorCordova
-  - CapacitorApp (7.1.1):
+  - CapacitorApp (7.1.2):
     - Capacitor
-  - CapacitorCordova (7.4.5)
+  - CapacitorCordova (7.5.0)
   - CapacitorHaptics (7.0.3):
     - Capacitor
   - CapacitorPluginSafeArea (4.0.3):
     - Capacitor
-  - CapacitorPushNotifications (7.0.4):
+  - CapacitorPushNotifications (7.0.5):
     - Capacitor
-  - CapacitorStatusBar (7.0.4):
+  - CapacitorStatusBar (7.0.5):
     - Capacitor
   - CapgoNativePurchases (7.16.2):
     - Capacitor
@@ -44,13 +44,13 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capgo/native-purchases"
 
 SPEC CHECKSUMS:
-  Capacitor: 12914e6f1b7835e161a74ebd19cb361efa37a7dd
-  CapacitorApp: 63b237168fc869e758481dba283315a85743ee78
-  CapacitorCordova: 31bbe4466000c6b86d9b7f1181ee286cff0205aa
+  Capacitor: 0a78ec6b54580fa055c11744a4e83cd7942d98ca
+  CapacitorApp: f01a913211780e0718dae9750442c3e23f96e106
+  CapacitorCordova: ae35646a9b46cfd00d637f195509c86594026aad
   CapacitorHaptics: ce15be8f287fa2c61c7d2d9e958885b90cf0bebc
   CapacitorPluginSafeArea: 1abd81c6facac9eae0c6ae3cb0b3b53ccc135522
-  CapacitorPushNotifications: 7604512af53bbfdf1dd8fb2256b9ef1e8a69cdc2
-  CapacitorStatusBar: d0e0151c89c001a9c7125bac59ddedf76b664768
+  CapacitorPushNotifications: 2d8af7b97c3cf64cb3dc591ce28bc37ef00c1c0a
+  CapacitorStatusBar: 6de542f202c0dd3f9d0a73b240d4c9d3dddc49b4
   CapgoNativePurchases: 8c676076beb71f7361f10e9cfb2cf043122fd5e4
 
 PODFILE CHECKSUM: e261f644b10bafd0ae897162149c280a7e08714e

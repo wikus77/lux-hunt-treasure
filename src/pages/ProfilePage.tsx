@@ -248,7 +248,12 @@ export const ProfilePage: React.FC = () => {
                 </Avatar>
                 <button
                   type="button"
-                  onClick={() => avatarFileInputRef.current?.click()}
+                  onClick={() => {
+                    console.log('[AvatarPicker] tap source=ProfilePage ok');
+                    const input = avatarFileInputRef.current;
+                    console.log('[AvatarPicker] inputFound=', !!input);
+                    if (input) { input.click(); console.log('[AvatarPicker] inputClick fired'); }
+                  }}
                   disabled={avatarUploading}
                   className="absolute -bottom-2 -right-2 bg-[#00D1FF] rounded-full p-2 hover:bg-[#00B8E6] transition-colors disabled:opacity-50"
                 >
@@ -261,6 +266,8 @@ export const ProfilePage: React.FC = () => {
                   className="hidden"
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
+                    const n = e.target.files?.length ?? 0;
+                    console.log('[AvatarPicker] onChange files=', n, 'type=', file?.type, 'size=', file?.size);
                     if (!file || !user) return;
                     if (!file.type.startsWith('image/')) {
                       toast.error('Seleziona solo un\'immagine (PNG, JPG).');
@@ -274,17 +281,23 @@ export const ProfilePage: React.FC = () => {
                     try {
                       const ext = file.name.split('.').pop();
                       const fileName = `${user.id}/avatar_${Date.now()}.${ext}`;
+                      console.log('[AvatarUpload] path=', fileName, 'start');
                       const { error: uploadError } = await supabase.storage
                         .from('avatars')
                         .upload(fileName, file, { upsert: true, cacheControl: '3600' });
                       if (uploadError) throw uploadError;
                       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+                      console.log('[AvatarUpload] ok url=', publicUrl);
+                      console.log('[AvatarProfile] update start');
                       const { error: updateError } = await supabase
                         .from('profiles')
                         .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
                         .eq('id', user.id);
                       if (updateError) throw updateError;
+                      console.log('[AvatarProfile] update ok');
                       setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : null);
+                      localStorage.setItem('profileImage', publicUrl);
+                      console.log('[AvatarSync] storeUpdated avatar=', publicUrl);
                       toast.success('Avatar aggiornato');
                     } catch (err: any) {
                       toast.error(err?.message || 'Errore caricamento avatar');

@@ -205,11 +205,24 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
       }
 
       const detected = detectLang(messageText);
-      const lang = detected ?? lastUserLangRef.current ?? (i18n.language?.slice(0, 2) as 'it' | 'en' | 'fr') ?? 'it';
+      const appLang = (i18n.language?.slice(0, 2) === 'en' || i18n.language?.slice(0, 2) === 'fr')
+        ? i18n.language.slice(0, 2) as 'en' | 'fr'
+        : 'it';
+      // Language lock: only update lastUserLangRef when detection is confident (not null).
+      // When null, keep previous value so we don't switch to appLang (e.g. EN) and return wrong language.
       if (detected) lastUserLangRef.current = detected;
+      const lang = detected ?? lastUserLangRef.current ?? appLang;
+      const replyLang = lastUserLangRef.current;
 
       if (import.meta.env.DEV) {
-        console.log('[AION][LANG]', { messageText: messageText.substring(0, 30), detected, lang });
+        console.log('[AION][LANG]', {
+          text: messageText.substring(0, 50),
+          detected,
+          lastUserLangRef: lastUserLangRef.current,
+          appLang,
+          lang,
+          reply_lang: replyLang
+        });
       }
 
       // Call norah-chat-v2 edge function
@@ -220,7 +233,7 @@ const IntelChatPanel: React.FC<IntelChatPanelProps> = ({ aionEntityRef, classNam
           messages: messages.filter(m => m.role !== 'system' && m.role !== 'error').slice(-10),
           system: 'AION_CLIENT',
           lang,
-          reply_lang: lang,
+          reply_lang: replyLang,
           is_retry: isRetry,
           retry_attempt: currentRetry
         }

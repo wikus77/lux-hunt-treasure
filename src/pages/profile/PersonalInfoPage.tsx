@@ -36,6 +36,8 @@ const PersonalInfoPage: React.FC = () => {
   // TASK 3 — Gestione Avatar (Upload Immagine Profilo)
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    const n = event.target.files?.length ?? 0;
+    console.log('[AvatarPicker] onChange files=', n, 'type=', file?.type, 'size=', file?.size);
     if (!file) return;
 
     // Validate file type and size
@@ -65,7 +67,7 @@ const PersonalInfoPage: React.FC = () => {
       // Create unique folder for user avatars
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/avatar_${Date.now()}.${fileExt}`;
-      
+      console.log('[AvatarUpload] path=', fileName, 'start');
       // Upload to avatars bucket
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -80,7 +82,9 @@ const PersonalInfoPage: React.FC = () => {
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
+      console.log('[AvatarUpload] ok url=', publicUrl);
 
+      console.log('[AvatarProfile] update start');
       // Update profile in database
       const { error: updateError } = await supabase
         .from('profiles')
@@ -91,9 +95,12 @@ const PersonalInfoPage: React.FC = () => {
         .eq('id', user.id);
 
       if (updateError) throw updateError;
+      console.log('[AvatarProfile] update ok');
 
       // Update local state
       actions.setProfileImage(publicUrl);
+      localStorage.setItem('profileImage', publicUrl);
+      console.log('[AvatarSync] storeUpdated avatar=', publicUrl);
       
       toast({
         title: "Avatar aggiornato",
@@ -218,7 +225,12 @@ const PersonalInfoPage: React.FC = () => {
                 </div>
                 <Button
                   size="sm"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => {
+                    console.log('[AvatarPicker] tap source=PersonalInfoPage ok');
+                    const input = fileInputRef.current;
+                    console.log('[AvatarPicker] inputFound=', !!input);
+                    if (input) { input.click(); console.log('[AvatarPicker] inputClick fired'); }
+                  }}
                   className="absolute -bottom-2 -right-2 rounded-full p-2 h-8 w-8"
                   disabled={isLoading}
                 >

@@ -13,7 +13,7 @@ interface ProfileLayoutProps {
 }
 
 const ProfileLayout = ({ children, showBottomNav = true }: ProfileLayoutProps) => {
-  const { profileImage } = useProfileImage();
+  const { profileImage, avatarDisplayUrl } = useProfileImage();
   const { navigate } = useWouterNavigation();
   const isMobile = useIsMobile();
 
@@ -24,7 +24,7 @@ const ProfileLayout = ({ children, showBottomNav = true }: ProfileLayoutProps) =
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <UnifiedHeader profileImage={profileImage} />
+      <UnifiedHeader profileImage={avatarDisplayUrl ?? profileImage} />
       <div className="h-[72px] w-full" />
       
       <main className={`pb-20 ${isMobile ? "px-3" : "px-6"} max-w-screen-xl mx-auto`}>
