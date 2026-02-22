@@ -252,14 +252,18 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
     }, 280);
   }, [isClosing, onClose, onContinue]);
 
+  const safeSet = useCallback((k: string, v: string) => {
+    try { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); } catch {}
+  }, []);
+
   // Dismiss forever — commit setItem before close to avoid unmount race (e.g. iOS WKWebView)
   const handleDismissForever = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    localStorage.setItem(storageKey, 'true');
+    safeSet(storageKey, 'true');
     Promise.resolve().then(() => {
       handleClose();
     });
-  }, [handleClose, storageKey]);
+  }, [handleClose, storageKey, safeSet]);
 
   // Video ended
   const handleVideoEnd = useCallback(() => {

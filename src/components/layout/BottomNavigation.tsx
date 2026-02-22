@@ -193,13 +193,17 @@ const BottomNavigationComponent = () => {
     '/leaderboard': 'm1_classifica_video_dismissed',
   };
 
+  const safeGet = (k: string): string | null => {
+    try { return typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null; } catch { return null; }
+  };
+
   // PWA compatible navigation handler — gate "don't show again" in parent (iOS WKWebView-safe)
   const handleNavigationPWA = async (link: typeof links[0], e: React.MouseEvent) => {
     e.preventDefault();
     hapticLight();
     
     const storageKey = VIDEO_DISMISSED_KEYS[link.path];
-    if (storageKey && typeof localStorage !== 'undefined' && localStorage.getItem(storageKey) === 'true') {
+    if (storageKey && safeGet(storageKey) === 'true') {
       // Già "Non mostrare più": naviga senza aprire il video
       switch (link.path) {
         case '/home': handleHomeVideoContinue(); return;
