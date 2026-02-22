@@ -4,6 +4,9 @@ PODS:
   - CapacitorApp (7.1.2):
     - Capacitor
   - CapacitorCordova (7.5.0)
+  - CapacitorGeolocation (7.1.8):
+    - Capacitor
+    - IONGeolocationLib (= 1.0.1)
   - CapacitorHaptics (7.0.3):
     - Capacitor
   - CapacitorPluginSafeArea (4.0.3):
@@ -14,16 +17,22 @@ PODS:
     - Capacitor
   - CapgoNativePurchases (7.16.2):
     - Capacitor
+  - IONGeolocationLib (1.0.1)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorGeolocation (from `../../node_modules/@capacitor/geolocation`)"
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - CapacitorPluginSafeArea (from `../../node_modules/capacitor-plugin-safe-area`)
   - "CapacitorPushNotifications (from `../../node_modules/@capacitor/push-notifications`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
   - "CapgoNativePurchases (from `../../node_modules/@capgo/native-purchases`)"
+
+SPEC REPOS:
+  trunk:
+    - IONGeolocationLib
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -32,6 +41,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/app"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorGeolocation:
+    :path: "../../node_modules/@capacitor/geolocation"
   CapacitorHaptics:
     :path: "../../node_modules/@capacitor/haptics"
   CapacitorPluginSafeArea:
@@ -47,12 +58,14 @@ SPEC CHECKSUMS:
   Capacitor: 0a78ec6b54580fa055c11744a4e83cd7942d98ca
   CapacitorApp: f01a913211780e0718dae9750442c3e23f96e106
   CapacitorCordova: ae35646a9b46cfd00d637f195509c86594026aad
+  CapacitorGeolocation: ab54d708e2fcf99a7bafe0219eaa6f7a932f001a
   CapacitorHaptics: ce15be8f287fa2c61c7d2d9e958885b90cf0bebc
   CapacitorPluginSafeArea: 1abd81c6facac9eae0c6ae3cb0b3b53ccc135522
   CapacitorPushNotifications: 2d8af7b97c3cf64cb3dc591ce28bc37ef00c1c0a
   CapacitorStatusBar: 6de542f202c0dd3f9d0a73b240d4c9d3dddc49b4
   CapgoNativePurchases: 8c676076beb71f7361f10e9cfb2cf043122fd5e4
+  IONGeolocationLib: 20f9d0248a0b5264511fb57a37e25dd2badf797a
 
-PODFILE CHECKSUM: e261f644b10bafd0ae897162149c280a7e08714e
+PODFILE CHECKSUM: 3d71ba490ac613d625f52a08c05b66f95527b422
 
 COCOAPODS: 1.16.2

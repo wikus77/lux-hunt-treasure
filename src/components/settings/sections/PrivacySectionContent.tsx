@@ -194,23 +194,35 @@ const PrivacySectionContent: React.FC<PrivacySectionContentProps> = ({ onClose }
             </ul>
           </div>
 
-          <button style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '12px',
-            background: 'rgba(0, 209, 255, 0.15)',
-            border: '1px solid rgba(0, 209, 255, 0.3)',
-            color: '#00D1FF',
-            fontSize: '14px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-          }}>
+          <button
+            type="button"
+            onClick={() => {
+              const to = 'contact@m1ssion.com';
+              const subject = encodeURIComponent(t('privacy_request_my_data_subject'));
+              const body = encodeURIComponent(t('privacy_request_my_data_body', {
+                email: user?.email ?? 'N/A',
+                userId: user?.id ?? 'N/A',
+              }));
+              window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+            }}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '12px',
+              background: 'rgba(0, 209, 255, 0.15)',
+              border: '1px solid rgba(0, 209, 255, 0.3)',
+              color: '#00D1FF',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
             <Download size={16} />
-            {t('download_my_data')}
+            {t('privacy_request_my_data')}
           </button>
         </GlassCard>
       </div>

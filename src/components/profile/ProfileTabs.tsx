@@ -44,6 +44,8 @@ interface ProfileTabsProps {
   navigateToPrivacySecurity: () => void;
   navigateToPaymentMethods: () => void;
   navigateToSubscriptions: () => void;
+  /** Quando true, nasconde solo la tab "Account" (usato nel modale Agent Profile da Impostazioni) */
+  hideAccountTab?: boolean;
 }
 
 const ProfileTabs = ({
@@ -59,6 +61,7 @@ const ProfileTabs = ({
   navigateToPrivacySecurity,
   navigateToPaymentMethods,
   navigateToSubscriptions,
+  hideAccountTab = false,
 }: ProfileTabsProps) => {
   // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
   // Force real-time subscription data to override any stale props
@@ -75,11 +78,11 @@ const ProfileTabs = ({
   });
   return (
     <Tabs defaultValue="stats" className="w-full">
-      <TabsList className="w-full grid grid-cols-4 bg-black/30">
+      <TabsList className={`w-full grid bg-black/30 ${hideAccountTab ? 'grid-cols-3' : 'grid-cols-4'}`}>
         <TabsTrigger value="stats" className="text-xs">Statistiche</TabsTrigger>
         <TabsTrigger value="history" className="text-xs">Cronologia</TabsTrigger>
         <TabsTrigger value="badges" className="text-xs">Badge</TabsTrigger>
-        <TabsTrigger value="account" className="text-xs">Account</TabsTrigger>
+        {!hideAccountTab && <TabsTrigger value="account" className="text-xs">Account</TabsTrigger>}
       </TabsList>
       
       {/* Stats Tab */}
@@ -171,7 +174,8 @@ const ProfileTabs = ({
         <BadgeShowcase />
       </TabsContent>
       
-      {/* Account Tab */}
+      {/* Account Tab - nascosto nel modale Agent Profile quando hideAccountTab */}
+      {!hideAccountTab && (
       <TabsContent value="account" className="p-4 bg-black/20 rounded-md mt-2">
         <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
           <Shield className="h-4 w-4 text-cyan-400" />
@@ -187,6 +191,7 @@ const ProfileTabs = ({
           navigateToSubscriptions={navigateToSubscriptions}
         />
       </TabsContent>
+      )}
     </Tabs>
   );
 };

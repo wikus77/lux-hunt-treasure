@@ -100,7 +100,7 @@ const SettingsPage = () => {
     {
       id: 'payment-methods',
       label: 'Metodi di Pagamento',
-      description: 'Carte, Apple Pay, Google Pay',
+      description: 'Carte e acquisti in-app',
       icon: CreditCard,
     },
     {

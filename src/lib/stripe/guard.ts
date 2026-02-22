@@ -40,7 +40,7 @@ export function assertStripeAllowedOnPlatform(): void {
     console.error('[STRIPE GUARD] ❌ BLOCKED: Stripe payment attempted on iOS native');
     console.error('[STRIPE GUARD] Use Apple IAP (StoreKit) for iOS purchases');
     throw new StoreComplianceError(
-      'Pagamenti Stripe non disponibili su iOS. Usa Apple Pay tramite l\'app.'
+      'Su iOS i pagamenti sono gestiti tramite acquisti in-app Apple (StoreKit).'
     );
   }
   

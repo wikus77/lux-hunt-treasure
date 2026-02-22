@@ -339,7 +339,7 @@ export const M1UShopContent: React.FC<M1UShopContentProps> = ({ onClose }) => {
             textAlign: 'center',
             marginTop: '8px',
           }}>
-            Pagamento sicuro tramite Apple Pay • M1U non scadono mai
+            {t('iap_footer_secure')} • {t('iap_m1u_never_expire')}
           </p>
         </div>
       </div>

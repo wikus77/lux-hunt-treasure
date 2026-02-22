@@ -1568,4 +1568,29 @@ body.is-native .card-glass-white-energy:focus-within {
     inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
 }
 
+/* 🔧 FIX 21/02/2026: Portal text visibility - override .sn-page grey inside our three portals
+   So modal/settings/profile content stays readable (white) when ios-native forces grey elsewhere. */
+#m1-modal-portal .text-muted-foreground,
+#m1-modal-portal [class*="text-muted-foreground"],
+#m1-settings-section-portal .text-muted-foreground,
+#m1-settings-section-portal [class*="text-muted-foreground"],
+#m1-profile-portal .text-muted-foreground,
+#m1-profile-portal [class*="text-muted-foreground"],
+#m1-modal-portal .text-gray-400,
+#m1-modal-portal .text-gray-500,
+#m1-settings-section-portal .text-gray-400,
+#m1-settings-section-portal .text-gray-500,
+#m1-profile-portal .text-gray-400,
+#m1-profile-portal .text-gray-500 {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* 🔧 WKWEBVIEW: Reward popup (body) - override .sn-page grey so body text is readable */
+.m1-reward-zone-popup .text-muted-foreground,
+.m1-reward-zone-popup [class*="text-muted-foreground"],
+.m1-reward-zone-popup .text-gray-400,
+.m1-reward-zone-popup .text-gray-500 {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
 /* © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

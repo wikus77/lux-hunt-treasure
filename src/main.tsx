@@ -6,6 +6,19 @@ console.log('🚨🚨🚨 IAP_FIX_V12_XHR_DEBUG_20260211_1335 🚨🚨🚨');
 console.log('🚨 [BUILD STAMP] main.tsx loaded at:', new Date().toISOString());
 // 🚨🚨🚨 END FORENSIC BUILD STAMP 🚨🚨🚨
 
+// CSS STAMP CHECK — verify which stylesheets/portals exist at load (for bundle/cache debug)
+if (typeof document !== 'undefined') {
+  console.log('Sheets:', [...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')].map((l) => l.href));
+  console.log('Portals:', {
+    modal: !!document.getElementById('m1-modal-portal'),
+    settings: !!document.getElementById('m1-settings-section-portal'),
+    profile: !!document.getElementById('m1-profile-portal'),
+  });
+}
+
+import { installIOSReadabilityHotfix } from '@/ios/iosReadabilityHotfix';
+installIOSReadabilityHotfix();
+
 import './styles/map.css';
 import './styles/effects/ritual-distortion.css';
 import './styles/motion-tokens.css'; // 🎬 Native Feel: Unified motion system

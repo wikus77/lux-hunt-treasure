@@ -1,15 +1,14 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎨 Settings Content - REVOLUT STYLE con sub-modali per sezioni
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { motion } from 'framer-motion';
 import { 
   X, User, Shield, Target, Bell, Lock, 
   FileText, Info, MapPin, Stethoscope, 
-  ChevronRight, CreditCard
+  ChevronRight, CreditCard, Trash2
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
-import { getProjectRef } from '@/lib/supabase/clientUtils';
 import { SettingsSectionFlipOverlay } from './SettingsSectionFlipOverlay';
 
 // Lazy load section contents
@@ -49,36 +48,23 @@ const SectionLoadingFallback = () => (
 export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [geolocationEnabled, setGeolocationEnabled] = useState(false);
-  const [sessionStatus, setSessionStatus] = useState<string>('checking');
   
   // State per gestire sezione aperta
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [sectionOriginRect, setSectionOriginRect] = useState<DOMRect | null>(null);
-  
-  const supabaseProjectId = getProjectRef();
 
-  useEffect(() => {
-    checkGeolocation();
-    checkSession();
-  }, []);
+  const handleRequestAccountDeletion = () => {
+    const subject = 'Account deletion request — M1SSION';
+    const body = `Hello,
+I would like to request the deletion of my M1SSION account and associated personal data.
 
-  const checkGeolocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        () => setGeolocationEnabled(true),
-        () => setGeolocationEnabled(false)
-      );
-    }
-  };
+Account email: ${user?.email ?? '(unknown)'}
+User ID: ${user?.id ?? '(unknown)'}
 
-  const checkSession = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSessionStatus(session ? 'active' : 'inactive');
-    } catch (error) {
-      setSessionStatus('error');
-    }
+Please confirm the deletion and the estimated processing time.
+Thank you.`;
+    const mailtoUrl = `mailto:contact@m1ssion.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoUrl;
   };
 
   // Apri sezione come sub-modal
@@ -187,58 +173,71 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
           background: 'transparent',
         }}
       >
-        {/* HEADER - REVOLUT STYLE */}
-        <div 
+        {/* HEADER — stessa animazione della card "Le tue notifiche" (NotificationsPage): graphite glass + motion slide-up + gradient line */}
+        <div
+          className="m1-folder-glass--graphite"
           style={{
             flexShrink: 0,
-            background: 'linear-gradient(180deg, rgba(0, 80, 120, 0.8) 0%, rgba(0, 50, 80, 0.6) 100%)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
-            paddingBottom: '20px',
-            paddingLeft: '16px',
-            paddingRight: '16px',
+            width: '100%',
+            position: 'relative' as const,
+            padding: 0,
+            borderRadius: '24px 24px 0 0',
+            overflow: 'hidden',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <button
-              onClick={onClose}
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.15)',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
-            </button>
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="m1-panel relative"
+            style={{
+              paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
+              paddingBottom: '20px',
+              paddingLeft: '16px',
+              paddingRight: '16px',
+              borderRadius: '16px 16px 0 0',
+            }}
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90 rounded-t-2xl" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <button
+                onClick={onClose}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.15)',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+              </button>
 
-            <div style={{ flex: 1, textAlign: 'center' }}>
-              <h1 style={{ 
-                color: '#FFFFFF', 
-                fontSize: '18px', 
-                fontWeight: 700,
-                letterSpacing: '1px',
-              }}>
-                {t('settings_modal_title')}
-              </h1>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <h1 style={{
+                  color: '#FFFFFF',
+                  fontSize: '18px',
+                  fontWeight: 700,
+                  letterSpacing: '1px',
+                }}>
+                  {t('settings_modal_title')}
+                </h1>
+              </div>
+
+              <div style={{ width: '40px' }} />
             </div>
 
-            <div style={{ width: '40px' }} />
-          </div>
-
-          <p style={{ 
-            color: 'rgba(255,255,255,0.6)', 
-            fontSize: '13px', 
-            textAlign: 'center',
-          }}>
-            {t('settings_modal_subtitle')}
-          </p>
+            <p style={{
+              color: 'rgba(255,255,255,0.6)',
+              fontSize: '13px',
+              textAlign: 'center',
+            }}>
+              {t('settings_modal_subtitle')}
+            </p>
+          </motion.div>
         </div>
 
         {/* CONTENT */}
@@ -266,113 +265,32 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
             ))}
           </GlassCard>
 
-          {/* Privacy & Permissions */}
-          <GlassCard style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <MapPin style={{ width: '18px', height: '18px', color: '#60a5fa' }} />
-              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600 }}>{t('privacy_permissions')}</span>
+          {/* Danger Zone — Request Account Deletion via mailto */}
+          <GlassCard style={{ marginBottom: '16px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <Trash2 style={{ width: '20px', height: '20px', color: '#EF4444' }} />
+              <span style={{ color: '#EF4444', fontSize: '16px', fontWeight: 600 }}>{t('danger_zone')}</span>
             </div>
-            
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              marginBottom: '12px',
-            }}>
-              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('geolocation')}</span>
-              <span style={{
-                padding: '4px 10px',
-                borderRadius: '12px',
-                background: geolocationEnabled ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.1)',
-                color: geolocationEnabled ? '#22c55e' : 'rgba(255,255,255,0.5)',
-                fontSize: '11px',
-                fontWeight: 600,
-              }}>
-                {geolocationEnabled ? t('active') : t('inactive')}
-              </span>
-            </div>
-            
-            <button
-              onClick={checkGeolocation}
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '10px',
-                background: 'rgba(96, 165, 250, 0.15)',
-                border: '1px solid rgba(96, 165, 250, 0.3)',
-                color: '#60a5fa',
-                fontSize: '13px',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
-            >
-              {t('check_permissions')}
-            </button>
-          </GlassCard>
 
-          {/* Diagnostics */}
-          <GlassCard>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <Stethoscope style={{ width: '18px', height: '18px', color: '#22c55e' }} />
-              <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600 }}>{t('diagnostics')}</span>
-            </div>
-            
-            <div style={{ marginBottom: '8px' }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                marginBottom: '8px',
-              }}>
-                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('supabase_id')}</span>
-                <span style={{
-                  padding: '4px 10px',
-                  borderRadius: '12px',
-                  background: 'rgba(34, 197, 94, 0.15)',
-                  border: '1px solid rgba(34, 197, 94, 0.3)',
-                  color: '#22c55e',
-                  fontSize: '11px',
-                  fontWeight: 500,
-                }}>
-                  {supabaseProjectId.slice(0, 8)}...
-                </span>
-              </div>
-              
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-              }}>
-                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('session_status')}</span>
-                <span style={{
-                  padding: '4px 10px',
-                  borderRadius: '12px',
-                  background: sessionStatus === 'active' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                  color: sessionStatus === 'active' ? '#22c55e' : '#ef4444',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                }}>
-                  {t(sessionStatus)}
-                </span>
-              </div>
-            </div>
-            
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginBottom: '12px' }}>
+              {t('request_account_deletion_desc')}
+            </p>
+
             <button
-              onClick={checkSession}
+              onClick={handleRequestAccountDeletion}
               style={{
                 width: '100%',
-                padding: '10px',
-                borderRadius: '10px',
-                background: 'rgba(34, 197, 94, 0.15)',
-                border: '1px solid rgba(34, 197, 94, 0.3)',
-                color: '#22c55e',
-                fontSize: '13px',
-                fontWeight: 500,
+                padding: '12px',
+                borderRadius: '12px',
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#EF4444',
+                fontSize: '14px',
+                fontWeight: 600,
                 cursor: 'pointer',
-                marginTop: '8px',
               }}
             >
-              {t('check_session')}
+              {t('request_account_deletion_cta')}
             </button>
           </GlassCard>
         </div>

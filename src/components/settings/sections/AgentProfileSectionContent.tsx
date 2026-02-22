@@ -138,6 +138,7 @@ const AgentProfileSectionContent: React.FC<AgentProfileSectionContentProps> = ({
             navigateToPrivacySecurity={() => {}}
             navigateToPaymentMethods={() => {}}
             navigateToSubscriptions={() => {}}
+            hideAccountTab
           />
         </GlassCard>
       </div>

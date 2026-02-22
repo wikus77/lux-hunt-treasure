@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { SettingsSectionFlipOverlay } from '../SettingsSectionFlipOverlay';
+import { isCapacitorNative, isCapacitorIOS } from '@/utils/capacitor';
 
 interface PaymentMethodsSectionContentProps {
   onClose: () => void;
@@ -57,7 +58,7 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
   };
 
   const handleApplePaySetup = () => {
-    toast({ title: "🍎 Apple Pay", description: "La configurazione sarà disponibile a breve." });
+    toast({ title: "🍎 " + t('payment_method_inapp_label'), description: t('apple_pay_setup') });
   };
 
   const handleGooglePaySetup = () => {
@@ -75,7 +76,7 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
     try {
       await supabase.from('user_payment_methods').update({ is_default: false }).eq('user_id', user.id);
       await supabase.from('user_payment_methods').update({ is_default: true }).eq('id', cardId);
-      toast({ title: "✅ Carta predefinita impostata" });
+      toast({ title: "✅ " + t('iap_default_card_set') });
       loadPaymentMethods();
     } catch (error) {
       toast({ title: "❌ " + t('error'), variant: "destructive" });
@@ -101,6 +102,8 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
       default: return '#6366F1';
     }
   };
+
+  const hideCardsOnIOS = isCapacitorNative() && isCapacitorIOS();
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
@@ -141,7 +144,7 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
             {isIOS && (
               <WalletButton 
                 icon="🍎" 
-                label="Apple Pay" 
+                label={t('payment_method_inapp_label')} 
                 status={t('not_configured')}
                 onClick={handleApplePaySetup}
               />
@@ -162,7 +165,8 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
           </div>
         </GlassCard>
 
-        {/* Cards */}
+        {/* Cards - hidden on iOS (digital goods only via IAP) */}
+        {!hideCardsOnIOS && (
         <GlassCard style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -198,8 +202,10 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
             </div>
           )}
         </GlassCard>
+        )}
 
-        {/* Security Note */}
+        {/* Security Note - hidden on iOS when cards hidden */}
+        {!hideCardsOnIOS && (
         <GlassCard>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
             <Shield style={{ width: '20px', height: '20px', color: '#22C55E', flexShrink: 0, marginTop: '2px' }} />
@@ -211,6 +217,7 @@ const PaymentMethodsSectionContent: React.FC<PaymentMethodsSectionContentProps> 
             </div>
           </div>
         </GlassCard>
+        )}
       </div>
 
       {/* Add Card Modal */}

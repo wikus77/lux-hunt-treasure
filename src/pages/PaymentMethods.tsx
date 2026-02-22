@@ -10,8 +10,10 @@ import GooglePayBox from "@/components/payments/GooglePayBox";
 import { useQueryParams } from "@/hooks/useQueryParams";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from "uuid";
+import { useTranslation } from "react-i18next";
 
 const PaymentMethods = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = useQueryParams<{ from?: string; price?: string; session?: string }>();
@@ -56,8 +58,8 @@ const PaymentMethods = () => {
       : "Nuovo indizio extra sbloccato!";
 
     // Show success notification
-    toast.success("Pagamento completato", {
-      description: "Il tuo pagamento è stato elaborato con successo!",
+    toast.success(t('iap_payment_processed'), {
+      description: t('iap_payment_processed_desc'),
     });
 
     // Set appropriate state based on payment type
@@ -92,19 +94,19 @@ const PaymentMethods = () => {
     // ⚠️ DEPRECATED: This payment method is no longer used for BUZZ/BUZZ MAP
     // All BUZZ payments now use M1U currency via RPC handle_m1u_payment
     console.warn('⚠️ PaymentMethods page is deprecated - BUZZ now uses M1U');
-    toast.error("Questo metodo di pagamento non è più disponibile. Usa M1U per i pagamenti BUZZ.");
+    toast.error(t('iap_payment_method_deprecated_use_m1u'));
   };
 
   const handleApplePay = async () => {
     // ⚠️ DEPRECATED: This payment method is no longer used for BUZZ/BUZZ MAP
     console.warn('⚠️ PaymentMethods page is deprecated - BUZZ now uses M1U');
-    toast.error("Questo metodo di pagamento non è più disponibile. Usa M1U per i pagamenti BUZZ.");
+    toast.error(t('iap_payment_method_deprecated_use_m1u'));
   };
 
   const handleGooglePay = async () => {
     // ⚠️ DEPRECATED: This payment method is no longer used for BUZZ/BUZZ MAP
     console.warn('⚠️ PaymentMethods page is deprecated - BUZZ now uses M1U');
-    toast.error("Questo metodo di pagamento non è più disponibile. Usa M1U per i pagamenti BUZZ.");
+    toast.error(t('iap_payment_method_deprecated_use_m1u'));
   };
 
   return (

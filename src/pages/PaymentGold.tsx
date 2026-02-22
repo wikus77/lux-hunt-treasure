@@ -9,8 +9,10 @@ import ApplePayBox from "@/components/payments/ApplePayBox";
 import GooglePayBox from "@/components/payments/GooglePayBox";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 import { useStripePayment } from "@/hooks/useStripePayment";
+import { useTranslation } from "react-i18next";
 
 const PaymentGold = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [showExplosion, setShowExplosion] = useState(false);
@@ -27,8 +29,8 @@ const PaymentGold = () => {
       setTimeout(() => {
         setShowExplosion(false);
         setFadeOutExplosion(false);
-        toast.success("Abbonamento Gold attivato", {
-          description: "Il tuo abbonamento Gold è stato attivato con successo!",
+        toast.success(t('iap_subscription_gold'), {
+          description: t('iap_subscription_gold_desc'),
         });
         localStorage.setItem("subscription_plan", "Gold");
         // Forziamo l'aggiornamento della localStorage per attivare l'evento
@@ -42,8 +44,8 @@ const PaymentGold = () => {
     if (isProcessing || loading) return;
     setIsProcessing(true);
     
-    toast.info("Collegamento a Stripe in corso...", {
-      description: "Verrai reindirizzato a Stripe per completare il pagamento in modo sicuro.",
+    toast.info(t('iap_connecting_stripe'), {
+      description: t('iap_redirect_stripe'),
       duration: 3000,
     });
     
@@ -63,16 +65,16 @@ const PaymentGold = () => {
     if (isProcessing || loading) return;
     setIsProcessing(true);
     
-    toast.success("Pagamento Rapido", {
-      description: "Pagamento in elaborazione..."
+    toast.success(t('iap_payment_fast'), {
+      description: t('iap_processing')
     });
     
     try {
       await processSubscription("Gold");
     } catch (error) {
       console.error("Errore durante il pagamento rapido:", error);
-      toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il pagamento rapido.",
+      toast.error(t('iap_error_generic'), {
+        description: t('iap_error_description'),
       });
     } finally {
       setIsProcessing(false);
@@ -91,8 +93,8 @@ const PaymentGold = () => {
       await processSubscription("Gold");
     } catch (error) {
       console.error("Errore durante il pagamento alternativo:", error);
-      toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il pagamento alternativo.",
+      toast.error(t('iap_error_generic'), {
+        description: t('iap_error_description'),
       });
     } finally {
       setIsProcessing(false);

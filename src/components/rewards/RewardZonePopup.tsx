@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
 import { X, MapPin, Navigation, Gift } from 'lucide-react';
@@ -37,6 +38,7 @@ const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: numbe
 };
 
 export const RewardZonePopup: React.FC = () => {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
@@ -326,10 +328,10 @@ export const RewardZonePopup: React.FC = () => {
 
             {/* Title */}
             <h2 className="relative text-2xl font-bold text-white mb-1">
-              <span className="text-emerald-400">99</span> MARKER REWARDS
+              <span className="text-emerald-400">99</span> {t('rewards99_title_rest')}
             </h2>
             <p className="relative text-white/90 text-sm font-medium tracking-wider">
-              HIDDEN TREASURES AWAIT
+              {t('rewards99_subtitle')}
             </p>
           </div>
 
@@ -339,16 +341,14 @@ export const RewardZonePopup: React.FC = () => {
               <div className="flex items-start gap-3 mb-3">
                 <MapPin className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                 <p className="text-white/90 text-sm leading-relaxed">
-                  Abbiamo nascosto <span className="text-emerald-400 font-bold">99 marker rewards</span> di colore verde sulla mappa. 
-                  Trovandoli potrai riscattare premi esclusivi!
+                  {t('rewards99_body_line1')}
                 </p>
               </div>
               
               <div className="flex items-start gap-3">
                 <Navigation className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
                 <p className="text-white/90 text-sm leading-relaxed">
-                  Premi il pulsante per volare verso una <span className="text-cyan-400">zona di 250 metri</span> dove 
-                  si nasconde un marker. Dovrai cercarlo!
+                  {t('rewards99_body_line2')}
                 </p>
               </div>
             </div>
@@ -366,7 +366,7 @@ export const RewardZonePopup: React.FC = () => {
               }}
             >
               <Navigation className="w-5 h-5 mr-2" />
-              🎯 FLY TO REWARD ZONE
+              🎯 {t('rewards99_cta_fly')}
             </Button>
 
             <div className="flex gap-2">
@@ -375,14 +375,14 @@ export const RewardZonePopup: React.FC = () => {
                 variant="outline"
                 className="flex-1 h-10 border-white/20 text-white hover:bg-white/10"
               >
-                Più tardi
+                {t('rewards99_later')}
               </Button>
               <Button
                 onClick={handleDontShowAgain}
                 variant="ghost"
                 className="flex-1 h-10 text-white hover:text-white/90 hover:bg-white/5"
               >
-                Non mostrare più
+                {t('rewards99_dont_show_again')}
               </Button>
             </div>
           </div>

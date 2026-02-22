@@ -171,56 +171,69 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose, o
           background: 'transparent',
         }}
       >
-        {/* HEADER - Gradiente verde */}
-        <div 
+        {/* HEADER — NotificationsCardMotion (identico a Impostazioni / card Notifiche) */}
+        <div
+          className="m1-folder-glass--graphite"
           style={{
             flexShrink: 0,
-            background: 'linear-gradient(180deg, rgba(34, 197, 94, 0.3) 0%, rgba(16, 185, 129, 0.2) 100%)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
-            paddingBottom: '16px',
-            paddingLeft: '16px',
-            paddingRight: '16px',
+            width: '100%',
+            position: 'relative' as const,
+            padding: 0,
+            borderRadius: '24px 24px 0 0',
+            overflow: 'hidden',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <button
-              onClick={onClose}
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.15)',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
-            </button>
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="m1-panel relative"
+            style={{
+              paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
+              paddingBottom: '16px',
+              paddingLeft: '16px',
+              paddingRight: '16px',
+              borderRadius: '16px 16px 0 0',
+            }}
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90 rounded-t-2xl" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <button
+                onClick={onClose}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.15)',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <X style={{ width: '20px', height: '20px', color: '#FFFFFF' }} />
+              </button>
 
-            <div style={{ flex: 1, textAlign: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <Target style={{ width: '20px', height: '20px', color: '#22C55E' }} />
-                <h1 style={{ 
-                  color: isUrgent ? '#FF4444' : '#22C55E', 
-                  fontSize: '18px', 
-                  fontWeight: 700,
-                  letterSpacing: '1px',
-                }}>
-                  🎯 {t('home_next_action_title')}
-                </h1>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <Target style={{ width: '20px', height: '20px', color: '#22C55E' }} />
+                  <h1 style={{
+                    color: isUrgent ? '#FF4444' : '#22C55E',
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    letterSpacing: '1px',
+                  }}>
+                    🎯 {t('home_next_action_title')}
+                  </h1>
+                </div>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '2px' }}>
+                  {isUrgent ? `⚠️ ${t('home_next_action_subtitle_urgent', { count: daysRemaining })}` : t('home_next_action_subtitle')}
+                </p>
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '2px' }}>
-                {isUrgent ? `⚠️ ${t('home_next_action_subtitle_urgent', { count: daysRemaining })}` : t('home_next_action_subtitle')}
-              </p>
-            </div>
 
-            <div style={{ width: '40px' }} />
-          </div>
+              <div style={{ width: '40px' }} />
+            </div>
+          </motion.div>
         </div>
 
         {/* CONTENT */}

@@ -1,5 +1,8 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+// iOS App Review: on iOS native use Capacitor geolocation only (no "localhost" prompt)
 import { useEffect, useRef, useState } from 'react';
+import { getCurrentPositionSafe, watchPositionSafe, clearWatchSafe, type WatchHandle } from '@/utils/geolocationSafe';
+import { isCapacitorNative, isCapacitorIOS } from '@/utils/capacitor';
 
 export type GeoCoords = { lat: number; lng: number; acc: number };
 export type GeoState = {
@@ -23,9 +26,10 @@ export type GeoState = {
 // iOS PWA-friendly geolocation with proper error handling and fallbacks
 export function useGeoWatcher() {
   const [state, setState] = useState<GeoState>({ granted: false });
-  const watchId = useRef<number | null>(null);
+  const watchId = useRef<WatchHandle | null>(null);
   const attemptsRef = useRef(0);
-  
+
+  const useCapacitorGeo = typeof window !== 'undefined' && isCapacitorNative() && isCapacitorIOS();
   
   // CRITICAL iOS PWA Detection Fix
   const isIOS = typeof window !== 'undefined' && (
@@ -171,11 +175,22 @@ export function useGeoWatcher() {
       return;
     }
 
-    console.log('🌍 Starting geolocation watch...', { isIOS, isPWA });
+    console.log('🌍 Starting geolocation watch...', { isIOS, isPWA, useCapacitorGeo });
     
   const initGeoLocation = async () => {
-      console.log('🌍 CRITICAL INIT GEO - Starting geolocation for:', { isIOS, isPWA, hasGeolocation: !!navigator.geolocation });
+      console.log('🌍 CRITICAL INIT GEO - Starting geolocation for:', { isIOS, isPWA, hasGeolocation: !!navigator.geolocation, useCapacitorGeo });
       attemptsRef.current = 0;
+      
+      // iOS native: single stack Capacitor only (no navigator.geolocation → no "localhost" prompt)
+      if (useCapacitorGeo) {
+        getCurrentPositionSafe({ enableHighAccuracy: false, timeout: 25000, maximumAge: 300000 })
+          .then(onSuccess)
+          .then(() => {
+            watchId.current = watchPositionSafe(onSuccess, (err) => { console.warn('⚠️ Watch position:', err); }, { enableHighAccuracy: false, timeout: 25000, maximumAge: 60000 });
+          })
+          .catch(onError);
+        return;
+      }
       
       // FORCE DIRECT APPROACH for ALL PWA scenarios
       if (isPWA || isIOS) {

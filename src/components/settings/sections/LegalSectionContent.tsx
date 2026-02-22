@@ -2,11 +2,9 @@
 // Legale - Section Modal Content (Revolut-style glass design)
 // Now with full legal content and IT/EN language switcher
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { X, FileText, Shield, Settings, Copyright, Award, ExternalLink, Trash2, AlertTriangle, ChevronRight, Loader2, Globe } from 'lucide-react';
+import { X, FileText, Shield, Settings, Copyright, Award, ExternalLink, Trash2, ChevronRight, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { SettingsSectionFlipOverlay } from '../SettingsSectionFlipOverlay';
 
 interface LegalSectionContentProps {
@@ -31,9 +29,6 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language?.substring(0, 2) || 'en'; // 'en' | 'it' | 'fr'
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // State per document modal
   const [openDocument, setOpenDocument] = useState<LegalLink | null>(null);
@@ -67,24 +62,18 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
     setOpenDocument(link);
   };
 
-  const handleDeleteAccount = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      await supabase.from('user_clues').delete().eq('user_id', user.id);
-      await supabase.from('user_buzz_counter').delete().eq('user_id', user.id);
-      await supabase.from('user_notifications').delete().eq('user_id', user.id);
-      await supabase.from('subscriptions').delete().eq('user_id', user.id);
-      await supabase.from('profiles').delete().eq('id', user.id);
-      await supabase.auth.signOut();
-      localStorage.clear();
-      toast({ title: "✅ Account eliminato" });
-      window.location.href = '/login';
-    } catch (error: any) {
-      toast({ title: "❌ Errore eliminazione", description: error.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+  const handleRequestAccountDeletion = () => {
+    const subject = 'Account deletion request — M1SSION';
+    const body = `Hello,
+I would like to request the deletion of my M1SSION account and associated personal data.
+
+Account email: ${user?.email ?? '(unknown)'}
+User ID: ${user?.id ?? '(unknown)'}
+
+Please confirm the deletion and the estimated processing time.
+Thank you.`;
+    const mailtoUrl = `mailto:contact@m1ssion.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoUrl;
   };
 
   return (
@@ -192,7 +181,7 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
           </div>
         </GlassCard>
 
-        {/* Delete Account */}
+        {/* Danger Zone — Request Account Deletion via mailto */}
         <GlassCard style={{ border: '1px solid rgba(239, 68, 68, 0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <Trash2 style={{ width: '20px', height: '20px', color: '#EF4444' }} />
@@ -200,52 +189,25 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
           </div>
 
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginBottom: '12px' }}>
-            ⚠️ {t('delete_account_warning')}
+            {t('request_account_deletion_desc')}
           </p>
 
-          {!showDeleteConfirm ? (
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '12px',
-                background: 'rgba(239, 68, 68, 0.15)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                color: '#EF4444',
-                fontSize: '14px',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              {t('delete_account_permanently')}
-            </button>
-          ) : (
-            <div style={{ background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px', padding: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                <AlertTriangle style={{ width: '20px', height: '20px', color: '#EF4444' }} />
-                <span style={{ color: '#EF4444', fontSize: '14px', fontWeight: 600 }}>{t('are_you_sure')}</span>
-              </div>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginBottom: '16px' }}>
-                {t('delete_account_confirm_text')}
-              </p>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  style={{ flex: 1, padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#FFFFFF', cursor: 'pointer' }}
-                >
-                  {t('cancel')}
-                </button>
-                <button
-                  onClick={handleDeleteAccount}
-                  disabled={loading}
-                  style={{ flex: 1, padding: '10px', borderRadius: '10px', background: '#EF4444', border: 'none', color: '#FFFFFF', cursor: 'pointer', opacity: loading ? 0.5 : 1 }}
-                >
-                  {loading ? t('deleting') : t('confirm_deletion')}
-                </button>
-              </div>
-            </div>
-          )}
+          <button
+            onClick={handleRequestAccountDeletion}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '12px',
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              color: '#EF4444',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {t('request_account_deletion_cta')}
+          </button>
         </GlassCard>
       </div>
 

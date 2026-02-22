@@ -1265,6 +1265,9 @@ export default function MapTiler3D() {
     } else if (geoStatus === 'idle') {
       enableGeo();
       toast.info('Attivazione geolocalizzazione...');
+    } else if (geoStatus === 'prompt' || geoStatus === 'granted') {
+      // Permission granted or waiting for first position — do NOT show "non disponibile"
+      // (avoids false negative right after user taps Allow on iOS)
     } else {
       toast.info('Geolocalizzazione non disponibile');
     }

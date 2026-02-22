@@ -27,6 +27,7 @@ import { CircularBackButton } from '@/components/ui/CircularBackButton';
 import { supabase } from '@/integrations/supabase/client';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import { isCapacitorNative, isCapacitorIOS } from '@/utils/capacitor';
 
 // Platform detection
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
@@ -98,11 +99,11 @@ const PaymentMethodsPage: React.FC = () => {
 
   const handleApplePaySetup = () => {
     // Analytics tracking
-    console.log('📊 Analytics: Apple Pay setup clicked');
+    console.log('📊 Analytics: In-app purchase setup clicked');
     
     toast({
-      title: "🍎 Apple Pay",
-      description: "La configurazione di Apple Pay sarà disponibile a breve. Resta sintonizzato!",
+      title: "🍎 Acquisto in-app",
+      description: "I pagamenti per contenuti digitali sono gestiti tramite acquisti in-app Apple.",
     });
   };
 
@@ -245,7 +246,7 @@ const PaymentMethodsPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Apple Pay */}
+              {/* In-App Purchase (iOS) */}
               {(isIOS || isCapacitor || true) && ( // Show on all platforms for demo
                 <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/10">
                   <div className="flex items-center gap-3">
@@ -253,7 +254,7 @@ const PaymentMethodsPage: React.FC = () => {
                       <span className="text-white text-lg">🍎</span>
                     </div>
                     <div>
-                      <p className="text-white font-medium">Apple Pay</p>
+                      <p className="text-white font-medium">Acquisto in-app</p>
                       <p className="text-white/60 text-xs">
                         {platformStatus.applePay === 'not_available' 
                           ? 'Non disponibile su questo dispositivo'
@@ -325,7 +326,8 @@ const PaymentMethodsPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Credit/Debit Cards */}
+          {/* Credit/Debit Cards - hidden on iOS (digital goods only via IAP) */}
+          {!(isCapacitorNative() && isCapacitorIOS()) && (
           <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-white font-orbitron flex items-center justify-between text-base">
@@ -453,6 +455,7 @@ const PaymentMethodsPage: React.FC = () => {
               )}
             </CardContent>
           </Card>
+          )}
 
           {/* In-App Purchases Notice */}
           <Card className="bg-blue-900/20 border-blue-500/30 backdrop-blur-sm">

@@ -1,5 +1,8 @@
 // © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
+// iOS App Review: use geolocationSafe on iOS native (Capacitor only → no "localhost" prompt)
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { watchPositionSafe, clearWatchSafe, type WatchHandle } from '@/utils/geolocationSafe';
+import { isCapacitorNative, isCapacitorIOS } from '@/utils/capacitor';
 
 type GeoStatus = 'idle' | 'prompt' | 'granted' | 'denied' | 'blocked' | 'error';
 type Pos = { lat: number; lng: number; acc?: number | null };
@@ -41,7 +44,7 @@ export function useGeolocation() {
   const [position, setPosition] = useState<Pos | undefined>(undefined);
   const [error, setError] = useState<GeoError>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const watchId = useRef<number | undefined>();
+  const watchId = useRef<WatchHandle | undefined>();
 
   const enable = useCallback(() => {
     writeEnabled(true);
@@ -54,13 +57,13 @@ export function useGeolocation() {
     setEnabled(false);
     setStatus('idle');
     setError(null);
-    if (watchId.current != null) navigator.geolocation.clearWatch(watchId.current);
+    if (watchId.current != null) clearWatchSafe(watchId.current);
   }, []);
 
   // Retry function for when permission is blocked
   const retry = useCallback(() => {
     if (watchId.current != null) {
-      navigator.geolocation.clearWatch(watchId.current);
+      clearWatchSafe(watchId.current);
     }
     setRetryCount(prev => prev + 1);
     setStatus('prompt');
@@ -69,7 +72,10 @@ export function useGeolocation() {
 
   useEffect(() => {
     if (!enabled) return;
-    if (!('geolocation' in navigator)) {
+    // Use safe wrapper: on iOS native → Capacitor only (no navigator.geolocation → no "localhost" prompt)
+    const useCapacitorGeo = isCapacitorNative() && isCapacitorIOS();
+    const hasGeo = typeof navigator !== 'undefined' && 'geolocation' in navigator;
+    if (!hasGeo && !useCapacitorGeo) {
       setStatus('error');
       setError({ code: 0, message: 'Geolocation not supported' });
       return;
@@ -77,8 +83,8 @@ export function useGeolocation() {
     
     setStatus('prompt');
     
-    // Check Permissions API first (if available)
-    if ('permissions' in navigator) {
+    // Check Permissions API first (if available) — skip on iOS native to avoid web prompt
+    if (!useCapacitorGeo && 'permissions' in navigator) {
       navigator.permissions.query({ name: 'geolocation' as PermissionName }).then((result) => {
         console.log('📍 [Geo] Permission state:', result.state);
         
@@ -88,7 +94,6 @@ export function useGeolocation() {
           return;
         }
         
-        // Listen for permission changes
         result.onchange = () => {
           console.log('📍 [Geo] Permission changed to:', result.state);
           if (result.state === 'granted') {
@@ -99,12 +104,11 @@ export function useGeolocation() {
           }
         };
       }).catch(() => {
-        // Permissions API not available, continue with watchPosition
         console.log('📍 [Geo] Permissions API not available');
       });
     }
     
-    watchId.current = navigator.geolocation.watchPosition(
+    watchId.current = watchPositionSafe(
       (p) => {
         console.log('📍 [Geo] Position received:', { lat: p.coords.latitude, lng: p.coords.longitude });
         setStatus('granted');
@@ -115,19 +119,15 @@ export function useGeolocation() {
         console.warn('📍 [Geo] Error:', e.code, e.message);
         setError({ code: e.code, message: e.message });
         
-        // PERMISSION_DENIED = 1
-        if (e.code === e.PERMISSION_DENIED) {
-          // Check if this is a "blocked" state (user dismissed multiple times)
+        if (e.code === 1) {
           if (e.message.includes('blocked') || e.message.includes('ignored') || retryCount > 2) {
             setStatus('blocked');
           } else {
             setStatus('denied');
           }
-        } else if (e.code === e.POSITION_UNAVAILABLE) {
-          // Position unavailable - could be temporary
+        } else if (e.code === 2) {
           setStatus('error');
-        } else if (e.code === e.TIMEOUT) {
-          // Timeout - could be temporary
+        } else if (e.code === 3) {
           setStatus('error');
         } else {
           setStatus('error');
@@ -136,12 +136,12 @@ export function useGeolocation() {
       { 
         enableHighAccuracy: true, 
         maximumAge: 0, 
-        timeout: isIOSSafari() ? 15000 : 10000 // Longer timeout for iOS
+        timeout: isIOSSafari() ? 15000 : 10000
       }
     );
     
     return () => {
-      if (watchId.current != null) navigator.geolocation.clearWatch(watchId.current);
+      if (watchId.current != null) clearWatchSafe(watchId.current);
     };
   }, [enabled, retryCount]);
 

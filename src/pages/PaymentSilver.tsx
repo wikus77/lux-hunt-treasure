@@ -9,8 +9,10 @@ import ApplePayBox from "@/components/payments/ApplePayBox";
 import GooglePayBox from "@/components/payments/GooglePayBox";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 import { useStripePayment } from "@/hooks/useStripePayment";
+import { useTranslation } from "react-i18next";
 
 const PaymentSilver = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [showExplosion, setShowExplosion] = useState(false);
@@ -55,8 +57,8 @@ const PaymentSilver = () => {
       setTimeout(() => {
         setShowExplosion(false);
         setFadeOutExplosion(false);
-        toast.success("Abbonamento Silver attivato", {
-          description: "Il tuo abbonamento Silver è stato attivato con successo!",
+        toast.success(t('iap_subscription_silver'), {
+          description: t('iap_subscription_silver_desc'),
         });
         localStorage.setItem("subscription_plan", "Silver");
         // Forziamo l'aggiornamento della localStorage per attivare l'evento
@@ -70,8 +72,8 @@ const PaymentSilver = () => {
     if (isProcessing || loading) return;
     setIsProcessing(true);
     
-    toast.info("Collegamento a Stripe in corso...", {
-      description: "Verrai reindirizzato a Stripe per completare il pagamento in modo sicuro.",
+    toast.info(t('iap_connecting_stripe'), {
+      description: t('iap_redirect_stripe'),
       duration: 3000,
     });
     
@@ -79,8 +81,8 @@ const PaymentSilver = () => {
       await processSubscription("Silver", "card");
     } catch (error) {
       console.error("Errore durante il processo di pagamento:", error);
-      toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il processo di pagamento.",
+      toast.error(t('iap_error_generic'), {
+        description: t('iap_error_description'),
       });
     } finally {
       setIsProcessing(false);
@@ -91,17 +93,17 @@ const PaymentSilver = () => {
     if (isProcessing || loading) return;
     setIsProcessing(true);
     
-    toast.info("Inizializzazione Apple Pay...", {
-      description: "Preparazione del pagamento con Apple Pay in corso.",
+    toast.info(t('iap_init_inapp'), {
+      description: t('iap_init_description'),
       duration: 2000,
     });
     
     try {
       await processSubscription("Silver", "apple_pay");
     } catch (error) {
-      console.error("Errore durante il pagamento con Apple Pay:", error);
-      toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il pagamento con Apple Pay.",
+      console.error("Errore durante il pagamento:", error);
+      toast.error(t('iap_error_generic'), {
+        description: t('iap_error_description'),
       });
     } finally {
       setIsProcessing(false);
@@ -112,8 +114,8 @@ const PaymentSilver = () => {
     if (isProcessing || loading) return;
     setIsProcessing(true);
     
-    toast.info("Inizializzazione Google Pay...", {
-      description: "Preparazione del pagamento con Google Pay in corso.",
+    toast.info(t('iap_connecting_stripe'), {
+      description: t('iap_redirect_stripe'),
       duration: 2000,
     });
     
@@ -121,8 +123,8 @@ const PaymentSilver = () => {
       await processSubscription("Silver", "google_pay");
     } catch (error) {
       console.error("Errore durante il pagamento con Google Pay:", error);
-      toast.error("Errore di pagamento", {
-        description: "Si è verificato un errore durante il pagamento con Google Pay.",
+      toast.error(t('iap_error_generic'), {
+        description: t('iap_error_description'),
       });
     } finally {
       setIsProcessing(false);
@@ -186,7 +188,7 @@ const PaymentSilver = () => {
               onClick={() => setPaymentMethod('apple')}
               disabled={!paymentMethodsAvailable.applePayAvailable}
             >
-              <span className="text-sm">Apple Pay</span>
+              <span className="text-sm">{t('payment_method_inapp_label')}</span>
             </button>
             
             <button 

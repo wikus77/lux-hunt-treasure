@@ -19,6 +19,7 @@ import { isStripeAvailable, assertStripeAvailable } from '@/lib/stripe/stripeCli
 import { isCapacitorNative, isCapacitorIOS, getCapacitorPlatform } from '@/utils/capacitor';
 import { useIAP, getProductByCode } from '@/iap';
 import { assertStripeAllowedOnPlatform } from '@/lib/stripe/guard';
+import { useTranslation } from 'react-i18next';
 
 const stripePromise = getStripeSafe();
 
@@ -40,6 +41,7 @@ const StripeCheckoutContent: React.FC<{
   onSuccess: () => void; 
   onCancel: () => void;
 }> = ({ packCode, m1uAmount, priceCents, onSuccess, onCancel }) => {
+  const { t } = useTranslation();
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -72,7 +74,7 @@ const StripeCheckoutContent: React.FC<{
         });
 
         if (error) {
-          toast.error(`Errore: ${error.message || 'Creazione pagamento fallita'}`);
+          toast.error(`${t('error')}: ${error.message || t('iap_error_generic')}`);
           return;
         }
 
@@ -80,15 +82,15 @@ const StripeCheckoutContent: React.FC<{
         if (clientSecretValue) {
           setClientSecret(clientSecretValue);
         } else {
-          toast.error('Errore nella configurazione del pagamento');
+          toast.error(t('iap_error_generic'));
         }
       } catch (error: any) {
         // 🛡️ Handle Store Compliance errors specifically
         if (error?.name === 'StoreComplianceError') {
           console.error('[M1U Payment] ❌ Store compliance violation:', error.message);
-          toast.error('Usa acquisti in-app per questa piattaforma');
+          toast.error(t('iap_use_inapp_platform'));
         } else {
-          toast.error('Errore nel sistema di pagamento');
+          toast.error(t('iap_error_generic'));
         }
       }
     };
@@ -104,12 +106,12 @@ const StripeCheckoutContent: React.FC<{
       assertStripeAllowedOnPlatform();
     } catch (e: any) {
       console.error('[M1U Payment] ❌ Blocked: Stripe payment on iOS native');
-      toast.error('Usa acquisti in-app su questa piattaforma');
+      toast.error(t('iap_use_inapp_platform'));
       return;
     }
 
     if (!stripe || !elements || !clientSecret) {
-      toast.error('Sistema di pagamento non pronto');
+      toast.error(t('iap_payment_system_not_ready'));
       return;
     }
 
@@ -117,7 +119,7 @@ const StripeCheckoutContent: React.FC<{
 
     const cardElement = elements.getElement(CardElement);
     if (!cardElement) {
-      toast.error('Elemento carta non trovato');
+      toast.error(t('iap_card_element_not_found'));
       setLoading(false);
       return;
     }
@@ -131,7 +133,7 @@ const StripeCheckoutContent: React.FC<{
       });
 
       if (error) {
-        toast.error(`Pagamento fallito: ${error.message || 'Errore sconosciuto'}`);
+        toast.error(`${t('iap_payment_failed')}: ${error.message || t('error')}`);
       } else if (paymentIntent.status === 'succeeded') {
         try {
           const { data: creditData, error: creditError } = await supabase.functions.invoke('credit-m1u-purchase', {
@@ -144,7 +146,7 @@ const StripeCheckoutContent: React.FC<{
           });
 
           if (creditError) {
-            toast.error('Pagamento ricevuto ma errore nell\'accredito M1U. Contatta il supporto.');
+            toast.error(t('iap_payment_received_credit_error'));
             return;
           }
 
@@ -154,14 +156,14 @@ const StripeCheckoutContent: React.FC<{
             }));
             onSuccess();
           } else {
-            toast.error('Errore nell\'accredito M1U. Contatta il supporto.');
+            toast.error(t('iap_error_m1u_credit'));
           }
         } catch {
-          toast.error('Errore nell\'accredito M1U. Contatta il supporto.');
+          toast.error(t('iap_error_m1u_credit'));
         }
       }
     } catch {
-      toast.error('Errore nel processare il pagamento');
+      toast.error(t('iap_error_generic'));
     } finally {
       setLoading(false);
     }
@@ -264,6 +266,7 @@ const NativeIAPCheckoutContent: React.FC<{
   onSuccess: () => void;
   onCancel: () => void;
 }> = ({ packName, packCode, m1uAmount, priceEur, onSuccess, onCancel }) => {
+  const { t } = useTranslation();
   const platform = getCapacitorPlatform();
   const { status, products, error, isIAPReady, purchase, initIAP, isNativeIAPAvailable } = useIAP();
   const [purchasing, setPurchasing] = useState(false);
@@ -348,18 +351,18 @@ const NativeIAPCheckoutContent: React.FC<{
       console.log('[IAP_FIX_V4] purchase() result', result);
       
       if (result.success) {
-        toast.success(`✅ ${m1uAmount} M1U aggiunti!`);
+        toast.success(`✅ ${t('iap_m1u_added', { count: m1uAmount })}`);
         onSuccess();
       } else if (result.cancelled) {
         // 🔍 [IAP_FIX_V4] User cancelled - NOT an error, just close gracefully
         console.log('[IAP_FIX_V4] User cancelled purchase - resetting state');
-        toast('Acquisto annullato', { icon: '↩️' });
+        toast(t('iap_purchase_cancelled'), { icon: '↩️' });
         // Don't show red error, just reset
         setLocalError(null);
       } else if (result.pendingValidation) {
         // 🔧 [IAP_FIX_V7] Purchase OK but validation pending - show info message
         console.log('[IAP_FIX_V7] Purchase pending validation - showing info');
-        toast('Acquisto ricevuto! Verifica in corso...', { 
+        toast(t('iap_purchase_received_verifying'), { 
           icon: '⏳',
           duration: 5000,
         });
@@ -367,11 +370,11 @@ const NativeIAPCheckoutContent: React.FC<{
         setLocalError(null);
         onSuccess(); // Close modal, but user should check later
       } else {
-        setLocalError(result.error || 'Acquisto non completato');
+        setLocalError(result.error || t('iap_error_generic'));
       }
     } catch (e) {
       console.error('[IAP_FIX_V4] handlePurchase() exception', e);
-      setLocalError('Errore durante l\'acquisto.');
+      setLocalError(t('iap_error_purchase'));
     } finally {
       setPurchasing(false);
     }
@@ -403,7 +406,7 @@ const NativeIAPCheckoutContent: React.FC<{
             letterSpacing: '-0.4px',
             marginBottom: '4px' 
           }}>
-            Errore di connessione
+            {t('iap_connection_error')}
           </p>
           <p style={{ 
             color: 'rgba(255,255,255,0.6)', 
@@ -411,10 +414,9 @@ const NativeIAPCheckoutContent: React.FC<{
             lineHeight: '1.4',
             marginBottom: '20px' 
           }}>
-            {localError || error || productMappingError || 'Impossibile connettersi allo store.'}
+            {localError || error || productMappingError || t('iap_store_connection_failed')}
           </p>
           <div style={{ display: 'flex', gap: '12px' }}>
-            {/* Apple-style PRIMARY (in error context) */}
             <button 
               onClick={handleRetry} 
               style={{ 
@@ -431,9 +433,8 @@ const NativeIAPCheckoutContent: React.FC<{
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              Riprova
+              {t('iap_retry')}
             </button>
-            {/* Apple-style SECONDARY (in error context) */}
             <button 
               onClick={onCancel} 
               style={{ 
@@ -459,7 +460,7 @@ const NativeIAPCheckoutContent: React.FC<{
       {!hasError && status === 'initializing' && (
         <div style={{ textAlign: 'center', padding: '24px' }}>
           <div style={{ width: '32px', height: '32px', border: '2px solid rgba(0, 209, 255, 0.3)', borderTopColor: '#00D1FF', borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 1s linear infinite' }} />
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>Connessione allo store...</p>
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>{t('iap_connect_store')}</p>
         </div>
       )}
 
@@ -498,24 +499,13 @@ const NativeIAPCheckoutContent: React.FC<{
                   borderRadius: '50%',
                   animation: 'spin 0.8s linear infinite',
                 }} />
-                <span>Elaborazione...</span>
+                <span>{t('iap_processing')}</span>
               </>
             ) : (
-              <>
-                {/* Apple Logo SVG */}
-                <svg 
-                  viewBox="0 0 384 512" 
-                  style={{ width: '20px', height: '20px', fill: '#FFFFFF', marginRight: '6px' }}
-                >
-                  <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
-                </svg>
-                <span style={{ fontWeight: 600 }}>Pay</span>
-                <span style={{ marginLeft: '4px' }}>{displayPrice}</span>
-              </>
+              <span style={{ fontWeight: 600 }}>{t('iap_buy_price', { price: displayPrice })}</span>
             )}
           </button>
 
-          {/* SECONDARY Button - text link style */}
           <button
             onClick={onCancel}
             disabled={purchasing}
@@ -533,14 +523,13 @@ const NativeIAPCheckoutContent: React.FC<{
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            Annulla
+            {t('iap_cancel')}
           </button>
         </>
       )}
 
       {!hasError && !isIAPReady && status !== 'initializing' && (
         <>
-          {/* BLACK PRIMARY Button - Apple Pay style */}
           <button
             onClick={handleRetry}
             style={{
@@ -561,9 +550,8 @@ const NativeIAPCheckoutContent: React.FC<{
             }}
           >
             <Smartphone style={{ width: '20px', height: '20px' }} />
-            Connetti allo Store
+            {t('iap_connect_store')}
           </button>
-          {/* SECONDARY Button */}
           <button 
             onClick={onCancel} 
             style={{ 
@@ -579,13 +567,13 @@ const NativeIAPCheckoutContent: React.FC<{
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            Annulla
+            {t('iap_cancel')}
           </button>
         </>
       )}
 
       <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', textAlign: 'center', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-        🔒 Pagamento sicuro tramite {platform === 'ios' ? 'Apple' : 'Google'}
+        🔒 {t('iap_footer_secure')}
       </p>
     </div>
   );

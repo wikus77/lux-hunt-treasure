@@ -43,7 +43,7 @@ const ApplePayBox = ({ onApplePay }: ApplePayBoxProps) => {
   }, []);
 
   const handleClick = () => {
-    console.log("Apple Pay button clicked");
+    console.log("In-app purchase button clicked");
     onApplePay();
   };
 
@@ -52,12 +52,12 @@ const ApplePayBox = ({ onApplePay }: ApplePayBoxProps) => {
       <div className="text-center p-4">
         <div className="border border-gray-700 rounded-md p-6 mb-4 bg-gray-900">
           <CreditCardIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p className="mb-6 text-gray-400">Apple Pay non è disponibile su questo dispositivo</p>
+          <p className="mb-6 text-gray-400">Metodo non disponibile su iOS. Usa acquisti in-app.</p>
           <Button
             disabled={true}
             className="w-full bg-gray-700 cursor-not-allowed"
           >
-            Apple Pay non disponibile
+            Non disponibile su iOS
           </Button>
         </div>
       </div>
@@ -70,12 +70,12 @@ const ApplePayBox = ({ onApplePay }: ApplePayBoxProps) => {
         <div className="flex items-center justify-center mb-4">
           <AppleIcon className="h-12 w-12" />
         </div>
-        <p className="mb-6">Paga in modo veloce e sicuro con Apple Pay</p>
+        <p className="mb-6">Completa l'acquisto in-app in modo sicuro</p>
         <Button
           onClick={handleClick}
           className="w-full bg-black hover:bg-gray-900 text-white font-medium"
         >
-          Paga con Apple Pay
+          Completa acquisto in-app
         </Button>
       </div>
     </div>

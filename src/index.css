@@ -1579,6 +1579,72 @@ html:has(.sn-page) .text-white:not(.leaderboard-card-glass .text-white):not(.m1-
   color: #ffffff !important;
 }
 
+/* 🔧 WKWEBVIEW MODAL READABILITY: Reward popup (body) - muted/gray/placeholder/disabled
+   RewardZonePopup uses createPortal(..., document.body) + .m1-reward-zone-popup; no portal ID.
+   Scope: only inside .m1-reward-zone-popup. */
+.m1-reward-zone-popup .text-muted-foreground,
+.m1-reward-zone-popup [class*="text-muted-foreground"],
+.m1-reward-zone-popup .text-gray-400,
+.m1-reward-zone-popup .text-gray-500 {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+.m1-reward-zone-popup .text-foreground,
+.m1-reward-zone-popup [class*="text-foreground"]:not([class*="muted"]) {
+  color: #ffffff !important;
+}
+.m1-reward-zone-popup input::placeholder,
+.m1-reward-zone-popup textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+.m1-reward-zone-popup input:disabled,
+.m1-reward-zone-popup textarea:disabled {
+  opacity: 1 !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* 🔧 FIX 21/02/2026: MODAL PORTAL - Leggibilità testi (iOS WKWebView)
+   #m1-modal-portal, #m1-settings-section-portal, #m1-profile-portal: muted/foreground
+   e gray bianchi, placeholder e disabled leggibili. Scope-safe: nessun impatto fuori modali. */
+#m1-modal-portal .text-muted-foreground,
+#m1-modal-portal [class*="text-muted-foreground"],
+#m1-settings-section-portal .text-muted-foreground,
+#m1-settings-section-portal [class*="text-muted-foreground"],
+#m1-profile-portal .text-muted-foreground,
+#m1-profile-portal [class*="text-muted-foreground"],
+#m1-modal-portal .text-gray-400,
+#m1-modal-portal .text-gray-500,
+#m1-settings-section-portal .text-gray-400,
+#m1-settings-section-portal .text-gray-500,
+#m1-profile-portal .text-gray-400,
+#m1-profile-portal .text-gray-500 {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+#m1-modal-portal .text-foreground,
+#m1-modal-portal [class*="text-foreground"]:not([class*="muted"]),
+#m1-settings-section-portal .text-foreground,
+#m1-settings-section-portal [class*="text-foreground"]:not([class*="muted"]),
+#m1-profile-portal .text-foreground,
+#m1-profile-portal [class*="text-foreground"]:not([class*="muted"]) {
+  color: #ffffff !important;
+}
+#m1-modal-portal input::placeholder,
+#m1-modal-portal textarea::placeholder,
+#m1-settings-section-portal input::placeholder,
+#m1-settings-section-portal textarea::placeholder,
+#m1-profile-portal input::placeholder,
+#m1-profile-portal textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+#m1-modal-portal input:disabled,
+#m1-modal-portal textarea:disabled,
+#m1-settings-section-portal input:disabled,
+#m1-settings-section-portal textarea:disabled,
+#m1-profile-portal input:disabled,
+#m1-profile-portal textarea:disabled {
+  opacity: 1 !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
 .sn-page .text-white\/70:not(.m1-folder-glass--graphite .text-white\/70):not(.m1-folder-glass .text-white\/70),
 .sn-page .text-white\/80:not(.m1-folder-glass--graphite .text-white\/80):not(.m1-folder-glass .text-white\/80),
 html:has(.sn-page) .text-white\/70:not(.m1-folder-glass--graphite .text-white\/70),
