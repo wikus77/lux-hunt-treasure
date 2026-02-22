@@ -166,17 +166,12 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
   };
   const subtitleLines = getSubtitleLines();
 
-  // Check se mostrare il video (admin sempre, altri controllano localStorage)
+  // Check se mostrare il video (tutti, incluso admin, rispettano "Non mostrare più")
   const shouldShowVideo = useCallback(() => {
     const val = typeof localStorage !== 'undefined' ? localStorage.getItem(storageKey) : null;
     if (import.meta.env.DEV) console.log('[VIDEO DEBUG] shouldShowVideo', storageKey, val, 'href', typeof location !== 'undefined' ? location.href : '');
-    const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
-    if (isAdmin) {
-      localStorage.removeItem(storageKey);
-      return true;
-    }
     return val !== 'true';
-  }, [userEmail, storageKey]);
+  }, [storageKey]);
 
   // Create portal
   useEffect(() => {
