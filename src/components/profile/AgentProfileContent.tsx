@@ -15,6 +15,7 @@ import { useProfileRealtime } from '@/hooks/useProfileRealtime';
 import { HelpModal } from '@/components/help/HelpModal';
 import { LearnModal } from '@/components/learn/LearnModal';
 import { InviteFriendsModal } from '@/components/invite/InviteFriendsModal';
+import { useOpenSettingsSection } from '@/contexts/OpenSettingsSectionContext';
 
 interface AgentProfileContentProps {
   profileImage?: string | null;
@@ -32,9 +33,19 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
   const { currentRank, pulseEnergy } = usePulseEnergy();
   const { subscription } = useProfileSubscription();
   const { profileData } = useProfileRealtime();
+  const openSettings = useOpenSettingsSection();
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showLearnModal, setShowLearnModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+
+  const openSettingsSection = (sectionId: 'legal' | 'security' | 'privacy') => {
+    if (openSettings) {
+      onClose();
+      openSettings.openSettingsWithSection(sectionId);
+    } else {
+      goTo(`/settings/${sectionId}`);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -227,15 +238,15 @@ export const AgentProfileContent: React.FC<AgentProfileContentProps> = ({
         {/* Menu 1 */}
         <GlassCard style={{ marginBottom: '16px', padding: 0 }}>
           <MenuItem icon={HelpCircle} label={t('help')} onClick={() => setShowHelpModal(true)} />
-          <MenuItem icon={FileText} label={t('legal_documents')} onClick={() => goTo('/settings/legal')} />
+          <MenuItem icon={FileText} label={t('legal_documents')} onClick={() => openSettingsSection('legal')} />
           <MenuItem icon={GraduationCap} label={t('learn')} onClick={() => setShowLearnModal(true)} />
           <MenuItem icon={Mail} label={t('inbox')} onClick={() => goTo('/notifications')} badge={3} last />
         </GlassCard>
 
         {/* Menu 2 */}
         <GlassCard style={{ marginBottom: '16px', padding: 0 }}>
-          <MenuItem icon={Shield} label={t('security')} onClick={() => goTo('/settings/security')} />
-          <MenuItem icon={Eye} label={t('privacy')} onClick={() => goTo('/settings/privacy')} />
+          <MenuItem icon={Shield} label={t('security')} onClick={() => openSettingsSection('security')} />
+          <MenuItem icon={Eye} label={t('privacy')} onClick={() => openSettingsSection('privacy')} />
           <MenuItem icon={Bell} label={t('notifications')} onClick={() => goTo('/settings/notifications')} last />
         </GlassCard>
 

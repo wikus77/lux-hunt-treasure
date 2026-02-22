@@ -13,16 +13,18 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   originRect?: DOMRect | null;
+  /** Apri direttamente questa sezione (es. da Profilo → Legal/Security/Privacy) */
+  initialSection?: string | null;
 }
 
-export function SettingsModal({ isOpen, onClose, originRect = null }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, originRect = null, initialSection = null }: SettingsModalProps) {
   return (
     <SettingsFlipOverlay
       open={isOpen}
       originRect={originRect}
       onClose={onClose}
     >
-      <SettingsContent onClose={onClose} />
+      <SettingsContent onClose={onClose} initialSection={initialSection} />
     </SettingsFlipOverlay>
   );
 }

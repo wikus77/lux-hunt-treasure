@@ -23,6 +23,8 @@ const AppInfoSectionContent = lazy(() => import('./sections/AppInfoSectionConten
 
 interface SettingsContentProps {
   onClose: () => void;
+  /** Sezione da aprire subito (es. 'legal' | 'security' | 'privacy' da quick link Profilo) */
+  initialSection?: string | null;
 }
 
 // Section loading fallback
@@ -45,13 +47,20 @@ const SectionLoadingFallback = () => (
   </div>
 );
 
-export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
+export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose, initialSection: initialSectionProp = null }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   
   // State per gestire sezione aperta
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [sectionOriginRect, setSectionOriginRect] = useState<DOMRect | null>(null);
+
+  // Apri subito la sezione richiesta (es. da Profilo → Legal/Security/Privacy)
+  useEffect(() => {
+    if (initialSectionProp) {
+      setOpenSection(initialSectionProp);
+    }
+  }, [initialSectionProp]);
 
   const handleRequestAccountDeletion = () => {
     const subject = 'Account deletion request — M1SSION';

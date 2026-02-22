@@ -183,11 +183,35 @@ const BottomNavigationComponent = () => {
     if (isPWA) setTimeout(() => window.scrollTo(0, 0), 100);
   }, [playClassificaSound, navigate, isPWA]);
 
-  // PWA compatible navigation handler
+  // 🎬 Chiavi localStorage per "Non mostrare più" — stabili, stesse usate da BriefingFlipOverlay
+  const VIDEO_DISMISSED_KEYS: Record<string, string> = {
+    '/home': 'm1_home_video_dismissed',
+    '/map-3d-tiler': 'm1_map_video_dismissed',
+    '/buzz': 'm1_buzz_video_modal_dismissed',
+    '/intelligence': 'm1_aion_video_dismissed',
+    '/notifications': 'm1_notifiche_video_dismissed',
+    '/leaderboard': 'm1_classifica_video_dismissed',
+  };
+
+  // PWA compatible navigation handler — gate "don't show again" in parent (iOS WKWebView-safe)
   const handleNavigationPWA = async (link: typeof links[0], e: React.MouseEvent) => {
     e.preventDefault();
     hapticLight();
     
+    const storageKey = VIDEO_DISMISSED_KEYS[link.path];
+    if (storageKey && typeof localStorage !== 'undefined' && localStorage.getItem(storageKey) === 'true') {
+      // Già "Non mostrare più": naviga senza aprire il video
+      switch (link.path) {
+        case '/home': handleHomeVideoContinue(); return;
+        case '/map-3d-tiler': handleMapVideoContinue(); return;
+        case '/buzz': handleBuzzVideoContinue(); return;
+        case '/intelligence': handleAionVideoContinue(); return;
+        case '/notifications': handleNotificheVideoContinue(); return;
+        case '/leaderboard': handleClassificaVideoContinue(); return;
+        default: break;
+      }
+    }
+
     // 🎬 Mostra video modal per ogni pagina
     switch (link.path) {
       case '/home':

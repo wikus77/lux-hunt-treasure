@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import ProfileDropdown from "@/components/profile/ProfileDropdown";
 import { motion } from "framer-motion";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
@@ -15,6 +15,7 @@ import ReferralCodeDisplay from "@/components/layout/header/ReferralCodeDisplay"
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import MinimalHeaderStrip from "@/components/layout/MinimalHeaderStrip";
 import { SettingsModal } from "@/components/settings/SettingsModal";
+import { OpenSettingsSectionProvider } from "@/contexts/OpenSettingsSectionContext";
 // 🆕 Import M1UPill for header
 import M1UPill from "@/features/m1u/M1UPill";
 
@@ -72,6 +73,17 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [homeHide, setHomeHide] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [settingsOriginRect, setSettingsOriginRect] = useState<DOMRect | null>(null);
+  const [settingsInitialSection, setSettingsInitialSection] = useState<string | null>(null);
+
+  const openSettingsWithSection = useCallback((sectionId: string) => {
+    setSettingsInitialSection(sectionId);
+    setIsSettingsModalOpen(true);
+  }, []);
+
+  const handleCloseSettingsModal = useCallback(() => {
+    setIsSettingsModalOpen(false);
+    setSettingsInitialSection(null);
+  }, []);
   
   // 🛡️ BUZZ ROUTE GUARD: Disable scroll-hide on /buzz to prevent freeze
   const hideHeader = isBuzzRoute ? false : (isMapRoute ? mapHide : (isHomeRoute ? homeHide : windowHide));
@@ -274,7 +286,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const isMap = location === '/map';
 
   return (
-    <>
+    <OpenSettingsSectionProvider onRequestOpen={openSettingsWithSection}>
       <MinimalHeaderStrip show={false}>
         {/* Hidden - Legacy support */}
       </MinimalHeaderStrip>
@@ -464,10 +476,11 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       {/* Settings Modal - FULLSCREEN con animazione FLIP */}
       <SettingsModal 
         isOpen={isSettingsModalOpen} 
-        onClose={() => setIsSettingsModalOpen(false)}
+        onClose={handleCloseSettingsModal}
         originRect={settingsOriginRect}
+        initialSection={settingsInitialSection}
       />
-    </>
+    </OpenSettingsSectionProvider>
   );
 };
 
