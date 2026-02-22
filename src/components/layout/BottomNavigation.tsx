@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT
 import React, { useCallback, useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Home, MessageSquare, Circle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -28,6 +29,7 @@ const CLASSIFICA_VIDEO = '/assets/video/CLASSIFICA-BRIF-VIDEO.mp4';
 const NOTIFICHE_VIDEO = '/assets/video/NOTIFICHE-BRIF-VIDEO.mp4';
 
 const BottomNavigationComponent = () => {
+  const { t } = useTranslation();
   // 🎬 State per i modal video
   const [showBuzzVideoModal, setShowBuzzVideoModal] = useState(false);
   const [showHomeVideoModal, setShowHomeVideoModal] = useState(false);
@@ -357,8 +359,8 @@ const BottomNavigationComponent = () => {
         onContinue={handleBuzzVideoContinue}
         videoSrc={BUZZ_VIDEO}
         storageKey="m1_buzz_video_modal_dismissed"
-        title="BRIEFING BUZZ"
-        subtitle="Guarda il video introduttivo prima di iniziare"
+        title={t('tutorial_buzz_title')}
+        subtitle={t('tutorial_buzz_subtitle')}
         enableSubtitles="buzz"
       />
       
@@ -369,8 +371,8 @@ const BottomNavigationComponent = () => {
         onContinue={handleHomeVideoContinue}
         videoSrc={HOME_VIDEO}
         storageKey="m1_home_video_dismissed"
-        title="M1SSION HOME"
-        subtitle="Briefing: Benvenuto nel tuo quartier generale"
+        title={t('tutorial_home_title')}
+        subtitle={t('tutorial_home_subtitle')}
         enableSubtitles="home"
       />
       
@@ -381,8 +383,8 @@ const BottomNavigationComponent = () => {
         onContinue={handleMapVideoContinue}
         videoSrc={MAP_VIDEO}
         storageKey="m1_map_video_dismissed"
-        title="BUZZ MAP"
-        subtitle="Briefing: La mappa della missione"
+        title={t('tutorial_buzz_map_title')}
+        subtitle={t('tutorial_buzz_map_subtitle')}
         enableSubtitles="buzz_map"
       />
       
@@ -393,8 +395,8 @@ const BottomNavigationComponent = () => {
         onContinue={handleAionVideoContinue}
         videoSrc={AION_VIDEO}
         storageKey="m1_aion_video_dismissed"
-        title="AION AI"
-        subtitle="Briefing: L'intelligenza artificiale al tuo servizio"
+        title={t('tutorial_aion_title')}
+        subtitle={t('tutorial_aion_subtitle')}
         enableSubtitles="aion"
       />
       
@@ -405,8 +407,8 @@ const BottomNavigationComponent = () => {
         onContinue={handleClassificaVideoContinue}
         videoSrc={CLASSIFICA_VIDEO}
         storageKey="m1_classifica_video_dismissed"
-        title="CLASSIFICA"
-        subtitle="Briefing: La classifica dei migliori agenti"
+        title={t('tutorial_classifica_title')}
+        subtitle={t('tutorial_classifica_subtitle')}
         enableSubtitles="classifica"
       />
       
@@ -417,8 +419,8 @@ const BottomNavigationComponent = () => {
         onContinue={handleNotificheVideoContinue}
         videoSrc={NOTIFICHE_VIDEO}
         storageKey="m1_notifiche_video_dismissed"
-        title="NOTIFICHE"
-        subtitle="Briefing: Le notifiche della missione"
+        title={t('tutorial_notifiche_title')}
+        subtitle={t('tutorial_notifiche_subtitle')}
         enableSubtitles="notifiche"
       />
     </div>

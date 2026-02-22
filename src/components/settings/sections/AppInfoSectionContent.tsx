@@ -119,30 +119,31 @@ const AppInfoSectionContent: React.FC<AppInfoSectionContentProps> = ({ onClose }
           </div>
         </GlassCard>
 
-        {/* Links */}
-        <GlassCard style={{ marginBottom: '16px' }}>
-          <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600, marginBottom: '16px', background: 'linear-gradient(90deg, #A855F7, #EC4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            {t('links')}
-          </h3>
-
-          <button style={{
-            width: '100%',
-            padding: '14px 16px',
-            borderRadius: '12px',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            cursor: 'pointer',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Heart style={{ width: '18px', height: '18px', color: '#EF4444' }} />
-              <span style={{ color: '#FFFFFF', fontSize: '14px' }}>{t('support_project')}</span>
-            </div>
-            <ExternalLink style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.3)' }} />
-          </button>
-        </GlassCard>
+        {/* Links / Support the Project — hidden per scope (APPINFO-20260222) */}
+        {false && (
+          <GlassCard style={{ marginBottom: '16px' }}>
+            <h3 style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600, marginBottom: '16px', background: 'linear-gradient(90deg, #A855F7, #EC4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              {t('links')}
+            </h3>
+            <button style={{
+              width: '100%',
+              padding: '14px 16px',
+              borderRadius: '12px',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Heart style={{ width: '18px', height: '18px', color: '#EF4444' }} />
+                <span style={{ color: '#FFFFFF', fontSize: '14px' }}>{t('support_project')}</span>
+              </div>
+              <ExternalLink style={{ width: '16px', height: '16px', color: 'rgba(255,255,255,0.3)' }} />
+            </button>
+          </GlassCard>
+        )}
 
         {/* Copyright */}
         <div style={{ textAlign: 'center', padding: '16px 0' }}>

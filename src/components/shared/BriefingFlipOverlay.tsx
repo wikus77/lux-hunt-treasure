@@ -10,6 +10,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { X, VolumeX, Volume2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { getLocale } from '@/i18n/i18n';
 
 const ADMIN_EMAILS = ['wikus77@hotmail.it'];
@@ -136,10 +137,12 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
   videoSrc,
   storageKey,
   title,
-  subtitle = 'Guarda il video introduttivo prima di iniziare',
+  subtitle,
   enableSubtitles,
 }) => {
+  const { t } = useTranslation();
   const [isClosing, setIsClosing] = useState(false);
+  const subtitleDisplay = subtitle ?? t('tutorial_default_subtitle');
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [subtitleIndex, setSubtitleIndex] = useState(-1);
@@ -393,7 +396,7 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
                   backdropFilter: 'blur(8px)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                 }}
-                aria-label="Chiudi"
+                aria-label={t('tutorial_close')}
               >
                 <X className="w-5 h-5 text-white" strokeWidth={2.5} />
               </button>
@@ -407,7 +410,7 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
                 background: 'rgba(0, 0, 0, 0.8)',
               }}
             >
-              {subtitle}
+              {subtitleDisplay}
             </p>
 
             {/* Video Container - MASSIMIZZATO */}
@@ -449,7 +452,7 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
                       <VolumeX className="w-8 h-8 text-white" />
-                      <span className="text-white text-xs font-medium">Tocca per l'audio</span>
+                      <span className="text-white text-xs font-medium">{t('tutorial_tap_audio')}</span>
                     </motion.div>
                   </motion.div>
                 )}
@@ -534,7 +537,7 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
                 whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.18)' }}
                 whileTap={{ scale: 0.98 }}
               >
-                CONTINUA →
+                {t('tutorial_continue')}
               </motion.button>
               
               {/* Toggle - leggibile */}
@@ -545,7 +548,7 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
                 }}
                 onClick={handleDismissForever}
               >
-                Non mostrare più questo video
+                {t('tutorial_dont_show_again')}
               </button>
             </div>
           </motion.div>
