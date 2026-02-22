@@ -15,6 +15,10 @@ import { getLocale } from '@/i18n/i18n';
 
 const ADMIN_EMAILS = ['wikus77@hotmail.it'];
 
+const __m1dbg = (...args: unknown[]) => {
+  if (import.meta.env.DEV) console.log('[VIDEO DEBUG]', ...args);
+};
+
 // FASE 3 — Testi autorizzati (IMMUTABILI) per sottotitoli M1SSION HOME
 const SUBTITLES_EN = [
   'Agent, this is M1SSION.\nA limited-time hunt with real prizes.',
@@ -169,9 +173,7 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
   // Check se mostrare il video (admin sempre, altri controllano localStorage)
   const shouldShowVideo = useCallback(() => {
     const val = typeof localStorage !== 'undefined' ? localStorage.getItem(storageKey) : null;
-    if (import.meta.env.DEV) {
-      console.log('[VIDEO DEBUG] shouldShowVideo', storageKey, val);
-    }
+    __m1dbg('SHOULD_SHOW', { storageKey, val, href: typeof location !== 'undefined' ? location.href : '', origin: typeof location !== 'undefined' ? location.origin : '' });
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
     if (isAdmin) {
       localStorage.removeItem(storageKey);
@@ -263,13 +265,11 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
   // Dismiss forever — commit setItem before close to avoid unmount race (e.g. iOS WKWebView)
   const handleDismissForever = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    if (import.meta.env.DEV) {
-      console.log('[VIDEO DEBUG] dismiss click', storageKey);
-    }
+    const before = typeof localStorage !== 'undefined' ? localStorage.getItem(storageKey) : null;
+    __m1dbg('DISMISS_CLICK', { storageKey, href: typeof location !== 'undefined' ? location.href : '', origin: typeof location !== 'undefined' ? location.origin : '', before });
     safeSet(storageKey, 'true');
-    if (import.meta.env.DEV) {
-      console.log('[VIDEO DEBUG] after set', storageKey, typeof localStorage !== 'undefined' ? localStorage.getItem(storageKey) : 'N/A');
-    }
+    const after = typeof localStorage !== 'undefined' ? localStorage.getItem(storageKey) : null;
+    __m1dbg('DISMISS_AFTER_SET', { storageKey, after });
     Promise.resolve().then(() => {
       handleClose();
     });
