@@ -203,6 +203,9 @@ const BottomNavigationComponent = () => {
     hapticLight();
     
     const storageKey = VIDEO_DISMISSED_KEYS[link.path];
+    if (import.meta.env.DEV && storageKey) {
+      console.log('[VIDEO DEBUG] navigation', link.path, storageKey, safeGet(storageKey));
+    }
     if (storageKey && safeGet(storageKey) === 'true') {
       // Già "Non mostrare più": naviga senza aprire il video
       switch (link.path) {

@@ -168,12 +168,16 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
 
   // Check se mostrare il video (admin sempre, altri controllano localStorage)
   const shouldShowVideo = useCallback(() => {
+    const val = typeof localStorage !== 'undefined' ? localStorage.getItem(storageKey) : null;
+    if (import.meta.env.DEV) {
+      console.log('[VIDEO DEBUG] shouldShowVideo', storageKey, val);
+    }
     const isAdmin = userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase());
     if (isAdmin) {
       localStorage.removeItem(storageKey);
       return true;
     }
-    return localStorage.getItem(storageKey) !== 'true';
+    return val !== 'true';
   }, [userEmail, storageKey]);
 
   // Create portal
@@ -259,7 +263,13 @@ export const BriefingFlipOverlay: React.FC<BriefingFlipOverlayProps> = ({
   // Dismiss forever — commit setItem before close to avoid unmount race (e.g. iOS WKWebView)
   const handleDismissForever = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    if (import.meta.env.DEV) {
+      console.log('[VIDEO DEBUG] dismiss click', storageKey);
+    }
     safeSet(storageKey, 'true');
+    if (import.meta.env.DEV) {
+      console.log('[VIDEO DEBUG] after set', storageKey, typeof localStorage !== 'undefined' ? localStorage.getItem(storageKey) : 'N/A');
+    }
     Promise.resolve().then(() => {
       handleClose();
     });
