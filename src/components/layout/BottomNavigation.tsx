@@ -28,10 +28,6 @@ const AION_VIDEO = '/assets/video/AION-BRIF-VIDEO.mp4';
 const CLASSIFICA_VIDEO = '/assets/video/CLASSIFICA-BRIF-VIDEO.mp4';
 const NOTIFICHE_VIDEO = '/assets/video/NOTIFICHE-BRIF-VIDEO.mp4';
 
-const __m1dbg = (...args: unknown[]) => {
-  if (import.meta.env.DEV) console.log('[VIDEO DEBUG]', ...args);
-};
-
 const BottomNavigationComponent = () => {
   const { t } = useTranslation();
   // 🎬 State per i modal video
@@ -113,6 +109,29 @@ const BottomNavigationComponent = () => {
   const { navigate } = useWouterNavigation();
   const isPWA = typeof window !== 'undefined' && 
     window.matchMedia('(display-mode: standalone)').matches;
+
+  // (DEV only) Page lifecycle — log pagehide/pageshow/visibilitychange per forensic
+  useEffect(() => {
+    if (!import.meta.env.DEV || typeof window === 'undefined') return;
+    const href = () => location.href;
+    const onPageHide = (e: PageTransitionEvent) => {
+      console.log('[VIDEO DEBUG] pagehide', { href: href(), persisted: e.persisted });
+    };
+    const onPageShow = (e: PageTransitionEvent) => {
+      console.log('[VIDEO DEBUG] pageshow', { href: href(), persisted: e.persisted });
+    };
+    const onVisibilityChange = () => {
+      console.log('[VIDEO DEBUG] visibilitychange', { href: href(), visibility: document.visibilityState });
+    };
+    window.addEventListener('pagehide', onPageHide);
+    window.addEventListener('pageshow', onPageShow);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', onPageHide);
+      window.removeEventListener('pageshow', onPageShow);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, []);
 
   // Navigation links
   const links = [
@@ -206,17 +225,13 @@ const BottomNavigationComponent = () => {
     e.preventDefault();
     hapticLight();
 
-    const navEntry = typeof performance !== 'undefined' && performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : null;
-    const navType = navEntry && 'type' in navEntry ? (navEntry as PerformanceNavigationTiming).type : undefined;
-    __m1dbg('NAV_CLICK', { path: link.path, href: typeof location !== 'undefined' ? location.href : '', origin: typeof location !== 'undefined' ? location.origin : '', navType });
-
     const storageKey = VIDEO_DISMISSED_KEYS[link.path];
+    if (import.meta.env.DEV) console.log('[VIDEO DEBUG] navigation click', link.path, 'key', storageKey, 'val', storageKey ? safeGet(storageKey) : null, 'href', typeof location !== 'undefined' ? location.href : '');
+
     const lsVal = storageKey ? safeGet(storageKey) : null;
 
     if (storageKey && lsVal === 'true') {
       // Già "Non mostrare più": naviga senza aprire il video
-      __m1dbg('NAV_DECISION', { path: link.path, storageKey, ls: lsVal });
-      __m1dbg('NAV_METHOD', { usesWindowLocation: false, usesAnchorHref: false, usesRouterNavigate: true });
       switch (link.path) {
         case '/home': handleHomeVideoContinue(); return;
         case '/map-3d-tiler': handleMapVideoContinue(); return;
@@ -227,9 +242,6 @@ const BottomNavigationComponent = () => {
         default: break;
       }
     }
-
-    __m1dbg('NAV_DECISION', { path: link.path, storageKey, ls: storageKey ? safeGet(storageKey) : null });
-    __m1dbg('NAV_METHOD', { usesWindowLocation: false, usesAnchorHref: false, usesRouterNavigate: true });
 
     // 🎬 Mostra video modal per ogni pagina
     switch (link.path) {
