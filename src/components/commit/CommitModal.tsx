@@ -124,6 +124,15 @@ export const CommitModal: React.FC<CommitModalProps> = ({
         );
       }
 
+      // MPE Real Data v1: record daily commit completed (idempotent, silent)
+      if (response.success) {
+        try {
+          await supabase.rpc('mpe_record_daily_commit');
+        } catch {
+          // Silent: do not affect Commit flow
+        }
+      }
+
       // 🔧 FIX 06/02/2026: Show reward modal on SUCCESS (+5 M1U)
       if (response.success && response.outcome === 'success') {
         console.log('[Commit] ✅ SUCCESS! Showing reward modal +5 M1U');
