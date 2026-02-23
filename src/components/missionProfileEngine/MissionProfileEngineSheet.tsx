@@ -16,6 +16,7 @@ import { MissionProfileEngineRing } from './MissionProfileEngineRing';
 import { buildReportFromSnapshot, type MPESnapshot, type MPEDelta } from '@/lib/missionProfileEngine/buildReportFromSnapshot';
 import type { AgentPerformanceReport } from '@/lib/missionProfileEngine/types';
 import { supabase } from '@/integrations/supabase/client';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 const DRAG_CLOSE_THRESHOLD_PX = 140;
 const VELOCITY_CLOSE_THRESHOLD = 900;
@@ -84,6 +85,7 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
   onClose,
 }) => {
   const { t } = useTranslation();
+  const { user } = useUnifiedAuth();
   const [, setLocation] = useLocation();
   const [state, setState] = useState<SheetState>('idle');
   const [report, setReport] = useState<AgentPerformanceReport | null>(null);

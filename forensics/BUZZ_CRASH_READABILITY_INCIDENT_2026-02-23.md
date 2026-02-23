@@ -6,6 +6,14 @@
 
 ---
 
+## ROOT CAUSE BUZZ CRASH (ReferenceError: Can't find variable: user)
+
+- **File:** `src/components/missionProfileEngine/MissionProfileEngineSheet.tsx`
+- **Causa:** La dependency array di `handleScanComplete` conteneva `[user?.id]` ma nel componente **non era mai dichiarata** la variabile `user` (nessuna chiamata a useUnifiedAuth/useAuth/useAuthContext). Su iOS (e in strict mode) l’uso di un identificatore non dichiarato genera ReferenceError → ErrorBoundary con "Oops! Qualcosa è andato storto" e codice ERR-MLZ6URxx.
+- **Fix applicato:** Aggiunto `import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';` e `const { user } = useUnifiedAuth();` all’inizio del componente. Comportamento BUZZ/MPE invariato; nessuna modifica a logiche BUZZ/Map/IAP/auth.
+
+---
+
 ## Step 1 — Forensic verification (repo-side)
 
 ### ERR-MLZ6UR79
@@ -71,7 +79,8 @@ git reset --hard safety-buzz-crash-readability-before-20260223-141037
 
 ## File toccati
 
-- `src/ios/iosReadabilityHotfix.ts` (solo file modificato)
+- `src/ios/iosReadabilityHotfix.ts` (observer gating + popup CSS + hardening non distruttivo)
+- `src/components/missionProfileEngine/MissionProfileEngineSheet.tsx` (fix crash: `user` dichiarato con `useUnifiedAuth()`)
 
 ---
 
