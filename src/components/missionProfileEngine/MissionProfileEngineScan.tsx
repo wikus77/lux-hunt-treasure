@@ -1,14 +1,34 @@
 /**
  * MISSION PROFILE ENGINE™ — Scan HUD (10–40s, steps, abort).
+ * Haptic: selectionChanged on each step completion (iOS native only).
  * © 2025 Joseph MULÉ – M1SSION™ – NIYVORA KFT™
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
 import type { ScanStep } from '@/lib/missionProfileEngine/types';
 import { buildScanSteps } from '@/lib/missionProfileEngine/scanTimings';
+
+async function isIosNative(): Promise<boolean> {
+  try {
+    const { Capacitor } = await import('@capacitor/core');
+    return Capacitor.isNativePlatform() === true && Capacitor.getPlatform() === 'ios';
+  } catch {
+    return false;
+  }
+}
+
+async function hapticStepTick(): Promise<void> {
+  try {
+    if (!(await isIosNative())) return;
+    const { Haptics } = await import('@capacitor/haptics');
+    if (Haptics?.selectionChanged) await Haptics.selectionChanged();
+  } catch {
+    // no-op
+  }
+}
 
 interface MissionProfileEngineScanProps {
   dataComplexity: number;
@@ -31,7 +51,13 @@ export const MissionProfileEngineScan: React.FC<MissionProfileEngineScanProps> =
   const totalProgressMs = totalElapsed + (currentStep ? (stepProgress / 100) * currentStep.durationMs : 0);
   const progressPct = totalDuration > 0 ? (totalProgressMs / totalDuration) * 100 : 0;
 
+  const lastHapticStepRef = useRef(-1);
+
   const advance = useCallback(() => {
+    if (currentIndex !== lastHapticStepRef.current) {
+      lastHapticStepRef.current = currentIndex;
+      void hapticStepTick();
+    }
     setSteps((prev) =>
       prev.map((s, i) => (i === currentIndex ? { ...s, completed: true } : s))
     );

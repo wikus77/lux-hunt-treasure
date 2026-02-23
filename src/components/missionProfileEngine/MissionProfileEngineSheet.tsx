@@ -21,6 +21,15 @@ const DRAG_CLOSE_THRESHOLD_PX = 140;
 const VELOCITY_CLOSE_THRESHOLD = 900;
 const SPRING = { type: 'spring' as const, damping: 28, stiffness: 300 };
 
+async function isIosNative(): Promise<boolean> {
+  try {
+    const { Capacitor } = await import('@capacitor/core');
+    return Capacitor.isNativePlatform() === true && Capacitor.getPlatform() === 'ios';
+  } catch {
+    return false;
+  }
+}
+
 const hapticImpact = async (style: 'light' | 'medium' | 'heavy') => {
   try {
     const { Haptics } = await import('@capacitor/haptics');
@@ -29,6 +38,39 @@ const hapticImpact = async (style: 'light' | 'medium' | 'heavy') => {
     // no-op
   }
 };
+
+/** iOS only: Light impact when scan starts */
+async function hapticScanStart(): Promise<void> {
+  try {
+    if (!(await isIosNative())) return;
+    const { Haptics } = await import('@capacitor/haptics');
+    if (Haptics?.impact) await Haptics.impact({ style: 'Light' as any });
+  } catch {
+    // no-op
+  }
+}
+
+/** iOS only: Success notification when scan completes */
+async function hapticScanSuccess(): Promise<void> {
+  try {
+    if (!(await isIosNative())) return;
+    const { Haptics } = await import('@capacitor/haptics');
+    if (Haptics?.notification) await Haptics.notification({ type: 'SUCCESS' as any });
+  } catch {
+    // no-op
+  }
+}
+
+/** iOS only: Warning notification when scan aborted */
+async function hapticScanAbort(): Promise<void> {
+  try {
+    if (!(await isIosNative())) return;
+    const { Haptics } = await import('@capacitor/haptics');
+    if (Haptics?.notification) await Haptics.notification({ type: 'WARNING' as any });
+  } catch {
+    // no-op
+  }
+}
 
 type SheetState = 'idle' | 'scan' | 'report';
 
@@ -77,6 +119,7 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
       toast.info(t('mission_profile_engine_one_free_per_day'));
       return;
     }
+    void hapticScanStart();
     setState('scan');
   }, [t]);
 
@@ -102,11 +145,13 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
     const r = buildReportFromSnapshot(snapshot, delta);
     setReport(r);
     setState('report');
+    void hapticScanSuccess();
     const intensity = r.percentage >= 80 ? 'heavy' : r.percentage >= 51 ? 'medium' : 'light';
     hapticImpact(intensity);
-  }, []);
+  }, [user?.id]);
 
   const handleAbortScan = useCallback(() => {
+    void hapticScanAbort();
     setState('idle');
     setAbortMessage(t('mission_profile_engine_scan_aborted'));
     setTimeout(() => setAbortMessage(null), 2000);
