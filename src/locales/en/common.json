@@ -1232,5 +1232,7 @@
   "mission_profile_engine_priority_action": "Priority action",
   "mission_profile_engine_priority_action_example": "Reduce Buzz Map area below 3 km²",
   "mission_profile_engine_expected_delta": "Estimated impact: +{{min}}–{{max}}%",
-  "mission_profile_engine_cta_buzz_map": "GO TO BUZZ MAP"
+  "mission_profile_engine_cta_buzz_map": "GO TO BUZZ MAP",
+  "mission_profile_engine_scan_error": "Scan unavailable. Try again.",
+  "mission_profile_engine_extra_insufficient_m1u": "Need 5 M1U for extra analysis."
 }

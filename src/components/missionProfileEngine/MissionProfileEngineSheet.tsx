@@ -1,19 +1,25 @@
 /**
  * MISSION PROFILE ENGINE™ — Fullscreen-capable bottom sheet (iOS style).
  * States: Idle → Scan (10–40s) → Report. Safe area, close, abort.
+ * Drag-to-dismiss (when scroll at top), sticky header, no handle line.
  * © 2025 Joseph MULÉ – M1SSION™ – NIYVORA KFT™
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { MissionProfileEngineScan } from './MissionProfileEngineScan';
 import { MissionProfileEngineRing } from './MissionProfileEngineRing';
-import { getFakeReport } from '@/lib/missionProfileEngine/fakeReport';
+import { buildReportFromSnapshot, type MPESnapshot, type MPEDelta } from '@/lib/missionProfileEngine/buildReportFromSnapshot';
 import type { AgentPerformanceReport } from '@/lib/missionProfileEngine/types';
+import { supabase } from '@/integrations/supabase/client';
+
+const DRAG_CLOSE_THRESHOLD_PX = 140;
+const VELOCITY_CLOSE_THRESHOLD = 900;
+const SPRING = { type: 'spring' as const, damping: 28, stiffness: 300 };
 
 const hapticImpact = async (style: 'light' | 'medium' | 'heavy') => {
   try {
@@ -42,14 +48,58 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
   const [abortMessage, setAbortMessage] = useState<string | null>(null);
   const dataComplexity = 0.4;
 
-  const handleStartScan = useCallback(() => {
+  const sheetY = useMotionValue(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const dragStartY = useRef(0);
+  const dragStartScrollTop = useRef(0);
+  const isDragging = useRef(false);
+
+  const backdropOpacity = useTransform(sheetY, [0, DRAG_CLOSE_THRESHOLD_PX], [1, 0]);
+
+  useLayoutEffect(() => {
+    if (isOpen) {
+      const height = typeof window !== 'undefined' ? window.innerHeight : 600;
+      sheetY.set(height);
+      animate(sheetY, 0, SPRING);
+    }
+  }, [isOpen, sheetY]);
+
+  const handleStartScan = useCallback(async () => {
     setAbortMessage(null);
     setReport(null);
+    const { data, error } = await supabase.rpc('mpe_check_and_consume_run', { p_is_paid: false });
+    if (error) {
+      toast.error(t('mission_profile_engine_scan_error'));
+      return;
+    }
+    const allowed = (data as { allowed?: boolean })?.allowed;
+    if (!allowed) {
+      toast.info(t('mission_profile_engine_one_free_per_day'));
+      return;
+    }
     setState('scan');
-  }, []);
+  }, [t]);
 
-  const handleScanComplete = useCallback(() => {
-    const r = getFakeReport();
+  const handleScanComplete = useCallback(async () => {
+    const { data: snapshotData, error: snapErr } = await supabase.rpc('mpe_get_inputs_snapshot');
+    const snapshot = (snapshotData as MPESnapshot) ?? {};
+    if (snapErr) {
+      snapshot.error = snapErr.message;
+    }
+    const reportFromSnapshot = buildReportFromSnapshot(snapshot, null);
+    const payload = {
+      ...snapshot,
+      bars: reportFromSnapshot.bars,
+      percentage: reportFromSnapshot.percentage,
+    };
+    const scoreTotal = reportFromSnapshot.percentage;
+    await supabase.rpc('mpe_save_daily_snapshot', {
+      p_payload: payload,
+      p_score_total: scoreTotal,
+    });
+    const { data: deltaData } = await supabase.rpc('mpe_get_daily_delta');
+    const delta = (deltaData as MPEDelta) ?? null;
+    const r = buildReportFromSnapshot(snapshot, delta);
     setReport(r);
     setState('report');
     const intensity = r.percentage >= 80 ? 'heavy' : r.percentage >= 51 ? 'medium' : 'light';
@@ -62,59 +112,149 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
     setTimeout(() => setAbortMessage(null), 2000);
   }, [t]);
 
-  const handleClose = useCallback(() => {
+  const closeAndUnmount = useCallback(() => {
     setState('idle');
     setReport(null);
     setAbortMessage(null);
     onClose();
   }, [onClose]);
 
+  const requestClose = useCallback(() => {
+    const height = typeof window !== 'undefined' ? window.innerHeight : 600;
+    animate(sheetY, height, { ...SPRING, onComplete: closeAndUnmount });
+  }, [sheetY, closeAndUnmount]);
+
+  const handleClose = requestClose;
+
   const goToBuzzMap = useCallback(() => {
     setLocation('/map-3d-tiler');
-    handleClose();
-  }, [setLocation, handleClose]);
+    requestClose();
+  }, [setLocation, requestClose]);
 
-  const handleExtraAnalysis = useCallback(() => {
-    toast.info(t('mission_profile_engine_coming_soon'));
+  const handleExtraAnalysis = useCallback(async () => {
+    const { data, error } = await supabase.rpc('mpe_check_and_consume_run', { p_is_paid: true });
+    if (error) {
+      toast.error(t('mission_profile_engine_scan_error'));
+      return;
+    }
+    const allowed = (data as { allowed?: boolean; reason?: string })?.allowed;
+    if (!allowed) {
+      const reason = (data as { reason?: string })?.reason;
+      if (reason === 'insufficient_m1u') {
+        toast.error(t('mission_profile_engine_extra_insufficient_m1u'));
+      } else {
+        toast.info(t('mission_profile_engine_one_free_per_day'));
+      }
+      return;
+    }
+    setAbortMessage(null);
+    setReport(null);
+    setState('scan');
   }, [t]);
+
+
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isOpen) return;
+      dragStartY.current = e.clientY;
+      dragStartScrollTop.current = scrollRef.current?.scrollTop ?? 0;
+      isDragging.current = false;
+    },
+    [isOpen]
+  );
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isOpen) return;
+      const allowedButtons = e.buttons === 1 || e.buttons === 0;
+      if (!allowedButtons && !isDragging.current) return;
+      const scrollTop = scrollRef.current?.scrollTop ?? 0;
+      if (!isDragging.current && dragStartScrollTop.current > 0 && scrollTop > 0) return;
+      const dy = e.clientY - dragStartY.current;
+      if (dy > 10 || isDragging.current) {
+        isDragging.current = true;
+        sheetY.set(Math.max(0, dy));
+      }
+    },
+    [isOpen, sheetY]
+  );
+
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isOpen) return;
+      if (!isDragging.current) return;
+      const y = sheetY.get();
+      const velocityY = (e as unknown as { velocityY?: number }).velocityY ?? 0;
+      if (y > DRAG_CLOSE_THRESHOLD_PX || velocityY > VELOCITY_CLOSE_THRESHOLD) {
+        const height = typeof window !== 'undefined' ? window.innerHeight : 600;
+        animate(sheetY, height, { ...SPRING, onComplete: closeAndUnmount });
+      } else {
+        animate(sheetY, 0, SPRING);
+      }
+      isDragging.current = false;
+    },
+    [isOpen, sheetY, closeAndUnmount]
+  );
+
+  const onPointerLeave = useCallback(() => {
+    if (isDragging.current) {
+      const y = sheetY.get();
+      if (y > DRAG_CLOSE_THRESHOLD_PX) {
+        const height = typeof window !== 'undefined' ? window.innerHeight : 600;
+        animate(sheetY, height, { ...SPRING, onComplete: closeAndUnmount });
+      } else {
+        animate(sheetY, 0, SPRING);
+      }
+      isDragging.current = false;
+    }
+  }, [sheetY, closeAndUnmount]);
 
   if (!isOpen) return null;
 
   return (
     <>
-      <div
+      <motion.div
         className="fixed inset-0 z-[2000] bg-black/50"
-        style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+        style={{
+          paddingTop: 'env(safe-area-inset-top)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          opacity: backdropOpacity,
+        }}
         onClick={handleClose}
         aria-hidden
       />
       <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-        className="fixed left-0 right-0 bottom-0 z-[2001] flex max-h-[92vh] flex-col rounded-t-3xl bg-[#0c1426] shadow-2xl"
+        data-m1-mpe-sheet="true"
         style={{
+          y: sheetY,
           paddingTop: 'env(safe-area-inset-top)',
           paddingLeft: 'env(safe-area-inset-left)',
           paddingRight: 'env(safe-area-inset-right)',
           paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
         }}
+        className="fixed left-0 right-0 bottom-0 z-[2001] flex max-h-[92vh] flex-col rounded-t-3xl bg-[#0c1426] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerLeave}
+        onPointerLeave={onPointerLeave}
       >
-        <div className="flex shrink-0 items-center justify-between px-4 pt-2 pb-2">
-          <div className="h-1 w-12 rounded-full bg-white/20" />
+        <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 bg-[#0c1426] px-4 pt-1 pb-2">
+          <h2 className="min-w-0 flex-1 text-left text-lg font-bold text-white drop-shadow-sm">
+            {t('mission_profile_engine_sheet_title')}
+          </h2>
           <button
             type="button"
             onClick={handleClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-white/90 hover:bg-white/10 hover:text-white"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/90 hover:bg-white/10 hover:text-white"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
-        </div>
+        </header>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-6">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-6">
           <AnimatePresence mode="wait">
             {state === 'idle' && (
               <motion.div
@@ -122,11 +262,8 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex flex-col items-center gap-6 py-4"
+                className="flex flex-col items-center gap-6 py-2"
               >
-                <h2 className="text-center text-xl font-bold text-white drop-shadow-sm">
-                  {t('mission_profile_engine_sheet_title')}
-                </h2>
                 <p className="text-center text-sm text-white/90">
                   {t('mission_profile_engine_sheet_subtitle')}
                 </p>
@@ -157,10 +294,8 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
+                className="py-2"
               >
-                <h2 className="mb-2 text-center text-lg font-bold text-white drop-shadow-sm">
-                  {t('mission_profile_engine_sheet_title')}
-                </h2>
                 <MissionProfileEngineScan
                   dataComplexity={dataComplexity}
                   onComplete={handleScanComplete}
