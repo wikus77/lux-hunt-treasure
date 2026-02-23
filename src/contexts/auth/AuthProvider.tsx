@@ -584,6 +584,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
   const logout = async (): Promise<void> => {
+    if (process.env.NODE_ENV === 'development') console.log('[LOGOUT DEBUG] start');
     log("Logout iniziato");
     
     try {
@@ -597,6 +598,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Keychain tokens remain valid for Face ID restore.
       console.log('🔐 [AuthProvider] signOut({ scope: "local" }) - preserving Face ID tokens');
       await supabase.auth.signOut({ scope: 'local' });
+      if (process.env.NODE_ENV === 'development') console.log('[LOGOUT DEBUG] signOut ok');
       
       // Cleanup stato locale IMMEDIATO + sessionStorage
       setUser(null);
@@ -618,36 +620,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // APPLE-LOGIN-LOOP-PATCH: clear just-signed-in flag on logout
       sessionStorage.removeItem(JUST_SIGNED_IN_STORAGE_KEY);
       console.log('🧹 [AuthProvider] Cleared hasSeenPostLoginIntro on logout');
+      if (process.env.NODE_ENV === 'development') console.log('[LOGOUT DEBUG] storage cleared');
       
-      // 🚨 CRITICAL: Force redirect to login after logout + PWA iOS stability
-      setTimeout(() => {
-        setIsLoading(false);
-        
-        // PWA iOS compatibility: clear all caches before redirect
-        if ('caches' in window) {
-          caches.keys().then(cacheNames => {
-            cacheNames.forEach(cacheName => {
-              caches.delete(cacheName);
-            });
+      // 🚨 CRITICAL: Force redirect to login after logout (iOS WKWebView: replace + no delay = immediate)
+      setIsLoading(false);
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
+        if (process.env.NODE_ENV === 'development') console.log('[LOGOUT DEBUG] navigate -> /login');
+        log("Force redirect to login after logout");
+        try {
+          window.location.replace('/login');
+        } catch (error) {
+          log("Fallback redirect method", error);
+          window.location.href = '/login';
+        }
+      }
+      // PWA iOS: clear caches in background (do not block redirect)
+      if ('caches' in window) {
+        caches.keys().then(cacheNames => {
+          cacheNames.forEach(cacheName => {
+            caches.delete(cacheName);
           });
-        }
-        
-        if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
-          log("Force redirect to login after logout");
-          
-          // Enhanced PWA iOS redirect with fallback
-          const redirectToLogin = () => {
-            try {
-              window.location.href = '/login';
-            } catch (error) {
-              log("Fallback redirect method", error);
-              window.location.replace('/login');
-            }
-          };
-          
-          redirectToLogin();
-        }
-      }, 150);
+        });
+      }
       
       log("Logout completato");
     } catch (error) {

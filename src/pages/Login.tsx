@@ -460,7 +460,7 @@ const Login = () => {
           By tapping "Sign Up", you agree to our{' '}
           <a href="/terms" className="text-white/60 underline">Terms of Use</a>
           {' '}and acknowledge that you have read and understand our{' '}
-          <a href="/privacy" className="text-white/60 underline">Privacy Policy</a>.
+          <a href="/privacy-policy" className="text-white/60 underline">Privacy Policy</a>.
         </p>
       </motion.div>
     </motion.div>

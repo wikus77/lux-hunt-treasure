@@ -1,0 +1,46 @@
+/**
+ * MPE Pill title — brand (M1 cyan + SSION PROFILE ENGINE white) + pulse.
+ * Local to MissionProfileEnginePill only. WKWebView-safe.
+ */
+
+.mpe-pill-title {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  animation: mpeTitlePulse 2.6s ease-in-out infinite;
+}
+
+.mpe-pill-title-wrap {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.25;
+}
+
+.mpe-pill-title-m1 {
+  color: #00e5ff;
+  -webkit-text-fill-color: #00e5ff;
+}
+
+.mpe-pill-title-rest {
+  color: rgba(255, 255, 255, 0.92);
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92);
+}
+
+@keyframes mpeTitlePulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.015);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mpe-pill-title {
+    animation: none;
+  }
+}
