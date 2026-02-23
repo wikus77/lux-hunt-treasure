@@ -25,6 +25,10 @@ import { useTranslation } from 'react-i18next';
 // STANDBY: Sistema hint inattività disabilitato - riattivare se necessario
 // import { InactivityHint } from '@/components/first-session';
 import { MotivationalPopup } from '@/components/feedback';
+import { MissionProfileEnginePill } from '@/components/missionProfileEngine/MissionProfileEnginePill';
+import { MissionProfileEngineSheet } from '@/components/missionProfileEngine/MissionProfileEngineSheet';
+
+const MPE_UI_ENABLED = import.meta.env.VITE_MISSION_PROFILE_ENGINE_UI !== '0';
 
 export const BuzzPage: React.FC = () => {
   const { t } = useTranslation();
@@ -34,6 +38,7 @@ export const BuzzPage: React.FC = () => {
   // 🔇 RIMOSSO: vortexSoundRef - suono vortex eliminato
   const debugEnabled = useDebugFlag();
   const [forceShow, setForceShow] = React.useState(false);
+  const [mpeSheetOpen, setMpeSheetOpen] = React.useState(false);
   const [, setLocation] = useLocation();
   
   // 🚨 START M1SSION GATE: Check if user is enrolled in mission
@@ -270,9 +275,23 @@ export const BuzzPage: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* MISSION PROFILE ENGINE™ — Pill below BUZZ card (feature-flagged) */}
+            {MPE_UI_ENABLED && (
+              <>
+                <div style={{ height: 10 }} aria-hidden />
+                <div className="flex w-full justify-center">
+                  <MissionProfileEnginePill onPress={() => setMpeSheetOpen(true)} />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </main>
+
+      {MPE_UI_ENABLED && (
+        <MissionProfileEngineSheet isOpen={mpeSheetOpen} onClose={() => setMpeSheetOpen(false)} />
+      )}
       
       {/* Bottom Navigation - gestita da GlobalLayout */}
 
