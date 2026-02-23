@@ -105,7 +105,7 @@ export const MissionProfileEngineScan: React.FC<MissionProfileEngineScanProps> =
       <button
         type="button"
         onClick={onAbort}
-        className="text-sm text-white/60 underline hover:text-white/90"
+        className="text-sm text-white/85 underline hover:text-white"
       >
         {t('mission_profile_engine_abort_scan')}
       </button>

@@ -107,7 +107,7 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
           <button
             type="button"
             onClick={handleClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-white/90 hover:bg-white/10 hover:text-white"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -124,10 +124,10 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
                 exit={{ opacity: 0 }}
                 className="flex flex-col items-center gap-6 py-4"
               >
-                <h2 className="text-center text-xl font-bold text-white">
+                <h2 className="text-center text-xl font-bold text-white drop-shadow-sm">
                   {t('mission_profile_engine_sheet_title')}
                 </h2>
-                <p className="text-center text-sm text-white/60">
+                <p className="text-center text-sm text-white/90">
                   {t('mission_profile_engine_sheet_subtitle')}
                 </p>
                 <button
@@ -137,11 +137,11 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
                 >
                   {t('mission_profile_engine_cta_scan')}
                 </button>
-                <p className="text-xs text-white/50">{t('mission_profile_engine_one_free_per_day')}</p>
+                <p className="text-xs text-white/75">{t('mission_profile_engine_one_free_per_day')}</p>
                 <button
                   type="button"
                   onClick={handleExtraAnalysis}
-                  className="text-sm text-white/50 underline hover:text-white/70"
+                  className="text-sm text-white/80 underline hover:text-white"
                 >
                   {t('mission_profile_engine_extra_analysis')}
                 </button>
@@ -158,7 +158,7 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <h2 className="mb-2 text-center text-lg font-bold text-white">
+                <h2 className="mb-2 text-center text-lg font-bold text-white drop-shadow-sm">
                   {t('mission_profile_engine_sheet_title')}
                 </h2>
                 <MissionProfileEngineScan
@@ -178,19 +178,19 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
                 className="flex flex-col items-center gap-6 py-4"
               >
                 <MissionProfileEngineRing percentage={report.percentage} size={200} strokeWidth={12} />
-                <p className="text-center font-medium text-white">{t(report.stateLabelKey)}</p>
-                <p className="text-sm text-white/70">
+                <p className="text-center font-medium text-white drop-shadow-sm">{t(report.stateLabelKey)}</p>
+                <p className="text-sm text-white/90">
                   {report.dailyDelta >= 0
                     ? t('mission_profile_engine_delta_positive', { delta: report.dailyDelta })
                     : t('mission_profile_engine_delta_negative', { delta: Math.abs(report.dailyDelta) })}
                 </p>
-                <p className="text-xs text-white/50">{t(report.confidenceLabelKey)}</p>
-                <p className="text-center text-xs text-white/40 italic">{t(report.interferenceLineKey)}</p>
+                <p className="text-xs text-white/80">{t(report.confidenceLabelKey)}</p>
+                <p className="text-center text-xs text-white/70 italic">{t(report.interferenceLineKey)}</p>
 
                 <div className="grid w-full max-w-sm grid-cols-2 gap-2">
                   {(['intelligence', 'geo', 'discipline', 'operational'] as const).map((k) => (
                     <div key={k} className="rounded-lg bg-white/5 p-2">
-                      <div className="mb-1 text-xs text-white/70 capitalize">{t(`mission_profile_engine_bar_${k}`)}</div>
+                      <div className="mb-1 text-xs text-white/90 capitalize">{t(`mission_profile_engine_bar_${k}`)}</div>
                       <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                         <motion.div
                           className="h-full bg-cyan-500 rounded-full"
@@ -205,8 +205,8 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
 
                 <div className="w-full max-w-sm rounded-xl bg-white/5 p-4">
                   <div className="mb-1 text-xs font-medium text-cyan-400">{t('mission_profile_engine_priority_action')}</div>
-                  <p className="text-sm text-white/90">{t(report.priorityAction.labelKey)}</p>
-                  <p className="mt-1 text-xs text-white/50">
+                  <p className="text-sm text-white">{t(report.priorityAction.labelKey)}</p>
+                  <p className="mt-1 text-xs text-white/80">
                     {t('mission_profile_engine_expected_delta', {
                       min: report.priorityAction.expectedDeltaRange[0],
                       max: report.priorityAction.expectedDeltaRange[1],
