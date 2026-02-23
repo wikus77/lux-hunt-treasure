@@ -92,7 +92,6 @@ DECLARE
   v_cashback_accum INT;
   v_cashback_lifetime INT;
   v_cashback_last_claim TIMESTAMPTZ;
-  v_rank BIGINT;
   v_daily_commit BOOLEAN;
   v_current_week INT := EXTRACT(WEEK FROM CURRENT_DATE)::INTEGER;
   v_result JSONB;
@@ -131,10 +130,6 @@ BEGIN
   INTO v_cashback_accum, v_cashback_lifetime, v_cashback_last_claim
   FROM public.user_cashback_wallet c WHERE c.user_id = v_uid LIMIT 1;
 
-  -- rank (leaderboard_rankings)
-  SELECT lr.global_rank INTO v_rank
-  FROM public.leaderboard_rankings lr WHERE lr.id = v_uid LIMIT 1;
-
   -- daily commit completed today
   SELECT EXISTS(
     SELECT 1 FROM public.mpe_daily_commit_log
@@ -154,7 +149,6 @@ BEGIN
     'cashback_accumulated_m1u', COALESCE(v_cashback_accum, 0),
     'cashback_lifetime_earned_m1u', COALESCE(v_cashback_lifetime, 0),
     'cashback_last_claim_at', v_cashback_last_claim,
-    'global_rank', v_rank,
     'daily_commit_completed_today', COALESCE(v_daily_commit, false)
   );
   RETURN v_result;

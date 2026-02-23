@@ -16,6 +16,7 @@ import { MissionProfileEngineRing } from './MissionProfileEngineRing';
 import { buildReportFromSnapshot, type MPESnapshot, type MPEDelta } from '@/lib/missionProfileEngine/buildReportFromSnapshot';
 import type { AgentPerformanceReport } from '@/lib/missionProfileEngine/types';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 
 const DRAG_CLOSE_THRESHOLD_PX = 140;
 const VELOCITY_CLOSE_THRESHOLD = 900;
@@ -42,6 +43,7 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
   onClose,
 }) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [state, setState] = useState<SheetState>('idle');
   const [report, setReport] = useState<AgentPerformanceReport | null>(null);
@@ -86,7 +88,7 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
     if (snapErr) {
       snapshot.error = snapErr.message;
     }
-    const reportFromSnapshot = buildReportFromSnapshot(snapshot, null);
+    const reportFromSnapshot = buildReportFromSnapshot(snapshot, null, user?.id);
     const payload = {
       ...snapshot,
       bars: reportFromSnapshot.bars,
@@ -99,12 +101,12 @@ export const MissionProfileEngineSheet: React.FC<MissionProfileEngineSheetProps>
     });
     const { data: deltaData } = await supabase.rpc('mpe_get_daily_delta');
     const delta = (deltaData as MPEDelta) ?? null;
-    const r = buildReportFromSnapshot(snapshot, delta);
+    const r = buildReportFromSnapshot(snapshot, delta, user?.id);
     setReport(r);
     setState('report');
     const intensity = r.percentage >= 80 ? 'heavy' : r.percentage >= 51 ? 'medium' : 'light';
     hapticImpact(intensity);
-  }, []);
+  }, [user?.id]);
 
   const handleAbortScan = useCallback(() => {
     setState('idle');
