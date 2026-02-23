@@ -37,7 +37,7 @@ const HOTFIX_CSS = `
 #m1-modal-portal .text-muted-foreground,#m1-modal-portal [class*="text-muted-foreground"],#m1-modal-portal .text-gray-400,#m1-modal-portal .text-gray-500,#m1-modal-portal .text-slate-400,#m1-modal-portal .text-slate-500,
 #m1-settings-section-portal .text-muted-foreground,#m1-settings-section-portal [class*="text-muted-foreground"],#m1-settings-section-portal .text-gray-400,#m1-settings-section-portal .text-gray-500,#m1-settings-section-portal .text-slate-400,#m1-settings-section-portal .text-slate-500,
 #m1-profile-portal .text-muted-foreground,#m1-profile-portal [class*="text-muted-foreground"],#m1-profile-portal .text-gray-400,#m1-profile-portal .text-gray-500,#m1-profile-portal .text-slate-400,#m1-profile-portal .text-slate-500,
-.m1-reward-zone-popup .text-muted-foreground,.m1-reward-zone-popup [class*="text-muted-foreground"],.m1-reward-zone-popup .text-gray-400,.m1-reward-zone-popup .text-gray-500,.m1-reward-zone-popup .text-slate-400,.m1-reward-zone-popup .text-slate-500,
+.m1-reward-zone-popup .text-muted-foreground,.m1-reward-zone-popup [class*="text-muted-foreground"],.m1-reward-zone-popup .text-gray-400,.m1-reward-zone-popup .text-gray-500,.m1-reward-zone-popup .text-slate-400,.m1-reward-zone-popup .text-slate-500,.m1-reward-zone-popup .text-white\\/90,.m1-reward-zone-popup .text-white\\/85,.m1-reward-zone-popup .text-white\\/80,.m1-reward-zone-popup .text-white\\/75,.m1-reward-zone-popup .text-white\\/70,.m1-reward-zone-popup .text-zinc-400,.m1-reward-zone-popup .text-zinc-500,
 [data-radix-dialog-content] .text-muted-foreground,[data-radix-dialog-content] [class*="text-muted-foreground"],[data-radix-dialog-content] .text-gray-400,[data-radix-dialog-content] .text-gray-500,[data-radix-dialog-content] .text-slate-400,[data-radix-dialog-content] .text-slate-500,
 [data-radix-alert-dialog-content] .text-muted-foreground,[data-radix-alert-dialog-content] [class*="text-muted-foreground"],[data-radix-alert-dialog-content] .text-gray-400,[data-radix-alert-dialog-content] .text-gray-500,
 [data-radix-popover-content] .text-muted-foreground,[data-radix-popover-content] [class*="text-muted-foreground"],[data-radix-popover-content] .text-gray-400,[data-radix-popover-content] .text-gray-500,
@@ -45,7 +45,7 @@ const HOTFIX_CSS = `
 [data-vaul-drawer] .text-muted-foreground,[data-vaul-drawer] [class*="text-muted-foreground"],[data-vaul-drawer] .text-gray-400,[data-vaul-drawer] .text-gray-500,
 .vaul-drawer .text-muted-foreground,.vaul-drawer [class*="text-muted-foreground"],.vaul-drawer .text-gray-400,.vaul-drawer .text-gray-500,
 .settings-modal .text-muted-foreground,.settings-modal [class*="text-muted-foreground"],.settings-modal .text-gray-400,.settings-modal .text-gray-500,
-[data-m1-mpe-sheet] .text-muted-foreground,[data-m1-mpe-sheet] [class*="text-muted-foreground"],[data-m1-mpe-sheet] .text-gray-400,[data-m1-mpe-sheet] .text-gray-500,[data-m1-mpe-sheet] .text-slate-400,[data-m1-mpe-sheet] .text-slate-500,[data-m1-mpe-sheet] .text-white\\/90,[data-m1-mpe-sheet] .text-white\\/85,[data-m1-mpe-sheet] .text-white\\/80,[data-m1-mpe-sheet] .text-white\\/75,[data-m1-mpe-sheet] .text-white\\/70 { color: rgba(255,255,255,0.78) !important; -webkit-text-fill-color: rgba(255,255,255,0.78) !important; text-shadow: 0 0 1px rgba(0,0,0,0.3); }
+[data-m1-mpe-sheet] .text-muted-foreground,[data-m1-mpe-sheet] [class*="text-muted-foreground"],[data-m1-mpe-sheet] .text-gray-400,[data-m1-mpe-sheet] .text-gray-500,[data-m1-mpe-sheet] .text-slate-400,[data-m1-mpe-sheet] .text-slate-500,[data-m1-mpe-sheet] .text-white\\/90,[data-m1-mpe-sheet] .text-white\\/85,[data-m1-mpe-sheet] .text-white\\/80,[data-m1-mpe-sheet] .text-white\\/75,[data-m1-mpe-sheet] .text-white\\/70,[data-m1-mpe-sheet] .text-zinc-400,[data-m1-mpe-sheet] .text-zinc-500 { color: rgba(255,255,255,0.78) !important; -webkit-text-fill-color: rgba(255,255,255,0.78) !important; text-shadow: 0 0 1px rgba(0,0,0,0.3); }
 /* foreground */
 #m1-modal-portal .text-foreground,#m1-modal-portal [class*="text-foreground"]:not([class*="muted"]),#m1-settings-section-portal .text-foreground,#m1-settings-section-portal [class*="text-foreground"]:not([class*="muted"]),#m1-profile-portal .text-foreground,#m1-profile-portal [class*="text-foreground"]:not([class*="muted"]) { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
 .m1-reward-zone-popup .text-foreground,.m1-reward-zone-popup [class*="text-foreground"]:not([class*="muted"]) { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
@@ -60,10 +60,48 @@ const HOTFIX_CSS = `
 [data-radix-dialog-content] input:disabled,[data-radix-dialog-content] textarea:disabled,[data-radix-alert-dialog-content] input:disabled,[data-radix-alert-dialog-content] textarea:disabled,[data-radix-popover-content] input:disabled,[data-radix-popover-content] textarea:disabled,[data-radix-select-content] input:disabled,[data-radix-select-content] textarea:disabled,[data-vaul-drawer] input:disabled,[data-vaul-drawer] textarea:disabled,.vaul-drawer input:disabled,.vaul-drawer textarea:disabled,.settings-modal input:disabled,.settings-modal textarea:disabled,[data-m1-mpe-sheet] input:disabled,[data-m1-mpe-sheet] textarea:disabled { opacity: 1 !important; color: rgba(255,255,255,0.70) !important; -webkit-text-fill-color: rgba(255,255,255,0.70) !important; filter: none !important; }
 `;
 
+/** True if node is inside any of the target roots (portals/sheets/modals). */
+function isInsideTargetRoot(node: Node): boolean {
+  if (node.nodeType !== Node.ELEMENT_NODE) return false;
+  const el = node as Element;
+  for (const sel of ROOT_SELECTORS) {
+    try {
+      const roots = document.querySelectorAll(sel);
+      for (const r of roots) {
+        if (r.contains(el)) return true;
+      }
+    } catch {
+      /* ignore invalid selector */
+    }
+  }
+  return false;
+}
+
+/** True if element is a target root or is inside one (so we should run sweep). */
+function isTargetRootOrInside(node: Node): boolean {
+  let el: Element | null = node.nodeType === Node.ELEMENT_NODE ? (node as Element) : (node.parentNode?.nodeType === Node.ELEMENT_NODE ? (node.parentNode as Element) : null);
+  if (!el) return false;
+  if (isInsideTargetRoot(el)) return true;
+  for (const sel of ROOT_SELECTORS) {
+    try {
+      if (el.matches?.(sel)) return true;
+      const q = document.querySelector(sel);
+      if (q === el) return true;
+    } catch {
+      /* ignore */
+    }
+  }
+  return false;
+}
+
+/** Apply opacity/filter override only to text-bearing elements to avoid breaking layout/animations. */
 function harden(el: Element): void {
   if (!(el instanceof HTMLElement)) return;
   const html = el as HTMLElement;
   const cn = html.className;
+  const hasText = (html.textContent?.trim().length ?? 0) > 0;
+  const hasTextClass = typeof cn === 'string' && /\btext-/.test(cn);
+  if (!hasText && !hasTextClass) return;
   if (typeof cn === 'string' && /\bopacity-\d+\b/.test(cn)) {
     html.className = cn.replace(/\bopacity-\d+\b/g, '').replace(/\s+/g, ' ').trim();
   }
@@ -131,7 +169,20 @@ export function installIOSReadabilityHotfix(): void {
 
   sweep();
 
-  observerInstance = new MutationObserver(() => scheduleSweep());
+  observerInstance = new MutationObserver((mutations) => {
+    for (const mut of mutations) {
+      if (isTargetRootOrInside(mut.target)) {
+        scheduleSweep();
+        return;
+      }
+      for (const n of mut.addedNodes) {
+        if (n.nodeType === Node.ELEMENT_NODE && isTargetRootOrInside(n)) {
+          scheduleSweep();
+          return;
+        }
+      }
+    }
+  });
   observerInstance.observe(document.documentElement, {
     childList: true,
     subtree: true,
