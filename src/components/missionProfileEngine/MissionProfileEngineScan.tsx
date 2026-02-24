@@ -20,11 +20,31 @@ async function isIosNative(): Promise<boolean> {
   }
 }
 
-async function hapticStepTick(): Promise<void> {
+const isDev = typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV === true;
+
+async function hapticStepComplete(stepIndex: number, totalSteps: number): Promise<void> {
   try {
     if (!(await isIosNative())) return;
     const { Haptics } = await import('@capacitor/haptics');
-    if (Haptics?.selectionChanged) await Haptics.selectionChanged();
+    const isLastStep = stepIndex >= totalSteps - 1;
+    if (isLastStep && Haptics?.impact) {
+      await Haptics.impact({ style: 'Medium' as any });
+      if (isDev) console.log('[MPE][HAPTICS] stepComplete idx=' + stepIndex + ' (Medium)');
+    } else if (Haptics?.selectionChanged) {
+      await Haptics.selectionChanged();
+      if (isDev) console.log('[MPE][HAPTICS] stepComplete idx=' + stepIndex);
+    }
+  } catch {
+    // no-op
+  }
+}
+
+async function hapticProgressTick(style: 'Light' | 'Medium' | 'Heavy', pct: number): Promise<void> {
+  try {
+    if (!(await isIosNative())) return;
+    const { Haptics } = await import('@capacitor/haptics');
+    if (Haptics?.impact) await Haptics.impact({ style });
+    if (isDev) console.log('[MPE][HAPTICS] tick p=' + (pct * 100).toFixed(0) + '% style=' + style);
   } catch {
     // no-op
   }
@@ -52,11 +72,15 @@ export const MissionProfileEngineScan: React.FC<MissionProfileEngineScanProps> =
   const progressPct = totalDuration > 0 ? (totalProgressMs / totalDuration) * 100 : 0;
 
   const lastHapticStepRef = useRef(-1);
+  const progressPctRef = useRef(0);
+  const progressiveTickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  progressPctRef.current = progressPct / 100;
 
   const advance = useCallback(() => {
     if (currentIndex !== lastHapticStepRef.current) {
       lastHapticStepRef.current = currentIndex;
-      void hapticStepTick();
+      void hapticStepComplete(currentIndex, steps.length);
     }
     setSteps((prev) =>
       prev.map((s, i) => (i === currentIndex ? { ...s, completed: true } : s))
@@ -68,6 +92,50 @@ export const MissionProfileEngineScan: React.FC<MissionProfileEngineScanProps> =
     setCurrentIndex((i) => i + 1);
     setStepProgress(0);
   }, [currentIndex, steps.length, onComplete]);
+
+  // Progressive haptic tick: 0–33% Light/1400ms, 34–66% Medium/1100ms, 67–100% Heavy/850ms
+  useEffect(() => {
+    let cancelled = false;
+    function scheduleNext() {
+      if (cancelled) return;
+      const p = progressPctRef.current;
+      const interval = p < 0.34 ? 1400 : p < 0.67 ? 1100 : 850;
+      progressiveTickTimeoutRef.current = setTimeout(() => {
+        if (cancelled) return;
+        const pNow = progressPctRef.current;
+        const style: 'Light' | 'Medium' | 'Heavy' = pNow < 0.34 ? 'Light' : pNow < 0.67 ? 'Medium' : 'Heavy';
+        void hapticProgressTick(style, pNow);
+        scheduleNext();
+      }, interval);
+    }
+    scheduleNext();
+    return () => {
+      cancelled = true;
+      if (progressiveTickTimeoutRef.current) {
+        clearTimeout(progressiveTickTimeoutRef.current);
+        progressiveTickTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  // DEV: self-test haptics from console
+  useEffect(() => {
+    if (!isDev || typeof window === 'undefined') return;
+    (window as any).__m1_haptics_test__ = async () => {
+      try {
+        const { Haptics } = await import('@capacitor/haptics');
+        if (Haptics?.notification) await Haptics.notification({ type: 'SUCCESS' as any });
+        if (Haptics?.impact) await Haptics.impact({ style: 'Heavy' as any });
+        if (Haptics?.selectionChanged) await Haptics.selectionChanged();
+        console.log('[MPE][HAPTICS] self-test ran (Success + Heavy + selectionChanged)');
+      } catch (e) {
+        console.warn('[MPE][HAPTICS] self-test failed', e);
+      }
+    };
+    return () => {
+      (window as any).__m1_haptics_test__ = undefined;
+    };
+  }, []);
 
   useEffect(() => {
     const step = steps[currentIndex];

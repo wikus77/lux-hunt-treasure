@@ -40,12 +40,15 @@ const hapticImpact = async (style: 'light' | 'medium' | 'heavy') => {
   }
 };
 
-/** iOS only: Light impact when scan starts */
+/** iOS only: Medium impact when scan starts (more perceptible than Light) */
 async function hapticScanStart(): Promise<void> {
   try {
     if (!(await isIosNative())) return;
     const { Haptics } = await import('@capacitor/haptics');
-    if (Haptics?.impact) await Haptics.impact({ style: 'Light' as any });
+    if (Haptics?.impact) await Haptics.impact({ style: 'Medium' as any });
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) {
+      console.log('[MPE][HAPTICS] start');
+    }
   } catch {
     // no-op
   }
@@ -68,6 +71,9 @@ async function hapticScanAbort(): Promise<void> {
     if (!(await isIosNative())) return;
     const { Haptics } = await import('@capacitor/haptics');
     if (Haptics?.notification) await Haptics.notification({ type: 'WARNING' as any });
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) {
+      console.log('[MPE][HAPTICS] abort');
+    }
   } catch {
     // no-op
   }

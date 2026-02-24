@@ -30,8 +30,12 @@ const ROOT_SELECTORS = [
 ];
 
 const HOTFIX_CSS = `
-/* WKWEBVIEW READABILITY — base + -webkit-text-fill-color for WKWebView */
-#m1-modal-portal,.m1-reward-zone-popup,[data-radix-dialog-content],[data-radix-alert-dialog-content],[data-radix-popover-content],[data-radix-select-content],[data-vaul-drawer],.vaul-drawer,.settings-modal,.m1-sheet,.m1-modal,.mission-profile-engine,[data-m1-mpe-sheet] { color: rgba(255,255,255,0.92) !important; -webkit-text-fill-color: currentColor !important; }
+/* WKWEBVIEW READABILITY — base + -webkit-text-fill-color + text-shadow for WKWebView */
+#m1-modal-portal,.m1-reward-zone-popup,[data-radix-dialog-content],[data-radix-alert-dialog-content],[data-radix-popover-content],[data-radix-select-content],[data-vaul-drawer],.vaul-drawer,.settings-modal,.m1-sheet,.m1-modal,.mission-profile-engine,[data-m1-mpe-sheet] { color: rgba(255,255,255,0.92) !important; -webkit-text-fill-color: rgba(255,255,255,0.92) !important; text-shadow: 0 1px 10px rgba(0,0,0,0.55) !important; }
+/* MPE sheet + reward popup: stronger base so title/body stay readable */
+[data-m1-mpe-sheet] h1,[data-m1-mpe-sheet] h2,[data-m1-mpe-sheet] h3,[data-m1-mpe-sheet] p,[data-m1-mpe-sheet] span,[data-m1-mpe-sheet] label,[data-m1-mpe-sheet] button,[data-m1-mpe-sheet] a,.m1-reward-zone-popup h1,.m1-reward-zone-popup h2,.m1-reward-zone-popup p,.m1-reward-zone-popup span,.m1-reward-zone-popup button { color: rgba(255,255,255,0.92) !important; -webkit-text-fill-color: rgba(255,255,255,0.92) !important; text-shadow: 0 1px 10px rgba(0,0,0,0.55) !important; }
+/* Cyan brand in MPE / popup: preserve accent */
+[data-m1-mpe-sheet] .text-cyan-400,[data-m1-mpe-sheet] .text-cyan-500,[data-m1-mpe-sheet] [class*="text-cyan"],.m1-reward-zone-popup .text-cyan-400,.m1-reward-zone-popup [class*="text-cyan"] { color: rgba(0,229,255,0.95) !important; -webkit-text-fill-color: rgba(0,229,255,0.95) !important; }
 #m1-settings-section-portal,#m1-profile-portal { color: rgba(255,255,255,0.92) !important; -webkit-text-fill-color: currentColor !important; }
 /* muted + gray + slate + tailwind */
 #m1-modal-portal .text-muted-foreground,#m1-modal-portal [class*="text-muted-foreground"],#m1-modal-portal .text-gray-400,#m1-modal-portal .text-gray-500,#m1-modal-portal .text-slate-400,#m1-modal-portal .text-slate-500,
@@ -94,14 +98,18 @@ function isTargetRootOrInside(node: Node): boolean {
   return false;
 }
 
-/** Apply opacity/filter override only to text-bearing elements to avoid breaking layout/animations. */
+const TEXT_TAGS = new Set(['P', 'SPAN', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LABEL', 'BUTTON', 'A', 'LI', 'SMALL', 'STRONG', 'EM']);
+
+/** Apply opacity/filter override to text-bearing elements (robust: tag, class, aria-label). */
 function harden(el: Element): void {
   if (!(el instanceof HTMLElement)) return;
   const html = el as HTMLElement;
   const cn = html.className;
   const hasText = (html.textContent?.trim().length ?? 0) > 0;
   const hasTextClass = typeof cn === 'string' && /\btext-/.test(cn);
-  if (!hasText && !hasTextClass) return;
+  const isTextTag = TEXT_TAGS.has(html.tagName);
+  const hasAriaLabel = html.getAttribute?.('aria-label') != null || html.getAttribute?.('role') === 'button';
+  if (!hasText && !hasTextClass && !isTextTag && !hasAriaLabel) return;
   if (typeof cn === 'string' && /\bopacity-\d+\b/.test(cn)) {
     html.className = cn.replace(/\bopacity-\d+\b/g, '').replace(/\s+/g, ' ').trim();
   }
@@ -109,17 +117,31 @@ function harden(el: Element): void {
   html.style.setProperty('filter', 'none', 'important');
 }
 
+const isDev = typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV === true;
+
 function sweep(): void {
+  let totalRoots = 0;
+  let totalNodes = 0;
   for (const sel of ROOT_SELECTORS) {
     try {
       const roots = document.querySelectorAll(sel);
       roots.forEach((root) => {
+        totalRoots++;
         harden(root);
-        root.querySelectorAll('*').forEach((desc) => harden(desc));
+        const descs = root.querySelectorAll('*');
+        descs.forEach((desc) => harden(desc));
+        totalNodes += 1 + descs.length;
+        if (isDev) {
+          const shortSel = sel.length > 30 ? sel.slice(0, 27) + '...' : sel;
+          console.log('[iOSReadability] harden root=' + shortSel + ' nodes=' + (1 + descs.length));
+        }
       });
     } catch (_) {
       /* ignore invalid selector */
     }
+  }
+  if (isDev && totalRoots > 0) {
+    console.log('[iOSReadability] sweep done roots=' + totalRoots + ' totalNodes=' + totalNodes);
   }
 }
 
@@ -172,11 +194,13 @@ export function installIOSReadabilityHotfix(): void {
   observerInstance = new MutationObserver((mutations) => {
     for (const mut of mutations) {
       if (isTargetRootOrInside(mut.target)) {
+        if (isDev) console.log('[iOSReadability] sweep scheduled (reason=targetInRoot)');
         scheduleSweep();
         return;
       }
       for (const n of mut.addedNodes) {
         if (n.nodeType === Node.ELEMENT_NODE && isTargetRootOrInside(n)) {
+          if (isDev) console.log('[iOSReadability] sweep scheduled (reason=portalAdded) roots=' + ROOT_SELECTORS.length);
           scheduleSweep();
           return;
         }
