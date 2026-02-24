@@ -1,5 +1,6 @@
 /**
  * MISSION PROFILE ENGINE™ — Pill below BUZZ card (centered).
+ * Title: M1 cyan + SSION PROFILE ENGINE white, pulse, anti-done dimming.
  * © 2025 Joseph MULÉ – M1SSION™ – NIYVORA KFT™
  */
 
@@ -7,6 +8,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { BarChart3 } from 'lucide-react';
+import './mpe-pill-title.css';
 
 interface MissionProfileEnginePillProps {
   onPress: () => void;
@@ -28,8 +30,19 @@ export const MissionProfileEnginePill: React.FC<MissionProfileEnginePillProps> =
         <BarChart3 className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="font-semibold text-white truncate">
-          {t('mission_profile_engine_title')}
+        <div className="mpe-pill-title font-semibold truncate">
+          {(() => {
+            const title = t('mission_profile_engine_title');
+            if (typeof title === 'string' && title.startsWith('M1')) {
+              return (
+                <>
+                  <span className="mpe-pill-title-m1">M1</span>
+                  <span className="mpe-pill-title-rest">{title.slice(2)}</span>
+                </>
+              );
+            }
+            return <span className="mpe-pill-title-rest">{title}</span>;
+          })()}
         </div>
         <div className="text-xs text-white/60 truncate">
           {t('mission_profile_engine_subtitle')}

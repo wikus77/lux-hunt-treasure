@@ -1,0 +1,46 @@
+/**
+ * MPE Pill — Title brand (M1 cyan + rest white) + pulse. Anti done-state dimming.
+ * Scope: ONLY the pill title on BUZZ page. NOT global.
+ * © 2026 Joseph MULÉ – M1SSION™ – NIYVORA KFT™
+ */
+
+.mpe-pill-title {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55);
+  animation: mpeTitlePulse 2.8s ease-in-out infinite;
+}
+
+.mpe-pill-title-m1 {
+  color: #00e5ff !important;
+  -webkit-text-fill-color: #00e5ff !important;
+}
+
+.mpe-pill-title-rest {
+  color: rgba(255, 255, 255, 0.92) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* Anti done-state dimming (WKWebView) */
+.mpe-pill-title,
+.mpe-pill-title * {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mpe-pill-title {
+    animation: none;
+  }
+}
+
+@keyframes mpeTitlePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.015);
+  }
+}
