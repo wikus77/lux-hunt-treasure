@@ -59,3 +59,8 @@ ios/apns-test.json
 ios/apns_auth_key.p8
 ios/*.p8
 
+# GH001: big rollback zips & glb assets (never push >100MB)
+_local_bigfiles_backup/
+_rollback/*.zip
+public/models/*.glb
+
