@@ -94,19 +94,17 @@ const LegalSettings: React.FC = () => {
 
     setLoading(true);
     try {
-      // Delete from specific tables that reference user_id
-      await supabase.from('user_clues').delete().eq('user_id', user.id);
-      await supabase.from('user_buzz_counter').delete().eq('user_id', user.id);
-      await supabase.from('user_notifications').delete().eq('user_id', user.id);
-      await supabase.from('subscriptions').delete().eq('user_id', user.id);
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
+      });
 
-      // Delete profile (this should cascade to other references)
-      await supabase.from('profiles').delete().eq('id', user.id);
+      if (error) throw error;
+      if (data?.success !== true) {
+        throw new Error(data?.error || 'Deletion failed');
+      }
 
-      // Sign out user
       await supabase.auth.signOut();
-
-      // Clear local storage
       localStorage.clear();
 
       toast({
@@ -114,13 +112,13 @@ const LegalSettings: React.FC = () => {
         description: "Il tuo account e tutti i dati associati sono stati eliminati permanentemente."
       });
 
-      // Redirect to login page
       window.location.href = '/login';
-    } catch (error: any) {
-      console.error('Account deletion error:', error);
+    } catch (err: any) {
+      console.error('Account deletion error:', err);
+      const message = err?.message || err?.error || "Impossibile eliminare l'account. Riprova o contatta il supporto.";
       toast({
         title: "❌ Errore eliminazione account",
-        description: error.message || "Impossibile eliminare l'account. Contatta il supporto.",
+        description: message,
         variant: "destructive"
       });
     } finally {
