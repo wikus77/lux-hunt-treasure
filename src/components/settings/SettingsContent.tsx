@@ -69,11 +69,16 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose, initi
 
   const handleConfirmDeleteAccount = async () => {
     if (!user) return;
+    const session = (await supabase.auth.getSession()).data.session;
+    if (!session?.access_token) {
+      toast({ title: t('danger_zone'), description: 'Session expired. Please log in again.', variant: 'destructive' });
+      return;
+    }
     setDeleteLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('delete-account', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error) throw error;
       if (data?.success !== true) throw new Error(data?.error || 'Deletion failed');

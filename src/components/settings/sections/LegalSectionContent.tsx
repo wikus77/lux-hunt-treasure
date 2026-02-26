@@ -32,7 +32,9 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language?.substring(0, 2) || 'en'; // 'en' | 'it' | 'fr'
   const { user } = useAuth();
-  
+  const { toast } = useToast();
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   // State per document modal
   const [openDocument, setOpenDocument] = useState<LegalLink | null>(null);
   const [documentOriginRect, setDocumentOriginRect] = useState<DOMRect | null>(null);
@@ -67,11 +69,16 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
 
   const handleConfirmDeleteAccount = async () => {
     if (!user) return;
+    const session = (await supabase.auth.getSession()).data.session;
+    if (!session?.access_token) {
+      toast({ title: t('danger_zone'), description: 'Session expired. Please log in again.', variant: 'destructive' });
+      return;
+    }
     setDeleteLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('delete-account', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error) throw error;
       if (data?.success !== true) throw new Error(data?.error || 'Deletion failed');
