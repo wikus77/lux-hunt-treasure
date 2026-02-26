@@ -304,6 +304,13 @@
   "deleting": "Suppression...",
   "confirm_deletion": "Confirmer la Suppression",
   "account_deleted": "Compte supprimé",
+  "delete_account_modal_title": "Supprimer le compte définitivement",
+  "delete_account_modal_irreversible": "Cette action est irréversible.",
+  "delete_account_modal_account_deleted": "Votre compte M1SSION sera définitivement supprimé et vous perdrez l'accès.",
+  "delete_account_modal_gdpr": "Les données personnelles associées seront supprimées ou anonymisées conformément au RGPD, sauf les données que nous devons conserver pour des obligations légales (ex. facturation, antifraude) le cas échéant.",
+  "delete_account_modal_signed_out": "Vous serez déconnecté immédiatement.",
+  "delete_account_modal_understand_checkbox": "Je comprends que c'est irréversible",
+  "delete_account_modal_cta_delete": "Supprimer le compte",
 
   "payments_title": "PAIEMENTS",
   "payments_subtitle": "Cartes et achats intégrés",

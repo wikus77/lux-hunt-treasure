@@ -309,6 +309,13 @@
   "deleting": "Deleting...",
   "confirm_deletion": "Confirm Deletion",
   "account_deleted": "Account deleted",
+  "delete_account_modal_title": "Delete account permanently",
+  "delete_account_modal_irreversible": "This action is irreversible.",
+  "delete_account_modal_account_deleted": "Your M1SSION account will be permanently deleted and you will lose access.",
+  "delete_account_modal_gdpr": "Associated personal data will be deleted or anonymized according to GDPR, except data we must retain for legal obligations (e.g. billing, anti-fraud) where applicable.",
+  "delete_account_modal_signed_out": "You will be signed out immediately.",
+  "delete_account_modal_understand_checkbox": "I understand this is irreversible",
+  "delete_account_modal_cta_delete": "Delete account",
 
   "payments_title": "PAYMENTS",
   "payments_subtitle": "Cards & In-App Purchase",

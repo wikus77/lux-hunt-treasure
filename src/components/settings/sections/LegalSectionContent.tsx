@@ -5,10 +5,8 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { X, FileText, Shield, Settings, Copyright, Award, ExternalLink, Trash2, ChevronRight, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
 import { SettingsSectionFlipOverlay } from '../SettingsSectionFlipOverlay';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { supabase } from '@/integrations/supabase/client';
+import { DeleteAccountModal } from '@/components/m1units/DeleteAccountModal';
 
 interface LegalSectionContentProps {
   onClose: () => void;
@@ -67,30 +65,9 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
     setOpenDocument(link);
   };
 
-  const handleConfirmDeleteAccount = async () => {
-    if (!user) return;
-    const session = (await supabase.auth.getSession()).data.session;
-    if (!session?.access_token) {
-      toast({ title: t('danger_zone'), description: 'Session expired. Please log in again.', variant: 'destructive' });
-      return;
-    }
-    setDeleteLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('delete-account', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (error) throw error;
-      if (data?.success !== true) throw new Error(data?.error || 'Deletion failed');
-      await supabase.auth.signOut();
-      localStorage.clear();
-      window.location.href = '/login';
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Deletion failed. Please try again or contact support.';
-      toast({ title: t('danger_zone'), description: message, variant: 'destructive' });
-    } finally {
-      setDeleteLoading(false);
-    }
+  const openDeleteModal = (e: React.MouseEvent<HTMLElement>) => {
+    setDeleteOriginRect(e.currentTarget.getBoundingClientRect());
+    setDeleteModalOpen(true);
   };
 
   return (
@@ -209,43 +186,22 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
             {t('delete_account_desc_in_app')}
           </p>
 
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button
-                disabled={deleteLoading}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '12px',
-                  background: 'rgba(239, 68, 68, 0.15)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  color: '#EF4444',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  cursor: deleteLoading ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {deleteLoading ? t('deleting') : t('delete_account_permanently')}
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="bg-black/90 border-red-500/20">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-white">{t('delete_account_confirm_title')}</AlertDialogTitle>
-                <AlertDialogDescription className="text-white/80">
-                  {t('delete_account_confirm_message')}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="bg-white/10 text-white border-white/20">{t('cancel')}</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleConfirmDeleteAccount}
-                  className="bg-red-600 hover:bg-red-700 text-white"
-                >
-                  {t('delete_account_permanently')}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <button
+            onClick={openDeleteModal}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '12px',
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              color: '#EF4444',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {t('delete_account_permanently')}
+          </button>
         </GlassCard>
       </div>
 
@@ -263,6 +219,12 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
           />
         </SettingsSectionFlipOverlay>
       )}
+
+      <DeleteAccountModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        originRect={deleteOriginRect}
+      />
     </div>
   );
 };
