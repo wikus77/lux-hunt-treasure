@@ -5,6 +5,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { X, FileText, Shield, Settings, Copyright, Award, ExternalLink, Trash2, ChevronRight, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 import { SettingsSectionFlipOverlay } from '../SettingsSectionFlipOverlay';
 import { DeleteAccountModal } from '@/components/m1units/DeleteAccountModal';
 
@@ -36,6 +37,8 @@ const LegalSectionContent: React.FC<LegalSectionContentProps> = ({ onClose }) =>
   // State per document modal
   const [openDocument, setOpenDocument] = useState<LegalLink | null>(null);
   const [documentOriginRect, setDocumentOriginRect] = useState<DOMRect | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteOriginRect, setDeleteOriginRect] = useState<DOMRect | null>(null);
 
   const legalLinks: LegalLink[] = [
     { id: 'terms', title: 'Termini di Servizio', titleEn: 'Terms of Service', titleFr: 'Conditions d\'Utilisation', description: "Condizioni d'uso dell'applicazione", descriptionEn: 'Application usage conditions', descriptionFr: 'Conditions d\'utilisation de l\'application', icon: FileText, color: '#00D1FF' },
