@@ -144,7 +144,7 @@ serve(withCors(async (req) => {
               .from("user_notifications")
               .insert([{
                 user_id,
-                notification_type: 'reward',
+                type: 'reward',
                 title: 'BUZZ Gratuito Ricevuto!',
                 message: `Hai ricevuto ${buzzCount} BUZZ gratuiti dal marker ${markerId}`,
                 metadata: { source: `marker:${markerId}`, reward_type: 'buzz_free', count: buzzCount }
@@ -175,7 +175,7 @@ serve(withCors(async (req) => {
                 .from("user_notifications")
                 .insert([{
                   user_id,
-                  notification_type: 'reward',
+                  type: 'reward',
                   title: 'Premio Messaggio',
                   message: fallbackMessage,
                   metadata: { source: `marker:${markerId}`, reward_type: 'message', original_message: message }
@@ -192,7 +192,7 @@ serve(withCors(async (req) => {
                 .from("user_notifications")
                 .insert([{
                   user_id,
-                  notification_type: 'reward',
+                  type: 'reward',
                   title: 'Premio Messaggio',
                   message: cleanMessage,
                   metadata: { source: `marker:${markerId}`, reward_type: 'message' }
@@ -242,7 +242,7 @@ serve(withCors(async (req) => {
               .from("user_notifications")
               .insert([{
                 user_id,
-                notification_type: 'reward',
+                type: 'reward',
                 title: 'Punti Esperienza Ricevuti!',
                 message: `Hai guadagnato ${xpPoints} punti esperienza dal marker ${markerId}`,
                 metadata: { source: `marker:${markerId}`, reward_type: 'xp_points', xp: xpPoints }
@@ -277,7 +277,7 @@ serve(withCors(async (req) => {
               .from("user_notifications")
               .insert([{
                 user_id,
-                notification_type: 'reward',
+                type: 'reward',
                 title: 'Biglietto Evento Ricevuto!',
                 message: `Hai ricevuto un biglietto ${ticketType} per l'evento ${eventId}`,
                 metadata: { source: `marker:${markerId}`, reward_type: 'event_ticket', event_id: eventId, ticket_type: ticketType }
@@ -309,7 +309,7 @@ serve(withCors(async (req) => {
               .from("user_notifications")
               .insert([{
                 user_id,
-                notification_type: 'reward',
+                type: 'reward',
                 title: 'Distintivo Sbloccato!',
                 message: `Hai sbloccato un nuovo distintivo dal marker ${markerId}`,
                 metadata: { source: `marker:${markerId}`, reward_type: 'badge', badge_id: badgeId }
@@ -369,7 +369,7 @@ serve(withCors(async (req) => {
             // Notifica in-app
             await admin.from("user_notifications").insert([{
               user_id,
-              notification_type: 'reward',
+              type: 'reward',
               title: '💰 M1U Ricevuti!',
               message: `+${m1uAmount} M1U accreditati! Nuovo saldo: ${newBalance}`,
               metadata: { reward_type: 'm1u', amount: m1uAmount, new_balance: newBalance }
@@ -418,7 +418,7 @@ serve(withCors(async (req) => {
               .from("user_notifications")
               .insert([{
                 user_id,
-                notification_type: 'clue',
+                type: 'clue',
                 title: '🔍 Indizio Trovato!',
                 message: clueText,
                 metadata: { 
@@ -472,7 +472,7 @@ serve(withCors(async (req) => {
               .from("user_notifications")
               .insert([{
                 user_id,
-                notification_type: 'prize',
+                type: 'prize',
                 title: `🎉 PREMIO VINTO: ${prizeName}!`,
                 message: `Congratulazioni! Hai vinto ${prizeName}! Il tuo codice di riscatto è: ${claimCode}. Conserva questo codice per ritirare il premio.`,
                 metadata: { 
