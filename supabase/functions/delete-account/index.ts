@@ -92,7 +92,15 @@ serve(async (req) => {
     // 4) Auth: remove user (must be last)
     const authResult = await admin.auth.admin.deleteUser(user_id);
     if (authResult.error) {
-      const msg = authResult.error.message || "";
+      const err = authResult.error as { message?: string; status?: number; code?: string; details?: string };
+      const msg = err.message || "";
+      // Diagnostic log (no token/key/JWT)
+      console.warn("delete-account: deleteUser error", {
+        message: msg,
+        status: err.status,
+        code: err.code,
+        details: err.details,
+      });
       if (msg.toLowerCase().includes("not found") || msg.toLowerCase().includes("does not exist")) {
         return new Response(JSON.stringify({ success: true, deleted_at: new Date().toISOString() }), {
           status: 200,
@@ -108,7 +116,12 @@ serve(async (req) => {
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
-    console.warn("delete-account: error", message);
+    const errObj = e as { message?: string; status?: number; code?: string; details?: string };
+    console.warn("delete-account: error", message, {
+      status: errObj.status,
+      code: errObj.code,
+      details: errObj.details,
+    });
     return new Response(JSON.stringify({ success: false, error: "Deletion failed. Please try again or contact support." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

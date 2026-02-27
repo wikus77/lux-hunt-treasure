@@ -1,11 +1,11 @@
-// sw-bump-2025-01-07-v3
+// sw-bump-2026-02-01-FORCE
 // M1SSION™ PWA Service Worker - Unified Web Push + Caching + S-W-R
 // © 2025 Joseph MULÉ – NIYVORA KFT™
 
-const SW_VERSION = '2.2.0'; // 🔄 FORCE UPDATE - Jan 7, 2025
-const CACHE_NAME = 'm1ssion-v2.2';
-const STATIC_CACHE = 'm1ssion-static-v2.2';
-const ASSET_CACHE = 'm1ssion-assets-v2.2'; // S-W-R cache
+const SW_VERSION = '3.0.0'; // 🔄 FORCE UPDATE - Feb 1, 2026 - REVOLUT STYLE
+const CACHE_NAME = 'm1ssion-v3.0';
+const STATIC_CACHE = 'm1ssion-static-v3.0';
+const ASSET_CACHE = 'm1ssion-assets-v3.0'; // S-W-R cache
 
 // Precache critical resources
 const PRECACHE_RESOURCES = [
