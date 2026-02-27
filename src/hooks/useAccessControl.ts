@@ -69,7 +69,20 @@ export const useAccessControl = (): AccessControlState => {
         }
 
         if (!userProfile) {
-          // Profile missing (0 rows) — do not block app: grant access with free plan
+          // Profile missing (zombie after delete-account partial failure) — ensure minimal profile then grant access
+          const { error: insertErr } = await supabase.from('profiles').insert({
+            id: user.id,
+            email: user.email ?? '',
+            full_name: user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Agente',
+            role: 'user',
+          }).select('id').maybeSingle();
+          if (!insertErr) {
+            console.log('[useAccessControl] ensureProfile: created minimal profile for', user.id);
+          }
+          // 23505 = unique_violation (race: another tab/request already created)
+          if (insertErr && (insertErr as { code?: string }).code !== '23505') {
+            console.warn('[useAccessControl] ensureProfile insert warning:', (insertErr as Error).message);
+          }
           setState({ canAccess: true, isLoading: false, accessStartDate: new Date(), subscriptionPlan: 'free', status: 'active', timeUntilAccess: null });
           return;
         }
