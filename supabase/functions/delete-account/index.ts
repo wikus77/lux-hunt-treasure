@@ -67,29 +67,32 @@ serve(async (req) => {
       // Continue; bucket may not exist or be empty
     }
 
-    // 2) Public data: delete in safe order (child refs first)
+    // 2) Public data: delete in safe order (child refs first; profiles LAST before deleteUser).
+    // If deleteUser fails after profiles is deleted → zombie (auth user without profile). App safety net (ensureProfile) handles existing zombies.
     const tablesByUser: { table: string; column: string }[] = [
       { table: "email_sends", column: "recipient_user_id" },
       { table: "user_clues", column: "user_id" },
       { table: "user_buzz_counter", column: "user_id" },
       { table: "user_notifications", column: "user_id" },
       { table: "subscriptions", column: "user_id" },
+      { table: "user_roles", column: "user_id" },
+      { table: "antifraud_log", column: "user_id" },
     ];
     for (const { table, column } of tablesByUser) {
       const { error: delErr } = await admin.from(table).delete().eq(column, user_id);
       if (delErr) {
         console.warn(`delete-account: ${table} delete warning`, delErr.message);
-        // Continue; table may not exist or RLS
+        // Continue; table may not exist or missing column
       }
     }
 
-    // 3) Profile (may cascade elsewhere)
+    // 3) Profile — must be deleted before deleteUser (profiles.id FK → auth.users). Last public cleanup.
     const { error: profileErr } = await admin.from("profiles").delete().eq("id", user_id);
     if (profileErr) {
       console.warn("delete-account: profiles delete warning", profileErr.message);
     }
 
-    // 4) Auth: remove user (must be last)
+    // 4) Auth: remove user (must be last). If this fails, user remains without profile → zombie; app ensureProfile will repair on next boot.
     const authResult = await admin.auth.admin.deleteUser(user_id);
     if (authResult.error) {
       const err = authResult.error as { message?: string; status?: number; code?: string; details?: string };
