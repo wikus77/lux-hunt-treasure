@@ -16,7 +16,7 @@ export interface WelcomeBonusState {
   newBalance: number | null;
 }
 
-const WELCOME_BONUS_AMOUNT = 500;
+const WELCOME_BONUS_AMOUNT = 150;
 const LOCAL_STORAGE_KEY = 'm1ssion_welcome_bonus_shown';
 
 export const useWelcomeBonus = () => {

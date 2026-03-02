@@ -10,7 +10,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const WELCOME_BONUS_AMOUNT = 500;
+const WELCOME_BONUS_AMOUNT = 150;
 
 interface ClaimRequest {
   userId?: string; // Optional - will use auth user if not provided

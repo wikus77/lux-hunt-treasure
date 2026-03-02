@@ -1,8 +1,9 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Component: WelcomeBonusModal
-// Modal di benvenuto con animazione e accredito 500 M1U
+// Modal di benvenuto con animazione e accredito 150 M1U
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWelcomeBonus } from '@/hooks/useWelcomeBonus';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
@@ -17,6 +18,7 @@ const WelcomeBonusModal: React.FC<WelcomeBonusModalProps> = ({
   isOpen: externalIsOpen,
   onComplete 
 }) => {
+  const { t } = useTranslation();
   const { user } = useUnifiedAuth();
   const { 
     needsBonus, 
@@ -200,8 +202,8 @@ const WelcomeBonusModal: React.FC<WelcomeBonusModalProps> = ({
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.4 }}
                     >
-                      <span className="text-cyan-400">BENVENUTO</span>{' '}
-                      <span className="text-white">IN M1SSION</span>
+                      <span className="text-cyan-400">{t('welcome_bonus.title')}</span>{' '}
+                      <span className="text-white">{t('welcome_bonus.title_brand')}</span>
                       <span className="text-cyan-400 text-lg">™</span>
                     </motion.h2>
 
@@ -211,8 +213,8 @@ const WelcomeBonusModal: React.FC<WelcomeBonusModalProps> = ({
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.6 }}
                     >
-                      Ciao <span className="text-cyan-400 font-semibold">{agentName}</span>!<br />
-                      La caccia al tesoro globale ti aspetta.
+                      {t('welcome_bonus.greeting', { name: agentName })}<br />
+                      {t('welcome_bonus.greeting_subtitle')}
                     </motion.p>
 
                     {/* Bonus announcement */}
@@ -245,7 +247,7 @@ const WelcomeBonusModal: React.FC<WelcomeBonusModalProps> = ({
                         </span>
                       </div>
                       <p className="text-gray-400 text-xs mt-2">
-                        per esplorare il gioco e iniziare la tua missione
+                        {t('welcome_bonus.description')}
                       </p>
                     </motion.div>
 
@@ -272,11 +274,11 @@ const WelcomeBonusModal: React.FC<WelcomeBonusModalProps> = ({
                               animate={{ rotate: 360 }}
                               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                             />
-                            ATTIVAZIONE...
+                            {t('welcome_bonus.activating')}
                           </>
                         ) : (
                           <>
-                            BUONA CACCIA
+                            {t('welcome_bonus.cta')}
                             <ChevronRight className="w-5 h-5" />
                           </>
                         )}
@@ -315,7 +317,7 @@ const WelcomeBonusModal: React.FC<WelcomeBonusModalProps> = ({
                     </motion.div>
 
                     <h3 className="text-xl font-bold text-white mb-4 font-orbitron">
-                      ACCREDITO IN CORSO...
+                      {t('welcome_bonus.crediting')}
                     </h3>
 
                     {/* Slot machine display */}
@@ -373,7 +375,7 @@ const WelcomeBonusModal: React.FC<WelcomeBonusModalProps> = ({
                     </motion.div>
 
                     <h3 className="text-2xl font-bold text-green-400 mb-2 font-orbitron">
-                      BONUS ATTIVATO!
+                      {t('welcome_bonus.completed')}
                     </h3>
 
                     <div
@@ -388,7 +390,7 @@ const WelcomeBonusModal: React.FC<WelcomeBonusModalProps> = ({
                     </div>
 
                     <p className="text-gray-400">
-                      Buona caccia, Agente!
+                      {t('welcome_bonus.final_message')}
                     </p>
                   </motion.div>
                 )}
