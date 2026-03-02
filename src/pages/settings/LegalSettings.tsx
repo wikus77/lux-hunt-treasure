@@ -94,13 +94,13 @@ const LegalSettings: React.FC = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('delete-account', {
+      const { data, error } = await supabase.functions.invoke('delete-account-v2', {
         method: 'POST',
         headers: { Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
       });
 
       if (error) throw error;
-      if (data?.success !== true) {
+      if (data?.ok !== true) {
         throw new Error(data?.error || 'Deletion failed');
       }
 

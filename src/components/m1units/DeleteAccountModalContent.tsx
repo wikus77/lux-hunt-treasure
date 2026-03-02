@@ -29,12 +29,12 @@ export const DeleteAccountModalContent: React.FC<DeleteAccountModalContentProps>
     }
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('delete-account', {
+      const { data, error } = await supabase.functions.invoke('delete-account-v2', {
         method: 'POST',
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error) throw error;
-      if (data?.success !== true) throw new Error(data?.error || 'Deletion failed');
+      if (data?.ok !== true) throw new Error(data?.error || 'Deletion failed');
       await supabase.auth.signOut();
       localStorage.clear();
       window.location.href = '/login';
