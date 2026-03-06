@@ -1,15 +1,11 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { useState, useEffect, Suspense, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
-import * as THREE from "three";
 import "@/styles/landing-flip-cards.css";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { getAgentById, getDefaultAgent } from "@/components/agent/agentCatalog";
 import { useLongPress } from "@/hooks/useLongPress";
 import { LongPressInfoModal } from "@/components/ui/LongPressInfoModal";
 import { Gift, Trophy, Car, Diamond, Sparkles, Smartphone } from "lucide-react";
@@ -33,46 +29,6 @@ interface PrizeVisionProps {
   status?: "locked" | "partial" | "near" | "unlocked";
 }
 
-// Mini 3D Agent for Decryption Room
-function MiniAgentModel({ glbPath }: { glbPath: string }) {
-  const { scene } = useGLTF(glbPath);
-  
-  const clonedScene = React.useMemo(() => {
-    const clone = scene.clone();
-    
-    // Calculate bounding box
-    const box = new THREE.Box3().setFromObject(clone);
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    
-    // Scale to fit in small viewer
-    const targetHeight = 2.0;
-    const scaleFactor = targetHeight / size.y;
-    clone.scale.setScalar(scaleFactor);
-    
-    // Recalculate after scaling
-    const scaledBox = new THREE.Box3().setFromObject(clone);
-    const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
-    
-    // Center model
-    clone.position.x = -scaledCenter.x;
-    clone.position.z = -scaledCenter.z;
-    clone.position.y = -scaledBox.min.y;
-    
-    // Disable shadows for performance
-    clone.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        child.castShadow = false;
-        child.receiveShadow = false;
-      }
-    });
-    
-    return clone;
-  }, [scene]);
-  
-  return <primitive object={clonedScene} />;
-}
-
 export function PrizeVision({ progress }: PrizeVisionProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -80,8 +36,6 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSwipeTransition, setIsSwipeTransition] = useState(false);
   const [isDecryptionMode, setIsDecryptionMode] = useState(false);
-  const [selectedAgentGlb, setSelectedAgentGlb] = useState<string | null>(null);
-  const [agentName, setAgentName] = useState<string>('');
   const [agentCode, setAgentCode] = useState<string>('AG-XXXX');
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [originRect, setOriginRect] = useState<DOMRect | null>(null);
@@ -96,76 +50,34 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
     hapticFeedback: true,
   });
 
-  // Load selected agent for Decryption Room
+  // Load agent code from profile for Decryption Room label (no GLB/3D)
   useEffect(() => {
-    const loadAgent = async () => {
-      if (!user?.id) {
-        // Use default agent
-        const defaultAgent = getDefaultAgent();
-        setSelectedAgentGlb(defaultAgent.glbPath);
-        setAgentName(defaultAgent.name);
-        return;
-      }
-
+    const loadAgentCode = async () => {
+      if (!user?.id) return;
       try {
-        // Try localStorage first
-        const localData = localStorage.getItem(`agent_customization_v2_${user.id}`);
-        if (localData) {
-          try {
-            const parsed = JSON.parse(localData);
-            if (parsed.selectedAgentId) {
-              const agent = getAgentById(parsed.selectedAgentId);
-              if (agent) {
-                setSelectedAgentGlb(agent.glbPath);
-                setAgentName(agent.name);
-              }
-            }
-          } catch (e) {
-            // Fallback to default
-            const defaultAgent = getDefaultAgent();
-            setSelectedAgentGlb(defaultAgent.glbPath);
-            setAgentName(defaultAgent.name);
-          }
-        } else {
-          const defaultAgent = getDefaultAgent();
-          setSelectedAgentGlb(defaultAgent.glbPath);
-          setAgentName(defaultAgent.name);
-        }
-
-        // Try to load agent code from profile
         const { data: profile } = await supabase
           .from('profiles')
-          .select('agent_code, agent_customization')
+          .select('agent_code')
           .eq('id', user.id)
           .maybeSingle();
-
-        if (profile?.agent_code) {
-          setAgentCode(profile.agent_code);
-        }
-
-        // Check Supabase for more up-to-date data
-        if (profile?.agent_customization) {
-          const dbData = profile.agent_customization as { selectedAgentId?: string };
-          if (dbData.selectedAgentId) {
-            const agent = getAgentById(dbData.selectedAgentId);
-            if (agent) {
-              setSelectedAgentGlb(agent.glbPath);
-              setAgentName(agent.name);
+        if (profile?.agent_code) setAgentCode(profile.agent_code);
+        else {
+          const cached = localStorage.getItem('m1ssion_agent_code');
+          if (cached) {
+            try {
+              const parsed = JSON.parse(cached);
+              if (parsed?.code) setAgentCode(parsed.code);
+            } catch {
+              // ignore
             }
           }
         }
       } catch (err) {
-        console.error('[PrizeVision] Error loading agent:', err);
-        const defaultAgent = getDefaultAgent();
-        setSelectedAgentGlb(defaultAgent.glbPath);
-        setAgentName(defaultAgent.name);
+        console.error('[PrizeVision] Error loading agent code:', err);
       }
     };
-
-    loadAgent();
-
-    // Listen for agent updates
-    const handleAgentChange = () => loadAgent();
+    loadAgentCode();
+    const handleAgentChange = () => loadAgentCode();
     window.addEventListener('agent-customization-updated', handleAgentChange);
     return () => window.removeEventListener('agent-customization-updated', handleAgentChange);
   }, [user?.id]);
@@ -443,54 +355,23 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
                 {/* Layout: Agent on left, Holographic Cube on right */}
                 <div className="flex-1 flex items-center justify-center gap-4">
                   
-                  {/* 3D Agent Viewer - Left side */}
-                  {selectedAgentGlb && (
-                    <div className="relative flex-shrink-0">
-                      <div 
-                        className="w-24 h-32 sm:w-28 sm:h-36 rounded-xl border overflow-hidden"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(0, 20, 40, 0.9) 100%)',
-                          borderColor: 'rgba(16, 185, 129, 0.4)',
-                          boxShadow: '0 0 20px rgba(16, 185, 129, 0.3), inset 0 0 15px rgba(16, 185, 129, 0.1)'
-                        }}
-                      >
-                        <Canvas
-                          camera={{ position: [0, 0.5, 3.5], fov: 35 }}
-                          gl={{ 
-                            antialias: true, 
-                            alpha: true,
-                            powerPreference: 'low-power',
-                            toneMappingExposure: 1.3,
-                            toneMapping: THREE.ACESFilmicToneMapping
-                          }}
-                          style={{ width: '100%', height: '100%' }}
-                        >
-                          <ambientLight intensity={1.2} color="#ffffff" />
-                          <directionalLight position={[2, 3, 2]} intensity={1.5} color="#ffffff" />
-                          <directionalLight position={[-2, 1, 2]} intensity={0.8} color="#10B981" />
-                          
-                          <Suspense fallback={null}>
-                            <MiniAgentModel glbPath={selectedAgentGlb} />
-                          </Suspense>
-                          
-                          <OrbitControls
-                            enablePan={false}
-                            enableZoom={false}
-                            autoRotate={true}
-                            autoRotateSpeed={1.5}
-                            minPolarAngle={Math.PI / 3}
-                            maxPolarAngle={Math.PI / 2}
-                            target={[0, 0.7, 0]}
-                          />
-                        </Canvas>
-                      </div>
-                      {/* Agent Label */}
-                      <div className="absolute -bottom-6 left-0 right-0 text-center">
-                        <p className="text-[9px] text-emerald-400/80 font-mono truncate">{agentName}</p>
-                        <p className="text-[8px] text-cyan-400/60 font-mono">{agentCode}</p>
-                      </div>
+                  {/* Agent placeholder - Left side (no GLB/3D) */}
+                  <div className="relative flex-shrink-0">
+                    <div
+                      className="w-24 h-32 sm:w-28 sm:h-36 rounded-xl border overflow-hidden flex flex-col items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(0, 20, 40, 0.9) 100%)',
+                        borderColor: 'rgba(16, 185, 129, 0.4)',
+                        boxShadow: '0 0 20px rgba(16, 185, 129, 0.3), inset 0 0 15px rgba(16, 185, 129, 0.1)'
+                      }}
+                    >
+                      <Sparkles className="w-8 h-8 text-emerald-400/70 mb-1" />
+                      <span className="text-[10px] text-emerald-400/80 font-mono">Agent</span>
                     </div>
-                  )}
+                    <div className="absolute -bottom-6 left-0 right-0 text-center">
+                      <p className="text-[8px] text-cyan-400/60 font-mono">{agentCode}</p>
+                    </div>
+                  </div>
 
                   {/* Holographic Cube - Right side */}
                   <div className="relative">

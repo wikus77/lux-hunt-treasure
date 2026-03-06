@@ -39,6 +39,7 @@ import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { toast } from 'sonner';
 import { getMissionDeadline } from '@/utils/countdownDate';
 import LotteryTicketCard from './LotteryTicketCard';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 interface LotteryStatus {
   cycle_id: string;
@@ -303,12 +304,7 @@ const LotteryContent: React.FC<LotteryContentProps> = ({ balance, onBalanceUpdat
           description: `+${data.prize_m1u} M1U accreditati!`
         });
         
-        // Dispatch event for M1U animation
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('m1u-credited', {
-            detail: { amount: data.prize_m1u }
-          }));
-        }, 500);
+        emitM1UCreditEvent(data.prize_m1u, 'lottery');
         
         // Refresh data
         onBalanceUpdate();

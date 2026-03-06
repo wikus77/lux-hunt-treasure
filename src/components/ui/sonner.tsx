@@ -1,7 +1,7 @@
-
 import { useTheme } from "next-themes"
 import { Toaster as Sonner } from "sonner"
 import { useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import { toastDebug } from "@/utils/toastDebug"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
@@ -117,7 +117,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
     }
   }, [])
 
-  return (
+  const sonnerContent = (
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
@@ -163,6 +163,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
       {...props}
     />
   )
+
+  // iOS WKWebView: mount Toaster as direct child of body so it stacks above Login overlay
+  // (Login uses createPortal(..., document.body) with z-100; Toaster needs same level + z-9999)
+  if (typeof document !== 'undefined' && document.body) {
+    return createPortal(sonnerContent, document.body)
+  }
+  return sonnerContent
 }
 
 // Export the connected toast function from sonner

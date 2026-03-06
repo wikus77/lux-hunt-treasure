@@ -27,6 +27,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import { useNotifications } from '@/hooks/useNotifications';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 interface ScratchWinModalProps {
   isOpen: boolean;
@@ -442,12 +443,7 @@ export const ScratchWinModal: React.FC<ScratchWinModalProps> = ({
           duration: 8000,
         });
         
-        // Trigger M1U Pill animation
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('m1u-credited', { 
-            detail: { amount: rewardValue } 
-          }));
-        }, 1500);
+        emitM1UCreditEvent(rewardValue, 'scratch');
         
       } else if (rewardType === 'progress') {
         // Progress advancement confetti

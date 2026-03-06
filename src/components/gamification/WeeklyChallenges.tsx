@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Target, CheckCircle, Gift, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 interface Challenge {
   id: string;
@@ -79,10 +80,7 @@ export function WeeklyChallenges({ compact = false }: WeeklyChallengesProps) {
       setShowReward('conquer_country');
       setTimeout(() => setShowReward(null), 4000);
       
-      // Dispatch M1U animation
-      window.dispatchEvent(new CustomEvent('m1u-credited', { 
-        detail: { amount: 100 } 
-      }));
+      emitM1UCreditEvent(100, 'weekly_challenge');
     };
 
     window.addEventListener('country-conquered', handleConquest);

@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
 import { useAwardPE } from '@/features/pulse/hooks/useAwardPE';
 import { trackStreak } from '@/lib/analytics';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 interface StreakInfo {
   current_streak: number;
@@ -241,10 +242,7 @@ export function StreakWidget({ compact = false, onCheckIn }: StreakWidgetProps) 
           toast.success(`🎉 Nuovo badge sbloccato: ${milestone.name}!`);
         }
         
-        // 🆕 Dispatch event for M1U pill slot machine animation
-        window.dispatchEvent(new CustomEvent('m1u-credited', { 
-          detail: { amount: milestone.m1uReward + DAILY_M1U_REWARD } 
-        }));
+        emitM1UCreditEvent(milestone.m1uReward + DAILY_M1U_REWARD, 'streak');
 
         // 🔒 AAA+ Analytics: Track milestone reached
         trackStreak('daily_streak_incremented', {
@@ -263,10 +261,7 @@ export function StreakWidget({ compact = false, onCheckIn }: StreakWidgetProps) 
         setShowM1UReward({ amount: DAILY_M1U_REWARD, isMilestone: false });
         setTimeout(() => setShowM1UReward(null), 3000);
         
-        // 🆕 Dispatch event for M1U pill slot machine animation
-        window.dispatchEvent(new CustomEvent('m1u-credited', { 
-          detail: { amount: DAILY_M1U_REWARD } 
-        }));
+        emitM1UCreditEvent(DAILY_M1U_REWARD, 'streak');
       }
 
       setCanCheckIn(false);

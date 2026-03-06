@@ -7,6 +7,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { useAuthContext } from '@/contexts/auth';
 
 export interface AgentRank {
   id: number;
@@ -38,6 +39,7 @@ interface UseAgentEnergyReturn {
 
 export const useAgentEnergy = (): UseAgentEnergyReturn => {
   const { user } = useAuth();
+  const { authReady } = useAuthContext();
   const [energy, setEnergy] = useState<AgentEnergyState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -139,14 +141,14 @@ export const useAgentEnergy = (): UseAgentEnergyReturn => {
     }
   }, [user?.id, fetchRanks]);
 
-  // Initial fetch
+  // Initial fetch (only after auth bootstrap to avoid lock contention)
   useEffect(() => {
-    fetchEnergy();
-  }, [fetchEnergy]);
+    if (authReady) fetchEnergy();
+  }, [authReady, fetchEnergy]);
 
-  // Realtime subscription for pulse_energy changes
+  // Realtime subscription for pulse_energy changes (only after auth bootstrap)
   useEffect(() => {
-    if (!user?.id) return;
+    if (!authReady || !user?.id) return;
 
     const channel = supabase
       .channel(`agent_energy_${user.id}`)
@@ -179,7 +181,7 @@ export const useAgentEnergy = (): UseAgentEnergyReturn => {
     return () => {
       channel.unsubscribe();
     };
-  }, [user?.id, fetchEnergy]);
+  }, [authReady, user?.id, fetchEnergy]);
 
   return {
     energy,

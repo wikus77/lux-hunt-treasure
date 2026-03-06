@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 interface StreakModalProps {
   isOpen: boolean;
@@ -218,10 +219,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
         toast.success(`🔥 ${t('streak_toast_days')}: ${newStreak} ${t('streak_days_label')}! +${DAILY_M1U_REWARD} M1U`, { duration: 3000 });
       }
       
-      // 🆕 FIX 16/01/2026: Dispatch evento per animazione slot machine M1UPill
-      window.dispatchEvent(new CustomEvent('m1u-credited', { 
-        detail: { amount: totalM1U } 
-      }));
+      emitM1UCreditEvent(totalM1U, 'streak');
       
       setTimeout(() => {
         setShowSuccess(false);

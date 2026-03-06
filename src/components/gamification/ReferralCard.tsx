@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 interface ReferralStats {
   referral_code: string;
@@ -128,10 +129,7 @@ export function ReferralCard({ compact = false, showApplyCode = false }: Referra
         hapticSuccess();
         toast.success(result.message || 'Bonus applicato!');
         
-        // Trigger M1U animation
-        window.dispatchEvent(new CustomEvent('m1u-credited', { 
-          detail: { amount: result.referred_reward || 50 } 
-        }));
+        emitM1UCreditEvent(result.referred_reward || 50, 'referral');
         
         setApplyCodeMode(false);
         setInputCode('');

@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Sparkles, Zap, VolumeX, Volume2, X } from 'lucide-react';
 import type { ClueMilestone } from '@/hooks/useClueMilestones';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 // 🎬 Video path
 const LEVELUP_VIDEO = '/assets/video/LEVELUP-BRIF-VIDEO.mp4';
@@ -88,11 +89,7 @@ export const ClueMilestoneModal: React.FC<ClueMilestoneModalProps> = ({ mileston
         // Scroll in alto per vedere il pill M1U
         window.scrollTo({ top: 0, behavior: 'smooth' });
         
-        // Dispatch evento per slot machine PRIMA di chiudere
-        console.log('[ClueMilestoneModal] 🎰 Dispatching m1u-credited for slot machine');
-        window.dispatchEvent(new CustomEvent('m1u-credited', {
-          detail: { amount: milestone.m1u }
-        }));
+        emitM1UCreditEvent(milestone.m1u, 'clue_milestone');
         
         // Chiudi modal dopo un breve delay
         setTimeout(onClose, 500);

@@ -208,8 +208,7 @@ export const AgentDiaryContent: React.FC<AgentDiaryContentProps> = ({ onClose })
   };
 
   const handleOpenAgentLab = () => {
-    onClose();
-    setTimeout(() => setShowAgentLab(true), 300);
+    setShowAgentLab(true);
   };
 
   const handleMissionShortcut = (type: string) => {

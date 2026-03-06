@@ -85,10 +85,10 @@ export const ClueMilestoneWatcher: React.FC = () => {
         return;
       }
 
-      // 2. Fallback: conta le notifiche buzz
+      // 2. Fallback: conta le notifiche buzz (tabella reale: user_notifications)
       console.log('[ClueMilestoneWatcher] 📡 Fallback: counting notifications...');
       const { count: notifCount } = await supabase
-        .from('notifications')
+        .from('user_notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('type', 'buzz');

@@ -12,6 +12,7 @@ import { Vault, Gift, Clock, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCashbackWallet } from '@/hooks/useCashbackWallet';
 import { M1SSION_ENABLE_CASHBACK } from '@/config/cashbackConfig';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 interface CashbackVaultPillProps {
   className?: string;
@@ -147,11 +148,8 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
           description: t('home_cashback_credited', { amount: result.credited_m1u.toLocaleString() }),
         });
         setShowClaimModal(false);
-        // Trigger M1U pill refresh
         window.dispatchEvent(new CustomEvent('m1u-balance-updated'));
-        window.dispatchEvent(new CustomEvent('m1u-credited', { 
-          detail: { amount: result.credited_m1u } 
-        }));
+        emitM1UCreditEvent(result.credited_m1u, 'cashback');
       } else {
         toast.error(t('home_cashback_claim_failed'), { 
           description: walletError || t('home_cashback_check_connection') 

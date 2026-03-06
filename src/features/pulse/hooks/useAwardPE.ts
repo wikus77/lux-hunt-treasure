@@ -188,15 +188,22 @@ export const useAwardPE = (): UseAwardPEReturn => {
         return { success: false, error: result?.error || 'Award failed' };
       }
 
-      // Registra l'azione nel log giornaliero (se ha limite)
+      // Registra l'azione nel log giornaliero (se ha limite). No .catch() — supabase.rpc() return may not be full Promise on iOS.
       if (dailyLimit !== undefined) {
-        await supabase.rpc('record_pe_daily_action', {
-          p_user_id: user.id,
-          p_action_type: action,
-          p_pe_awarded: peAmount
-        }).catch(err => {
-          console.warn('[PE] ⚠️ Failed to record daily action (RPC may not exist yet):', err);
-        });
+        try {
+          const { error: dailyErr } = await supabase.rpc('record_pe_daily_action', {
+            p_user_id: user.id,
+            p_action_type: action,
+            p_pe_awarded: peAmount
+          });
+          if (dailyErr && import.meta.env.DEV) {
+            console.warn('[PE] ⚠️ Failed to record daily action (RPC may not exist yet):', dailyErr.message);
+          }
+        } catch (_err) {
+          if (import.meta.env.DEV) {
+            console.warn('[PE] ⚠️ record_pe_daily_action exception:', _err instanceof Error ? _err.message : _err);
+          }
+        }
       }
 
       const awardResult: AwardPEResult = {
@@ -229,7 +236,19 @@ export const useAwardPE = (): UseAwardPEReturn => {
       return awardResult;
 
     } catch (err) {
-      console.error('[PE] ❌ Exception:', err);
+      const msg = err instanceof Error ? err.message : String(err ?? '');
+      const name = err instanceof Error ? err.name : '';
+      const stack = err instanceof Error ? err.stack : '';
+      const cause = err instanceof Error && (err as Error & { cause?: unknown }).cause != null ? (err as Error & { cause?: unknown }).cause : undefined;
+      const safeJson = (() => {
+        try {
+          if (err && typeof err === 'object' && Object.keys(err).length > 0) return JSON.stringify(err);
+        } catch (_) {}
+        return '';
+      })();
+      if (import.meta.env.DEV || msg || name || stack) {
+        console.error('[PE] ❌ Exception:', msg || name || '(empty)', { name, stack: stack?.slice(0, 200), cause, raw: safeJson || (err != null ? String(err) : '') });
+      }
       return { 
         success: false, 
         error: err instanceof Error ? err.message : 'Unknown error' 

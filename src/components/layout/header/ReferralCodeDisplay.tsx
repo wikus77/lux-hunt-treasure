@@ -29,9 +29,9 @@ const ReferralCodeDisplay: React.FC = () => {
       transition={{ duration: 0.3 }}
       className="flex items-center"
     >
-      {/* Agent Code - 🚀 NATIVE: Font più grande e visibile - Pallino RIMOSSO */}
+      {/* Agent Code - iOS: compatto (~70% size) per non sovrapporsi a ON M1SSION */}
       <span 
-        className={`text-[15px] font-orbitron font-bold agent-code-badge tracking-wider ${
+        className={`max-w-[72px] truncate text-[11px] font-orbitron font-bold agent-code-badge tracking-wider block ${
           isMCP ? 'text-red-500' : 'text-[#00D1FF]'
         }`}
         style={{
