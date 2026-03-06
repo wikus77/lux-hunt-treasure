@@ -41,6 +41,8 @@ export type PECreditSource =
   | 'clue_milestone'
   | 'onboarding'
   | 'vera_bomb'
+  | 'practice_mode_win'
+  | 'battle_defense_win'
   | string;
 
 /**

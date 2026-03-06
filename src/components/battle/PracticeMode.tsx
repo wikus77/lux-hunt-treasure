@@ -95,8 +95,8 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
     localStorage.setItem(`battle_times_${userId}`, JSON.stringify(newTimes.slice(-20)));
   }, [userId]);
 
-  // Update balance in Supabase (fire and forget, like Pulse Breaker)
-  const updateBalanceAsync = useCallback(async (currency: StakeCurrency, newBalance: number) => {
+  // Update balance in Supabase. Returns promise so callers can run post-success logic (e.g. PE fullscreen).
+  const updateBalanceAsync = useCallback(async (currency: StakeCurrency, newBalance: number): Promise<void> => {
     try {
       const field = currency === 'M1U' ? 'm1_units' : 'pulse_energy';
       await supabase
@@ -226,7 +226,17 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
           [stake.currency.toLowerCase()]: newBalance
         }));
         
-        updateBalanceAsync(stake.currency, newBalance);
+        if (stake.currency === 'PE' && payout > 0) {
+          const preValue = currentBalance;
+          const postValue = newBalance;
+          updateBalanceAsync(stake.currency, newBalance).then(() => {
+            import('@/features/pulse/peCreditEvent').then(({ emitPECreditEvent }) => {
+              emitPECreditEvent(payout, 'practice_mode_win', { preValue, postValue });
+            }).catch(() => {});
+          }).catch(() => {});
+        } else {
+          updateBalanceAsync(stake.currency, newBalance);
+        }
         setLastPayout(stake.amount); // Show profit only
       } else {
         // Loss: Stake already deducted

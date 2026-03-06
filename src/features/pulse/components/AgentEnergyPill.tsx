@@ -44,7 +44,7 @@ export const AgentEnergyPill = () => {
   const rankColor = currentLevel?.color || '#00e7ff';
 
   return (
-    <div className="relative">
+    <div className="relative flex flex-col items-center gap-1">
       {/* Main Orb - Click opens full modal */}
       <motion.button
         className="pe-pill-orb"
@@ -58,13 +58,6 @@ export const AgentEnergyPill = () => {
       >
         {/* Rank symbol inside */}
         <span className="text-lg z-10 relative">{currentLevel?.icon || '❓'}</span>
-        {/* PE value at a glance — visible on pill */}
-        <span
-          className="absolute bottom-0.5 left-1/2 -translate-x-1/2 z-10 text-[10px] font-bold font-mono tabular-nums leading-tight"
-          style={{ color: rankColor, textShadow: `0 0 6px ${rankColor}` }}
-        >
-          {formatPE(pulseEnergy)}
-        </span>
         
         {/* Orbiting dot */}
         <span className="pe-dot" style={{ background: rankColor }} />
@@ -95,6 +88,20 @@ export const AgentEnergyPill = () => {
           />
         </svg>
       </motion.button>
+
+      {/* PE value badge — readability hardening: visibile al primo colpo d'occhio */}
+      <div
+        className="px-2 py-1 rounded-md min-w-[2.5rem] text-center font-black font-mono tabular-nums text-sm"
+        style={{
+          color: rankColor,
+          background: 'rgba(0,0,0,0.5)',
+          border: `1px solid ${rankColor}66`,
+          boxShadow: `0 0 10px ${rankColor}44, inset 0 0 8px ${rankColor}22`,
+          textShadow: `0 0 8px ${rankColor}, 0 1px 2px rgba(0,0,0,0.9)`,
+        }}
+      >
+        {formatPE(pulseEnergy)} <span className="text-[10px] font-bold opacity-90">PE</span>
+      </div>
 
       {/* PE Gain Animation */}
       <AnimatePresence>
