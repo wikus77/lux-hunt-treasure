@@ -77,6 +77,7 @@ import { BattleDefenseManager } from "./components/battle/BattleDefenseManager";
 import { NativeSafeAreaProvider } from "./components/layout/NativeSafeAreaProvider";
 // 🎰 Global M1U Slot Overlay — PRE→SLOT→POST on any credit (Shop, Wheel, Missions, etc.)
 import { GlobalM1UCreditOverlay } from "./features/m1u/GlobalM1UCreditOverlay";
+import { GlobalPERewardOverlay } from "./features/pulse/components/GlobalPERewardOverlay";
 // 🎯 Daily Missions System
 import { DailyMissionsController } from "./missions";
 // 🎯 FIRST SESSION: Micro-missions (global - works on all pages)
@@ -261,6 +262,8 @@ function App() {
                 <AuthProvider>
                   {/* M1U Global Slot Overlay: inside AuthProvider so M1UPill can use useUnifiedAuth (fix post-IAP crash) */}
                   <GlobalM1UCreditOverlay />
+                  {/* PE Global Fullscreen Reward: Energy Injection modal on every PE credit */}
+                  <GlobalPERewardOverlay />
                   {/* 🚫 DISABILITATO 16/01/2026: OnboardingProvider rimosso (forzava navigazione) */}
                   {/* <OnboardingProvider> */}
                   <InterestSignalsProvider>

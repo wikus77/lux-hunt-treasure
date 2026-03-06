@@ -8,6 +8,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { emitPECreditEvent } from '@/features/pulse/peCreditEvent';
 
 // ============================================================================
 // TIPI DI AZIONI CHE GENERANO PE
@@ -231,6 +232,15 @@ export const useAwardPE = (): UseAwardPEReturn => {
         window.dispatchEvent(new CustomEvent('pe:awarded', {
           detail: { ...awardResult, action }
         }));
+        // PE fullscreen reward overlay: only for positive delta
+        const delta = awardResult.deltaPE ?? (awardResult.newPE != null && awardResult.oldPE != null ? awardResult.newPE - awardResult.oldPE : 0);
+        if (delta > 0) {
+          const source = action.toLowerCase().replace(/\s+/g, '_');
+          emitPECreditEvent(delta, source, {
+            preValue: awardResult.oldPE,
+            postValue: awardResult.newPE,
+          });
+        }
       }
 
       return awardResult;

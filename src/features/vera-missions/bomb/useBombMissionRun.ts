@@ -146,6 +146,13 @@ export function useBombMissionRun() {
               },
             })
           );
+          if (res.delta_pe > 0) {
+            const { emitPECreditEvent } = await import('@/features/pulse/peCreditEvent');
+            emitPECreditEvent(res.delta_pe, 'vera_bomb', {
+              preValue: res.old_pe,
+              postValue: res.new_pe,
+            });
+          }
         }
         return {
           success: res.success ?? false,

@@ -203,6 +203,13 @@ export const useClueMilestones = (): UseClueMilestonesReturn => {
               newM1UBalance,
               newPEBalance
             });
+            if (milestone.pe > 0) {
+              const { emitPECreditEvent } = await import('@/features/pulse/peCreditEvent');
+              emitPECreditEvent(milestone.pe, 'clue_milestone', {
+                preValue: (profile.pulse_energy || 0),
+                postValue: newPEBalance,
+              });
+            }
           }
         }
       } catch (dbErr) {

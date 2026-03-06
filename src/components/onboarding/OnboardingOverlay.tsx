@@ -104,6 +104,8 @@ const CelebrationOverlay = ({ onComplete, userId }: { onComplete: () => void; us
         setPeAwarded(true);
         toast.success('🎉 +50 PE accreditati per aver completato il tutorial!');
         console.log('[Onboarding] PE awarded successfully');
+        const { emitPECreditEvent } = await import('@/features/pulse/peCreditEvent');
+        emitPECreditEvent(50, 'onboarding');
       } catch (err) {
         console.error('[Onboarding] Error awarding PE:', err);
       }
