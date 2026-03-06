@@ -10,6 +10,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/contexts/auth';
 import { emitSubscribed, emitError } from '@/lib/realtime/reconnectBus';
 import { hasPendingValidations } from '@/iap/iapService';
 
@@ -36,6 +37,7 @@ interface UseM1UnitsRealtimeReturn {
 const M1U_CACHE_KEY = 'm1ssion_m1u_cache';
 
 export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealtimeReturn => {
+  const { authReady } = useAuthContext();
   // Load cached value for instant display
   const getCachedBalance = (): number => {
     try {
@@ -192,9 +194,9 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
     };
   }, [fetchUnits]);
 
-  // Subscribe to realtime updates
+  // Subscribe to realtime updates (only after auth bootstrap to avoid lock contention)
   useEffect(() => {
-    if (!userId) return;
+    if (!authReady || !userId) return;
 
     // Fetch immediately
     fetchUnits();
@@ -248,7 +250,7 @@ export const useM1UnitsRealtime = (userId: string | undefined): UseM1UnitsRealti
       channel.unsubscribe();
       setConnectionState('INIT');
     };
-  }, [userId, fetchUnits]);
+  }, [authReady, userId, fetchUnits]);
 
   return {
     unitsData,

@@ -1,10 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionSingleFlight } from "@/integrations/supabase/authSingleFlight";
+import { useAuthContext } from "@/contexts/auth";
 import { getBuzzMapPricing } from "@/lib/buzzMapPricing";
 import { getBuzzMapCostM1U } from "@/lib/constants/buzzMapPricingM1U";
 import { getCurrentWeekOfYear } from "@/lib/weekUtils";
 
 export function useBuzzMapPricingNew(userId?: string) {
+  const { authReady } = useAuthContext();
   const [loading, setLoading] = useState(true);
   const [nextLevel, setLevel] = useState(1);
   const [nextRadiusKm, setRadius] = useState(500);
@@ -19,8 +22,8 @@ export function useBuzzMapPricingNew(userId?: string) {
     setDisabled(false);
     
     try {
-      // Get current session to authenticate
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      // Get current session (single-flight to avoid lock contention)
+      const { data: { session }, error: sessionError } = await getSessionSingleFlight();
       
       if (sessionError || !session?.user) {
         console.warn('No authenticated session for buzz map pricing');
@@ -99,18 +102,19 @@ export function useBuzzMapPricingNew(userId?: string) {
     }
   }, [userId]);
 
-  // Initial calculation
+  // Initial calculation (only after auth bootstrap to avoid lock contention)
   useEffect(() => {
-    calculateNextLevel();
-  }, [calculateNextLevel]);
+    if (authReady) calculateNextLevel();
+  }, [authReady, calculateNextLevel]);
 
-  // 🔥 REALTIME: Subscribe to user_map_areas INSERT for current week to refresh pricing
+  // 🔥 REALTIME: Subscribe to user_map_areas INSERT for current week to refresh pricing (only after auth bootstrap)
   useEffect(() => {
+    if (!authReady) return;
     let mounted = true;
     let channel: any;
 
     const setup = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSessionSingleFlight();
       const uid = userId || session?.user?.id;
       if (!uid || !mounted) {
         console.warn('useBuzzMapPricingNew: realtime not started — no user id');
@@ -152,7 +156,7 @@ export function useBuzzMapPricingNew(userId?: string) {
         supabase.removeChannel(channel);
       }
     };
-  }, [userId, calculateNextLevel]);
+  }, [authReady, userId, calculateNextLevel]);
 
   // 🔥 FALLBACK: Listen to custom event from BuzzMapButtonSecure
   useEffect(() => {

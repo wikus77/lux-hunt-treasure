@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useUnifiedAuth } from './useUnifiedAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 export interface WelcomeBonusState {
   isLoading: boolean;
@@ -162,10 +163,7 @@ export const useWelcomeBonus = () => {
       const localKey = `${LOCAL_STORAGE_KEY}:${user.id}`;
       localStorage.setItem(localKey, 'claimed');
 
-      // Dispatch event for slot machine animation in M1UPill
-      window.dispatchEvent(new CustomEvent('m1u-credited', {
-        detail: { amount: WELCOME_BONUS_AMOUNT }
-      }));
+      emitM1UCreditEvent(WELCOME_BONUS_AMOUNT, 'welcome');
 
       setState(prev => ({
         ...prev,

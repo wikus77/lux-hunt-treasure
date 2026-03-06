@@ -864,6 +864,14 @@ let _lastRejectionLog = 0;
 let _rejectionLogCount = 0;
 
 window.addEventListener('unhandledrejection', (event) => {
+  // Soft-handle Supabase auth lock timeout to avoid UNHANDLED REJECTION spam (iOS Capacitor)
+  const msg = event.reason instanceof Error ? event.reason.message : String(event.reason ?? '');
+  if (typeof msg === 'string' && (msg.includes('Navigator LockManager lock') || msg.includes('lock timed out') || msg.includes('timed out waiting'))) {
+    console.warn('[Auth] Lock timeout handled (no crash):', msg.slice(0, 120));
+    event.preventDefault();
+    return;
+  }
+
   const now = Date.now();
   
   // Reset counter every minute

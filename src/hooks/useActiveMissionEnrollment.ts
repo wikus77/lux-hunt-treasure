@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { useAuthContext } from '@/contexts/auth';
 
 // Cache key for localStorage
 const ENROLLMENT_CACHE_KEY = 'm1_mission_enrolled';
@@ -59,6 +60,7 @@ interface EnrollmentState {
 
 export const useActiveMissionEnrollment = () => {
   const { user } = useAuth();
+  const { authReady } = useAuthContext();
   
   // 🔧 FIX: Check for cross-page reset FIRST before using cache
   const wasReset = checkCrossPageReset();
@@ -232,14 +234,14 @@ export const useActiveMissionEnrollment = () => {
     }
   }, [user]);
 
-  // Initial load
+  // Initial load (only after auth bootstrap to avoid lock contention)
   useEffect(() => {
-    checkEnrollment();
-  }, [checkEnrollment]);
+    if (authReady) checkEnrollment();
+  }, [authReady, checkEnrollment]);
 
-  // Real-time subscription for instant updates
+  // Real-time subscription for instant updates (only after auth bootstrap to avoid lock contention)
   useEffect(() => {
-    if (!user) return;
+    if (!authReady || !user) return;
 
     const channel = supabase
       .channel('mission_enrollment_changes')
@@ -284,7 +286,7 @@ export const useActiveMissionEnrollment = () => {
     return () => {
       channel.unsubscribe();
     };
-  }, [user, checkEnrollment]);
+  }, [authReady, user, checkEnrollment]);
 
   // Listen for custom event (from StartMissionButton)
   useEffect(() => {

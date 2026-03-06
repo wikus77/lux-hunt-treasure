@@ -370,7 +370,14 @@ function wrapCapgoPlugin(NativePurchases: any): any {
         pendingTransactions.delete(transactionId);
         console.log('[IAP Capgo] ✅ Transaction acknowledged:', transactionId);
         return true;
-      } catch (error) {
+      } catch (error: unknown) {
+        const msg = (error && typeof error === 'object' && 'message' in error) ? String((error as { message: unknown }).message) : String(error);
+        // iOS: plugin may auto-finish/auto-acknowledge; treat "already finished" as success to avoid error spam
+        if (/already finished|Transaction not found|not found.*finished/i.test(msg)) {
+          console.warn('[IAP Capgo] Transaction already finished (treating as success):', msg.slice(0, 80));
+          pendingTransactions.delete(transactionId);
+          return true;
+        }
         console.error('[IAP Capgo] acknowledgePurchase error:', error);
         return false;
       }
@@ -735,16 +742,16 @@ async function validatePurchaseServerSide(params: {
   jws?: string;
   originalTransactionId?: string;
 }): Promise<{ success: boolean; error?: string; newBalance?: number; isNetworkError?: boolean }> {
-  // 🚨🚨🚨 [IAP_FIX_V12] ALL LOGS USE console.error FOR XCODE VISIBILITY 🚨🚨🚨
+  // [IAP_V12] Use console.log for info/success so console doesn't show false "errors"; keep console.error for real failures.
   const txnShort = params.transactionId?.slice(-10) || 'NO_TXN';
-  console.error(`[IAP_V12] 🎯 ENTRY txn:${txnShort} product:${params.productCode}`);
+  console.log(`[IAP_V12] 🎯 ENTRY txn:${txnShort} product:${params.productCode}`);
   
   const functionName = 'verify-iap-purchase';
   
   // Check rate limit
   if (isRateLimited()) {
     const remaining = getRateLimitCooldownRemaining();
-    console.error(`[IAP_V12] ⏳ RATE_LIMITED cooldown:${Math.round(remaining / 1000)}s`);
+    console.warn(`[IAP_V12] ⏳ RATE_LIMITED cooldown:${Math.round(remaining / 1000)}s`);
     return {
       success: false,
       error: `Server sovraccarico - riprova tra ${Math.ceil(remaining / 1000)} secondi`,
@@ -755,12 +762,12 @@ async function validatePurchaseServerSide(params: {
   pendingValidationTransactions.add(params.transactionId);
   
   try {
-    // Session check - use console.error for visibility
-    console.error(`[IAP_V12] 📡 Getting session...`);
+    // Session check
+    console.log(`[IAP_V12] 📡 Getting session...`);
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     const session = sessionData?.session;
     
-    console.error(`[IAP_V12] 🔐 Session: has=${!!session} token=${session?.access_token?.length || 0}chars userId=${session?.user?.id?.slice(-8) || 'NONE'} err=${sessionError?.message || 'none'}`);
+    console.log(`[IAP_V12] 🔐 Session: has=${!!session} token=${session?.access_token?.length || 0}chars userId=${session?.user?.id?.slice(-8) || 'NONE'} err=${sessionError?.message || 'none'}`);
 
     if (!session?.access_token) {
       console.error('[IAP_V12] ❌ NO SESSION - login required');
@@ -787,16 +794,15 @@ async function validatePurchaseServerSide(params: {
     };
     
     // Log JWS presence (safe - only length, not content)
-    console.error(`[IAP_V15] 📦 Payload: jws=${params.jws?.length || 0}chars receipt=${params.receipt?.length || 0}chars`);
+    console.log(`[IAP_V15] 📦 Payload: jws=${params.jws?.length || 0}chars receipt=${params.receipt?.length || 0}chars`);
 
     const bodySize = JSON.stringify(requestBody).length;
-    console.error(`[IAP_V12] 📦 Body: ${bodySize}chars txn:${txnShort}`);
+    console.log(`[IAP_V12] 📦 Body: ${bodySize}chars txn:${txnShort}`);
 
     // ═══════════════════════════════════════════════════════════════════
     // METHOD 1: Try supabase.functions.invoke() with EXPLICIT Authorization
-    // 🔧 [IAP_FIX_V12] ALL LOGS AS console.error FOR XCODE VISIBILITY
     // ═══════════════════════════════════════════════════════════════════
-    console.error(`[IAP_V12] 🚀 M1: invoke() txn:${txnShort}`);
+    console.log(`[IAP_V12] 🚀 M1: invoke() txn:${txnShort}`);
     const startTime = Date.now();
     
     try {
@@ -808,7 +814,7 @@ async function validatePurchaseServerSide(params: {
       });
       
       const elapsed = Date.now() - startTime;
-      console.error(`[IAP_V12] 📥 M1 response: ${elapsed}ms data=${!!data} err=${error?.message?.slice(0,50) || 'none'}`);
+      console.log(`[IAP_V12] 📥 M1 response: ${elapsed}ms data=${!!data} err=${error?.message?.slice(0,50) || 'none'}`);
       
       if (error) {
         const errorMsg = error.message || '';
@@ -852,7 +858,7 @@ async function validatePurchaseServerSide(params: {
         return { success: false, error: data?.error || 'Verifica fallita', isNetworkError: false };
       }
 
-      console.error(`[IAP_V12] ✅ M1 SUCCESS! balance=${data.new_balance}`);
+      console.log(`[IAP_V12] ✅ M1 SUCCESS! balance=${data.new_balance}`);
       pendingValidationTransactions.delete(params.transactionId);
       return { success: true, newBalance: data.new_balance, isNetworkError: false };
       
@@ -866,9 +872,8 @@ async function validatePurchaseServerSide(params: {
 
     // ═══════════════════════════════════════════════════════════════════
     // METHOD 2: XMLHttpRequest fallback (different WKWebView code path)
-    // 🔧 [IAP_FIX_V12] Extended timeout (30s) + detailed event logging
     // ═══════════════════════════════════════════════════════════════════
-    console.error(`[IAP_V12] 🔄 M2: XHR fallback txn:${txnShort}`);
+    console.log(`[IAP_V12] 🔄 M2: XHR fallback txn:${txnShort}`);
     const functionUrl = `${SUPABASE_URL}/functions/v1/${functionName}`;
     const xhrStartTime = Date.now();
     
@@ -876,20 +881,20 @@ async function validatePurchaseServerSide(params: {
       const xhr = new XMLHttpRequest();
       xhr.timeout = 30000; // 🔧 V12: 30 second timeout (was 20s)
       
-      // Log ALL XHR events
+      // Log XHR events (info level)
       xhr.onreadystatechange = () => {
-        console.error(`[IAP_V12] 📶 XHR state=${xhr.readyState} status=${xhr.readyState >= 2 ? xhr.status : '-'} elapsed=${Date.now() - xhrStartTime}ms`);
+        console.log(`[IAP_V12] 📶 XHR state=${xhr.readyState} status=${xhr.readyState >= 2 ? xhr.status : '-'} elapsed=${Date.now() - xhrStartTime}ms`);
       };
       
       xhr.onload = () => {
         const elapsed = Date.now() - xhrStartTime;
-        console.error(`[IAP_V12] 📥 M2 onload: status=${xhr.status} len=${xhr.responseText?.length || 0} ${elapsed}ms`);
+        console.log(`[IAP_V12] 📥 M2 onload: status=${xhr.status} len=${xhr.responseText?.length || 0} ${elapsed}ms`);
         
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const data = JSON.parse(xhr.responseText);
             if (data.success) {
-              console.error(`[IAP_V12] ✅ M2 SUCCESS! balance=${data.new_balance}`);
+              console.log(`[IAP_V12] ✅ M2 SUCCESS! balance=${data.new_balance}`);
               resolve({ success: true, data });
             } else {
               console.error(`[IAP_V12] ❌ M2 server returned error: ${data.error}`);
@@ -929,7 +934,7 @@ async function validatePurchaseServerSide(params: {
       xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
       xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
       
-      console.error(`[IAP_V12] 📤 M2 sending to ${functionUrl.split('/').slice(-2).join('/')}`);
+      console.log(`[IAP_V12] 📤 M2 sending to ${functionUrl.split('/').slice(-2).join('/')}`);
       
       try {
         xhr.send(JSON.stringify(requestBody));

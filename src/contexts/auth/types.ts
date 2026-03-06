@@ -9,6 +9,8 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   authHydrated: boolean;
+  /** True after bootstrap getSession (success or failure); gate realtime/fetch to avoid lock contention. */
+  authReady: boolean;
   justSignedInAt: number | null;
   isEmailVerified: boolean;
   getCurrentUser: () => User | null;

@@ -8,14 +8,25 @@ import { runPWACleanupOnce } from '@/lib/pwa/cleanup';
 import { registerPush } from '@/lib/push/register-push';
 import { useAuth } from './use-auth';
 
+/** True when running inside Capacitor (iOS/Android native). PWA/Service Worker not used there. */
+function isCapacitorNative(): boolean {
+  const cap = (typeof window !== 'undefined' && (window as any).Capacitor);
+  return !!(cap?.isNativePlatform?.());
+}
+
 /**
  * Stabilize PWA and handle push subscriptions
  * Note: SW updates now handled by silentAutoUpdate.ts
+ * On Capacitor native, skips init (no SW) to avoid console errors.
  */
 export const usePWAStabilizer = () => {
   const { user } = useAuth();
 
   useEffect(() => {
+    if (isCapacitorNative()) {
+      return;
+    }
+
     console.log('🚀 PWA Stabilizer: Initializing...');
 
     const initializePWA = async () => {
@@ -48,13 +59,13 @@ export const usePWAStabilizer = () => {
               console.log('✅ PWA Stabilizer: Push subscription established:', result);
             }
           } catch (error) {
-            console.error('❌ PWA Stabilizer: Push subscription failed:', error);
+            console.warn('⚠️ PWA Stabilizer: Push subscription failed:', error);
           }
         }
 
         console.log('✅ PWA Stabilizer: Initialization complete');
       } catch (error) {
-        console.error('❌ PWA Stabilizer: Initialization failed:', error);
+        console.warn('⚠️ PWA Stabilizer: Initialization failed (non-critical):', error);
       }
     };
 

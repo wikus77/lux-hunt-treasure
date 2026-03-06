@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { useAuthContext } from '@/contexts/auth';
 import {
   HIERARCHY_LEVELS,
   getCurrentLevel,
@@ -42,6 +43,7 @@ export interface UseHierarchyRankReturn {
 
 export const useHierarchyRank = (): UseHierarchyRankReturn => {
   const { user } = useAuth();
+  const { authReady } = useAuthContext();
   const [state, setState] = useState<HierarchyRankState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -152,14 +154,14 @@ export const useHierarchyRank = (): UseHierarchyRankReturn => {
     setPendingRankUp(null);
   }, [pendingRankUp, saveLastSeenLevel]);
 
-  // Fetch iniziale
+  // Fetch iniziale (only after auth bootstrap to avoid lock contention)
   useEffect(() => {
-    fetchEnergy();
-  }, [fetchEnergy]);
+    if (authReady) fetchEnergy();
+  }, [authReady, fetchEnergy]);
 
-  // Realtime subscription per PE changes
+  // Realtime subscription per PE changes (only after auth bootstrap)
   useEffect(() => {
-    if (!user?.id) return;
+    if (!authReady || !user?.id) return;
 
     const channel = supabase
       .channel(`hierarchy_rank_${user.id}`)
@@ -186,7 +188,7 @@ export const useHierarchyRank = (): UseHierarchyRankReturn => {
     return () => {
       channel.unsubscribe();
     };
-  }, [user?.id, fetchEnergy]);
+  }, [authReady, user?.id, fetchEnergy]);
 
   return {
     state,

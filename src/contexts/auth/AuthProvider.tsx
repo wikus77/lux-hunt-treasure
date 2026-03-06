@@ -11,6 +11,7 @@
 import React, { useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionSingleFlight, getUserSingleFlight } from '@/integrations/supabase/authSingleFlight';
 // getAuthTokenKey removed - no longer clearing auth cache automatically
 import AuthContext from './AuthContext';
 import { AuthContextType } from './types';
@@ -124,7 +125,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       while (attempts < maxAttempts && !session) {
         try {
-          const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+          const { data: { session: currentSession }, error } = await getSessionSingleFlight();
           
           if (error) {
             log(`Errore getSession (tentativo ${attempts + 1})`, error);
@@ -135,10 +136,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             }
             // APPLE-LOGIN-LOOP-PATCH: fallback to getUser when getSession fails (iPad WKWebView resilience)
             try {
-              const { data: { user: fallbackUser } } = await supabase.auth.getUser();
+              const { data: { user: fallbackUser } } = await getUserSingleFlight();
               if (fallbackUser && isMounted) {
                 log("Fallback getUser OK - user recovered");
-                const { data: { session: fallbackSession } } = await supabase.auth.getSession();
+                const { data: { session: fallbackSession } } = await getSessionSingleFlight();
                 if (fallbackSession) {
                   setSession(fallbackSession);
                   setUser(fallbackUser);
@@ -333,8 +334,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       log("🔐 Face ID session restored event received", event.detail);
       
       try {
-        // Re-fetch current session to ensure state is synced
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        // Re-fetch current session to ensure state is synced (single-flight)
+        const { data: { session: currentSession } } = await getSessionSingleFlight();
         
         if (currentSession?.user) {
           log("🔐 Re-hydrating user data after Face ID restore");
@@ -392,7 +393,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         log("PWA tornata attiva - verifica sessione");
         
         try {
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          const { data: { session: currentSession } } = await getSessionSingleFlight();
           
           // Verifica se sessione è cambiata
           if (currentSession && (!session || session.expires_at !== currentSession.expires_at)) {
@@ -663,6 +664,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user,
     isLoading,
     authHydrated,
+    authReady: authHydrated,
     justSignedInAt,
     isEmailVerified: user?.email_confirmed_at ? true : false,
     userRole: userRoles[0] || null,

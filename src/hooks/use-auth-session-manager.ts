@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionSingleFlight } from '@/integrations/supabase/authSingleFlight';
 import { getAuthTokenKey } from '@/lib/supabase/clientUtils';
 
 interface SessionManagerResult {
@@ -183,8 +184,8 @@ export const useAuthSessionManager = (): SessionManagerResult => {
       console.log('🔍 INITIALIZING SESSION (Enhanced Diagnostics)...');
       
       try {
-        // Method 1: Check for active Supabase session
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // Method 1: Check for active Supabase session (single-flight to avoid lock contention)
+        const { data: { session }, error } = await getSessionSingleFlight();
         
         console.log('📊 Supabase session check:', {
           hasError: !!error,

@@ -156,9 +156,15 @@ export const useBuzzGrants = () => {
 
       if (error) throw error;
 
-      // 🔥 FIX: SAVE CLUE TO DATABASE - Generate clue_id as required
+      // 🔥 FIX: SAVE CLUE TO DATABASE - clue_id must be valid UUID (DB type uuid, 22P02 fix)
       const uniqueClue = `Cerca dove l'innovazione italiana splende (${new Date().toLocaleTimeString()}) - FREE BUZZ`;
-      const clueId = `free_buzz_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      const clueId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+        ? crypto.randomUUID()
+        : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
       
       console.log('💾 SAVING FREE BUZZ CLUE TO DATABASE');
       
@@ -166,7 +172,7 @@ export const useBuzzGrants = () => {
         .from('user_clues')
         .insert({
           user_id: userId,
-          clue_id: clueId, // Required field!
+          clue_id: clueId, // UUID v4 for DB uuid column
           title_it: "🎁 Indizio BUZZ Gratuito",
           description_it: uniqueClue,
           clue_type: "buzz",

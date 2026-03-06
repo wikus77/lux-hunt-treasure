@@ -2,6 +2,8 @@
 // @ts-nocheck
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionSingleFlight } from '@/integrations/supabase/authSingleFlight';
+import { useAuthContext } from '@/contexts/auth';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface ProfileData {
@@ -16,18 +18,20 @@ interface ProfileData {
 }
 
 export const useProfileRealtime = () => {
+  const { authReady } = useAuthContext();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
-  // Load initial profile data and setup realtime subscription
+  // Load initial profile data and setup realtime subscription (only after auth bootstrap to avoid lock contention)
   useEffect(() => {
+    if (!authReady) return;
     let mounted = true;
     let realtimeChannel: RealtimeChannel | null = null;
 
     const setupRealtimeSubscription = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await getSessionSingleFlight();
         
         if (!session?.user) {
           setIsLoading(false);
@@ -99,12 +103,12 @@ export const useProfileRealtime = () => {
         supabase.removeChannel(realtimeChannel);
       }
     };
-  }, []);
+  }, [authReady]);
 
   // Update profile function that immediately updates local state
   const updateProfile = async (updates: Partial<ProfileData>) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSessionSingleFlight();
       
       if (!session?.user) return null;
 
