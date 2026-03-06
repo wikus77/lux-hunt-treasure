@@ -27,6 +27,7 @@ import {
   areMissionsCompleted,
 } from '@/config/firstSessionConfig';
 import { supabase } from '@/integrations/supabase/client';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 // Premio per completamento micro-missions
 const MICRO_MISSIONS_REWARD_M1U = 50;
@@ -1150,10 +1151,7 @@ export default function MicroMissionsCard({ mapContainerId = 'ml-sandbox' }: Mic
                     if (result.success) {
                       console.log('[MicroMissions] ✅ Reward credited via RPC:', result);
                       
-                      // Dispatch evento per animazione slot machine
-                      window.dispatchEvent(new CustomEvent('m1u-credited', {
-                        detail: { amount: result.reward || MICRO_MISSIONS_REWARD_M1U }
-                      }));
+                      emitM1UCreditEvent(result.reward || MICRO_MISSIONS_REWARD_M1U, 'micro_mission');
                     } else {
                       console.log('[MicroMissions] ℹ️ RPC returned success=false:', result.reason, result.message);
                       // Già premiato in precedenza - va bene, non è un errore

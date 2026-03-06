@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, Clock, Info, Plus, AlertCircle } from 'lucide-react';
@@ -65,10 +66,13 @@ export default function MissionActionsModal({
   onCompletePhase1,
   onClose,
 }: MissionActionsModalProps) {
+  const { t } = useTranslation();
   const [inputValue, setInputValue] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [counterValue, setCounterValue] = useState(0);
-  
+  const titleKey = `mission.popup.${mission.id}.title`;
+  const missionTitle = t(titleKey) !== titleKey ? t(titleKey) : mission.title;
+
   const { phase } = missionState;
   const phase2Available = isPhase2Available();
   const { phase1: phase1Reward, phase2: phase2Reward } = calculatePhaseRewards(mission.totalRewardM1U);
@@ -102,7 +106,7 @@ export default function MissionActionsModal({
     if (mission.phase1.actionType === 'input') {
       const validation = validateInput(inputValue, mission.phase1.inputValidation);
       if (!validation.valid) {
-        setValidationError(validation.error || 'Risposta non valida.');
+        setValidationError(validation.error || t('mission.popup.invalidAnswer'));
         return;
       }
       onCompletePhase1({ userInput: inputValue });
@@ -112,7 +116,10 @@ export default function MissionActionsModal({
     // COUNTER type: check target reached
     if (mission.phase1.actionType === 'counter' && mission.phase1.counter) {
       if (counterValue < mission.phase1.counter.target) {
-        setValidationError(`Devi raggiungere ${mission.phase1.counter.target} ${mission.phase1.counter.label || 'punti'}.`);
+        setValidationError(t('mission.popup.mustReachTarget', {
+          target: mission.phase1.counter.target,
+          label: mission.phase1.counter.label || t('mission.popup.pointsDefault'),
+        }));
         return;
       }
       onCompletePhase1({ counterValue });
@@ -207,10 +214,10 @@ export default function MissionActionsModal({
                 <span style={{ fontSize: '36px', filter: 'drop-shadow(0 0 10px rgba(0, 255, 136, 0.5))' }}>{mission.icon}</span>
                 <div>
                   <p style={{ fontSize: '11px', color: '#00FF88', fontWeight: 600, margin: 0, textShadow: '0 0 10px rgba(0, 255, 136, 0.5)' }}>
-                    MISSIONE IN CORSO
+                    {t('mission.popup.inProgress')}
                   </p>
                   <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0 }}>
-                    {mission.title}
+                    {missionTitle}
                   </h3>
                 </div>
               </div>
@@ -259,7 +266,7 @@ export default function MissionActionsModal({
                         type="text"
                         value={inputValue}
                         onChange={handleInputChange}
-                        placeholder={mission.phase1.inputPlaceholder || 'Inserisci la risposta...'}
+                        placeholder={mission.phase1.inputPlaceholder || t('mission.popup.placeholder')}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -289,7 +296,7 @@ export default function MissionActionsModal({
                       }}>
                         <div>
                           <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-                            {mission.phase1.counter.label || 'Progresso'}
+                            {mission.phase1.counter.label || t('mission.popup.progress')}
                           </p>
                           <p style={{ 
                             fontSize: '24px', 
@@ -320,7 +327,7 @@ export default function MissionActionsModal({
                         </motion.button>
                       </div>
                       <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '8px', textAlign: 'center' }}>
-                        Premi + dopo ogni vittoria in Pulse Breaker
+                        {t('mission.popup.pulseBreakerHint')}
                       </p>
                     </div>
                   )}
@@ -346,7 +353,7 @@ export default function MissionActionsModal({
 
                   {/* Reward preview */}
                   <p style={{ fontSize: '13px', color: '#00FF96', marginBottom: '12px' }}>
-                    ✅ Completa per +{phase1Reward} M1U
+                    ✅ {t('mission.popup.completeFor', { amount: phase1Reward })}
                   </p>
 
                   {/* Complete button */}
@@ -373,7 +380,7 @@ export default function MissionActionsModal({
                     }}
                   >
                     <Check size={18} />
-                    COMPLETA FASE 1
+                    {t('mission.popup.completePhase1Button')}
                   </motion.button>
                 </div>
               )}
@@ -389,10 +396,10 @@ export default function MissionActionsModal({
                 }}>
                   <Clock size={30} color="#FFD700" style={{ marginBottom: '10px' }} />
                   <p style={{ fontSize: '14px', color: '#FFD700', fontWeight: 600, marginBottom: '6px' }}>
-                    FASE 2 SI SBLOCCA DOMANI
+                    {t('mission.popup.phase2UnlocksTomorrow')}
                   </p>
                   <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
-                    Torna domani per completare la missione e ottenere +{phase2Reward} M1U
+                    {t('mission.popup.returnTomorrow', { amount: phase2Reward })}
                   </p>
                 </div>
               )}

@@ -1,10 +1,12 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎨 Daily Mission Content - REVOLUT STYLE
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { X, Clock, Play, Check } from 'lucide-react';
 import { 
   getMissionState, 
+  getTodayKey,
   startMission, 
   markBriefingShown,
   completePhase1,
@@ -15,6 +17,13 @@ import {
 } from '@/missions/missionState';
 import { creditM1USafe } from '@/missions/rewards/creditM1U';
 import { calculatePhaseRewards } from '@/missions/missionsRegistry';
+import { CipherDrillModal } from '@/missions/ui/CipherDrillModal';
+import { WordDuelMemoryModal } from '@/missions/ui/WordDuelMemoryModal';
+import { SignalPatternNumbersModal } from '@/missions/ui/SignalPatternNumbersModal';
+
+const MISSION_ID_CIPHER_DRILL = 'cipher_drill_anagram_v1';
+const MISSION_ID_WORD_DUEL = 'word_duel_memory_v1';
+const MISSION_ID_SIGNAL_PATTERN = 'signal_pattern_numbers_v1';
 
 interface DailyMissionContentProps {
   mission: any;
@@ -27,6 +36,17 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
   onClose,
   onComplete
 }) => {
+  const { t } = useTranslation();
+
+  if (mission?.id === MISSION_ID_CIPHER_DRILL) {
+    return <CipherDrillModal onClose={onClose} onComplete={onComplete} />;
+  }
+  if (mission?.id === MISSION_ID_WORD_DUEL) {
+    return <WordDuelMemoryModal onClose={onClose} onComplete={onComplete} />;
+  }
+  if (mission?.id === MISSION_ID_SIGNAL_PATTERN) {
+    return <SignalPatternNumbersModal onClose={onClose} onComplete={onComplete} />;
+  }
   const [phase, setPhase] = useState(0);
   const [showCompletion, setShowCompletion] = useState(false);
   const [completedReward, setCompletedReward] = useState(0);
@@ -43,10 +63,15 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
     refreshState();
   }, [refreshState]);
 
+  const state = getMissionState();
+  const isStateForThisMission = state.activeMissionId === mission?.id && state.dayKey === getTodayKey();
   const isPhase2Ready = isPhase2Available();
   const isNotStarted = phase === 0;
-  const isPhase1Active = phase === 1 && !isPhase2Ready;
-  const isPhase2Pending = phase === 2 && !isPhase2Ready;
+  const effectiveNotStarted = isNotStarted || !isStateForThisMission;
+  const isPhase1Active = phase === 1 && !isPhase2Ready && isStateForThisMission;
+  const isPhase2Pending = phase === 2 && !isPhase2Ready && isStateForThisMission;
+  const isPhase2ReadyAndThisMission = isPhase2Ready && isStateForThisMission;
+  const isCompletedToday = phase === 3 && isStateForThisMission;
 
   const handleStartMission = async () => {
     startMission(mission.id);
@@ -104,7 +129,9 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <button
+            type="button"
             onClick={onClose}
+            aria-label={t('mission.popup.close')}
             style={{
               width: '40px',
               height: '40px',
@@ -128,7 +155,7 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
               letterSpacing: '1px',
               marginBottom: '4px',
             }}>
-              DAILY MISSION
+              {t('mission.popup.dailyMission')}
             </p>
             <h1 style={{ 
               color: '#FFFFFF', 
@@ -163,15 +190,15 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
           </p>
         </div>
 
-        {/* NOT STARTED */}
-        {isNotStarted && (
+        {/* NOT STARTED — also when state is for another mission/day (stale), so user can START this mission */}
+        {effectiveNotStarted && (
           <>
             <GlassCard style={{ marginBottom: '16px', background: 'rgba(0, 255, 136, 0.1)', border: '1px solid rgba(0, 255, 136, 0.3)' }}>
               <p style={{ color: '#00FF88', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>
-                📍 PHASE 1 (OGGI): +{phase1Reward} M1U
+                {t('mapPills.mission.phase1Today', { reward: phase1Reward })}
               </p>
               <p style={{ color: '#FFD700', fontSize: '13px', fontWeight: 600, margin: 0 }}>
-                🔄 PHASE 2 (DOMANI): +{phase2Reward} M1U
+                {t('mapPills.mission.phase2Tomorrow', { reward: phase2Reward })}
               </p>
             </GlassCard>
             <motion.button
@@ -194,7 +221,7 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
                 gap: '10px',
               }}
             >
-              <Play style={{ width: '20px', height: '20px' }} /> START MISSION
+              <Play style={{ width: '20px', height: '20px' }} /> {t('mission.popup.startMission')}
             </motion.button>
           </>
         )}
@@ -204,7 +231,7 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
           <>
             <GlassCard style={{ marginBottom: '16px', background: 'rgba(0, 255, 136, 0.1)', border: '1px solid rgba(0, 255, 136, 0.3)' }}>
               <p style={{ color: '#00FF88', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
-                📍 PHASE 1 IN CORSO
+                {t('mapPills.mission.phase1InProgress')}
               </p>
               <p style={{ color: '#FFFFFF', fontSize: '14px', margin: 0 }}>{mission.phase1.instruction}</p>
             </GlassCard>
@@ -228,7 +255,7 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
                 gap: '8px',
               }}
             >
-              <Check style={{ width: '20px', height: '20px' }} /> COMPLETA PHASE 1 (+{phase1Reward} M1U)
+              <Check style={{ width: '20px', height: '20px' }} /> {t('mapPills.mission.completePhase1', { reward: phase1Reward })}
             </motion.button>
           </>
         )}
@@ -238,20 +265,30 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
           <GlassCard style={{ textAlign: 'center', background: 'rgba(255, 215, 0, 0.1)', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
             <Clock style={{ width: '40px', height: '40px', color: '#FFD700', margin: '0 auto 12px' }} />
             <p style={{ color: '#FFD700', fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>
-              PHASE 2 SI SBLOCCA DOMANI
+              {t('mission.popup.phase2UnlocksTomorrow')}
             </p>
             <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', margin: 0 }}>
-              Torna domani per +{phase2Reward} M1U
+              {t('mapPills.mission.returnToClaim', { reward: phase2Reward })}
+            </p>
+          </GlassCard>
+        )}
+
+        {/* COMPLETED TODAY — phase 3 and state is for this mission */}
+        {isCompletedToday && (
+          <GlassCard style={{ textAlign: 'center', background: 'rgba(0, 255, 136, 0.1)', border: '1px solid rgba(0, 255, 136, 0.3)' }}>
+            <Check style={{ width: '40px', height: '40px', color: '#00FF88', margin: '0 auto 12px' }} />
+            <p style={{ color: '#00FF88', fontSize: '16px', fontWeight: 600, margin: 0 }}>
+              {t('mission.popup.completedToday')}
             </p>
           </GlassCard>
         )}
 
         {/* PHASE 2 READY */}
-        {isPhase2Ready && (
+        {isPhase2ReadyAndThisMission && (
           <>
             <GlassCard style={{ marginBottom: '16px', background: 'rgba(255, 215, 0, 0.15)', border: '1px solid rgba(255, 215, 0, 0.4)' }}>
               <p style={{ color: '#FFD700', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
-                🔄 PHASE 2 PRONTA!
+                {t('mapPills.mission.phase2Ready')}
               </p>
               <p style={{ color: '#FFFFFF', fontSize: '14px', margin: 0 }}>{mission.phase2.instruction}</p>
             </GlassCard>
@@ -275,7 +312,7 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
                 gap: '8px',
               }}
             >
-              🎉 COMPLETA PHASE 2 (+{phase2Reward} M1U)
+              {t('mapPills.mission.completePhase2', { reward: phase2Reward })}
             </motion.button>
           </>
         )}
@@ -289,7 +326,7 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
           textAlign: 'center',
         }}>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', margin: 0 }}>
-            TOTAL REWARD: <span style={{ color: '#00FF88', fontWeight: 700 }}>{mission.totalRewardM1U} M1U</span>
+            {t('mission.popup.totalRewardLabel', { amount: mission.totalRewardM1U })}
           </p>
         </div>
       </div>
@@ -315,7 +352,7 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
           }}
         >
           <p style={{ fontSize: '16px', fontWeight: 700, color: '#00FF88', marginBottom: '8px' }}>
-            {completedPhase === 1 ? '✅ PHASE 1 COMPLETE!' : '🎉 MISSION ACCOMPLISHED!'}
+            {completedPhase === 1 ? t('mapPills.mission.phase1Complete') : t('mapPills.mission.missionAccomplished')}
           </p>
           <p style={{ 
             fontSize: '28px', 
@@ -329,7 +366,7 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
           </p>
           {completedPhase === 1 && (
             <p style={{ fontSize: '12px', color: '#FFD700', margin: 0 }}>
-              Torna domani per Phase 2!
+              {t('mapPills.mission.returnTomorrowPhase2')}
             </p>
           )}
         </motion.div>

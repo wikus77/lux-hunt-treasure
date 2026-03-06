@@ -14,11 +14,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Target, Clock, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
-import { 
-  MISSIONS_ENABLED, 
-  getMissionOfTheDay,
-  calculatePhaseRewards,
-} from '../missionsRegistry';
+import { MISSIONS_ENABLED, calculatePhaseRewards } from '../missionsRegistry';
+import { useMissionOfTheDay } from '../useMissionOfTheDay';
 import { 
   getMissionState, 
   startMission, 
@@ -43,8 +40,13 @@ export function MissionPill() {
   const [completedPhase, setCompletedPhase] = useState<1 | 2>(1);
   const [isReady, setIsReady] = useState(false);
 
-  const mission = getMissionOfTheDay();
-  const { phase1: phase1Reward, phase2: phase2Reward } = calculatePhaseRewards(mission.totalRewardM1U);
+  const { mission, loading: missionLoading } = useMissionOfTheDay();
+  const phase1Reward = mission ? calculatePhaseRewards(mission.totalRewardM1U).phase1 : 0;
+  const phase2Reward = mission ? calculatePhaseRewards(mission.totalRewardM1U).phase2 : 0;
+  const titleKey = mission ? `mission.popup.${mission.id}.title` : '';
+  const descKey = mission ? `mission.popup.${mission.id}.description` : '';
+  const missionTitle = mission ? (t(titleKey) !== titleKey ? t(titleKey) : mission.title) : '';
+  const missionDescription = mission ? (t(descKey) !== descKey ? t(descKey) : mission.description) : '';
 
   // Refresh state
   const refreshState = useCallback(() => {
@@ -73,9 +75,10 @@ export function MissionPill() {
     return () => clearInterval(interval);
   }, [user, isReady, refreshState]);
 
-  // Don't render if disabled or not ready or mission completed
+  // Don't render if disabled, loading, no mission, or mission completed
   if (!MISSIONS_ENABLED) return null;
   if (!isReady) return null;
+  if (missionLoading || !mission) return null;
   if (phase === 3) return null;
 
   const isPhase2Ready = isPhase2Available();
@@ -206,10 +209,10 @@ export function MissionPill() {
               <div style={{ textAlign: 'center', marginBottom: '16px' }}>
                 <span style={{ fontSize: '40px' }}>{mission.icon}</span>
                 <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', margin: '8px 0 4px' }}>
-                  {mission.title}
+                  {missionTitle}
                 </h2>
                 <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
-                  {mission.description}
+                  {missionDescription}
                 </p>
               </div>
 
@@ -242,7 +245,7 @@ export function MissionPill() {
                       gap: '8px',
                     }}
                   >
-                    <Play size={18} /> {t('mapPills.mission.startMission')}
+                    <Play size={18} /> {t('mission.popup.startMission')}
                   </button>
                 </>
               )}
@@ -321,7 +324,7 @@ export function MissionPill() {
                 onClick={() => setShowModal(false)}
                 style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '12px', cursor: 'pointer' }}
               >
-                {t('mapPills.mission.close')}
+                {t('mission.popup.close')}
               </p>
             </motion.div>
           </motion.div>

@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, Gift, X, Lightbulb, Plus, AlertCircle } from 'lucide-react';
@@ -63,11 +64,14 @@ export default function Phase2ResumeModal({
   onConfirmComplete,
   onDismiss,
 }: Phase2ResumeModalProps) {
+  const { t } = useTranslation();
   const [inputValue, setInputValue] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [counterValue, setCounterValue] = useState(0);
   const [showHint, setShowHint] = useState(false);
-  
+  const titleKey = `mission.popup.${mission.id}.title`;
+  const missionTitle = t(titleKey) !== titleKey ? t(titleKey) : mission.title;
+
   const { phase2: reward } = calculatePhaseRewards(mission.totalRewardM1U);
 
   // Load counter value on mount
@@ -100,7 +104,7 @@ export default function Phase2ResumeModal({
     if (mission.phase2.actionType === 'input') {
       const validation = validateInput(inputValue, mission.phase2.inputValidation);
       if (!validation.valid) {
-        setValidationError(validation.error || 'Risposta non valida.');
+        setValidationError(validation.error || t('mission.popup.invalidAnswer'));
         return;
       }
       onConfirmComplete({ userInput: inputValue });
@@ -110,7 +114,10 @@ export default function Phase2ResumeModal({
     // COUNTER type: check target reached
     if (mission.phase2.actionType === 'counter' && mission.phase2.counter) {
       if (counterValue < mission.phase2.counter.target) {
-        setValidationError(`Devi raggiungere ${mission.phase2.counter.target} ${mission.phase2.counter.label || 'punti'}.`);
+        setValidationError(t('mission.popup.mustReachTarget', {
+          target: mission.phase2.counter.target,
+          label: mission.phase2.counter.label || t('mission.popup.pointsDefault'),
+        }));
         return;
       }
       onConfirmComplete({ counterValue });
@@ -182,7 +189,9 @@ export default function Phase2ResumeModal({
             {/* Close button */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
               <button 
+                type="button"
                 onClick={onDismiss}
+                aria-label={t('mission.popup.close')}
                 style={{ 
                   background: 'rgba(255,255,255,0.1)', 
                   border: 'none', 
@@ -225,11 +234,11 @@ export default function Phase2ResumeModal({
               color: '#FFD700', 
               marginBottom: '6px' 
             }}>
-              FASE 2 DISPONIBILE!
+              {t('mission.popup.phase2Available')}
             </h2>
 
             <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', marginBottom: '16px' }}>
-              {mission.title}
+              {missionTitle}
             </p>
 
             {/* Mission icon */}
@@ -245,7 +254,11 @@ export default function Phase2ResumeModal({
               textAlign: 'left',
             }}>
               <p style={{ fontSize: '13px', color: '#fff', lineHeight: 1.5, margin: 0 }}>
-                {mission.phase2.instruction}
+                {(() => {
+                  const key = `mission.popup.${mission.id}.phase2_instruction`;
+                  const translated = t(key);
+                  return translated !== key ? translated : mission.phase2.instruction;
+                })()}
               </p>
             </div>
 
@@ -256,7 +269,11 @@ export default function Phase2ResumeModal({
                   type="text"
                   value={inputValue}
                   onChange={handleInputChange}
-                  placeholder={mission.phase2.inputPlaceholder || 'Inserisci la risposta...'}
+                  placeholder={(() => {
+                    const key = `mission.popup.${mission.id}.phase2_placeholder`;
+                    const translated = t(key);
+                    return translated !== key ? translated : (mission.phase2.inputPlaceholder || t('mission.popup.placeholder'));
+                  })()}
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -286,7 +303,7 @@ export default function Phase2ResumeModal({
                 }}>
                   <div style={{ textAlign: 'left' }}>
                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-                      {mission.phase2.counter.label || 'Progresso'}
+                      {mission.phase2.counter.label || t('mission.popup.progress')}
                     </p>
                     <p style={{ 
                       fontSize: '24px', 
@@ -341,7 +358,7 @@ export default function Phase2ResumeModal({
                     }}
                   >
                     <Lightbulb size={16} />
-                    Mostra suggerimento
+                    {t('mission.popup.showHint')}
                   </button>
                 ) : (
                   <div style={{
@@ -354,7 +371,7 @@ export default function Phase2ResumeModal({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                       <Lightbulb size={14} color="#FFD700" />
                       <span style={{ fontSize: '11px', color: '#FFD700', fontWeight: 600 }}>
-                        SUGGERIMENTO
+                        {t('mission.popup.hint')}
                       </span>
                     </div>
                     <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', margin: 0, lineHeight: 1.5 }}>
@@ -395,7 +412,7 @@ export default function Phase2ResumeModal({
             }}>
               <Gift size={18} color="#00FF96" />
               <span style={{ fontSize: '18px', fontWeight: 700, color: '#00FF96' }}>
-                +{reward} M1U ti aspettano!
+                {t('mission.popup.rewardWaiting', { amount: reward })}
               </span>
             </div>
 
@@ -418,7 +435,7 @@ export default function Phase2ResumeModal({
                 cursor: canComplete() ? 'pointer' : 'not-allowed',
               }}
             >
-              COMPLETA FASE 2
+              {t('mission.popup.completePhase2Button')}
             </motion.button>
 
             <p 
@@ -431,7 +448,7 @@ export default function Phase2ResumeModal({
                 cursor: 'pointer',
               }}
             >
-              Ricordamelo dopo
+              {t('mission.popup.remindMeLater')}
             </p>
           </motion.div>
         </motion.div>

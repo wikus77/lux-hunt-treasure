@@ -1115,22 +1115,110 @@ export const MISSIONS_REGISTRY: MissionDefinition[] = [
     icon: '🏅',
     repeatable: true,
   },
+  // ─── SERVER-REAL: Cipher Drill (Anagram) — Idea 1
+  {
+    id: 'cipher_drill_anagram_v1',
+    title: 'CIPHER DRILL',
+    briefing: 'Memorize the anagram shown for 60 seconds. Return tomorrow and type the original word.',
+    description: 'Memorizza l\'anagramma per 60 secondi. Torna domani e inserisci la parola originale.',
+    difficulty: 'logic',
+    totalRewardM1U: 20,
+    phase1: {
+      instruction: 'Memorize the word. You have 60 seconds.',
+      actionType: 'confirm',
+    },
+    phase2: {
+      instruction: 'Enter the original word you memorized yesterday.',
+      actionType: 'input',
+      inputPlaceholder: 'Original word…',
+      inputValidation: { type: 'any' },
+    },
+    icon: '🔤',
+    repeatable: true,
+  },
+
+  // Daily #2 — Word Duel Memory (5 rounds + 60s memorize + tomorrow input)
+  {
+    id: 'word_duel_memory_v1',
+    title: 'WORD DUEL',
+    briefing: '5 rounds: pick the correct word. Memorize the saved words for 60s. Tomorrow enter the sequence.',
+    description: '5 round: scegli la parola corretta. Memorizza le parole salvate per 60s. Domani inserisci la sequenza.',
+    difficulty: 'logic',
+    totalRewardM1U: 20,
+    phase1: { instruction: 'Choose the correct word each round.', actionType: 'confirm' },
+    phase2: { instruction: 'Enter the words you saved, in order.', actionType: 'input', inputPlaceholder: 'Words…', inputValidation: { type: 'any' } },
+    icon: '📝',
+    repeatable: true,
+  },
+
+  // Daily #3 — Signal Pattern Numbers (sequence + next number tomorrow)
+  {
+    id: 'signal_pattern_numbers_v1',
+    title: 'Signal Pattern',
+    briefing: 'Memorize the number sequence. Tomorrow enter the next number.',
+    description: 'Memorizza la sequenza numerica. Domani inserisci il numero successivo.',
+    difficulty: 'logic',
+    totalRewardM1U: 10,
+    phase1: { instruction: 'Memorize: tomorrow enter the next number.', actionType: 'confirm' },
+    phase2: { instruction: 'Enter the next number.', actionType: 'input', inputPlaceholder: 'Number…', inputValidation: { type: 'any' } },
+    icon: '🔢',
+    repeatable: true,
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════
-// 🔧 UTILITIES
+// 🔧 UTILITIES — Mission Cycle (no dayOfYear; sync fallback for engine)
 // ═══════════════════════════════════════════════════════════════
 
+/** Cycle of 15 mission IDs — must match server daily-mission-today. Used for sync fallback only. */
+const MISSION_CYCLE_FALLBACK: string[] = [
+  'cipher_drill_anagram_v1',
+  'word_duel_memory_v1',
+  'signal_pattern_numbers_v1',
+  'open_source_intel',
+  'urban_riddle',
+  'pulse_breaker_challenge',
+  'signal_trace',
+  'code_fragment',
+  'area_observation_lite',
+  'pattern_break',
+  'chain_of_intel',
+  'time_distortion',
+  'false_signal',
+  'shadow_zone',
+  'cipher_decode',
+  'memory_matrix',
+  'word_puzzle',
+];
+
+function getEpochDay(dayKey: string): number {
+  const t = new Date(dayKey + 'T00:00:00Z').getTime();
+  return Math.floor(t / 86400000);
+}
+
+function getMissionIdFromDayKey(dayKey: string): string {
+  const epochDay = getEpochDay(dayKey);
+  const idx = epochDay % MISSION_CYCLE_FALLBACK.length;
+  const index = idx >= 0 ? idx : idx + MISSION_CYCLE_FALLBACK.length;
+  return MISSION_CYCLE_FALLBACK[index];
+}
+
 /**
- * Get mission of the day (deterministic based on date)
+ * Get mission of the day (sync fallback: deterministic from day_key UTC, cycle of 15).
+ * UI should use useMissionOfTheDay() for server-driven value. This is for missionEngine and legacy callers.
+ * Set VITE_FORCE_DAILY_MISSION=cipher_drill_anagram_v1 in .env.local for testing.
  */
 export function getMissionOfTheDay(): MissionDefinition {
-  const today = new Date();
-  const dayOfYear = Math.floor(
-    (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
-  );
-  const index = dayOfYear % MISSIONS_REGISTRY.length;
-  return MISSIONS_REGISTRY[index];
+  const forcedId = import.meta.env.VITE_FORCE_DAILY_MISSION;
+  if (forcedId && typeof forcedId === 'string') {
+    const found = MISSIONS_REGISTRY.find((m) => m.id === forcedId);
+    if (found) return found;
+  }
+  // UTC day_key (same as missionState.getTodayKey()) + same cycle as server (epochDay % 15)
+  const dayKey = new Date().toISOString().split('T')[0];
+  const missionId = getMissionIdFromDayKey(dayKey);
+  const def = MISSIONS_REGISTRY.find((m) => m.id === missionId);
+  return def ?? MISSIONS_REGISTRY[0];
 }
 
 /**

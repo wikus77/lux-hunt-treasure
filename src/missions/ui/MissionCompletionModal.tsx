@@ -7,6 +7,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Clock, Trophy } from 'lucide-react';
@@ -26,6 +27,7 @@ export default function MissionCompletionModal({
   missionTitle,
   onClose,
 }: MissionCompletionModalProps) {
+  const { t } = useTranslation();
   const isPhase1 = phase === 1;
 
   if (!isOpen) return null;
@@ -98,7 +100,7 @@ export default function MissionCompletionModal({
               color: isPhase1 ? '#00D1FF' : '#00FF96', 
               marginBottom: '8px' 
             }}>
-              {isPhase1 ? 'PHASE 1 COMPLETE!' : 'MISSION ACCOMPLISHED!'}
+              {isPhase1 ? t('mapPills.mission.phase1Complete') : t('mapPills.mission.missionAccomplished')}
             </h2>
 
             <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', marginBottom: '20px' }}>
@@ -119,7 +121,7 @@ export default function MissionCompletionModal({
               }}
             >
               <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}>
-                REWARD CREDITED
+                {t('mission.popup.rewardCredited')}
               </p>
               <p style={{ fontSize: '32px', fontWeight: 900, color: '#00FF96' }}>
                 +{rewardAmount} M1U
@@ -140,9 +142,9 @@ export default function MissionCompletionModal({
               }}>
                 <Clock size={20} color="#FFD700" />
                 <div style={{ textAlign: 'left' }}>
-                  <p style={{ fontSize: '11px', color: '#FFD700', fontWeight: 600 }}>PHASE 2 UNLOCKS TOMORROW</p>
+                  <p style={{ fontSize: '11px', color: '#FFD700', fontWeight: 600 }}>{t('mission.popup.phase2UnlocksTomorrow')}</p>
                   <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
-                    Return to claim your remaining reward
+                    {t('mission.popup.returnToClaimRemaining')}
                   </p>
                 </div>
               </div>
@@ -166,7 +168,7 @@ export default function MissionCompletionModal({
                 cursor: 'pointer',
               }}
             >
-              {isPhase1 ? 'GOT IT!' : 'CLAIM REWARD'}
+              {isPhase1 ? t('mission.popup.gotIt') : t('mission.popup.claimReward')}
             </motion.button>
           </motion.div>
         </motion.div>

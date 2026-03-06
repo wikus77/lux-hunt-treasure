@@ -10,11 +10,8 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Target, Clock, Play, X, Check, Info, Gift } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { 
-  MISSIONS_ENABLED, 
-  getMissionOfTheDay,
-  calculatePhaseRewards,
-} from '@/missions/missionsRegistry';
+import { MISSIONS_ENABLED, calculatePhaseRewards } from '@/missions/missionsRegistry';
+import { useMissionOfTheDay } from '@/missions/useMissionOfTheDay';
 import { 
   getMissionState, 
   startMission, 
@@ -54,8 +51,9 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
   const [completedPhase, setCompletedPhase] = useState<1 | 2>(1);
   const [isReady, setIsReady] = useState(false);
 
-  const mission = getMissionOfTheDay();
-  const { phase1: phase1Reward, phase2: phase2Reward } = calculatePhaseRewards(mission.totalRewardM1U);
+  const { mission, loading: missionLoading } = useMissionOfTheDay();
+  const phase1Reward = mission ? calculatePhaseRewards(mission.totalRewardM1U).phase1 : 0;
+  const phase2Reward = mission ? calculatePhaseRewards(mission.totalRewardM1U).phase2 : 0;
   
   // Long press handler - shows brief info
   const longPressHandlers = useLongPress(() => {
@@ -88,9 +86,10 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
     return () => clearInterval(interval);
   }, [user, isReady, refreshState]);
 
-  // Don't render if disabled
+  // Don't render if disabled, loading, or no mission
   if (!MISSIONS_ENABLED) return null;
   if (!isReady) return null;
+  if (missionLoading || !mission) return null;
   if (phase === 3) return null; // Mission completed
 
   const isPhase2Ready = isPhase2Available();
@@ -209,7 +208,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
                   color: isNotStarted ? '#00FF96' : isPhase2Ready ? '#FFD700' : '#00D1FF',
                 }}
               >
-                {isNotStarted ? 'NEW' : isPhase2Ready ? 'P2!' : 'P1'}
+                {isNotStarted ? t('daily_mission.badge_new') : isPhase2Ready ? t('daily_mission.badge_p2') : t('daily_mission.badge_p1')}
               </div>
               
               <motion.div
@@ -277,7 +276,9 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
 
                 {/* Close button */}
                 <button
+                  type="button"
                   onClick={() => setShowModal(false)}
+                  aria-label={t('mission.popup.close')}
                   style={{
                     position: 'absolute',
                     top: '16px',
@@ -341,10 +342,10 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
                         border: '1px solid rgba(0, 255, 136, 0.3)',
                       }}>
                         <p style={{ fontSize: '13px', color: '#00FF88', fontWeight: 600, margin: '0 0 8px' }}>
-                          📍 PHASE 1 (OGGI): +{phase1Reward} M1U
+                          {t('mapPills.mission.phase1Today', { reward: phase1Reward })}
                         </p>
                         <p style={{ fontSize: '13px', color: '#FFD700', fontWeight: 600, margin: 0 }}>
-                          🔄 PHASE 2 (DOMANI): +{phase2Reward} M1U
+                          {t('mapPills.mission.phase2Tomorrow', { reward: phase2Reward })}
                         </p>
                       </div>
                       <motion.button
@@ -368,7 +369,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
                           boxShadow: '0 4px 25px rgba(0, 255, 136, 0.4)',
                         }}
                       >
-                        <Play size={20} /> START MISSION
+                        <Play size={20} /> {t('mission.popup.startMission')}
                       </motion.button>
                     </>
                   )}
@@ -384,7 +385,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
                         border: '1px solid rgba(0, 255, 136, 0.3)',
                       }}>
                         <p style={{ fontSize: '12px', color: '#00FF88', fontWeight: 600, margin: '0 0 8px' }}>
-                          📍 PHASE 1 IN CORSO
+                          {t('mapPills.mission.phase1InProgress')}
                         </p>
                         <p style={{ fontSize: '14px', color: '#fff', margin: 0 }}>{mission.phase1.instruction}</p>
                       </div>
@@ -409,7 +410,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
                           boxShadow: '0 4px 25px rgba(0, 255, 136, 0.4)',
                         }}
                       >
-                        <Check size={20} /> COMPLETA PHASE 1 (+{phase1Reward} M1U)
+                        <Check size={20} /> {t('mapPills.mission.completePhase1', { reward: phase1Reward })}
                       </motion.button>
                     </>
                   )}
@@ -425,10 +426,10 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
                     }}>
                       <Clock size={40} color="#FFD700" style={{ marginBottom: '12px' }} />
                       <p style={{ fontSize: '16px', color: '#FFD700', fontWeight: 600, margin: '0 0 8px' }}>
-                        PHASE 2 SI SBLOCCA DOMANI
+                        {t('mission.popup.phase2UnlocksTomorrow')}
                       </p>
                       <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', margin: 0 }}>
-                        Torna domani per +{phase2Reward} M1U
+                        {t('mapPills.mission.returnToClaim', { reward: phase2Reward })}
                       </p>
                     </div>
                   )}
@@ -444,7 +445,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
                         border: '1px solid rgba(255, 215, 0, 0.4)',
                       }}>
                         <p style={{ fontSize: '12px', color: '#FFD700', fontWeight: 600, margin: '0 0 8px' }}>
-                          🔄 PHASE 2 PRONTA!
+                          {t('mapPills.mission.phase2Ready')}
                         </p>
                         <p style={{ fontSize: '14px', color: '#fff', margin: 0 }}>{mission.phase2.instruction}</p>
                       </div>
@@ -469,7 +470,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
                           boxShadow: '0 4px 25px rgba(255, 215, 0, 0.4)',
                         }}
                       >
-                        🎉 COMPLETA PHASE 2 (+{phase2Reward} M1U)
+                        {t('mapPills.mission.completePhase2', { reward: phase2Reward })}
                       </motion.button>
                     </>
                   )}
@@ -483,7 +484,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
                     textAlign: 'center',
                   }}>
                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>
-                      TOTAL REWARD: <span style={{ color: '#00FF88', fontWeight: 700 }}>{mission.totalRewardM1U} M1U</span>
+                      {t('mission.popup.totalRewardLabel', { amount: mission.totalRewardM1U })}
                     </p>
                   </div>
                 </div>
@@ -518,7 +519,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
               }}
             >
               <p style={{ fontSize: '16px', fontWeight: 700, color: '#00FF88', margin: '0 0 8px' }}>
-                {completedPhase === 1 ? '✅ PHASE 1 COMPLETE!' : '🎉 MISSION ACCOMPLISHED!'}
+                {completedPhase === 1 ? t('mapPills.mission.phase1Complete') : t('mapPills.mission.missionAccomplished')}
               </p>
               <p style={{ 
                 fontSize: '28px', 
@@ -532,7 +533,7 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
               </p>
               {completedPhase === 1 && (
                 <p style={{ fontSize: '12px', color: '#FFD700', margin: 0 }}>
-                  Torna domani per Phase 2!
+                  {t('mapPills.mission.returnTomorrowPhase2')}
                 </p>
               )}
             </motion.div>
@@ -550,16 +551,16 @@ export const DailyMissionCard: React.FC<DailyMissionCardProps> = ({ className = 
         icon={<span className="text-2xl">{mission.icon}</span>}
         accentColor="#00D1FF"
         items={[
-          { label: 'Missione', value: mission.title, color: '#fff', icon: <Target className="w-4 h-4" /> },
-          { label: 'Fase attuale', value: phase === 0 ? 'Non iniziata' : phase === 1 ? 'Phase 1' : phase === 2 ? 'Phase 2' : 'Completata', color: phase === 0 ? '#FFD700' : phase === 3 ? '#22C55E' : '#00D1FF' },
-          { label: 'Reward P1', value: `+${phase1Reward} M1U`, color: '#00FF88', icon: <Gift className="w-4 h-4" /> },
-          { label: 'Reward P2', value: `+${phase2Reward} M1U`, color: '#FFD700', icon: <Gift className="w-4 h-4" /> },
-          { label: 'Reward Totale', value: `+${mission.totalRewardM1U} M1U`, color: '#A855F7' },
-          { label: 'Status', value: isPhase2Available() ? '⚡ Phase 2 Pronta!' : phase === 0 ? '🆕 Nuova' : '⏳ In corso', color: isPhase2Available() ? '#FFD700' : '#00D1FF' },
+          { label: t('daily_mission.label_mission'), value: mission.title, color: '#fff', icon: <Target className="w-4 h-4" /> },
+          { label: t('daily_mission.label_phase'), value: phase === 0 ? t('daily_mission.phase_not_started') : phase === 1 ? t('daily_mission.phase_1') : phase === 2 ? t('daily_mission.phase_2') : t('daily_mission.phase_completed'), color: phase === 0 ? '#FFD700' : phase === 3 ? '#22C55E' : '#00D1FF' },
+          { label: t('daily_mission.reward_p1'), value: `+${phase1Reward} M1U`, color: '#00FF88', icon: <Gift className="w-4 h-4" /> },
+          { label: t('daily_mission.reward_p2'), value: `+${phase2Reward} M1U`, color: '#FFD700', icon: <Gift className="w-4 h-4" /> },
+          { label: t('daily_mission.reward_total'), value: `+${mission.totalRewardM1U} M1U`, color: '#A855F7' },
+          { label: t('daily_mission.status'), value: isPhase2Available() ? `⚡ ${t('daily_mission.status_p2_ready')}` : phase === 0 ? `🆕 ${t('daily_mission.status_new')}` : `⏳ ${t('daily_mission.status_in_progress')}`, color: isPhase2Available() ? '#FFD700' : '#00D1FF' },
         ]}
         footer={
           <p className="text-xs text-white/50 text-center">
-            Tocca la card per vedere i dettagli completi
+            {t('daily_mission.longpress_footer')}
           </p>
         }
       />

@@ -17,10 +17,8 @@ import { GLASS_PRESETS, M1SSION_COLORS } from './glassPresets';
 import { useMissionStatus } from '@/hooks/useMissionStatus';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { track } from '@/lib/analytics';
-import { 
-  MISSIONS_ENABLED, 
-  getMissionOfTheDay,
-} from '@/missions/missionsRegistry';
+import { MISSIONS_ENABLED } from '@/missions/missionsRegistry';
+import { useMissionOfTheDay } from '@/missions/useMissionOfTheDay';
 import { 
   getMissionState, 
   isPhase2Available,
@@ -48,7 +46,8 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
   const [missionPhase, setMissionPhase] = useState(0);
   const [isMissionReady, setIsMissionReady] = useState(false);
 
-  const mission = MISSIONS_ENABLED ? getMissionOfTheDay() : null;
+  const { mission: serverMission, loading: missionLoading } = useMissionOfTheDay();
+  const mission = MISSIONS_ENABLED ? serverMission : null;
 
   const preset = GLASS_PRESETS.success;
   
@@ -56,10 +55,12 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
   const isUrgent = daysRemaining !== null && daysRemaining <= 3;
 
   // Mission state refresh
+  const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
   const refreshMissionState = useCallback(() => {
     if (!MISSIONS_ENABLED) return;
     const state = getMissionState();
     setMissionPhase(state.phase);
+    setActiveMissionId(state.activeMissionId);
   }, []);
 
   useEffect(() => {
@@ -79,7 +80,7 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
 
   const isPhase2Ready = isPhase2Available();
   const isMissionNotStarted = missionPhase === 0;
-  const isMissionCompleted = missionPhase === 3;
+  const isMissionCompleted = missionPhase === 3 && activeMissionId === mission?.id;
 
   // Get mission status text
   const getMissionStatusText = () => {
@@ -108,6 +109,11 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
     });
   };
 
+  const handleCloseModal = useCallback(() => {
+    track('next_action_collapse', { screen: 'home' });
+    setIsModalOpen(false);
+  }, []);
+
   return (
     <>
       <motion.div
@@ -117,7 +123,9 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
         transition={{ duration: 0.3 }}
       >
         <motion.button
+          type="button"
           onClick={handleOpenModal}
+          aria-label={t('next_action_tap_options')}
           className="w-full rounded-2xl overflow-hidden relative backdrop-blur-xl"
           style={{
             background: preset.background,
@@ -242,9 +250,14 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
       <NextActionFlipOverlay
         open={isModalOpen}
         originRect={originRect}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
       >
-        <NextActionContent onClose={() => setIsModalOpen(false)} onOpenVeraBomb={handleOpenVeraBomb} />
+        <NextActionContent
+          onClose={handleCloseModal}
+          onOpenVeraBomb={handleOpenVeraBomb}
+          mission={mission}
+          missionLoading={missionLoading}
+        />
       </NextActionFlipOverlay>
 
       {/* BombMissionModal: mounted here (outside overlay) so it appears above everything */}

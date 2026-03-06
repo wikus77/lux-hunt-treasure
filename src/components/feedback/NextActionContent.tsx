@@ -18,11 +18,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { useMissionStatus } from '@/hooks/useMissionStatus';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { track } from '@/lib/analytics';
-import { 
-  MISSIONS_ENABLED, 
-  getMissionOfTheDay,
-  calculatePhaseRewards,
-} from '@/missions/missionsRegistry';
+import { MISSIONS_ENABLED, calculatePhaseRewards } from '@/missions/missionsRegistry';
+import type { MissionDefinition } from '@/missions/missionsRegistry';
 import { 
   getMissionState, 
   isPhase2Available,
@@ -34,9 +31,16 @@ import { isVeraBombEnabled } from '@/config/featureFlags';
 interface NextActionContentProps {
   onClose: () => void;
   onOpenVeraBomb: () => void;
+  mission?: MissionDefinition | null;
+  missionLoading?: boolean;
 }
 
-export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose, onOpenVeraBomb }) => {
+export const NextActionContent: React.FC<NextActionContentProps> = ({
+  onClose,
+  onOpenVeraBomb,
+  mission = null,
+  missionLoading = false,
+}) => {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
   const { user } = useAuth();
@@ -48,8 +52,6 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose, o
   const [showMissionModal, setShowMissionModal] = useState(false);
   const [missionPhase, setMissionPhase] = useState(0);
   const [isMissionReady, setIsMissionReady] = useState(false);
-
-  const mission = MISSIONS_ENABLED ? getMissionOfTheDay() : null;
   
   // Dynamic priority calculation
   const daysRemaining = missionStatus?.daysRemaining ?? null;
@@ -57,10 +59,12 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose, o
   const buzzUsedToday = dailyBuzzCounter > 0;
 
   // Mission state refresh
+  const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
   const refreshMissionState = useCallback(() => {
     if (!MISSIONS_ENABLED) return;
     const state = getMissionState();
     setMissionPhase(state.phase);
+    setActiveMissionId(state.activeMissionId);
   }, []);
 
   useEffect(() => {
@@ -74,7 +78,7 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose, o
 
   const isPhase2Ready = isPhase2Available();
   const isMissionNotStarted = missionPhase === 0;
-  const isMissionCompleted = missionPhase === 3;
+  const isMissionCompleted = missionPhase === 3 && activeMissionId === mission?.id;
 
   // Dynamic priority calculation
   const orderedActions = useMemo(() => {
@@ -198,7 +202,9 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose, o
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90 rounded-t-2xl" />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <button
+                type="button"
                 onClick={onClose}
+                aria-label={t('mission.popup.close')}
                 style={{
                   width: '40px',
                   height: '40px',
@@ -303,13 +309,13 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose, o
           </div>
 
           {/* Optional actions (Daily Mission + VERA BOMB) */}
-          {(MISSIONS_ENABLED && isMissionReady && !isMissionCompleted && mission) || isVeraBombEnabled() ? (
+          {(MISSIONS_ENABLED && isMissionReady) || isVeraBombEnabled() ? (
             <>
               {/* Section divider */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                 <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
                 <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  Azioni opzionali di oggi
+                  {t('home_next_action_optional_section')}
                 </span>
                 <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
               </div>
@@ -346,8 +352,22 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose, o
                 </GlassCard>
               )}
 
+              {/* Daily Mission: loading placeholder */}
+              {MISSIONS_ENABLED && isMissionReady && missionLoading && (
+                <div style={{ marginBottom: '12px', padding: '14px', borderRadius: '14px', background: 'rgba(0, 209, 255, 0.08)', border: '1px solid rgba(0, 209, 255, 0.2)' }}>
+                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>{t('daily_mission.loading')}</p>
+                </div>
+              )}
+
+              {/* Daily Mission: unavailable */}
+              {MISSIONS_ENABLED && isMissionReady && !missionLoading && !mission && (
+                <div style={{ marginBottom: '12px', padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('daily_mission.unavailable')}</p>
+                </div>
+              )}
+
               {/* Daily Mission Card */}
-              {MISSIONS_ENABLED && isMissionReady && !isMissionCompleted && mission && (
+              {MISSIONS_ENABLED && isMissionReady && !missionLoading && !isMissionCompleted && mission && (
               <GlassCard onClick={handleDailyMissionClick}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div 
@@ -368,7 +388,7 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({ onClose, o
                   
                   <div style={{ flex: 1, textAlign: 'left' }}>
                     <p style={{ color: '#FFFFFF', fontWeight: 600, fontSize: '14px' }}>
-                      Daily Mission
+                      {t('daily_mission.title')}
                     </p>
                     <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>
                       {mission.title}

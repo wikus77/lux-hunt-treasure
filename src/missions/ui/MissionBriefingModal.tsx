@@ -7,6 +7,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Play } from 'lucide-react';
@@ -25,7 +26,12 @@ export default function MissionBriefingModal({
   onStart,
   onDismiss,
 }: MissionBriefingModalProps) {
+  const { t } = useTranslation();
   const { phase1, phase2 } = calculatePhaseRewards(mission.totalRewardM1U);
+  const titleKey = `mission.popup.${mission.id}.title`;
+  const descKey = `mission.popup.${mission.id}.description`;
+  const title = t(titleKey) !== titleKey ? t(titleKey) : mission.title;
+  const description = t(descKey) !== descKey ? t(descKey) : mission.description;
 
   if (!isOpen) return null;
 
@@ -124,7 +130,7 @@ export default function MissionBriefingModal({
             {/* Body */}
             <div style={{ padding: '20px' }}>
               <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.6, marginBottom: '20px' }}>
-                {mission.description}
+                {description}
               </p>
 
               {/* Phases */}
@@ -136,7 +142,7 @@ export default function MissionBriefingModal({
                   padding: '12px',
                 }}>
                   <p style={{ fontSize: '11px', color: '#00D1FF', fontWeight: 600, marginBottom: '4px', margin: 0 }}>
-                    📍 PHASE 1 (TODAY)
+                    {t('mission.popup.phase1TodayLabel')}
                   </p>
                   <p style={{ fontSize: '13px', color: '#fff', margin: '4px 0' }}>{mission.phase1.instruction}</p>
                   <p style={{ fontSize: '12px', color: '#00FF96', marginTop: '6px', margin: '6px 0 0 0' }}>
@@ -151,7 +157,7 @@ export default function MissionBriefingModal({
                   padding: '12px',
                 }}>
                   <p style={{ fontSize: '11px', color: '#FFD700', fontWeight: 600, marginBottom: '4px', margin: 0 }}>
-                    🔄 PHASE 2 (TOMORROW)
+                    {t('mission.popup.phase2TomorrowLabel')}
                   </p>
                   <p style={{ fontSize: '13px', color: '#fff', margin: '4px 0' }}>{mission.phase2.instruction}</p>
                   <p style={{ fontSize: '12px', color: '#00FF96', marginTop: '6px', margin: '6px 0 0 0' }}>
@@ -169,7 +175,7 @@ export default function MissionBriefingModal({
                 marginBottom: '20px',
                 textAlign: 'center',
               }}>
-                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>TOTAL REWARD</p>
+                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>{t('mission.popup.totalReward')}</p>
                 <p style={{ fontSize: '24px', fontWeight: 800, color: '#00FF96', margin: '4px 0 0 0' }}>
                   {mission.totalRewardM1U} M1U
                 </p>
@@ -198,7 +204,7 @@ export default function MissionBriefingModal({
                 }}
               >
                 <Play size={22} />
-                START MISSION
+                {t('mission.popup.startMission')}
               </motion.button>
 
               {/* Dismiss text */}
@@ -212,7 +218,7 @@ export default function MissionBriefingModal({
                   cursor: 'pointer',
                 }}
               >
-                Maybe later
+                {t('mission.popup.maybeLater')}
               </p>
             </div>
           </motion.div>
