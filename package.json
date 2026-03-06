@@ -21,7 +21,10 @@
     "prebuild": "node scripts/push-guard.cjs",
     "build:analyze": "vite build --config vite.analyze.config.ts",
     "build:prod": "vite build --config vite.prod.config.ts",
-    "guard:push": "bash scripts/push-freeze-guard.sh"
+    "guard:push": "bash scripts/push-freeze-guard.sh",
+    "cap:sync:ios": "npm run build && npx cap sync ios",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:check-assets": "node scripts/check-cap-assets.js"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.4",

@@ -35,6 +35,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { toast } from 'sonner';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 // Types
 interface LotteryStatus {
@@ -243,12 +244,7 @@ const LotteryTest: React.FC = () => {
           description: `+${data.prize_m1u} M1U accreditati!`
         });
         
-        // Dispatch event for M1U animation
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('m1u-credited', {
-            detail: { amount: data.prize_m1u }
-          }));
-        }, 500);
+        emitM1UCreditEvent(data.prize_m1u, 'lottery');
         
         // Refresh data
         refetchBalance();
