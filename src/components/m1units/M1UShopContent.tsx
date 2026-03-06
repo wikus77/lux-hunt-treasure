@@ -1,10 +1,11 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 // 🎨 M1U Shop Content - REVOLUT STYLE (identico design a SettingsContent)
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { X, ShoppingCart, Sparkles, Zap, Crown, Gem, Star } from 'lucide-react';
 import { M1UPaymentModal } from './M1UPaymentModal';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 interface M1UShopContentProps {
   onClose: () => void;
@@ -84,6 +85,8 @@ const M1U_PACKS: M1UPack[] = [
   }
 ];
 
+const SHOP_CLOSE_AFTER_CREDIT_MS = 400;
+
 export const M1UShopContent: React.FC<M1UShopContentProps> = ({ onClose }) => {
   const { t } = useTranslation();
   const [selectedPack, setSelectedPack] = useState<M1UPack | null>(null);
@@ -109,27 +112,12 @@ export const M1UShopContent: React.FC<M1UShopContentProps> = ({ onClose }) => {
   const handlePaymentSuccess = () => {
     console.log('[M1U SHOP] Payment successful for:', selectedPack?.code);
     setShowPaymentModal(false);
-    
     if (selectedPack) {
-      console.log('[M1U SHOP] Emitting m1u-credited event with amount:', selectedPack.m1u_total);
-      window.dispatchEvent(new CustomEvent('m1u-credited', {
-        detail: { 
-          amount: selectedPack.m1u_total,
-          packCode: selectedPack.code,
-          packName: selectedPack.name
-        }
-      }));
-      
-      window.dispatchEvent(new CustomEvent('m1u-balance-changed', {
-        detail: { 
-          type: 'purchase',
-          amount: selectedPack.m1u_total 
-        }
-      }));
+      const amount = selectedPack.m1u_total;
+      emitM1UCreditEvent(amount, 'shop');
+      setTimeout(() => onClose(), SHOP_CLOSE_AFTER_CREDIT_MS);
     }
-    
     setSelectedPack(null);
-    onClose();
   };
 
   const handlePaymentCancel = () => {
@@ -357,6 +345,7 @@ export const M1UShopContent: React.FC<M1UShopContentProps> = ({ onClose }) => {
           onCancel={handlePaymentCancel}
         />
       )}
+
     </>
   );
 };

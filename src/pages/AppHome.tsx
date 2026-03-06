@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import { useState, useEffect, Suspense, lazy } from "react";
+import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import CommandCenterHome from "@/components/command-center/CommandCenterHome";
@@ -43,6 +43,8 @@ const AppHome = () => {
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
+  const [walletPillVisible, setWalletPillVisible] = useState(true);
+  const scrollSentinelRef = useRef<HTMLDivElement>(null);
   // 🔧 FIX 25/01/2026: Synchronous detection - MUST be true BEFORE first render
   // Previous bug: useState(false) + useEffect caused race condition where MissionSync
   // mounted with disabled=false, attached listeners, then disabled changed to true
@@ -114,6 +116,36 @@ const { isConnected } = useRealTimeNotifications();
       setIsLoaded(true);
     }, 300);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Wallet pill fade on scroll (UI only) — IntersectionObserver; double rAF so CSS transition runs (browser paints "from" state first)
+  const walletPillVisibleRef = useRef(true);
+  useEffect(() => {
+    const el = scrollSentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const next = entry.isIntersecting;
+          if (walletPillVisibleRef.current === next) return;
+          if (next) {
+            walletPillVisibleRef.current = true;
+            setWalletPillVisible(true);
+          } else {
+            // Defer setState so browser paints current (visible) frame, then transition 1→0 runs
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                walletPillVisibleRef.current = false;
+                setWalletPillVisible(false);
+              });
+            });
+          }
+        });
+      },
+      { root: null, threshold: 0, rootMargin: "-100px 0px 0px 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -242,8 +274,8 @@ const { isConnected } = useRealTimeNotifications();
         />
         <div className="container mx-auto px-4">
           
-          {/* Offset per header - ESATTAMENTE come BuzzPage */}
-          <div className="m1-first-content-offset-compact mb-4">
+          {/* Offset per header - ESATTAMENTE come BuzzPage (sentinel per fade pill) */}
+          <div ref={scrollSentinelRef} className="m1-first-content-offset-compact mb-4" aria-hidden="true">
             {/* Placeholder for scroll offset */}
           </div>
 
@@ -460,7 +492,7 @@ const { isConnected } = useRealTimeNotifications();
         }}
       />
       
-      {/* 🔧 FIX 03/02/2026: M1UPill come OVERLAY FISSO (come BuzzPage) */}
+      {/* 🔧 FIX 03/02/2026: M1UPill OVERLAY + dissolvenza progressiva on scroll (solo Home) */}
       <div 
         id="m1u-pill-home-slot" 
         data-onboarding="m1u-pill"
@@ -468,7 +500,11 @@ const { isConnected } = useRealTimeNotifications();
         style={{ 
           top: 'calc(env(safe-area-inset-top, 0px) + 80px)',
           paddingLeft: 'max(0px, env(safe-area-inset-left, 0px))',
-          pointerEvents: 'auto' 
+          opacity: walletPillVisible ? 1 : 0,
+          transform: walletPillVisible ? 'translateY(0)' : 'translateY(-8px)',
+          transition: 'opacity 280ms ease, transform 280ms ease',
+          willChange: 'opacity, transform',
+          pointerEvents: walletPillVisible ? 'auto' : 'none',
         }}
       >
         <M1UPill showLabel showPlusButton />

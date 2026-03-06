@@ -18,11 +18,13 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Gift, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionSingleFlight } from '@/integrations/supabase/authSingleFlight';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import { AudioManager } from '@/lib/audio/AudioManager';
 import Analytics from '@/lib/analytics';
+import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 
 // 🎯 WHEEL SEGMENTS - 16 segments for progress visualization (STORE COMPLIANT)
 // All segments represent progress outcomes - NO win/lose
@@ -215,8 +217,30 @@ interface ProgressResult {
   message?: string;
 }
 
+export interface SpinWheelResponse {
+  ok?: boolean;
+  error?: string;
+  already_spun?: boolean;
+  day_key?: string;
+  segment_id?: number;
+  reward_type?: string;
+  credited_amount?: number;
+  reward_payload?: { clue_id?: string | null; clue_text?: string };
+}
+
+async function invokeSpinWheel(action: 'status' | 'spin', locale?: string): Promise<SpinWheelResponse | null> {
+  const { data: { session } } = await getSessionSingleFlight();
+  if (!session?.access_token) return null;
+  const { data, error } = await supabase.functions.invoke<SpinWheelResponse>('spin-wheel', {
+    body: { action, locale: locale || 'it' },
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+  if (error || !data) return data ?? null;
+  return data;
+}
+
 export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuthContext();
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -226,69 +250,41 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
   const [showClueModal, setShowClueModal] = useState(false);
   const [revealedClue, setRevealedClue] = useState('');
   const tickIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // 🏪 Store progress result for tracking (STORE COMPLIANT)
-  const progressResultRef = useRef<ProgressResult | null>(null);
 
-  // 🏪 STORE COMPLIANT: Check via server-side RPC (deterministic progress)
+  // Server-real: check via Edge spin-wheel (status only); no client fallback
   useEffect(() => {
     const checkCanInteract = async () => {
       if (!isOpen) {
         setIsLoading(false);
         return;
       }
-
-      // Track progress wheel viewed
       Analytics.track('progress_wheel_viewed', { user_logged_in: !!user });
 
-      // 🏪 SERVER-SIDE CHECK via RPC (deterministic progress system)
-      if (user) {
-        try {
-          const { data, error } = await supabase.rpc('check_wheel_progress_today');
-          
-          if (error) {
-            console.error('[ProgressWheel] RPC check failed:', error);
-            // Fallback to localStorage for UX
-            const today = new Date().toDateString();
-            const localLastInteraction = localStorage.getItem(STORAGE_KEY);
-            if (localLastInteraction) {
-              const localLastDate = new Date(localLastInteraction).toDateString();
-              setCanSpin(localLastDate !== today);
-            } else {
-              setCanSpin(true);
-            }
-          } else {
-            setCanSpin(data?.can_interact === true);
-            
-            // Sync localStorage with server state
-            if (!data?.can_interact) {
-              localStorage.setItem(STORAGE_KEY, new Date().toISOString());
-            }
-          }
-        } catch (err) {
-          console.error('[ProgressWheel] Check failed:', err);
-          setCanSpin(false);
-        }
-      } else {
-        // Non-authenticated: use localStorage only
-        const today = new Date().toDateString();
-        const localLastInteraction = localStorage.getItem(STORAGE_KEY);
-        if (localLastInteraction) {
-          const localLastDate = new Date(localLastInteraction).toDateString();
-          setCanSpin(localLastDate !== today);
-        } else {
-          setCanSpin(true);
-        }
+      if (!user) {
+        setCanSpin(false);
+        setIsLoading(false);
+        return;
       }
-      
+      try {
+        const data = await invokeSpinWheel('status');
+        if (data?.ok === true) {
+          setCanSpin(data.already_spun === false);
+        } else {
+          setCanSpin(false);
+          if (data?.error) toast.error(t('wheel.error_generic'));
+        }
+      } catch (err) {
+        console.error('[FortuneWheel] Status check failed:', err);
+        setCanSpin(false);
+        toast.error(t('wheel.error_generic'));
+      }
       setIsLoading(false);
     };
-
     if (isOpen) {
       setIsLoading(true);
       checkCanInteract();
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, t]);
 
   // Cleanup tick interval
   useEffect(() => {
@@ -302,145 +298,73 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
   // 🔒 REMOVED: getWeightedResult (now server-side only)
   // 🔒 REMOVED: awardPrize (now server-side only via RPC)
 
-  // Handle CLUE reward display (server determined this was a clue win)
-  const showClueReward = useCallback(() => {
-    const randomClue = INSTANT_CLUES[Math.floor(Math.random() * INSTANT_CLUES.length)];
-    setRevealedClue(randomClue);
-    setTimeout(() => setShowClueModal(true), 500);
-  }, []);
-
-  // 🔒 AAA+ SECURE: Spin the wheel via server-side RPC (with client fallback)
+  // Server-real: spin via Edge spin-wheel only (no client fallback)
   const handleSpin = useCallback(async () => {
-    if (isSpinning || !canSpin) return;
+    if (isSpinning || !canSpin || !user) return;
 
-    // Track spin started
     const spinId = `spin_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    Analytics.track('wheel_spin_started', { 
-      spin_id: spinId 
-    }, { dedupe_key: `wheel:spin:${spinId}` });
+    Analytics.track('wheel_spin_started', { spin_id: spinId }, { dedupe_key: `wheel:spin:${spinId}` });
 
     setIsSpinning(true);
     setResult(null);
-    
-    // Play start sound
     playSpinStartSound();
 
-    // Start tick sounds with decreasing frequency
     let tickSpeed = 50;
-    tickIntervalRef.current = setInterval(() => {
-      playTickSound();
-    }, tickSpeed);
-
-    // Gradually slow down ticks
+    tickIntervalRef.current = setInterval(() => playTickSound(), tickSpeed);
     const slowDownInterval = setInterval(() => {
       tickSpeed += 30;
       if (tickIntervalRef.current) {
         clearInterval(tickIntervalRef.current);
-        tickIntervalRef.current = setInterval(() => {
-          playTickSound();
-        }, tickSpeed);
+        tickIntervalRef.current = setInterval(() => playTickSound(), tickSpeed);
       }
-      if (tickSpeed > 400) {
-        clearInterval(slowDownInterval);
-      }
+      if (tickSpeed > 400) clearInterval(slowDownInterval);
     }, 500);
 
-    // 🏪 CALL SERVER-SIDE RPC - Deterministic progress (STORE COMPLIANT)
-    // With client-side fallback if RPC fails
-    let serverResult: ProgressResult | null = null;
-    let useClientFallback = false;
-    
-    if (user) {
-      try {
-        const { data, error } = await supabase.rpc('execute_wheel_progress');
-        
-        if (error) {
-          console.warn('[ProgressWheel] RPC execute_wheel_progress failed, using fallback:', error);
-          useClientFallback = true;
-        } else {
-          serverResult = data as ProgressResult;
-          progressResultRef.current = serverResult;
-          
-          // Handle already completed today (race condition protection)
-          if (serverResult.status === 'already_completed_today') {
-            toast.info(t('fortune_progression_done'));
-            setCanSpin(false);
-            setIsSpinning(false);
-            localStorage.setItem(STORAGE_KEY, new Date().toISOString());
-            if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
-            clearInterval(slowDownInterval);
-            return;
-          }
-          
-          if (serverResult.status !== 'success' || !serverResult.segment_id) {
-            console.warn('[FortuneWheel] Unexpected server response, using fallback:', serverResult);
-            useClientFallback = true;
-          }
-        }
-      } catch (err) {
-        console.warn('[FortuneWheel] RPC call failed, using fallback:', err);
-        useClientFallback = true;
-      }
-    } else {
-      // No user - use client fallback
-      useClientFallback = true;
-    }
-    
-    // 🎯 CLIENT FALLBACK: Deterministic result based on time
-    if (useClientFallback) {
-      const fallbackSegmentId = (Math.floor(Date.now() / 1000) % 16) + 1;
-      serverResult = {
-        status: 'success',
-        segment_id: fallbackSegmentId,
-        progress_gain: 10,
-        total_progress: 10,
-        milestone_reached: false,
-        milestone_level: 0,
-        reward_type: 'progress',
-        reward_value: 10,
-        message: t('fortune_progression_points')
-      };
-      progressResultRef.current = serverResult;
+    const locale = (i18n.language || 'it').slice(0, 2);
+    const data = await invokeSpinWheel('spin', locale);
+
+    if (!data?.ok) {
+      if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
+      clearInterval(slowDownInterval);
+      setIsSpinning(false);
+      toast.error(data?.error ? t('wheel.error_generic') : t('wheel.error_generic'));
+      return;
     }
 
-    // 🎡 Animate wheel to server-determined segment
-    const segmentIndex = serverResult.segment_id - 1; // segment_id is 1-based
-    const winningSegment = WHEEL_SEGMENTS[segmentIndex] || WHEEL_SEGMENTS[0];
-    
-    // Calculate rotation
+    if (data.already_spun === true) {
+      if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
+      clearInterval(slowDownInterval);
+      setIsSpinning(false);
+      setCanSpin(false);
+      toast.info(t('wheel.already_spun'));
+      return;
+    }
+
+    const segmentId = data.segment_id ?? 1;
+    const segmentIndex = Math.max(0, Math.min(segmentId - 1, WHEEL_SEGMENTS.length - 1));
+    const winningSegment = WHEEL_SEGMENTS[segmentIndex];
+
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
     const segmentCenterAngle = (segmentIndex + 0.5) * segmentAngle;
     const rotationToWin = 360 - segmentCenterAngle;
-    const totalRotation = rotation + (360 * 6) + rotationToWin;
-    
+    const totalRotation = rotation + 360 * 6 + rotationToWin;
     setRotation(totalRotation);
 
-    // Wait for animation to complete
-    setTimeout(async () => {
-      // Clear tick sounds
-      if (tickIntervalRef.current) {
-        clearInterval(tickIntervalRef.current);
-      }
+    setTimeout(() => {
+      if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
       clearInterval(slowDownInterval);
-      
       setIsSpinning(false);
       setResult(winningSegment);
-      
-      // Sync localStorage
-      localStorage.setItem(STORAGE_KEY, new Date().toISOString());
       setCanSpin(false);
 
-      // Track spin completed with server result
       Analytics.track('wheel_spin_completed', {
-        spin_id: serverResult?.interaction_id || spinId,
-        segment_id: serverResult?.segment_id,
-        reward_type: serverResult?.reward_type,
-        reward_value: serverResult?.reward_value,
-        message: serverResult?.message,
-      }, { dedupe_key: `wheel:complete:${serverResult?.interaction_id || spinId}` });
+        spin_id: spinId,
+        segment_id: data.segment_id,
+        reward_type: data.reward_type,
+        credited_amount: data.credited_amount,
+      }, { dedupe_key: `wheel:complete:${spinId}` });
 
-      // Play result sound based on server-determined outcome
-      if (serverResult!.reward_type !== 'nothing' && serverResult!.reward_type !== 'retry') {
+      if (data.reward_type !== 'nothing' && data.reward_type !== 'retry') {
         playWinSound();
         confetti({
           particleCount: 150,
@@ -448,105 +372,22 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
           origin: { y: 0.6 },
           colors: ['#00FF88', '#00D1FF', '#FFD700', '#FF00FF', '#39FF14'],
         });
-        
-        if (navigator.vibrate) {
-          navigator.vibrate([100, 50, 100, 50, 200]);
-        }
-
-        // 🎁 AWARD PRIZE BASED ON WINNING SEGMENT
-        // The wheel segment determines the actual prize, not milestones
-        const segmentPrize = winningSegment;
-        
-        if (segmentPrize.type === 'm1u' && segmentPrize.value > 0 && user) {
-          try {
-            // Award M1U directly to user's profile
-            const { error: awardError } = await supabase.rpc('award_wheel_m1u', {
-              p_amount: segmentPrize.value
-            });
-            
-            if (awardError) {
-              // Fallback: direct update if RPC doesn't exist
-              console.warn('[FortuneWheel] award_wheel_m1u RPC failed, trying direct update:', awardError);
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ 
-                  m1_units: supabase.rpc('increment_m1u', { amount: segmentPrize.value })
-                })
-                .eq('id', user.id);
-              
-              if (updateError) {
-                // Last resort: simple increment via raw SQL approach
-                const { data: profile } = await supabase
-                  .from('profiles')
-                  .select('m1_units')
-                  .eq('id', user.id)
-                  .single();
-                
-                if (profile) {
-                  await supabase
-                    .from('profiles')
-                    .update({ m1_units: (profile.m1_units || 0) + segmentPrize.value })
-                    .eq('id', user.id);
-                }
-              }
-            }
-            
-            // Notify UI of credit
-            window.dispatchEvent(new CustomEvent('m1u-credited', {
-              detail: { amount: segmentPrize.value }
-            }));
-            
-            toast.success(t('fortune_m1u_added', { value: segmentPrize.value }), {
-              description: t('fortune_prize_credited')
-            });
-            
-          } catch (err) {
-            console.error('[FortuneWheel] Failed to award M1U:', err);
-            toast.error(t('fortune_award_error'));
-          }
-        } else if (segmentPrize.type === 'pe' && segmentPrize.value > 0 && user) {
-          // Award Pulse Energy
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('pulse_energy')
-              .eq('id', user.id)
-              .single();
-            
-            if (profile) {
-              await supabase
-                .from('profiles')
-                .update({ pulse_energy: (profile.pulse_energy || 0) + segmentPrize.value })
-                .eq('id', user.id);
-              
-              toast.success(`+${segmentPrize.value} PE aggiunti!`);
-            }
-          } catch (err) {
-            console.error('[FortuneWheel] Failed to award PE:', err);
-          }
-        }
-        
-        // Track reward assigned
-        if (segmentPrize.value > 0) {
-          Analytics.track('wheel_reward_assigned', {
-            spin_id: serverResult?.interaction_id || spinId,
-            reward_type: segmentPrize.type,
-            reward_value: segmentPrize.value,
-            segment_label: segmentPrize.label,
-          }, { dedupe_key: `wheel:reward:${serverResult?.interaction_id || spinId}` });
-        }
-      } else {
-        // Play completion sound (no lose state in progress system)
-        playWinSound(); // All progress is positive
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
       }
 
-      // Handle CLUE display (server already recorded the progress)
-      if (serverResult!.reward_type === 'clue') {
-        showClueReward();
+      if (data.credited_amount != null && data.credited_amount > 0) {
+        emitM1UCreditEvent(data.credited_amount, 'wheel');
+        toast.success(t('fortune_m1u_added', { value: data.credited_amount }), {
+          description: t('fortune_prize_credited'),
+        });
       }
 
+      if (data.reward_type === 'clue' && data.reward_payload?.clue_text) {
+        setRevealedClue(data.reward_payload.clue_text);
+        setTimeout(() => setShowClueModal(true), 500);
+      }
     }, 5500);
-  }, [isSpinning, canSpin, rotation, user, showClueReward]);
+  }, [isSpinning, canSpin, rotation, user, t, i18n.language]);
 
   // 🏪 STORE COMPLIANT: Progress-based messaging (no win/lose)
   const getResultMessage = () => {
@@ -895,9 +736,10 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                       inset 0 0 20px rgba(0, 50, 100, 0.3),
                       0 0 30px rgba(0, 100, 200, 0.2)
                     `,
+                    willChange: 'transform',
                   }}
                   animate={{ rotate: rotation }}
-                  transition={{ duration: 5.5, ease: [0.2, 0.8, 0.2, 1] }}
+                  transition={{ type: 'tween', duration: 5.5, ease: [0.25, 0.1, 0.25, 1] }}
                 >
                   {/* SVG Wheel - AAA QUALITY with text PARALLEL to dividers */}
                   <svg viewBox="0 0 400 400" className="w-full h-full">
@@ -1165,24 +1007,24 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                     <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.5, repeat: Infinity, ease: 'linear' }}>
                       <RotateCcw className="w-5 h-5" />
                     </motion.div>
-                    GIRANDO...
+                    {t('wheel.spinning')}
                   </>
                 ) : canSpin ? (
                   <>
                     <Gift className="w-5 h-5" />
-                    AVANZA
+                    {t('wheel.spin_now')}
                   </>
                 ) : (
                   <>
                     <X className="w-5 h-5" />
-                    TORNA DOMANI
+                    {t('wheel.come_back_tomorrow')}
                   </>
                 )}
               </motion.button>
 
               {!canSpin && !isSpinning && (
                 <p className="text-center text-white/40 text-xs mt-2">
-                  Puoi girare la ruota una volta al giorno
+                  {t('wheel.one_per_day')}
                 </p>
               )}
             </div>
@@ -1230,7 +1072,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                         textShadow: '0 0 20px rgba(255, 215, 0, 0.6)',
                       }}
                     >
-                      INDIZIO SVELATO!
+                      {t('clue_reward.title')}
                     </h3>
                     <p className="text-white/90 text-lg italic mb-8 leading-relaxed">"{revealedClue}"</p>
                     <motion.button
@@ -1244,7 +1086,7 @@ export const FortuneWheel: React.FC<FortuneWheelProps> = ({ isOpen, onClose }) =
                         boxShadow: '0 0 30px rgba(255, 215, 0, 0.4)',
                       }}
                     >
-                      CAPITO!
+                      {t('clue_reward.cta_close')}
                     </motion.button>
                   </div>
                 </motion.div>

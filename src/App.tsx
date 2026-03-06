@@ -75,6 +75,8 @@ import { MissionPrizeIntroOverlay } from "./components/overlay/MissionPrizeIntro
 import { BattleDefenseManager } from "./components/battle/BattleDefenseManager";
 // 📱 Native Safe Area Provider - Cross-device layout adaptation
 import { NativeSafeAreaProvider } from "./components/layout/NativeSafeAreaProvider";
+// 🎰 Global M1U Slot Overlay — PRE→SLOT→POST on any credit (Shop, Wheel, Missions, etc.)
+import { GlobalM1UCreditOverlay } from "./features/m1u/GlobalM1UCreditOverlay";
 // 🎯 Daily Missions System
 import { DailyMissionsController } from "./missions";
 // 🎯 FIRST SESSION: Micro-missions (global - works on all pages)
@@ -257,6 +259,8 @@ function App() {
               <Router>
               <SoundProvider>
                 <AuthProvider>
+                  {/* M1U Global Slot Overlay: inside AuthProvider so M1UPill can use useUnifiedAuth (fix post-IAP crash) */}
+                  <GlobalM1UCreditOverlay />
                   {/* 🚫 DISABILITATO 16/01/2026: OnboardingProvider rimosso (forzava navigazione) */}
                   {/* <OnboardingProvider> */}
                   <InterestSignalsProvider>

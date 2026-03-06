@@ -4,7 +4,38 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useState, useEffect } from 'react';
+const DEBUG_M1U_PILL = false;
+
+const GLOBAL_LOCK_KEY = '__m1u_pill_credit_lock__';
+const GLOBAL_REFETCH_LOCK_KEY = '__m1u_refetch_lock__';
+const PENDING_CREDIT_KEY = '__m1u_pending_credit__';
+const PENDING_CREDIT_TTL_MS = 5000;
+const CREDIT_LOCK_WINDOW_MS = 2000;
+const REFETCH_THROTTLE_MS = 1500;
+
+interface PendingCredit {
+  amount: number;
+  issuedAt: number;
+  source: string;
+  id: string;
+}
+
+function readPendingCredit(win: (Window & { [key: string]: unknown }) | null): PendingCredit | null {
+  if (!win || !win[PENDING_CREDIT_KEY]) return null;
+  const p = win[PENDING_CREDIT_KEY] as PendingCredit;
+  if (typeof p.amount !== 'number' || p.amount <= 0) return null;
+  if (Date.now() - p.issuedAt >= PENDING_CREDIT_TTL_MS) {
+    delete win[PENDING_CREDIT_KEY];
+    return null;
+  }
+  return p;
+}
+
+function clearPendingCredit(win: (Window & { [key: string]: unknown }) | null): void {
+  if (win && win[PENDING_CREDIT_KEY]) delete win[PENDING_CREDIT_KEY];
+}
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -50,151 +81,326 @@ const M1UPill: React.FC<M1UPillProps> = ({
   // 🎰 SLOT MACHINE ANIMATION STATE - Initialize with cached value!
   const [displayedBalance, setDisplayedBalance] = useState<number>(() => getCachedM1U());
   const [isAnimating, setIsAnimating] = useState(false);
-  const animationRef = React.useRef<number | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const animatingRef = useRef(false);
+  const displayedBalanceRef = useRef(displayedBalance);
+  const animationTargetRef = useRef<number | null>(null);
+  const hardStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const instanceIdRef = useRef<string>(`pill-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`);
+  const lastTickLogRef = useRef<number>(0);
+  const lastCreditAtRef = useRef<number>(0);
 
-  // 🏪 COUNTER ANIMATION - Animates numbers rolling up progressively
-  const animateBalance = (startValue: number, endValue: number, duration: number = 2000) => {
+  const HARD_STOP_MS = 3200;
+  const CREDIT_COOLDOWN_MS = 4000;
+
+  const win = typeof window !== 'undefined' ? (window as any) : null;
+
+  displayedBalanceRef.current = displayedBalance;
+
+  useEffect(() => {
+    if (DEBUG_M1U_PILL) {
+      const route = typeof window !== 'undefined' ? (window as any).location?.pathname ?? '' : '';
+      console.error(`[M1UPill][mount] id=${instanceIdRef.current} route=${route}`);
+    }
+    return () => {
+      if (DEBUG_M1U_PILL) console.error(`[M1UPill][unmount] id=${instanceIdRef.current}`);
+      if (animationRef.current != null) cancelAnimationFrame(animationRef.current);
+      if (hardStopTimeoutRef.current != null) clearTimeout(hardStopTimeoutRef.current);
+      animatingRef.current = false;
+    };
+  }, []);
+
+  const forceStopAnimation = useCallback(() => {
+    const target = animationTargetRef.current;
+    const displayedAtStop = displayedBalanceRef.current;
+    if (DEBUG_M1U_PILL) console.error(`[M1UPill][forceStopAnimation] id=${instanceIdRef.current} finalTarget=${target} displayedBalanceRef.current=${displayedAtStop} reason=HARD_STOP_MS`);
+    if (animationRef.current != null) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+    if (hardStopTimeoutRef.current != null) {
+      clearTimeout(hardStopTimeoutRef.current);
+      hardStopTimeoutRef.current = null;
+    }
+    if (target != null) {
+      setDisplayedBalance(target);
+      setPrevBalance(target);
+      animationTargetRef.current = null;
+    }
+    setIsAnimating(false);
+    setPulseAnimation(false);
+    animatingRef.current = false;
+  }, []);
+
+  // 🏪 COUNTER ANIMATION - Animates numbers rolling up progressively; hard-stop guaranteed
+  const animateBalance = useCallback((startValue: number, endValue: number, duration: number = 2000) => {
+    if (DEBUG_M1U_PILL) console.error(`[M1UPill][animateBalance:start] id=${instanceIdRef.current} start=${startValue} target=${endValue} dur=${duration} animatingRef=${animatingRef.current}`);
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
-    
+    if (hardStopTimeoutRef.current) {
+      clearTimeout(hardStopTimeoutRef.current);
+    }
+    animationTargetRef.current = endValue;
     const startTime = performance.now();
     const difference = endValue - startValue;
-    
     setIsAnimating(true);
     setPulseAnimation(true);
-    
+    animatingRef.current = true;
+
+    hardStopTimeoutRef.current = setTimeout(() => {
+      hardStopTimeoutRef.current = null;
+      forceStopAnimation();
+    }, HARD_STOP_MS);
+
     const animate = (currentTime: number) => {
+      if (win && win[GLOBAL_LOCK_KEY]) {
+        const lock = win[GLOBAL_LOCK_KEY] as { expiresAt: number };
+        if (Date.now() > lock.expiresAt) {
+          win[GLOBAL_LOCK_KEY] = null;
+          forceStopAnimation();
+          return;
+        }
+      }
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      
-      // Easing function for smooth deceleration (like a slot machine slowing down)
+      if (DEBUG_M1U_PILL && progress < 1) {
+        const now = Date.now();
+        if (now - lastTickLogRef.current > 500) {
+          lastTickLogRef.current = now;
+          if (DEBUG_M1U_PILL) console.error(`[M1UPill][animateBalance:raf] id=${instanceIdRef.current} progress=${progress.toFixed(3)} elapsed=${Math.round(elapsed)}`);
+        }
+      }
       const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      
       const currentValue = Math.round(startValue + (difference * easeOutQuart));
       setDisplayedBalance(currentValue);
-      
       if (progress < 1) {
         animationRef.current = requestAnimationFrame(animate);
       } else {
+        if (DEBUG_M1U_PILL) console.error(`[M1UPill][animateBalance:complete] id=${instanceIdRef.current} final=${endValue} progress>=1`);
+        if (hardStopTimeoutRef.current) {
+          clearTimeout(hardStopTimeoutRef.current);
+          hardStopTimeoutRef.current = null;
+        }
         setDisplayedBalance(endValue);
+        setPrevBalance(endValue);
         setIsAnimating(false);
         setPulseAnimation(false);
         animationRef.current = null;
+        animatingRef.current = false;
+        animationTargetRef.current = null;
       }
     };
-    
     animationRef.current = requestAnimationFrame(animate);
-  };
+  }, [forceStopAnimation]);
 
-  // 🔥 FIX: Listen for BUZZ events and SHOP purchases to refetch M1U immediately
-  useEffect(() => {
-    const handleRefresh = () => {
-      console.log('💰 M1UPill: Event received, refetching balance...');
+  // Refetch with global throttle (single-flight + 1500ms) to avoid cascade from 2 pill instances
+  const refetchWithThrottle = useCallback((reason: string) => {
+    if (!win) {
       refetch();
-    };
+      return;
+    }
+    let lock = win[GLOBAL_REFETCH_LOCK_KEY] as { lastRefetchAt: number; inflight: boolean } | undefined;
+    if (!lock) {
+      lock = { lastRefetchAt: 0, inflight: false };
+      win[GLOBAL_REFETCH_LOCK_KEY] = lock;
+    }
+    const now = Date.now();
+    if (now - lock.lastRefetchAt < REFETCH_THROTTLE_MS) {
+      if (DEBUG_M1U_PILL) console.error(`[M1UPill][refetch:skip] id=${instanceIdRef.current} reason=${reason} lastRefetchAt=${lock.lastRefetchAt} willRefetch=false`);
+      return;
+    }
+    if (lock.inflight) {
+      if (DEBUG_M1U_PILL) console.error(`[M1UPill][refetch:skip] id=${instanceIdRef.current} reason=${reason} inflight=true willRefetch=false`);
+      return;
+    }
+    if (DEBUG_M1U_PILL) console.error(`[M1UPill][refetch:call] id=${instanceIdRef.current} reason=${reason} lastRefetchAt=${lock.lastRefetchAt} willRefetch=true`);
+    lock.inflight = true;
+    refetch().finally(() => {
+      if (win && win[GLOBAL_REFETCH_LOCK_KEY]) {
+        win[GLOBAL_REFETCH_LOCK_KEY].inflight = false;
+        win[GLOBAL_REFETCH_LOCK_KEY].lastRefetchAt = Date.now();
+      }
+    });
+  }, [refetch]);
 
-    // Also listen for shop purchases (M1U spent)
+  useEffect(() => {
+    const handleRefreshBalanceChanged = () => {
+      if (DEBUG_M1U_PILL) {
+        const creditKey = `balance|${Math.floor(Date.now() / 500)}`;
+        console.error(`[M1UPill][m1u-balance-changed] id=${instanceIdRef.current} creditKey=${creditKey}`);
+      }
+      refetchWithThrottle('balanceChanged');
+    };
+    const handleRefreshBuzzArea = () => refetchWithThrottle('buzzAreaCreated');
+    const handleRefreshBuzzClue = () => refetchWithThrottle('buzzClueCreated');
+
     const handleM1USpent = (event: CustomEvent) => {
       const amount = event.detail?.amount || 0;
       const newBalance = event.detail?.newBalance;
-      console.log('💸 M1UPill: M1U spent event!', { amount, newBalance });
-      
-      // Immediately update displayed balance if we have the new value
+      if (!DEBUG_M1U_PILL) console.log('💸 M1UPill: M1U spent event!', { amount, newBalance });
       if (newBalance !== undefined) {
         setDisplayedBalance(newBalance);
         setPrevBalance(newBalance);
       }
-      
-      // Also refetch to be sure
-      setTimeout(() => refetch(), 300);
+      setTimeout(() => refetchWithThrottle('m1u-spent'), 300);
     };
 
-    window.addEventListener('buzzAreaCreated', handleRefresh);
-    window.addEventListener('buzzClueCreated', handleRefresh);
+    window.addEventListener('buzzAreaCreated', handleRefreshBuzzArea);
+    window.addEventListener('buzzClueCreated', handleRefreshBuzzClue);
     window.addEventListener('m1u-spent', handleM1USpent as EventListener);
-    window.addEventListener('m1u-balance-changed', handleRefresh);
-    
+    window.addEventListener('m1u-balance-changed', handleRefreshBalanceChanged);
     return () => {
-      window.removeEventListener('buzzAreaCreated', handleRefresh);
-      window.removeEventListener('buzzClueCreated', handleRefresh);
+      window.removeEventListener('buzzAreaCreated', handleRefreshBuzzArea);
+      window.removeEventListener('buzzClueCreated', handleRefreshBuzzClue);
       window.removeEventListener('m1u-spent', handleM1USpent as EventListener);
-      window.removeEventListener('m1u-balance-changed', handleRefresh);
+      window.removeEventListener('m1u-balance-changed', handleRefreshBalanceChanged);
     };
-  }, [refetch]);
+  }, [refetchWithThrottle]);
 
-  // 🎉 Listen for M1U credited event (from marker rewards) - trigger SLOT MACHINE animation
-  useEffect(() => {
-    const handleM1UCredited = (event: CustomEvent) => {
-      const amount = event.detail?.amount || 0;
-      console.log('💰 M1UPill: M1U credited event received!', amount);
-      
-      // 🎰 Start slot machine animation from current displayed value
-      const currentDisplayed = displayedBalance;
-      const newBalance = currentDisplayed + amount;
-      
-      // Refetch to get actual new balance from server
-      setTimeout(() => refetch(), 100);
-      
-      // Start the rolling animation - NO TOAST, let the animation speak!
-      animateBalance(currentDisplayed, newBalance, 2500); // 2.5 seconds for dramatic effect
-      
-      // 🎰 Toast removed - the slot machine animation IS the celebration!
-      console.log(`[M1UPill] 🎰 Slot machine animation started: +${amount} M1U`);
-    };
+  // 🎉 Listen for M1U credited — baseline PRE→POST deterministic (targetBalance - amount); global lock: only ONE pill animates (fix2)
+  const handleM1UCredited = useCallback(
+    (event: Event) => {
+      const amount = (event as CustomEvent).detail?.amount ?? 0;
+      const now = Date.now();
+      const rounded2s = Math.floor(now / CREDIT_LOCK_WINDOW_MS);
+      const creditKey = `credited|${amount}|${rounded2s}`;
+      const evTs = (event as CustomEvent).timeStamp ?? now;
 
-    window.addEventListener('m1u-credited', handleM1UCredited as EventListener);
-    return () => {
-      window.removeEventListener('m1u-credited', handleM1UCredited as EventListener);
-    };
-  }, [refetch, displayedBalance]);
-
-  // Initialize displayed balance when data loads - FIXED SYNC LOGIC
-  useEffect(() => {
-    if (unitsData?.balance !== undefined && !isAnimating) {
-      // Always sync if difference exists (was broken before!)
-      if (displayedBalance !== unitsData.balance) {
-        console.log('💰 M1UPill: Syncing balance', { displayed: displayedBalance, actual: unitsData.balance });
-        setDisplayedBalance(unitsData.balance);
+      // FASE 1 forensics: at event start
+      if (DEBUG_M1U_PILL) {
+        const lock = win ? (win[GLOBAL_LOCK_KEY] as { creditKey: string; expiresAt: number } | undefined) : undefined;
+        console.error(
+          `[M1UPill][handleM1UCredited:start] instanceId=${instanceIdRef.current} amount=${amount} unitsDataBalance=${unitsData?.balance} displayedBalanceRef.current=${displayedBalanceRef.current} lock=${lock ? `creditKey=${lock.creditKey} expiresAt=${lock.expiresAt}` : 'none'}`
+        );
       }
+      if (amount <= 0) return;
+      if (animatingRef.current) return;
+
+      if (win) {
+        let lock = win[GLOBAL_LOCK_KEY] as { creditKey: string; expiresAt: number } | undefined;
+        if (lock && now >= lock.expiresAt) {
+          win[GLOBAL_LOCK_KEY] = null;
+          lock = undefined;
+        }
+        if (lock && lock.creditKey === creditKey && now < lock.expiresAt) {
+          if (DEBUG_M1U_PILL) console.error(`[M1UPill][m1u-credited:skip] id=${instanceIdRef.current} creditKey=${creditKey} lock held by another`);
+          return;
+        }
+        win[GLOBAL_LOCK_KEY] = { creditKey, expiresAt: now + HARD_STOP_MS + 800 };
+      }
+
+      lastCreditAtRef.current = now;
+
+      // FASE 2: deterministic baseline PRE → POST (single source: m1u-credited)
+      const targetBalance =
+        typeof unitsData?.balance === 'number'
+          ? unitsData.balance
+          : typeof displayedBalanceRef.current === 'number'
+            ? displayedBalanceRef.current
+            : 0;
+      const targetReason =
+        typeof unitsData?.balance === 'number' ? 'targetFromUnitsData' : typeof displayedBalanceRef.current === 'number' ? 'targetFromDisplayed' : 'fallback';
+
+      let fromBalance: number;
+      let fromReason: string;
+      if (typeof amount === 'number' && amount >= 0 && typeof targetBalance === 'number') {
+        fromBalance = Math.max(0, targetBalance - amount);
+        fromReason = 'fromComputedPre';
+      } else if (typeof prevBalance === 'number') {
+        fromBalance = prevBalance;
+        fromReason = 'fromPrevBalance';
+      } else {
+        fromBalance = typeof displayedBalanceRef.current === 'number' ? displayedBalanceRef.current : 0;
+        fromReason = 'fromDisplayed';
+      }
+
+      if (DEBUG_M1U_PILL) {
+        console.error(
+          `[M1UPill][handleM1UCredited:preAnim] computedFromBalance=${fromBalance} computedTargetBalance=${targetBalance} reason=${targetReason} fromReason=${fromReason}`
+        );
+      }
+
+      // Sync UI to PRE (fromBalance) before animating so user sees pre-accredit then clean increment
+      setDisplayedBalance(fromBalance);
+      displayedBalanceRef.current = fromBalance;
+      setPrevBalance(fromBalance);
+
+      // Consume pending credit so sync effects can show POST again after TTL if needed (POST-FIRST FIX)
+      const pending = readPendingCredit(win);
+      if (pending && pending.amount === amount) clearPendingCredit(win);
+
+      // Animate only if there is a real increment
+      if (targetBalance <= fromBalance) {
+        if (DEBUG_M1U_PILL) console.error(`[M1UPill][handleM1UCredited:skipAnim] targetBalance=${targetBalance} <= fromBalance=${fromBalance}`);
+        setDisplayedBalance(targetBalance);
+        setPrevBalance(targetBalance);
+        displayedBalanceRef.current = targetBalance;
+        setTimeout(() => refetchWithThrottle('credited'), 100);
+        return;
+      }
+
+      setTimeout(() => refetchWithThrottle('credited'), 100);
+      animateBalance(fromBalance, targetBalance, 2500);
+    },
+    [refetchWithThrottle, animateBalance, unitsData?.balance, prevBalance]
+  );
+
+  useEffect(() => {
+    window.addEventListener('m1u-credited', handleM1UCredited);
+    return () => window.removeEventListener('m1u-credited', handleM1UCredited);
+  }, [handleM1UCredited]);
+
+  // Initialize displayed balance when data loads — pending-aware: show PRE if shop credit pending (POST-FIRST FIX)
+  useEffect(() => {
+    if (unitsData?.balance === undefined || animatingRef.current) return;
+    const pending = readPendingCredit(win);
+    if (pending && typeof unitsData.balance === 'number') {
+      const pre = Math.max(0, unitsData.balance - pending.amount);
+      if (displayedBalance !== pre) {
+        setDisplayedBalance(pre);
+        setPrevBalance(pre);
+      }
+      return;
+    }
+    if (displayedBalance !== unitsData.balance) {
+      console.log('💰 M1UPill: Syncing balance', { displayed: displayedBalance, actual: unitsData.balance });
+      setDisplayedBalance(unitsData.balance);
     }
   }, [unitsData?.balance, isAnimating, displayedBalance]);
 
-  // Trigger pulse animation on balance change (for non-event changes)
-  // 🔧 FIX: Only animate for REAL changes during session, not initial load
+  // FIX2: Balance effect — pending-aware: show PRE if shop credit pending; else sync to unitsData (POST-FIRST FIX)
   useEffect(() => {
-    if (unitsData?.balance !== undefined) {
-      // First time setting prevBalance - don't animate, just sync
-      if (prevBalance === null) {
-        setPrevBalance(unitsData.balance);
-        setDisplayedBalance(unitsData.balance);
-        return;
+    if (animatingRef.current) return;
+    if (unitsData?.balance === undefined) return;
+    const pending = readPendingCredit(win);
+    if (pending && typeof unitsData.balance === 'number') {
+      const pre = Math.max(0, unitsData.balance - pending.amount);
+      if (displayedBalance !== pre) {
+        setDisplayedBalance(pre);
+        setPrevBalance(pre);
       }
-      
-      // Only animate if:
-      // 1. Balance actually changed
-      // 2. Change is significant (>=5 M1U) but not massive (initial load detection)
-      // 3. Not already animating
-      const diff = Math.abs(unitsData.balance - prevBalance);
-      if (unitsData.balance !== prevBalance) {
-        // If diff is > 1000, it's likely initial load mismatch - don't animate
-        if (!isAnimating && diff >= 5 && diff < 1000) {
-          animateBalance(prevBalance, unitsData.balance, 1500);
-        } else {
-          // Just sync without animation
-          setDisplayedBalance(unitsData.balance);
-        }
-        setPrevBalance(unitsData.balance);
-      }
+      return;
     }
-  }, [unitsData?.balance, prevBalance, isAnimating]);
+    if (prevBalance === null) {
+      if (DEBUG_M1U_PILL) console.error(`[M1UPill][balanceEffect] id=${instanceIdRef.current} prevBalance=null newBalance=${unitsData.balance} reason=init`);
+      setPrevBalance(unitsData.balance);
+      setDisplayedBalance(unitsData.balance);
+      return;
+    }
+    if (unitsData.balance !== prevBalance) {
+      if (DEBUG_M1U_PILL) console.error(`[M1UPill][balanceEffect] id=${instanceIdRef.current} prevBalance=${prevBalance} newBalance=${unitsData.balance} sync_only`);
+      setDisplayedBalance(unitsData.balance);
+      setPrevBalance(unitsData.balance);
+    }
+  }, [unitsData?.balance, prevBalance, displayedBalance]);
   
-  // Cleanup animation on unmount
+  // Cleanup animation and hard-stop timeout on unmount
   useEffect(() => {
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      if (animationRef.current != null) cancelAnimationFrame(animationRef.current);
+      if (hardStopTimeoutRef.current != null) clearTimeout(hardStopTimeoutRef.current);
+      animatingRef.current = false;
     };
   }, []);
 
