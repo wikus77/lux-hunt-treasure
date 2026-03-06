@@ -179,6 +179,19 @@ export function BattleDefenseModal({
         .eq('id', userId);
       
       console.log(`⚡ [Defense] Defender PE: ${defenderCurrentPE} → ${defenderNewPE}`);
+
+      // PE fullscreen: emit only when defender gains PE (win)
+      if (defenderWins && peAmount > 0) {
+        try {
+          const { emitPECreditEvent } = await import('@/features/pulse/peCreditEvent');
+          emitPECreditEvent(peAmount, 'battle_defense_win', {
+            preValue: defenderCurrentPE,
+            postValue: defenderNewPE,
+          });
+        } catch (_e) {
+          // non-blocking
+        }
+      }
       
       // 2. Update ATTACKER's PE (opposite of defender)
       if (attackerId) {

@@ -58,6 +58,13 @@ export const AgentEnergyPill = () => {
       >
         {/* Rank symbol inside */}
         <span className="text-lg z-10 relative">{currentLevel?.icon || '❓'}</span>
+        {/* PE value at a glance — visible on pill */}
+        <span
+          className="absolute bottom-0.5 left-1/2 -translate-x-1/2 z-10 text-[10px] font-bold font-mono tabular-nums leading-tight"
+          style={{ color: rankColor, textShadow: `0 0 6px ${rankColor}` }}
+        >
+          {formatPE(pulseEnergy)}
+        </span>
         
         {/* Orbiting dot */}
         <span className="pe-dot" style={{ background: rankColor }} />

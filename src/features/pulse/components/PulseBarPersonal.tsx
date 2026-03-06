@@ -178,12 +178,12 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
             </span>
           </div>
           
-          {/* PE Totali */}
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] text-white/40">PE:</span>
+          {/* PE Totali — leggibilità: dimensione e contrasto aumentati */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-white/80">PE</span>
             <span 
-              className="text-xs font-bold font-mono"
-              style={{ color: rankColor }}
+              className="text-sm font-bold font-mono tabular-nums"
+              style={{ color: rankColor, textShadow: `0 0 10px ${rankColor}99` }}
             >
               {formatPE(pulseEnergy)}
             </span>
@@ -233,8 +233,8 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
 
         {/* Footer: PE in questo livello + Next Rank Badge */}
         <div className="flex items-center justify-between mt-1">
-          {/* PE nel livello corrente */}
-          <span className="text-[10px] text-white/50 font-mono">
+          {/* PE nel livello corrente — leggibilità migliorata */}
+          <span className="text-xs text-white/70 font-mono tabular-nums">
             {formatPE(peInCurrentLevel)} / {formatPE(peNeededForLevel)} PE
           </span>
           

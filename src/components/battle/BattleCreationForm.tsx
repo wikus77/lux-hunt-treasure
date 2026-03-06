@@ -384,36 +384,8 @@ export function BattleCreationForm({
       setShowVideo(true);
     }
     
-    // Aggiorna PE SUBITO
+    // 🔋 PE: single source of truth via awardPE (RPC) — no direct profile update to avoid double credit / missing fullscreen
     try {
-      const peAmount = stakePercent;
-      
-      const { data: profile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('pulse_energy')
-        .eq('id', userId)
-        .single();
-      
-      if (fetchError) {
-        console.error('[Battle] Error fetching profile:', fetchError);
-      } else {
-        const currentPE = profile?.pulse_energy || 0;
-        const newPE = won 
-          ? Math.max(0, currentPE + peAmount)
-          : Math.max(0, currentPE - peAmount);
-        
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ pulse_energy: newPE })
-          .eq('id', userId);
-        
-        if (updateError) {
-          console.error('[Battle] Error updating PE:', updateError);
-        } else {
-          console.log(`⚡ [Battle] PE ${won ? 'gained' : 'lost'}: ${currentPE} → ${newPE} (${won ? '+' : '-'}${peAmount})`);
-        }
-      }
-      
       // 🆕 Per agenti REALI: aggiorna anche il risultato nel DB
       // Skip per Fake Agents (non hanno record in battle_sessions)
       if (currentBattleId && !isFakeAgent) {
