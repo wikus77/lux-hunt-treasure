@@ -14,6 +14,7 @@ import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { hapticLight, hapticSuccess } from '@/utils/haptics';
 import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
+import { useAwardPE } from '@/features/pulse/hooks/useAwardPE';
 
 interface StreakModalProps {
   isOpen: boolean;
@@ -60,6 +61,7 @@ const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperti
 export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalProps) {
   const { t } = useTranslation();
   const { user } = useAuthContext();
+  const { awardPE } = useAwardPE();
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
   const [streakInfo, setStreakInfo] = useState<StreakInfo | null>(null);
@@ -194,6 +196,11 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
         p_source: 'daily_checkin'
       });
 
+      // Daily check-in PE: 10 PE reali, una volta al giorno (flusso globale → fullscreen reward)
+      awardPE('DAILY_LOGIN', undefined, { streakDays: newStreak, streakBroken }).catch((err) => {
+        console.warn('[StreakModal] PE award failed:', err);
+      });
+
       // 🆕 FIX 16/01/2026: Award daily M1U (+2 M1U)
       await awardM1U(DAILY_M1U_REWARD, 'streak_daily_checkin');
       
@@ -239,7 +246,6 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
   const progress = streakInfo?.next_milestone 
     ? ((streak / streakInfo.next_milestone) * 100)
     : 100;
-  const peMultiplier = Math.min(1 + streak * 0.05, 1.5);
   const m1uBonus = Math.min(streak * 2, 30);
 
   return (
@@ -339,7 +345,7 @@ export function StreakModal({ isOpen, onClose, onCheckInComplete }: StreakModalP
                       <Zap className="w-4 h-4" style={{ color: '#c084fc' }} />
                       <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{t('streak_pe_bonus')}</span>
                     </div>
-                    <p className="text-lg font-bold" style={{ color: '#e9d5ff' }}>+{Math.round((peMultiplier - 1) * 100)}%</p>
+                    <p className="text-lg font-bold" style={{ color: '#e9d5ff' }}>{t('streak_pe_bonus_amount')}</p>
                   </div>
                   <div style={{ padding: 12, borderRadius: 12, background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.25)' }}>
                     <div className="flex items-center gap-2 mb-1">

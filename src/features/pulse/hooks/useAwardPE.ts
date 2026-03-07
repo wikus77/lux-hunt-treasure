@@ -53,7 +53,7 @@ export const PE_VALUES: Record<Exclude<PEActionType, 'CUSTOM' | 'FORTUNE_WHEEL'>
   BATTLE_WIN: 50,           // Vittoria Tron Battle
   BATTLE_LOSE: -100,        // Sconfitta Tron Battle
   COUNTRY_CONQUEST: 1000,
-  DAILY_LOGIN: 5,
+  DAILY_LOGIN: 10,
   DAILY_MISSION: 50,
   REFERRAL_SIGNUP: 200,
   FINAL_SHOOT_WIN: 150,
