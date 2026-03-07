@@ -180,9 +180,21 @@ export function BattleDefenseModal({
       
       console.log(`⚡ [Defense] Defender PE: ${defenderCurrentPE} → ${defenderNewPE}`);
 
-      // PE fullscreen: emit only when defender gains PE (win)
+      // PE fullscreen + Home sync: emit pe:awarded and pe-credit-event when defender gains PE (win)
       if (defenderWins && peAmount > 0) {
         try {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('pe:awarded', {
+              detail: {
+                success: true,
+                oldPE: defenderCurrentPE,
+                newPE: defenderNewPE,
+                deltaPE: peAmount,
+                rankChanged: false,
+                action: 'BATTLE_DEFENSE_WIN',
+              },
+            }));
+          }
           const { emitPECreditEvent } = await import('@/features/pulse/peCreditEvent');
           emitPECreditEvent(peAmount, 'battle_defense_win', {
             preValue: defenderCurrentPE,

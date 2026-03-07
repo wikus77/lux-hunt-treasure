@@ -204,9 +204,22 @@ export const useClueMilestones = (): UseClueMilestonesReturn => {
               newPEBalance
             });
             if (milestone.pe > 0) {
+              const oldPE = profile.pulse_energy || 0;
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('pe:awarded', {
+                  detail: {
+                    success: true,
+                    oldPE,
+                    newPE: newPEBalance,
+                    deltaPE: milestone.pe,
+                    rankChanged: false,
+                    action: 'CLUE_MILESTONE',
+                  },
+                }));
+              }
               const { emitPECreditEvent } = await import('@/features/pulse/peCreditEvent');
               emitPECreditEvent(milestone.pe, 'clue_milestone', {
-                preValue: (profile.pulse_energy || 0),
+                preValue: oldPE,
                 postValue: newPEBalance,
               });
             }

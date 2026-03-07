@@ -93,19 +93,38 @@ const CelebrationOverlay = ({ onComplete, userId }: { onComplete: () => void; us
             .single();
 
           if (profile) {
+            const oldPE = profile.pulse_energy || 0;
+            const newPE = oldPE + 50;
             await supabase
               .from('profiles')
-              .update({ pulse_energy: (profile.pulse_energy || 0) + 50 })
+              .update({ pulse_energy: newPE })
               .eq('id', userId);
+            // PE unification: emit pe:awarded + pe-credit-event after successful credit (Home sync + fullscreen)
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('pe:awarded', {
+                detail: {
+                  success: true,
+                  oldPE,
+                  newPE,
+                  deltaPE: 50,
+                  rankChanged: false,
+                  action: 'ONBOARDING',
+                },
+              }));
+            }
+            const { emitPECreditEvent } = await import('@/features/pulse/peCreditEvent');
+            emitPECreditEvent(50, 'onboarding', { preValue: oldPE, postValue: newPE });
           }
+        } else {
+          // First update path (no error): emit for fullscreen; we do not have oldPE/newPE from DB here
+          const { emitPECreditEvent } = await import('@/features/pulse/peCreditEvent');
+          emitPECreditEvent(50, 'onboarding');
         }
 
         localStorage.setItem('m1ssion_onboarding_pe_awarded', 'true');
         setPeAwarded(true);
         toast.success('🎉 +50 PE accreditati per aver completato il tutorial!');
         console.log('[Onboarding] PE awarded successfully');
-        const { emitPECreditEvent } = await import('@/features/pulse/peCreditEvent');
-        emitPECreditEvent(50, 'onboarding');
       } catch (err) {
         console.error('[Onboarding] Error awarding PE:', err);
       }
