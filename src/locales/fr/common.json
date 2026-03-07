@@ -116,6 +116,7 @@
   "pulse_energy": "Énergie Pulse",
   "pe_reward": {
     "title": "Énergie Pulse",
+    "new_total": "Nouveau total",
     "cta_continue": "Continuer",
     "source_buzz_click": "Buzz",
     "source_buzz_map_click": "Buzz Map",

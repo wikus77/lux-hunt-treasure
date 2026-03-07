@@ -121,6 +121,7 @@
   "pulse_energy": "Pulse Energy",
   "pe_reward": {
     "title": "Pulse Energy",
+    "new_total": "New total",
     "cta_continue": "Continue",
     "source_buzz_click": "Buzz",
     "source_buzz_map_click": "Buzz Map",

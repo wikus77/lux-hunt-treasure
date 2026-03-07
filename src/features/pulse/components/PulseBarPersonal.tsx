@@ -27,6 +27,7 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
   const [isGameOpen, setIsGameOpen] = useState(false);
   const [showPEGain, setShowPEGain] = useState(false);
   const [lastPE, setLastPE] = useState(0);
+  const [displayDelta, setDisplayDelta] = useState(0);
 
   // Valori dallo stato
   const progressPercent = state?.progressPercent ?? 0;
@@ -50,11 +51,18 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
     return () => window.removeEventListener('pe:awarded', handlePEAward as EventListener);
   }, [refetch]);
 
-  // Show PE gain animation
+  // Show PE gain animation: capture delta so badge stays visible for full 2.8s
   useEffect(() => {
-    if (pulseEnergy > lastPE && lastPE > 0) {
+    if (pulseEnergy > lastPE && lastPE >= 0) {
+      const delta = pulseEnergy - lastPE;
+      setDisplayDelta(delta);
       setShowPEGain(true);
-      setTimeout(() => setShowPEGain(false), 2500);
+      setLastPE(pulseEnergy);
+      const t = setTimeout(() => {
+        setShowPEGain(false);
+        setDisplayDelta(0);
+      }, 2800);
+      return () => clearTimeout(t);
     }
     setLastPE(pulseEnergy);
   }, [pulseEnergy, lastPE]);
@@ -178,26 +186,45 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
             </span>
           </div>
           
-          {/* PE Totali — readability hardening: grande, contrastato, primo colpo d'occhio */}
-          <div className="flex items-baseline gap-2 px-2 py-1 rounded-lg bg-black/40 border border-white/20">
+          {/* PE Totali — readability: chiaro al primo colpo d'occhio su iPhone */}
+          <div
+            className="flex items-baseline gap-2 px-2.5 py-1.5 rounded-lg bg-black/50 border border-white/30"
+            style={{ boxShadow: `0 0 12px ${rankColor}22, inset 0 1px 0 rgba(255,255,255,0.06)` }}
+          >
             <span className="text-sm font-bold text-white uppercase tracking-wide">PE</span>
-            <span 
-              className="text-lg font-black font-mono tabular-nums min-w-[3ch]"
-              style={{ color: rankColor, textShadow: `0 0 12px ${rankColor}, 0 0 24px ${rankColor}99, 0 1px 2px rgba(0,0,0,0.8)` }}
+            <span
+              className="text-xl font-black font-mono tabular-nums min-w-[3ch]"
+              style={{
+                color: rankColor,
+                textShadow: `0 0 14px ${rankColor}, 0 0 28px ${rankColor}99, 0 1px 3px rgba(0,0,0,0.9)`,
+              }}
             >
               {formatPE(pulseEnergy)}
             </span>
           </div>
         </div>
 
-        {/* Segmented Bar */}
+        {/* Segmented Bar — sweep glow when reward just received */}
         <div 
           className="relative h-[18px] rounded-lg overflow-hidden"
           style={{
             background: 'rgba(0,20,30,0.9)',
             border: `1px solid ${rankColor}33`,
+            boxShadow: showPEGain ? `0 0 16px ${rankColor}44, inset 0 0 12px ${rankColor}22` : undefined,
           }}
         >
+          {showPEGain && displayDelta > 0 && (
+            <motion.div
+              className="absolute top-0 bottom-0 w-16 pointer-events-none"
+              style={{
+                background: `linear-gradient(90deg, transparent, ${rankColor}55, transparent)`,
+                boxShadow: `0 0 20px ${rankColor}88`,
+              }}
+              initial={{ left: '-20%' }}
+              animate={{ left: '120%' }}
+              transition={{ duration: 1.2, ease: 'easeInOut' }}
+            />
+          )}
           {/* Segments */}
           <div className="absolute inset-1 flex gap-[2px]">
             {[...Array(totalSegments)].map((_, i) => {
@@ -252,16 +279,20 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
         </div>
       </div>
 
-      {/* PE Gain Animation */}
-      {showPEGain && pulseEnergy > lastPE && (
+      {/* PE Gain Animation — delta shown for full 2.8s */}
+      {showPEGain && displayDelta > 0 && (
         <motion.div
-          className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap z-20"
-          initial={{ opacity: 0, y: 5, scale: 0.8 }}
+          className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap z-20"
+          initial={{ opacity: 0, y: 8, scale: 0.85 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.8 }}
+          exit={{ opacity: 0, y: -12, scale: 0.9 }}
+          transition={{ duration: 0.3 }}
         >
-          <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-500/20 border border-emerald-400/50 text-emerald-400">
-            ⚡ +{pulseEnergy - lastPE} PE
+          <div
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-base font-black font-mono tabular-nums bg-emerald-500/25 border-2 border-emerald-400/60 text-emerald-300"
+            style={{ textShadow: '0 0 12px rgba(52,211,153,0.6), 0 1px 2px rgba(0,0,0,0.8)' }}
+          >
+            ⚡ +{displayDelta} PE
           </div>
         </motion.div>
       )}

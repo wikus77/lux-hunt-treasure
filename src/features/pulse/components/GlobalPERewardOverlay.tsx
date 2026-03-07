@@ -1,6 +1,6 @@
 /**
- * Global PE Reward Overlay — Fullscreen cinematic reward on every PE credit.
- * Listens to pe-credit-event; shows modal with PulseBarReward (Energy Injection).
+ * Global PE Reward Overlay — True fullscreen cinematic reward on every PE credit.
+ * Listens to pe-credit-event; shows full-viewport modal with PulseBarReward (Energy Injection).
  * Dedupe/lock: one modal at a time; ignore events while open or within DEDUPE_MS.
  * © 2025 Joseph MULÉ – M1SSION™ – NIYVORA KFT™
  */
@@ -72,59 +72,74 @@ export const GlobalPERewardOverlay: React.FC = () => {
       {payload && (
         <motion.div
           key={payload.id}
-          className="fixed inset-0 flex items-center justify-center"
-        style={{
-          zIndex: 999998,
-          padding: 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)',
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.25 }}
-      >
-        <div
-          className="absolute inset-0 bg-black/85 backdrop-blur-sm"
-          style={{ boxShadow: 'inset 0 0 120px rgba(0,231,255,0.06)' }}
-          onClick={handleContinue}
-          aria-hidden
-        />
-        <motion.div
-          className="relative flex flex-col items-center justify-center px-6 py-10 rounded-2xl max-w-md w-full mx-4"
+          className="fixed inset-0 flex flex-col"
           style={{
-            background: 'linear-gradient(180deg, rgba(10,20,35,0.97) 0%, rgba(5,12,22,0.98) 100%)',
-            border: '1px solid rgba(0,231,255,0.25)',
-            boxShadow: '0 0 60px rgba(0,231,255,0.15), 0 24px 48px rgba(0,0,0,0.5)',
+            zIndex: 999998,
+            padding: 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)',
           }}
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.98 }}
-          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          onClick={(e) => e.stopPropagation()}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
         >
-          <PulseBarReward
-            amount={payload.amount}
-            source={payload.source}
-            preValue={payload.preValue}
-            postValue={payload.postValue}
-            onAnimationComplete={handleAnimationComplete}
-          />
-          <motion.button
-            type="button"
-            className="mt-8 px-8 py-3 rounded-xl font-semibold text-white uppercase tracking-wider text-sm"
-            style={{
-              background: 'linear-gradient(135deg, rgba(0,231,255,0.25) 0%, rgba(0,180,220,0.3) 100%)',
-              border: '1px solid rgba(0,231,255,0.5)',
-              boxShadow: '0 0 20px rgba(0,231,255,0.2)',
-            }}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.25 }}
+          {/* Backdrop — fullscreen, premium */}
+          <div
+            className="absolute inset-0 bg-black/90 backdrop-blur-md"
+            style={{ boxShadow: 'inset 0 0 160px rgba(0,231,255,0.08)' }}
             onClick={handleContinue}
+            aria-hidden
+          />
+
+          {/* Content — full viewport height/width within safe area, no max-w card */}
+          <motion.div
+            className="relative flex flex-col flex-1 min-h-0 w-full items-center justify-center px-6 py-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={(e) => e.stopPropagation()}
           >
-            {t('pe_reward.cta_continue')}
-          </motion.button>
+            {/* Header / title */}
+            <motion.div
+              className="text-center mb-6 sm:mb-8"
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.1 }}
+            >
+              <h2 className="text-xl sm:text-2xl font-bold text-white/95 uppercase tracking-widest">
+                {t('pe_reward.title')}
+              </h2>
+            </motion.div>
+
+            {/* Central animation zone — PulseBarReward */}
+            <div className="flex-1 flex flex-col items-center justify-center w-full max-w-lg mx-auto">
+              <PulseBarReward
+                amount={payload.amount}
+                source={payload.source}
+                preValue={payload.preValue}
+                postValue={payload.postValue}
+                onAnimationComplete={handleAnimationComplete}
+              />
+            </div>
+
+            {/* CTA */}
+            <motion.button
+              type="button"
+              className="mt-6 sm:mt-8 px-10 py-4 rounded-xl font-semibold text-white uppercase tracking-wider text-base"
+              style={{
+                background: 'linear-gradient(135deg, rgba(0,231,255,0.3) 0%, rgba(0,180,220,0.35) 100%)',
+                border: '1px solid rgba(0,231,255,0.6)',
+                boxShadow: '0 0 24px rgba(0,231,255,0.25)',
+              }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.3 }}
+              onClick={handleContinue}
+            >
+              {t('pe_reward.cta_continue')}
+            </motion.button>
+          </motion.div>
         </motion.div>
-      </motion.div>
       )}
     </AnimatePresence>
   );

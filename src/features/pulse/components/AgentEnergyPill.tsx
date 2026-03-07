@@ -17,16 +17,23 @@ export const AgentEnergyPill = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPEGain, setShowPEGain] = useState(false);
   const [lastPE, setLastPE] = useState(0);
+  const [displayDelta, setDisplayDelta] = useState(0);
 
   const pulseEnergy = state?.pulseEnergy ?? 0;
   const currentLevel = state?.currentLevel;
   const progressPercent = state?.progressPercent ?? 0;
 
-  // Show PE gain animation
+  // Show PE gain animation: capture delta so badge stays visible
   useEffect(() => {
-    if (pulseEnergy > lastPE && lastPE > 0) {
+    if (pulseEnergy > lastPE && lastPE >= 0) {
+      setDisplayDelta(pulseEnergy - lastPE);
       setShowPEGain(true);
-      setTimeout(() => setShowPEGain(false), 2500);
+      setLastPE(pulseEnergy);
+      const t = setTimeout(() => {
+        setShowPEGain(false);
+        setDisplayDelta(0);
+      }, 2800);
+      return () => clearTimeout(t);
     }
     setLastPE(pulseEnergy);
   }, [pulseEnergy, lastPE]);
@@ -89,32 +96,32 @@ export const AgentEnergyPill = () => {
         </svg>
       </motion.button>
 
-      {/* PE value badge — readability hardening: visibile al primo colpo d'occhio */}
+      {/* PE value badge — leggibile su iPhone, primo colpo d'occhio */}
       <div
-        className="px-2 py-1 rounded-md min-w-[2.5rem] text-center font-black font-mono tabular-nums text-sm"
+        className="px-2.5 py-1.5 rounded-md min-w-[3rem] text-center font-black font-mono tabular-nums text-base"
         style={{
           color: rankColor,
-          background: 'rgba(0,0,0,0.5)',
-          border: `1px solid ${rankColor}66`,
-          boxShadow: `0 0 10px ${rankColor}44, inset 0 0 8px ${rankColor}22`,
-          textShadow: `0 0 8px ${rankColor}, 0 1px 2px rgba(0,0,0,0.9)`,
+          background: 'rgba(0,0,0,0.55)',
+          border: `1px solid ${rankColor}77`,
+          boxShadow: `0 0 12px ${rankColor}44, inset 0 0 8px ${rankColor}22`,
+          textShadow: `0 0 10px ${rankColor}, 0 1px 2px rgba(0,0,0,0.9)`,
         }}
       >
-        {formatPE(pulseEnergy)} <span className="text-[10px] font-bold opacity-90">PE</span>
+        {formatPE(pulseEnergy)} <span className="text-xs font-bold opacity-90">PE</span>
       </div>
 
       {/* PE Gain Animation */}
       <AnimatePresence>
-        {showPEGain && pulseEnergy > lastPE && (
+        {showPEGain && displayDelta > 0 && (
           <motion.div
-            className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap z-20"
-            initial={{ opacity: 0, y: 5, scale: 0.8 }}
+            className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap z-20"
+            initial={{ opacity: 0, y: 6, scale: 0.85 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.8 }}
+            exit={{ opacity: 0, y: -10, scale: 0.85 }}
           >
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-emerald-500/20 border border-emerald-400/50 text-emerald-400">
-              <Zap className="w-3 h-3" />
-              +{pulseEnergy - lastPE} PE
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-500/25 border border-emerald-400/50 text-emerald-300">
+              <Zap className="w-3.5 h-3.5" />
+              +{displayDelta} PE
             </div>
           </motion.div>
         )}

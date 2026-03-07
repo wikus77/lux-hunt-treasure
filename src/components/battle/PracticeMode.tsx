@@ -230,6 +230,18 @@ export function PracticeMode({ userId, onClose }: PracticeModeProps) {
           const preValue = currentBalance;
           const postValue = newBalance;
           updateBalanceAsync(stake.currency, newBalance).then(() => {
+            // Sync Home immediately: emit pe:awarded so PulseBarPersonal/useHierarchyRank refetch
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('pe:awarded', {
+                detail: {
+                  success: true,
+                  oldPE: preValue,
+                  newPE: postValue,
+                  deltaPE: payout,
+                  action: 'PRACTICE_MODE_WIN',
+                },
+              }));
+            }
             import('@/features/pulse/peCreditEvent').then(({ emitPECreditEvent }) => {
               emitPECreditEvent(payout, 'practice_mode_win', { preValue, postValue });
             }).catch(() => {});
