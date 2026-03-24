@@ -125,6 +125,7 @@ export const useAwardPE = (): UseAwardPEReturn => {
     }
 
     setIsAwarding(true);
+    if (typeof console !== 'undefined') console.log('[PE-TRACE-AWARD] ENTRY', { action });
 
     try {
       // Determina l'importo PE
@@ -228,14 +229,20 @@ export const useAwardPE = (): UseAwardPEReturn => {
       setLastAward(awardResult);
 
       // Dispatch evento globale per aggiornare UI
+      const delta = awardResult.deltaPE ?? (awardResult.newPE != null && awardResult.oldPE != null ? awardResult.newPE - awardResult.oldPE : 0);
+      const limitReached = !!(awardResult as { limitReached?: boolean }).limitReached;
+      const willEmit = typeof window !== 'undefined' && delta > 0;
+      if (typeof console !== 'undefined') {
+        console.log('[PE-TRACE-AWARD] RPC success', { action, delta, limitReached, willEmit });
+      }
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('pe:awarded', {
           detail: { ...awardResult, action }
         }));
         // PE fullscreen reward overlay: only for positive delta
-        const delta = awardResult.deltaPE ?? (awardResult.newPE != null && awardResult.oldPE != null ? awardResult.newPE - awardResult.oldPE : 0);
         if (delta > 0) {
           const source = action.toLowerCase().replace(/\s+/g, '_');
+          if (typeof console !== 'undefined') console.log('[PE-TRACE-AWARD] calling emitPECreditEvent', { delta, source });
           emitPECreditEvent(delta, source, {
             preValue: awardResult.oldPE,
             postValue: awardResult.newPE,

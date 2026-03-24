@@ -117,7 +117,7 @@ Il ramo battle usato dalla Home passa da **PracticeMode.tsx**. In quel ramo i PE
 ## 14. Hash commit finale
 
 - **Commit eseguito:** sì.  
-- **Hash:** (vedi output di `git log -1 --oneline` dopo il commit.)  
+- **Hash:** 03c1bd80b (`fix(pulse): trigger PE fullscreen in practice mode and harden home PE readability`)  
 
 ---
 

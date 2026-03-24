@@ -24,7 +24,9 @@
     "guard:push": "bash scripts/push-freeze-guard.sh",
     "cap:sync:ios": "npm run build && npx cap sync ios",
     "cap:sync": "npm run build && npx cap sync",
-    "cap:check-assets": "node scripts/check-cap-assets.js"
+    "cap:check-assets": "node scripts/check-cap-assets.js",
+    "ios:sync:incremental": "bash scripts/ios-sync-incremental.sh",
+    "cap:ios:incremental": "npm run build && npm run ios:sync:incremental && npx cap update ios"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.4",

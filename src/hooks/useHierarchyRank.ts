@@ -7,7 +7,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
 import { useAuthContext } from '@/contexts/auth';
 import {
   HIERARCHY_LEVELS,
@@ -42,8 +41,7 @@ export interface UseHierarchyRankReturn {
 }
 
 export const useHierarchyRank = (): UseHierarchyRankReturn => {
-  const { user } = useAuth();
-  const { authReady } = useAuthContext();
+  const { user, authReady } = useAuthContext();
   const [state, setState] = useState<HierarchyRankState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

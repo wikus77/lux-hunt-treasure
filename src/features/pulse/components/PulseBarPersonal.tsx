@@ -12,8 +12,7 @@ import { useHierarchyRank } from '@/hooks/useHierarchyRank';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { PULSE_ENABLED } from '@/config/featureFlags';
-import { PulseBreaker } from '@/features/pulse-breaker';
-import { isPulseBreakerEnabled } from '@/utils/storeCompliance';
+import { usePulseBreakerStore } from '@/stores/pulseBreakerStore';
 import { ChevronUp } from 'lucide-react';
 
 interface PulseBarPersonalProps {
@@ -24,7 +23,7 @@ interface PulseBarPersonalProps {
 export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
   const { state, refetch } = useHierarchyRank();
   const [displayValue, setDisplayValue] = useState(0);
-  const [isGameOpen, setIsGameOpen] = useState(false);
+  const { openPulseBreaker } = usePulseBreakerStore();
   const [showPEGain, setShowPEGain] = useState(false);
   const [lastPE, setLastPE] = useState(0);
   const [displayDelta, setDisplayDelta] = useState(0);
@@ -86,12 +85,11 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
   // Colore basato sul rank
   const rankColor = currentLevel?.color || '#00e7ff';
 
-  // Handler per aprire il gioco quando si clicca sulla barra
   const handleBarClick = () => {
     if (onTap) {
       onTap();
     } else {
-      setIsGameOpen(true);
+      openPulseBreaker();
     }
   };
 
@@ -297,13 +295,7 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
         </motion.div>
       )}
 
-      {/* 🏪 STORE COMPLIANCE: Game Modal (hidden on native) */}
-      {isPulseBreakerEnabled() && (
-        <PulseBreaker 
-          isOpen={isGameOpen} 
-          onClose={() => setIsGameOpen(false)} 
-        />
-      )}
+      {/* Modale Pulse Breaker = GlobalPulseBreakerModal (fullscreen come Impostazioni) */}
     </motion.div>
   );
 };

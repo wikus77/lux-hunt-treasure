@@ -84,7 +84,7 @@ Sì. Il box che prima mostrava `+{Math.round((peMultiplier - 1) * 100)}%` (es. "
 
 ## 12. Commit hash finale
 
-`b68b2aaeb` — commit eseguito dopo build e cap sync passati.
+`650dd5942` — commit eseguito dopo build e cap sync passati.
 
 ## 13. Conferma nessun file fuori scope
 

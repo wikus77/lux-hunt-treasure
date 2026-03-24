@@ -9,13 +9,14 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { ChevronDown, User, Activity, Target, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuthContext } from "@/contexts/auth";
 import { useAgentCode } from "@/hooks/useAgentCode";
 import { useAgentEnergy } from "@/features/pulse/hooks/useAgentEnergy";
 import { useLongPress } from "@/hooks/useLongPress";
 import { LongPressInfoModal } from "@/components/ui/LongPressInfoModal";
 import { AgentDiaryFlipOverlay } from "./AgentDiaryFlipOverlay";
 import { AgentDiaryContent } from "./AgentDiaryContent";
+import { useHomeSectionLauncher } from "@/contexts/HomeSectionLauncherContext";
 
 interface AgentStats {
   totalActivities: number;
@@ -29,7 +30,7 @@ interface AgentStats {
 // ═══════════════════════════════════════════════════════════════════════════
 export function AgentDiary() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { agentCode } = useAgentCode();
   const { energy } = useAgentEnergy();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,7 +45,18 @@ export function AgentDiary() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [infoModalOriginRect, setInfoModalOriginRect] = useState<DOMRect | null>(null);
   const longPressTargetRef = useRef<HTMLDivElement>(null);
-  
+  const { registerOpenAgent } = useHomeSectionLauncher();
+
+  useEffect(() => {
+    const cleanup = registerOpenAgent(() => {
+      const rect = longPressTargetRef.current?.getBoundingClientRect() ?? null;
+      setOriginRect(rect);
+      setIsModalOpen(true);
+      return true;
+    });
+    return cleanup;
+  }, [registerOpenAgent]);
+
   const longPressHandlers = useLongPress(() => {
     const rect = longPressTargetRef.current?.getBoundingClientRect() ?? null;
     setInfoModalOriginRect(rect);

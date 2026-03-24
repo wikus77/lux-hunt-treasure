@@ -2,6 +2,7 @@
 // 🎬 VISUAL ALIGNMENT: Matches LoginPage form styling
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRegistration } from '@/hooks/use-registration';
 import { Mail, User, Lock, ArrowRight } from 'lucide-react';
 import FormField from './form-field';
@@ -13,6 +14,7 @@ interface RegistrationFormProps {
 }
 
 export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPreference }) => {
+  const { t } = useTranslation();
   const {
     formData,
     errors,
@@ -32,8 +34,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
       <FormField
         id="name"
         type="text"
-        label="Nome Agente"
-        placeholder="Il tuo nome"
+        label={t('register_form_label_name')}
+        placeholder={t('register_form_placeholder_name')}
         value={formData.name}
         onChange={handleChange}
         icon={<User className="h-4 w-4" />}
@@ -45,8 +47,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
       <FormField
         id="email"
         type="email"
-        label="Email"
-        placeholder="agente@example.com"
+        label={t('auth_label_email')}
+        placeholder={t('register_form_placeholder_email')}
         value={formData.email}
         onChange={handleChange}
         icon={<Mail className="h-4 w-4" />}
@@ -58,8 +60,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
       <FormField
         id="password"
         type="password"
-        label="Password"
-        placeholder="••••••••"
+        label={t('auth_label_password')}
+        placeholder={t('register_form_placeholder_password')}
         value={formData.password}
         onChange={handleChange}
         icon={<Lock className="h-4 w-4" />}
@@ -71,8 +73,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
       <FormField
         id="confirmPassword"
         type="password"
-        label="Conferma Password"
-        placeholder="••••••••"
+        label={t('register_form_label_confirm_password')}
+        placeholder={t('register_form_placeholder_password')}
         value={formData.confirmPassword}
         onChange={handleChange}
         icon={<Lock className="h-4 w-4" />}
@@ -95,7 +97,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ missionPrefe
         ) : (
           <ArrowRight className="w-5 h-5 mr-2" />
         )}
-        {isSubmitting ? 'Registrazione...' : 'Registrati'}
+        {isSubmitting ? t('register_form_btn_submitting') : t('register_form_btn_submit')}
       </Button>
     </form>
   );

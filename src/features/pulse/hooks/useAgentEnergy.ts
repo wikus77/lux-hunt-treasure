@@ -6,7 +6,6 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
 import { useAuthContext } from '@/contexts/auth';
 
 export interface AgentRank {
@@ -38,8 +37,7 @@ interface UseAgentEnergyReturn {
 }
 
 export const useAgentEnergy = (): UseAgentEnergyReturn => {
-  const { user } = useAuth();
-  const { authReady } = useAuthContext();
+  const { user, authReady } = useAuthContext();
   const [energy, setEnergy] = useState<AgentEnergyState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

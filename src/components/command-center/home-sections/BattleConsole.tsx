@@ -5,7 +5,7 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Swords, ChevronDown, Trophy, Users, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import { BattleConsoleFlipOverlay } from "./BattleConsoleFlipOverlay";
 import { BattleGameFlipOverlay } from "./BattleGameFlipOverlay";
 import { BattleConsoleLobbyContent } from "./BattleConsoleLobbyContent";
 import { BattleGameContent } from "./BattleGameContent";
+import { useHomeSectionLauncher } from "@/contexts/HomeSectionLauncherContext";
 
 interface BattleConsoleProps {
   className?: string;
@@ -28,6 +29,18 @@ export function BattleConsole({ className }: BattleConsoleProps) {
   const [userId, setUserId] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [stats, setStats] = useState<any>(null);
+  const battleCardRef = useRef<HTMLDivElement>(null);
+  const { registerOpenBattle } = useHomeSectionLauncher();
+
+  useEffect(() => {
+    const cleanup = registerOpenBattle(() => {
+      const rect = battleCardRef.current?.getBoundingClientRect() ?? null;
+      setOriginRect(rect);
+      setIsLobbyOpen(true);
+      return true;
+    });
+    return cleanup;
+  }, [registerOpenBattle]);
 
   // Get current user
   useEffect(() => {
@@ -146,6 +159,7 @@ export function BattleConsole({ className }: BattleConsoleProps) {
       {/* Compact Card - Tap to open lobby modal */}
       {/* 🔧 FIX 06/02/2026: Stile "Buzz Notifications/Generali" - glass graphite, no glow */}
       <motion.div 
+        ref={battleCardRef}
         className={`m1-folder-glass--graphite rounded-[20px] overflow-hidden cursor-pointer transition-all duration-300 mb-4 relative ${className}`}
         onClick={handleOpenLobby}
         whileHover={{ scale: 1.01 }}

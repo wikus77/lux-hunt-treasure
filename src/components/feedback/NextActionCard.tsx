@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import { ChevronRight, Map, Zap, Gift, Brain, Swords, Target, Sparkles, Info } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { determineNextAction, NextAction } from '@/gameplay/progress';
+import { usePulseBreakerStore } from '@/stores/pulseBreakerStore';
 import { useMissionStatus } from '@/hooks/useMissionStatus';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
@@ -25,6 +26,7 @@ interface NextActionCardProps {
 export const NextActionCard: React.FC<NextActionCardProps> = ({ className = '' }) => {
   const [, navigate] = useLocation();
   const { user } = useUnifiedAuth();
+  const { openPulseBreaker } = usePulseBreakerStore();
   const { missionStatus } = useMissionStatus();
   const { dailyBuzzCounter } = useBuzzCounter(user?.id);
   const [showLongPressInfo, setShowLongPressInfo] = useState(false);
@@ -66,8 +68,12 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({ className = '' }
   // Don't render if no action or low priority
   if (!nextAction || nextAction.priority < 50) return null;
   
-  // Handle click
+  // Handle click: Pulse Breaker opens via store (no route), others navigate
   const handleClick = () => {
+    if (nextAction.type === 'do_pulse_breaker') {
+      openPulseBreaker();
+      return;
+    }
     navigate(nextAction.path);
   };
   

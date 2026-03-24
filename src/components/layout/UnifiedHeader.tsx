@@ -2,6 +2,7 @@
 import { Link, useLocation } from "wouter";
 import { Settings, ArrowLeft } from "lucide-react";
 import { hapticLight } from "@/utils/haptics";
+import { buttonClickFeedback } from "@/utils/buttonClickFeedback";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import ProfileDropdown from "@/components/profile/ProfileDropdown";
@@ -407,7 +408,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             {/* Settings - transparent glass pill */}
             <motion.button
               onClick={(e) => {
-                hapticLight();
+                buttonClickFeedback();
                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                 setSettingsOriginRect(rect);
                 setIsSettingsModalOpen(true);

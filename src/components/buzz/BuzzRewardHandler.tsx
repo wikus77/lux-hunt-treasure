@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -11,6 +12,7 @@ interface BuzzRewardHandlerProps {
 export const BuzzRewardHandler: React.FC<BuzzRewardHandlerProps> = ({
   onRewardRedeemed
 }) => {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
   const processedRef = useRef(false);
 
@@ -27,7 +29,7 @@ export const BuzzRewardHandler: React.FC<BuzzRewardHandlerProps> = ({
 
   const redeemFreeBuzz = async () => {
     if (!user?.id) {
-      toast.error('Devi essere loggato per usare il BUZZ gratuito');
+      toast.error(t('buzz_toast_login_required_free'));
       removeFreeQueryParams();
       return;
     }
@@ -44,12 +46,12 @@ export const BuzzRewardHandler: React.FC<BuzzRewardHandlerProps> = ({
 
       if (consumeErr || !consumed) {
         console.error('consume_credit error', consumeErr);
-        toast.error('Nessun credito BUZZ disponibile');
+        toast.error(t('buzz_toast_no_credit'));
         removeFreeQueryParams();
         return;
       }
 
-      toast.success('🎁 BUZZ gratuito riscattato! Ora puoi premere il pulsante BUZZ.', {
+      toast.success(t('buzz_reward_success'), {
         duration: 5000,
         position: 'top-center',
         style: { 
@@ -67,7 +69,7 @@ export const BuzzRewardHandler: React.FC<BuzzRewardHandlerProps> = ({
 
     } catch (e) {
       console.error('redeemFreeBuzz exception', e);
-      toast.error('Errore durante il riscatto gratuito');
+      toast.error(t('buzz_toast_redeem_error'));
     } finally {
       removeFreeQueryParams();
     }

@@ -23,6 +23,40 @@ function getYesterdayKeyUtc(): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Previous day_key (UTC) for streak continuity. */
+function getDayKeyBefore(dayKey: string): string {
+  const d = new Date(dayKey + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Phase 3: update daily mission streak after successful complete_phase2 (win + new claim). */
+async function updateStreakAfterComplete(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  completedDayKey: string
+): Promise<void> {
+  const dayBefore = getDayKeyBefore(completedDayKey);
+  const { data: row } = await admin
+    .from("daily_mission_streaks")
+    .select("current_streak, last_completed_day_key")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const currentStreak = (row?.current_streak as number) ?? 0;
+  const lastKey = (row?.last_completed_day_key as string) ?? null;
+  const newStreak = lastKey === dayBefore ? currentStreak + 1 : 1;
+  const nowIso = new Date().toISOString();
+  await admin.from("daily_mission_streaks").upsert(
+    {
+      user_id: userId,
+      last_completed_day_key: completedDayKey,
+      current_streak: newStreak,
+      updated_at: nowIso,
+    },
+    { onConflict: "user_id" }
+  );
+}
+
 // Anagram (Idea 1) — word list for server-side generation (EN; can add IT/FR later)
 const ANAGRAM_WORDS = [
   "AGENT", "CIPHER", "CODE", "DRILL", "HUNT", "MISSION", "SIGNAL", "TRACE",
@@ -395,6 +429,8 @@ async function handler(req: Request): Promise<Response> {
         .maybeSingle();
 
       let amount = 0;
+      let amountPe = 0;
+      const DAILY_MISSION_PE = 50;
       if (win && !existingClaim) {
         const { error: claimErr } = await admin.from("daily_mission_claims").insert({
           user_id: userId,
@@ -411,6 +447,14 @@ async function handler(req: Request): Promise<Response> {
             p_reason: `daily_mission_phase2:${mission_id}:${runDayKey}`,
           });
           if (!creditErr) amount = SIGNAL_PATTERN_P2_M1U;
+          const { error: peErr } = await admin.rpc("award_pulse_energy", {
+            p_user_id: userId,
+            p_delta_pe: DAILY_MISSION_PE,
+            p_reason: "daily_mission",
+            p_metadata: {},
+          });
+          if (!peErr) amountPe = DAILY_MISSION_PE;
+          if (win) await updateStreakAfterComplete(admin, userId, runDayKey);
         }
       } else if (existingClaim) {
         amount = (existingClaim as { amount_m1u: number }).amount_m1u;
@@ -423,6 +467,7 @@ async function handler(req: Request): Promise<Response> {
           status: win ? "completed" : "failed",
           reward_awarded: amount > 0,
           amount,
+          amount_pe: amountPe,
           result: win ? "win" : "fail",
           next_available_at: null,
         }),
@@ -733,6 +778,8 @@ async function handler(req: Request): Promise<Response> {
         .maybeSingle();
 
       let amount = 0;
+      let amountPe = 0;
+      const DAILY_MISSION_PE = 50;
       const shouldCredit = win && savedWords.length > 0;
       if (shouldCredit && !existingClaim) {
         const { error: claimErr } = await admin.from("daily_mission_claims").insert({
@@ -750,6 +797,14 @@ async function handler(req: Request): Promise<Response> {
             p_reason: `daily_mission_phase2:${mission_id}:${runDayKey}`,
           });
           if (!creditErr) amount = WORD_DUEL_P2_M1U;
+          const { error: peErr } = await admin.rpc("award_pulse_energy", {
+            p_user_id: userId,
+            p_delta_pe: DAILY_MISSION_PE,
+            p_reason: "daily_mission",
+            p_metadata: {},
+          });
+          if (!peErr) amountPe = DAILY_MISSION_PE;
+          if (win) await updateStreakAfterComplete(admin, userId, runDayKey);
         }
       } else if (existingClaim) {
         amount = (existingClaim as { amount_m1u: number }).amount_m1u;
@@ -762,6 +817,7 @@ async function handler(req: Request): Promise<Response> {
           status: win ? "completed" : "failed",
           reward_awarded: amount > 0,
           amount,
+          amount_pe: amountPe,
           result: win ? "win" : "fail",
           next_available_at: null,
         }),
@@ -1011,6 +1067,8 @@ async function handler(req: Request): Promise<Response> {
       .maybeSingle();
 
     let amount = 0;
+    let amountPe = 0;
+    const DAILY_MISSION_PE = 50;
     if (win && !existingClaim) {
       const { error: claimErr } = await admin.from("daily_mission_claims").insert({
         user_id: userId,
@@ -1027,6 +1085,14 @@ async function handler(req: Request): Promise<Response> {
           p_reason: `daily_mission_phase2:${mission_id}:${runDayKey}`,
         });
         if (!creditErr) amount = CIPHER_DRILL_P2_M1U;
+        const { error: peErr } = await admin.rpc("award_pulse_energy", {
+          p_user_id: userId,
+          p_delta_pe: DAILY_MISSION_PE,
+          p_reason: "daily_mission",
+          p_metadata: {},
+        });
+        if (!peErr) amountPe = DAILY_MISSION_PE;
+        await updateStreakAfterComplete(admin, userId, runDayKey);
       }
     } else if (existingClaim) {
       amount = (existingClaim as { amount_m1u: number }).amount_m1u;
@@ -1039,6 +1105,7 @@ async function handler(req: Request): Promise<Response> {
         status: win ? "completed" : "failed",
         reward_awarded: amount > 0,
         amount,
+        amount_pe: amountPe,
         result: win ? "win" : "fail",
         next_available_at: null,
       }),

@@ -22,6 +22,7 @@ export interface ClaimDailyPhaseResponse {
   };
   reward_awarded?: boolean;
   amount?: number;
+  amount_pe?: number;
   result?: 'win' | 'fail';
   savedWords?: string[];
   next_available_at?: string | null;

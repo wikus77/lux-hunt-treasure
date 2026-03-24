@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Zap, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ const BuzzMainContent: React.FC<BuzzMainContentProps> = ({
   maxBuzzCount,
   onNavigateToMap
 }) => {
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuthContext();
   const [isAnimating, setIsAnimating] = useState(false);
   const [showPulse, setShowPulse] = useState(false);
@@ -37,16 +38,16 @@ const BuzzMainContent: React.FC<BuzzMainContentProps> = ({
 
   const handleBuzzPress = async () => {
     if (!isAuthenticated) {
-      toast.error("Accesso richiesto", {
-        description: "Devi effettuare l'accesso per utilizzare questa funzione."
+      toast.error(t('buzz_main_access_required_title'), {
+        description: t('buzz_main_access_required_desc'),
       });
       navigate('/login');
       return;
     }
 
     if (!canUseBuzz) {
-      toast.error("Buzz non disponibile", {
-        description: "Hai raggiunto il limite massimo di Buzz per oggi."
+      toast.error(t('buzz_main_not_available_title'), {
+        description: t('buzz_main_not_available_desc'),
       });
       return;
     }
@@ -64,8 +65,8 @@ const BuzzMainContent: React.FC<BuzzMainContentProps> = ({
       }, 3000);
     } catch (error) {
       console.error("Error during buzz press:", error);
-      toast.error("Errore", {
-        description: "Si è verificato un errore durante l'operazione."
+      toast.error(t('buzz_main_error_title'), {
+        description: t('buzz_main_error_desc'),
       });
     } finally {
       setTimeout(() => {
@@ -93,9 +94,9 @@ const BuzzMainContent: React.FC<BuzzMainContentProps> = ({
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold mb-2">Buzz</h1>
+          <h1 className="text-3xl font-bold mb-2">{t('buzz_main_page_title')}</h1>
           <p className="text-gray-400">
-            Premi il pulsante per inviare un segnale e scoprire nuove aree sulla mappa.
+            {t('buzz_main_page_subtitle')}
           </p>
         </motion.div>
 
@@ -158,7 +159,7 @@ const BuzzMainContent: React.FC<BuzzMainContentProps> = ({
             className="border-cyan-500 text-cyan-500 hover:bg-cyan-950"
           >
             <MapPin className="w-4 h-4 mr-2" />
-            Vai alla mappa
+            {t('buzz_main_go_to_map')}
           </Button>
         </motion.div>
       </div>

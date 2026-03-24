@@ -20,25 +20,13 @@ import {
 /**
  * 🏪 STORE COMPLIANCE: Check if PulseBreaker is enabled
  * 
- * PulseBreaker is a Crash/Aviator-style game that:
- * - Uses random crash points
- * - Has betting/payout mechanics
- * - Displays crash history (gambler's fallacy)
- * - Has near-miss psychological manipulation
+ * - Web: full mode (M1U + PE) when PULSE_BREAKER_ENABLED.
+ * - Native (iOS/Android): enabled in PE-only mode (no M1U) for progression/mini-game compliance.
  * 
- * This WILL be rejected by Apple and Google as simulated gambling.
- * 
- * @returns false on native platforms (iOS/Android), respects flag on web
+ * @returns true when Pulse Breaker is available (web: full; native: PE-only)
  */
 export function isPulseBreakerEnabled(): boolean {
-  // Native platforms: ALWAYS disabled for store compliance
-  if (isCapacitorNative()) {
-    console.log('[StoreCompliance] ❌ PulseBreaker disabled on native platform');
-    return false;
-  }
-  
-  // Web: respect the feature flag
-  return PULSE_BREAKER_ENABLED;
+  return !!PULSE_BREAKER_ENABLED;
 }
 
 /**

@@ -1,5 +1,5 @@
-
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 import { toast } from "sonner";
 
@@ -9,6 +9,7 @@ interface BuzzExplosionHandlerProps {
 }
 
 const BuzzExplosionHandler = ({ show, onCompleted }: BuzzExplosionHandlerProps) => {
+  const { t } = useTranslation();
   const [explosionFadeOut, setExplosionFadeOut] = useState(false);
   const timerRef = useRef<number | null>(null);
 
@@ -27,8 +28,8 @@ const BuzzExplosionHandler = ({ show, onCompleted }: BuzzExplosionHandlerProps) 
   function handleExplosionFadeOutComplete() {
     setExplosionFadeOut(false);
     onCompleted();
-    toast.success("Indizio sbloccato!", {
-      description: "Controlla la sezione Notifiche per vedere l'indizio extra."
+    toast.success(t('buzz_clue_unlocked_title'), {
+      description: t('buzz_clue_unlocked_desc'),
     });
   }
 

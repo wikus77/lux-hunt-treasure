@@ -1,7 +1,8 @@
 /**
  * Global PE Reward Overlay — True fullscreen cinematic reward on every PE credit.
  * Listens to pe-credit-event; shows full-viewport modal with PulseBarReward (Energy Injection).
- * Dedupe/lock: one modal at a time; ignore events while open or within DEDUPE_MS.
+ * Queue: events while modal is open are enqueued and shown one after another.
+ * Dedupe: only by event id (same event fired twice); no time-window drop of legitimate events.
  * © 2025 Joseph MULÉ – M1SSION™ – NIYVORA KFT™
  */
 
@@ -12,50 +13,118 @@ import { useTranslation } from 'react-i18next';
 import { PE_CREDIT_EVENT, PECreditEventDetail } from '../peCreditEvent';
 import { PulseBarReward } from './PulseBarReward';
 
-const DEDUPE_MS = 2500;
 const AUTO_CLOSE_MS = 3500;
+/** Anti-bounce: same event id re-fired within this ms is ignored (duplicate dispatch). */
+const SAME_ID_DEDUPE_MS = 300;
+
+/** PE modal runtime tracing — always on for iOS forensics (remove after diagnosis). */
+const po = (msg: string, data?: unknown) => {
+  if (typeof console !== 'undefined') console.log('[PE-TRACE-OVERLAY]', msg, data ?? '');
+};
+const pr = (msg: string, data?: unknown) => {
+  if (typeof console !== 'undefined') console.log('[PE-TRACE-RENDER]', msg, data ?? '');
+};
+const pc = (msg: string, data?: unknown) => {
+  if (typeof console !== 'undefined') console.log('[PE-TRACE-CLOSE]', msg, data ?? '');
+};
 
 export const GlobalPERewardOverlay: React.FC = () => {
   const { t } = useTranslation();
   const [payload, setPayload] = useState<PECreditEventDetail | null>(null);
-  const animatingRef = useRef(false);
+  const showingRef = useRef(false);
   const lastIdRef = useRef<string | null>(null);
-  const lastTimeRef = useRef(0);
+  const lastIdTimeRef = useRef(0);
+  const queueRef = useRef<PECreditEventDetail[]>([]);
   const autoCloseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  pr('RENDER', { hasPayload: !!payload, payloadId: payload?.id ?? null, payloadAmount: payload?.amount ?? null, showingRef: showingRef.current, queueLen: queueRef.current.length });
+
+  useEffect(() => {
+    po('MOUNT', { ts: Date.now() });
+    return () => po('UNMOUNT cleanup');
+  }, []);
+
   const close = () => {
+    const queueLenBefore = queueRef.current.length;
+    pc('ENTER', { queueLenBefore, showingRef: showingRef.current });
     setPayload(null);
-    animatingRef.current = false;
     if (autoCloseRef.current) {
       clearTimeout(autoCloseRef.current);
       autoCloseRef.current = null;
     }
-  };
-
-  useEffect(() => {
-    const handle = (e: Event) => {
-      const detail = (e as CustomEvent<PECreditEventDetail>).detail;
-      if (!detail?.amount || detail.amount <= 0) return;
-      if (animatingRef.current) return;
-      const now = Date.now();
-      if (lastIdRef.current === detail.id) return;
-      if (now - lastTimeRef.current < DEDUPE_MS) return;
-
-      lastIdRef.current = detail.id;
-      lastTimeRef.current = now;
-      animatingRef.current = true;
-      setPayload(detail);
-
+    const next = queueRef.current.shift();
+    const queueLenAfter = queueRef.current.length;
+    pc('AFTER shift', { hasNext: !!next, nextId: next?.id, queueLenAfter });
+    if (next) {
+      lastIdRef.current = next.id;
+      setPayload(next);
       autoCloseRef.current = setTimeout(() => {
         autoCloseRef.current = null;
         close();
       }, AUTO_CLOSE_MS);
+      po('close SCHEDULED next', { nextId: next.id });
+    } else {
+      showingRef.current = false;
+      pc('DONE', 'showingRef=false');
+    }
+  };
+
+  useEffect(() => {
+    po('useEffect RUN listener registration');
+    const handle = (e: Event) => {
+      const ev = e as CustomEvent<PECreditEventDetail>;
+      const detail = ev.detail;
+      po('handle ENTER', { ts: Date.now() });
+      if (typeof console !== 'undefined') {
+        console.log('[PE-TRACE-OVERLAY] handle DUMP', {
+          eType: ev.type,
+          eDetail: ev.detail,
+          typeOfDetail: typeof ev.detail,
+          detailAmount: ev.detail?.amount,
+          typeOfDetailAmount: typeof ev.detail?.amount,
+          detailId: ev.detail?.id,
+          detailSource: ev.detail?.source,
+        });
+      }
+      if (!detail) {
+        po('handle EXIT guard', 'detail assente');
+        return;
+      }
+      const amountVal = detail.amount;
+      if (amountVal == null || amountVal <= 0) {
+        po('handle EXIT guard', { reason: 'amount falsy or <=0', amountVal, type: typeof amountVal });
+        return;
+      }
+      const now = Date.now();
+      if (lastIdRef.current === detail.id && now - lastIdTimeRef.current < SAME_ID_DEDUPE_MS) {
+        po('handle EXIT guard', { reason: 'same-id dedupe', detailId: detail.id });
+        return;
+      }
+      if (showingRef.current) {
+        queueRef.current = [...queueRef.current, detail];
+        po('handle ENQUEUED', { detailId: detail.id, queueLen: queueRef.current.length });
+        return;
+      }
+      lastIdRef.current = detail.id;
+      lastIdTimeRef.current = now;
+      showingRef.current = true;
+      po('handle ACCEPTED setPayload', { detailId: detail.id, amount: detail.amount, source: detail.source });
+      setPayload(detail);
+      autoCloseRef.current = setTimeout(() => {
+        po('timer FIRED', { detailId: detail.id });
+        autoCloseRef.current = null;
+        close();
+      }, AUTO_CLOSE_MS);
+      po('timer STARTED', { detailId: detail.id });
     };
 
+    const regTs = Date.now();
     window.addEventListener(PE_CREDIT_EVENT, handle);
+    po('listener REGISTERED', { regTs });
     return () => {
       window.removeEventListener(PE_CREDIT_EVENT, handle);
       if (autoCloseRef.current) clearTimeout(autoCloseRef.current);
+      po('listener CLEANUP unmount');
     };
   }, []);
 
@@ -66,6 +135,8 @@ export const GlobalPERewardOverlay: React.FC = () => {
   const handleContinue = () => {
     close();
   };
+
+  if (payload) pr('RENDER BRANCH MODAL', { payloadId: payload.id, amount: payload.amount, source: payload.source });
 
   const modal = (
     <AnimatePresence>
@@ -144,6 +215,10 @@ export const GlobalPERewardOverlay: React.FC = () => {
     </AnimatePresence>
   );
 
-  if (typeof document === 'undefined') return null;
+  if (typeof document === 'undefined') {
+    pr('SKIP PORTAL', 'no document');
+    return null;
+  }
+  pr('createPortal CALL', { hasPayload: !!payload });
   return createPortal(modal, document.body);
 };

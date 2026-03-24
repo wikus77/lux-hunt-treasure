@@ -6,13 +6,38 @@
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionSingleFlight } from '@/integrations/supabase/authSingleFlight';
 
+/** Phase 2: template_key from server (weekday-based archetype). */
+export type DailyEngineTemplateKey =
+  | 'intelligence'
+  | 'skill'
+  | 'field'
+  | 'orientation'
+  | 'time'
+  | 'strategic'
+  | 'special';
+
+/** Phase 3: retention block from server. */
+export interface DailyMissionRetention {
+  streak: number;
+  week_start: string;
+  weekly_completion: boolean[];
+  agent_status: 'ACTIVE' | 'INACTIVE';
+  sunday_reward_available: boolean;
+  /** When available, the Sunday day_key to pass to consume-sunday-reward (e.g. Monday we pass yesterday's Sunday). */
+  sunday_reward_day_key?: string;
+}
+
 export interface DailyMissionTodayResponse {
   ok: boolean;
   error?: string;
   day_key?: string;
   mission_id?: string;
+  /** Phase 2: archetype for display (e.g. intelligence, skill). */
+  template_key?: DailyEngineTemplateKey;
   cycle_version?: string;
   index?: number;
+  /** Phase 3: retention (streak, weekly, agent, Sunday). */
+  retention?: DailyMissionRetention;
 }
 
 export async function fetchDailyMissionToday(): Promise<DailyMissionTodayResponse> {

@@ -2,6 +2,7 @@
 // M1SSION™ - BUZZ Action Button with M1U Payment System
 // PRIORITÀ BUZZ: 1) tierFreeBuzz (settimanali per tier) → 2) buzz_grants (premi) → 3) pricing M1U
 import React, { useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { pausePageAudio, resumePageAudio } from '@/utils/audioController';
 
 // 🔊 Audio path for BUZZ button sound - UNICO SUONO AUTORIZZATO
@@ -42,6 +43,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   onSuccess,
   isWalkthroughMode = false
 }) => {
+  const { t } = useTranslation();
   const { user } = useUnifiedAuth();
   
   // 🔊 Audio ref for BUZZ button sound
@@ -160,7 +162,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
 
   const redeemFreeBuzz = async () => {
     if (!user) {
-      toast.error('Devi essere loggato per usare il BUZZ gratuito');
+      toast.error(t('buzz_toast_login_required_free'));
       return;
     }
     try {
@@ -172,7 +174,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       });
       if (consumeErr || !consumed) {
         console.error('consume_credit error', consumeErr);
-        toast.error('Nessun credito BUZZ disponibile');
+        toast.error(t('buzz_toast_no_credit'));
         return;
       }
 
@@ -187,7 +189,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       
       if (hbpsErr) {
         console.error('handle-buzz-press error', hbpsErr);
-        toast.error('Errore durante l\'uso del BUZZ gratuito');
+        toast.error(t('buzz_toast_error_use_free'));
         return;
       }
 
@@ -204,7 +206,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
           }
         });
       } else {
-        toast.success('BUZZ gratuito utilizzato!');
+        toast.success(t('buzz_toast_free_used'));
       }
 
       // 4) Update counters and success callback
@@ -212,7 +214,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       onSuccess();
     } catch (e) {
       console.error('redeemFreeBuzz exception', e);
-      toast.error('Errore durante il riscatto gratuito');
+      toast.error(t('buzz_toast_redeem_error'));
     } finally {
       removeFreeQueryParams();
     }
@@ -304,7 +306,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     if (!user) {
       // 📳 Stop haptic pulse on error
       buzzHapticPulse.stop();
-      toast.error('Devi essere loggato per utilizzare BUZZ!');
+      toast.error(t('buzz_toast_login_required'));
       return;
     }
 
@@ -361,7 +363,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         }
         
         if (!__buzz.shown) {
-          toast.success(`BUZZ gratuito del giorno! (${tierFreeBuzzRemaining - 1}/${tierWeeklyLimit} tier rimasti)`);
+          toast.success(t('buzz_toast_free_day_tier', { remaining: tierFreeBuzzRemaining - 1, limit: tierWeeklyLimit }));
         }
         return;
       }
@@ -409,14 +411,14 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         }
         
         if (!__buzz.shown) {
-          toast.success('BUZZ gratuito del giorno (premio) utilizzato!');
+          toast.success(t('buzz_toast_free_grant_used'));
         }
         return;
       } else {
         console.error('🔴 M1SSION™ GRANT FREE BUZZ: Failed to consume grant');
         // 📳 Stop haptic pulse on error
         buzzHapticPulse.stop();
-        toast.error('Errore nell\'uso del BUZZ gratuito');
+        toast.error(t('buzz_toast_free_use_error'));
         return;
       }
     }
@@ -487,7 +489,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         console.error('❌ M1SSION™ M1U BUZZ: Update error', updateError);
         // 📳 Stop haptic pulse on error
         buzzHapticPulse.stop();
-        toast.error('Errore nel processare il pagamento M1U');
+        toast.error(t('buzz_toast_m1u_payment_error'));
         return;
       }
 
@@ -495,7 +497,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         console.error('❌ M1SSION™ M1U BUZZ: No profile returned after update');
         // 📳 Stop haptic pulse on error
         buzzHapticPulse.stop();
-        toast.error('Errore nel processare il pagamento M1U');
+        toast.error(t('buzz_toast_m1u_payment_error'));
         return;
       }
 
@@ -561,7 +563,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       console.error('❌ M1SSION™ M1U BUZZ: Exception during payment', error);
       // 📳 Stop haptic pulse on error
       buzzHapticPulse.stop();
-      toast.error('Errore durante il BUZZ. Riprova.');
+      toast.error(t('buzz_toast_error_retry'));
     }
   };
 

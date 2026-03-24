@@ -86,6 +86,9 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
     setCompletedReward(phase1Reward);
     setCompletedPhase(1);
     setShowCompletion(true);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('dcl-mission-done'));
+    }
     setTimeout(() => {
       setShowCompletion(false);
       onComplete();
@@ -99,6 +102,9 @@ export const DailyMissionContent: React.FC<DailyMissionContentProps> = ({
     setCompletedReward(phase2Reward);
     setCompletedPhase(2);
     setShowCompletion(true);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('dcl-mission-done'));
+    }
     setTimeout(() => {
       setShowCompletion(false);
       onComplete();

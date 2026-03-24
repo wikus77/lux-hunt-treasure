@@ -1,32 +1,29 @@
 /**
  * PULSE BREAKER™ — Quick Access Pill (Same style as AgentEnergyPill)
- * Pill circolare stile M1SSION con anelli rotanti
- * 
+ * Solo bottone: apre lo store. Il modale fullscreen è gestito da GlobalPulseBreakerModal (come Impostazioni).
+ *
  * 🏪 STORE COMPLIANCE (28/01/2026):
  * - Hidden on native platforms (gambling-like mechanic)
  * - Returns null when isPulseBreakerEnabled() === false
- * 
+ *
  * © 2026 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import { motion } from 'framer-motion';
 import { Gamepad2 } from 'lucide-react';
-import { PulseBreaker } from './PulseBreaker';
 import { usePulseBreakerStore } from '@/stores/pulseBreakerStore';
 import { isPulseBreakerEnabled } from '@/utils/storeCompliance';
 import '@/features/pulse/styles/pulse-pill.css';
 
 export const PulseBreakerPill = () => {
-  const { isOpen, openPulseBreaker, closePulseBreaker } = usePulseBreakerStore();
+  const { openPulseBreaker } = usePulseBreakerStore();
 
-  // 🏪 STORE COMPLIANCE: Hide on native platforms
   if (!isPulseBreakerEnabled()) {
     return null;
   }
 
   return (
     <div className="relative">
-      {/* Main Orb - Same style as AgentEnergyPill */}
       <motion.button
         className="pe-pill-orb"
         aria-label="Pulse Breaker Game"
@@ -34,32 +31,11 @@ export const PulseBreakerPill = () => {
         whileTap={{ scale: 0.97 }}
         onClick={openPulseBreaker}
       >
-        {/* Gamepad icon inside */}
         <Gamepad2 className="w-5 h-5 z-10 relative text-cyan-400" style={{ filter: 'drop-shadow(0 0 4px #00d4ff)' }} />
-        
-        {/* Orbiting dot */}
         <span className="pe-dot" />
-        
-        {/* Decorative arc overlay */}
         <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
-          <circle
-            cx="50%"
-            cy="50%"
-            r="45%"
-            fill="none"
-            stroke="rgba(0, 255, 200, 0.15)"
-            strokeWidth="2"
-          />
-          <circle
-            cx="50%"
-            cy="50%"
-            r="45%"
-            fill="none"
-            stroke="url(#pbGradient)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeDasharray="200 283"
-          />
+          <circle cx="50%" cy="50%" r="45%" fill="none" stroke="rgba(0, 255, 200, 0.15)" strokeWidth="2" />
+          <circle cx="50%" cy="50%" r="45%" fill="none" stroke="url(#pbGradient)" strokeWidth="2" strokeLinecap="round" strokeDasharray="200 283" />
           <defs>
             <linearGradient id="pbGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#00d4ff" />
@@ -69,12 +45,7 @@ export const PulseBreakerPill = () => {
           </defs>
         </svg>
       </motion.button>
-
-      {/* Game Modal */}
-      <PulseBreaker 
-        isOpen={isOpen} 
-        onClose={closePulseBreaker} 
-      />
+      {/* Modale fullscreen = solo GlobalPulseBreakerModal (in App), come Impostazioni */}
     </div>
   );
 };

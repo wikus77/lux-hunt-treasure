@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { 
   Mail, 
@@ -33,6 +34,7 @@ export const EmailVerificationFlow: React.FC<EmailVerificationFlowProps> = ({
   onOpenChange,
   onVerified
 }) => {
+  const { t } = useTranslation();
   const [isVerified, setIsVerified] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -55,7 +57,7 @@ export const EmailVerificationFlow: React.FC<EmailVerificationFlowProps> = ({
       if (refreshedUser?.email_confirmed_at) {
         setIsVerified(true);
         await vibrate(50);
-        toast.success('Email verificata con successo!');
+        toast.success(t('email_verification_toast_success'));
         
         if (onVerified) {
           onVerified();
@@ -88,17 +90,17 @@ export const EmailVerificationFlow: React.FC<EmailVerificationFlowProps> = ({
 
       if (error) {
         console.error('Error resending verification:', error);
-        toast.error('Errore nell\'invio dell\'email');
+        toast.error(t('email_verification_toast_resend_error'));
         return;
       }
 
       setLastSentTime(new Date());
       setCountdown(60); // 60 seconds cooldown
-      toast.success('Email di verifica inviata!');
+      toast.success(t('email_verification_toast_resend_success'));
 
     } catch (err) {
       console.error('Error in resendVerificationEmail:', err);
-      toast.error('Errore nell\'operazione');
+      toast.error(t('email_verification_toast_error'));
     } finally {
       setIsResending(false);
     }
@@ -320,7 +322,7 @@ export const EmailVerificationFlow: React.FC<EmailVerificationFlowProps> = ({
           {/* Footer */}
           <div className="text-center pt-4 border-t border-gray-700/50">
             <p className="text-xs text-gray-500">
-              La verifica email è richiesta per la sicurezza del tuo account
+              {t('email_verification_footer')}
             </p>
           </div>
         </div>

@@ -9,6 +9,8 @@ import { Flame, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { StreakModal } from './StreakModal';
+import { buttonClickFeedback } from '@/utils/buttonClickFeedback';
+import { useDclLauncher } from '@/contexts/DclLauncherContext';
 import '@/features/m1u/m1u-ui.css';
 
 interface StreakPillProps {
@@ -25,6 +27,15 @@ const StreakPill: React.FC<StreakPillProps> = ({ className = '', showLabel = tru
   const [pulseAnimation, setPulseAnimation] = useState(false);
   const [canCheckIn, setCanCheckIn] = useState(true);
   const hasLoadedRef = useRef(false);
+  const { registerOpenStreak } = useDclLauncher();
+
+  useEffect(() => {
+    const cleanup = registerOpenStreak(() => {
+      setShowModal(true);
+      return true;
+    });
+    return cleanup;
+  }, [registerOpenStreak]);
 
   // 🔥 FIX: Load data when user becomes available (handles race condition)
   useEffect(() => {
@@ -129,7 +140,10 @@ const StreakPill: React.FC<StreakPillProps> = ({ className = '', showLabel = tru
           }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+          buttonClickFeedback();
+          setShowModal(true);
+        }}
           animate={pulseAnimation ? { scale: [1, 1.05, 1] } : {}}
         >
           <motion.div

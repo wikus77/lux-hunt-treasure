@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { useQueryParams } from "@/hooks/useQueryParams";
 import Login from "./Login";
@@ -16,6 +17,7 @@ import { toast } from "sonner";
 import { recordQuizSkip } from "@/utils/quizDailyGuard";
 
 const Auth = () => {
+  const { t } = useTranslation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasCompletedQuiz, setHasCompletedQuiz] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -93,8 +95,8 @@ const Auth = () => {
       console.log("User skipped quiz - recording skip date");
       recordQuizSkip(userId!);
       setHasCompletedQuiz(true);
-      toast.info("Quiz saltato. Riapparirà domani all'apertura dell'app.", {
-        description: "Potrai completarlo anche dalla tua area profilo."
+      toast.info(t('auth_quiz_skipped_title'), {
+        description: t('auth_quiz_skipped_description'),
       });
       setTimeout(() => {
         navigate("/home");
@@ -111,8 +113,8 @@ const Auth = () => {
     localStorage.setItem("userProfileType", playerType.id);
     
     // Navigate to home page
-    toast.success("Profilo completato!", {
-      description: `Benvenuto, ${playerType.name}!`
+    toast.success(t('auth_profile_complete_title'), {
+      description: t('auth_profile_complete_description', { name: playerType.name }),
     });
     
     // Navigate to home page after a short delay
@@ -136,7 +138,7 @@ const Auth = () => {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center">
         <Spinner className="text-m1ssion-blue" size="lg" />
-        <div className="text-white text-xl mt-4">Caricamento...</div>
+        <div className="text-white text-xl mt-4">{t('auth_page_loading')}</div>
       </div>
     );
   }
@@ -178,7 +180,7 @@ const Auth = () => {
         />
       ) : (
         <div className="flex items-center justify-center h-screen">
-          <div className="text-white text-xl">Reindirizzamento in corso...</div>
+          <div className="text-white text-xl">{t('auth_redirecting')}</div>
           <Spinner className="ml-2 text-white" />
         </div>
       )}

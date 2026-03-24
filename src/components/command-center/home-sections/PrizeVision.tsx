@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import "@/styles/landing-flip-cards.css";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuthContext } from "@/contexts/auth";
 import { useLongPress } from "@/hooks/useLongPress";
 import { LongPressInfoModal } from "@/components/ui/LongPressInfoModal";
 import { Gift, Trophy, Car, Diamond, Sparkles, Smartphone } from "lucide-react";
@@ -31,7 +31,7 @@ interface PrizeVisionProps {
 
 export function PrizeVision({ progress }: PrizeVisionProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const safeProgress = Number.isFinite(progress) && typeof progress === "number" ? progress : 0;
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSwipeTransition, setIsSwipeTransition] = useState(false);

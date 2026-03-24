@@ -5,10 +5,15 @@
  */
 
 /* ========== OVERLAY ========== */
+/* Allineato al modale "+ M1U" (M1UShopContent): stesso viewport fullscreen e formula safe-area. */
 .pb-overlay {
   position: fixed;
   inset: 0;
   z-index: 10001;
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
   background:
     radial-gradient(1000px 600px at 75% 0%, rgba(0, 229, 255, 0.25), transparent 60%),
     radial-gradient(800px 500px at -10% 15%, rgba(123, 92, 255, 0.22), transparent 60%),
@@ -16,8 +21,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 60px 16px 90px;
-  overflow-y: auto;
+  padding-top: calc(env(safe-area-inset-top, 47px) + 12px);
+  padding-right: 16px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 34px) + 20px);
+  padding-left: 16px;
+  overflow: hidden;
 }
 
 /* Crash flash effect */
@@ -33,6 +41,9 @@
 .pb-container {
   width: 100%;
   max-width: 420px;
+  max-height: calc(100dvh - (env(safe-area-inset-top, 47px) + 12px) - (env(safe-area-inset-bottom, 34px) + 20px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: linear-gradient(180deg, 
     rgba(15, 20, 35, 0.97) 0%, 
     rgba(10, 12, 25, 0.98) 50%,
@@ -46,8 +57,18 @@
     0 20px 60px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     inset 0 -1px 0 rgba(0, 0, 0, 0.3);
-  overflow: hidden;
   position: relative;
+}
+
+/* Fullscreen sheet mode (stesso layout del modale + M1U: body a tutta pagina) */
+.pb-container--fullscreen {
+  max-width: none;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+}
+.pb-container--fullscreen::before {
+  display: none;
 }
 
 .pb-container::before {

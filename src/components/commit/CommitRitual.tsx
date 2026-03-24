@@ -16,6 +16,7 @@ import './commit-node.css';
 interface CommitRitualProps {
   onComplete: (durationMs: number) => void;
   onFail: (durationMs: number) => void;
+  onPlaySuccessSound?: () => void;
   disabled?: boolean;
 }
 
@@ -94,6 +95,7 @@ const FingerprintLargeSVG: React.FC<{ opacity: number; scale: number }> = ({ opa
 export const CommitRitual: React.FC<CommitRitualProps> = ({
   onComplete,
   onFail,
+  onPlaySuccessSound,
   disabled = false,
 }) => {
   const [phase, setPhase] = useState<RitualPhase>('idle');
@@ -178,6 +180,7 @@ export const CommitRitual: React.FC<CommitRitualProps> = ({
       isPressing.current = false;
       setPhase('complete');
       triggerHaptic(ImpactStyle.Medium);
+      onPlaySuccessSound?.();
 
       // Clear hold text
       setShowHoldText(false);
@@ -204,7 +207,7 @@ export const CommitRitual: React.FC<CommitRitualProps> = ({
     }
 
     rafRef.current = requestAnimationFrame(animate);
-  }, [onComplete]);
+  }, [onComplete, onPlaySuccessSound]);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // GESTURE HANDLERS

@@ -148,7 +148,7 @@
 
 - **Commit:** Eseguito (build e cap sync passati).
 - **Messaggio:** `feat(pulse): true fullscreen PE reward with visible animation and home sync feedback`
-- **Hash:** `b9b64ff24`
+- **Hash:** `3a1de40c5`
 
 ---
 

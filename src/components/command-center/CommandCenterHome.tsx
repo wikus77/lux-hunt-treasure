@@ -25,7 +25,7 @@ import { getMissionDeadline, getMissionStartDate, calculateRemainingDays } from 
 import { usePrizeData } from "@/hooks/usePrizeData";
 import { useBuzzPricing } from "@/hooks/useBuzzPricing";
 import { useMissionStatus } from "@/hooks/useMissionStatus";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuthContext } from "@/contexts/auth";
 import InviteFloatingButton from "@/components/home/InviteFloatingButton";
 // DNAQuickAction RIMOSSO - sostituito con AgentEnergyPill migliorato
 import { PULSE_ENABLED } from "@/config/featureFlags";
@@ -35,7 +35,7 @@ export default function CommandCenterHome() {
   // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
   
   // Get real user data from Supabase
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { userClues, loading: prizeLoading } = usePrizeData();
   const { userCluesCount } = useBuzzPricing(user?.id);
   const { missionStatus, loading: missionLoading } = useMissionStatus();

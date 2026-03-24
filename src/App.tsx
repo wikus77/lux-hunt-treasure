@@ -176,6 +176,23 @@ function App() {
     
     // Remove any reload triggers that could cause loops
   }, []);
+
+  // PE modal forensics: global JS error trap (temporary — remove after diagnosis)
+  useEffect(() => {
+    const onError = (ev: ErrorEvent) => {
+      console.log('[PE-TRACE-JS-ERROR] onerror', { message: ev.message, source: ev.filename, lineno: ev.lineno, colno: ev.colno, stack: ev.error?.stack });
+      return false;
+    };
+    const onRejection = (ev: PromiseRejectionEvent) => {
+      console.log('[PE-TRACE-JS-ERROR] unhandledrejection', { reason: ev.reason, message: ev.reason?.message, stack: ev.reason?.stack });
+    };
+    window.onerror = onError;
+    window.addEventListener('unhandledrejection', onRejection);
+    return () => {
+      window.onerror = null;
+      window.removeEventListener('unhandledrejection', onRejection);
+    };
+  }, []);
   
   // Initialize PWA stabilizer (prevents reload loops and manages push)
   usePWAStabilizer();

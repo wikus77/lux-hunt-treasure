@@ -117,7 +117,7 @@ git reset --hard safety/pe-unification-phase1-pre
 
 ## 13. Commit hash finale
 
-[Inserito dopo commit]
+`7012170a1` — commit eseguito dopo build e cap sync passati.
 
 ## 14. Eventuali limiti residui reali
 

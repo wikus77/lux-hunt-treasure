@@ -18,16 +18,31 @@ import { useDeepLinkQR } from "@/hooks/useDeepLinkQR";
 import M1UPill from "@/features/m1u/M1UPill";
 import { PageSkeleton } from "@/components/ui/skeleton-loader";
 // AgentEnergyPill ora in CommandCenterHome (posizione floating)
-import { PULSE_ENABLED } from "@/config/featureFlags";
+import { PULSE_ENABLED, HOME_V2_FLOATING_SIDE_PILLS_ENABLED } from "@/config/featureFlags";
 import StreakPill from "@/components/gamification/StreakPill";
 import CashbackVaultPill from "@/components/home/CashbackVaultPill";
 import ShopPill from "@/components/shop/ShopPill";
 import MissionSync from "@/components/home/MissionSync";
 import { CommitNodesContainer } from "@/components/commit";
+import { DailyControlLoopCard } from "@/components/home/DailyControlLoopCard";
 // STANDBY: Sistema hint inattività disabilitato - riattivare se necessario
 // import { InactivityHint } from "@/components/first-session";
 import { NextActionContainer, MotivationalPopup, FortuneWheel } from "@/components/feedback";
 import { SectionErrorBoundary } from "@/components/error/SectionErrorBoundary";
+import { DclLauncherProvider } from "@/contexts/DclLauncherContext";
+import { HomeSectionLauncherProvider } from "@/contexts/HomeSectionLauncherContext";
+import { HomeSidePillsLayer } from "@/components/home/HomeSidePillsLayer";
+import {
+  FloatingPillLayerV3,
+  ENABLE_HOME_FLOATING_PILLS_V3,
+} from "@/components/home/floatingPillsV3";
+import {
+  CommitPillV3,
+  CommitRadialHubPill,
+  ENABLE_COMMIT_PILL_V3,
+  COMMIT_PILL_V3_RADIAL_HUB,
+  isCommitPillV3IosCapacitor,
+} from "@/components/home/commitPillV3";
 // 🆕 REVOLUT LAYOUT: Prize carousel at top
 const PrizeVision = lazy(() => import("@/components/command-center/home-sections/PrizeVision").then(m => ({ default: m.PrizeVision })));
 import { useMissionStatus } from "@/hooks/useMissionStatus";
@@ -287,6 +302,8 @@ const { isConnected } = useRealTimeNotifications();
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
               >
+                <HomeSectionLauncherProvider>
+                <DclLauncherProvider>
                 {/* ON M1SSION BADGE — Positioned in header area (removed from scroll flow) */}
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
@@ -324,8 +341,9 @@ const { isConnected } = useRealTimeNotifications();
                     <PrizeVision progress={prizeProgress} />
                   </Suspense>
                   
-                  {/* Pills DENTRO M1SSION PRIZE (parte bassa) */}
-                  <div 
+                  {/* Pills DENTRO M1SSION PRIZE (parte bassa) — scroll target: Streak */}
+                  <div
+                    id="home-daily-streak"
                     style={{
                       display: 'flex',
                       justifyContent: 'center',
@@ -350,14 +368,24 @@ const { isConnected } = useRealTimeNotifications();
                 </div>
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                {/* COMMIT NODES — 3→1 Merge on Slow Scroll */}
+                {/* M1SSION DAILY CONTROL LOOP™ — Le 3 azioni di oggi */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                <CommitNodesContainer />
+                <SectionErrorBoundary section="DailyControlLoop" fallbackHeight="120px" showRetry={false}>
+                  <DailyControlLoopCard />
+                </SectionErrorBoundary>
+
+                {/* ═══════════════════════════════════════════════════════════════ */}
+                {/* COMMIT NODES — 3→1 Merge on Slow Scroll (scroll target: Commit) */}
+                {/* ═══════════════════════════════════════════════════════════════ */}
+                <div id="home-daily-commit">
+                  <CommitNodesContainer />
+                </div>
                 
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                {/* PROSSIMA AZIONE - BLACK GLASS + NEON (BLACK OPS) */}
+                {/* PROSSIMA AZIONE - BLACK GLASS + NEON (scroll target: Mission) */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                <div 
+                <div
+                  id="home-daily-mission"
                   style={{
                     width: '100%',
                     borderRadius: '24px',
@@ -386,6 +414,29 @@ const { isConnected } = useRealTimeNotifications();
                     <NextActionContainer />
                   </SectionErrorBoundary>
                 </div>
+
+                {HOME_V2_FLOATING_SIDE_PILLS_ENABLED && ENABLE_HOME_FLOATING_PILLS_V3 && (
+                  <SectionErrorBoundary section="FloatingPillV3" fallbackHeight="0px" showRetry={false}>
+                    <FloatingPillLayerV3 />
+                  </SectionErrorBoundary>
+                )}
+                {HOME_V2_FLOATING_SIDE_PILLS_ENABLED && !ENABLE_HOME_FLOATING_PILLS_V3 && (
+                  <SectionErrorBoundary section="HomeSidePills" fallbackHeight="0px" showRetry={false}>
+                    <HomeSidePillsLayer />
+                  </SectionErrorBoundary>
+                )}
+
+                {ENABLE_COMMIT_PILL_V3 && isCommitPillV3IosCapacitor() && (
+                  <SectionErrorBoundary section="CommitPillV3" fallbackHeight="0px" showRetry={false}>
+                    {COMMIT_PILL_V3_RADIAL_HUB ? (
+                      ENABLE_HOME_FLOATING_PILLS_V3 ? null : <CommitRadialHubPill />
+                    ) : (
+                      <CommitPillV3 />
+                    )}
+                  </SectionErrorBoundary>
+                )}
+
+                </DclLauncherProvider>
 
                 {/* Notifications Banner */}
                 {notificationsBannerOpen && (
@@ -459,6 +510,7 @@ const { isConnected } = useRealTimeNotifications();
                     </motion.div>
                   )}
                 </div>
+                </HomeSectionLauncherProvider>
               </motion.div>
             )}
           </AnimatePresence>

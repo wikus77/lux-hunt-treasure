@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, Plus, RefreshCw, Sparkles, User, Activity, Target, Search, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuthContext } from "@/contexts/auth";
 import { useAgentCode } from "@/hooks/useAgentCode";
 import { useAgentEnergy } from "@/features/pulse/hooks/useAgentEnergy";
 
@@ -30,7 +30,7 @@ interface AgentDiaryContentProps {
 
 export const AgentDiaryContent: React.FC<AgentDiaryContentProps> = ({ onClose }) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const { agentCode } = useAgentCode();
   const { energy } = useAgentEnergy();
   const [showAgentLab, setShowAgentLab] = useState(false);

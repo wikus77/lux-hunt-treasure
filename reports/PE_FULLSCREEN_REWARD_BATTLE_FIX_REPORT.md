@@ -115,7 +115,7 @@
 ## 14. Commit hash finale
 
 - **Commit eseguito:** sì.  
-- **Hash:** f80fe7c88 (`fix(pulse): stabilize PE fullscreen rewards in battle and improve pulse readability`)  
+- **Hash:** 6d6cee87f (`fix(pulse): stabilize PE fullscreen rewards in battle and improve pulse readability`)  
 
 ---
 

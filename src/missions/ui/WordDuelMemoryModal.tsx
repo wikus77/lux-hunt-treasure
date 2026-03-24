@@ -18,6 +18,7 @@ import {
   markPhase2Credited,
 } from '@/missions/missionState';
 import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
+import { emitPECreditEvent } from '@/features/pulse/peCreditEvent';
 
 const MISSION_ID = 'word_duel_memory_v1';
 const TIMER_MEMORIZE = 60;
@@ -155,6 +156,11 @@ export const WordDuelMemoryModal: React.FC<WordDuelMemoryModalProps> = ({ onClos
       setStep('phase2_win');
       if (amount > 0) {
         emitM1UCreditEvent(amount, 'mission');
+      }
+      if ((res as { amount_pe?: number }).amount_pe) {
+        const pe = (res as { amount_pe: number }).amount_pe;
+        window.dispatchEvent(new CustomEvent('pe:awarded', { detail: { delta: pe } }));
+        emitPECreditEvent(pe, 'daily_mission', {});
       }
     } else {
       setStep('phase2_fail');

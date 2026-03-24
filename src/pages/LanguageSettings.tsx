@@ -8,11 +8,11 @@ import { useToast } from "@/hooks/use-toast";
 import { setLocale, getLocale } from "@/i18n/i18n";
 import { useTranslation } from "react-i18next";
 
-// 🌍 Solo lingue con traduzioni complete
+// 🌍 Solo lingue supportate da src/i18n/i18n.ts (it, en, fr)
 const languages = [
-  { code: "it", name: "Italiano", flag: "🇮🇹" },
-  { code: "en", name: "English", flag: "🇬🇧" },
-  { code: "fr", name: "Français", flag: "🇫🇷" },
+  { code: "it", flag: "🇮🇹" },
+  { code: "en", flag: "🇬🇧" },
+  { code: "fr", flag: "🇫🇷" },
 ] as const;
 
 type SupportedLang = typeof languages[number]['code'];
@@ -37,34 +37,17 @@ const LanguageSettings = () => {
   const handleLanguageChange = (value: string) => {
     const lang = value as SupportedLang;
     setSelectedLanguage(lang);
-    
-    // 🔧 Applica il cambio lingua con i18next
     setLocale(lang);
-    
-    const selectedLang = languages.find(l => l.code === lang);
-    if (selectedLang) {
-      toast({
-        title: lang === 'it' ? "Lingua Aggiornata" : lang === 'fr' ? "Langue Mise à Jour" : "Language Updated",
-        description: lang === 'it' 
-          ? `La lingua dell'app è stata cambiata in ${selectedLang.name}.`
-          : lang === 'fr'
-          ? `La langue de l'app a été changée en ${selectedLang.name}.`
-          : `App language has been changed to ${selectedLang.name}.`
-      });
-    }
+    const langName = t(`lang_name_${lang}`);
+    toast({
+      title: t('language_updated_toast_title'),
+      description: t('language_updated_toast_description', { langName }),
+    });
   };
 
   const handleSave = () => {
     navigate("/settings");
   };
-
-  // Testi localizzati
-  const texts = {
-    it: { title: "Impostazioni Lingua", select: "Seleziona Lingua", save: "Salva Impostazioni" },
-    en: { title: "Language Settings", select: "Select Language", save: "Save Settings" },
-    fr: { title: "Paramètres de Langue", select: "Sélectionner la Langue", save: "Enregistrer" },
-  };
-  const currentTexts = texts[selectedLanguage] || texts.en;
 
   return (
     <div className="min-h-screen bg-black pb-6 w-full">
@@ -77,12 +60,12 @@ const LanguageSettings = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-bold">{currentTexts.title}</h1>
+        <h1 className="text-xl font-bold">{t('language_settings_title')}</h1>
       </header>
       <div className="h-[72px] w-full" />
       <div className="p-4">
         <div className="glass-card mb-6">
-          <h2 className="text-lg font-semibold mb-4">{currentTexts.select}</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('language_settings_select')}</h2>
           <RadioGroup value={selectedLanguage} onValueChange={handleLanguageChange} className="space-y-2">
             {languages.map((language) => (
               <div key={language.code} className="flex items-center justify-between rounded-md p-4 hover:bg-gray-800">
@@ -90,7 +73,7 @@ const LanguageSettings = () => {
                   <RadioGroupItem value={language.code} id={`language-${language.code}`} className="mr-4" />
                   <Label htmlFor={`language-${language.code}`} className="flex items-center text-base">
                     <span className="mr-2 text-lg">{language.flag}</span>
-                    {language.name}
+                    {t(`lang_name_${language.code}`)}
                   </Label>
                 </div>
                 {selectedLanguage === language.code && <Check className="h-5 w-5 text-m1ssion-blue" />}
@@ -101,7 +84,7 @@ const LanguageSettings = () => {
             onClick={handleSave}
             className="w-full mt-6 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
           >
-            {currentTexts.save}
+            {t('language_settings_save')}
           </Button>
         </div>
       </div>

@@ -5,7 +5,7 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CommitFlipOverlay } from './CommitFlipOverlay';
 import { CommitRitual } from './CommitRitual';
@@ -46,6 +46,24 @@ export const CommitModal: React.FC<CommitModalProps> = ({
   const [state, setState] = useState<ModalState>('checking');
   const [result, setResult] = useState<RitualResult | null>(null);
   const [unavailableReason, setUnavailableReason] = useState<string>('');
+  const commitBoomAudio = useRef<HTMLAudioElement | null>(null);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // COMMIT BOOM AUDIO — Preload for iOS WKWebView (no lag at 7s success)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    commitBoomAudio.current = new Audio('/assets/audio/commit-boom.mp3');
+    commitBoomAudio.current.preload = 'auto';
+    commitBoomAudio.current.volume = 0.9;
+  }, []);
+
+  const playCommitBoom = useCallback(() => {
+    if (commitBoomAudio.current) {
+      commitBoomAudio.current.currentTime = 10.25;
+      commitBoomAudio.current.play().catch(() => {});
+    }
+  }, []);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // CHECK AVAILABILITY
@@ -137,6 +155,9 @@ export const CommitModal: React.FC<CommitModalProps> = ({
       if (response.success && response.outcome === 'success') {
         console.log('[Commit] ✅ SUCCESS! Showing reward modal +5 M1U');
         setState('reward');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('dcl-commit-done'));
+        }
         // Auto-close after 4s to let user enjoy the celebration
         setTimeout(() => onClose(), 4000);
       } else {
@@ -253,6 +274,7 @@ export const CommitModal: React.FC<CommitModalProps> = ({
           <CommitRitual
             onComplete={handleComplete}
             onFail={handleFail}
+            onPlaySuccessSound={playCommitBoom}
             disabled={state === 'processing' || state === 'result'}
           />
         );

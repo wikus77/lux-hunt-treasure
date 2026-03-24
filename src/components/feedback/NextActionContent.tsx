@@ -26,7 +26,8 @@ import {
 } from '@/missions/missionState';
 import { DailyMissionFlipOverlay } from './DailyMissionFlipOverlay';
 import { DailyMissionContent } from './DailyMissionContent';
-import { isVeraBombEnabled } from '@/config/featureFlags';
+import { isVeraBombEnabled, DAILY_ENGINE_V2_ENABLED } from '@/config/featureFlags';
+import { DailyEngineV2Card } from '@/missions/dailyEngineV2/DailyEngineV2Card';
 
 interface NextActionContentProps {
   onClose: () => void;
@@ -308,8 +309,8 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({
             ))}
           </div>
 
-          {/* Optional actions (Daily Mission + VERA BOMB) */}
-          {(MISSIONS_ENABLED && isMissionReady) || isVeraBombEnabled() ? (
+          {/* Optional actions (Daily Mission v2 + VERA BOMB) */}
+          {(MISSIONS_ENABLED && isMissionReady) || isVeraBombEnabled() || DAILY_ENGINE_V2_ENABLED ? (
             <>
               {/* Section divider */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
@@ -319,6 +320,9 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({
                 </span>
                 <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
               </div>
+
+              {/* Daily Mission Engine v2 — server-driven (Phase 1 MVP) */}
+              {DAILY_ENGINE_V2_ENABLED && <DailyEngineV2Card />}
 
               {/* VERA MISSION BOMB - Entrypoint (feature flag) */}
               {isVeraBombEnabled() && (

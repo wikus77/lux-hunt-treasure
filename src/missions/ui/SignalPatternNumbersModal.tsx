@@ -18,6 +18,7 @@ import {
   markPhase2Credited,
 } from '@/missions/missionState';
 import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
+import { emitPECreditEvent } from '@/features/pulse/peCreditEvent';
 
 const MISSION_ID = 'signal_pattern_numbers_v1';
 const PHASE2_REWARD = 10;
@@ -110,6 +111,11 @@ export const SignalPatternNumbersModal: React.FC<SignalPatternNumbersModalProps>
       const amount = res.amount ?? PHASE2_REWARD;
       if (amount > 0) {
         emitM1UCreditEvent(amount, 'mission');
+      }
+      if ((res as { amount_pe?: number }).amount_pe) {
+        const pe = (res as { amount_pe: number }).amount_pe;
+        window.dispatchEvent(new CustomEvent('pe:awarded', { detail: { delta: pe } }));
+        emitPECreditEvent(pe, 'daily_mission', {});
       }
     } else {
       setStep('phase2_fail');

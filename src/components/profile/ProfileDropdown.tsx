@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import ProfileAvatar from '@/components/profile/ProfileAvatar';
 import AgentProfileFlipOverlay from '@/components/profile/AgentProfileFlipOverlay';
 import AgentProfileContent from '@/components/profile/AgentProfileContent';
+import { buttonClickFeedback } from '@/utils/buttonClickFeedback';
 
 interface ProfileDropdownProps {
   profileImage?: string | null;
@@ -21,6 +22,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   // 🎬 FLIP: Cattura rect dell'icona al click
   const handleAvatarClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    buttonClickFeedback();
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setOriginRect(rect);
     setIsOpen(true);

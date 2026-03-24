@@ -12,8 +12,12 @@
 // 🎚️ MASTER FLAGS
 // ═══════════════════════════════════════════════════════════════
 
-/** Master kill switch for entire missions system */
-export const MISSIONS_ENABLED = true;
+/**
+ * Master kill switch for entire missions system.
+ * Phase 0 (Daily Legacy Hide): set to false to hide all legacy daily mission UI.
+ * Rollback: set back to true to restore legacy daily missions.
+ */
+export const MISSIONS_ENABLED = false;
 
 /** Safe mode: rewards stored in localStorage only, no DB writes */
 export const MISSIONS_REWARD_SAFE_MODE = true;

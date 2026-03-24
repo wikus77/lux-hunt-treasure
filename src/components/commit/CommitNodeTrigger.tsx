@@ -4,8 +4,9 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React, { useState, useRef, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useRef, useCallback, useEffect, Suspense, lazy } from 'react';
 import { CommitModal } from './CommitModal';
+import { useDclLauncher } from '@/contexts/DclLauncherContext';
 import './commit-node.css';
 
 // Lazy load AionEntity to prevent THREE.js issues
@@ -29,6 +30,16 @@ export const CommitNodeTrigger: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
+  const { registerOpenCommit } = useDclLauncher();
+
+  useEffect(() => {
+    const cleanup = registerOpenCommit(() => {
+      if (triggerRef.current) setOriginRect(triggerRef.current.getBoundingClientRect());
+      setIsModalOpen(true);
+      return true;
+    });
+    return cleanup;
+  }, [registerOpenCommit]);
 
   const handleOpen = useCallback(() => {
     if (triggerRef.current) {

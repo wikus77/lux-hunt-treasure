@@ -2,7 +2,7 @@
 // @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuthContext } from '@/contexts/auth';
 import { preserveFunctionName } from '@/utils/pwaStubs';
 import { toast } from 'sonner';
 
@@ -48,7 +48,7 @@ export const usePrizeData = () => {
   const [userClues, setUserClues] = useState<UserClue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user } = useAuthContext();
 
   // Load all prizes with clue information
   const loadPrizes = preserveFunctionName(async () => {

@@ -10,6 +10,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { emitGameEvent } from '@/gameplay/events';
+import { isCapacitorNative } from '@/utils/capacitor';
 
 export type GameStatus = 'idle' | 'running' | 'cashed_out' | 'crashed';
 export type BetCurrency = 'PE' | 'M1U';
@@ -143,6 +144,9 @@ export function usePulseBreaker(): UsePulseBreakerReturn {
   // START ROUND
   const startRound = useCallback(async (betAmount: number, currency: BetCurrency): Promise<boolean> => {
     if (!user || gameActiveRef.current || gameState.status === 'running') return false;
+
+    // Native: PE-only (no M1U) for store compliance
+    if (isCapacitorNative() && currency === 'M1U') return false;
 
     const currentBalance = currency === 'M1U' ? userBalance.m1u : userBalance.pe;
     

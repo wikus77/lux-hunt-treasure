@@ -19,6 +19,7 @@ import {
 } from '@/missions/missionState';
 import { calculatePhaseRewards } from '@/missions/missionsRegistry';
 import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
+import { emitPECreditEvent } from '@/features/pulse/peCreditEvent';
 
 const PHASE1_REWARD = 10;
 const PHASE2_REWARD = 10;
@@ -112,6 +113,11 @@ export const CipherDrillModal: React.FC<CipherDrillModalProps> = ({ onClose, onC
         setStep('phase2_win');
         if (amount > 0) {
           emitM1UCreditEvent(amount, 'mission');
+        }
+        if ((res as { amount_pe?: number }).amount_pe) {
+          const pe = (res as { amount_pe: number }).amount_pe;
+          window.dispatchEvent(new CustomEvent('pe:awarded', { detail: { delta: pe } }));
+          emitPECreditEvent(pe, 'daily_mission', {});
         }
       } else {
         setStep('phase2_fail');

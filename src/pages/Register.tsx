@@ -2,6 +2,7 @@
 // 🎬 VISUAL ALIGNMENT: Matches LoginPage premium dialog modal style
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
@@ -13,6 +14,7 @@ import { useQueryParams } from "@/hooks/useQueryParams";
 
 
 const Register = () => {
+  const { t } = useTranslation();
   const { preference } = useQueryParams<{ preference?: 'uomo' | 'donna' }>();
   const [missionPreference, setMissionPreference] = useState<'uomo' | 'donna' | null>(null);
   const { navigate } = useWouterNavigation();
@@ -73,7 +75,7 @@ const Register = () => {
                 M1SSION™
               </h1>
               <p className="text-white/60 text-sm">
-                Unisciti agli agenti
+                {t('register_subtitle')}
               </p>
             </div>
             
@@ -86,9 +88,9 @@ const Register = () => {
                 transition={{ delay: 0.2, duration: 0.5 }}
               >
                 <p className="text-sm text-white/70">
-                  Missione selezionata: 
+                  {t('register_mission_selected')}{' '}
                   <span className="font-bold text-[#00D1FF] mx-1">
-                    {missionPreference === "uomo" ? "UOMO" : "DONNA"}
+                    {missionPreference === "uomo" ? t('register_mission_man') : t('register_mission_woman')}
                   </span>
                 </p>
                 <Button 
@@ -96,7 +98,7 @@ const Register = () => {
                   className="text-xs text-white/40 hover:text-[#00D1FF] p-0 mt-1"
                   onClick={() => navigate('/select-mission')}
                 >
-                  Cambia preferenza
+                  {t('register_change_preference')}
                 </Button>
               </motion.div>
             )}
@@ -112,7 +114,7 @@ const Register = () => {
                   variant="link"
                   className="text-white/50 hover:text-[#00D1FF]"
                 >
-                  Hai già un account? Accedi
+                  {t('register_already_have_account')}
                 </Button>
               </Link>
             </div>
@@ -120,13 +122,13 @@ const Register = () => {
             {/* Footer - matches LoginPage */}
             <div className="text-center mt-4 pt-4 border-t border-white/10">
               <p className="text-xs text-white/40">
-                Registrandoti accetti i{' '}
+                {t('register_terms_intro')}{' '}
                 <button type="button" className="text-[#00D1FF]/70 hover:text-[#00D1FF]" onClick={() => window.open('/terms', '_blank')}>
-                  Termini di Servizio
+                  {t('register_terms_link')}
                 </button>
-                {' '}e la{' '}
+                {' '}{t('register_terms_and')}{' '}
                 <button type="button" className="text-[#00D1FF]/70 hover:text-[#00D1FF]" onClick={() => window.open('/privacy-policy', '_blank')}>
-                  Privacy Policy
+                  {t('register_privacy_link')}
                 </button>
               </p>
             </div>

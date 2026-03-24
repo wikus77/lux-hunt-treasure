@@ -1,6 +1,7 @@
 
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -15,6 +16,7 @@ interface StandardLoginFormProps {
 }
 
 export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,13 +37,13 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
     const cleanPassword = password.trim();
     
     if (!cleanEmail || !cleanPassword) {
-      toast.error('Tutti i campi sono obbligatori');
+      toast.error(t('auth_all_fields_required'));
       return;
     }
 
     // Email format validation
     if (!/\S+@\S+\.\S+/.test(cleanEmail)) {
-      toast.error('Formato email non valido');
+      toast.error(t('auth_invalid_email_format'));
       return;
     }
 
@@ -55,15 +57,15 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
 
       if (!result.success) {
         console.error('❌ LOGIN ERROR');
-        toast.error('Errore di login', {
-          description: result.error?.message || 'Credenziali non valide'
+        toast.error(t('auth_login_error'), {
+          description: result.error?.message || t('auth_invalid_credentials'),
         });
         return;
       }
 
       console.log('✅ LOGIN SUCCESS - Emitting auth-success event');
-      toast.success('Login effettuato con successo', {
-        description: 'Benvenuto in M1SSION™!'
+      toast.success(t('auth_login_success'), {
+        description: t('auth_welcome_m1ssion'),
       });
 
       // 🔐 FACE ID: Save BOTH tokens for future Face ID login (iOS native only)
@@ -111,8 +113,8 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
       }
     } catch (error: any) {
       console.error('💥 LOGIN EXCEPTION');
-      toast.error('Errore di sistema', {
-        description: error.message || 'Si è verificato un errore imprevisto'
+      toast.error(t('auth_system_error'), {
+        description: error.message || t('auth_unexpected_error'),
       });
     } finally {
       setIsLoading(false);
@@ -123,9 +125,9 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
     <form onSubmit={handleSubmit} className="space-y-4">
       <FormField
         id="email"
-        label="Email"
+        label={t('auth_label_email')}
         type="email"
-        placeholder="Inserisci la tua email"
+        placeholder={t('auth_placeholder_email')}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         icon={<Mail className="h-4 w-4" />}
@@ -137,9 +139,9 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
       <div className="space-y-2">
         <FormField
           id="password"
-          label="Password"
+          label={t('auth_label_password')}
           type={showPassword ? "text" : "password"}
-          placeholder="Inserisci la password"
+          placeholder={t('auth_placeholder_password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           icon={<Lock className="h-4 w-4" />}
@@ -154,7 +156,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           onClick={() => setShowPassword(!showPassword)}
         >
           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          {showPassword ? 'Nascondi password' : 'Mostra password'}
+          {showPassword ? t('hide_password') : t('show_password')}
         </button>
       </div>
 
@@ -165,7 +167,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 font-bold text-lg py-3 rounded-xl neon-button-cyan"
           disabled={isLoading}
         >
-          {isLoading ? 'Caricamento...' : 'Accedi'}
+          {isLoading ? t('auth_loading') : t('auth_button_submit')}
         </Button>
 
         {/* Pulsante Registrati - ATTIVATO */}
@@ -175,7 +177,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 font-bold text-lg py-3 rounded-xl transition-all duration-300"
           disabled={isLoading}
         >
-          Registrati - Accesso limitato
+          {t('auth_register_cta')}
         </Button>
       </div>
     </form>

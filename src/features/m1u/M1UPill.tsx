@@ -42,6 +42,7 @@ import { toast } from 'sonner';
 import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { M1UnitsShopModal } from '@/components/m1units/M1UnitsShopModal';
+import { buttonClickFeedback } from '@/utils/buttonClickFeedback';
 import '@/features/m1u/m1u-ui.css';
 
 interface M1UPillProps {
@@ -408,6 +409,7 @@ const M1UPill: React.FC<M1UPillProps> = ({
   const lowBalance = balance < 100;
 
   const handleOpenRecharge = (e?: React.MouseEvent<HTMLElement>) => {
+    buttonClickFeedback();
     if (e) {
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       setShopOriginRect(rect);

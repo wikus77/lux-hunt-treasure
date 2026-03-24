@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useCashbackWallet } from '@/hooks/useCashbackWallet';
 import { M1SSION_ENABLE_CASHBACK } from '@/config/cashbackConfig';
 import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
+import { buttonClickFeedback } from '@/utils/buttonClickFeedback';
 
 interface CashbackVaultPillProps {
   className?: string;
@@ -200,7 +201,10 @@ const CashbackVaultPill: React.FC<CashbackVaultPillProps> = ({
           duration: isAnimating ? 0.3 : 0.3,
           repeat: isAnimating ? 3 : 0,
         }}
-        onClick={() => accumulatedM1U > 0 && setShowClaimModal(true)}
+        onClick={() => {
+          buttonClickFeedback();
+          if (accumulatedM1U > 0) setShowClaimModal(true);
+        }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >

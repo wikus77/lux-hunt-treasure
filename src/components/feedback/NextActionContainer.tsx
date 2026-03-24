@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+import { useDclLauncher } from '@/contexts/DclLauncherContext';
 import { 
   ChevronDown, 
   Target,
@@ -38,6 +39,7 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [originRect, setOriginRect] = useState<DOMRect | null>(null);
   const [isVeraBombOpen, setVeraBombOpen] = useState(false);
+  const { registerOpenMission } = useDclLauncher();
   
   const { missionStatus } = useMissionStatus();
   const { dailyBuzzCounter } = useBuzzCounter(user?.id);
@@ -77,6 +79,15 @@ export const NextActionContainer: React.FC<NextActionContainerProps> = ({ classN
     const interval = setInterval(refreshMissionState, 5000);
     return () => clearInterval(interval);
   }, [user, isMissionReady, refreshMissionState]);
+
+  useEffect(() => {
+    const cleanup = registerOpenMission(() => {
+      setOriginRect(null);
+      setIsModalOpen(true);
+      return true;
+    });
+    return cleanup;
+  }, [registerOpenMission]);
 
   const isPhase2Ready = isPhase2Available();
   const isMissionNotStarted = missionPhase === 0;

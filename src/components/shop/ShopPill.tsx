@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { ShopFlipOverlay } from '@/components/shop/ShopFlipOverlay';
 import { ShopContent } from '@/components/shop/ShopContent';
+import { buttonClickFeedback } from '@/utils/buttonClickFeedback';
 
 const WHEEL_STORAGE_KEY = 'm1_fortune_wheel_last_spin';
 
@@ -62,6 +63,7 @@ export const ShopPill: React.FC = () => {
   }, [user]);
 
   const handleOpenShop = (e: React.MouseEvent<HTMLButtonElement>) => {
+    buttonClickFeedback();
     setOriginRect(e.currentTarget.getBoundingClientRect());
     setShowShop(true);
   };

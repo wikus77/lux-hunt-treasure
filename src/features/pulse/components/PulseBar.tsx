@@ -13,8 +13,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { PULSE_ENABLED } from '@/config/featureFlags';
 import { Gamepad2 } from 'lucide-react';
-import { PulseBreaker } from '@/features/pulse-breaker';
-import { isPulseBreakerEnabled } from '@/utils/storeCompliance';
+import { usePulseBreakerStore } from '@/stores/pulseBreakerStore';
 
 interface PulseBarProps {
   onTap?: () => void;
@@ -24,7 +23,7 @@ interface PulseBarProps {
 export const PulseBar = ({ onTap }: PulseBarProps) => {
   const { pulseState, refetch } = usePulseRealtime();
   const [displayValue, setDisplayValue] = useState(0);
-  const [isGameOpen, setIsGameOpen] = useState(false);
+  const { openPulseBreaker } = usePulseBreakerStore();
 
   const value = pulseState?.value ?? 0;
 
@@ -58,13 +57,11 @@ export const PulseBar = ({ onTap }: PulseBarProps) => {
   const filledSegments = Math.floor((value / 100) * totalSegments);
   const cyan = '#00e7ff';
 
-  // Handler per aprire il gioco quando si clicca sulla barra
   const handleBarClick = () => {
     if (onTap) {
       onTap();
     } else {
-      // Se non c'è onTap prop, apri direttamente il gioco
-      setIsGameOpen(true);
+      openPulseBreaker();
     }
   };
 
@@ -235,13 +232,7 @@ export const PulseBar = ({ onTap }: PulseBarProps) => {
 
       {/* 🔥 RIMOSSO: PLAY Button - ora si accede solo dal PulseBreakerPill floating */}
 
-      {/* 🏪 STORE COMPLIANCE: Game Modal (hidden on native) */}
-      {isPulseBreakerEnabled() && (
-        <PulseBreaker 
-          isOpen={isGameOpen} 
-          onClose={() => setIsGameOpen(false)} 
-        />
-      )}
+      {/* Modale Pulse Breaker = GlobalPulseBreakerModal (fullscreen come Impostazioni) */}
     </motion.div>
   );
 };

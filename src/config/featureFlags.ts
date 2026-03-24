@@ -121,4 +121,18 @@ export function isVeraBombEnabled(): boolean {
   }
 }
 
+// ====== DAILY MISSION ENGINE V2 (Phase 1 MVP) ======
+// When true: show server-driven daily mission UI (v2). Legacy daily UI remains off (MISSIONS_ENABLED false).
+// Rollback: set to false to hide v2 card.
+export const DAILY_ENGINE_V2_ENABLED = true;
+
+// ====== HOME V2 — FLOATING LATERAL PILLS (AAA UI + launchers) ======
+// When true: floating capsule stacks on Home. Rollback: false = layer hidden, zero layout change.
+export const HOME_V2_FLOATING_SIDE_PILLS_ENABLED = true;
+
+// Floating interactive nodes V2 (orb / ring / blob). When false: legacy capsule HomeSidePillsLayer.
+export const ENABLE_FLOATING_NODES_V2 = true;
+/** @deprecated use HOME_V2_FLOATING_SIDE_PILLS_ENABLED */
+export const HOME_V2_SIDE_PILLS_ENABLED = HOME_V2_FLOATING_SIDE_PILLS_ENABLED;
+
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

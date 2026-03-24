@@ -3,12 +3,16 @@ import { execSync } from 'node:child_process'
 // M1SSION™ Treasure Hunt App - Custom Vite Configuration
 // Optimized for Capacitor iOS/Android deployment with enhanced build settings
 
+import { createRequire } from "node:module";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import checker from 'vite-plugin-checker';
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from "node:path";
+
+const require = createRequire(import.meta.url);
+const copyPublicAssetsPlugin = require("./build/copy-public-assets-plugin.cjs");
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -35,6 +39,8 @@ export default defineConfig(({ mode }) => ({
       gzipSize: true,
       brotliSize: true,
     }),
+    // Phase Performance 1: selective public → dist (replaces full copyPublicDir)
+    mode === 'production' && copyPublicAssetsPlugin(),
   ].filter(Boolean) as any,
   resolve: {
     alias: {
@@ -46,6 +52,8 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     target: 'esnext',
+    // Phase Performance 1: no full public/ copy; plugin copies whitelisted assets only
+    copyPublicDir: false,
     // Disable minification to fix MapLibre worker issue
     minify: false,
     sourcemap: mode === 'development',

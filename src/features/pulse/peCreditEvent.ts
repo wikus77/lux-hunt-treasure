@@ -45,6 +45,11 @@ export type PECreditSource =
   | 'battle_defense_win'
   | string;
 
+/** PE modal runtime tracing — always on for iOS forensics (remove after diagnosis). */
+const peEmit = (msg: string, data?: unknown) => {
+  if (typeof console !== 'undefined') console.log('[PE-TRACE-EMIT]', msg, data ?? '');
+};
+
 /**
  * Emit pe-credit-event for global fullscreen PE reward overlay.
  * Call only after PE has been actually credited (RPC success or DB update confirmed).
@@ -55,7 +60,17 @@ export function emitPECreditEvent(
   source: PECreditSource,
   metadata?: { preValue?: number; postValue?: number; [key: string]: unknown }
 ): void {
-  if (typeof window === 'undefined' || amount <= 0) return;
+  const rawAmount = amount;
+  const numAmount = Number(amount);
+  peEmit('CALLED', { rawAmount, numAmount, typeOfAmount: typeof amount, source, metadata });
+  if (typeof window === 'undefined') {
+    peEmit('EXIT no-window');
+    return;
+  }
+  if (amount <= 0) {
+    peEmit('EXIT amount<=0', { amount, numAmount });
+    return;
+  }
   const id = `pe-credit-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   const issuedAt = Date.now();
   const payload: PECreditEventDetail = {
@@ -67,5 +82,7 @@ export function emitPECreditEvent(
     postValue: metadata?.postValue,
     metadata,
   };
+  peEmit('BEFORE dispatchEvent', { payload, id: payload.id, amount: payload.amount });
   window.dispatchEvent(new CustomEvent(PE_CREDIT_EVENT, { detail: payload }));
+  peEmit('AFTER dispatchEvent', { id: payload.id });
 }

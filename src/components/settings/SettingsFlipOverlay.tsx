@@ -4,18 +4,23 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 
+const DEFAULT_SETTINGS_PORTAL_ID = 'm1-settings-portal';
+
 interface SettingsFlipOverlayProps {
   open: boolean;
   originRect: DOMRect | null;
   onClose: () => void;
   children: React.ReactNode;
+  /** Optional portal id; default 'm1-settings-portal'. Use different id (e.g. 'm1-pulsebreaker-portal') when reusing this overlay for another fullscreen modal. */
+  portalId?: string;
 }
 
 export const SettingsFlipOverlay: React.FC<SettingsFlipOverlayProps> = ({
   open,
   originRect,
   onClose,
-  children
+  children,
+  portalId = DEFAULT_SETTINGS_PORTAL_ID,
 }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
@@ -30,15 +35,15 @@ export const SettingsFlipOverlay: React.FC<SettingsFlipOverlayProps> = ({
 
   // Create portal
   useEffect(() => {
-    let container = document.getElementById('m1-settings-portal');
+    let container = document.getElementById(portalId);
     if (!container) {
       container = document.createElement('div');
-      container.id = 'm1-settings-portal';
+      container.id = portalId;
       container.style.cssText = 'position:fixed;inset:0;z-index:99999;pointer-events:none;';
       document.body.appendChild(container);
     }
     setPortalContainer(container);
-  }, []);
+  }, [portalId]);
 
   // Lock scroll
   useEffect(() => {

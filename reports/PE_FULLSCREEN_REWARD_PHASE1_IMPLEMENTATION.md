@@ -118,7 +118,7 @@ Implementato il sistema globale PE fullscreen (Opzione C — Energy Injection): 
 ## 13. Commit
 
 - **Eseguito:** Sì (dopo build e sync passati).  
-- **Hash:** (vedi output git log sotto).  
+- **Hash:** c61baf64e  
 - **Messaggio:** feat(pulse): global fullscreen PE reward overlay with cinematic pulse animation  
 
 ---

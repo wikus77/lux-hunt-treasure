@@ -9,13 +9,18 @@ interface M1UShopFlipOverlayProps {
   originRect: DOMRect | null;
   onClose: () => void;
   children: React.ReactNode;
+  /** Optional portal id; default 'm1-m1ushop-portal'. Use a different id (e.g. 'm1-pulsebreaker-portal') when reusing this overlay for another modal to avoid overwriting the M1U portal. */
+  portalId?: string;
 }
+
+const DEFAULT_M1U_PORTAL_ID = 'm1-m1ushop-portal';
 
 export const M1UShopFlipOverlay: React.FC<M1UShopFlipOverlayProps> = ({
   open,
   originRect,
   onClose,
-  children
+  children,
+  portalId = DEFAULT_M1U_PORTAL_ID,
 }) => {
   const [isClosing, setIsClosing] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
@@ -30,15 +35,15 @@ export const M1UShopFlipOverlay: React.FC<M1UShopFlipOverlayProps> = ({
 
   // Create portal
   useEffect(() => {
-    let container = document.getElementById('m1-m1ushop-portal');
+    let container = document.getElementById(portalId);
     if (!container) {
       container = document.createElement('div');
-      container.id = 'm1-m1ushop-portal';
+      container.id = portalId;
       container.style.cssText = 'position:fixed;inset:0;z-index:999999;pointer-events:none;';
       document.body.appendChild(container);
     }
     setPortalContainer(container);
-  }, []);
+  }, [portalId]);
 
   // Lock scroll
   useEffect(() => {

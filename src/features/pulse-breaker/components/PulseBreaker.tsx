@@ -10,16 +10,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Zap, TrendingUp, AlertTriangle, Coins, Info } from 'lucide-react';
 import { usePulseBreaker, BetCurrency } from '../hooks/usePulseBreaker';
 import { useAwardPE } from '../../pulse/hooks/useAwardPE';
+import { isCapacitorNative } from '@/utils/capacitor';
+import { useTranslation } from 'react-i18next';
 import './PulseBreaker.css';
 
 interface PulseBreakerProps {
   isOpen: boolean;
   onClose: () => void;
+  /** When true, render only inner content (no overlay). Used when wrapped by M1UShopFlipOverlay for same fullscreen behavior as "+ M1U" modal. */
+  renderAsContentOnly?: boolean;
 }
 
 const BET_PRESETS = [5, 10, 25, 50, 100];
 
-export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose }) => {
+export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, renderAsContentOnly = false }) => {
   const {
     gameState,
     isLoading,
@@ -30,9 +34,11 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose }) =
     refreshBalance,
     crashHistory,
   } = usePulseBreaker();
+  const { t } = useTranslation();
 
+  const isNativePEOnly = isCapacitorNative();
   const [betAmount, setBetAmount] = useState(10);
-  const [betCurrency, setBetCurrency] = useState<BetCurrency>('M1U');
+  const [betCurrency, setBetCurrency] = useState<BetCurrency>(() => (isNativePEOnly ? 'PE' : 'M1U'));
   const [showCrashEffect, setShowCrashEffect] = useState(false);
   const [showWinCelebration, setShowWinCelebration] = useState(false);
   const [currentSpeedZone, setCurrentSpeedZone] = useState<'normal' | 'fast' | 'supersonic' | 'warp'>('normal');
@@ -488,11 +494,236 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose }) =
     refreshBalance();
   }, [betCurrency, refreshBalance]);
 
+  // Native: lock to PE-only (no M1U)
+  useEffect(() => {
+    if (isNativePEOnly && betCurrency === 'M1U') setBetCurrency('PE');
+  }, [isNativePEOnly, betCurrency]);
+
   useEffect(() => {
     if (isOpen) {
       refreshBalance();
     }
   }, [isOpen, refreshBalance]);
+
+  /* Body scroll lock while Pulse Breaker is open (same pattern as GlassModal). Skip when renderAsContentOnly: parent M1UShopFlipOverlay does it. */
+  useEffect(() => {
+    if (!isOpen || renderAsContentOnly) return;
+    const origOverflow = document.body.style.overflow;
+    const origTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    document.body.classList.add('m1-modal-open');
+    return () => {
+      document.body.style.overflow = origOverflow;
+      document.body.style.touchAction = origTouchAction;
+      document.body.classList.remove('m1-modal-open');
+    };
+  }, [isOpen, renderAsContentOnly]);
+
+  /* When renderAsContentOnly: STESSO layout del modale IMPOSTAZIONI = header (m1-folder-glass--graphite) + body scrollabile a tutta pagina. */
+  if (renderAsContentOnly) {
+    const shellStyle: React.CSSProperties = { height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent', overflow: 'hidden' };
+    const bodyStyle: React.CSSProperties = {
+      flex: 1,
+      overflowY: 'auto',
+      padding: 16,
+      paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)',
+      WebkitOverflowScrolling: 'touch',
+    };
+    return (
+      <>
+        <AnimatePresence>
+          {showCrashEffect && (
+            <motion.div className="pb-crash-flash" initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 0.5, 1, 0] }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }} />
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {showWinCelebration && (
+            <motion.div
+              className="pb-win-celebration"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.8, 0.4, 0.6, 0] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5 }}
+              style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'radial-gradient(circle at center, rgba(0, 255, 136, 0.3), rgba(0, 231, 255, 0.2), transparent)', pointerEvents: 'none' }}
+            />
+          )}
+        </AnimatePresence>
+        <div style={shellStyle} className="settings-modal">
+          {/* HEADER — identico al modale Impostazioni: m1-folder-glass--graphite + X + titolo + spacer + sottotitolo */}
+          <div
+            className="m1-folder-glass--graphite"
+            style={{ flexShrink: 0, width: '100%', position: 'relative', padding: 0, borderRadius: '24px 24px 0 0', overflow: 'hidden' }}
+          >
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="m1-panel relative"
+              style={{
+                paddingTop: 'calc(env(safe-area-inset-top, 47px) + 12px)',
+                paddingBottom: '20px',
+                paddingLeft: 16,
+                paddingRight: 16,
+                borderRadius: '16px 16px 0 0',
+              }}
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90 rounded-t-2xl" />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); if (gameState.status !== 'running') { resetGame(); onClose(); } }}
+                  disabled={gameState.status === 'running'}
+                  style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                  type="button"
+                >
+                  <X style={{ width: 20, height: 20, color: '#FFFFFF' }} />
+                </button>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <h1 style={{ color: '#FFFFFF', fontSize: '18px', fontWeight: 700, letterSpacing: '1px', margin: 0 }}>
+                    PULSE BREAKER
+                  </h1>
+                </div>
+                <div style={{ width: 40 }} />
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', textAlign: 'center', margin: 0 }}>
+                Simulation game – entertainment only
+              </p>
+            </motion.div>
+          </div>
+          {/* CONTENT — come Impostazioni: flex 1, overflowY auto, padding + safe-area bottom */}
+          <div style={bodyStyle}>
+            <div className="pb-container pb-container--fullscreen">
+              <>
+                  <div className="pb-header-section">
+                    <div className="pb-logo">
+                      <Zap className="pb-logo-icon" />
+                      <span className="pb-logo-text">PULSE BREAKER</span>
+                    </div>
+                    {!isNativePEOnly && (
+                      <div className="pb-balance-pill">
+                        <Coins className="pb-pill-icon" />
+                        <span className="pb-pill-value">{Math.floor(userBalance.m1u)}</span>
+                        <span className="pb-pill-label">M1U</span>
+                      </div>
+                    )}
+                    <div className="pb-balance-pill">
+                      <Zap className="pb-pill-icon" />
+                      <span className="pb-pill-value">{Math.floor(userBalance.pe)}</span>
+                      <span className="pb-pill-label">PE</span>
+                    </div>
+                  </div>
+                  <div className={`pb-game-area ${gameState.status === 'crashed' ? 'crashed' : ''}`}>
+                    <canvas ref={canvasRef} className="pb-canvas" />
+                    {gameState.status === 'running' && (
+                      <div className={`pb-speed-indicator ${currentSpeedZone}`}>
+                        {currentSpeedZone === 'normal' && '● NORMAL'}
+                        {currentSpeedZone === 'fast' && '●● FAST'}
+                        {currentSpeedZone === 'supersonic' && '●●● SONIC'}
+                        {currentSpeedZone === 'warp' && '◆ WARP'}
+                      </div>
+                    )}
+                    {sonicBoomEffect !== 'none' && <div className={`pb-sonic-boom ${sonicBoomEffect}`} />}
+                    <div className={`pb-multiplier-display ${gameState.status}`}>
+                      {gameState.status === 'crashed' ? (
+                        <motion.div className="pb-crashed-display" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300 }}>
+                          <span className="pb-crash-text">CRASH!</span>
+                          <span className="pb-crash-mult">{gameState.crashPoint?.toFixed(2)}×</span>
+                        </motion.div>
+                      ) : gameState.status === 'cashed_out' ? (
+                        <motion.div className="pb-win-display" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                          <span className="pb-win-text">ESTRATTO!</span>
+                          <span className="pb-win-mult">{gameState.cashoutMultiplier?.toFixed(2)}×</span>
+                          <span className="pb-win-amount">+{Math.floor(gameState.payout || 0)} {gameState.betCurrency}</span>
+                        </motion.div>
+                      ) : (
+                        <motion.span className="pb-live-mult" key={gameState.currentMultiplier} initial={{ scale: 1.1 }} animate={{ scale: 1 }}>
+                          {gameState.currentMultiplier.toFixed(2)}×
+                        </motion.span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="pb-controls-section">
+                    {gameState.status === 'idle' && (
+                      <motion.div className="pb-idle-controls" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                        {crashHistory.length > 0 && (
+                          <div className="pb-crash-history">
+                            <span className="pb-history-label">Ultimi crash:</span>
+                            <div className="pb-history-pills">
+                              {crashHistory.slice(-6).map((crash, i) => (
+                                <span key={i} className={`pb-history-pill ${crash >= 2 ? 'high' : crash >= 1.5 ? 'mid' : 'low'}`}>{crash.toFixed(2)}×</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {!isNativePEOnly && (
+                          <div className="pb-currency-selector">
+                            <button className={`pb-curr-btn ${betCurrency === 'M1U' ? 'active' : ''}`} onClick={() => setBetCurrency('M1U')}><Coins size={16} /> M1U</button>
+                            <button className={`pb-curr-btn ${betCurrency === 'PE' ? 'active' : ''}`} onClick={() => setBetCurrency('PE')}><Zap size={16} /> PE</button>
+                          </div>
+                        )}
+                        <div className="pb-bet-presets">
+                          {BET_PRESETS.map(preset => (
+                            <button key={preset} className={`pb-preset ${betAmount === preset ? 'active' : ''}`} onClick={() => setBetAmount(preset)} disabled={preset > balance}>{preset}</button>
+                          ))}
+                        </div>
+                        <div className="pb-bet-input-wrapper">
+                          <input type="number" className="pb-bet-input" value={betAmount} onChange={(e) => setBetAmount(Math.max(1, Math.min(Number(e.target.value), Math.min(balance, 1000))))} min={1} max={Math.min(balance, 1000)} />
+                          <span className="pb-input-currency">{betCurrency}</span>
+                        </div>
+                        <motion.button className="pb-start-btn" onClick={handleStart} disabled={isLoading || betAmount < 1 || betAmount > balance} whileTap={{ scale: 0.97 }}><Zap size={22} /> START</motion.button>
+                      </motion.div>
+                    )}
+                    {gameState.status === 'running' && (
+                      <motion.div className="pb-running-controls" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                        <div className="pb-potential-win">Vincita: <strong>{Math.floor(betAmount * gameState.currentMultiplier)} {betCurrency}</strong></div>
+                        <motion.button className="pb-extract-btn" onClick={cashout} disabled={isLoading} whileTap={{ scale: 0.95 }} animate={{ boxShadow: ['0 0 20px rgba(0, 255, 136, 0.4)', '0 0 40px rgba(0, 255, 136, 0.7)', '0 0 20px rgba(0, 255, 136, 0.4)'] }} transition={{ duration: 0.6, repeat: Infinity }}><TrendingUp size={24} /> ESTRAI {Math.floor(betAmount * gameState.currentMultiplier)}</motion.button>
+                        <div className="pb-warning-text"><AlertTriangle size={14} /> Estrai prima del CRASH!</div>
+                      </motion.div>
+                    )}
+                    {(gameState.status === 'crashed' || gameState.status === 'cashed_out') && (
+                      <motion.div className="pb-result-controls" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                        {gameState.status === 'cashed_out' && (
+                          <>
+                            <div className="pb-win-banner">🎉 Hai ottenuto <strong>{Math.floor(gameState.payout || 0)} {gameState.betCurrency}</strong>!</div>
+                            {gameState.nearMissMultiplier && <motion.div className="pb-near-miss" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }}>😱 Il crash era a <strong>{gameState.crashPoint?.toFixed(2)}×</strong>! Potevi vincere <strong>{Math.floor(gameState.potentialWinAtCrash || 0)}</strong>!</motion.div>}
+                          </>
+                        )}
+                        {gameState.status === 'crashed' && <div className="pb-lose-banner">💥 Crash a {gameState.crashPoint?.toFixed(2)}× — Perso {gameState.betAmount} {gameState.betCurrency}</div>}
+                        <motion.button className="pb-replay-btn" onClick={resetGame} whileTap={{ scale: 0.95 }}>🔄 GIOCA ANCORA</motion.button>
+                      </motion.div>
+                    )}
+                    {gameState.error && <div className="pb-error-msg">⚠️ {gameState.error}</div>}
+                  </div>
+                  <div className="pb-disclaimer-footer">
+                    <span className="pb-disclaimer-text">⚡ ENTERTAINMENT ONLY – No real money, no cash prizes, no withdrawals.</span>
+                    <button className="pb-disclaimer-info-btn" onClick={() => setShowDisclaimer(true)} aria-label="More info about game disclaimer"><Info size={14} /></button>
+                  </div>
+              </>
+            </div>
+          </div>
+        </div>
+        <AnimatePresence>
+          {showDisclaimer && (
+            <motion.div className="pb-disclaimer-modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDisclaimer(false)}>
+              <motion.div className="pb-disclaimer-modal" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
+                <button className="pb-disclaimer-close" onClick={() => setShowDisclaimer(false)}><X size={18} /></button>
+                <h3 className="pb-disclaimer-title">🎮 PULSE BREAKER — SIMULATION GAME</h3>
+                <div className="pb-disclaimer-content">
+                  <p className="pb-disclaimer-intro">This game is provided for <strong>ENTERTAINMENT PURPOSES ONLY</strong>.</p>
+                  <div className="pb-disclaimer-section"><h4>❌ NO GAMBLING</h4><p>This is NOT a gambling application. No real money is wagered, won, or lost.</p></div>
+                  <div className="pb-disclaimer-section"><h4>❌ NO REAL-MONEY REWARDS</h4><p>{isNativePEOnly ? t('pulseBreaker.disclaimerPeOnly') : 'All currencies (M1U, PE) are virtual, in-app currencies with no monetary value.'}</p></div>
+                  <div className="pb-disclaimer-section"><h4>❌ NO CASH-OUT / WITHDRAWALS</h4><p>Virtual currencies cannot be exchanged or withdrawn for real money.</p></div>
+                  <div className="pb-disclaimer-section"><h4>✔️ ENTERTAINMENT ONLY</h4><p>This simulation is designed for fun within the M1SSION™ experience.</p></div>
+                  <div className="pb-disclaimer-section"><h4>⚠️ RESPONSIBLE PLAY</h4><p>Not intended to encourage repetitive paid play or simulate gambling behavior.</p></div>
+                </div>
+                <p className="pb-disclaimer-legal">By playing, you acknowledge this is a simulation game with no real-world monetary implications.</p>
+                <p className="pb-disclaimer-copyright">© 2025 NIYVORA KFT – M1SSION™</p>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </>
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -572,11 +803,18 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose }) =
               <span className="pb-logo-text">PULSE BREAKER</span>
             </div>
             
-            {/* M1U Pill */}
+            {/* Balance: on native PE-only, show only PE pill */}
+            {!isNativePEOnly && (
+              <div className="pb-balance-pill">
+                <Coins className="pb-pill-icon" />
+                <span className="pb-pill-value">{Math.floor(userBalance.m1u)}</span>
+                <span className="pb-pill-label">M1U</span>
+              </div>
+            )}
             <div className="pb-balance-pill">
-              <Coins className="pb-pill-icon" />
-              <span className="pb-pill-value">{Math.floor(userBalance.m1u)}</span>
-              <span className="pb-pill-label">M1U</span>
+              <Zap className="pb-pill-icon" />
+              <span className="pb-pill-value">{Math.floor(userBalance.pe)}</span>
+              <span className="pb-pill-label">PE</span>
             </div>
           </div>
 
@@ -659,23 +897,25 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose }) =
                   </div>
                 )}
                 
-                {/* Currency */}
-                <div className="pb-currency-selector">
-                  <button
-                    className={`pb-curr-btn ${betCurrency === 'M1U' ? 'active' : ''}`}
-                    onClick={() => setBetCurrency('M1U')}
-                  >
-                    <Coins size={16} />
-                    M1U
-                  </button>
-                  <button
-                    className={`pb-curr-btn ${betCurrency === 'PE' ? 'active' : ''}`}
-                    onClick={() => setBetCurrency('PE')}
-                  >
-                    <Zap size={16} />
-                    PE
-                  </button>
-                </div>
+                {/* Currency: on native PE-only, no selector (only PE) */}
+                {!isNativePEOnly && (
+                  <div className="pb-currency-selector">
+                    <button
+                      className={`pb-curr-btn ${betCurrency === 'M1U' ? 'active' : ''}`}
+                      onClick={() => setBetCurrency('M1U')}
+                    >
+                      <Coins size={16} />
+                      M1U
+                    </button>
+                    <button
+                      className={`pb-curr-btn ${betCurrency === 'PE' ? 'active' : ''}`}
+                      onClick={() => setBetCurrency('PE')}
+                    >
+                      <Zap size={16} />
+                      PE
+                    </button>
+                  </div>
+                )}
 
                 {/* Presets */}
                 <div className="pb-bet-presets">
@@ -852,7 +1092,7 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose }) =
                   
                   <div className="pb-disclaimer-section">
                     <h4>❌ NO REAL-MONEY REWARDS</h4>
-                    <p>All currencies (M1U, PE) are virtual, in-app currencies with no monetary value.</p>
+                    <p>{isNativePEOnly ? t('pulseBreaker.disclaimerPeOnly') : 'All currencies (M1U, PE) are virtual, in-app currencies with no monetary value.'}</p>
                   </div>
                   
                   <div className="pb-disclaimer-section">

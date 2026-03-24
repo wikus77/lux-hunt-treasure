@@ -358,7 +358,6 @@ const SettingsPage: React.FC = () => {
                     <SelectItem value="it">Italiano</SelectItem>
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="de">Deutsch</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
