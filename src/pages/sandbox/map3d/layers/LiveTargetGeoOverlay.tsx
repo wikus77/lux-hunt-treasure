@@ -37,6 +37,16 @@ import {
 } from './liveTargetPhase3CaptureConfig';
 import './LiveTargetGeoOverlay.css';
 
+const FORCE_IN_RANGE =
+  typeof window !== 'undefined' &&
+  (() => {
+    try {
+      return localStorage.getItem('m1_live_target_force_range') === 'true';
+    } catch {
+      return false;
+    }
+  })();
+
 let liveTarget20ModuleLogged = false;
 
 export interface LiveTargetGeoOverlayProps {
@@ -55,6 +65,7 @@ export default function LiveTargetGeoOverlay({
   const [isOpen, setIsOpen] = useState(false);
   const [captured, setCaptured] = useState(false);
   const [inRange, setInRange] = useState(false);
+  const effectiveInRange = FORCE_IN_RANGE || inRange;
   const [tutorialDismissed, setTutorialDismissed] = useState(false);
   const [capturedFeedback, setCapturedFeedback] = useState(false);
   const movementRafRef = useRef(0);
@@ -121,13 +132,13 @@ export default function LiveTargetGeoOverlay({
   }, [enabled, captured, userPosition]);
 
   const handleCapture = useCallback(() => {
-    if (!inRange || captured) return;
+    if (!effectiveInRange || captured) return;
     orbitPausedRef.current = true;
     setCaptured(true);
     setIsOpen(false);
     setTutorialDismissed(true);
     setCapturedFeedback(true);
-  }, [inRange, captured]);
+  }, [effectiveInRange, captured]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || liveTarget20ModuleLogged) return;
@@ -409,11 +420,11 @@ export default function LiveTargetGeoOverlay({
         <div className="item-hints" data-lt-geo-overlay="1">
           <div
             data-lt-hint-root="1"
-            className={`hint ${isOpen ? 'hint--open' : ''}${inRange && !captured ? ' hint--in-range' : ''}${captured ? ' hint--captured' : ''}`}
+            className={`hint ${isOpen ? 'hint--open' : ''}${effectiveInRange && !captured ? ' hint--in-range' : ''}${captured ? ' hint--captured' : ''}`}
             data-position="4"
           >
             <span className="hint-radius" aria-hidden />
-            {inRange && !captured && (
+            {effectiveInRange && !captured && (
               <span className="lt-phase3-in-range-badge">{t('liveTarget.in_range_badge')}</span>
             )}
             <button
@@ -465,7 +476,7 @@ export default function LiveTargetGeoOverlay({
         </div>
       )}
 
-      {inRange && !captured && (
+      {effectiveInRange && !captured && (
         <div className="lt-phase3-capture-wrap">
           <button
             type="button"

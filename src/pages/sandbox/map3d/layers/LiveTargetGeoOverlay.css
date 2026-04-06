@@ -197,10 +197,10 @@
 }
 
 .live-target-geo-overlay-debug-badge {
-  position: absolute;
+  position: fixed;
   left: 8px;
   bottom: max(100px, calc(env(safe-area-inset-bottom, 34px) + 72px));
-  z-index: 61;
+  z-index: 10001;
   pointer-events: none;
   padding: 2px 7px;
   font: 700 8px/1.2 system-ui, sans-serif;
@@ -214,9 +214,40 @@
 
 /* —— Phase 3: in-range / captured (target shell unchanged) —— */
 .live-target-geo-overlay-root .item-hints .hint--in-range .hint-dot {
-  box-shadow:
-    0 0 0 2px rgba(0, 255, 200, 0.55),
-    0 0 18px rgba(0, 255, 200, 0.35);
+  border-color: #00ffc3;
+  box-shadow: 0 0 18px rgba(0, 255, 195, 0.8);
+  -webkit-animation: ltPulse 1.2s infinite;
+  animation: ltPulse 1.2s infinite;
+}
+
+@-webkit-keyframes ltPulse {
+  0% {
+    -webkit-transform: translate(0, 0) scale(1);
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    -webkit-transform: translate(0, 0) scale(1.12);
+    transform: translate(0, 0) scale(1.12);
+  }
+  100% {
+    -webkit-transform: translate(0, 0) scale(1);
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes ltPulse {
+  0% {
+    -webkit-transform: translate(0, 0) scale(1);
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    -webkit-transform: translate(0, 0) scale(1.12);
+    transform: translate(0, 0) scale(1.12);
+  }
+  100% {
+    -webkit-transform: translate(0, 0) scale(1);
+    transform: translate(0, 0) scale(1);
+  }
 }
 
 .live-target-geo-overlay-root .item-hints .hint--in-range .hint-radius {
@@ -265,21 +296,23 @@
 }
 
 .lt-phase3-tutorial {
-  position: absolute;
+  position: fixed;
   left: 50%;
-  bottom: max(196px, calc(env(safe-area-inset-bottom, 34px) + 152px));
   transform: translateX(-50%);
-  z-index: 62;
+  bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+  z-index: 9999;
+  width: calc(100% - 40px);
+  max-width: 420px;
+  background: rgba(10, 15, 25, 0.85);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   pointer-events: auto;
-  max-width: min(340px, calc(100vw - 28px));
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(6, 10, 22, 0.88);
-  border: 1px solid rgba(0, 255, 200, 0.22);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.38);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   align-items: stretch;
   box-sizing: border-box;
 }
@@ -307,39 +340,49 @@
 }
 
 .lt-phase3-capture-wrap {
-  position: absolute;
+  position: fixed;
   left: 50%;
-  bottom: max(112px, calc(env(safe-area-inset-bottom, 34px) + 76px));
   transform: translateX(-50%);
-  z-index: 63;
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  z-index: 9998;
+  width: calc(100% - 40px);
+  max-width: 420px;
   pointer-events: auto;
+  box-sizing: border-box;
 }
 
 .lt-phase3-capture-btn {
-  min-height: 48px;
-  min-width: 168px;
-  padding: 0 26px;
+  margin-top: 12px;
+  width: 100%;
+  min-height: 0;
+  background: linear-gradient(135deg, #00ffc3, #00aaff);
+  color: #001018;
   border-radius: 12px;
+  padding: 14px;
   border: none;
-  font: 700 15px/1 system-ui, sans-serif;
-  color: #021210;
-  background: linear-gradient(180deg, #5fffd0 0%, #2ec9a0 100%);
-  box-shadow: 0 4px 18px rgba(0, 200, 160, 0.38);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+  font-family: system-ui, sans-serif;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0, 255, 195, 0.4);
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
 }
 
 .lt-phase3-capture-btn:active {
-  transform: scale(0.98);
+  opacity: 0.92;
+  transform: scale(0.99);
 }
 
 .lt-phase3-captured-toast {
-  position: absolute;
+  position: fixed;
   left: 50%;
   top: 42%;
   transform: translate(-50%, -50%);
-  z-index: 64;
+  z-index: 10000;
   pointer-events: none;
   max-width: min(280px, calc(100vw - 40px));
   padding: 11px 18px;

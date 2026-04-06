@@ -1,5 +1,8 @@
 /**
  * LIVE TARGET™ Phase 3 — capture tutorial base (constants only).
+ *
+ * QA (no GPS): `localStorage.setItem('m1_live_target_force_range','true')` then reload the app
+ * (flag is read once at module load in LiveTargetGeoOverlay).
  */
 
 /** Max distance (meters) from user to target geo position to allow capture. */
