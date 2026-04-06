@@ -1,0 +1,213 @@
+/**
+ * LIVE TARGET™ Phase 2.1 — reference item-hints / hint; position via map.project + render sync.
+ * Scoped under .live-target-geo-overlay-root — no collision with home PillHint `.item-hints`.
+ *
+ * Geo note: reference `margin: 150px auto` / page flow omitted — anchor is map.project pixel.
+ */
+
+.live-target-geo-overlay-root {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.lt-geo-anchor {
+  pointer-events: none;
+}
+
+/* Reference used padding-right + flex-start for page layout; geo anchor = dot center → tight box */
+.live-target-geo-overlay-root .item-hints {
+  --purple: #720c8f;
+  cursor: default;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 250px;
+  height: 250px;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.live-target-geo-overlay-root .item-hints .hint {
+  margin: 0;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 250px;
+  height: 250px;
+  min-width: 250px;
+  min-height: 250px;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.live-target-geo-overlay-root .item-hints .hint-dot {
+  z-index: 3;
+  border: 1px solid #ffe4e4;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  -webkit-transform: translate(0, 0) scale(0.95);
+  transform: translate(0, 0) scale(0.95);
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font: 600 13px/1 system-ui, sans-serif;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
+.live-target-geo-overlay-root .item-hints .hint-dot:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+/* Reference: radius hidden until hover — mobile: .hint--open */
+.live-target-geo-overlay-root .item-hints .hint-radius {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 250px;
+  height: 250px;
+  margin: -125px 0 0 -125px;
+  opacity: 0;
+  visibility: hidden;
+  -webkit-transform: scale(0);
+  transform: scale(0);
+  pointer-events: none;
+  z-index: 1;
+  transition:
+    opacity 0.45s ease,
+    visibility 0.45s ease,
+    transform 0.45s ease;
+}
+
+.live-target-geo-overlay-root .item-hints .hint--open .hint-radius {
+  opacity: 1;
+  visibility: visible;
+  -webkit-transform: scale(1);
+  transform: scale(1);
+}
+
+.live-target-geo-overlay-root .item-hints .hint[data-position='4'] .hint-content {
+  bottom: 85px;
+  left: 50%;
+  margin-left: 56px;
+}
+
+.live-target-geo-overlay-root .item-hints .hint-content {
+  width: 300px;
+  max-width: min(300px, calc(100vw - 32px));
+  position: absolute;
+  z-index: 5;
+  padding: 35px 0;
+  opacity: 0;
+  -webkit-transition:
+    opacity 0.7s ease,
+    visibility 0.7s ease;
+  transition:
+    opacity 0.7s ease,
+    visibility 0.7s ease;
+  color: #fff;
+  visibility: hidden;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.live-target-geo-overlay-root .item-hints .hint--open .hint-content {
+  position: absolute;
+  z-index: 5;
+  padding: 35px 0;
+  opacity: 1;
+  -webkit-transition:
+    opacity 0.7s ease,
+    visibility 0.7s ease;
+  transition:
+    opacity 0.7s ease,
+    visibility 0.7s ease;
+  color: #fff;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.live-target-geo-overlay-root .item-hints .hint-content p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  -webkit-font-smoothing: antialiased;
+}
+
+.live-target-geo-overlay-root .item-hints .hint-content::before {
+  width: 0;
+  bottom: 29px;
+  left: 0;
+  content: '';
+  background-color: #fff;
+  height: 1px;
+  position: absolute;
+  -webkit-transition: width 0.4s;
+  transition: width 0.4s;
+}
+
+.live-target-geo-overlay-root .item-hints .hint--open .hint-content::before {
+  width: 180px;
+  -webkit-transition: width 0.4s;
+  transition: width 0.4s;
+}
+
+.live-target-geo-overlay-root .item-hints .hint-content::after {
+  -webkit-transform-origin: 0 50%;
+  transform-origin: 0 50%;
+  -webkit-transform: rotate(-225deg);
+  transform: rotate(-225deg);
+  bottom: 29px;
+  left: 0;
+  width: 80px;
+  content: '';
+  background-color: #fff;
+  height: 1px;
+  position: absolute;
+  opacity: 1;
+  -webkit-transition: opacity 0.5s ease;
+  transition: opacity 0.5s ease;
+  -webkit-transition-delay: 0s;
+  transition-delay: 0s;
+}
+
+.live-target-geo-overlay-root .item-hints .hint--open .hint-content::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+.live-target-geo-overlay-debug-badge {
+  position: absolute;
+  left: 8px;
+  bottom: max(100px, calc(env(safe-area-inset-bottom, 34px) + 72px));
+  z-index: 61;
+  pointer-events: none;
+  padding: 2px 7px;
+  font: 700 8px/1.2 system-ui, sans-serif;
+  letter-spacing: 0.05em;
+  color: #dfffea;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 255, 200, 0.3);
+  border-radius: 4px;
+  opacity: 0.88;
+}
