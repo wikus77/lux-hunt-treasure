@@ -1741,7 +1741,7 @@
   "daily_neuromatch.restart": "Try again",
   "daily_neuromatch.moves": "Moves {{count}}",
   "daily_neuromatch.mismatches": "Mismatches {{count}}",
-  "liveTarget.tutorial_hint": "Move close to the target on the map. When you are in range, tap Capture.",
+  "liveTarget.tutorial_hint": "Move close to the moving target. When you see you are in range, tap the Target on the map to capture it.",
   "liveTarget.tutorial_need_location": "Enable location to know when you are in capture range.",
   "liveTarget.in_range_badge": "IN RANGE",
   "liveTarget.capture_cta": "Capture",

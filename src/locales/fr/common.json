@@ -1701,7 +1701,7 @@
   "daily_neuromatch.restart": "Réessayer",
   "daily_neuromatch.moves": "Coups {{count}}",
   "daily_neuromatch.mismatches": "Erreurs {{count}}",
-  "liveTarget.tutorial_hint": "Rapprochez-vous de la cible sur la carte. À portée, touchez Capturer.",
+  "liveTarget.tutorial_hint": "Rapprochez-vous de la cible en mouvement. Quand vous êtes à portée, touchez la cible sur la carte pour la capturer.",
   "liveTarget.tutorial_need_location": "Activez la localisation pour savoir quand vous êtes à portée.",
   "liveTarget.in_range_badge": "À PORTÉE",
   "liveTarget.capture_cta": "Capturer",

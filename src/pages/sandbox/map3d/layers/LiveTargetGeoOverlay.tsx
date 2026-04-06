@@ -1,10 +1,11 @@
 /**
- * LIVE TARGET™ Phase 3 — Phase 2.1 base + capture radius, tutorial chrome, in-range + Capture CTA, pause orbit when captured.
+ * LIVE TARGET™ Phase 3.1 — direct tap on target to capture when in range; no external Capture CTA.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Map as MLMap } from 'maplibre-gl';
+import { isHapticsAvailable, hapticSelection, hapticSuccess } from '@/utils/haptics';
 import { LIVE_TARGET_ENABLED as FEATURE_FLAG_LIVE_TARGET } from '@/config/featureFlags';
 import {
   effectiveVisualDebug,
@@ -37,16 +38,6 @@ import {
 } from './liveTargetPhase3CaptureConfig';
 import './LiveTargetGeoOverlay.css';
 
-const FORCE_IN_RANGE =
-  typeof window !== 'undefined' &&
-  (() => {
-    try {
-      return localStorage.getItem('m1_live_target_force_range') === 'true';
-    } catch {
-      return false;
-    }
-  })();
-
 let liveTarget20ModuleLogged = false;
 
 export interface LiveTargetGeoOverlayProps {
@@ -65,7 +56,6 @@ export default function LiveTargetGeoOverlay({
   const [isOpen, setIsOpen] = useState(false);
   const [captured, setCaptured] = useState(false);
   const [inRange, setInRange] = useState(false);
-  const effectiveInRange = FORCE_IN_RANGE || inRange;
   const [tutorialDismissed, setTutorialDismissed] = useState(false);
   const [capturedFeedback, setCapturedFeedback] = useState(false);
   const movementRafRef = useRef(0);
@@ -132,13 +122,32 @@ export default function LiveTargetGeoOverlay({
   }, [enabled, captured, userPosition]);
 
   const handleCapture = useCallback(() => {
-    if (!effectiveInRange || captured) return;
+    if (!inRange || captured) return;
     orbitPausedRef.current = true;
     setCaptured(true);
     setIsOpen(false);
     setTutorialDismissed(true);
     setCapturedFeedback(true);
-  }, [effectiveInRange, captured]);
+  }, [inRange, captured]);
+
+  const onHintDotClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      if (captured) return;
+      if (inRange) {
+        if (isHapticsAvailable()) hapticSuccess();
+        handleCapture();
+        return;
+      }
+      if (isHapticsAvailable()) hapticSelection();
+      setIsOpen((o) => !o);
+    },
+    [captured, inRange, handleCapture]
+  );
+
+  const onHintDotPointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined' || liveTarget20ModuleLogged) return;
@@ -420,11 +429,11 @@ export default function LiveTargetGeoOverlay({
         <div className="item-hints" data-lt-geo-overlay="1">
           <div
             data-lt-hint-root="1"
-            className={`hint ${isOpen ? 'hint--open' : ''}${effectiveInRange && !captured ? ' hint--in-range' : ''}${captured ? ' hint--captured' : ''}`}
+            className={`hint ${isOpen ? 'hint--open' : ''}${inRange && !captured ? ' hint--in-range' : ''}${captured ? ' hint--captured' : ''}`}
             data-position="4"
           >
             <span className="hint-radius" aria-hidden />
-            {effectiveInRange && !captured && (
+            {inRange && !captured && (
               <span className="lt-phase3-in-range-badge">{t('liveTarget.in_range_badge')}</span>
             )}
             <button
@@ -432,17 +441,8 @@ export default function LiveTargetGeoOverlay({
               className="hint-dot"
               aria-label={t('liveTarget.dot_label')}
               aria-expanded={isOpen}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsOpen((o) => {
-                  const next = !o;
-                  console.warn(next ? '[LiveTarget][2.0][open]' : '[LiveTarget][2.0][close]', {
-                    reason: 'dot',
-                  });
-                  return next;
-                });
-              }}
+              onPointerDown={onHintDotPointerDown}
+              onClick={onHintDotClick}
             >
               {t('liveTarget.dot_label')}
             </button>
@@ -476,22 +476,6 @@ export default function LiveTargetGeoOverlay({
         </div>
       )}
 
-      {effectiveInRange && !captured && (
-        <div className="lt-phase3-capture-wrap">
-          <button
-            type="button"
-            className="lt-phase3-capture-btn"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCapture();
-            }}
-          >
-            {t('liveTarget.capture_cta')}
-          </button>
-        </div>
-      )}
-
       {capturedFeedback && (
         <div className="lt-phase3-captured-toast" role="status" aria-live="polite">
           {t('liveTarget.captured_feedback')}
@@ -500,7 +484,7 @@ export default function LiveTargetGeoOverlay({
 
       {effectiveVisualDebug() && (
         <div className="live-target-geo-overlay-debug-badge" aria-hidden>
-          LT 3.0
+          LT 3.1
         </div>
       )}
     </div>

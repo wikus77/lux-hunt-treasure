@@ -1742,7 +1742,7 @@
   "daily_neuromatch.restart": "Riprova",
   "daily_neuromatch.moves": "Mosse {{count}}",
   "daily_neuromatch.mismatches": "Errori {{count}}",
-  "liveTarget.tutorial_hint": "Avvicinati al target sulla mappa. Quando sei nel raggio, tocca Cattura.",
+  "liveTarget.tutorial_hint": "Avvicinati al target in movimento. Quando sei in zona, tocca il cerchio Target sulla mappa per catturarlo.",
   "liveTarget.tutorial_need_location": "Attiva la posizione per sapere quando sei nel raggio di cattura.",
   "liveTarget.in_range_badge": "IN ZONA",
   "liveTarget.capture_cta": "Cattura",

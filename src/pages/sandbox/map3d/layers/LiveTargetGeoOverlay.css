@@ -47,7 +47,8 @@
 }
 
 .live-target-geo-overlay-root .item-hints .hint-dot {
-  z-index: 3;
+  z-index: 12;
+  position: relative;
   border: 1px solid #ffe4e4;
   border-radius: 50%;
   width: 60px;
@@ -200,7 +201,7 @@
   position: fixed;
   left: 8px;
   bottom: max(100px, calc(env(safe-area-inset-bottom, 34px) + 72px));
-  z-index: 10001;
+  z-index: 21200;
   pointer-events: none;
   padding: 2px 7px;
   font: 700 8px/1.2 system-ui, sans-serif;
@@ -299,8 +300,9 @@
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(140px + env(safe-area-inset-bottom, 0px));
-  z-index: 9999;
+  /* Above BuzzMapButtonSecure / map chrome (z ~10000); clear bottom nav + FAB */
+  bottom: calc(272px + env(safe-area-inset-bottom, 0px));
+  z-index: 21000;
   width: calc(100% - 40px);
   max-width: 420px;
   background: rgba(10, 15, 25, 0.85);
@@ -339,50 +341,12 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.lt-phase3-capture-wrap {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-  z-index: 9998;
-  width: calc(100% - 40px);
-  max-width: 420px;
-  pointer-events: auto;
-  box-sizing: border-box;
-}
-
-.lt-phase3-capture-btn {
-  margin-top: 12px;
-  width: 100%;
-  min-height: 0;
-  background: linear-gradient(135deg, #00ffc3, #00aaff);
-  color: #001018;
-  border-radius: 12px;
-  padding: 14px;
-  border: none;
-  font-weight: 700;
-  font-size: 15px;
-  line-height: 1.2;
-  font-family: system-ui, sans-serif;
-  text-align: center;
-  box-shadow: 0 0 20px rgba(0, 255, 195, 0.4);
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  box-sizing: border-box;
-}
-
-.lt-phase3-capture-btn:active {
-  opacity: 0.92;
-  transform: scale(0.99);
-}
-
 .lt-phase3-captured-toast {
   position: fixed;
   left: 50%;
   top: 42%;
   transform: translate(-50%, -50%);
-  z-index: 10000;
+  z-index: 21100;
   pointer-events: none;
   max-width: min(280px, calc(100vw - 40px));
   padding: 11px 18px;
