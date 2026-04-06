@@ -1,5 +1,5 @@
 /**
- * LIVE TARGET™ Phase 2.1 — reference item-hints / hint; position via map.project + render sync.
+ * LIVE TARGET™ Phase 3 — reference item-hints / hint; map.project + render sync; Phase 3 capture chrome.
  * Scoped under .live-target-geo-overlay-root — no collision with home PillHint `.item-hints`.
  *
  * Geo note: reference `margin: 150px auto` / page flow omitted — anchor is map.project pixel.
@@ -210,4 +210,157 @@
   border: 1px solid rgba(0, 255, 200, 0.3);
   border-radius: 4px;
   opacity: 0.88;
+}
+
+/* —— Phase 3: in-range / captured (target shell unchanged) —— */
+.live-target-geo-overlay-root .item-hints .hint--in-range .hint-dot {
+  box-shadow:
+    0 0 0 2px rgba(0, 255, 200, 0.55),
+    0 0 18px rgba(0, 255, 200, 0.35);
+}
+
+.live-target-geo-overlay-root .item-hints .hint--in-range .hint-radius {
+  opacity: 0.42;
+  visibility: visible;
+  -webkit-transform: scale(1);
+  transform: scale(1);
+  animation: lt-phase3-pulse 1.85s ease-in-out infinite;
+}
+
+@keyframes lt-phase3-pulse {
+  0%,
+  100% {
+    opacity: 0.32;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.52;
+    -webkit-transform: scale(1.05);
+    transform: scale(1.05);
+  }
+}
+
+.live-target-geo-overlay-root .item-hints .hint--captured .hint-dot {
+  opacity: 0.78;
+  box-shadow: 0 0 0 1px rgba(46, 201, 160, 0.45);
+  background: rgba(0, 48, 40, 0.45);
+}
+
+.lt-phase3-in-range-badge {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  font: 700 8px/1 system-ui, sans-serif;
+  letter-spacing: 0.07em;
+  color: #031a14;
+  background: linear-gradient(135deg, #6effd8, #38d4a8);
+  padding: 3px 7px;
+  border-radius: 5px;
+  z-index: 6;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+}
+
+.lt-phase3-tutorial {
+  position: absolute;
+  left: 50%;
+  bottom: max(196px, calc(env(safe-area-inset-bottom, 34px) + 152px));
+  transform: translateX(-50%);
+  z-index: 62;
+  pointer-events: auto;
+  max-width: min(340px, calc(100vw - 28px));
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(6, 10, 22, 0.88);
+  border: 1px solid rgba(0, 255, 200, 0.22);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.38);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+.lt-phase3-tutorial__text {
+  margin: 0;
+  font: 600 13px/1.4 system-ui, sans-serif;
+  color: rgba(230, 255, 248, 0.95);
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+}
+
+.lt-phase3-tutorial__dismiss {
+  align-self: center;
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 200, 0.28);
+  background: rgba(0, 255, 200, 0.08);
+  color: #b8fff0;
+  font: 600 12px/1 system-ui, sans-serif;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lt-phase3-capture-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: max(112px, calc(env(safe-area-inset-bottom, 34px) + 76px));
+  transform: translateX(-50%);
+  z-index: 63;
+  pointer-events: auto;
+}
+
+.lt-phase3-capture-btn {
+  min-height: 48px;
+  min-width: 168px;
+  padding: 0 26px;
+  border-radius: 12px;
+  border: none;
+  font: 700 15px/1 system-ui, sans-serif;
+  color: #021210;
+  background: linear-gradient(180deg, #5fffd0 0%, #2ec9a0 100%);
+  box-shadow: 0 4px 18px rgba(0, 200, 160, 0.38);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lt-phase3-capture-btn:active {
+  transform: scale(0.98);
+}
+
+.lt-phase3-captured-toast {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  z-index: 64;
+  pointer-events: none;
+  max-width: min(280px, calc(100vw - 40px));
+  padding: 11px 18px;
+  border-radius: 10px;
+  background: rgba(0, 36, 30, 0.92);
+  border: 1px solid rgba(0, 255, 200, 0.38);
+  color: #dfffea;
+  font: 600 15px/1.35 system-ui, sans-serif;
+  text-align: center;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
+  animation: lt-phase3-toast-in 0.32s ease-out;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes lt-phase3-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }

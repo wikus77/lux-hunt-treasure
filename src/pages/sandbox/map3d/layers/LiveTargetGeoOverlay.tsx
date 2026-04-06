@@ -1,9 +1,9 @@
 /**
- * LIVE TARGET™ Phase 2.1 — geo overlay + orbit (rAF) + camera-locked reprojection (map 'render'/'resize'/'move').
- * Orbit advances only in rAF; screen position = map.project(engine lng/lat) after every map draw during gestures.
+ * LIVE TARGET™ Phase 3 — Phase 2.1 base + capture radius, tutorial chrome, in-range + Capture CTA, pause orbit when captured.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Map as MLMap } from 'maplibre-gl';
 import { LIVE_TARGET_ENABLED as FEATURE_FLAG_LIVE_TARGET } from '@/config/featureFlags';
 import {
@@ -29,6 +29,12 @@ import {
   projectLiveTargetToDom,
   type LiveTargetProjectReason,
 } from './liveTargetMapProject';
+import { haversineMeters } from './liveTargetHaversineMeters';
+import {
+  LIVE_TARGET_CAPTURE_FEEDBACK_MS,
+  LIVE_TARGET_CAPTURE_RADIUS_METERS,
+  LIVE_TARGET_IN_RANGE_POLL_MS,
+} from './liveTargetPhase3CaptureConfig';
 import './LiveTargetGeoOverlay.css';
 
 let liveTarget20ModuleLogged = false;
@@ -42,14 +48,20 @@ export interface LiveTargetGeoOverlayProps {
 export default function LiveTargetGeoOverlay({
   map,
   enabled,
-  userPosition: _userPosition = null,
+  userPosition = null,
 }: LiveTargetGeoOverlayProps) {
+  const { t } = useTranslation();
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [captured, setCaptured] = useState(false);
+  const [inRange, setInRange] = useState(false);
+  const [tutorialDismissed, setTutorialDismissed] = useState(false);
+  const [capturedFeedback, setCapturedFeedback] = useState(false);
   const movementRafRef = useRef(0);
   const openRef = useRef(false);
   openRef.current = isOpen;
   const engineRef = useRef<LiveTargetGeoEngineState | null>(null);
+  const orbitPausedRef = useRef(false);
   const loggedStartRef = useRef(false);
   const loggedProjectedRef = useRef(false);
   const forensicBaselineLoggedRef = useRef(false);
@@ -74,6 +86,48 @@ export default function LiveTargetGeoOverlay({
     patchLiveTargetRuntimeGlobal({ componentMounted: Boolean(enabled && map) });
     return () => patchLiveTargetRuntimeGlobal({ componentMounted: false });
   }, [enabled, map]);
+
+  useEffect(() => {
+    if (!enabled) {
+      setCaptured(false);
+      setInRange(false);
+      setCapturedFeedback(false);
+      setTutorialDismissed(false);
+      orbitPausedRef.current = false;
+    }
+  }, [enabled]);
+
+  useEffect(() => {
+    if (!capturedFeedback) return;
+    const id = window.setTimeout(() => setCapturedFeedback(false), LIVE_TARGET_CAPTURE_FEEDBACK_MS);
+    return () => window.clearTimeout(id);
+  }, [capturedFeedback]);
+
+  useEffect(() => {
+    if (!enabled || captured) return;
+    const tick = () => {
+      const eng = engineRef.current;
+      if (!eng || !userPosition) {
+        setInRange((prev) => (prev ? false : prev));
+        return;
+      }
+      const d = haversineMeters(userPosition.lat, userPosition.lng, eng.currentLat, eng.currentLng);
+      const next = d <= LIVE_TARGET_CAPTURE_RADIUS_METERS;
+      setInRange((prev) => (prev === next ? prev : next));
+    };
+    tick();
+    const id = window.setInterval(tick, LIVE_TARGET_IN_RANGE_POLL_MS);
+    return () => window.clearInterval(id);
+  }, [enabled, captured, userPosition]);
+
+  const handleCapture = useCallback(() => {
+    if (!inRange || captured) return;
+    orbitPausedRef.current = true;
+    setCaptured(true);
+    setIsOpen(false);
+    setTutorialDismissed(true);
+    setCapturedFeedback(true);
+  }, [inRange, captured]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || liveTarget20ModuleLogged) return;
@@ -139,13 +193,18 @@ export default function LiveTargetGeoOverlay({
 
     const now = performance.now();
     eng.debugEnabled = effectiveVisualDebug();
-    const next = advanceOrbitTick(
-      eng,
-      now,
-      LIVE_TARGET_PHASE2_ORBIT_CENTER.lng,
-      LIVE_TARGET_PHASE2_ORBIT_CENTER.lat
-    );
-    engineRef.current = next;
+    let next: LiveTargetGeoEngineState;
+    if (orbitPausedRef.current) {
+      next = eng;
+    } else {
+      next = advanceOrbitTick(
+        eng,
+        now,
+        LIVE_TARGET_PHASE2_ORBIT_CENTER.lng,
+        LIVE_TARGET_PHASE2_ORBIT_CENTER.lat
+      );
+      engineRef.current = next;
+    }
 
     try {
       if (!map.loaded()) {
@@ -238,6 +297,7 @@ export default function LiveTargetGeoOverlay({
 
   useEffect(() => {
     if (!enabled || !map) {
+      orbitPausedRef.current = false;
       engineRef.current = null;
       loggedStartRef.current = false;
       loggedProjectedRef.current = false;
@@ -252,6 +312,7 @@ export default function LiveTargetGeoOverlay({
       return;
     }
 
+    orbitPausedRef.current = false;
     engineRef.current = createInitialEngineState(effectiveVisualDebug());
     if (!loggedStartRef.current) {
       loggedStartRef.current = true;
@@ -278,6 +339,7 @@ export default function LiveTargetGeoOverlay({
     } as Record<string, unknown>);
 
     return () => {
+      orbitPausedRef.current = false;
       engineRef.current = null;
       loggedStartRef.current = false;
       loggedProjectedRef.current = false;
@@ -330,6 +392,8 @@ export default function LiveTargetGeoOverlay({
 
   if (!enabled || !map) return null;
 
+  const showTutorial = !captured && !tutorialDismissed;
+
   return (
     <div className="live-target-geo-overlay-root" aria-hidden={false}>
       <div
@@ -345,14 +409,17 @@ export default function LiveTargetGeoOverlay({
         <div className="item-hints" data-lt-geo-overlay="1">
           <div
             data-lt-hint-root="1"
-            className={`hint ${isOpen ? 'hint--open' : ''}`}
+            className={`hint ${isOpen ? 'hint--open' : ''}${inRange && !captured ? ' hint--in-range' : ''}${captured ? ' hint--captured' : ''}`}
             data-position="4"
           >
             <span className="hint-radius" aria-hidden />
+            {inRange && !captured && (
+              <span className="lt-phase3-in-range-badge">{t('liveTarget.in_range_badge')}</span>
+            )}
             <button
               type="button"
               className="hint-dot"
-              aria-label="Target"
+              aria-label={t('liveTarget.dot_label')}
               aria-expanded={isOpen}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
@@ -366,17 +433,63 @@ export default function LiveTargetGeoOverlay({
                 });
               }}
             >
-              Target
+              {t('liveTarget.dot_label')}
             </button>
             <div className="hint-content do--split-children" role="status">
-              <p>LIVE TARGET</p>
+              <p>{t('liveTarget.card_title')}</p>
             </div>
           </div>
         </div>
       </div>
+
+      {showTutorial && (
+        <div
+          className="lt-phase3-tutorial"
+          role="region"
+          aria-label={t('liveTarget.tutorial_hint')}
+        >
+          <p className="lt-phase3-tutorial__text">
+            {userPosition ? t('liveTarget.tutorial_hint') : t('liveTarget.tutorial_need_location')}
+          </p>
+          <button
+            type="button"
+            className="lt-phase3-tutorial__dismiss"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              setTutorialDismissed(true);
+            }}
+          >
+            {t('liveTarget.dismiss_tutorial')}
+          </button>
+        </div>
+      )}
+
+      {inRange && !captured && (
+        <div className="lt-phase3-capture-wrap">
+          <button
+            type="button"
+            className="lt-phase3-capture-btn"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCapture();
+            }}
+          >
+            {t('liveTarget.capture_cta')}
+          </button>
+        </div>
+      )}
+
+      {capturedFeedback && (
+        <div className="lt-phase3-captured-toast" role="status" aria-live="polite">
+          {t('liveTarget.captured_feedback')}
+        </div>
+      )}
+
       {effectiveVisualDebug() && (
         <div className="live-target-geo-overlay-debug-badge" aria-hidden>
-          LT 2.1
+          LT 3.0
         </div>
       )}
     </div>
