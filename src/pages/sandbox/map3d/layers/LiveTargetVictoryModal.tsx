@@ -4,7 +4,7 @@
  */
 
 import type { ErrorInfo, ReactNode } from 'react';
-import { Component, Suspense, lazy, useEffect } from 'react';
+import { Component, Suspense, lazy, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { TFunction } from 'i18next';
 
@@ -51,6 +51,31 @@ export interface LiveTargetVictoryModalProps {
 }
 
 export function LiveTargetVictoryModal({ open, levelId, onContinue, t }: LiveTargetVictoryModalProps) {
+  /**
+   * riveContinueSupported: true solo se il .riv emette `RiveEvent` General/OpenUrl su OKAY
+   * (verifica log `[LiveTarget][victory-rive][okay-click-detected]` su device).
+   * usingHtmlFallback: true se l’utente ha premuto il bottone HTML (log fallback-html-continue).
+   */
+  const continueFiredRef = useRef(false);
+
+  useEffect(() => {
+    if (!open) continueFiredRef.current = false;
+  }, [open]);
+
+  const fireContinue = useCallback(
+    (source: 'rive' | 'html') => {
+      if (continueFiredRef.current) return;
+      continueFiredRef.current = true;
+      console.warn('[LiveTarget][victory-rive][continue-fired]', { source, levelId });
+      onContinue();
+    },
+    [onContinue, levelId]
+  );
+
+  const onRiveOkayContinue = useCallback(() => {
+    fireContinue('rive');
+  }, [fireContinue]);
+
   useEffect(() => {
     if (!open) return;
     console.warn('[LiveTarget][victory-modal][mount]', { open: true, levelId });
@@ -119,24 +144,24 @@ export function LiveTargetVictoryModal({ open, levelId, onContinue, t }: LiveTar
               <LiveTargetVictoryRive
                 fallbackText={t('liveTarget.victory_rive_error')}
                 loadingText={t('liveTarget.victory_rive_loading')}
+                onRiveOkayContinue={onRiveOkayContinue}
               />
             </Suspense>
           </VictoryRiveLazyErrorBoundary>
         </div>
-        <footer className="lt-rive-victory-footer">
+        <footer className="lt-rive-victory-footer lt-rive-victory-footer--html-fallback" aria-label={t('liveTarget.victory_modal_title', { level: levelId })}>
           <button
             type="button"
-            className="lt-rive-victory-continue"
+            className="lt-rive-victory-continue lt-rive-victory-continue--html-fallback"
             onPointerDown={(e) => {
               console.warn('[LiveTarget][victory-modal][pointer-debug]', { type: 'continue_pointerdown' });
               e.stopPropagation();
             }}
             onClick={(e) => {
               e.stopPropagation();
+              console.warn('[LiveTarget][victory-rive][fallback-html-continue]', { levelId });
               console.warn('[LiveTarget][victory-modal][continue-click]', { levelId });
-              console.warn('[LiveTarget][rive-forensic][continue-click]', { levelId });
-              console.warn('[RIVE][forensic][continue-click]', { levelId });
-              onContinue();
+              fireContinue('html');
             }}
           >
             {t('liveTarget.victory_continue')}

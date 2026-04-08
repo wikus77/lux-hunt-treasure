@@ -1,5 +1,6 @@
 /**
- * LIVE TARGET — Rive canvas vittoria: stesso .riv, fetch con origin Capacitor + buffer + introspection.
+ * LIVE TARGET — Rive canvas vittoria: buffer load + OKAY via RiveEvent (General/OpenUrl) + pointer sul canvas.
+ * Fallback: bottone HTML nel modale (non rimosso).
  */
 
 import type { Rive } from '@rive-app/canvas';
@@ -7,6 +8,7 @@ import { Alignment, Fit, Layout, useRive } from '@rive-app/react-canvas';
 import type { ErrorInfo, ReactNode } from 'react';
 import { Component, useEffect, useState } from 'react';
 
+import { attachVictoryRiveOkayListener } from '@/components/rive/attachVictoryRiveOkayListener';
 import { loadLiveTargetVictoryRivBytes } from '@/components/rive/liveTargetVictoryRivAsset';
 import { logRiveInstanceForensics } from '@/components/rive/logRiveInstanceForensics';
 
@@ -24,10 +26,9 @@ class LiveTargetRiveErrorBoundary extends Component<
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('[LiveTarget][Rive][error]', error, info.componentStack);
-    console.warn('[RIVE][forensic][render-error]', {
+    console.warn('[LiveTarget][victory-rive][render-error]', {
       phase: 'react_boundary',
       message: error?.message,
-      stack: error?.stack,
     });
   }
 
@@ -42,6 +43,22 @@ function scheduleVictoryPlayback(rive: Rive): void {
     try {
       logRiveInstanceForensics(rive);
 
+      const sms = [...rive.stateMachineNames];
+      console.warn('[LiveTarget][victory-rive][inputs]', {
+        artboard: rive.activeArtboard,
+        stateMachines: sms,
+        preview: sms.slice(0, 6).map((n) => {
+          try {
+            return {
+              sm: n,
+              inputs: rive.stateMachineInputs(n).map((i) => ({ name: i.name, type: i.type })),
+            };
+          } catch {
+            return { sm: n, inputs: [] as { name: string; type: string }[] };
+          }
+        }),
+      });
+
       const logDiscovered = (phase: string) => {
         console.warn('[LiveTarget][rive-forensic][discovered]', {
           phase,
@@ -52,10 +69,10 @@ function scheduleVictoryPlayback(rive: Rive): void {
       };
 
       const tryPlay = (): boolean => {
-        const sms = [...rive.stateMachineNames];
+        const smList = [...rive.stateMachineNames];
         const anims = [...rive.animationNames];
-        if (sms.length > 0) {
-          rive.reset({ stateMachines: sms[0], autoplay: true });
+        if (smList.length > 0) {
+          rive.reset({ stateMachines: smList[0], autoplay: true });
           return true;
         }
         if (anims.length > 0) {
@@ -96,7 +113,7 @@ function scheduleVictoryPlayback(rive: Rive): void {
       rive.resizeDrawingSurfaceToCanvas();
       rive.resizeToCanvas();
     } catch (e) {
-      console.warn('[RIVE][forensic][render-error]', { phase: 'playback_or_resize', e });
+      console.warn('[LiveTarget][victory-rive][render-error]', { phase: 'playback_or_resize', e });
     }
   };
 
@@ -105,21 +122,33 @@ function scheduleVictoryPlayback(rive: Rive): void {
   });
 }
 
-function LiveTargetVictoryRiveCanvas({ buffer }: { buffer: ArrayBuffer }) {
-  const { RiveComponent } = useRive(
+function LiveTargetVictoryRiveCanvas({
+  buffer,
+  onRiveOkayContinue,
+}: {
+  buffer: ArrayBuffer;
+  onRiveOkayContinue: () => void;
+}) {
+  const { RiveComponent, rive } = useRive(
     {
       buffer,
       autoplay: true,
+      shouldDisableRiveListeners: false,
+      automaticallyHandleEvents: false,
+      isTouchScrollEnabled: true,
       layout: new Layout({
         fit: Fit.Cover,
         alignment: Alignment.Center,
       }),
-      onRiveReady: (rive: Rive) => {
-        console.warn('[RIVE][forensic][ready]', { phase: 'rive_instance', artboard: rive.activeArtboard });
-        scheduleVictoryPlayback(rive);
+      onRiveReady: (instance: Rive) => {
+        console.warn('[LiveTarget][victory-rive][ready]', {
+          artboard: instance.activeArtboard,
+          stateMachines: [...instance.stateMachineNames],
+        });
+        scheduleVictoryPlayback(instance);
       },
       onLoadError: (err: unknown) => {
-        console.warn('[RIVE][forensic][parse-error]', { phase: 'rive_onLoadError', err });
+        console.warn('[LiveTarget][victory-rive][parse-error]', { phase: 'rive_onLoadError', err });
       },
     },
     {
@@ -128,8 +157,14 @@ function LiveTargetVictoryRiveCanvas({ buffer }: { buffer: ArrayBuffer }) {
     }
   );
 
+  useEffect(() => {
+    if (!rive) return;
+    const detach = attachVictoryRiveOkayListener(rive, onRiveOkayContinue);
+    return detach;
+  }, [rive, onRiveOkayContinue]);
+
   return (
-    <div className="lt-rive-victory-rive-wrap">
+    <div className="lt-rive-victory-rive-wrap lt-rive-victory-rive-wrap--interactive">
       <RiveComponent className="lt-rive-victory-canvas" />
     </div>
   );
@@ -138,9 +173,11 @@ function LiveTargetVictoryRiveCanvas({ buffer }: { buffer: ArrayBuffer }) {
 function LiveTargetVictoryRiveInner({
   fallbackText,
   loadingText,
+  onRiveOkayContinue,
 }: {
   fallbackText: string;
   loadingText: string;
+  onRiveOkayContinue: () => void;
 }) {
   const [buffer, setBuffer] = useState<ArrayBuffer | null>(null);
   const [fetchFailed, setFetchFailed] = useState(false);
@@ -165,20 +202,30 @@ function LiveTargetVictoryRiveInner({
     return <div className="lt-rive-victory-fallback">{loadingText}</div>;
   }
 
-  return <LiveTargetVictoryRiveCanvas buffer={buffer} />;
+  return <LiveTargetVictoryRiveCanvas buffer={buffer} onRiveOkayContinue={onRiveOkayContinue} />;
 }
 
 export interface LiveTargetVictoryRiveProps {
   fallbackText: string;
   loadingText: string;
+  /** Chiamato quando Rive emette RiveEvent (General/OpenUrl) — il modale applica guard anti-doppio. */
+  onRiveOkayContinue: () => void;
 }
 
-export function LiveTargetVictoryRive({ fallbackText, loadingText }: LiveTargetVictoryRiveProps) {
+export function LiveTargetVictoryRive({
+  fallbackText,
+  loadingText,
+  onRiveOkayContinue,
+}: LiveTargetVictoryRiveProps) {
   return (
     <LiveTargetRiveErrorBoundary
       fallback={<div className="lt-rive-victory-fallback">{fallbackText}</div>}
     >
-      <LiveTargetVictoryRiveInner fallbackText={fallbackText} loadingText={loadingText} />
+      <LiveTargetVictoryRiveInner
+        fallbackText={fallbackText}
+        loadingText={loadingText}
+        onRiveOkayContinue={onRiveOkayContinue}
+      />
     </LiveTargetRiveErrorBoundary>
   );
 }

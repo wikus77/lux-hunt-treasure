@@ -68,9 +68,18 @@
   height: 100%;
   max-height: none;
   position: relative;
-  /* Let footer stay above in hit order; Rive does not need pointer capture for victory */
-  pointer-events: none;
   box-sizing: border-box;
+}
+
+/* Default: non interattivo (fallback / loading copy) */
+.lt-rive-victory-rive-wrap:not(.lt-rive-victory-rive-wrap--interactive) {
+  pointer-events: none;
+}
+
+/* Victory canvas: pointer attivi per listener SM (OKAY interno). Footer resta z-index 2 sopra. */
+.lt-rive-victory-rive-wrap--interactive {
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 
 /* RiveComponent puts className on the wrapper div; canvas is nested inside */
@@ -80,6 +89,17 @@
   height: 100% !important;
   min-height: 200px;
   box-sizing: border-box;
+}
+
+.lt-rive-victory-rive-wrap--interactive > .lt-rive-victory-canvas,
+.lt-rive-victory-rive-wrap--interactive > .lt-rive-victory-canvas canvas,
+.lt-rive-victory-rive-wrap--interactive canvas {
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.lt-rive-victory-rive-wrap:not(.lt-rive-victory-rive-wrap--interactive) > .lt-rive-victory-canvas,
+.lt-rive-victory-rive-wrap:not(.lt-rive-victory-rive-wrap--interactive) canvas {
   pointer-events: none;
 }
 
@@ -88,7 +108,6 @@
   display: block;
   width: 100% !important;
   height: 100% !important;
-  pointer-events: none;
   vertical-align: top;
 }
 
@@ -136,4 +155,16 @@
 .lt-rive-victory-continue:active {
   opacity: 0.88;
   transform: scale(0.98);
+}
+
+/* Fallback HTML: sempre disponibile se Rive non emette eventi su OKAY */
+.lt-rive-victory-footer--html-fallback {
+  opacity: 0.62;
+}
+
+.lt-rive-victory-continue--html-fallback {
+  font-size: 0.88rem;
+  padding: 12px 22px;
+  min-width: min(220px, 100%);
+  background: rgba(255, 255, 255, 0.1);
 }
