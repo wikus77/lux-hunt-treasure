@@ -67,7 +67,10 @@ export default defineConfig(({ mode }) => ({
           'router-vendor': ['react-router-dom'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast'],
           'supabase-vendor': ['@supabase/supabase-js'],
-          'animation-vendor': ['framer-motion', 'lottie-react', '@rive-app/react-canvas'],
+          // Rive MUST NOT share a chunk with framer-motion: home boot loads animation-vendor;
+          // bundling @rive-app/canvas (WASM) there can black-screen WKWebView on startup.
+          'animation-vendor': ['framer-motion', 'lottie-react'],
+          'rive-vendor': ['@rive-app/react-canvas'],
           // THREE.js only - @react-three/fiber bundled with components that use it
           'three-vendor': ['three'],
           'map-vendor': ['leaflet', 'react-leaflet', '@react-google-maps/api'],
@@ -113,7 +116,6 @@ export default defineConfig(({ mode }) => ({
       'firebase/auth',
       'firebase/messaging',
       'lottie-react',
-      '@rive-app/react-canvas',
       '@tanstack/react-query',
       'sonner',
       'gsap',

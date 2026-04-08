@@ -1,13 +1,17 @@
 /**
  * LIVE TARGET™ — Victory modal: Rive animation (unchanged .riv) + continue CTA.
+ * Rive is lazy-loaded so map/home bundles never execute @rive-app/canvas at startup.
  */
 
+import { Suspense, lazy } from 'react';
 import { createPortal } from 'react-dom';
 import type { TFunction } from 'i18next';
 
-import { LiveTargetVictoryRive } from '@/components/rive/LiveTargetVictoryRive';
-
 import './LiveTargetVictoryModal.css';
+
+const LiveTargetVictoryRive = lazy(() =>
+  import('@/components/rive/LiveTargetVictoryRive').then((m) => ({ default: m.LiveTargetVictoryRive }))
+);
 
 export interface LiveTargetVictoryModalProps {
   open: boolean;
@@ -32,7 +36,11 @@ export function LiveTargetVictoryModal({ open, levelId, onContinue, t }: LiveTar
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
-        <LiveTargetVictoryRive fallbackText={t('liveTarget.victory_rive_error')} />
+        <Suspense
+          fallback={<div className="lt-rive-victory-fallback">{t('liveTarget.victory_rive_loading')}</div>}
+        >
+          <LiveTargetVictoryRive fallbackText={t('liveTarget.victory_rive_error')} />
+        </Suspense>
         <button
           type="button"
           className="lt-rive-victory-continue"

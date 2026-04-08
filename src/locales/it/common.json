@@ -1766,6 +1766,7 @@
   "liveTarget.victory_modal_continue": "CONTINUA",
   "liveTarget.victory_continue": "CONTINUA",
   "liveTarget.victory_rive_error": "Errore animazione",
+  "liveTarget.victory_rive_loading": "Caricamento…",
   "liveTarget.victory_modal_next_hint": "Premi continua per proseguire l'operazione.",
   "liveTarget.victory_card_classified": "RISERVATO"
 }
