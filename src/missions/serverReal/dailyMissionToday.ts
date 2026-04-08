@@ -36,8 +36,24 @@ export interface DailyMissionTodayResponse {
   template_key?: DailyEngineTemplateKey;
   cycle_version?: string;
   index?: number;
+  /** Optional: mini-games engine (pilot / future cycles). Client falls back to mission_id-only if absent. */
+  game_type?: string;
+  variant_key?: string;
+  cycle_day_index?: number;
   /** Phase 3: retention (streak, weekly, agent, Sunday). */
   retention?: DailyMissionRetention;
+  /** Tactical Tic-Tac-Toe meta (no correct_cell — server-only). */
+  difficulty_level?: string;
+  board_seed?: string;
+  /** Sheep Herd meta (preview; authoritative params from start_phase1). */
+  week_index?: number;
+  seed?: string;
+  /** Neuromatch Memory preview (authoritative board from start_phase1). */
+  cards_total?: number;
+  pairs_total?: number;
+  empty_slots?: number;
+  grid_cols?: number;
+  grid_rows?: number;
 }
 
 export async function fetchDailyMissionToday(): Promise<DailyMissionTodayResponse> {

@@ -7,6 +7,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import { M1U_CREDIT_EVENT, M1UCreditEventDetail } from './m1uCreditEvent';
+import { consumePeToM1uPresentationBridge } from '@/features/victoryPresentation/victoryPresentationBridge';
+import { playM1USound } from '@/utils/victoryRewardSounds';
 
 const OVERLAY_DISPATCH_DELAY_MS = 120;
 const OVERLAY_VISIBLE_MS = 2800;
@@ -30,11 +32,15 @@ export const GlobalM1UCreditOverlay: React.FC = () => {
       if (timeoutDispatchRef.current) clearTimeout(timeoutDispatchRef.current);
       if (timeoutHideRef.current) clearTimeout(timeoutHideRef.current);
 
+      const bridgeExtra = consumePeToM1uPresentationBridge();
+      const dispatchDelay = OVERLAY_DISPATCH_DELAY_MS + bridgeExtra;
+
       timeoutDispatchRef.current = setTimeout(() => {
         timeoutDispatchRef.current = null;
         window.dispatchEvent(new CustomEvent('m1u-credited', { detail: { amount: detail.amount } }));
         window.dispatchEvent(new CustomEvent('m1u-balance-changed', { detail: { type: 'credit', amount: detail.amount } }));
-      }, OVERLAY_DISPATCH_DELAY_MS);
+        playM1USound();
+      }, dispatchDelay);
 
       timeoutHideRef.current = setTimeout(() => {
         timeoutHideRef.current = null;

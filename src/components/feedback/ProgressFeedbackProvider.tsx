@@ -11,7 +11,8 @@ import { useLocation } from 'wouter';
 import { 
   PROGRESS_FEEDBACK_ENABLED, 
   isUserInProgressFeedbackAllowlist,
-  DEBUG_PANELS_ENABLED 
+  DEBUG_PANELS_ENABLED,
+  PULSE_BREAKER_LEGACY_PROGRESS_FEEDBACK_MODALS_ENABLED,
 } from '@/config/featureFlags';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import {
@@ -111,6 +112,13 @@ export const ProgressFeedbackProvider: React.FC<{ children: React.ReactNode }> =
     }
     
     const handleGameEvent = (e: CustomEvent<GameEvent>) => {
+      const t = e.detail?.type;
+      if (
+        !PULSE_BREAKER_LEGACY_PROGRESS_FEEDBACK_MODALS_ENABLED &&
+        (t === 'PULSE_BREAKER_CASHOUT' || t === 'PULSE_BREAKER_CRASH')
+      ) {
+        return;
+      }
       console.log('[ProgressFeedback] 📥 Event:', e.detail.type);
       enqueueEvent(e.detail);
     };

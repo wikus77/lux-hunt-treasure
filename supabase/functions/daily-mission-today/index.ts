@@ -5,8 +5,75 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.1";
 import { withCors } from "../_shared/cors.ts";
+import {
+  GAME_TYPE_NEURO_MATCH,
+  NEUROMATCH_MISSION_ID,
+  neuroMatchPublicMeta,
+} from "../_shared/dailyNeuroMatch.ts";
+import {
+  GAME_TYPE_SHEEP_HERD,
+  SHEEP_HERD_MISSION_ID,
+  sheepHerdPublicMeta,
+} from "../_shared/dailySheepHerd.ts";
+import {
+  GAME_TYPE_TIC_TAC_TOE,
+  TACTICAL_TIC_TAC_TOE_MISSION_ID,
+  tttHash,
+  weekSlotFromDayKey,
+} from "../_shared/ticTacToeDaily.ts";
 
 const CYCLE_VERSION = "v2";
+
+/** Pilot: pin_rotator_timing — active only when DAILY_MINI_GAMES_PILOT_ENABLED=true and email allowlist. Rollback: unset env or set false. */
+const PILOT_MISSION_ID = "dmg_v1_d01";
+const PILOT_GAME_TYPE = "pin_rotator_timing";
+const PILOT_VARIANT_KEY = "w1_std";
+const PILOT_CYCLE_VERSION = "dmg_v1";
+const PILOT_CYCLE_DAY_INDEX = 1;
+
+function isDailyMiniGamesPilotUser(email: string | undefined): boolean {
+  if (Deno.env.get("DAILY_MINI_GAMES_PILOT_ENABLED") !== "true") return false;
+  if (!email) return false;
+  const raw = Deno.env.get("DAILY_MINI_GAMES_PILOT_EMAILS");
+  const list = raw
+    ? raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)
+    : ["wikus77@hotmail.it", "joseph@m1ssion.io"];
+  return list.includes(email.toLowerCase());
+}
+
+/**
+ * Allowlist-only QA: force tactical TTT response. Precedence over pin_rotator pilot when both match.
+ * Production-safe defaults: flag off → identical behavior; flag on but empty DAILY_TTT_TEST_EMAILS → nobody matches.
+ * Rollback: set DAILY_TTT_TEST_ENABLED=false or clear secrets.
+ */
+function isDailyTttTestAllowlistedUser(email: string | undefined): boolean {
+  if (Deno.env.get("DAILY_TTT_TEST_ENABLED") !== "true") return false;
+  if (!email) return false;
+  const raw = Deno.env.get("DAILY_TTT_TEST_EMAILS");
+  if (raw == null || raw.trim() === "") return false;
+  const list = raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return list.includes(email.toLowerCase());
+}
+
+/** Allowlist-only QA: force neuromatch_memory_v1. Precedence above other daily test flags when enabled. */
+function isDailyNeuroMatchTestAllowlistedUser(email: string | undefined): boolean {
+  if (Deno.env.get("DAILY_NEUROMATCH_TEST_ENABLED") !== "true") return false;
+  if (!email) return false;
+  const raw = Deno.env.get("DAILY_NEUROMATCH_TEST_EMAILS");
+  if (raw == null || raw.trim() === "") return false;
+  const list = raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return list.includes(email.toLowerCase());
+}
+
+/** Allowlist-only QA: force sheep_herd_v1. */
+function isDailySheepHerdTestAllowlistedUser(email: string | undefined): boolean {
+  if (Deno.env.get("DAILY_SHEEP_HERD_TEST_ENABLED") !== "true") return false;
+  if (!email) return false;
+  const raw = Deno.env.get("DAILY_SHEEP_HERD_TEST_EMAILS");
+  if (raw == null || raw.trim() === "") return false;
+  const list = raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return list.includes(email.toLowerCase());
+}
 
 // Phase 2 — Mission Template System: 7 weekday-based templates, 3 underlying mission_ids (always playable).
 // getUTCDay(): 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat.
@@ -131,7 +198,42 @@ async function handler(req: Request): Promise<Response> {
   }
 
   const dayKey = getDayKeyUtc();
-  const { template_key, mission_id } = getTemplateForDay(dayKey);
+  let { template_key, mission_id } = getTemplateForDay(dayKey);
+  let game_type: string | undefined;
+  let variant_key: string | undefined;
+  let cycle_day_index: number | undefined;
+  let cycle_version_response = CYCLE_VERSION;
+
+  if (isDailyNeuroMatchTestAllowlistedUser(user.email)) {
+    mission_id = NEUROMATCH_MISSION_ID;
+    template_key = "intelligence";
+    game_type = GAME_TYPE_NEURO_MATCH;
+    variant_key = undefined;
+    cycle_day_index = undefined;
+    cycle_version_response = CYCLE_VERSION;
+  } else if (isDailySheepHerdTestAllowlistedUser(user.email)) {
+    mission_id = SHEEP_HERD_MISSION_ID;
+    template_key = "field";
+    game_type = GAME_TYPE_SHEEP_HERD;
+    variant_key = undefined;
+    cycle_day_index = undefined;
+    cycle_version_response = CYCLE_VERSION;
+  } else if (isDailyTttTestAllowlistedUser(user.email)) {
+    mission_id = TACTICAL_TIC_TAC_TOE_MISSION_ID;
+    template_key = "strategic";
+    game_type = GAME_TYPE_TIC_TAC_TOE;
+    variant_key = undefined;
+    cycle_day_index = undefined;
+    cycle_version_response = CYCLE_VERSION;
+  } else if (isDailyMiniGamesPilotUser(user.email)) {
+    mission_id = PILOT_MISSION_ID;
+    template_key = "intelligence";
+    game_type = PILOT_GAME_TYPE;
+    variant_key = PILOT_VARIANT_KEY;
+    cycle_day_index = PILOT_CYCLE_DAY_INDEX;
+    cycle_version_response = PILOT_CYCLE_VERSION;
+  }
+
   const weekday = getWeekdayUtc(dayKey);
 
   // Phase 3 — Retention: streak, weekly completion, agent status, Sunday reward availability
@@ -157,25 +259,59 @@ async function handler(req: Request): Promise<Response> {
   const sunday_reward_available = isMonday && sundayCompleted && !sundayRewardClaimed;
   const sunday_reward_day_key = sunday_reward_available ? yesterdayKey : undefined;
 
-  return new Response(
-    JSON.stringify({
-      ok: true,
-      day_key: dayKey,
-      mission_id,
-      template_key,
-      cycle_version: CYCLE_VERSION,
-      index: weekday,
-      retention: {
-        streak,
-        week_start: weekKeys[0],
-        weekly_completion,
-        agent_status,
-        sunday_reward_available,
-        sunday_reward_day_key,
-      },
-    }),
-    { status: 200, headers: { "Content-Type": "application/json" } }
-  );
+  const body: Record<string, unknown> = {
+    ok: true,
+    day_key: dayKey,
+    mission_id,
+    template_key,
+    cycle_version: cycle_version_response,
+    index: weekday,
+    retention: {
+      streak,
+      week_start: weekKeys[0],
+      weekly_completion,
+      agent_status,
+      sunday_reward_available,
+      sunday_reward_day_key,
+    },
+  };
+  if (game_type) {
+    body.game_type = game_type;
+    body.variant_key = variant_key;
+    body.cycle_day_index = cycle_day_index;
+  }
+
+  if (mission_id === TACTICAL_TIC_TAC_TOE_MISSION_ID) {
+    body.game_type = GAME_TYPE_TIC_TAC_TOE;
+    body.difficulty_level = `week_${weekSlotFromDayKey(dayKey) + 1}`;
+    body.board_seed = tttHash(`${dayKey}|${user.id}`).toString(36).slice(0, 12);
+  }
+
+  if (mission_id === SHEEP_HERD_MISSION_ID) {
+    const meta = sheepHerdPublicMeta(dayKey, user.id);
+    body.game_type = meta.game_type;
+    body.difficulty_level = meta.difficulty_level;
+    body.week_index = meta.week_index;
+    body.seed = meta.seed;
+  }
+
+  if (mission_id === NEUROMATCH_MISSION_ID) {
+    const meta = neuroMatchPublicMeta(dayKey, user.id);
+    body.game_type = meta.game_type;
+    body.difficulty_level = meta.difficulty_level;
+    body.week_index = meta.week_index;
+    body.seed = meta.seed;
+    body.cards_total = meta.cards_total;
+    body.pairs_total = meta.pairs_total;
+    body.empty_slots = meta.empty_slots;
+    body.grid_cols = meta.grid_cols;
+    body.grid_rows = meta.grid_rows;
+  }
+
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 serve(withCors(handler));

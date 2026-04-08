@@ -50,6 +50,28 @@ export const M1U_ENABLED = true;
 // Set to false to restore subscription plans visibility
 export const SUBSCRIPTIONS_STEALTH = true;
 
+// ====== LIVE TARGET SYSTEM™ (Phase 1 — static map marker only) ======
+/** Temp Phase 1.3I: iOS / prod test without rebuilding — set `localStorage m1_live_target_force_on=true` + reload. */
+function readLiveTargetForceOnFromStorage(): boolean {
+  try {
+    return typeof localStorage !== 'undefined' && localStorage.getItem('m1_live_target_force_on') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * When true: single static LIVE TARGET marker on MapTiler3D. No gameplay.
+ * - `VITE_LIVE_TARGET=0` → always off.
+ * - Else on if: dev server, or `VITE_LIVE_TARGET=1`, or LS `m1_live_target_force_on=true`.
+ */
+export const LIVE_TARGET_ENABLED =
+  import.meta.env.VITE_LIVE_TARGET === '0'
+    ? false
+    : import.meta.env.DEV ||
+      import.meta.env.VITE_LIVE_TARGET === '1' ||
+      readLiveTargetForceOnFromStorage();
+
 // ====== GAME FEATURES ======
 // Battle system
 export const BATTLE_ENABLED = true;
@@ -78,6 +100,13 @@ export const isUserInProgressFeedbackAllowlist = (email: string | undefined | nu
   if (!email) return false;
   return PROGRESS_FEEDBACK_ALLOWLIST.includes(email.toLowerCase());
 };
+
+/**
+ * Pulse Breaker — legacy Progress Feedback fullscreen modals (CelebrationModal: «CASHOUT PERFETTO» / «CRASH» from gameEvents).
+ * When false (default): ProgressFeedbackProvider ignores only PULSE_BREAKER_CASHOUT and PULSE_BREAKER_CRASH; emit in usePulseBreaker is unchanged.
+ * Set true to restore green/red celebration modals for allowlisted users (reversible).
+ */
+export const PULSE_BREAKER_LEGACY_PROGRESS_FEEDBACK_MODALS_ENABLED = false;
 
 // ====== STORE COMPLIANCE (Apple/Google) ======
 // Deterministic progress systems (no RNG for win/lose decisions)
@@ -125,6 +154,73 @@ export function isVeraBombEnabled(): boolean {
 // When true: show server-driven daily mission UI (v2). Legacy daily UI remains off (MISSIONS_ENABLED false).
 // Rollback: set to false to hide v2 card.
 export const DAILY_ENGINE_V2_ENABLED = true;
+
+/**
+ * Victory / Reward Orchestration V1 — daily pilot (PE → M1U → rank gate).
+ * Default OFF. Enable: VITE_VICTORY_ORCHESTRATION_V1=true or localStorage m1_victory_orchestration_v1=true + reload.
+ */
+export const VICTORY_ORCHESTRATION_V1_ENABLED = false;
+
+export function isVictoryOrchestrationV1Enabled(): boolean {
+  if (VICTORY_ORCHESTRATION_V1_ENABLED) return true;
+  if (import.meta.env.VITE_VICTORY_ORCHESTRATION_V1 === 'true') return true;
+  try {
+    return localStorage.getItem('m1_victory_orchestration_v1') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Victory System V4 — real daily reward presentation rollout (PE → M1U → rank gate).
+ * Same conductor/listeners/overlays as QA-validated V1; separate flag for controlled product rollout.
+ * Default OFF. Enable: VITE_VICTORY_SYSTEM_V4_REAL_DAILY=true or localStorage m1_victory_system_v4_real_daily=true + reload.
+ * Does not enable the QA harness panel (remains dev / explicit QA env only).
+ */
+export function isVictorySystemV4RealDailyEnabled(): boolean {
+  if (import.meta.env.VITE_VICTORY_SYSTEM_V4_REAL_DAILY === 'true') return true;
+  try {
+    return localStorage.getItem('m1_victory_system_v4_real_daily') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/** True when the victory conductor should register (daily PE/M1U sequencing + rank gate). */
+export function isVictoryOrchestrationConductorEnabled(): boolean {
+  return isVictoryOrchestrationV1Enabled() || isVictorySystemV4RealDailyEnabled();
+}
+
+/** True when VITE_QA_MODE is set to an enabling value (not 0 / false / off). */
+function isViteQaModeHarnessEligible(): boolean {
+  const v = import.meta.env.VITE_QA_MODE;
+  if (v == null || v === '') return false;
+  const s = String(v).trim().toLowerCase();
+  return s !== '0' && s !== 'false' && s !== 'no' && s !== 'off';
+}
+
+/**
+ * Victory Orchestration QA harness — floating panel to fire synthetic PE/M1U (no server).
+ * Default OFF. Enable: VITE_VICTORY_ORCH_QA_HARNESS=true, VITE_QA_MODE (non-off), localStorage m1_victory_orch_qa_harness=true, or import.meta.env.DEV + reload.
+ * iOS QA: set VITE_QA_MODE=1 (or VITE_VICTORY_ORCH_QA_HARNESS=true) in the env used for `vite build` / Capacitor sync.
+ */
+export function isVictoryOrchQaHarnessEnabled(): boolean {
+  if (import.meta.env.DEV) return true;
+  if (import.meta.env.VITE_VICTORY_ORCH_QA_HARNESS === 'true') return true;
+  if (isViteQaModeHarnessEligible()) return true;
+  try {
+    return localStorage.getItem('m1_victory_orch_qa_harness') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/** Preserved across ErrorBoundary «RIAVVIA EMERGENZA» so QA flags survive storage clear. */
+export const VICTORY_ORCH_QA_LOCALSTORAGE_PRESERVE_KEYS = [
+  'm1_victory_orch_qa_harness',
+  'm1_victory_orchestration_v1',
+  'm1_victory_system_v4_real_daily',
+] as const;
 
 // ====== HOME V2 — FLOATING LATERAL PILLS (AAA UI + launchers) ======
 // When true: floating capsule stacks on Home. Rollback: false = layer hidden, zero layout change.

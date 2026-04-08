@@ -19,6 +19,7 @@ import {
 } from '@/missions/missionState';
 import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 import { emitPECreditEvent } from '@/features/pulse/peCreditEvent';
+import type { ShellGameProps } from '@/missions/dailyMiniGames/shellGameProps';
 
 const MISSION_ID = 'word_duel_memory_v1';
 const TIMER_MEMORIZE = 60;
@@ -42,12 +43,7 @@ interface RoundPayload {
   right: string;
 }
 
-interface WordDuelMemoryModalProps {
-  onClose: () => void;
-  onComplete: () => void;
-}
-
-export const WordDuelMemoryModal: React.FC<WordDuelMemoryModalProps> = ({ onClose, onComplete }) => {
+export const WordDuelMemoryModal: React.FC<ShellGameProps> = ({ onClose, onComplete }) => {
   const { t } = useTranslation();
   const [step, setStep] = useState<Step>('loading');
   const [rounds, setRounds] = useState<RoundPayload[]>([]);

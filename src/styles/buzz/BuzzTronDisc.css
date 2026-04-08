@@ -292,6 +292,7 @@
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .tron-disc,
+  .tron-disc-rotating,
   .tron-led-ring.loading::after,
   .tron-loading-spinner {
     animation: none !important;
@@ -390,6 +391,12 @@
 .tron-disc.tron-disc-red .tron-disc-dots-sides::after {
   width: 4px;
   height: 4px;
+}
+
+/* Home GIOCA CTA — stesso linguaggio Tron di BUZZ MAP (tron-disc-red), scala compatta per fixed sopra BottomNav */
+.tron-disc.tron-disc-red.tron-disc--home-gioca {
+  width: clamp(108px, 21vw, 136px);
+  flex-shrink: 0;
 }
 
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

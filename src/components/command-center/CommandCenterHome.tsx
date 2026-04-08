@@ -31,7 +31,23 @@ import InviteFloatingButton from "@/components/home/InviteFloatingButton";
 import { PULSE_ENABLED } from "@/config/featureFlags";
 import { PulseBarPersonal, AgentEnergyPill } from "@/features/pulse";
 
-export default function CommandCenterHome() {
+export interface CommandCenterHomeProps {
+  /** AppHome-only: hide in-page “Tempo rimasto” card (ActiveMissionBox); floating Time pill unaffected. */
+  hideScrollMissionStatusCard?: boolean;
+  /** AppHome-only: hide in-page M1SSION BATTLE card; floating Battle pill + overlays unaffected. */
+  hideScrollBattleCard?: boolean;
+  /** AppHome-only: hide in-page M1SSION AGENT glass container (`AgentDiary`); floating Agent pill on play surface unaffected. */
+  hideScrollAgentContainer?: boolean;
+  /** AppHome-only: hide green PE gain chips + stack invite + rank pill above bottom nav */
+  hidePeGainBadgeUi?: boolean;
+}
+
+export default function CommandCenterHome({
+  hideScrollMissionStatusCard = false,
+  hideScrollBattleCard = false,
+  hideScrollAgentContainer = false,
+  hidePeGainBadgeUi = false,
+}: CommandCenterHomeProps = {}) {
   // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
   
   // Get real user data from Supabase
@@ -212,26 +228,36 @@ export default function CommandCenterHome() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.05 }}
       >
-        <PulseBarPersonal variant="inline" />
+        <PulseBarPersonal variant="inline" hidePeGainBadge={hidePeGainBadgeUi} />
       </motion.div>
     )}
 
-{/* Floating Invite circle button in top-right */}
-<InviteFloatingButton />
-
-{/* 🎖️ Rank Pill - Posizione esatta dove era DNA Hub */}
-{PULSE_ENABLED && (
-  <div data-onboarding="rank-pill" className="fixed z-[70] bottom-24 right-4 md:bottom-28 md:right-8">
-    <AgentEnergyPill />
+{/* Invite + Rank: stacked above BottomNav — no overlap between invite orb and PE pill */}
+<div
+  className="fixed z-[70] flex flex-col items-end gap-3 pointer-events-none"
+  style={{
+    right: 'max(16px, env(safe-area-inset-right, 0px))',
+    bottom: 'calc(88px + env(safe-area-inset-bottom, 0px) + 10px)',
+  }}
+>
+  <div className="pointer-events-auto">
+    <InviteFloatingButton layout="stacked" />
   </div>
-)}
+  {PULSE_ENABLED && (
+    <div data-onboarding="rank-pill" className="pointer-events-auto">
+      <AgentEnergyPill hidePeGainBadge={hidePeGainBadgeUi} />
+    </div>
+  )}
+</div>
 
 
     {/* ═══════════════════════════════════════════════════════════════ */}
     {/* M1SSION AGENT - BLACK GLASS + WHITE MICRO-ENERGY */}
     {/* ═══════════════════════════════════════════════════════════════ */}
     <div 
-      className="card-glass-white-energy"
+      className={`card-glass-white-energy${hideScrollAgentContainer ? ' hidden' : ''}`}
+      aria-hidden={hideScrollAgentContainer ? true : undefined}
+      data-m1-home-section="scroll-agent-diary"
       style={{
         width: '100%',
         borderRadius: '24px',
@@ -271,7 +297,8 @@ export default function CommandCenterHome() {
     {/* TEMPO RIMASTO - BLACK GLASS + WHITE MICRO-ENERGY */}
     {/* ═══════════════════════════════════════════════════════════════ */}
     <div 
-      className="card-glass-white-energy"
+      className={`card-glass-white-energy${hideScrollMissionStatusCard ? ' hidden' : ''}`}
+      aria-hidden={hideScrollMissionStatusCard ? true : undefined}
       style={{
         width: '100%',
         borderRadius: '24px',
@@ -317,7 +344,8 @@ export default function CommandCenterHome() {
     {/* M1SSION BATTLE - BLACK GLASS + WHITE MICRO-ENERGY */}
     {/* ═══════════════════════════════════════════════════════════════ */}
     <div 
-      className="card-glass-white-energy"
+      className={`card-glass-white-energy${hideScrollBattleCard ? ' hidden' : ''}`}
+      aria-hidden={hideScrollBattleCard ? true : undefined}
       style={{
         width: '100%',
         borderRadius: '24px',

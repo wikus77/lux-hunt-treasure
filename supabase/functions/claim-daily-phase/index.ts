@@ -6,6 +6,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.1";
 import { withCors } from "../_shared/cors.ts";
+import { handlePinRotatorPilotClaim } from "../_shared/dailyPinRotatorPilotClaim.ts";
+import { handleTicTacToeDailyClaim } from "../_shared/dailyTicTacToeClaim.ts";
+import { handleNeuroMatchDailyClaim, NEUROMATCH_MISSION_ID } from "../_shared/dailyNeuroMatchClaim.ts";
+import { handleSheepHerdDailyClaim, SHEEP_HERD_MISSION_ID } from "../_shared/dailySheepHerdClaim.ts";
+import { TACTICAL_TIC_TAC_TOE_MISSION_ID } from "../_shared/ticTacToeDaily.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -166,6 +171,76 @@ async function handler(req: Request): Promise<Response> {
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
   const dayKey = getDayKeyUtc();
   const yesterdayKey = getYesterdayKeyUtc();
+
+  const pilotResponse = await handlePinRotatorPilotClaim(
+    mission_id,
+    action,
+    payload,
+    userId,
+    user.email,
+    dayKey,
+    admin
+  );
+  if (pilotResponse) {
+    return pilotResponse;
+  }
+
+  const tttResponse = await handleTicTacToeDailyClaim({
+    admin,
+    userId,
+    dayKey,
+    yesterdayKey,
+    action,
+    mission_id,
+    payload,
+  });
+  if (tttResponse) {
+    return tttResponse;
+  }
+  if (mission_id === TACTICAL_TIC_TAC_TOE_MISSION_ID) {
+    return new Response(JSON.stringify({ ok: false, error: "ttt_unhandled" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  }
+
+  const sheepResponse = await handleSheepHerdDailyClaim({
+    admin,
+    userId,
+    dayKey,
+    yesterdayKey,
+    action,
+    mission_id,
+    payload,
+  });
+  if (sheepResponse) {
+    return sheepResponse;
+  }
+  if (mission_id === SHEEP_HERD_MISSION_ID) {
+    return new Response(JSON.stringify({ ok: false, error: "sheep_herd_unhandled" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  }
+
+  const neuroResponse = await handleNeuroMatchDailyClaim({
+    admin,
+    userId,
+    dayKey,
+    yesterdayKey,
+    action,
+    mission_id,
+    payload,
+  });
+  if (neuroResponse) {
+    return neuroResponse;
+  }
+  if (mission_id === NEUROMATCH_MISSION_ID) {
+    return new Response(JSON.stringify({ ok: false, error: "neuro_match_unhandled" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  }
 
   if (
     mission_id !== "cipher_drill_anagram_v1" &&

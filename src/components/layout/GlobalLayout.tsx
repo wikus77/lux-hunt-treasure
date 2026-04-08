@@ -57,6 +57,9 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   const shouldHideNavigation = hideNavigationRoutes.includes(location);
   const isFullScreen = fullScreenRoutes.includes(location);
   const isSelfManaged = selfManagedRoutes.includes(location);
+  /** Capacitor native Home: single-screen, no vertical scroll / rubber-band on main (WKWebView). */
+  const isAppHomePath = location === '/' || location === '/home';
+  const lockAppHomeScroll = isAppHomePath && isCapacitor;
   
   // Debug logs only in development
   if (import.meta.env.DEV) {
@@ -95,21 +98,31 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
         {/* Main content - SCROLLS UNDER HEADER (AION-like) */}
         <main 
           key={location} 
-          className="relative global-layout-content m1-single-scroll-root m1-scroll-under-header"
+          className={`relative global-layout-content m1-single-scroll-root m1-scroll-under-header${lockAppHomeScroll ? ' overscroll-y-none' : ''}`}
           style={{
-            minHeight: 'var(--app-height, 100dvh)',
+            ...(lockAppHomeScroll
+              ? {
+                  height: 'var(--app-height, 100dvh)',
+                  maxHeight: 'var(--app-height, 100dvh)',
+                  minHeight: 0,
+                  overflowY: 'hidden',
+                  overflowX: 'hidden',
+                  overscrollBehaviorY: 'none',
+                  WebkitOverflowScrolling: 'auto',
+                }
+              : {
+                  minHeight: 'var(--app-height, 100dvh)',
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  overscrollBehavior: 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                  touchAction: 'pan-y',
+                }),
             // 🔧 FIX v6: NO paddingTop - content scrolls under the glass header
-            // Each page's first element handles its own top margin for visibility
             paddingTop: 0,
             paddingBottom: isCapacitor ? 'calc(64px + env(safe-area-inset-bottom, 0px))' : '64px',
-            overflowY: 'auto',
-            overflowX: 'hidden',
             position: 'relative',
             zIndex: 0,
-            // 🔧 FIX 27/01/2026 (Option B): contain → auto for native iOS rubber-band bounce
-            overscrollBehavior: 'auto',
-            WebkitOverflowScrolling: 'touch',
-            touchAction: 'pan-y',
           }}
         >
           {children}
@@ -134,21 +147,30 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
       {/* Main content - SCROLLS UNDER HEADER (AION-like) */}
       <main 
         key={location}
-        className="relative global-layout-content has-bottom-nav-padding m1-single-scroll-root m1-scroll-under-header"
+        className={`relative global-layout-content has-bottom-nav-padding m1-single-scroll-root m1-scroll-under-header${lockAppHomeScroll ? ' overscroll-y-none' : ''}`}
         style={{
-          minHeight: 'var(--app-height, 100dvh)',
-          // 🔧 FIX v6: NO paddingTop - content scrolls under the glass header
-          // Each page's first element handles its own top margin for visibility
+          ...(lockAppHomeScroll
+            ? {
+                height: 'var(--app-height, 100dvh)',
+                maxHeight: 'var(--app-height, 100dvh)',
+                minHeight: 0,
+                overflowY: 'hidden',
+                overflowX: 'hidden',
+                overscrollBehaviorY: 'none',
+                WebkitOverflowScrolling: 'auto',
+              }
+            : {
+                minHeight: 'var(--app-height, 100dvh)',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                overscrollBehavior: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+              }),
           paddingTop: 0,
           paddingBottom: isCapacitor ? 'calc(64px + env(safe-area-inset-bottom, 0px))' : '64px',
-          overflowY: 'auto',
-          overflowX: 'hidden',
           position: 'relative',
           zIndex: 0,
-          // 🔧 FIX 27/01/2026 (Option B): contain → auto for native iOS rubber-band bounce
-          overscrollBehavior: 'auto',
-          WebkitOverflowScrolling: 'touch',
-          touchAction: 'pan-y',
         }}
       >
         {children}

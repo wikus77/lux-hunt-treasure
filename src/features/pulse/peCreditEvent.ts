@@ -17,6 +17,8 @@ export interface PECreditEventDetail {
   /** Optional: post-value after credit */
   postValue?: number;
   metadata?: Record<string, unknown>;
+  /** Set when Conductor replays; capture listener ignores to avoid loops. */
+  orchestratorReplay?: boolean;
 }
 
 export type PECreditSource =

@@ -18,9 +18,11 @@ import { ChevronUp } from 'lucide-react';
 interface PulseBarPersonalProps {
   onTap?: () => void;
   variant?: 'inline' | 'fixed' | 'floating';
+  /** UI-only: hide green ⚡ +N PE chip above bar */
+  hidePeGainBadge?: boolean;
 }
 
-export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
+export const PulseBarPersonal = ({ onTap, hidePeGainBadge = false }: PulseBarPersonalProps) => {
   const { state, refetch } = useHierarchyRank();
   const [displayValue, setDisplayValue] = useState(0);
   const { openPulseBreaker } = usePulseBreakerStore();
@@ -278,7 +280,7 @@ export const PulseBarPersonal = ({ onTap }: PulseBarPersonalProps) => {
       </div>
 
       {/* PE Gain Animation — delta shown for full 2.8s */}
-      {showPEGain && displayDelta > 0 && (
+      {!hidePeGainBadge && showPEGain && displayDelta > 0 && (
         <motion.div
           className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap z-20"
           initial={{ opacity: 0, y: 8, scale: 0.85 }}

@@ -22,19 +22,25 @@ import {
 import { ENABLE_HOME_FLOATING_PILLS_V3 } from '@/components/home/floatingPillsV3/floating-pills-v3';
 import { useFloatingPillsV3 } from '@/components/home/floatingPillsV3/useFloatingPillsV3';
 
-/** 7 positions on circle, radius 70px (hub center = pill center; slots unchanged). */
+/**
+ * Same compositional rules as Prossima azione (`ActionRadialHubPill`): +x only, 64px discs,
+ * staggered columns, ≥~65px center spacing. First four offsets match Action; three more on a right column.
+ */
 const RADIAL_7: { x: number; y: number }[] = [
-  { x: 70, y: 0 },
-  { x: 44, y: -55 },
-  { x: -15, y: -68 },
-  { x: -63, y: -35 },
-  { x: -63, y: 35 },
-  { x: -15, y: 68 },
-  { x: 44, y: 55 },
+  { x: 62, y: -102 },
+  { x: 104, y: -51 },
+  { x: 104, y: 51 },
+  { x: 62, y: 102 },
+  { x: 152, y: -95 },
+  { x: 152, y: 0 },
+  { x: 152, y: 95 },
 ];
 
-const SAT_SIZE = 44;
+const SAT_SIZE = 64;
 const HALF = SAT_SIZE / 2;
+/** Fits Action-equivalent fan + third column (152±32 from hub center). */
+const RADIAL_STAGE_W = 380;
+const RADIAL_STAGE_H = 276;
 
 /** Seeded shuffle (reproducible per day). */
 function shuffleWithSeed<T>(arr: T[], seed: number): T[] {
@@ -182,7 +188,7 @@ export const CommitRadialHubPill: React.FC = () => {
                 key={i}
                 type="button"
                 aria-label={`${t('home_side_pill_commit')} · ${slotsLetters[i]}`}
-                className="pointer-events-auto absolute flex items-center justify-center rounded-full border text-lg font-black uppercase"
+                className="pointer-events-auto absolute flex items-center justify-center rounded-full border text-2xl font-black uppercase tracking-tight"
                 style={{
                   width: SAT_SIZE,
                   height: SAT_SIZE,
@@ -289,6 +295,7 @@ export const CommitRadialHubPill: React.FC = () => {
         {backdrop}
         <div
           id={COMMIT_PILL_V3_PORTAL_ID}
+          data-m1-pill-layout-measure="commit"
           className="relative shrink-0 self-start overflow-visible"
           style={{
             width: 72,
@@ -298,7 +305,7 @@ export const CommitRadialHubPill: React.FC = () => {
         >
           <div
             className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 overflow-visible"
-            style={{ width: 200, height: 200 }}
+            style={{ width: RADIAL_STAGE_W, height: RADIAL_STAGE_H }}
           >
             {hubCore}
           </div>
@@ -327,8 +334,8 @@ export const CommitRadialHubPill: React.FC = () => {
         style={{
           top: 'calc(env(safe-area-inset-top, 0px) + 4px)',
           right: 'max(16px, env(safe-area-inset-right, 0px))',
-          width: 200,
-          height: 200,
+          width: RADIAL_STAGE_W,
+          height: RADIAL_STAGE_H,
           pointerEvents: 'none',
         }}
       >

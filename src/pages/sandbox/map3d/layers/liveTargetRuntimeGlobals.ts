@@ -107,7 +107,7 @@ export function createLiveTargetRuntimeState(
     effectiveVisualDebug: effectiveVisualDebug(),
     featureFlagLIVE_TARGET_ENABLED: LIVE_TARGET_ENABLED,
     liveTargetBuildStamp: {
-      liveTargetModuleCode: 'LT-3.1',
+      liveTargetModuleCode: 'LT-4.3',
       viteBuildId: String(import.meta.env.VITE_BUILD_ID ?? ''),
       vitePwaVersion: String(import.meta.env.VITE_PWA_VERSION ?? ''),
       bundleEvaluatedAtIso: new Date().toISOString(),

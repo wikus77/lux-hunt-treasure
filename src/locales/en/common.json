@@ -1748,5 +1748,21 @@
   "liveTarget.captured_feedback": "Target captured",
   "liveTarget.card_title": "LIVE TARGET",
   "liveTarget.dot_label": "Target",
-  "liveTarget.dismiss_tutorial": "Got it"
+  "liveTarget.dismiss_tutorial": "Got it",
+  "liveTarget.engage_cta": "Engage",
+  "liveTarget.tutorial_phase4_title": "Live Target — how to play",
+  "liveTarget.tutorial_phase4_body": "Get within GPS range, then zoom the map until you are in the correct band. When Engage appears, tap it — the target turns cyan. Then tap the Target on the map to complete the capture before time runs out; stay in range and keep zoom inside the valid window.",
+  "liveTarget.state_engage_ready": "ZOOM OK",
+  "liveTarget.state_engaged": "ENGAGED",
+  "liveTarget.success_message": "Target secured",
+  "liveTarget.failure_message": "Lock lost",
+  "liveTarget.difficulty_easy": "Easy",
+  "liveTarget.tutorial_engaged_hint": "Active mode: tap the Target on the map to complete the capture — stay in range and keep zoom in the valid band.",
+  "liveTarget.fail_miss_tap": "Target missed — your tap was not on the objective.",
+  "liveTarget.victory_modal_badge": "LIVE TARGET COMPLETE",
+  "liveTarget.victory_modal_title": "LEVEL {{level}} COMPLETE",
+  "liveTarget.victory_modal_subtitle": "Target acquired. Next level access unlocked.",
+  "liveTarget.victory_modal_continue": "CONTINUE",
+  "liveTarget.victory_modal_next_hint": "Press continue to advance your operation.",
+  "liveTarget.victory_card_classified": "CLASSIFIED"
 }

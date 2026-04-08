@@ -1708,5 +1708,21 @@
   "liveTarget.captured_feedback": "Cible capturée",
   "liveTarget.card_title": "LIVE TARGET",
   "liveTarget.dot_label": "Cible",
-  "liveTarget.dismiss_tutorial": "Compris"
+  "liveTarget.dismiss_tutorial": "Compris",
+  "liveTarget.engage_cta": "Engager",
+  "liveTarget.tutorial_phase4_title": "Live Target — comment jouer",
+  "liveTarget.tutorial_phase4_body": "Approchez-vous dans la zone GPS, puis zoomez jusqu’à être dans la bonne plage. Quand Engager apparaît, touchez-le — la cible devient cyan. Ensuite touchez la cible sur la carte pour finaliser la capture avant la fin du temps ; restez à portée et gardez le zoom dans la fenêtre valide.",
+  "liveTarget.state_engage_ready": "ZOOM OK",
+  "liveTarget.state_engaged": "ENGAGÉ",
+  "liveTarget.success_message": "Cible verrouillée",
+  "liveTarget.failure_message": "Verrou perdu",
+  "liveTarget.difficulty_easy": "Facile",
+  "liveTarget.tutorial_engaged_hint": "Mode actif : touchez la cible sur la carte pour finaliser — restez à portée et gardez le zoom dans la plage valide.",
+  "liveTarget.fail_miss_tap": "Cible manquée — le toucher n'était pas sur l'objectif.",
+  "liveTarget.victory_modal_badge": "LIVE TARGET TERMINÉ",
+  "liveTarget.victory_modal_title": "NIVEAU {{level}} TERMINÉ",
+  "liveTarget.victory_modal_subtitle": "Cible acquise. Accès au niveau suivant débloqué.",
+  "liveTarget.victory_modal_continue": "CONTINUER",
+  "liveTarget.victory_modal_next_hint": "Appuyez sur continuer pour poursuivre l'opération.",
+  "liveTarget.victory_card_classified": "CLASSIFIÉ"
 }

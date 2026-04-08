@@ -1568,6 +1568,19 @@ html:has(.sn-page) .text-white:not(.leaderboard-card-glass .text-white):not(.m1-
   color: #ffffff !important;
 }
 
+/* 🔧 FIX GIOCA V6: Floating pills portal — same sn-page .text-white → dark override as #m1-modal-portal.
+   Play modal bottom sheet lives here on dark panels; Tailwind text-white must stay light. */
+#m1-floating-pills-v3-portal .text-white,
+#m1-floating-pills-v3-portal [class*="text-white"],
+#m1-floating-pills-v3-portal .text-white\/90,
+#m1-floating-pills-v3-portal .text-white\/80,
+#m1-floating-pills-v3-portal .text-white\/70,
+#m1-floating-pills-v3-portal .text-white\/60,
+#m1-floating-pills-v3-portal .text-white\/50,
+#m1-floating-pills-v3-portal .text-emerald-50 {
+  color: #fafafa !important;
+}
+
 /* RewardZonePopup renders to body (not #m1-modal-portal) - same fix */
 .m1-reward-zone-popup .text-white,
 .m1-reward-zone-popup [class*="text-white"],

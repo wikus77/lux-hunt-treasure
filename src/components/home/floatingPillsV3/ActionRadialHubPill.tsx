@@ -15,16 +15,19 @@ import { useDclLauncher } from '@/contexts/DclLauncherContext';
 import { buttonClickFeedback } from '@/utils/buttonClickFeedback';
 import { useFloatingPillsV3 } from './useFloatingPillsV3';
 
-/** 4 positions on circle, radius 70px. */
+/** 4 slots open **to the right** of hub: +x only, generous vertical + staggered x so 64px discs do not overlap (~65px+ center spacing). */
 const RADIAL_4: { x: number; y: number; icon: React.ReactNode; label: string; path?: string; action?: () => void }[] = [
-  { x: 70, y: 0, icon: <Map className="h-5 w-5" />, label: 'MAP', path: '/map-3d-tiler' },
-  { x: 0, y: -70, icon: <Zap className="h-5 w-5" />, label: 'BUZZ', path: '/buzz' },
-  { x: -70, y: 0, icon: <Brain className="h-5 w-5" />, label: 'AION', path: '/intelligence' },
-  { x: 0, y: 70, icon: <Calendar className="h-5 w-5" />, label: 'MISSION', action: undefined }, // Will use openMission()
+  { x: 62, y: -102, icon: <Map className="h-6 w-6 shrink-0" />, label: 'MAP', path: '/map-3d-tiler' },
+  { x: 104, y: -51, icon: <Zap className="h-6 w-6 shrink-0" />, label: 'BUZZ', path: '/buzz' },
+  { x: 104, y: 51, icon: <Brain className="h-6 w-6 shrink-0" />, label: 'AION', path: '/intelligence' },
+  { x: 62, y: 102, icon: <Calendar className="h-6 w-6 shrink-0" />, label: 'MISSION', action: undefined },
 ];
 
-const SAT_SIZE = 52;
+const SAT_SIZE = 64;
 const HALF = SAT_SIZE / 2;
+/** Wider stage so right-open sats + larger diameter stay inside overflow-visible bounds */
+const RADIAL_STAGE_W = 280;
+const RADIAL_STAGE_H = 252;
 
 const ACTION_PILL_TAPPED_KEY = 'm1-action-pill-tapped-today';
 
@@ -97,6 +100,7 @@ export const ActionRadialHubPill: React.FC = () => {
   /** Flex footprint = visible pill (72×72); radial hit-area 200×200 is centered so rail axis matches Tempo/Battle. */
   return (
     <div
+      data-m1-pill-layout-measure="prossima-azione"
       className="relative shrink-0 self-start overflow-visible"
       style={{
         width: 72,
@@ -125,7 +129,7 @@ export const ActionRadialHubPill: React.FC = () => {
 
       <div
         className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 overflow-visible"
-        style={{ width: 200, height: 200 }}
+        style={{ width: RADIAL_STAGE_W, height: RADIAL_STAGE_H }}
       >
         <div className="relative h-full w-full" style={{ pointerEvents: 'none' }}>
         <AnimatePresence>
@@ -161,7 +165,7 @@ export const ActionRadialHubPill: React.FC = () => {
                   key={i}
                   type="button"
                   aria-label={`${t('home_side_pill_next_action')} · ${slot.label}`}
-                  className="pointer-events-auto absolute flex flex-col items-center justify-center gap-1 rounded-full border text-xs font-bold uppercase"
+                  className="pointer-events-auto absolute flex flex-col items-center justify-center gap-0.5 rounded-full border text-xs font-bold uppercase"
                   style={{
                     width: SAT_SIZE,
                     height: SAT_SIZE,
@@ -205,8 +209,10 @@ export const ActionRadialHubPill: React.FC = () => {
                     onSlotTap(slot);
                   }}
                 >
-                  <span className="text-[10px]">{slot.icon}</span>
-                  <span className="text-[8px] leading-none">{slot.label}</span>
+                  <span className="flex shrink-0 items-center justify-center">{slot.icon}</span>
+                  <span className="max-w-[4.25rem] text-center text-[9px] font-extrabold leading-tight tracking-wide">
+                    {slot.label}
+                  </span>
                 </motion.button>
               );
             })}

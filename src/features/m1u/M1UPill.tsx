@@ -43,6 +43,7 @@ import { useM1UnitsRealtime } from '@/hooks/useM1UnitsRealtime';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { M1UnitsShopModal } from '@/components/m1units/M1UnitsShopModal';
 import { buttonClickFeedback } from '@/utils/buttonClickFeedback';
+import { isHapticsAvailable, hapticSelection } from '@/utils/haptics';
 import '@/features/m1u/m1u-ui.css';
 
 interface M1UPillProps {
@@ -341,6 +342,13 @@ const M1UPill: React.FC<M1UPillProps> = ({
         return;
       }
 
+      if (isHapticsAvailable()) {
+        try {
+          hapticSelection();
+        } catch {
+          /* dev web */
+        }
+      }
       setTimeout(() => refetchWithThrottle('credited'), 100);
       animateBalance(fromBalance, targetBalance, 2500);
     },
@@ -438,7 +446,7 @@ const M1UPill: React.FC<M1UPillProps> = ({
 
         {/* M1U Pill - NOW SECOND (RIGHT) */}
         <motion.div
-          className="m1u-pill-main flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer"
+          className="m1u-pill-main flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer relative"
           style={{
             // 🎨 DARK GLASS SEMI-TRASPARENTE - Testo bianco visibile
             background: 'rgba(10, 10, 15, 0.7)',
@@ -452,9 +460,29 @@ const M1UPill: React.FC<M1UPillProps> = ({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={(e) => handleOpenRecharge(e)}
-          animate={pulseAnimation ? { scale: [1, 1.05, 1] } : {}}
-          transition={{ duration: 0.3 }}
+          animate={pulseAnimation || isAnimating ? { scale: [1, 1.1, 1.02, 1] } : {}}
+          transition={{
+            duration: isAnimating ? 0.7 : 0.38,
+            ease: [0.22, 1, 0.36, 1],
+          }}
         >
+          {/* Victory credit ring — presentation only */}
+          <AnimatePresence>
+            {(pulseAnimation || isAnimating) && (
+              <motion.span
+                className="pointer-events-none absolute rounded-full"
+                style={{
+                  inset: -4,
+                  border: '2px solid rgba(255, 215, 0, 0.5)',
+                  boxShadow: '0 0 22px rgba(255, 215, 0, 0.42), 0 0 48px rgba(0, 231, 255, 0.12)',
+                }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: [0.55, 0.95, 0.35], scale: [0.94, 1.08, 1.01] }}
+                exit={{ opacity: 0, scale: 1.1 }}
+                transition={{ duration: 0.78, ease: [0.22, 1, 0.36, 1] }}
+              />
+            )}
+          </AnimatePresence>
           {/* Icona M1 */}
           <motion.div
             className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"

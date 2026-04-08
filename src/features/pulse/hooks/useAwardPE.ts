@@ -66,8 +66,8 @@ export const PE_VALUES: Record<Exclude<PEActionType, 'CUSTOM' | 'FORTUNE_WHEEL'>
 export const PE_DAILY_LIMITS: Partial<Record<PEActionType, number>> = {
   BUZZ_CLICK: 5,
   BUZZ_MAP_CLICK: 3,
-  PULSE_BREAKER_WIN: 10,
-  PULSE_BREAKER_PLAY: 10,
+  PULSE_BREAKER_WIN: 100,
+  PULSE_BREAKER_PLAY: 100,
   AION_CHAT: 3,
   FORUM_POST: 5,
   FORUM_COMMENT: 10,
@@ -208,30 +208,35 @@ export const useAwardPE = (): UseAwardPEReturn => {
         }
       }
 
+      const oldPeVal = result.old_pe ?? result.oldPe;
+      const newPeVal = result.new_pe ?? result.newPe;
+      const deltaPeRaw = result.delta_pe ?? result.deltaPe;
       const awardResult: AwardPEResult = {
         success: true,
-        oldPE: result.old_pe,
-        newPE: result.new_pe,
-        deltaPE: result.delta_pe,
-        rankChanged: result.rank_changed,
-        oldRankId: result.old_rank_id,
-        newRankId: result.new_rank_id,
+        oldPE: oldPeVal,
+        newPE: newPeVal,
+        deltaPE: deltaPeRaw,
+        rankChanged: result.rank_changed ?? result.rankChanged,
+        oldRankId: result.old_rank_id ?? result.oldRankId,
+        newRankId: result.new_rank_id ?? result.newRankId,
       };
 
       console.log(`[PE] ✅ Award successful:`, {
         action,
-        oldPE: result.old_pe,
-        newPE: result.new_pe,
-        delta: result.delta_pe,
+        oldPE: oldPeVal,
+        newPE: newPeVal,
+        delta: deltaPeRaw,
         rankChanged: result.rank_changed
       });
 
       setLastAward(awardResult);
 
       // Dispatch evento globale per aggiornare UI
-      const delta = awardResult.deltaPE ?? (awardResult.newPE != null && awardResult.oldPE != null ? awardResult.newPE - awardResult.oldPE : 0);
+      const delta = Number(
+        awardResult.deltaPE ?? (awardResult.newPE != null && awardResult.oldPE != null ? awardResult.newPE - awardResult.oldPE : 0)
+      );
       const limitReached = !!(awardResult as { limitReached?: boolean }).limitReached;
-      const willEmit = typeof window !== 'undefined' && delta > 0;
+      const willEmit = typeof window !== 'undefined' && Number.isFinite(delta) && delta > 0;
       if (typeof console !== 'undefined') {
         console.log('[PE-TRACE-AWARD] RPC success', { action, delta, limitReached, willEmit });
       }

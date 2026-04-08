@@ -20,6 +20,7 @@ import {
 import { calculatePhaseRewards } from '@/missions/missionsRegistry';
 import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 import { emitPECreditEvent } from '@/features/pulse/peCreditEvent';
+import type { ShellGameProps } from '@/missions/dailyMiniGames/shellGameProps';
 
 const PHASE1_REWARD = 10;
 const PHASE2_REWARD = 10;
@@ -27,12 +28,7 @@ const TIMER_SECONDS = 60;
 
 type Step = 'loading' | 'phase1' | 'phase1_done' | 'phase2' | 'phase2_win' | 'phase2_fail' | 'error' | 'return_tomorrow';
 
-interface CipherDrillModalProps {
-  onClose: () => void;
-  onComplete: () => void;
-}
-
-export const CipherDrillModal: React.FC<CipherDrillModalProps> = ({ onClose, onComplete }) => {
+export const CipherDrillModal: React.FC<ShellGameProps> = ({ onClose, onComplete }) => {
   const { t } = useTranslation();
   const [step, setStep] = useState<Step>('loading');
   const [anagram, setAnagram] = useState<string>('');

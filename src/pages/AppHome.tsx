@@ -19,6 +19,13 @@ import M1UPill from "@/features/m1u/M1UPill";
 import { PageSkeleton } from "@/components/ui/skeleton-loader";
 // AgentEnergyPill ora in CommandCenterHome (posizione floating)
 import { PULSE_ENABLED, HOME_V2_FLOATING_SIDE_PILLS_ENABLED } from "@/config/featureFlags";
+import {
+  APP_HOME_HIDE_FLOATING_AGENT_PILL,
+  APP_HOME_HIDE_PE_GAIN_BADGE_UI,
+  APP_HOME_HIDE_SCROLL_AGENT_CONTAINER,
+  APP_HOME_HIDE_SCROLL_SECTIONS_UI,
+  APP_HOME_GIOCA_PLAY_GATE_ENABLED,
+} from "@/config/appHomeUiHide";
 import StreakPill from "@/components/gamification/StreakPill";
 import CashbackVaultPill from "@/components/home/CashbackVaultPill";
 import ShopPill from "@/components/shop/ShopPill";
@@ -34,8 +41,13 @@ import { HomeSectionLauncherProvider } from "@/contexts/HomeSectionLauncherConte
 import { HomeSidePillsLayer } from "@/components/home/HomeSidePillsLayer";
 import {
   FloatingPillLayerV3,
+  PillInfoOverlay,
   ENABLE_HOME_FLOATING_PILLS_V3,
 } from "@/components/home/floatingPillsV3";
+import { HomePlaySurfaceProvider } from "@/contexts/HomePlaySurfaceContext";
+import { PillInfoOverlayProvider } from "@/contexts/PillInfoOverlayContext";
+import { HomeGiocaCta } from "@/components/home/HomeGiocaCta";
+import { HomePlayGatedVisibility } from "@/components/home/HomePlayGatedVisibility";
 import {
   CommitPillV3,
   CommitRadialHubPill,
@@ -136,6 +148,7 @@ const { isConnected } = useRealTimeNotifications();
   // Wallet pill fade on scroll (UI only) — IntersectionObserver; double rAF so CSS transition runs (browser paints "from" state first)
   const walletPillVisibleRef = useRef(true);
   useEffect(() => {
+    if (isCapacitor) return;
     const el = scrollSentinelRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
@@ -147,7 +160,6 @@ const { isConnected } = useRealTimeNotifications();
             walletPillVisibleRef.current = true;
             setWalletPillVisible(true);
           } else {
-            // Defer setState so browser paints current (visible) frame, then transition 1→0 runs
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
                 walletPillVisibleRef.current = false;
@@ -161,7 +173,7 @@ const { isConnected } = useRealTimeNotifications();
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [isCapacitor]);
 
   useEffect(() => {
     // Real-time notification connection status updated
@@ -259,6 +271,11 @@ const { isConnected } = useRealTimeNotifications();
   const [progress] = useLocalStorage<number>("mission-progress", 0);
   const prizeProgress = missionStatus?.progressPercent || progress || 46;
 
+  const homeGiocaPlayGateEnabled =
+    HOME_V2_FLOATING_SIDE_PILLS_ENABLED &&
+    ENABLE_HOME_FLOATING_PILLS_V3 &&
+    APP_HOME_GIOCA_PLAY_GATE_ENABLED;
+
   return (
     <div className="w-full relative sn-page sn-page-dark">
       <Helmet>
@@ -304,6 +321,7 @@ const { isConnected } = useRealTimeNotifications();
               >
                 <HomeSectionLauncherProvider>
                 <DclLauncherProvider>
+                <HomePlaySurfaceProvider enabled={homeGiocaPlayGateEnabled}>
                 {/* ON M1SSION BADGE — Positioned in header area (removed from scroll flow) */}
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
@@ -311,6 +329,7 @@ const { isConnected } = useRealTimeNotifications();
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 <div 
                   className="m1-neon-border-animated"
+                  data-m1-home-layout-measure="prize-outer"
                   style={{
                     position: 'relative',
                     width: '100%',
@@ -370,22 +389,33 @@ const { isConnected } = useRealTimeNotifications();
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 {/* M1SSION DAILY CONTROL LOOP™ — Le 3 azioni di oggi */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                <SectionErrorBoundary section="DailyControlLoop" fallbackHeight="120px" showRetry={false}>
-                  <DailyControlLoopCard />
-                </SectionErrorBoundary>
+                <div
+                  className={APP_HOME_HIDE_SCROLL_SECTIONS_UI ? 'hidden' : undefined}
+                  aria-hidden={APP_HOME_HIDE_SCROLL_SECTIONS_UI ? true : undefined}
+                >
+                  <SectionErrorBoundary section="DailyControlLoop" fallbackHeight="120px" showRetry={false}>
+                    <DailyControlLoopCard />
+                  </SectionErrorBoundary>
+                </div>
 
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 {/* COMMIT NODES — 3→1 Merge on Slow Scroll (scroll target: Commit) */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                <div id="home-daily-commit">
+                <HomePlayGatedVisibility
+                  id="home-daily-commit"
+                  className={APP_HOME_HIDE_SCROLL_SECTIONS_UI ? 'hidden' : undefined}
+                  aria-hidden={APP_HOME_HIDE_SCROLL_SECTIONS_UI ? true : undefined}
+                >
                   <CommitNodesContainer />
-                </div>
+                </HomePlayGatedVisibility>
                 
                 {/* ═══════════════════════════════════════════════════════════════ */}
                 {/* PROSSIMA AZIONE - BLACK GLASS + NEON (scroll target: Mission) */}
                 {/* ═══════════════════════════════════════════════════════════════ */}
-                <div
+                <HomePlayGatedVisibility
                   id="home-daily-mission"
+                  className={APP_HOME_HIDE_SCROLL_SECTIONS_UI ? 'hidden' : undefined}
+                  aria-hidden={APP_HOME_HIDE_SCROLL_SECTIONS_UI ? true : undefined}
                   style={{
                     width: '100%',
                     borderRadius: '24px',
@@ -413,13 +443,17 @@ const { isConnected } = useRealTimeNotifications();
                   <SectionErrorBoundary section={t('home_section_next_action')} fallbackHeight="80px">
                     <NextActionContainer />
                   </SectionErrorBoundary>
-                </div>
+                </HomePlayGatedVisibility>
 
                 {HOME_V2_FLOATING_SIDE_PILLS_ENABLED && ENABLE_HOME_FLOATING_PILLS_V3 && (
-                  <SectionErrorBoundary section="FloatingPillV3" fallbackHeight="0px" showRetry={false}>
-                    <FloatingPillLayerV3 />
-                  </SectionErrorBoundary>
+                  <PillInfoOverlayProvider>
+                    <SectionErrorBoundary section="FloatingPillV3" fallbackHeight="0px" showRetry={false}>
+                      <FloatingPillLayerV3 hideAgentPill={APP_HOME_HIDE_FLOATING_AGENT_PILL} />
+                    </SectionErrorBoundary>
+                    <PillInfoOverlay />
+                  </PillInfoOverlayProvider>
                 )}
+                {homeGiocaPlayGateEnabled && <HomeGiocaCta />}
                 {HOME_V2_FLOATING_SIDE_PILLS_ENABLED && !ENABLE_HOME_FLOATING_PILLS_V3 && (
                   <SectionErrorBoundary section="HomeSidePills" fallbackHeight="0px" showRetry={false}>
                     <HomeSidePillsLayer />
@@ -436,6 +470,7 @@ const { isConnected } = useRealTimeNotifications();
                   </SectionErrorBoundary>
                 )}
 
+                </HomePlaySurfaceProvider>
                 </DclLauncherProvider>
 
                 {/* Notifications Banner */}
@@ -469,7 +504,12 @@ const { isConnected } = useRealTimeNotifications();
 
                 <div id="main-content" className="max-w-screen-xl mx-auto pb-20" role="main">
                   <SectionErrorBoundary section={t('home_section_command_center')} fallbackHeight="400px">
-                    <CommandCenterHome />
+                    <CommandCenterHome
+                      hideScrollMissionStatusCard={APP_HOME_HIDE_SCROLL_SECTIONS_UI}
+                      hideScrollBattleCard={APP_HOME_HIDE_SCROLL_SECTIONS_UI}
+                      hideScrollAgentContainer={APP_HOME_HIDE_SCROLL_AGENT_CONTAINER}
+                      hidePeGainBadgeUi={APP_HOME_HIDE_PE_GAIN_BADGE_UI}
+                    />
                   </SectionErrorBoundary>
                   
                   {/* M1SSION PANEL™ Button - Admin/Developer only */}
@@ -548,6 +588,7 @@ const { isConnected } = useRealTimeNotifications();
       <div 
         id="m1u-pill-home-slot" 
         data-onboarding="m1u-pill"
+        data-m1-home-layout-measure="m1u-slot"
         className="fixed left-4 z-[1001] flex flex-col gap-3"
         style={{ 
           top: 'calc(env(safe-area-inset-top, 0px) + 80px)',

@@ -29,6 +29,9 @@ import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/supabase/clientUtils';
 // ✅ TASK 4: Auto-register SW on all hosts (not just *.pages.dev)
 import '@/lib/pwa/sw-autorun';
 
+// LIVE TARGET 1.3C: app entry — window.__LIVE_TARGET_RUNTIME__ even when MapTiler3D is lazy-loaded
+import '@/pages/sandbox/map3d/layers/liveTargetRuntimeGlobals';
+
 import React from 'react';
 // __M1_BUILD_STAMP__=1769059557
 import ReactDOM from 'react-dom/client';

@@ -8,6 +8,7 @@
 
 import React from 'react';
 import { useHierarchyRank } from '@/hooks/useHierarchyRank';
+import { useVictoryOrchestrationGate } from '@/features/victoryOrchestration/VictoryOrchestrationContext';
 import { RankUpVideoModal } from './RankUpVideoModal';
 
 /**
@@ -16,12 +17,12 @@ import { RankUpVideoModal } from './RankUpVideoModal';
  */
 export const RankUpWatcher: React.FC = () => {
   const { pendingRankUp, dismissRankUp, isLoading } = useHierarchyRank();
+  const { blockRankUpModal } = useVictoryOrchestrationGate();
 
   // Non mostrare nulla durante il caricamento
   if (isLoading) return null;
 
-  // Se c'è un rank up pendente, mostra il modal
-  if (pendingRankUp) {
+  if (pendingRankUp && !blockRankUpModal) {
     console.log(`[RankUpWatcher] 🎖️ Showing rank up modal for: ${pendingRankUp.name}`);
     
     return (

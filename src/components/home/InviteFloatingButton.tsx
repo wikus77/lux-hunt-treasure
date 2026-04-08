@@ -6,8 +6,20 @@ import { UserPlus } from "lucide-react";
 import { InviteFriendModal } from "@/components/xp/InviteFriendModal";
 import '@/features/pulse/styles/pulse-pill.css';
 
-const InviteFloatingButton: React.FC = () => {
+export type InviteFloatingButtonLayout = 'fixed' | 'stacked';
+
+export interface InviteFloatingButtonProps {
+  /** `stacked`: parent provides position (column above rank pill); `fixed`: legacy solo placement */
+  layout?: InviteFloatingButtonLayout;
+}
+
+const InviteFloatingButton: React.FC<InviteFloatingButtonProps> = ({ layout = 'fixed' }) => {
   const [open, setOpen] = useState(false);
+
+  const positionClass =
+    layout === 'stacked'
+      ? 'pe-pill-orb relative z-[71]'
+      : 'pe-pill-orb fixed z-[70] bottom-40 right-4 md:bottom-44 md:right-8';
 
   return (
     <>
@@ -15,7 +27,7 @@ const InviteFloatingButton: React.FC = () => {
         aria-label="Invita un Amico"
         data-onboarding="invite"
         onClick={() => setOpen(true)}
-        className="pe-pill-orb fixed z-[70] bottom-40 right-4 md:bottom-44 md:right-8"
+        className={positionClass}
         initial={{ opacity: 0, scale: 0.9, y: -10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         whileHover={{ scale: 1.03 }}

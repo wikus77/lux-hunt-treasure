@@ -12,7 +12,12 @@ import { Zap } from 'lucide-react';
 import '@/features/pulse/styles/pulse-pill.css';
 import RankDetailModal from '@/components/rank/RankDetailModal';
 
-export const AgentEnergyPill = () => {
+export interface AgentEnergyPillProps {
+  /** UI-only: hide green ⚡ +N PE chip; hooks / state unchanged */
+  hidePeGainBadge?: boolean;
+}
+
+export const AgentEnergyPill = ({ hidePeGainBadge = false }: AgentEnergyPillProps) => {
   const { state, isLoading } = useHierarchyRank();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPEGain, setShowPEGain] = useState(false);
@@ -112,7 +117,7 @@ export const AgentEnergyPill = () => {
 
       {/* PE Gain Animation */}
       <AnimatePresence>
-        {showPEGain && displayDelta > 0 && (
+        {!hidePeGainBadge && showPEGain && displayDelta > 0 && (
           <motion.div
             className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap z-20"
             initial={{ opacity: 0, y: 6, scale: 0.85 }}

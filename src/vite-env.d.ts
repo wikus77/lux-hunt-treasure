@@ -50,6 +50,9 @@ declare const process: {
 
 // Dichiarazione per Cookie Script
 interface Window {
+  /** LIVE TARGET™ Phase 1.3C — set when map screen loads (liveTargetRuntimeGlobals). */
+  __LIVE_TARGET_RUNTIME__?: Record<string, unknown>;
+
   CookieScriptConsent?: {
     show: () => void;
     hide: () => void;
@@ -106,9 +109,24 @@ interface ImportMetaEnv {
   readonly VITE_BUNDLE_ANALYZE?: string;
 
   // Feature flags
+  readonly VITE_VICTORY_ORCHESTRATION_V1?: string;
+  readonly VITE_VICTORY_SYSTEM_V4_REAL_DAILY?: string;
+  readonly VITE_VICTORY_ORCH_QA_HARNESS?: string;
+  /** PE reward A/V sync tracing: `true` or localStorage `m1_pe_sync_debug=true` */
+  readonly VITE_PE_SYNC_DEBUG?: string;
   readonly VITE_LIVING_MAP_USE_MOCK?: string;
   readonly VITE_ENABLE_LIVING_MAP?: string;
   readonly VITE_DEMO_WEATHER?: string;
+
+  /** Live Target map marker: `1` / `0` (see featureFlags LIVE_TARGET_ENABLED). */
+  readonly VITE_LIVE_TARGET?: string;
+  /** Extra `[LiveTarget]` console diagnostics on production builds when `true`. */
+  readonly VITE_LIVE_TARGET_LOG?: string;
+  /**
+   * Phase 1.3 forensic: huge high-contrast marker + screen-lock anchor + rich `[LiveTarget]` logs.
+   * Remove after validation. Set `true` only for device screenshots.
+   */
+  readonly VITE_LIVE_TARGET_DEBUG?: string;
 
   // Sentry
   readonly VITE_SENTRY_DSN?: string;

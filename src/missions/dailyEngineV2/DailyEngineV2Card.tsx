@@ -7,21 +7,38 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Target, ChevronRight, Gift } from 'lucide-react';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useDailyEngineV2 } from './useDailyEngineV2';
 import { getSecondsUntilNextUtcMidnight } from './getNextUtcMidnight';
-import { MISSION_ID_CIPHER_DRILL, MISSION_ID_WORD_DUEL, MISSION_ID_SIGNAL_PATTERN } from '@/missions/serverReal/claimDailyPhase';
 import { consumeSundayReward } from '@/missions/serverReal/consumeSundayReward';
-import { CipherDrillModal } from '@/missions/ui/CipherDrillModal';
-import { WordDuelMemoryModal } from '@/missions/ui/WordDuelMemoryModal';
-import { SignalPatternNumbersModal } from '@/missions/ui/SignalPatternNumbersModal';
+import { resolveMiniGameModal, isShellMiniGameSupported } from '@/missions/dailyMiniGames/miniGameRegistry';
+import { isDailyMiniGamePilotUser } from '@/missions/dailyMiniGames/dmgPilotAllowlist';
+import {
+  GAME_TYPE_PIN_ROTATOR_TIMING,
+  MISSION_ID_DMG_V1_D01_PIN_ROTATOR,
+} from '@/missions/serverReal/claimDailyPhase';
+import { getTodayKey } from '@/missions/missionState';
+import { PinRotatorTimingModal } from '@/missions/miniGames/pinRotatorTiming/PinRotatorTimingModal';
 import { SundaySuperRewardModal } from './SundaySuperRewardModal';
 
-const SUPPORTED_MISSION_IDS = [MISSION_ID_CIPHER_DRILL, MISSION_ID_WORD_DUEL, MISSION_ID_SIGNAL_PATTERN];
+/** Dev-only: local Pin Rotator UX lab (replayTestMode — zero claimDailyPhase / no DB writes). */
+function useDevPinRotatorLabEnabled(): boolean {
+  if (!import.meta.env.DEV) return false;
+  try {
+    return typeof localStorage !== 'undefined' && localStorage.getItem('m1_dev_pin_rotator_lab') === 'true';
+  } catch {
+    return false;
+  }
+}
+
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export function DailyEngineV2Card() {
   const { t } = useTranslation();
-  const { dayKey, missionId, templateKey, run, retention, loading, error, refetch } = useDailyEngineV2();
+  const { user } = useUnifiedAuth();
+  const { dayKey, missionId, templateKey, gameType, run, retention, loading, error, refetch } = useDailyEngineV2();
+  const devPinRotatorLab = useDevPinRotatorLabEnabled();
+  const [showDevPinLabModal, setShowDevPinLabModal] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showSundayModal, setShowSundayModal] = useState(false);
   const [sundayConsuming, setSundayConsuming] = useState(false);
@@ -62,8 +79,21 @@ export function DailyEngineV2Card() {
     refetch();
   }, [refetch]);
 
-  const canOpenMission = missionId != null && SUPPORTED_MISSION_IDS.includes(missionId);
+  const canOpenMission = missionId != null && isShellMiniGameSupported(missionId, gameType);
   const isCompleted = run != null && run.phase === 3 && run.status === 'completed';
+
+  const isPinRotatorPilotMission =
+    gameType === GAME_TYPE_PIN_ROTATOR_TIMING || missionId === MISSION_ID_DMG_V1_D01_PIN_ROTATOR;
+
+  const allowPilotReplay =
+    isCompleted &&
+    isPinRotatorPilotMission &&
+    isDailyMiniGamePilotUser(user?.email) &&
+    dayKey != null &&
+    missionId != null &&
+    user?.id != null;
+
+  const canOpenModal = !isCompleted || allowPilotReplay;
 
   const statusLabel =
     run == null
@@ -91,69 +121,119 @@ export function DailyEngineV2Card() {
     return `${h}h ${m}m`;
   };
 
+  const devPinLabBlock =
+    devPinRotatorLab && user?.id ? (
+      <>
+        <div style={{ marginBottom: 10 }}>
+          <button
+            type="button"
+            onClick={() => setShowDevPinLabModal(true)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: 10,
+              border: '1px dashed rgba(0, 209, 255, 0.45)',
+              background: 'rgba(0, 209, 255, 0.06)',
+              color: 'rgba(0, 209, 255, 0.9)',
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Dev: Pin Rotator lab (no server claims)
+          </button>
+        </div>
+        {showDevPinLabModal && (
+          <PinRotatorTimingModal
+            key="dev-pin-rotator-lab"
+            onClose={() => setShowDevPinLabModal(false)}
+            onComplete={() => setShowDevPinLabModal(false)}
+            replayTestMode
+            pinRotatorReplayContext={{
+              dayKey: dayKey ?? getTodayKey(),
+              missionId: MISSION_ID_DMG_V1_D01_PIN_ROTATOR,
+              userId: user.id,
+              progressJson: null,
+            }}
+          />
+        )}
+      </>
+    ) : null;
+
   if (loading) {
     return (
-      <div
-        style={{
-          marginBottom: '12px',
-          padding: '14px',
-          borderRadius: '14px',
-          background: 'rgba(0, 209, 255, 0.08)',
-          border: '1px solid rgba(0, 209, 255, 0.2)',
-        }}
-      >
-        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>{t('daily_engine.loading')}</p>
-      </div>
+      <>
+        <div
+          style={{
+            marginBottom: '12px',
+            padding: '14px',
+            borderRadius: '14px',
+            background: 'rgba(0, 209, 255, 0.08)',
+            border: '1px solid rgba(0, 209, 255, 0.2)',
+          }}
+        >
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>{t('daily_engine.loading')}</p>
+        </div>
+        {devPinLabBlock}
+      </>
     );
   }
 
   if (error || !dayKey || !missionId) {
     return (
-      <div
-        style={{
-          marginBottom: '12px',
-          padding: '14px',
-          borderRadius: '14px',
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.1)',
-        }}
-      >
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('daily_engine.unavailable')}</p>
-      </div>
+      <>
+        <div
+          style={{
+            marginBottom: '12px',
+            padding: '14px',
+            borderRadius: '14px',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('daily_engine.unavailable')}</p>
+        </div>
+        {devPinLabBlock}
+      </>
     );
   }
 
   if (!canOpenMission) {
     return (
-      <div
-        style={{
-          marginBottom: '12px',
-          padding: '14px',
-          borderRadius: '14px',
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.1)',
-        }}
-      >
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('daily_engine.unavailable_mission')}</p>
-        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '4px' }}>{t('daily_engine.reset_utc')}</p>
-      </div>
+      <>
+        <div
+          style={{
+            marginBottom: '12px',
+            padding: '14px',
+            borderRadius: '14px',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{t('daily_engine.unavailable_mission')}</p>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '4px' }}>{t('daily_engine.reset_utc')}</p>
+        </div>
+        {devPinLabBlock}
+      </>
     );
   }
+
+  const MiniGameModal = resolveMiniGameModal(missionId, gameType);
 
   return (
     <>
       <div
         role="button"
         tabIndex={0}
-        onClick={() => !isCompleted && setShowModal(true)}
-        onKeyDown={(e) => e.key === 'Enter' && !isCompleted && setShowModal(true)}
+        onClick={() => canOpenModal && setShowModal(true)}
+        onKeyDown={(e) => e.key === 'Enter' && canOpenModal && setShowModal(true)}
         style={{
           marginBottom: '12px',
           padding: '14px',
           borderRadius: '14px',
           background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.15) 0%, rgba(0, 209, 255, 0.06) 100%)',
           border: '1px solid rgba(0, 209, 255, 0.3)',
-          cursor: isCompleted ? 'default' : 'pointer',
+          cursor: canOpenModal ? 'pointer' : 'default',
           boxShadow: '0 2px 12px rgba(0, 209, 255, 0.1)',
         }}
       >
@@ -186,12 +266,19 @@ export function DailyEngineV2Card() {
               {t('daily_engine.reset_utc')} · {t('daily_engine.next_in', { time: formatCountdown(countdownSec) })}
             </p>
           </div>
-          {!isCompleted && (
+          {canOpenModal && (
             <ChevronRight style={{ width: '16px', height: '16px', color: 'rgba(0, 209, 255, 0.6)', flexShrink: 0 }} />
           )}
         </div>
         {isCompleted && (
-          <p style={{ color: 'rgba(0, 255, 136, 0.9)', fontSize: '12px', marginTop: '8px' }}>{ctaLabel}</p>
+          <div style={{ marginTop: '8px' }}>
+            <p style={{ color: 'rgba(0, 255, 136, 0.9)', fontSize: '12px', margin: 0 }}>{ctaLabel}</p>
+            {allowPilotReplay && (
+              <p style={{ color: 'rgba(0, 209, 255, 0.75)', fontSize: '11px', marginTop: '6px', marginBottom: 0 }}>
+                {t('daily_engine.replay_test_hint')}
+              </p>
+            )}
+          </div>
         )}
 
         {/* Phase 3 — Retention: streak, weekly tracker, agent status */}
@@ -236,7 +323,10 @@ export function DailyEngineV2Card() {
         {retention?.sundayRewardAvailable && retention.sundayRewardDayKey && (
           <button
             type="button"
-            onClick={() => handleSundayClaim(retention.sundayRewardDayKey!)}
+            onClick={(e) => {
+              e.stopPropagation();
+              void handleSundayClaim(retention.sundayRewardDayKey!);
+            }}
             disabled={sundayConsuming}
             style={{
               marginTop: '10px',
@@ -261,15 +351,25 @@ export function DailyEngineV2Card() {
         )}
       </div>
 
-      {showModal && missionId === MISSION_ID_CIPHER_DRILL && (
-        <CipherDrillModal onClose={handleClose} onComplete={handleComplete} />
+      {showModal && MiniGameModal != null && (
+        <MiniGameModal
+          key={`${missionId}${allowPilotReplay && isCompleted ? '-replay' : ''}`}
+          onClose={handleClose}
+          onComplete={handleComplete}
+          replayTestMode={Boolean(allowPilotReplay && isCompleted)}
+          pinRotatorReplayContext={
+            allowPilotReplay && isCompleted && dayKey && missionId && user?.id
+              ? {
+                  dayKey,
+                  missionId,
+                  userId: user.id,
+                  progressJson: run?.progress_json ?? null,
+                }
+              : null
+          }
+        />
       )}
-      {showModal && missionId === MISSION_ID_WORD_DUEL && (
-        <WordDuelMemoryModal onClose={handleClose} onComplete={handleComplete} />
-      )}
-      {showModal && missionId === MISSION_ID_SIGNAL_PATTERN && (
-        <SignalPatternNumbersModal onClose={handleClose} onComplete={handleComplete} />
-      )}
+      {devPinLabBlock}
       {showSundayModal && (
         <SundaySuperRewardModal onClose={handleSundayClose} />
       )}

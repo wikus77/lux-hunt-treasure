@@ -183,6 +183,7 @@ export const NextActionContent: React.FC<NextActionContentProps> = ({
             flexShrink: 0,
             width: '100%',
             position: 'relative' as const,
+            zIndex: 10002,
             padding: 0,
             borderRadius: '24px 24px 0 0',
             overflow: 'hidden',

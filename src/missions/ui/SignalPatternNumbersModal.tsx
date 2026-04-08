@@ -19,6 +19,7 @@ import {
 } from '@/missions/missionState';
 import { emitM1UCreditEvent } from '@/features/m1u/m1uCreditEvent';
 import { emitPECreditEvent } from '@/features/pulse/peCreditEvent';
+import type { ShellGameProps } from '@/missions/dailyMiniGames/shellGameProps';
 
 const MISSION_ID = 'signal_pattern_numbers_v1';
 const PHASE2_REWARD = 10;
@@ -33,12 +34,7 @@ type Step =
   | 'return_tomorrow'
   | 'error';
 
-interface SignalPatternNumbersModalProps {
-  onClose: () => void;
-  onComplete: () => void;
-}
-
-export const SignalPatternNumbersModal: React.FC<SignalPatternNumbersModalProps> = ({ onClose, onComplete }) => {
+export const SignalPatternNumbersModal: React.FC<ShellGameProps> = ({ onClose, onComplete }) => {
   const { t } = useTranslation();
   const [step, setStep] = useState<Step>('loading');
   const [sequence, setSequence] = useState<number[]>([]);

@@ -118,7 +118,10 @@ export function FloatingTimeRingPillV3({
       }
       whileTap={{ scale: 0.95 }}
     >
-      <span className="absolute -right-0.5 -top-0.5 z-10 max-w-[54px] truncate rounded-full border border-white/22 bg-black/60 px-1 py-0.5 text-[7px] font-bold text-white/95 shadow-md">
+      <span
+        className="absolute -right-1 -top-1 z-20 min-h-[32px] min-w-[32px] max-w-[118px] truncate rounded-full border-[2.5px] border-white/70 bg-neutral-950/95 px-3 py-2 text-[13px] font-extrabold leading-snug tracking-wide text-white shadow-[0_6px_18px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.12)_inset]"
+        style={{ textShadow: '0 1px 4px rgba(0,0,0,0.95)' }}
+      >
         {badge}
       </span>
 

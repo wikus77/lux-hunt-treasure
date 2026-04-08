@@ -5,14 +5,76 @@
  * © 2025 Joseph MULÉ – M1SSION™ – NIYVORA KFT™
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Zap, TrendingUp, AlertTriangle, Coins, Info } from 'lucide-react';
 import { usePulseBreaker, BetCurrency } from '../hooks/usePulseBreaker';
-import { useAwardPE } from '../../pulse/hooks/useAwardPE';
+import { useAwardPE, type AwardPEResult } from '../../pulse/hooks/useAwardPE';
 import { isCapacitorNative } from '@/utils/capacitor';
 import { useTranslation } from 'react-i18next';
+import { PE_REWARD_OVERLAY_SETTLED_EVENT } from '@/features/victoryOrchestration/constants';
+import { PulseBreakerPremiumOutcome } from './PulseBreakerPremiumOutcome';
+import {
+  PulseBreakerPeFallbackLayer,
+  type PulseBreakerPeFallbackMoment,
+  type PulseBreakerPeFallbackReason,
+} from './PulseBreakerPeFallbackLayer';
 import './PulseBreaker.css';
+
+const PE_SETTLE_TIMEOUT_MS = 120_000;
+
+/** Listen for overlay settle BEFORE awardPE dispatches pe-credit-event (avoids missing a fast dismiss on iOS). Abort when no overlay will be shown (delta 0 / limit). */
+function waitForNextPeOverlaySettled(signal: AbortSignal): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+  return new Promise((resolve) => {
+    let done = false;
+    const cleanup = () => {
+      if (done) return;
+      done = true;
+      window.removeEventListener(PE_REWARD_OVERLAY_SETTLED_EVENT, onEvt as EventListener);
+      window.clearTimeout(tid);
+      signal.removeEventListener('abort', onAbort);
+      resolve();
+    };
+    const onEvt = () => cleanup();
+    const onAbort = () => cleanup();
+    if (signal.aborted) {
+      resolve();
+      return;
+    }
+    signal.addEventListener('abort', onAbort);
+    window.addEventListener(PE_REWARD_OVERLAY_SETTLED_EVENT, onEvt as EventListener);
+    const tid = window.setTimeout(cleanup, PE_SETTLE_TIMEOUT_MS);
+  });
+}
+
+function peAwardShowsFullscreen(r: { success: boolean; deltaPE?: number }): boolean {
+  if (!r.success) return false;
+  const d = Number(r.deltaPE ?? 0);
+  return Number.isFinite(d) && d > 0;
+}
+
+function peFallbackReasonFromAward(r: AwardPEResult): PulseBreakerPeFallbackReason {
+  if (r.limitReached) return 'limit';
+  if (r.success && !peAwardShowsFullscreen(r)) return 'nocredit';
+  return 'generic';
+}
+
+const PeRewardBridgeLayer: React.FC = () => {
+  const { t } = useTranslation();
+  return (
+    <motion.div
+      className="absolute inset-0 z-[110] flex flex-col items-center justify-center bg-black/78 backdrop-blur-md px-6 text-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+    >
+      <p className="text-lg font-semibold text-white">{t('pulseBreaker.peBridgeLine1')}</p>
+      <p className="mt-2 text-sm text-white/72">{t('pulseBreaker.peBridgeLine2')}</p>
+    </motion.div>
+  );
+};
 
 interface PulseBreakerProps {
   isOpen: boolean;
@@ -44,6 +106,15 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, ren
   const [currentSpeedZone, setCurrentSpeedZone] = useState<'normal' | 'fast' | 'supersonic' | 'warp'>('normal');
   const [sonicBoomEffect, setSonicBoomEffect] = useState<'none' | 'supersonic-enter' | 'warp-enter'>('none');
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [postRunPhase, setPostRunPhase] = useState<'none' | 'pe_bridge' | 'pe_fallback' | 'outcome'>('none');
+  const [peFallbackPayload, setPeFallbackPayload] = useState<{
+    reason: PulseBreakerPeFallbackReason;
+    moment: PulseBreakerPeFallbackMoment;
+  } | null>(null);
+  const peFallbackResolverRef = useRef<(() => void) | null>(null);
+  const requestPeFallbackRef = useRef(
+    (_reason: PulseBreakerPeFallbackReason, _moment: PulseBreakerPeFallbackMoment) => Promise.resolve()
+  );
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
   const lastZoneRef = useRef<string>('normal');
@@ -56,8 +127,28 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, ren
   
   // 🔋 PE System Hook
   const { awardPE } = useAwardPE();
-  const peAwardedRef = useRef<string | null>(null); // Track awarded round to prevent duplicates
-  
+  const peAwardedRef = useRef<string | null>(null);
+
+  useLayoutEffect(() => {
+    requestPeFallbackRef.current = (reason, moment) =>
+      new Promise<void>((resolve) => {
+        peFallbackResolverRef.current = () => {
+          peFallbackResolverRef.current = null;
+          resolve();
+        };
+        setPeFallbackPayload({ reason, moment });
+        setPostRunPhase('pe_fallback');
+      });
+  }, []);
+
+  const dismissPeFallbackStep = useCallback(() => {
+    setPeFallbackPayload(null);
+    setPostRunPhase('pe_bridge');
+    const r = peFallbackResolverRef.current;
+    peFallbackResolverRef.current = null;
+    r?.();
+  }, []);
+
   // Track speed zone changes and trigger effects
   useEffect(() => {
     if (gameState.status !== 'running') {
@@ -112,32 +203,99 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, ren
     }
   }, [gameState.status]);
 
-  // 🔋 PE System: Award PE on game end
+  // 🔋 PE: sequential PLAY → (settle overlay if PE shown) → WIN if cashout → settle → final outcome modal (not legacy CelebrationModal).
   useEffect(() => {
-    // Only award PE when game ends (cashed_out or crashed)
-    if ((gameState.status === 'cashed_out' || gameState.status === 'crashed') && gameState.roundId) {
-      // Prevent duplicate awards for same round
-      if (peAwardedRef.current === gameState.roundId) return;
-      peAwardedRef.current = gameState.roundId;
+    const terminal = gameState.status === 'cashed_out' || gameState.status === 'crashed';
+    const roundId = gameState.roundId;
+    if (!terminal || !roundId) return;
+    if (peAwardedRef.current === roundId) return;
 
-      // Partecipazione: +5 PE (per ogni partita giocata)
-      awardPE('PULSE_BREAKER_PLAY', undefined, {
-        roundId: gameState.roundId,
-        betAmount: gameState.betAmount,
-        betCurrency: gameState.betCurrency,
-        crashPoint: gameState.crashPoint,
-      }).catch(err => console.warn('[PE] Participation award failed:', err));
+    const snap = {
+      status: gameState.status,
+      roundId: gameState.roundId!,
+      betAmount: gameState.betAmount,
+      betCurrency: gameState.betCurrency,
+      crashPoint: gameState.crashPoint,
+      payout: gameState.payout,
+      cashoutMultiplier: gameState.cashoutMultiplier,
+    };
+    const win = snap.status === 'cashed_out';
 
-      // Vittoria: +10 PE (solo se cashout)
-      if (gameState.status === 'cashed_out') {
-        awardPE('PULSE_BREAKER_WIN', undefined, {
-          roundId: gameState.roundId,
-          payout: gameState.payout,
-          multiplier: gameState.cashoutMultiplier,
-        }).catch(err => console.warn('[PE] Win award failed:', err));
-      }
+    let cancelled = false;
+    const tid = window.setTimeout(() => {
+      void (async () => {
+        if (cancelled) return;
+        if (peAwardedRef.current === roundId) return;
+        peAwardedRef.current = roundId;
+        setPostRunPhase('pe_bridge');
+        try {
+          const acPlay = new AbortController();
+          const waitPlay = waitForNextPeOverlaySettled(acPlay.signal);
+          const rPlay = await awardPE('PULSE_BREAKER_PLAY', undefined, {
+            roundId: snap.roundId,
+            betAmount: snap.betAmount,
+            betCurrency: snap.betCurrency,
+            crashPoint: snap.crashPoint,
+          });
+          if (cancelled) {
+            acPlay.abort();
+            return;
+          }
+          if (peAwardShowsFullscreen(rPlay)) await waitPlay;
+          else {
+            acPlay.abort();
+            await requestPeFallbackRef.current(peFallbackReasonFromAward(rPlay), 'play');
+          }
+          if (cancelled) return;
+
+          if (win) {
+            const acWin = new AbortController();
+            const waitWin = waitForNextPeOverlaySettled(acWin.signal);
+            const rWin = await awardPE('PULSE_BREAKER_WIN', undefined, {
+              roundId: snap.roundId,
+              payout: snap.payout,
+              multiplier: snap.cashoutMultiplier,
+            });
+            if (cancelled) {
+              acWin.abort();
+              return;
+            }
+            if (peAwardShowsFullscreen(rWin)) await waitWin;
+            else {
+              acWin.abort();
+              await requestPeFallbackRef.current(peFallbackReasonFromAward(rWin), 'win');
+            }
+          }
+        } catch (e) {
+          console.warn('[PulseBreaker] PE pipeline error:', e);
+        }
+        if (!cancelled) setPostRunPhase('outcome');
+      })();
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(tid);
+    };
+  }, [
+    gameState.status,
+    gameState.roundId,
+    gameState.betAmount,
+    gameState.betCurrency,
+    gameState.crashPoint,
+    gameState.payout,
+    gameState.cashoutMultiplier,
+    awardPE,
+  ]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setPostRunPhase('none');
+      peAwardedRef.current = null;
+      setPeFallbackPayload(null);
+      peFallbackResolverRef.current = null;
     }
-  }, [gameState.status, gameState.roundId, gameState.betAmount, gameState.betCurrency, gameState.crashPoint, gameState.payout, gameState.cashoutMultiplier, awardPE]);
+  }, [isOpen]);
 
   // Canvas drawing - COSMIC WARP STYLE with Stars
   const drawCanvas = useCallback(() => {
@@ -484,11 +642,23 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, ren
     await startRound(betAmount, betCurrency);
   };
 
-  const handleClose = () => {
+  /** After premium outcome CTA / header X: reset run only. Do NOT call onClose() — that is closePulseBreaker and dismisses the whole PB shell (reads as Home). */
+  const handleFinishOutcomeFlow = useCallback(() => {
+    peAwardedRef.current = null;
+    setPostRunPhase('none');
+    resetGame();
+  }, [resetGame]);
+
+  const handleClose = useCallback(() => {
     if (gameState.status === 'running') return;
+    if (postRunPhase === 'pe_bridge' || postRunPhase === 'pe_fallback') return;
+    if (postRunPhase === 'outcome') {
+      handleFinishOutcomeFlow();
+      return;
+    }
     resetGame();
     onClose();
-  };
+  }, [gameState.status, postRunPhase, resetGame, onClose, handleFinishOutcomeFlow]);
 
   useEffect(() => {
     refreshBalance();
@@ -522,7 +692,14 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, ren
 
   /* When renderAsContentOnly: STESSO layout del modale IMPOSTAZIONI = header (m1-folder-glass--graphite) + body scrollabile a tutta pagina. */
   if (renderAsContentOnly) {
-    const shellStyle: React.CSSProperties = { height: '100%', display: 'flex', flexDirection: 'column', background: 'transparent', overflow: 'hidden' };
+    const shellStyle: React.CSSProperties = {
+      position: 'relative',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'transparent',
+      overflow: 'hidden',
+    };
     const bodyStyle: React.CSSProperties = {
       flex: 1,
       overflowY: 'auto',
@@ -570,8 +747,11 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, ren
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-amber-500 opacity-90 rounded-t-2xl" />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <button
-                  onClick={(e) => { e.stopPropagation(); if (gameState.status !== 'running') { resetGame(); onClose(); } }}
-                  disabled={gameState.status === 'running'}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClose();
+                  }}
+                  disabled={gameState.status === 'running' || postRunPhase === 'pe_bridge' || postRunPhase === 'pe_fallback'}
                   style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                   type="button"
                 >
@@ -679,18 +859,6 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, ren
                         <div className="pb-warning-text"><AlertTriangle size={14} /> Estrai prima del CRASH!</div>
                       </motion.div>
                     )}
-                    {(gameState.status === 'crashed' || gameState.status === 'cashed_out') && (
-                      <motion.div className="pb-result-controls" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                        {gameState.status === 'cashed_out' && (
-                          <>
-                            <div className="pb-win-banner">🎉 Hai ottenuto <strong>{Math.floor(gameState.payout || 0)} {gameState.betCurrency}</strong>!</div>
-                            {gameState.nearMissMultiplier && <motion.div className="pb-near-miss" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }}>😱 Il crash era a <strong>{gameState.crashPoint?.toFixed(2)}×</strong>! Potevi vincere <strong>{Math.floor(gameState.potentialWinAtCrash || 0)}</strong>!</motion.div>}
-                          </>
-                        )}
-                        {gameState.status === 'crashed' && <div className="pb-lose-banner">💥 Crash a {gameState.crashPoint?.toFixed(2)}× — Perso {gameState.betAmount} {gameState.betCurrency}</div>}
-                        <motion.button className="pb-replay-btn" onClick={resetGame} whileTap={{ scale: 0.95 }}>🔄 GIOCA ANCORA</motion.button>
-                      </motion.div>
-                    )}
                     {gameState.error && <div className="pb-error-msg">⚠️ {gameState.error}</div>}
                   </div>
                   <div className="pb-disclaimer-footer">
@@ -700,6 +868,33 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, ren
               </>
             </div>
           </div>
+          <AnimatePresence>
+            {postRunPhase === 'pe_bridge' && <PeRewardBridgeLayer key="pb-pe-bridge" />}
+            {postRunPhase === 'pe_fallback' && peFallbackPayload && (
+              <PulseBreakerPeFallbackLayer
+                key="pb-pe-fallback"
+                reason={peFallbackPayload.reason}
+                moment={peFallbackPayload.moment}
+                onContinue={dismissPeFallbackStep}
+              />
+            )}
+            {postRunPhase === 'outcome' && (
+              <PulseBreakerPremiumOutcome
+                key="pb-outcome"
+                win={gameState.status === 'cashed_out'}
+                payout={Math.floor(gameState.payout || 0)}
+                betCurrency={gameState.betCurrency}
+                crashPoint={gameState.crashPoint ?? 0}
+                cashoutMultiplier={gameState.cashoutMultiplier ?? null}
+                betAmount={gameState.betAmount}
+                showNearMiss={!!gameState.nearMissMultiplier}
+                potentialWinAtCrash={
+                  gameState.potentialWinAtCrash != null ? Math.floor(gameState.potentialWinAtCrash) : null
+                }
+                onContinue={handleFinishOutcomeFlow}
+              />
+            )}
+          </AnimatePresence>
         </div>
         <AnimatePresence>
           {showDisclaimer && (
@@ -734,7 +929,6 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, ren
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={(e) => {
-            // Chiudi cliccando sull'overlay (fuori dal container)
             if (e.target === e.currentTarget && gameState.status !== 'running') {
               handleClose();
             }
@@ -785,12 +979,9 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, ren
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
-              if (gameState.status !== 'running') {
-                resetGame();
-                onClose();
-              }
+              handleClose();
             }}
-            disabled={gameState.status === 'running'}
+            disabled={gameState.status === 'running' || postRunPhase === 'pe_bridge' || postRunPhase === 'pe_fallback'}
             type="button"
           >
             <X size={24} />
@@ -991,47 +1182,6 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, ren
               </motion.div>
             )}
 
-            {(gameState.status === 'crashed' || gameState.status === 'cashed_out') && (
-              <motion.div 
-                className="pb-result-controls"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                {gameState.status === 'cashed_out' && (
-                  <>
-                    {/* 🏪 STORE COMPLIANT: Earned, not won */}
-                    <div className="pb-win-banner">
-                      🎉 Hai ottenuto <strong>{Math.floor(gameState.payout || 0)} {gameState.betCurrency}</strong>!
-                    </div>
-                    {/* 🎰 REGOLA 1: Near-miss - "Potevi vincere di più!" */}
-                    {gameState.nearMissMultiplier && (
-                      <motion.div 
-                        className="pb-near-miss"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.5 }}
-                      >
-                        😱 Il crash era a <strong>{gameState.crashPoint.toFixed(2)}×</strong>! 
-                        Potevi vincere <strong>{Math.floor(gameState.potentialWinAtCrash || 0)}</strong>!
-                      </motion.div>
-                    )}
-                  </>
-                )}
-                {gameState.status === 'crashed' && (
-                  <div className="pb-lose-banner">
-                    💥 Crash a {gameState.crashPoint?.toFixed(2)}× — Perso {gameState.betAmount} {gameState.betCurrency}
-                  </div>
-                )}
-                <motion.button 
-                  className="pb-replay-btn" 
-                  onClick={resetGame}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  🔄 GIOCA ANCORA
-                </motion.button>
-              </motion.div>
-            )}
-
             {gameState.error && (
               <div className="pb-error-msg">⚠️ {gameState.error}</div>
             )}
@@ -1050,6 +1200,34 @@ export const PulseBreaker: React.FC<PulseBreakerProps> = ({ isOpen, onClose, ren
               <Info size={14} />
             </button>
           </div>
+
+          <AnimatePresence>
+            {postRunPhase === 'pe_bridge' && <PeRewardBridgeLayer key="pb-pe-bridge" />}
+            {postRunPhase === 'pe_fallback' && peFallbackPayload && (
+              <PulseBreakerPeFallbackLayer
+                key="pb-pe-fallback"
+                reason={peFallbackPayload.reason}
+                moment={peFallbackPayload.moment}
+                onContinue={dismissPeFallbackStep}
+              />
+            )}
+            {postRunPhase === 'outcome' && (
+              <PulseBreakerPremiumOutcome
+                key="pb-outcome"
+                win={gameState.status === 'cashed_out'}
+                payout={Math.floor(gameState.payout || 0)}
+                betCurrency={gameState.betCurrency}
+                crashPoint={gameState.crashPoint ?? 0}
+                cashoutMultiplier={gameState.cashoutMultiplier ?? null}
+                betAmount={gameState.betAmount}
+                showNearMiss={!!gameState.nearMissMultiplier}
+                potentialWinAtCrash={
+                  gameState.potentialWinAtCrash != null ? Math.floor(gameState.potentialWinAtCrash) : null
+                }
+                onContinue={handleFinishOutcomeFlow}
+              />
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* ⚖️ FULL DISCLAIMER MODAL */}

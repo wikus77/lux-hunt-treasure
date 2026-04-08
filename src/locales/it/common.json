@@ -1749,5 +1749,21 @@
   "liveTarget.captured_feedback": "Target catturato",
   "liveTarget.card_title": "LIVE TARGET",
   "liveTarget.dot_label": "Target",
-  "liveTarget.dismiss_tutorial": "Ok"
+  "liveTarget.dismiss_tutorial": "Ok",
+  "liveTarget.engage_cta": "Ingaggia",
+  "liveTarget.tutorial_phase4_title": "Live Target — come giocare",
+  "liveTarget.tutorial_phase4_body": "Avvicinati nel raggio GPS, poi zooma la mappa finché sei nella fascia corretta. Quando compare Ingaggia, toccalo: il target diventa cyan. Poi tocca il cerchio Target sulla mappa per completare la cattura prima che scada il tempo; resta in zona e mantieni lo zoom nella finestra valida.",
+  "liveTarget.state_engage_ready": "ZOOM OK",
+  "liveTarget.state_engaged": "INGAGGIATO",
+  "liveTarget.success_message": "Target acquisito",
+  "liveTarget.failure_message": "Lock perso",
+  "liveTarget.difficulty_easy": "Facile",
+  "liveTarget.tutorial_engaged_hint": "Modalità attiva: tocca il Target sulla mappa per completare la cattura — resta in zona e mantieni lo zoom nella fascia valida.",
+  "liveTarget.fail_miss_tap": "Bersaglio mancato — il tocco non era sul target.",
+  "liveTarget.victory_modal_badge": "LIVE TARGET COMPLETATO",
+  "liveTarget.victory_modal_title": "LIVELLO {{level}} COMPLETATO",
+  "liveTarget.victory_modal_subtitle": "Target acquisito. Accesso al livello successivo sbloccato.",
+  "liveTarget.victory_modal_continue": "CONTINUA",
+  "liveTarget.victory_modal_next_hint": "Premi continua per proseguire l'operazione.",
+  "liveTarget.victory_card_classified": "RISERVATO"
 }

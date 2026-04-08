@@ -1,5 +1,8 @@
 // @ts-nocheck
 // Force rebuild to load MapTiler secrets from environment
+// LIVE TARGET 1.3C: side-effect import first — window.__LIVE_TARGET_RUNTIME__ as soon as map screen loads
+import './map3d/layers/liveTargetRuntimeGlobals';
+import { effectiveVisualDebug, patchLiveTargetRuntimeGlobal } from './map3d/layers/liveTargetRuntimeGlobals';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import maplibregl, { Map as MLMap } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -26,6 +29,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AgentsLayer3D from './map3d/layers/AgentsLayer3D';
 import PortalsLayer3D from './map3d/layers/PortalsLayer3D';
 import RewardsLayer3D from './map3d/layers/RewardsLayer3D';
+import LiveTargetLayer3D from './map3d/layers/LiveTargetLayer3D';
 import AreasLayer3D from './map3d/layers/AreasLayer3D';
 import RewardZoneLayer3D from './map3d/layers/RewardZoneLayer3D';
 import CountryDominationLayer3D from './map3d/layers/CountryDominationLayer3D'; // 🏴 Risiko Domination
@@ -74,6 +78,7 @@ import { MapHUD } from '@/components/first-session';
 // MicroMissionsCard ora è globale in App.tsx
 // 🎯 DAILY MISSIONS: Mission pill
 import { MissionPill } from '@/missions/ui/MissionPill';
+import { LIVE_TARGET_ENABLED } from '@/config/featureFlags';
 // 🎬 Video intro now handled by BottomNavigation GenericVideoModal
 
 // 🔧 DEV-ONLY MOCKS (Page-local, governed by ENV)
@@ -92,6 +97,8 @@ interface DiagState {
 export default function MapTiler3D() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MLMap | null>(null);
+  /** LIVE TARGET 1.3I: state-driven map instance; map-only debug; LS `m1_live_target_force_on` enables flag in prod. */
+  const [mapInstance, setMapInstance] = useState<MLMap | null>(null);
   const debugEnabled = useDebugFlag();
   
   // 🆕 v5: Shadow Protocol Map Glitch Effect
@@ -884,7 +891,10 @@ export default function MapTiler3D() {
       });
 
       console.log('✅ MapLibre instance created');
+      console.warn('[LiveTarget][1.3I][map-created]', { ok: true });
       mapRef.current = map;
+      setMapInstance(map);
+      console.warn('[LiveTarget][1.3I][map-state-set]', { mapInstanceSet: true });
 
       map.on('error', (e: any) => {
         console.error('❌ MapLibre error:', e);
@@ -1142,9 +1152,51 @@ export default function MapTiler3D() {
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+        setMapInstance(null);
       }
     };
   }, []);
+
+  useEffect(() => {
+    let forceOnLs = false;
+    try {
+      forceOnLs = typeof localStorage !== 'undefined' && localStorage.getItem('m1_live_target_force_on') === 'true';
+    } catch {
+      forceOnLs = false;
+    }
+    const evd = effectiveVisualDebug();
+    console.warn('[LiveTarget][1.3I][env-proof]', {
+      DEV: import.meta.env.DEV,
+      MODE: import.meta.env.MODE,
+      VITE_LIVE_TARGET: String(import.meta.env.VITE_LIVE_TARGET ?? ''),
+      LIVE_TARGET_ENABLED,
+      liveTargetForceOnLs: forceOnLs,
+    });
+    console.warn('[LiveTarget][1.3I][jsx-gates]', {
+      liveTargetLayerInTree: true,
+      badgeAndProbeGate: LIVE_TARGET_ENABLED && evd,
+      mapJsxProbeGate: mapInstance != null && LIVE_TARGET_ENABLED && evd,
+      mapInstanceNull: mapInstance == null,
+      mapRefCurrentNull: mapRef.current == null,
+    });
+  }, [mapInstance, LIVE_TARGET_ENABLED]);
+
+  useEffect(() => {
+    if (!LIVE_TARGET_ENABLED || mapInstance == null) return;
+    console.warn('[LiveTarget][1.3I][jsx-live-target-slot-mounted]', {
+      liveTargetEnabled: LIVE_TARGET_ENABLED,
+      mapInstanceNull: false,
+      mapRefCurrentNull: mapRef.current == null,
+      effectiveVisualDebug: effectiveVisualDebug(),
+    });
+    patchLiveTargetRuntimeGlobal({
+      mapPresent: true,
+      maptilerMapRefNull: mapRef.current == null,
+      mapInstanceReactNull: false,
+      lastRenderPhase: 'maptiler_1.3i_jsx_slot',
+      renderProbeMode: 'map_jsx_slot_1.3i_pending_layer_ab',
+    } as Record<string, unknown>);
+  }, [mapInstance, LIVE_TARGET_ENABLED]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -1594,15 +1646,27 @@ export default function MapTiler3D() {
         </div>
       )}
 
-      <div 
-        ref={containerRef} 
-        id="ml-sandbox" 
-        style={{ 
-          position: 'fixed', 
+      <div
+        style={{
+          position: 'fixed',
           inset: 0,
-          zIndex: 1
-        }} 
-      />
+          zIndex: 1,
+        }}
+      >
+        <div
+          ref={containerRef}
+          id="ml-sandbox"
+          style={{
+            position: 'absolute',
+            inset: 0,
+          }}
+        />
+        <LiveTargetLayer3D
+          map={mapInstance}
+          enabled={LIVE_TARGET_ENABLED}
+          userPosition={position ? { lat: position.lat, lng: position.lng } : null}
+        />
+      </div>
 
       {/* FINAL SHOOT Overlay - Captures map clicks when active */}
       <FinalShootOverlay map={mapRef.current} />

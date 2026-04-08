@@ -50,7 +50,7 @@ import { GlobalPulseBreakerModal } from "./components/popups/GlobalPulseBreakerM
 import { UpdateBanner } from "./components/sw/UpdateBanner";
 import '@/features/living-map/styles/livingMap.css';
 import { OnboardingProvider, OnboardingOverlay } from "./components/onboarding";
-import { PULSE_ENABLED } from "@/config/featureFlags";
+import { PULSE_ENABLED, VICTORY_ORCH_QA_LOCALSTORAGE_PRESERVE_KEYS } from "@/config/featureFlags";
 import { PulseContributionListener, PulseRewardNotification } from "@/features/pulse";
 import { RouteAnnouncer } from "./components/a11y/RouteAnnouncer";
 import { useRouteAnnouncements } from "./hooks/useRouteAnnouncements";
@@ -78,6 +78,8 @@ import { NativeSafeAreaProvider } from "./components/layout/NativeSafeAreaProvid
 // 🎰 Global M1U Slot Overlay — PRE→SLOT→POST on any credit (Shop, Wheel, Missions, etc.)
 import { GlobalM1UCreditOverlay } from "./features/m1u/GlobalM1UCreditOverlay";
 import { GlobalPERewardOverlay } from "./features/pulse/components/GlobalPERewardOverlay";
+import { VictoryOrchestrationProvider } from "@/features/victoryOrchestration/VictoryOrchestrationContext";
+import { VictoryOrchQaHarnessPanel } from "@/features/victoryOrchestration/qa/VictoryOrchQaHarnessPanel";
 // 🎯 Daily Missions System
 import { DailyMissionsController } from "./missions";
 // 🎯 FIRST SESSION: Micro-missions (global - works on all pages)
@@ -96,6 +98,7 @@ import { ViewportHUD } from "./components/debug/ViewportHUD";
 import { initViewportHeight } from "./utils/viewportHeight";
 // 📱 NATIVE DETECTION: For scoped native-only CSS fixes
 import { Capacitor } from '@capacitor/core';
+import { primeVictorySoundsOnUserGesture } from '@/utils/victoryRewardSounds';
 
 function App() {
   // 📱 NATIVE CLASS: Add 'is-native' to body for scoped iOS WKWebView fixes
@@ -125,6 +128,11 @@ function App() {
   // 📏 Initialize viewport height for iOS WKWebView compatibility
   useEffect(() => {
     initViewportHeight();
+  }, []);
+
+  // Victory SFX: preload Audio elements after first user gesture (iOS WKWebView–safe)
+  useEffect(() => {
+    primeVictorySoundsOnUserGesture();
   }, []);
 
   // Initialize GA4 and M1SSION Analytics once on mount
@@ -255,8 +263,23 @@ function App() {
             <p className="mb-6">L'applicazione ha riscontrato un errore fatale. Ricarica la pagina.</p>
             <button 
               onClick={() => {
-                // Clear all storage and reload
+                const preserved: [string, string][] = [];
+                for (const key of VICTORY_ORCH_QA_LOCALSTORAGE_PRESERVE_KEYS) {
+                  try {
+                    const v = localStorage.getItem(key);
+                    if (v !== null) preserved.push([key, v]);
+                  } catch {
+                    /* ignore */
+                  }
+                }
                 localStorage.clear();
+                for (const [key, v] of preserved) {
+                  try {
+                    localStorage.setItem(key, v);
+                  } catch {
+                    /* ignore */
+                  }
+                }
                 sessionStorage.clear();
                 window.location.reload();
               }}
@@ -277,10 +300,13 @@ function App() {
               <Router>
               <SoundProvider>
                 <AuthProvider>
+                  <VictoryOrchestrationProvider>
                   {/* M1U Global Slot Overlay: inside AuthProvider so M1UPill can use useUnifiedAuth (fix post-IAP crash) */}
                   <GlobalM1UCreditOverlay />
                   {/* PE Global Fullscreen Reward: Energy Injection modal on every PE credit */}
                   <GlobalPERewardOverlay />
+                  {/* QA-only: synthetic victory orchestration scenarios (flagged off in production). */}
+                  <VictoryOrchQaHarnessPanel />
                   {/* 🚫 DISABILITATO 16/01/2026: OnboardingProvider rimosso (forzava navigazione) */}
                   {/* <OnboardingProvider> */}
                   <InterestSignalsProvider>
@@ -351,6 +377,7 @@ function App() {
                     <ProgressFeedbackProvider children={null} />
                   </InterestSignalsProvider>
                   {/* </OnboardingProvider> */}
+                  </VictoryOrchestrationProvider>
                 </AuthProvider>
               </SoundProvider>
             </Router>

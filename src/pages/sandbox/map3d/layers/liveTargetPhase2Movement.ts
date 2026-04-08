@@ -18,6 +18,8 @@ export type LiveTargetGeoEngineState = {
   currentLat: number;
   lastLng: number;
   lastLat: number;
+  orbitCenterLng: number;
+  orbitCenterLat: number;
   isMoving: boolean;
   startedAt: number;
   lastTickAt: number;
@@ -26,14 +28,30 @@ export type LiveTargetGeoEngineState = {
   phaseCode: string;
 };
 
-export function createInitialEngineState(debugEnabled: boolean): LiveTargetGeoEngineState {
-  const { lng, lat } = LIVE_TARGET_PHASE2_ORBIT_CENTER;
+function initialOrbitPoint(center: { lng: number; lat: number }): { lng: number; lat: number } {
+  const R = LIVE_TARGET_PHASE2_ORBIT_RADIUS_DEG_LAT;
+  const cosLat = Math.cos((center.lat * Math.PI) / 180);
+  const safeCos = Math.abs(cosLat) < 0.2 ? 0.2 : cosLat;
+  const angle = 0;
+  return {
+    lng: center.lng + (R / safeCos) * Math.cos(angle),
+    lat: center.lat + R * Math.sin(angle),
+  };
+}
+
+export function createInitialEngineState(
+  debugEnabled: boolean,
+  orbitCenter: { lng: number; lat: number } = LIVE_TARGET_PHASE2_ORBIT_CENTER
+): LiveTargetGeoEngineState {
+  const p0 = initialOrbitPoint(orbitCenter);
   const now = performance.now();
   return {
-    currentLng: lng,
-    currentLat: lat,
-    lastLng: lng,
-    lastLat: lat,
+    currentLng: p0.lng,
+    currentLat: p0.lat,
+    lastLng: p0.lng,
+    lastLat: p0.lat,
+    orbitCenterLng: orbitCenter.lng,
+    orbitCenterLat: orbitCenter.lat,
     isMoving: true,
     startedAt: now,
     lastTickAt: now,
@@ -46,12 +64,9 @@ export function createInitialEngineState(debugEnabled: boolean): LiveTargetGeoEn
 /**
  * Small circular orbit in geographic space (clockwise when viewed from above north pole).
  */
-export function advanceOrbitTick(
-  state: LiveTargetGeoEngineState,
-  nowMs: number,
-  centerLng: number,
-  centerLat: number
-): LiveTargetGeoEngineState {
+export function advanceOrbitTick(state: LiveTargetGeoEngineState, nowMs: number): LiveTargetGeoEngineState {
+  const centerLng = state.orbitCenterLng;
+  const centerLat = state.orbitCenterLat;
   const elapsed = nowMs - state.startedAt;
   const angle = (elapsed / LIVE_TARGET_PHASE2_ORBIT_PERIOD_MS) * Math.PI * 2;
   const R = LIVE_TARGET_PHASE2_ORBIT_RADIUS_DEG_LAT;

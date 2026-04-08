@@ -30,6 +30,8 @@ export interface DailyEngineV2State {
   missionId: string | null;
   /** Phase 2: template archetype for display (e.g. intelligence, skill). */
   templateKey: string | null;
+  /** Optional: from daily-mission-today when server sends it (pilot / future). */
+  gameType: string | null;
   run: DailyRunState | null;
   /** Phase 3: retention (streak, weekly, agent, Sunday). */
   retention: DailyEngineRetention | null;
@@ -43,6 +45,7 @@ export function useDailyEngineV2(): DailyEngineV2State {
   const [dayKey, setDayKey] = useState<string | null>(null);
   const [missionId, setMissionId] = useState<string | null>(null);
   const [templateKey, setTemplateKey] = useState<string | null>(null);
+  const [gameType, setGameType] = useState<string | null>(null);
   const [run, setRun] = useState<DailyRunState | null>(null);
   const [retention, setRetention] = useState<DailyEngineRetention | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,6 +56,7 @@ export function useDailyEngineV2(): DailyEngineV2State {
       setDayKey(null);
       setMissionId(null);
       setTemplateKey(null);
+      setGameType(null);
       setRun(null);
       setRetention(null);
       setLoading(false);
@@ -66,6 +70,7 @@ export function useDailyEngineV2(): DailyEngineV2State {
         setDayKey(null);
         setMissionId(null);
         setTemplateKey(null);
+        setGameType(null);
         setRun(null);
         setRetention(null);
         setError(res.error ?? 'fetch_failed');
@@ -75,6 +80,7 @@ export function useDailyEngineV2(): DailyEngineV2State {
       setDayKey(res.day_key);
       setMissionId(res.mission_id);
       setTemplateKey(res.template_key ?? null);
+      setGameType(res.game_type ?? null);
       if (res.retention) {
         setRetention({
           streak: res.retention.streak,
@@ -133,5 +139,5 @@ export function useDailyEngineV2(): DailyEngineV2State {
     };
   }, [refetch]);
 
-  return { dayKey, missionId, templateKey, run, retention, loading, error, refetch };
+  return { dayKey, missionId, templateKey, gameType, run, retention, loading, error, refetch };
 }
