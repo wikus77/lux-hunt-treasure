@@ -116,7 +116,10 @@ export function LiveTargetVictoryModal({ open, levelId, onContinue, t }: LiveTar
             <Suspense
               fallback={<div className="lt-rive-victory-fallback">{t('liveTarget.victory_rive_loading')}</div>}
             >
-              <LiveTargetVictoryRive fallbackText={t('liveTarget.victory_rive_error')} />
+              <LiveTargetVictoryRive
+                fallbackText={t('liveTarget.victory_rive_error')}
+                loadingText={t('liveTarget.victory_rive_loading')}
+              />
             </Suspense>
           </VictoryRiveLazyErrorBoundary>
         </div>
@@ -131,6 +134,7 @@ export function LiveTargetVictoryModal({ open, levelId, onContinue, t }: LiveTar
             onClick={(e) => {
               e.stopPropagation();
               console.warn('[LiveTarget][victory-modal][continue-click]', { levelId });
+              console.warn('[LiveTarget][rive-forensic][continue-click]', { levelId });
               onContinue();
             }}
           >
