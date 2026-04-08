@@ -1723,6 +1723,8 @@
   "liveTarget.victory_modal_title": "NIVEAU {{level}} TERMINÉ",
   "liveTarget.victory_modal_subtitle": "Cible acquise. Accès au niveau suivant débloqué.",
   "liveTarget.victory_modal_continue": "CONTINUER",
+  "liveTarget.victory_continue": "CONTINUER",
+  "liveTarget.victory_rive_error": "Erreur d'animation",
   "liveTarget.victory_modal_next_hint": "Appuyez sur continuer pour poursuivre l'opération.",
   "liveTarget.victory_card_classified": "CLASSIFIÉ"
 }

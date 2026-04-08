@@ -67,7 +67,7 @@ export default defineConfig(({ mode }) => ({
           'router-vendor': ['react-router-dom'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast'],
           'supabase-vendor': ['@supabase/supabase-js'],
-          'animation-vendor': ['framer-motion', 'lottie-react'],
+          'animation-vendor': ['framer-motion', 'lottie-react', '@rive-app/react-canvas'],
           // THREE.js only - @react-three/fiber bundled with components that use it
           'three-vendor': ['three'],
           'map-vendor': ['leaflet', 'react-leaflet', '@react-google-maps/api'],
@@ -113,6 +113,7 @@ export default defineConfig(({ mode }) => ({
       'firebase/auth',
       'firebase/messaging',
       'lottie-react',
+      '@rive-app/react-canvas',
       '@tanstack/react-query',
       'sonner',
       'gsap',
@@ -127,5 +128,5 @@ export default defineConfig(({ mode }) => ({
   ssr: {
     noExternal: ['maplibre-gl', 'three', 'gsap'],
   },
-  assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.mp3', '**/*.wav']
+  assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.mp3', '**/*.wav', '**/*.riv']
 }));

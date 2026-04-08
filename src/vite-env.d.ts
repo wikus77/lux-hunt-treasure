@@ -33,6 +33,11 @@ declare module "*.webp" {
   export default src;
 }
 
+declare module "*.riv" {
+  const src: string;
+  export default src;
+}
+
 // Browser timer compatibility for NodeJS.Timeout
 declare global {
   namespace NodeJS {

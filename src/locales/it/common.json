@@ -1764,6 +1764,8 @@
   "liveTarget.victory_modal_title": "LIVELLO {{level}} COMPLETATO",
   "liveTarget.victory_modal_subtitle": "Target acquisito. Accesso al livello successivo sbloccato.",
   "liveTarget.victory_modal_continue": "CONTINUA",
+  "liveTarget.victory_continue": "CONTINUA",
+  "liveTarget.victory_rive_error": "Errore animazione",
   "liveTarget.victory_modal_next_hint": "Premi continua per proseguire l'operazione.",
   "liveTarget.victory_card_classified": "RISERVATO"
 }
