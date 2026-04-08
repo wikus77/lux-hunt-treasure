@@ -96,24 +96,28 @@ export function LiveTargetVictoryModal({ open, levelId, onContinue, t }: LiveTar
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
-        <VictoryRiveLazyErrorBoundary fallback={riveFallback}>
-          <Suspense
-            fallback={<div className="lt-rive-victory-fallback">{t('liveTarget.victory_rive_loading')}</div>}
+        <div className="lt-rive-victory-stage">
+          <VictoryRiveLazyErrorBoundary fallback={riveFallback}>
+            <Suspense
+              fallback={<div className="lt-rive-victory-fallback">{t('liveTarget.victory_rive_loading')}</div>}
+            >
+              <LiveTargetVictoryRive fallbackText={t('liveTarget.victory_rive_error')} />
+            </Suspense>
+          </VictoryRiveLazyErrorBoundary>
+        </div>
+        <footer className="lt-rive-victory-footer">
+          <button
+            type="button"
+            className="lt-rive-victory-continue"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onContinue();
+            }}
           >
-            <LiveTargetVictoryRive fallbackText={t('liveTarget.victory_rive_error')} />
-          </Suspense>
-        </VictoryRiveLazyErrorBoundary>
-        <button
-          type="button"
-          className="lt-rive-victory-continue"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            onContinue();
-          }}
-        >
-          {t('liveTarget.victory_continue')}
-        </button>
+            {t('liveTarget.victory_continue')}
+          </button>
+        </footer>
       </div>
     </div>,
     document.body
