@@ -135,6 +135,7 @@ export function LiveTargetVictoryModal({ open, levelId, onContinue, t }: LiveTar
               e.stopPropagation();
               console.warn('[LiveTarget][victory-modal][continue-click]', { levelId });
               console.warn('[LiveTarget][rive-forensic][continue-click]', { levelId });
+              console.warn('[RIVE][forensic][continue-click]', { levelId });
               onContinue();
             }}
           >
