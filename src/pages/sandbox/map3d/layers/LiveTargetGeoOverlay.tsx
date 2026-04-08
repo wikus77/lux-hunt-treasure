@@ -387,6 +387,7 @@ export default function LiveTargetGeoOverlay({
   }, [enabled, terminal]);
 
   const succeedSession = useCallback(() => {
+    console.warn('[LiveTarget][victory-flow] success_reached', { levelId: liveTargetLevelId });
     orbitPausedRef.current = true;
     setTerminal('success');
     setOutcomeToast('success');
@@ -394,7 +395,7 @@ export default function LiveTargetGeoOverlay({
     setTutorialDismissed(true);
     setIsOpen(false);
     if (isHapticsAvailable()) hapticSuccess();
-  }, []);
+  }, [liveTargetLevelId]);
 
   const onVictoryContinue = useCallback(() => {
     const maxL = getMaxLiveTargetLevelId();

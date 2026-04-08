@@ -20,6 +20,11 @@ class LiveTargetRiveErrorBoundary extends Component<
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('[LiveTarget][Rive][error]', error, info.componentStack);
+    console.warn('[LiveTarget][victory-flow] rive_error', {
+      message: error?.message,
+      stack: error?.stack,
+      componentStack: info?.componentStack,
+    });
   }
 
   render(): ReactNode {
@@ -31,6 +36,7 @@ class LiveTargetRiveErrorBoundary extends Component<
 function LiveTargetVictoryRiveInner() {
   useEffect(() => {
     console.warn('[LiveTarget][Rive][mount]');
+    console.warn('[LiveTarget][victory-flow] rive_component_mounted');
   }, []);
 
   const { RiveComponent } = useRive(
@@ -43,9 +49,14 @@ function LiveTargetVictoryRiveInner() {
       }),
       onRiveReady: () => {
         console.warn('[LiveTarget][Rive][loaded]');
+        console.warn('[LiveTarget][victory-flow] rive_loaded');
       },
     },
-    { shouldResizeCanvasToContainer: true }
+    {
+      shouldResizeCanvasToContainer: true,
+      // Offscreen renderer often breaks or shows blank canvas in iOS WKWebView
+      useOffscreenRenderer: false,
+    }
   );
 
   return (
