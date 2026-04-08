@@ -24,10 +24,10 @@
 	},
 	"packageClassList": [
 		"AppPlugin",
+		"GeolocationPlugin",
 		"HapticsPlugin",
 		"PushNotificationsPlugin",
 		"StatusBarPlugin",
-		"GeolocationPlugin",
 		"NativePurchasesPlugin",
 		"SafeAreaPlugin"
 	]
