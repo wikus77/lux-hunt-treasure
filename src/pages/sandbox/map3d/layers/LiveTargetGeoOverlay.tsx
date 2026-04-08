@@ -2,7 +2,7 @@
  * LIVE TARGET™ Phase 4 — zoom gate + Engage CTA + engaged cyan + tap capture + success/fail WOW.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import type { Map as MLMap } from 'maplibre-gl';
@@ -61,6 +61,9 @@ import {
 } from './liveTargetGameplayMachine';
 import './LiveTargetGeoOverlay.css';
 
+/** Opt-in Rive isolato (LS `m1_live_target_rive_forensic=1`) — nessuna nuova route. */
+const RiveVictoryForensicHarness = lazy(() => import('./RiveVictoryForensicHarness'));
+
 const LT_PROFILE = getLiveTargetDifficultyProfile(LIVE_TARGET_PHASE4_DEFAULT_DIFFICULTY);
 
 let liveTarget20ModuleLogged = false;
@@ -77,6 +80,13 @@ export default function LiveTargetGeoOverlay({
   userPosition = null,
 }: LiveTargetGeoOverlayProps) {
   const { t } = useTranslation();
+  const riveForensicHarness = useMemo(() => {
+    try {
+      return localStorage.getItem('m1_live_target_rive_forensic') === '1';
+    } catch {
+      return false;
+    }
+  }, []);
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [inRange, setInRange] = useState(false);
@@ -902,6 +912,11 @@ export default function LiveTargetGeoOverlay({
       onContinue={onVictoryContinue}
       t={t}
     />
+    {riveForensicHarness && (
+      <Suspense fallback={null}>
+        <RiveVictoryForensicHarness />
+      </Suspense>
+    )}
     </>
   );
 }
