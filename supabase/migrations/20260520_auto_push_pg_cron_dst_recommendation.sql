@@ -1,0 +1,27 @@
+-- © 2025 Joseph MULÉ – M1SSION™ – RECOMMENDATION ONLY (do not apply without GO)
+--
+-- PROBLEM: pg_cron job `auto-push-hourly` uses fixed UTC hours (8,10,14,17)
+-- mapped for CET (UTC+1). During CEST (UTC+2) Rome hours become 10,12,16,19
+-- and auto-push-cron rejects runs (allowed Rome hours: 9,11,15,18).
+--
+-- OPTION A (recommended): Rely on GitHub Actions */5 min; disable pg_cron duplicate:
+--   SELECT cron.unschedule(jobid) FROM cron.job WHERE jobname = 'auto-push-hourly';
+--
+-- OPTION B: Reschedule for CEST (May–Oct) — verify in Dashboard before apply:
+--   SELECT cron.unschedule(jobid) FROM cron.job WHERE jobname = 'auto-push-hourly';
+--   SELECT cron.schedule(
+--     'auto-push-hourly',
+--     '0 7,9,13,16 * * *',
+--     $$SELECT public.invoke_auto_push_cron(jsonb_build_object('trigger','pg_cron','dryRun',false))$$
+--   );
+--
+-- OPTION C: Keep pg_cron; edge function filters Rome hour on every invoke (v17+).
+--   GitHub */5 is sufficient; pg_cron is optional redundancy.
+
+-- ROLLBACK (if Option B applied):
+--   SELECT cron.unschedule(jobid) FROM cron.job WHERE jobname = 'auto-push-hourly';
+--   SELECT cron.schedule(
+--     'auto-push-hourly',
+--     '0 8,10,14,17 * * *',
+--     $$SELECT public.invoke_auto_push_cron(jsonb_build_object('trigger', 'cron', 'dryRun', false))$$
+--   );

@@ -32,7 +32,8 @@ jobs:
           curl -sS -X POST \
             "https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/auto-push-cron" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-            -H "Content-Type: application/json"
+            -H "Content-Type: application/json" \
+            -d '{"dryRun":false,"trigger":"github_cron","debugSkipReasons":true}'
 
   battle-finalize:
     runs-on: ubuntu-latest
